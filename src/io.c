@@ -70,8 +70,9 @@ void writeByte(int bus, unsigned char *b, unsigned long msecs)
     write(busses[bus].fd, b, 1);
     tcflush(busses[bus].fd, TCOFLUSH);
   }
-  if(busses[bus].debuglevel >= 2) {
-      syslog(LOG_INFO, "bus %d byte sent: 0x%02x", bus, *b);
+  if(busses[bus].debuglevel >= 2)
+  {
+    syslog(LOG_INFO, "bus %d (FD: %d) byte sent: 0x%02x", bus, busses[bus].fd, *b);
   }
   usleep(msecs * 1000);
 }

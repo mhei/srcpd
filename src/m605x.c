@@ -154,14 +154,12 @@ int init_bus_M6051(int bus) {
   return 0;
 }
 
-int
-term_bus_M6051(int bus)
+int term_bus_M6051(int bus)
 {
   return 0;
 }
 
-void*
-thr_sendrec_M6051(void *v)
+void* thr_sendrec_M6051(void *v)
 {
   unsigned char SendByte;
   int akt_S88, addr, temp, number_fb;

@@ -113,7 +113,7 @@ int main(int argc, char **argv)
   struct _THREADS cmds;
   install_signal_handler();
 
-  strcpy(conffile, "/etc/srcpd.conf");
+  strcpy(conffile, "/usr/local/etc/srcpd.conf");
   /* Parameter auswerten */
   opterr=0;
   while((c=getopt(argc, argv, "f:hv")) != EOF)
@@ -158,6 +158,14 @@ int main(int argc, char **argv)
   cmds.socket = ((SERVER_DATA *) busses[0].driverdata)->TCPPORT;
   cmds.func = thr_doClient;
 
+  /* Now we have to initialize all busses */
+  /* this function should open the device */
+  for(i=0; i<=num_busses; i++)
+  {
+    if(busses[i].init_func)
+        (*busses[i].init_func)(i);
+  }
+
   // a little help for debugging the threads
   if (busses[0].debuglevel < 9)
   {
@@ -190,13 +198,6 @@ int main(int argc, char **argv)
   startup_SERVER();
   startup_SESSION();
 
-  /* Now we have to initialize all busses */
-  /* this function should open the device */
-  for(i=0; i<=num_busses; i++)
-  {
-    if(busses[i].init_func)
-        (*busses[i].init_func)(i);
-  }
   /* Netzwerkverbindungen */
   error = pthread_create(&ttid_cmd, NULL, thr_handlePort, &cmds);
   if(error)
