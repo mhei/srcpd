@@ -31,10 +31,22 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include <libxml/tree.h>
+
 #include "config-srcpd.h"
 #include "hsi-88.h"
 #include "io.h"
 #include "srcp-fb.h"
+
+void readconfig_HSI_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber){
+    busses[busnumber].type = SERVER_HSI_88;
+    busses[busnumber].init_func = &init_bus_HSI_88;
+    busses[busnumber].term_func = &term_bus_HSI_88;
+    busses[busnumber].thr_func = &thr_sendrec_HSI_88;
+    busses[busnumber].driverdata = malloc(sizeof(struct _HSI_S88_DATA));
+    strcpy(busses[busnumber].description, "FB POWER");
+}
+
 
 int
 init_bus_HSI_88(int bus)

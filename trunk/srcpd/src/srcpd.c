@@ -51,8 +51,6 @@ void hup_handler(int);
 void term_handler(int);
 void install_signal_handler(void);
 
-extern int TCPPORT;
-
 extern int server_shutdown_state;
 extern int server_reset_state;
 extern const char *WELCOME_MSG;
@@ -61,9 +59,9 @@ void
 CreatePIDFile(int pid)
 {
   FILE *f;
-  f=fopen(PIDFILE,"wb");
+  f=fopen(((SERVER_DATA *) busses[0].driverdata)->PIDFILE,"wb");
   if (!f)
-    syslog(LOG_INFO,"   cannot open %s. Ignoring.", PIDFILE);
+    syslog(LOG_INFO,"   cannot open %s. Ignoring.", ((SERVER_DATA *) busses[0].driverdata)->PIDFILE);
   else
   {
     fprintf(f,"%d", pid);
@@ -75,7 +73,7 @@ CreatePIDFile(int pid)
 void
 DeletePIDFile()
 {
-  unlink(PIDFILE);
+  unlink(((SERVER_DATA *) busses[0].driverdata)->PIDFILE);
 }
 
 void
@@ -118,9 +116,9 @@ main(int argc, char **argv)
   pid_t pid;
   char c, conffile[MAXPATHLEN];
   pthread_t ttid_cmd, ttid_clock, ttid_pid;
-  struct _THREADS cmds = {TCPPORT, thr_doClient};
+  struct _THREADS cmds = {((SERVER_DATA *) busses[0].driverdata)->TCPPORT, thr_doClient};
   install_signal_handler();
-  cmds.socket = TCPPORT;
+  cmds.socket = ((SERVER_DATA *) busses[0].driverdata)->TCPPORT;
   strcpy(conffile, "/etc/srcpd.cond");
 
   /* Parameter auswerten */

@@ -17,6 +17,8 @@
 #include <signal.h>
 #include <syslog.h>
 
+#include <libxml/tree.h>
+
 #include "config-srcpd.h"
 #include "io.h"
 #include "loopback.h"
@@ -26,9 +28,17 @@
 #include "srcp-power.h"
 #include "srcp-srv.h"
 
-int
-init_lineLoopback (char *name)
+void readconfig_loopback(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
+    busses[busnumber].type = SERVER_LOOPBACK;
+    busses[busnumber].init_func = &init_bus_Loopback;
+    busses[busnumber].term_func = &term_bus_Loopback;
+    busses[busnumber].thr_func = &thr_sendrec_Loopback;
+    busses[busnumber].driverdata = malloc(sizeof(struct _LOOPBACK_DATA));
+    strcpy(busses[busnumber].description, "GA GL FB POWER");
+}
+
+int init_lineLoopback (char *name) {
   int FD;
   syslog(LOG_INFO,"loopback open device %s", name);
   FD = -1;

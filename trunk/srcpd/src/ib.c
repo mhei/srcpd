@@ -46,6 +46,8 @@
 #include <netinet/in.h>
 #include <linux/serial.h>
 
+#include <libxml/tree.h>
+
 #include "config-srcpd.h"
 #include "ib.h"
 #include "io.h"
@@ -60,6 +62,50 @@ extern int testmode;
 #endif
 
 static struct _GA tga[50];
+
+void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node,
+	       int busnumber)
+{
+    xmlNodePtr child = node->children;
+
+    busses[busnumber].type = SERVER_IB;
+    busses[busnumber].init_func = &init_bus_IB;
+    busses[busnumber].term_func = &term_bus_IB;
+    busses[busnumber].thr_func = &thr_sendrec_IB;
+    busses[busnumber].driverdata = malloc(sizeof(struct _IB_DATA));
+    strcpy(busses[busnumber].description, "GA GL FB POWER");
+
+    ((IB_DATA *) busses[busnumber].driverdata)->number_fb = 0;	/* max 31 */
+    ((IB_DATA *) busses[busnumber].driverdata)->number_ga = 256;
+    ((IB_DATA *) busses[busnumber].driverdata)->number_gl = 80;
+    strcpy(busses[busnumber].description, "GA GL FB POWER");
+
+    while (child) {
+	if (strcmp(child->name, "maximum_address_for_feedback") == 0) {
+	    char *txt =
+		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+	    ((IB_DATA *) busses[busnumber].driverdata)->number_fb =
+		atoi(txt);
+	    free(txt);
+	}
+
+	if (strcmp(child->name, "maximum_address_for_locomotiv") == 0) {
+	    char *txt =
+		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+	    ((IB_DATA *) busses[busnumber].driverdata)->number_gl =
+		atoi(txt);
+	    free(txt);
+	}
+	if (strcmp(child->name, "maximum_address_for_accessoire") == 0) {
+	    char *txt =
+		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+	    ((IB_DATA *) busses[busnumber].driverdata)->number_ga =
+		atoi(txt);
+	    free(txt);
+	}
+	child = child->next;
+    }
+}
 
 int
 init_bus_IB(int bus)
