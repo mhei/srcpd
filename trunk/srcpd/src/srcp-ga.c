@@ -332,7 +332,7 @@ void unlock_ga_bytime(void) {
   for(i=0; i<num_busses; i++)
   {
     number = get_number_ga(i);
-    DBG(0, DBG_DEBUG, "number of GA for busnumber %d is %d", i, number);
+    DBG(i, DBG_DEBUG, "number of GA for busnumber %d is %d", i, number);
     for(j=1;j<=number; j++)
     {
       if(ga[i].gastate[j].lockduration-- == 1)
