@@ -20,8 +20,6 @@
 void close_comport(int fd);
 int init_comport(char*);
 int open_comport(int*, char*);
-void restore_comport(char*);
-void save_comport(char*);
 void* thr_sendrecintellibox(void*);
 
 #endif

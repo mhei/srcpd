@@ -18,11 +18,17 @@
 #include <config.h>
 #endif
 
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <syslog.h>
 #include <termios.h>
 #include <unistd.h>
 
 #include "io.h"
+
+struct termios interface_org;
+int org_status_saved  = 0;
 
 extern int testmode;
 
@@ -64,4 +70,41 @@ void writeByte(int FD, unsigned char *b, unsigned long usecs)
 	tcflush(FD, TCOFLUSH);
 	usleep(usecs);
 #endif
+}
+
+void save_comport(char *name)
+{
+  int fd;
+
+	printf("Saveing attribute for serial line %s\n", name);
+	fd=open(name, O_RDWR);
+	if (fd == -1)
+	{
+		printf("dammit, couldn't open device.\n");
+	}
+	else
+  {
+		tcgetattr(fd, &interface_org);
+		org_status_saved = 1;
+		close(fd);
+	}
+}
+
+void restore_comport(char *name)
+{
+  int fd;
+
+	syslog(LOG_INFO, "Restoreing attributes for serial line %s", name);
+	fd=open(name,O_RDWR);
+	if (fd == -1)
+	{
+		syslog(LOG_INFO, "dammit, couldn't open device.");
+	}
+	else
+  {
+		syslog(LOG_INFO, "alte Werte werden wiederhergestellt");
+		tcsetattr(fd, TCSANOW, &interface_org);
+		close(fd);
+		syslog(LOG_INFO, "erfolgreich wiederhergestellt");
+	}
 }
