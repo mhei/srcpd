@@ -210,7 +210,23 @@ Konfiguration
     
     xmltag: ddl
     
-    keine Parameter derzeit
+    spezifische Parameter:
+
+    enable-maerklin: Yes             # Yes/No
+    enable-nmradcc: Yes              # Yes/No
+
+    improve-nmradcc-timing: Yes      # Yes/No recommended: Yes
+    nmradcc-translation-routine: 3   # 1,2 or 3 recommended: 3
+
+    enable-usleep-patch: No          # Yes/No recommended: No
+    usleep-usecs: 500                # usecs to sleep, recommended 100 - 5000
+
+    enable-shortcut-checking: No     # Yes/No recommended: Yes, if booster supports
+    inverse-dsr-handling: No         # Yes/No recommended: Yes, if booster supports
+    shortcut-failure-delay: 500      # wait usecs before handle failure
+
+    enable-ringindicator-checking: No # Yes/No recommended: No
+
         
 Installieren und Benutzen:
 

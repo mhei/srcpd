@@ -1,11 +1,11 @@
-Version 2.0 (Winter 2003 oder spaeter)
+Version 2.0 (Winter 2004 oder spaeter)
 	- SRCP 0.8
 	- Konfiguration im XML Format
 	- Redesign: Framework mit Modulen
-	- Unterstützung der Gerätegruppe SM bei passender Hardware (IB)
+	- Unterstützung der Gerätegruppe SM bei passender Hardware
 	- viel mehr und neue Hardware, auch mehrere gleichartige 
 	  gleichzeitig: Intellibox, Märklin 605x, HSI S88,  S88 am Parallelport, 
-	  I2C
+	  I2C (Eigenbau), RS232 (via Booster)
 	- Portierung auf FreeBSD
 	- Loopbackbus für Modellbahner ohne Anlage(nanschluß), auch als
 	  Ausgangspunkt für eigene Entwicklungen geeignet (kann alles, was

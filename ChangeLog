@@ -1,3 +1,48 @@
+2004-01-13 20:03  mtrute
+
+	* Makefile.am, Makefile.in, README, config-srcpd.c, ddl.c, ddl.h,
+	ddl_maerklin.c, ddl_maerklin.h, ddl_nmra.c, ddl_nmra.h, srcp-ga.c,
+	srcp-gl.c: Minor cleanups, added DDL Code for direct signal
+	generation via RS232
+
+2003-11-18 17:26  mtrute
+
+	* srcpd.c: reordering of init...
+
+2003-11-16 12:00  mtrute
+
+	* srcp-gl.c, srcp-gl.h, srcp-info.c: More error checking for GL
+	input, please read diff
+
+2003-11-16 11:59  mtrute
+
+	* srcp-ga.c: fixed DBG Message
+
+2003-11-16 11:58  mtrute
+
+	* netserver.c: fixed format error
+
+2003-11-16 11:19  mtrute
+
+	* README, config-srcpd.c, ddl-s88.c, hsi-88.c, ib.c, m605x.c,
+	srcp-fb.c, srcp-fb.h, srcpd.c, zimo.c: Moved p_time parameter to
+	busses with FB devices, minor docu updates.
+
+2003-11-08 20:57  mborchers
+
+	* i2c-dev.c: added #define in case I2C_SLAVE is not defined (cause
+	of this problem not yet located, temporary work-around)
+
+2003-11-07 20:37  sieloff
+
+	* ib.c: Most writeByte calls with waiting time=0; readByte_ib
+	instead of readByte; Error during checking S88(wrong S88 module)
+	fixed.
+
+2003-11-05 14:24  mtrute
+
+	* ChangeLog: Updated Changelog
+
 2003-11-02 19:40  mborchers
 
 	* ib.c: major fix in init-procedure
