@@ -275,12 +275,10 @@ void check_reset_fb(void)
   struct timeval cmp_time, diff_time;
   int i;
     
-  DBG(0, DBG_DEBUG, "start with checking for resetted feedbacks");
   for (i=0;i<MAX_BUSSES;i++)
   {  
     while (getNextFB(i, &reset_fb) != -1)
     {
-//      syslog(LOG_INFO, "status of change = %d", fb[reset_fb.busnumber].fbstate[reset_fb.port].change);
       if (fb[i].fbstate[reset_fb.port].change == 0)
       {
         // drop this reset of feedback, because we've got an new impulse

@@ -54,8 +54,6 @@
 extern int testmode;
 #endif
 
-static volatile struct _GA tga[50];
-
 #if 0
 void* thr_sendrecli100(void *v)
 {

@@ -45,11 +45,11 @@ int readByte(int bus, int wait, unsigned char *the_byte)
     status = ioctl(busses[bus].fd, FIONREAD, &i);
     if(status < 0)
       DBG(bus, DBG_ERROR, "IOCTL   status: %d with errno = %d", status, errno);
-    DBG(bus, DBG_DEBUG, "on bus %d (fd = %d), there are bytes to read: %d", bus, busses[bus].fd, i);
 
     // read only, if there is really an input
     if ((i > 0) || (wait == 1))
     {
+      DBG(bus, DBG_DEBUG, "on bus %d (fd = %d), there are %d bytes to read.", bus, busses[bus].fd, i);
       i = read(busses[bus].fd, the_byte, 1);
       if(i < 0)
         DBG(bus, DBG_ERROR, "READ    status: %d with errno = %d", i, errno);
@@ -62,10 +62,10 @@ int readByte(int bus, int wait, unsigned char *the_byte)
 
 void writeByte(int bus, unsigned char *b, unsigned long msecs)
 {
-  if(busses[bus].debuglevel < 7)
+  if(busses[bus].debuglevel <= DBG_DEBUG)
   {
     write(busses[bus].fd, b, 1);
-    tcflush(busses[bus].fd, TCOFLUSH);
+    tcdrain(busses[bus].fd);
   }
   DBG(bus, DBG_DEBUG, "bus %d (FD: %d) byte sent: 0x%02x", bus, busses[bus].fd, *b);
   usleep(msecs * 1000);

@@ -140,22 +140,12 @@ int getGA(int busnumber, int addr, struct _GASTATE *a)
 
 static int initGA_default(int busnumber, int addr)
 {
-  int number_ga = get_number_ga(busnumber);
-
-  if((addr > 0) && (addr <= number_ga))
-  {
-    strcpy(ga[busnumber].gastate[addr].protocol, "P");
-    return SRCP_OK;
-  }
-  else
-  {
-    return SRCP_UNSUPPORTEDDEVICE;
-  }
+  return initGA(busnumber, addr, "P");
 }
 
 int isInitializedGA(int busnumber, int addr)
 {
-  return ga[busnumber].gastate[addr].protocol == NULL;
+  return ga[busnumber].gastate[addr].protocol != NULL;
 }
 
 /* ********************
@@ -169,7 +159,8 @@ int setGA(int busnumber, int addr, struct _GASTATE a, int info)
   {
     if(!isInitializedGA(busnumber, addr))
       initGA_default(busnumber, addr);
-    ga[busnumber].gastate[addr] = a;
+    ga[busnumber].gastate[addr].action = a.action;
+    ga[busnumber].gastate[addr].port    = a.port;
     gettimeofday(&ga[busnumber].gastate[addr].tv[ga[busnumber].gastate[addr].port], NULL);
     if (info == 1)
       queueInfoGA(busnumber, addr, ga[busnumber].gastate[addr].port, ga[busnumber].gastate[addr].action,
@@ -210,8 +201,7 @@ int infoGA(int busnumber, int addr, int port, char* msg)
     sprintf(msg, "%ld.%ld 100 INFO %d GA %d %d %d\n",
       ga[busnumber].gastate[addr].tv[port].tv_sec,
       ga[busnumber].gastate[addr].tv[port].tv_usec/1000, busnumber,
-      ga[busnumber].gastate[addr].id, ga[busnumber].gastate[addr].port,
-      ga[busnumber].gastate[addr].action);
+      addr, port, ga[busnumber].gastate[addr].action);
   }
   else
   {
@@ -223,9 +213,11 @@ int infoGA(int busnumber, int addr, int port, char* msg)
 int initGA(int busnumber, int addr, const char *protocol)
 {
   int number_ga = get_number_ga(busnumber);
-
+  DBG(busnumber, DBG_DEBUG, "init GA: %d %s", addr, protocol);
   if((addr > 0) && (addr <= number_ga))
   {
+    free(ga[busnumber].gastate[addr].protocol);
+    ga[busnumber].gastate[addr].protocol = malloc(strlen(protocol+1));
     strcpy(ga[busnumber].gastate[addr].protocol, protocol);
     return SRCP_OK;
   }

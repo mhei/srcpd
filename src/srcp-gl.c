@@ -49,11 +49,11 @@ int get_number_gl (int busnumber)
 
 static int initGL_default(int busnumber, int addr)
 {
+  DBG(busnumber, DBG_INFO, "GL default init for %d", addr);
   switch (busses[busnumber].type)
   {
     case SERVER_M605X:
-        gl[busnumber].glstate[addr].n_fs = 14;
-        gl[busnumber].glstate[addr].n_func = 1;
+        initGL(busnumber, addr, "M", 1, 14, 1);
         break;
     case SERVER_IB:
         gl[busnumber].glstate[addr].n_fs =  126;
@@ -87,7 +87,7 @@ static int calcspeed(int vs, int vmax, int n_fs)
 
 int isInitializedGL(int busnumber, int addr)
 {
-   return (gl[busnumber].glstate[addr].n_fs == 0);
+   return (gl[busnumber].glstate[addr].n_fs != 0);
 }
 
 /* Übernehme die neuen Angaben für die Lok, einige wenige Prüfungen. Lock wird ignoriert!
@@ -97,7 +97,6 @@ int queueGL(int busnumber, int addr, int dir, int speed, int maxspeed, int f,  i
 {
   struct timeval akt_time;
   int number_gl = get_number_gl(busnumber);
-  DBG(busnumber, DBG_DEBUG, "setGL für %i", addr);
   if ((addr > 0) && (addr <= number_gl) )
   {
     if (!isInitializedGL(busnumber, addr))
@@ -189,7 +188,7 @@ int getGL(int busnumber, int addr, struct _GLSTATE *l)
 }
 
 /**
-
+  info: update from hardware, not from network; queue into info mode!
 */
 int setGL(int busnumber, int addr, struct _GLSTATE l, int info)
 {
@@ -199,13 +198,16 @@ int setGL(int busnumber, int addr, struct _GLSTATE l, int info)
 
   if((addr>0) && (addr <= number_gl))
   {
-    gl[busnumber].glstate[addr] = l;
-    gettimeofday(&gl[busnumber].glstate[addr].tv, NULL);
-    if (info == 1)
+     gl[busnumber].glstate[addr].direction = l.direction;
+     gl[busnumber].glstate[addr].speed = l.speed;
+     gl[busnumber].glstate[addr].funcs = l.funcs;
+     gettimeofday(&gl[busnumber].glstate[addr].tv, NULL);
+     if (info == 1)
       queueInfoGL(busnumber, addr, gl[busnumber].glstate[addr].direction, gl[busnumber].glstate[addr].speed,
-        gl[busnumber].glstate[addr].maxspeed, (gl[busnumber].glstate[addr].funcs & 0x01) ? 1 : 0,
-        (gl[busnumber].glstate[addr].funcs & 0x02) ? 1 : 0, (gl[busnumber].glstate[addr].funcs & 0x04) ? 1 : 0,
-        (gl[busnumber].glstate[addr].funcs & 0x08) ? 1 : 0, (gl[busnumber].glstate[addr].funcs & 0x10) ? 1 : 0,
+        gl[busnumber].glstate[addr].n_fs,
+        (gl[busnumber].glstate[addr].funcs & 0x10) ? 1 : 0,
+        (gl[busnumber].glstate[addr].funcs & 0x01) ? 1 : 0, (gl[busnumber].glstate[addr].funcs & 0x02) ? 1 : 0,
+        (gl[busnumber].glstate[addr].funcs & 0x04) ? 1 : 0, (gl[busnumber].glstate[addr].funcs & 0x08) ? 1 : 0,
         &gl[busnumber].glstate[addr].tv);
     return SRCP_OK;
   }
@@ -258,7 +260,8 @@ int infoGL(int busnumber, int addr, char* msg)
   {
     sprintf(msg, "%d GL %d %d %d %d %d %d %d %d %d",
       busnumber, addr, gl[busnumber].glstate[addr].direction,
-      gl[busnumber].glstate[addr].speed, gl[busnumber].glstate[addr].maxspeed,
+      gl[busnumber].glstate[addr].speed,
+      gl[busnumber].glstate[addr].n_fs, 
       (gl[busnumber].glstate[addr].funcs & 0x10)?1:0,
       (gl[busnumber].glstate[addr].funcs & 0x01)?1:0,
       (gl[busnumber].glstate[addr].funcs & 0x02)?1:0,
@@ -353,11 +356,11 @@ int init_GL(int busnumber, int number)
 
   if(number > 0)
   {
-    gl[busnumber].glstate = malloc(number * sizeof(struct _GLSTATE));
+    gl[busnumber].glstate = malloc( (number+1) * sizeof(struct _GLSTATE));
     if (gl[busnumber].glstate == NULL)
       return 1;
     gl[busnumber].numberOfGl = number;
-    for(i=0;i<number;i++)
+    for(i=0;i<=number;i++)
     {
       bzero(&gl[busnumber].glstate[i], sizeof(struct _GLSTATE));
     }

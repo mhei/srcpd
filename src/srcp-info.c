@@ -106,6 +106,7 @@ int queueInfoGL(int busnumber, int addr, int dir, int speed, int maxspeed, int f
       akt_time->tv_sec, akt_time->tv_usec/1000, busnumber, addr,
       dir, speed, maxspeed,
       f, f1, f2, f3, f4);
+    DBG(busnumber, DBG_INFO, "data queued: %s", info_queue[in]);
     in++;
     if (in == QUEUELENGTH_INFO)
       in = 0;
@@ -129,6 +130,7 @@ int queueInfoGA(int busnumber, int addr, int port, int action, struct timeval *a
     sprintf(info_queue[in], "%ld.%ld 100 INFO %d GA %d %d %d\n",
       akt_time->tv_sec, akt_time->tv_usec/1000,
       busnumber, addr, port, action);
+    DBG(busnumber, DBG_INFO, "data queued: %s", info_queue[in]);
     in++;
     if (in == QUEUELENGTH_INFO)
       in = 0;
@@ -348,7 +350,7 @@ static int addNewClient(int Socket, int sessionid)
 // if it was last client, cancel thread
 static int removeClient(int client)
 {
-  DBG(0, DBG_DEBUG, "removeClient %ld", client);
+  DBG(0, DBG_DEBUG, "removeClient %ld: %ld %ld", client, socketOfClients[client], sessionOfClients[client]);
   pthread_mutex_lock(&queue_mutex_client);
   if (number_of_clients == 1)
   {
@@ -434,8 +436,6 @@ void sendInfos(int current)
     int busnumber;
     int value;
     int number;
-    struct _GASTATE gatmp;
-    struct _GLSTATE gltmp;
 
     reply[0] = '\0';
 
@@ -446,52 +446,37 @@ void sendInfos(int current)
       // send all needed generic locomotivs
       gettimeofday(&start_time, NULL);
       number = get_number_gl(busnumber);
-      DBG(busnumber, DBG_DEBUG, "send all locomotivs from busnumber %d to new client", busnumber);
+      DBG(busnumber, DBG_DEBUG, "send all (max. %d) locomotivs from busnumber %d to new client", number, busnumber);
       for (i = 1; i <= number; i++)
       {
-        if(!isInitializedGL(busnumber, i))
+        if(isInitializedGL(busnumber, i))
         {
-          #warning complete me
-          getGL(busnumber, i, &gltmp);
-          if (compareTime(gltmp.tv, start_time))
-          {
-            sprintf(temp, "%ld.%ld 100 INFO %d GL %d %d %d %d %d %d %d %d\n",
-              gltmp.tv.tv_sec, gltmp.tv.tv_usec/1000,
-              busnumber, i,
-              gltmp.direction, gltmp.speed, gltmp.maxspeed,
-              0, 0, 0, 0);
-            strcat(reply, temp);
-            if (strlen(reply) > 900)
+            infoGL(busnumber, i, reply);
+            if (strlen(reply) > 0)
             {
               write(socketOfClients[current], reply, strlen(reply));
               reply[0] = '\0';
             }
-          }
         }
       }
 
       // send all needed generic assesoires
       gettimeofday(&start_time, NULL);
       number = get_number_ga(busnumber);
-      DBG(busnumber, DBG_DEBUG,  "send all assesoirs from busnumber %d to new client", busnumber);
+      DBG(busnumber, DBG_DEBUG,  "send all (max. %d) assesoirs from busnumber %d to new client", number, busnumber);
       for (i = 1; i <= number; i++)
       {
-        if(!isInitializedGA(busnumber, i))
+        if(isInitializedGA(busnumber, i))
         {
-          getGA(busnumber, i, &gatmp);
-          value = gatmp.port;
-          if (compareTime(gatmp.tv[value], start_time))
-          {
-            sprintf(temp, "%ld.%ld 100 INFO %d GA %d %d %d\n",
-              gatmp.tv[value].tv_sec, gatmp.tv[value].tv_usec/1000,
-              busnumber, i, value, gatmp.action);
-            strcat(reply, temp);
-            if (strlen(reply) > 900)
-            {
-              write(socketOfClients[current], reply, strlen(reply));
-              reply[0] = '\0';
-            }
-          }
+          DBG(busnumber, DBG_DEBUG, "GA initialized: %d", i);
+          infoGA(busnumber, i, 0, reply);
+          if (strlen(reply) > 0)
+            write(socketOfClients[current], reply, strlen(reply));
+          infoGA(busnumber, i, 1, reply);
+          if (strlen(reply) > 0)
+            write(socketOfClients[current], reply, strlen(reply));
+
+          reply[0] = '\0';
         }
       }
 
@@ -562,7 +547,6 @@ void *thr_doInfoClient(void *v)
 {
   while(1)
   {
-    DBG(0, DBG_DEBUG, "I'm living with %d clients and %d entries in queue", number_of_clients, queueLengthInfo());
     if (number_of_clients == 0)
     {
       // no client is present, also wait a second

@@ -143,18 +143,23 @@ static int init_lineM6051(int bus) {
     return -1;
   }
   tcgetattr(FD, &interface);
-  interface.c_oflag = ONOCR | ONLRET;
-  interface.c_oflag &= ~(OLCUC | ONLCR | OCRNL);
+#ifdef linux
   interface.c_cflag = CS8 | CRTSCTS;
   interface.c_cflag &= ~(CSTOPB | PARENB);
+  interface.c_oflag = ONOCR | ONLRET;
+  interface.c_oflag &= ~(OLCUC | ONLCR | OCRNL);
   interface.c_iflag = IGNBRK | IGNPAR;
   interface.c_iflag &= ~(ISTRIP | IXON | IXOFF | IXANY);
   interface.c_lflag = NOFLSH | IEXTEN;
   interface.c_lflag &= ~(ISIG | ICANON | ECHO | ECHOE | TOSTOP | PENDIN);
   cfsetospeed(&interface, B2400);
   cfsetispeed(&interface, B2400);
-  tcsetattr(FD, TCSAFLUSH, &interface);
-
+#else
+  interface.c_ispeed = interface.c_ospeed = B2400;
+  interface.c_cflag = CREAD  | HUPCL | CS8 | CSTOPB | CRTSCTS;
+  cfmakeraw(&interface);
+#endif
+  tcsetattr(FD, TCSAFLUSH|TCSANOW, &interface);
   return FD;
 }
 
@@ -237,18 +242,13 @@ void* thr_sendrec_M6051(void *v)
           SendByte = addr;
           writeByte(bus, &SendByte, pause_between_cmd);
         }
-        /* Geschwindigkeit und Licht setzen, erst recht nach Richtungswechsel */
-        if ((gltmp.speed != glakt.speed) ||
-           ((gltmp.funcs & 0x10) != (glakt.funcs & 0x10)) ||
-            (gltmp.direction != glakt.direction))
-        {
-          c = gltmp.speed + 16 * ((gltmp.funcs & 0x10) ? 1 : 0);
-          /* jetzt aufpassen: n_fs erzwingt ggf. mehrfache Ansteuerungen des Dekoders */
-          /* das Protokoll ist da wirklich eigenwillig, vorerst ignoriert!            */
-          writeByte(bus, &c, pause_between_bytes);
-          SendByte = addr;
-          writeByte(bus, &SendByte, pause_between_cmd);
-        }
+        /* Geschwindigkeit und Licht setzen, erst recht nach Richtungswechsel  */
+        c = gltmp.speed + 16 * ((gltmp.funcs & 0x10) ? 1 : 0);
+        /* jetzt aufpassen: n_fs erzwingt ggf. mehrfache Ansteuerungen des Dekoders */
+        /* das Protokoll ist da wirklich eigenwillig, vorerst ignoriert!            */
+        writeByte(bus, &c, pause_between_bytes);
+        SendByte = addr;
+        writeByte(bus, &SendByte, pause_between_cmd);
         /* Erweiterte Funktionen des 6021 senden, manchmal */
         if (( (busses[bus].flags & M6020_MODE) == 0) && (gltmp.funcs != glakt.funcs))
         {
@@ -257,7 +257,7 @@ void* thr_sendrec_M6051(void *v)
           SendByte = addr;
           writeByte(bus, &SendByte, pause_between_cmd);
         }
-        setGL(bus, addr, gltmp, 0);
+        setGL(bus, addr, gltmp, 1);
       }
       busses[bus].watchdog = 4;
     }
@@ -270,7 +270,7 @@ void* thr_sendrec_M6051(void *v)
       if (gatmp.action == 1)
       {
         gettimeofday(&gatmp.tv[gatmp.port], NULL);
-        setGA(bus, addr, gatmp, 0);
+        setGA(bus, addr, gatmp, 1);
         if (gatmp.activetime >= 0)
         {
           gatmp.activetime = (gatmp.activetime > ga_min_active_time) ?
@@ -290,12 +290,12 @@ void* thr_sendrec_M6051(void *v)
       }
       if ((gatmp.action == 0) && ( (M6051_DATA *) busses[bus].driverdata)  -> cmd32_pending)
       {
-        // fprintf(stderr, "32 abzusetzen\n");
         SendByte = 32;
         writeByte(bus, &SendByte, pause_between_cmd);
         ( (M6051_DATA *) busses[bus].driverdata)  -> cmd32_pending = 0;
+        setGA(bus, addr, gatmp, 1);
       }
-      setGA(bus, addr, gatmp, 0);
+
       busses[bus].watchdog = 6;
     }
     busses[bus].watchdog = 7;
