@@ -839,17 +839,16 @@ void *thr_refresh_cycle(void *v) {
                 write(busses[busnumber].fd,NMRA_idle_data,13);
              packet_type=queue_get(&addr,packet,&packet_size);
          }
-      }
-      else {                          /* no commands? Then we do a refresh */
+      } else {                          /* no commands? Then we do a refresh */
          if (__DDL->CHECKSHORT) if (checkShortcut(busnumber)==1) {mkclean(busnumber);return NULL;}
          if (__DDL->RI_CHECK)   if (checkRingIndicator(busnumber)==1) {mkclean(busnumber);return NULL;}
          gettimeofday(&(__DDL->tv2), &(__DDL->tz));
          if (compute_delta(__DDL->tv1,__DDL->tv2)>100000) {        /* but not every time! */
             refresh_loco(busnumber);
             gettimeofday(&(__DDL->tv1), &(__DDL->tz));
-         }
-         else
+         } else {
             nanosleep(&rqtp_sleep, &rmtp);
+         }
       }
    }
 
@@ -881,7 +880,7 @@ int init_ga_DDL(struct _GASTATE *ga) {
 }
 
 
-void readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, int busnumber)
+int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
   xmlNodePtr child = node->children;
 
@@ -1025,6 +1024,7 @@ void readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     __DDL->number_gl = 0;
     DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
   }
+  return(1);
 }
 
 int term_bus_DDL(int bus)
@@ -1052,14 +1052,21 @@ void* thr_sendrec_DDL (void *v)
   struct _GASTATE gatmp;
   int addr;
   int bus = (int) v;
+  char msg[110];
 
   DBG(bus, DBG_INFO, "DDL started, bus #%d, %s", bus, busses[bus].device);
 
   busses[bus].watchdog = 1;
 
   while (1) {
+    if(short_detected>0) {
+        busses[bus].power_changed=1;
+        strcpy(busses[bus].power_msg, "SHORT DETECTED");
+        infoPower(bus, msg);
+        queueInfoMessage(msg);
+    }
     if(busses[bus].power_changed==1) {
-      char msg[110];
+
       if (busses[bus].power_state==0)
         stop_voltage(bus);
       if (busses[bus].power_state==1)
@@ -1083,7 +1090,7 @@ void* thr_sendrec_DDL (void *v)
 
         unqueueNextGL(bus, &gltmp);
 	p = gltmp.protocol;
-	pv = gltmp.protocolversion;
+	pv = gltmp.protocolversion; // need to compute from the n_fs and n_func parameters
 	addr = gltmp.id;
 	speed = gltmp.speed;
 	direction = gltmp.direction;
@@ -1091,6 +1098,7 @@ void* thr_sendrec_DDL (void *v)
 	switch(p) {
 	    case 'M': /* Motorola Codes */
 		if(speed==1) speed++; /* Never send FS1 */
+                if(direction == 2) speed = 0;
 		switch(pv) {
 		    case 1: comp_maerklin_1(bus, addr, gltmp.direction, speed, gltmp.funcs & 0x01);
 			    break;
@@ -1183,7 +1191,22 @@ void* thr_sendrec_DDL (void *v)
 		break;
           }
           setGA(bus, addr, gatmp);
-          busses[bus].watchdog = 6;
+          busses[bus].watchdog = 5;
+          if(gatmp.activetime>=0) {
+            usleep(1000L * (unsigned long) gatmp.activetime);
+            gatmp.action = 0;
+            DBG(bus, DBG_DEBUG, "delayed GA command: %c (%x) %d", p, p, addr);
+	    switch(p) {
+	     case 'M': /* Motorola Codes */
+		comp_maerklin_ms(bus, addr, gatmp.port, gatmp.action);
+		break;
+	     case 'N':
+		comp_nmra_accessory(bus, addr, gatmp.port, gatmp.action);
+		break;
+            }
+            setGA(bus, addr, gatmp);
+      }
+
     }
     usleep(1000);
   }

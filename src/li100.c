@@ -47,7 +47,7 @@ int cmpTime(struct timeval *t1, struct timeval *t2);
 static int readAnswer_LI100(int busnumber, unsigned char *str);
 static int initLine_LI100(int busnumber);
 
-void readConfig_LI100(xmlDocPtr doc, xmlNodePtr node, int busnumber)
+int readConfig_LI100(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
   xmlNodePtr child = node->children;
   DBG(busnumber, DBG_INFO, "reading configuration for LI100 at bus %d", busnumber);
@@ -96,6 +96,7 @@ void readConfig_LI100(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     }
     child = child->next;
   }
+  return(1);
 }
 /**
  * initGL: modifies the gl data used to initialize the device

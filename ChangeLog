@@ -1,3 +1,13 @@
+2005-01-08  Matthias Trute <mtrute@users.sourceforge.net>
+
+ * XML configuration ignores property number for definition of
+   busses. They are simply numbered as they appear in the configuration.
+   The API for the register_bus_XX functions has changed to reflect this.
+ * DDL changes (mostly untested but should work)
+    - short detection
+    - automatic deactivation of GA after specified delay
+    - emergency stop for GL (M protocols)
+ 
 2005-01-02  Frank Schmischke  <frank.schmischke@t-online.de>
 
  * ib.c: use of watchdog added

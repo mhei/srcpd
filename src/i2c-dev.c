@@ -43,10 +43,10 @@
 
 #define __i2cdev ((I2CDEV_DATA*)busses[busnumber].driverdata)
 
-void readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, int busnumber)
+int readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
     xmlNodePtr child = node->children;
-	
+
 	busses[busnumber].type = SERVER_I2C_DEV;
     busses[busnumber].init_func = &init_bus_I2C_DEV;
     busses[busnumber].term_func = &term_bus_I2C_DEV;
@@ -76,62 +76,62 @@ void readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 	    free(txt);
 	}
 	*/
-	
+
 	if (strcmp(child->name, "first_ga_bus") == 0) {
 	    char *txt =
 		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
 	    __i2cdev->first_ga_bus = atoi(txt);
 	    free(txt);
 	}
-	
+
 	if (strcmp(child->name, "last_ga_bus") == 0) {
 	    char *txt =
 		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
 	    __i2cdev->last_ga_bus = atoi(txt);
 	    free(txt);
 	}
-	
+
 	if (strcmp(child->name, "port_swap") == 0) {
 	    char *txt =
 		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
 	    __i2cdev->port_swap = atoi(txt);
 	    free(txt);
 	}
-	
+
 	if (strcmp(child->name, "first_fb_bus") == 0) {
 	    char *txt =
 		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
 	    __i2cdev->first_ga_bus = atoi(txt);
 	    free(txt);
 	}
-	
+
 	if (strcmp(child->name, "last_fb_bus") == 0) {
 	    char *txt =
 		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
 	    __i2cdev->last_ga_bus = atoi(txt);
 	    free(txt);
 	}
-	
+
 	child = child->next;
     }				// while
 
-	
+
 	// check if config for GA is valid
-	if ((__i2cdev->first_ga_bus < 1) && (__i2cdev->last_ga_bus < 1) && 
-		(__i2cdev->last_ga_bus < __i2cdev->first_ga_bus)) 
+	if ((__i2cdev->first_ga_bus < 1) && (__i2cdev->last_ga_bus < 1) &&
+		(__i2cdev->last_ga_bus < __i2cdev->first_ga_bus))
 	{
 		__i2cdev->first_ga_bus = 0;
 		__i2cdev->last_ga_bus = 0;
 		__i2cdev->number_ga = 0;
 	} else {
 		__i2cdev->number_ga = 64 * (1 + __i2cdev->last_ga_bus - __i2cdev->first_ga_bus);
-		
+
 	}
-	
+
 	// check if config for FB is valid
 	// FIXME: more complex check for overlaping with GA
-	if ( (__i2cdev->first_fb_bus < 1) && (__i2cdev->last_fb_bus < 1) && 
-		(__i2cdev->last_fb_bus < __i2cdev->first_fb_bus) ) 
+	if ( (__i2cdev->first_fb_bus < 1) && (__i2cdev->last_fb_bus < 1) &&
+		(__i2cdev->last_fb_bus < __i2cdev->first_fb_bus) )
 	{
 		__i2cdev->first_fb_bus = 0;
 		__i2cdev->last_fb_bus = 0;
@@ -139,7 +139,7 @@ void readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 	} else {
 		__i2cdev->number_fb = 16 * (1 + __i2cdev->last_ga_bus - __i2cdev->last_ga_bus);
 	}
-	
+
 	// init the stuff
     if (init_GA(busnumber, __i2cdev->number_ga)) {
 		__i2cdev->number_ga = 0;
@@ -152,11 +152,12 @@ void readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 		DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
     }
 	*/
-	
+
     if (init_FB(busnumber, __i2cdev->number_fb)) {
 		__i2cdev->number_fb = 0;
 		DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
     }
+    return(1);
 }
 
 
@@ -182,23 +183,23 @@ int init_lineI2C_DEV(int bus)
 
 void reset_ga(int busnumber, int busfd) {
 	// resets all GA devices on all multiplexed busses
-	
+
 	int i, multiplexer_adr;
 	int first_ga_bus, last_ga_bus;
 	char buf = 0xff;
-	
+
 	first_ga_bus = __i2cdev->first_ga_bus;
 	last_ga_bus = __i2cdev->last_ga_bus;
-	
+
 	if (__i2cdev->number_ga > 0) {
-		
-		for (multiplexer_adr = first_ga_bus; 
-				multiplexer_adr <= last_ga_bus; 
-				multiplexer_adr++) 
+
+		for (multiplexer_adr = first_ga_bus;
+				multiplexer_adr <= last_ga_bus;
+				multiplexer_adr++)
 		{
-		
+
 			select_bus(multiplexer_adr, busfd, busnumber);
-			
+
 			// first PCF 8574 P
 			for (i = 64; i <= 78; i++) {
 				ioctl(busfd, I2C_SLAVE, (i >> 1));
@@ -212,29 +213,29 @@ void reset_ga(int busnumber, int busfd) {
 				writeByte(busnumber, buf, 1);
 				i++;
 			}
-		
+
 		}
-		
+
 		select_bus(0, busfd, busnumber);
-		
+
 	}
-	
+
 }
 
 void select_bus(int mult_busnum, int busfd, int busnumber) {
 
 	int addr, value=0;
-	
+
 	//addr = 224 + (2 * (int) (mult_busnum / 9));
 	addr = 224;
 	if (mult_busnum > 8) mult_busnum = 0;
-	
+
 	if (busses[busnumber].power_state == 1) value = 64;
 	value = value | (mult_busnum % 9);
-	
+
 	ioctl(busfd, I2C_SLAVE, (addr >> 1));
 	writeByte(busnumber, value, 1);
-	
+
 }
 
 int term_bus_I2C_DEV(int bus)
@@ -252,7 +253,7 @@ int term_bus_I2C_DEV(int bus)
  */
 int init_bus_I2C_DEV(int i)
 {
-	
+
 	int old_power_state = busses[i].power_state;
 
     DBG(i, DBG_INFO, "i2c-dev init: bus #%d, debug %d", i,
@@ -260,24 +261,24 @@ int init_bus_I2C_DEV(int i)
     if (busses[i].debuglevel < 6) {
 		busses[i].fd = init_lineI2C_DEV(i);
 		DBG(i, DBG_INFO, "i2c-dev init: reseting devices");
-		
+
 		// enable POWER for the bus, to reset the devices
 		busses[i].power_state = 1;
 		reset_ga(i, busses[i].fd);
 		// reset to old state
 		busses[i].power_state = old_power_state;
 		select_bus(0, busses[i].fd, i);
-		
+
     } else {
 		busses[i].fd = -1;
     }
-	
+
     DBG(i, DBG_INFO, "i2c-dev init done");
     return 0;
 }
 
 /*
- * 
+ *
  * The main worker-thread for the i2c-dev device
  * Enters an endless loop that waits for commands and
  * executes them.
@@ -298,27 +299,27 @@ void *thr_sendrec_I2C_DEV(void *v)
 
     int i2c_addr = 0, i2c_base_addr = 0;
     char i2c_val = 0, i2c_oldval = 0;
-	
+
 	int mult_busnum;
 
     DBG(bus, DBG_INFO, "i2c-dev started, bus #%d, %s", bus,
 	busses[bus].device);
 
     busses[bus].watchdog = 1;
-	
+
 	// process POWER changes
 	if (busses[bus].power_changed == 1) {
 		// something happend!
-		
+
 		char msg[1000];
-		
+
 		// dummy select to change power state
 		select_bus(0, busses[bus].fd, bus);
 		busses[bus].power_changed = 0;
 		infoPower(bus, msg);
 		queueInfoMessage(msg);
 	}
-	
+
     while (1) {
         // do nothing, if power off
         if(busses[bus].power_state==0) {
@@ -334,18 +335,18 @@ void *thr_sendrec_I2C_DEV(void *v)
 	    addr = gatmp.id;
 	    port = gatmp.port;
 	    value = gatmp.action;
-		
+
 		// some error-corrections
 		if (port > 1) port = 1;
 		if (value > 1) value = 1;
-		
+
 		// port-swap feature
 		if (port_swap) {
 			if (port == 1) port = 0; else port = 1;
 		}
-		
+
 	    // address-calculation
-		
+
 		// calc and select multiplexed bus
 	    mult_busnum = 1 + (addr / 65);
 		select_bus(mult_busnum, busses[bus].fd, bus);
@@ -356,8 +357,8 @@ void *thr_sendrec_I2C_DEV(void *v)
 	    // PFC 8574 AP
 	    if ((addr % 65) >= 33)
 			i2c_base_addr = 112;
-		
-		
+
+
 		// first project all higher multiplexed busses to the first bus
 		i2c_addr = addr - (64 * (mult_busnum-1));
 		// now project all PCF-8574 AP addresses to PCF-8574 P addresses
@@ -366,8 +367,8 @@ void *thr_sendrec_I2C_DEV(void *v)
 		i2c_addr = 2 * ( (int)((i2c_addr-1)/4) );
 		// last step: add the base-address
 		i2c_addr = i2c_base_addr + i2c_addr;
-		
-		DBG(bus, DBG_DEBUG, "i2c_base_addr = %d, i2c_addr = %d on multiplexed bus #%d", 
+
+		DBG(bus, DBG_DEBUG, "i2c_base_addr = %d, i2c_addr = %d on multiplexed bus #%d",
 			i2c_base_addr, i2c_addr, mult_busnum);
 
 	    // calculate bit-value from command

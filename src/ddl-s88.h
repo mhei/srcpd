@@ -19,7 +19,7 @@
 
 #include <libxml/tree.h>
 //maximal number of bytes read from one s88-bus
-#define S88_MAXPORTSB 62 
+#define S88_MAXPORTSB 62
 //maximal number of s88-busses
 #define S88_MAXBUSSES 4
 //maximal number of ports
@@ -41,7 +41,7 @@ typedef struct _DDL_S88_DATA {
 
 } DDL_S88_DATA;
 
-void readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber);
+int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber);
 
 int init_bus_S88(int);
 int term_bus_S88(int);

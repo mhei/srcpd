@@ -11,23 +11,23 @@
 #define _I2C_DEV_H
 
 typedef struct _I2CDEV_DATA {
-	
+
     int number_ga;
 	int first_ga_bus;
 	int last_ga_bus;
 	int port_swap;
- 
+
  	int number_gl;
-	
+
 	int number_fb;
 	int first_fb_bus;
 	int last_fb_bus;
- 
+
 	int ga_min_active_time;
-	
+
 } I2CDEV_DATA;
 
-void readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, int busnumber);
+int readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, int busnumber);
 int init_lineI2C_DEV(int );
 int init_bus_I2C_DEV(int );
 int term_bus_I2C_DEV(int );

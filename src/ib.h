@@ -33,7 +33,7 @@ typedef struct _IB_DATA
     int emergency_on_ib;
 } IB_DATA;
 
-void readConfig_IB(xmlDocPtr doc, xmlNodePtr node,  int busnumber);
+int readConfig_IB(xmlDocPtr doc, xmlNodePtr node,  int busnumber);
 
 
 int init_bus_IB(int busnumber);
