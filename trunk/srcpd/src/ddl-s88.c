@@ -28,7 +28,7 @@
 #include <dev/ppbus/ppi.h>
 #include <dev/ppbus/ppbconf.h>
 #else
-#error Dieser Treiber ist fuer Ihr Betriebssystem nicht geeignet
+#error This driver is not usable on your operation system. Sorry.
 #endif
 #endif
 
@@ -79,7 +79,7 @@ const char BIT_VALUES[] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
 
 #define __ddl_s88 ((DDL_S88_DATA *) busses[busnumber].driverdata)
 
-void readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
+int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
   int i;
   xmlNodePtr child = node->children;
@@ -197,7 +197,7 @@ void readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     __ddl_s88->number_fb[3] = 0;
     DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
   }
-  busnumber += 4;
+  return(4);
 }
 
 /****************************************************************

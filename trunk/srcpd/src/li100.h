@@ -37,7 +37,7 @@ typedef struct _LI100_DATA
     int code_zentrale;
 } LI100_DATA;
 
-void readConfig_LI100(xmlDocPtr doc, xmlNodePtr node,  int busnumber);
+int readConfig_LI100(xmlDocPtr doc, xmlNodePtr node,  int busnumber);
 
 int init_bus_LI100(int busnumber);
 int term_bus_LI100(int busnumber);

@@ -9,7 +9,7 @@ typedef struct _zimo_DATA {
     int number_fb;
 } zimo_DATA;
 
-void readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, int busnumber);
+int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, int busnumber);
 int init_linezimo(char *);
 int init_bus_zimo(int );
 int term_bus_zimo(int );

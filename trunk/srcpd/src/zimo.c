@@ -18,7 +18,7 @@
 
 #define __zimo ((zimo_DATA*)busses[busnumber].driverdata)
 
-void readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, int busnumber)
+int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
   xmlNodePtr child = node->children;
 
@@ -86,6 +86,7 @@ void readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     __zimo->number_fb = 0;
     DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
   }
+  return(1);
 }
 
 int init_linezimo (char *name)

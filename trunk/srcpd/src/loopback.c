@@ -3,7 +3,7 @@
 /* loopback: simple Busdriver without any hardware.
  *
  */
- 
+
 #include "stdincludes.h"
 
 #include "config-srcpd.h"
@@ -19,7 +19,7 @@
 
 #define __loopback ((LOOPBACK_DATA*)busses[busnumber].driverdata)
 
-void readconfig_loopback(xmlDocPtr doc, xmlNodePtr node, int busnumber)
+int readconfig_loopback(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
   xmlNodePtr child = node->children;
 
@@ -28,7 +28,7 @@ void readconfig_loopback(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   busses[busnumber].term_func = &term_bus_Loopback;
   busses[busnumber].thr_func = &thr_sendrec_Loopback;
   busses[busnumber].init_gl_func = &init_gl_Loopback;
-  busses[busnumber].init_ga_func = &init_ga_Loopback;  
+  busses[busnumber].init_ga_func = &init_ga_Loopback;
 
   busses[busnumber].driverdata = malloc(sizeof(struct _LOOPBACK_DATA));
   strcpy(busses[busnumber].description, "GA GL FB POWER LOCK DESCRIPTION");
@@ -71,7 +71,7 @@ void readconfig_loopback(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     __loopback->number_gl = 0;
     DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
   }
-  
+
   if(init_GA(busnumber, __loopback->number_ga))
   {
     __loopback->number_ga = 0;
@@ -83,6 +83,7 @@ void readconfig_loopback(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     __loopback->number_fb = 0;
     DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
   }
+  return(1);
 }
 
 int init_lineLoopback (char *name)
@@ -100,7 +101,7 @@ int term_bus_Loopback(int bus)
 
 /**
  * initGL: modifies the gl data used to initialize the device
- 
+
  */
 int init_gl_Loopback(struct _GLSTATE *gl) {
     switch(gl->protocol) {
@@ -110,12 +111,12 @@ int init_gl_Loopback(struct _GLSTATE *gl) {
 	    break;
 	case 'M':
 	  switch(gl->protocolversion) {
-	    case 1: 
+	    case 1:
 		return ( gl -> n_fs == 14) ? SRCP_OK : SRCP_WRONGVALUE;
 		break;
 	    case 2:
-		return ( (gl -> n_fs == 14) || 
-		         (gl -> n_fs == 27) || 
+		return ( (gl -> n_fs == 14) ||
+		         (gl -> n_fs == 27) ||
 			 (gl -> n_fs == 28) ) ? SRCP_OK : SRCP_WRONGVALUE;
 		break;
     	  }
@@ -123,12 +124,12 @@ int init_gl_Loopback(struct _GLSTATE *gl) {
           break;
 	case 'N':
           switch(gl->protocolversion) {
-	    case 1: 
-		return ( (gl -> n_fs == 14) || 
+	    case 1:
+		return ( (gl -> n_fs == 14) ||
 			 (gl -> n_fs == 128) ) ? SRCP_OK : SRCP_WRONGVALUE;
 		break;
 	    case 2:
-		return ( (gl -> n_fs == 14) || 
+		return ( (gl -> n_fs == 14) ||
 			 (gl -> n_fs == 128) ) ? SRCP_OK : SRCP_WRONGVALUE;
 		break;
     	  }
@@ -173,7 +174,7 @@ void* thr_sendrec_Loopback (void *v)
   struct _GASTATE gatmp;
   int addr;
   int bus = (int) v;
-  
+
   DBG(bus, DBG_INFO, "loopback started, bus #%d, %s", bus, busses[bus].device);
 
   busses[bus].watchdog = 1;

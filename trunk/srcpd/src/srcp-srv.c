@@ -1,7 +1,7 @@
 /* $Id$ */
 
-/* 
- * Vorliegende Software unterliegt der General Public License, 
+/*
+ * Vorliegende Software unterliegt der General Public License,
  * Version 2, 1991. (c) Matthias Trute, 2000-2001.
  *
  */
@@ -18,7 +18,7 @@ int server_shutdown_state;
 
 #define __srv ((SERVER_DATA*)busses[busnumber].driverdata)
 
-void readconfig_server(xmlDocPtr doc, xmlNodePtr node, int busnumber)
+int readconfig_server(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
   xmlNodePtr child = node->children;
   DBG(busnumber, DBG_INFO, "bus %d starting configuration child %s", busnumber, node->name);
@@ -34,7 +34,7 @@ void readconfig_server(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   __srv->groupname = NULL;
   __srv->username = NULL;
   __srv->listenip = NULL;
-  
+
   while (child)
   {
     if (strncmp(child->name, "text", 4) == 0)
@@ -93,6 +93,7 @@ void readconfig_server(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     }
     child = child->next;
   } /* while */
+  return(1);
 }
 
 
@@ -142,9 +143,9 @@ int infoSERVER( char *msg) {
     sprintf(msg, "%lu.%.3lu 100 INFO 0 SERVER RESETTING\n", akt_time.tv_sec, akt_time.tv_usec/1000);
   } else {
     if(server_shutdown_state==1) {
-       sprintf(msg, "%lu.%.3lu 100 INFO 0 SERVER TERMINATING\n", akt_time.tv_sec, akt_time.tv_usec/1000);      
+       sprintf(msg, "%lu.%.3lu 100 INFO 0 SERVER TERMINATING\n", akt_time.tv_sec, akt_time.tv_usec/1000);
     } else {
-       sprintf(msg, "%lu.%.3lu 100 INFO 0 SERVER RUNNING\n", akt_time.tv_sec, akt_time.tv_usec/1000);            
+       sprintf(msg, "%lu.%.3lu 100 INFO 0 SERVER RUNNING\n", akt_time.tv_sec, akt_time.tv_usec/1000);
     }
   }
   return SRCP_OK;

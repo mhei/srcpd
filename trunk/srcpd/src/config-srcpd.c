@@ -58,43 +58,22 @@ int bus_has_devicegroup(int bus, int dg) {
   }
   return 0;
 }
-// check that a real server is running on bus greather then zero
-static void check_bus(int busnumber)
-{
- if (busnumber == 0)
- {
-   printf("Sorry, at bus 0 is only type=server allowed!\n");
-   exit(1);
- }
-}
-
-static int register_bus(xmlDocPtr doc, xmlNodePtr node)
+static int register_bus(int busnumber, xmlDocPtr doc, xmlNodePtr node)
 {
  xmlNodePtr child;
- char *proptxt;
- int busnumber;
  int found;
+ int current_bus = busnumber;
 
  if (strcmp(node->name, "bus"))
-   return 1; // only bus definitions
+   return busnumber;
 
- proptxt = xmlGetProp(node, "number");
- busnumber = atoi(proptxt);
- free(proptxt);
  if (busnumber >= MAX_BUSSES || busnumber < 0)
  {
-   // you need to recompile
-   return 1;
+   printf("Sorry, you have used an invalid busnumber (%d). If this is greater than or equal to %d.\n", busnumber, MAX_BUSSES);
+   printf("you need to recompile the sources. Exiting now\n");
+   return busnumber;
  }
 
- if (busnumber <= num_busses)
- {
-   printf("Sorry, there is an error in your srcpd.conf !\n");
-   printf("bus %i is following bus %i, this is not allowed!",
-     busnumber, num_busses);
-   exit(1);
- }
- busses[busnumber].number = busnumber;
  num_busses = busnumber;
  child = node->children;
  while (child)
@@ -111,7 +90,7 @@ static int register_bus(xmlDocPtr doc, xmlNodePtr node)
    {
      if (busnumber == 0)
      {
-       readconfig_server(doc, child, busnumber);
+       busnumber += readconfig_server(doc, child, busnumber);
        found = 1;
      }
      else
@@ -122,58 +101,49 @@ static int register_bus(xmlDocPtr doc, xmlNodePtr node)
    /* but the most important are not ;=)  */
    if (strcmp(child->name, "zimo") == 0)
    {
-     check_bus(busnumber);
-     readconfig_zimo(doc, child, busnumber);
+     busnumber += readconfig_zimo(doc, child, busnumber);
      found = 1;
    }
    if (strcmp(child->name, "ddl") == 0)
    {
-     check_bus(busnumber);
-     readconfig_DDL(doc, child, busnumber);
+     busnumber += readconfig_DDL(doc, child, busnumber);
      found = 1;
    }
 
    if (strcmp(child->name, "m605x") == 0)
    {
-     check_bus(busnumber);
-     readconfig_m605x(doc, child, busnumber);
+     busnumber += readconfig_m605x(doc, child, busnumber);
      found = 1;
    }
    if (strcmp(child->name, "intellibox") == 0)
    {
-     check_bus(busnumber);
-     readConfig_IB(doc, child, busnumber);
+     busnumber += readConfig_IB(doc, child, busnumber);
      found = 1;
    }
    if (strcmp(child->name, "loopback") == 0)
    {
-     check_bus(busnumber);
-     readconfig_loopback(doc, child, busnumber);
+     busnumber += readconfig_loopback(doc, child, busnumber);
      found = 1;
    }
    if (strcmp(child->name, "ddl-s88") == 0)
    {
-     check_bus(busnumber);
-     readconfig_DDL_S88(doc, child, busnumber);
+     busnumber += readconfig_DDL_S88(doc, child, busnumber);
      found = 1;
    }
    if (strcmp(child->name, "hsi-88") == 0)
    {
-     check_bus(busnumber);
-     readConfig_HSI_88(doc, child, busnumber);
+     busnumber += readConfig_HSI_88(doc, child, busnumber);
      found = 1;
    }
    if (strcmp(child->name, "li100") == 0)
    {
-     check_bus(busnumber);
-     readConfig_LI100(doc, child, busnumber);
+     busnumber += readConfig_LI100(doc, child, busnumber);
      found = 1;
    }
    if (strcmp(child->name, "i2c-dev") == 0)
    {
-     check_bus(busnumber);
 #ifdef linux
-     readconfig_I2C_DEV(doc, child, busnumber);
+     busnumber += readconfig_I2C_DEV(doc, child, busnumber);
      found = 1;
 #else
   printf("Sorry, I2C-DEV only available on Linux (yet)\n");
@@ -183,37 +153,37 @@ static int register_bus(xmlDocPtr doc, xmlNodePtr node)
    if (strcmp(child->name, "device") == 0)
    {
      found = 1;
-     free(busses[busnumber].device);
-     busses[busnumber].device = malloc(strlen(txt) + 1);
-     if (busses[busnumber].device == NULL)
+     free(busses[current_bus].device);
+     busses[current_bus].device = malloc(strlen(txt) + 1);
+     if (busses[current_bus].device == NULL)
      {
        printf("cannot allocate memory\n");
        exit(1);
      }
-     strcpy(busses[busnumber].device, txt);
+     strcpy(busses[current_bus].device, txt);
    }
    if (strcmp(child->name, "verbosity") == 0)
    {
      found = 1;
-     busses[busnumber].debuglevel = atoi(txt);
+     busses[current_bus].debuglevel = atoi(txt);
    }
    if (strcmp(child->name, "use_watchdog") == 0)
    {
      found = 1;
      if (strcmp(txt, "yes") == 0)
-       busses[busnumber].flags |= USE_WATCHDOG;
+       busses[current_bus].flags |= USE_WATCHDOG;
    }
    if (strcmp(child->name, "restore_device_settings") == 0)
    {
      found = 1;
      if (strcmp(txt, "yes") == 0)
-       busses[busnumber].flags |= RESTORE_COM_SETTINGS;
+       busses[current_bus].flags |= RESTORE_COM_SETTINGS;
    }
    if (strcmp(child->name, "auto_power_on") == 0)
    {
      found = 1;
      if (strcmp(txt, "yes") == 0)
-          busses[busnumber].flags |= AUTO_POWER_ON ;
+          busses[current_bus].flags |= AUTO_POWER_ON ;
    }
    if (strcmp(child->name, "speed") == 0)
    {
@@ -221,32 +191,32 @@ static int register_bus(xmlDocPtr doc, xmlNodePtr node)
      switch(atoi(txt))
      {
        case 2400:
-         busses[busnumber].baudrate = B2400;
+         busses[current_bus].baudrate = B2400;
          break;
        case 19200:
-         busses[busnumber].baudrate = B19200;
+         busses[current_bus].baudrate = B19200;
          break;
        case 38400:
-         busses[busnumber].baudrate = B38400;
+         busses[current_bus].baudrate = B38400;
          break;
        default:
-         busses[busnumber].baudrate = B2400;
+         busses[current_bus].baudrate = B2400;
          break;
      }
    }
    if (!found)
    {
-     printf("WARNING, \"%s\" (bus %d) is an unknown tag!\n", child->name, busnumber);
+     printf("WARNING, \"%s\" (bus %d) is an unknown tag!\n", child->name, current_bus);
    }
    free(txt);
    child = child->next;
  }
- return 0;
+ return busnumber;
 }
 
 static int walk_config_xml(xmlDocPtr doc)
 {
- int rc = 0;
+ int bus = 0;
  xmlNodePtr root, child;
 
  root = xmlDocGetRootElement(doc);
@@ -254,10 +224,10 @@ static int walk_config_xml(xmlDocPtr doc)
 
  while (child)
  {
-   rc = register_bus(doc, child);
+   bus = register_bus(bus, doc, child);
    child = child->next;
  }
- return rc;
+ return bus;
 }
 
 int readConfig(char *filename)
@@ -278,7 +248,7 @@ int readConfig(char *filename)
  { /* always put a message */
    DBG(0, 0, "walking %s", filename);
    rc = walk_config_xml(doc);
-   DBG(0, 0, " done %s", filename);
+   DBG(0, 0, " done %s; found %d busses", filename, rc);
    xmlFreeDoc(doc);
  }
  else

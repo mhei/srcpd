@@ -138,7 +138,7 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     __m6051->number_fb = 0;
     DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
   }
-  return 0;
+  return 1;
 }
 
 

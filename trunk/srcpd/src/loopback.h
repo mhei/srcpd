@@ -9,7 +9,7 @@ typedef struct _LOOPBACK_DATA {
     int number_fb;
 } LOOPBACK_DATA;
 
-void readconfig_loopback(xmlDocPtr doc, xmlNodePtr node, int busnumber);
+int readconfig_loopback(xmlDocPtr doc, xmlNodePtr node, int busnumber);
 int init_lineLoopback(char *);
 int init_bus_Loopback(int );
 int term_bus_Loopback(int );

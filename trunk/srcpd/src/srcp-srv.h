@@ -1,7 +1,7 @@
 /* $Id$ */
 
-/* 
- * Vorliegende Software unterliegt der General Public License, 
+/*
+ * Vorliegende Software unterliegt der General Public License,
  * Version 2, 1991. (c) Matthias Trute, 2000-2001.
  *
  */
@@ -25,7 +25,7 @@ typedef struct _SERVER_DATA {
     char *groupname;
 } SERVER_DATA;
 
-void readconfig_server(xmlDocPtr doc, xmlNodePtr node, int busnumber);
+int readconfig_server(xmlDocPtr doc, xmlNodePtr node, int busnumber);
 
 int startup_SERVER(void);
 

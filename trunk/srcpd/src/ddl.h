@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <sys/socket.h>
-#include <sys/uio.h>    
+#include <sys/uio.h>
 #include <termios.h>
 #include <signal.h>
 #include <sys/io.h>
@@ -38,7 +38,7 @@ typedef struct _DDL_DATA {
     int        CHECKSHORT;            /* default no shortcut checking */
     int        DSR_INVERSE;           /* controls how DSR is used to  */
                                           /* check shorts                 */
-    time_t     SHORTCUTDELAY;             /* usecs shortcut delay         */ 
+    time_t     SHORTCUTDELAY;             /* usecs shortcut delay         */
     int        NMRADCC_TR_V;              /* version of the nmra dcc      */
                                           /* translation routine (1 or 2) */
     int        ENABLED_PROTOCOLS; /* enabled p's */
@@ -53,7 +53,7 @@ typedef struct _DDL_DATA {
 
 } DDL_DATA;
 
-void readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, int busnumber);
+int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, int busnumber);
 int init_lineDDL(int );
 int init_bus_DDL(int );
 int term_bus_DDL(int );
@@ -69,7 +69,7 @@ void* thr_sendrec_DDL(void *);
 #define SDM_NOTINITIALIZED -1
 #define SDM_DEFAULT         1  /* must be one of the following values */
 #define SDM_MAERKLIN        0
-#define SDM_NMRA            1   
+#define SDM_NMRA            1
 int setSerialMode(int busnumber, int mode);
 
 #define PKTSIZE     40
@@ -80,13 +80,13 @@ int setSerialMode(int busnumber, int mode);
 #define QM2LOCOPKT  2
 #define QM2FXPKT    3
 #define QM1FUNCPKT  4
-#define QM1SOLEPKT  5 
+#define QM1SOLEPKT  5
 #define QNBLOCOPKT  6
-#define QNBACCPKT   7    
+#define QNBACCPKT   7
 
 void queue_init();
 void queue_add(int addr, char *packet, int packet_type, int packet_size);
-int  queue_get(int *addr, char *packet, int *packet_size); 
+int  queue_get(int *addr, char *packet, int *packet_size);
 
 int monitor_NrOfQCmds();
 
@@ -124,8 +124,8 @@ typedef struct _tNMRAPacketPool {
 void init_MaerklinPacketPool(int busnumber);
 char *get_maerklin_packet(int bus, int adr, int fx);
 void update_MaerklinPacketPool(int bus, int adr, char *sd_packet, char *f1, char *f2,
-                                                         char *f3, char *f4); 
-void init_NMRAPacketPool(int busnumber); 
+                                                         char *f3, char *f4);
+void init_NMRAPacketPool(int busnumber);
 void update_NMRAPacketPool(int bus, int adr, char *packet, int packet_size,
                                     char *fx_packet, int fx_packet_size);
 

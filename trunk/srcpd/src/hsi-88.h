@@ -26,7 +26,7 @@ typedef struct _HSI_88_DATA
   char v_text[50];
 } HSI_88_DATA;
 
-void readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber);
+int readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber);
 
 int init_bus_HSI_88(int busnumber);
 int term_bus_HSI_88(int busnumber);

@@ -1,9 +1,9 @@
 /***************************************************************************
-                        ib.c  -  description
-                         -------------------
-begin                : Don Apr 19 17:35:13 MEST 2001
-copyright            : (C) 2001 by Dipl.-Ing. Frank Schmischke
-email                : frank.schmischke@t-online.de
+                         ib.c  -  description
+                          -------------------
+ begin                : Don Apr 19 17:35:13 MEST 2001
+ copyright            : (C) 2001 by Dipl.-Ing. Frank Schmischke
+ email                : frank.schmischke@t-online.de
 ***************************************************************************/
 
 /***************************************************************************
@@ -56,7 +56,7 @@ static int readByte_IB( int bus, int wait, unsigned char *the_byte );
 static speed_t checkBaudrate( const int fd, const int busnumber );
 static int resetBaudrate( const speed_t speed, const int busnumber );
 
-void readConfig_IB( xmlDocPtr doc, xmlNodePtr node, int busnumber )
+int readConfig_IB( xmlDocPtr doc, xmlNodePtr node, int busnumber )
 {
   xmlNodePtr child = node->children;
   DBG( busnumber, DBG_INFO, "reading configuration for intellibox at bus %d", busnumber );
@@ -106,7 +106,7 @@ void readConfig_IB( xmlDocPtr doc, xmlNodePtr node, int busnumber )
 
     child = child->next;
   }
-
+  return (1);
 }
 
 int cmpTime( struct timeval *t1, struct timeval *t2 )
@@ -241,7 +241,7 @@ void* thr_sendrec_IB( void *v )
   fb_zaehler1 = 0;
   fb_zaehler2 = 1;
   byte2send = XSensOff;
-  writeByte( busnumber, byte2send, 0 );
+  writeByte( busnumber, byte2send, 0);
   status = readByte( busnumber, 1, &rr );
   while ( 1 )
   {
@@ -278,11 +278,11 @@ void* thr_sendrec_IB( void *v )
           usleep( 100000 );
           status = readByte_IB( busnumber, 1, &rr );
         }
-        if ( rr == 0x00 )                      // war alles OK ?
+        if ( rr == 0x00 )                     // war alles OK ?
         {
           busses[ busnumber ].power_changed = 0;
         }
-        if ( rr == 0x06 )                      // power on not possible - overheating
+        if ( rr == 0x06 )                     // power on not possible - overheating
         {
           busses[ busnumber ].power_changed = 0;
           busses[ busnumber ].power_state = 0;
@@ -330,7 +330,7 @@ void send_command_ga_IB( int busnumber )
     {
       DBG( busnumber, DBG_DEBUG, "Zeit %i,%i", ( int ) akt_time.tv_sec, ( int ) akt_time.tv_usec );
       cmp_time = __ib -> tga[ i ].t;
-      if ( cmpTime( &cmp_time, &akt_time ) )          // Ausschaltzeitpunkt erreicht ?
+      if ( cmpTime( &cmp_time, &akt_time ) )         // Ausschaltzeitpunkt erreicht ?
       {
         gatmp = __ib -> tga[ i ];
         addr = gatmp.id;
@@ -446,7 +446,7 @@ void send_command_gl_IB( int busnumber )
       temp >>= 8;
       byte2send = temp;
       writeByte( busnumber, byte2send, 0 );
-      if ( gltmp.direction == 2 )           // Nothalt ausgel�t ?
+      if ( gltmp.direction == 2 )          // Nothalt ausgel�t ?
       {
         byte2send = 1;              // Nothalt setzen
       }
@@ -736,50 +736,50 @@ void send_command_sm_IB( int busnumber )
     DBG( busnumber, DBG_DEBUG, "in send_command_sm: last_type[%d] = %d", busnumber, __ib -> last_type );
     switch ( smakt.command )
     {
-      case SET:
-        if ( smakt.addr == -1 )
-        {
-          switch ( smakt.type )
-          {
-            case REGISTER:
-              write_register( busnumber, smakt.typeaddr, smakt.value );
-              break;
-            case CV:
-              write_cv( busnumber, smakt.typeaddr, smakt.value );
-              break;
-            case CV_BIT:
-              write_cvbit( busnumber, smakt.typeaddr, smakt.bit, smakt.value );
-              break;
-            case PAGE:
-              write_page( busnumber, smakt.typeaddr, smakt.value );
-          }
-        }
-        else
-        {
-          send_pom( busnumber, smakt.addr, smakt.typeaddr, smakt.value );
-        }
-        break;
-      case GET:
+    case SET:
+      if ( smakt.addr == -1 )
+      {
         switch ( smakt.type )
         {
-          case REGISTER:
-            read_register( busnumber, smakt.typeaddr );
-            break;
-          case CV:
-            read_cv( busnumber, smakt.typeaddr );
-            break;
-          case CV_BIT:
-            read_cvbit( busnumber, smakt.typeaddr, smakt.bit );
-            break;
-          case PAGE:
-            read_page( busnumber, smakt.typeaddr );
+        case REGISTER:
+          write_register( busnumber, smakt.typeaddr, smakt.value );
+          break;
+        case CV:
+          write_cv( busnumber, smakt.typeaddr, smakt.value );
+          break;
+        case CV_BIT:
+          write_cvbit( busnumber, smakt.typeaddr, smakt.bit, smakt.value );
+          break;
+        case PAGE:
+          write_page( busnumber, smakt.typeaddr, smakt.value );
         }
+      }
+      else
+      {
+        send_pom( busnumber, smakt.addr, smakt.typeaddr, smakt.value );
+      }
+      break;
+    case GET:
+      switch ( smakt.type )
+      {
+      case REGISTER:
+        read_register( busnumber, smakt.typeaddr );
         break;
-      case VERIFY:
+      case CV:
+        read_cv( busnumber, smakt.typeaddr );
         break;
-      case TERM:
-        term_pgm( busnumber );
+      case CV_BIT:
+        read_cvbit( busnumber, smakt.typeaddr, smakt.bit );
         break;
+      case PAGE:
+        read_page( busnumber, smakt.typeaddr );
+      }
+      break;
+    case VERIFY:
+      break;
+    case TERM:
+      term_pgm( busnumber );
+      break;
     }
   }
 }
@@ -815,7 +815,7 @@ void check_status_IB( int busnumber )
     }
   }
 
-  if ( xevnt1 & 0x01 )            // mindestens eine Lok wurde von Hand gesteuert
+  if ( xevnt1 & 0x01 )           // mindestens eine Lok wurde von Hand gesteuert
   {
     byte2send = 0xC9;
     writeByte( busnumber, byte2send, 0 );
@@ -875,7 +875,7 @@ void check_status_IB( int busnumber )
     }
   }
 
-  if ( xevnt1 & 0x04 )            // mindestens eine Rückmeldung hat sich geändert
+  if ( xevnt1 & 0x04 )           // mindestens eine Rückmeldung hat sich geändert
   {
     byte2send = 0xCB;
     writeByte( busnumber, byte2send, 0 );
@@ -892,7 +892,7 @@ void check_status_IB( int busnumber )
     }
   }
 
-  if ( xevnt1 & 0x20 )            // mindestens eine Weiche wurde von Hand geschaltet
+  if ( xevnt1 & 0x20 )           // mindestens eine Weiche wurde von Hand geschaltet
   {
     byte2send = 0xCA;
     writeByte( busnumber, byte2send, 0 );
@@ -910,7 +910,7 @@ void check_status_IB( int busnumber )
     }
   }
 
-  if ( xevnt2 & 0x3f )           // overheat, short on track etc.
+  if ( xevnt2 & 0x3f )          // overheat, short on track etc.
   {
     DBG( busnumber, DBG_DEBUG, "on bus %i short detected; old-state is %i", busnumber, getPower( busnumber ) );
     if ( ( __ib->emergency_on_ib == 0 ) && ( getPower( busnumber ) ) )
@@ -970,7 +970,7 @@ void check_status_IB( int busnumber )
   }
 
 
-  if ( xevnt3 & 0x01 )            // we should send an XPT_event-command
+  if ( xevnt3 & 0x01 )           // we should send an XPT_event-command
     check_status_pt_IB( busnumber );
 }
 
@@ -1231,24 +1231,24 @@ speed_t checkBaudrate( const int fd, const int busnumber )
     }
     switch ( baudrate )
     {
-      case 2400:
-        internalBaudrate = B2400;
-        break;
-      case 4800:
-        internalBaudrate = B4800;
-        break;
-      case 9600:
-        internalBaudrate = B9600;
-        break;
-      case 19200:
-        internalBaudrate = B19200;
-        break;
-      case 38400:
-        internalBaudrate = B38400;
-        break;
-      default:
-        internalBaudrate = B19200;
-        break;
+    case 2400:
+      internalBaudrate = B2400;
+      break;
+    case 4800:
+      internalBaudrate = B4800;
+      break;
+    case 9600:
+      internalBaudrate = B9600;
+      break;
+    case 19200:
+      internalBaudrate = B19200;
+      break;
+    case 38400:
+      internalBaudrate = B38400;
+      break;
+    default:
+      internalBaudrate = B19200;
+      break;
     }
     if ( cfsetispeed( &interface, internalBaudrate ) != 0 )
     {
@@ -1280,26 +1280,26 @@ speed_t checkBaudrate( const int fd, const int busnumber )
 
     switch ( len )
     {
-      case 1:
-        // IBox has P50 commands disabled
-        found = 1;
-        if ( input[ 0 ] == 'D' )
-        {
-          printf( "Intellibox in download mode.\nDO NOT PROCEED !!!\n" );
-          return ( 2 );
-        }
-        printf( "IBox found; P50-commands are disabled.\n" );
-        break;
-      case 2:
-        // IBox has P50 commands enabled
-        found = 1;
-        // don't know if this also works, when P50 is enabled...
-        // check disabled for now...
-        printf( "IBox found; P50-commands are enabled.\n" );
-        break;
-      default:
-        found = 0;
-        break;
+    case 1:
+      // IBox has P50 commands disabled
+      found = 1;
+      if ( input[ 0 ] == 'D' )
+      {
+        printf( "Intellibox in download mode.\nDO NOT PROCEED !!!\n" );
+        return ( 2 );
+      }
+      printf( "IBox found; P50-commands are disabled.\n" );
+      break;
+    case 2:
+      // IBox has P50 commands enabled
+      found = 1;
+      // don't know if this also works, when P50 is enabled...
+      // check disabled for now...
+      printf( "IBox found; P50-commands are enabled.\n" );
+      break;
+    default:
+      found = 0;
+      break;
     }
     if ( found == 0 )
     {
@@ -1324,31 +1324,31 @@ static int resetBaudrate( const speed_t speed, const int busnumber )
   unsigned char* sendString = "";
   switch ( speed )
   {
-    case B2400:
-      printf( "Changing baudrate to 2400 bps\n" );
-      sendString = "B2400";
-      writeString( busnumber, sendString, 0 );
-      break;
-    case B4800:
-      printf( "Changing baudrate to 4800 bps\n" );
-      sendString = "B4800";
-      writeString( busnumber, sendString, 0 );
-      break;
-    case B9600:
-      printf( "Changing baudrate to 9600 bps\n" );
-      sendString = "B9600";
-      writeString( busnumber, sendString, 0 );
-      break;
-    case B19200:
-      printf( "Changing baudrate to 19200 bps\n" );
-      sendString = "B19200";
-      writeString( busnumber, sendString, 0 );
-      break;
-    case B38400:
-      printf( "Changing baudrate to 38400 bps\n" );
-      sendString = "B38400";
-      writeString( busnumber, sendString, 0 );
-      break;
+  case B2400:
+    printf( "Changing baudrate to 2400 bps\n" );
+    sendString = "B2400";
+    writeString( busnumber, sendString, 0 );
+    break;
+  case B4800:
+    printf( "Changing baudrate to 4800 bps\n" );
+    sendString = "B4800";
+    writeString( busnumber, sendString, 0 );
+    break;
+  case B9600:
+    printf( "Changing baudrate to 9600 bps\n" );
+    sendString = "B9600";
+    writeString( busnumber, sendString, 0 );
+    break;
+  case B19200:
+    printf( "Changing baudrate to 19200 bps\n" );
+    sendString = "B19200";
+    writeString( busnumber, sendString, 0 );
+    break;
+  case B38400:
+    printf( "Changing baudrate to 38400 bps\n" );
+    sendString = "B38400";
+    writeString( busnumber, sendString, 0 );
+    break;
   }
   byte2send = 0x0d;
   writeByte( busnumber, byte2send, 0 );
