@@ -1,9 +1,93 @@
-2004-03-12 12:20  schmischi
+2004-05-23 18:54  mborchers
 
-	* ddl-s88.c, hsi-88.c, ib.c, m605x.c, zimo.c:  correct reset of 
-	feedbacks when delay is set
-	* ib.c: improve usage of SM for DCC
-	
+	* ib.c: function changes sent by the iB are now correctly set in
+	the GLSTATE struct (and correctly displayed by clients of course)
+
+2004-05-15 22:06  mtrute
+
+	* ddl.c, ddl_maerklin.c, srcp-gl.c: do not mix marklin and dcc
+	signals, minor typos
+
+2004-04-09 16:36  mtrute
+
+	* config-srcpd.h, netserver.c: Minor cleanup, Busses may use there
+	busnumber as a SRCP sessionid, e.g. for locking
+
+2004-03-12 15:04  schmischi
+
+	* ChangeLog, acinclude.m4, config-srcpd.h, config.h.in,
+	configure.in, ib.h, io.c, netserver.c: some cleanup's
+
+2004-03-12 15:01  schmischi
+
+	* ddl-s88.c, hsi-88.c, ib.c, m605x.c, srcp-fb.c, zimo.c: correct
+	logic for reset feedbacks when delay is set
+
+2004-02-03 01:35  schmischi
+
+	* netserver.c: [no log message]
+
+2004-02-03 01:34  schmischi
+
+	* ib.c: improve SM-mode
+
+2004-02-03 01:20  schmischi
+
+	* ib.h: some definitions
+
+2004-02-03 01:18  schmischi
+
+	* srcp-fb.c: update reset of GA
+
+2004-02-03 01:08  schmischi
+
+	* srcp-sm.c, srcp-sm.h: add TERM for SM
+
+2004-02-03 01:06  schmischi
+
+	* srcp-power.c: in setPower remove state -1
+
+2004-02-03 01:04  schmischi
+
+	* srcp-gl.c: more logic for calculate speed
+
+2004-02-03 00:55  schmischi
+
+	* Makefile.am: [no log message]
+
+2004-02-03 00:47  schmischi
+
+	* io.c: [no log message]
+
+2004-02-03 00:40  schmischi
+
+	* config-srcpd.h: change comment
+
+2004-01-24 17:50  mtrute
+
+	* srcp-gl.c, srcp-ga.c: if command queues are full, dont wait
+	anymore but report a SRCP error 413 back to the client; Thanks to
+	Eckhart Wörner for reporting the bug
+
+2004-01-17 18:08  mtrute
+
+	* ddl.c: Functions did not work...
+
+2004-01-17 17:06  mtrute
+
+	* config-srcpd.h, ddl.c, ddl_maerklin.c, ddl_maerklin.h,
+	ddl_nmra.c, ib.c, loopback.c, srcp-ga.c, srcp-gl.c, srcp-gl.h,
+	srcp-time.h: Cleanups, GA/GL init functions can abort SRCP init
+
+2004-01-17 17:05  mtrute
+
+	* m605x.c, m605x.h: 6020 Mode did not work
+
+2004-01-14 18:08  mtrute
+
+	* ChangeLog, NEWS, PROGRAMMING-HOWTO, README, ddl.c: added
+	configuration parameters. Disabled SM Devices (for now)
+
 2004-01-13 20:03  mtrute
 
 	* Makefile.am, Makefile.in, README, config-srcpd.c, ddl.c, ddl.h,
