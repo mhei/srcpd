@@ -256,7 +256,7 @@ void* thr_sendrec_M6051(void *v)
         /* Erweiterte Funktionen des 6021 senden, manchmal */
         if ( !((busses[bus].flags & M6020_MODE) == M6020_MODE) && (gltmp.funcs != glakt.funcs))
         {
-          c = (gltmp.funcs >> 1 ) + 64;
+          c = ((gltmp.funcs >> 1 ) & 0x0f) + 64;
           writeByte(bus, c, pause_between_bytes);
           SendByte = addr;
           writeByte(bus, SendByte, pause_between_cmd);
