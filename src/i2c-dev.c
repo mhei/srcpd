@@ -19,9 +19,10 @@
 
 #include "stdincludes.h"
 #include "i2c-dev.h"
-#include <linux/i2c-dev.h>
 
+#include <linux/i2c-dev.h>
 // we have to use kernel-headers directly, sorry!
+
 #include <math.h>
 // needed for pow()
 
@@ -87,8 +88,6 @@ void readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     DBG(busnumber, DBG_ERROR, "Can't create array for accessoires");
   }
 	
-	//fprintf(stdout, "number_ga = %d\n", __i2cdev->number_ga);
-	
   if(init_GL(busnumber, __i2cdev->number_gl))
   {
     __i2cdev->number_gl = 0;
@@ -111,15 +110,12 @@ int init_lineI2C_DEV (int bus)
 	if (busses[bus].debuglevel > 0)
   {
     DBG(bus, DBG_INFO, "Opening i2c-dev: %s", busses[bus].device);
-		//fprintf(stdout, "Opening i2c-dev: %s\n", busses[bus].device);
   }
 	
 	FD = open (busses[bus].device, O_RDWR);
-	//fprintf(stdout, "FD = %d\n", FD);
 	
 	if (FD <= 0) {
 		DBG(bus, DBG_FATAL, "couldn't open device %s.", busses[bus].device);
-		//fprintf(stdout, "couldn't open device %s.\n", busses[bus].device);
 		FD = -1;
 	} else {
 		
@@ -158,12 +154,8 @@ int init_lineI2C_DEV (int bus)
 
 int term_bus_I2C_DEV(int bus)
 {
-	
-	//fprintf(stdout, "i2c-dev bus %d terminating\n", bus);
   DBG(bus, DBG_INFO, "i2c-dev bus %d terminating", bus);
-	
 	close (busses[bus].fd);
-	
   return 0;
 }
 
@@ -175,9 +167,7 @@ int term_bus_I2C_DEV(int bus)
  */
 int init_bus_I2C_DEV(int i)
 {
-	
-	//fprintf(stdout, "i2c-dev init: bus #%d, debug %d\n", i, busses[i].debuglevel);
-	
+
   DBG(i, DBG_INFO,"i2c-dev init: bus #%d, debug %d", i, busses[i].debuglevel);
   if(busses[i].debuglevel < 6)
   {
@@ -187,8 +177,6 @@ int init_bus_I2C_DEV(int i)
   {
     busses[i].fd = -1;
   }
-	
-	//fprintf(stdout, "i2c-dev init done\n");
 	
   DBG(i, DBG_INFO, "i2c-dev init done");
   return 0;
@@ -214,15 +202,11 @@ void* thr_sendrec_I2C_DEV (void *v)
 	int i2c_addr, i2c_base_addr;
 	char i2c_val, i2c_oldval;
 	
-	int no_off = 0;
-  
-	//fprintf(stdout, "i2c-dev started, bus #%d, %s\n", bus, busses[bus].device); 
+	int no_off = 0; 
 	
   DBG(bus, DBG_INFO, "i2c-dev started, bus #%d, %s", bus, busses[bus].device);
 
   busses[bus].watchdog = 1;
-
-	//fprintf (stdout, "Entering i2c-dev worker thread...\n");
 	
   while (1) {
 
@@ -251,8 +235,6 @@ void* thr_sendrec_I2C_DEV (void *v)
           addr = gatmp.id;
 					port = gatmp.port;
 					value = gatmp.action;
-					//i2c_val = 255;
-					//i2c_oldval = 255;
 					
 					// address-calculation
 					// we will need more complex address-calculation later
@@ -299,7 +281,6 @@ void* thr_sendrec_I2C_DEV (void *v)
 						// wait
 						usleep(1000 * (unsigned long) gatmp.activetime);
 						
-						// FIXME: Ausschaltzeitpunkt setzen!
 						// write old value back, if wait-time != -1
 						if ( no_off == 0 ) {
 							writeByte(bus, &i2c_oldval, 0);
@@ -307,7 +288,6 @@ void* thr_sendrec_I2C_DEV (void *v)
 
 					}
 					
-					// FIXME: nur ausführen, wenn nich schon oben ausgeführt
 					if ( (gatmp.action == 0) ) {
 						gettimeofday(&gatmp.tv[gatmp.port], NULL);
             setGA(bus, addr, gatmp, 0);
