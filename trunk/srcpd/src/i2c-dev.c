@@ -232,6 +232,10 @@ void *thr_sendrec_I2C_DEV(void *v)
 	    addr = gatmp.id;
 	    port = gatmp.port;
 	    value = gatmp.action;
+		
+		// some error-corrections
+		if (port > 1) port = 1;
+		if (value > 1) value = 1;
 
 	    // address-calculation
 	    // we will need more complex address-calculation later
