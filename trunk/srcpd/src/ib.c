@@ -57,70 +57,61 @@
 #include "srcp-fb.h"
 #include "ibox/ibox.h"
 
-#ifdef TESTMODE
-extern int testmode;
-#endif
+#define __ib ((IB_DATA*)busses[busnumber].driverdata)
 
 static struct _GA tga[50];
 
-void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node,
-         int busnumber)
+void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
-    xmlNodePtr child = node->children;
+  xmlNodePtr child = node->children;
 
-    busses[busnumber].type = SERVER_IB;
-    busses[busnumber].init_func = &init_bus_IB;
-    busses[busnumber].term_func = &term_bus_IB;
-    busses[busnumber].thr_func = &thr_sendrec_IB;
-    busses[busnumber].driverdata = malloc(sizeof(struct _IB_DATA));
-    strcpy(busses[busnumber].description, "GA GL FB POWER");
+  busses[busnumber].type = SERVER_IB;
+  busses[busnumber].init_func = &init_bus_IB;
+  busses[busnumber].term_func = &term_bus_IB;
+  busses[busnumber].thr_func = &thr_sendrec_IB;
+  busses[busnumber].driverdata = malloc(sizeof(struct _IB_DATA));
+  strcpy(busses[busnumber].description, "GA GL FB POWER");
 
-    ((IB_DATA *) busses[busnumber].driverdata)->number_fb = 0;  /* max 31 */
-    ((IB_DATA *) busses[busnumber].driverdata)->number_ga = 256;
-    ((IB_DATA *) busses[busnumber].driverdata)->number_gl = 80;
-    strcpy(busses[busnumber].description, "GA GL FB POWER");
+  __ib->number_fb = 0;            // max. 31 for S88; Loconet is missing this time
+  __ib->number_ga = 256;
+  __ib->number_gl = 80;
 
-    while (child) {
-  if (strcmp(child->name, "maximum_address_for_feedback") == 0) {
-      char *txt =
-    xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      ((IB_DATA *) busses[busnumber].driverdata)->number_fb =
-    atoi(txt);
+  while (child)
+  {
+    if (strcmp(child->name, "number_fb") == 0)
+    {
+      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      __ib->number_fb = atoi(txt);
       free(txt);
-  }
-
-  if (strcmp(child->name, "maximum_address_for_locomotiv") == 0) {
-      char *txt =
-    xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      ((IB_DATA *) busses[busnumber].driverdata)->number_gl =
-    atoi(txt);
-      free(txt);
-  }
-  if (strcmp(child->name, "maximum_address_for_accessoire") == 0) {
-      char *txt =
-    xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      ((IB_DATA *) busses[busnumber].driverdata)->number_ga =
-    atoi(txt);
-      free(txt);
-  }
-  child = child->next;
     }
+
+    if (strcmp(child->name, "number_gl") == 0)
+    {
+      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      __ib->number_gl = atoi(txt);
+      free(txt);
+    }
+    if (strcmp(child->name, "number_ga") == 0)
+    {
+      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      __ib->number_ga = atoi(txt);
+      free(txt);
+    }
+    child = child->next;
+  }
 }
 
-int
-init_bus_IB(int bus)
+int init_bus_IB(int bus)
 {
   return 0;
 }
 
-int
-term_bus_IB(int bus)
+int term_bus_IB(int bus)
 {
   return 0;
 }
 
-void*
-thr_sendrec_IB(void *v)
+void* thr_sendrec_IB(void *v)
 {
   int fd;
   unsigned char byte2send;
@@ -128,11 +119,8 @@ thr_sendrec_IB(void *v)
   unsigned char rr;
   int bus;
   int zaehler1, fb_zaehler1, fb_zaehler2;
-#ifndef TESTMODE
-  syslog(LOG_INFO, "thr_sendrecintellibox gestartet");
-#else
-  syslog(LOG_INFO, "thr_sendrecintellibox gestartet, testmode=%i",testmode);
-#endif
+
+  syslog(LOG_INFO, "thr_sendrecintellibox is startet");
   bus = (int) v;
 
   fd = busses[bus].fd;
@@ -165,8 +153,7 @@ thr_sendrec_IB(void *v)
   }      // Ende WHILE(1)
 }
 
-void
-send_command_ga(int bus)
+void send_command_ga(int bus)
 {
   int i, i1;
   int temp;
@@ -211,60 +198,60 @@ send_command_ga(int bus)
   }
 
   // Decoder einschalten
-  if(! queue_GA_isempty(bus)) {
-        unqueueNextGA(bus, &gatmp);
-        addr = gatmp.id;
-        byte2send = 0x90;
-        writeByte(bus, &byte2send,0);
-        temp = gatmp.id;
-        temp &= 0x00FF;
-        byte2send = temp;
-        writeByte(bus, &byte2send,0);
-        temp = gatmp.id;
-        temp >>= 8;
-        byte2send = temp;
-        if(gatmp.action)
+  if(! queue_GA_isempty(bus))
+  {
+    unqueueNextGA(bus, &gatmp);
+    addr = gatmp.id;
+    byte2send = 0x90;
+    writeByte(fd, &byte2send,0);
+    temp = gatmp.id;
+    temp &= 0x00FF;
+    byte2send = temp;
+    writeByte(fd, &byte2send,0);
+    temp = gatmp.id;
+    temp >>= 8;
+    byte2send = temp;
+    if(gatmp.action)
+    {
+      byte2send |= 0x40;
+    }
+    if(gatmp.port)
+    {
+      byte2send |= 0x80;
+    }
+    writeByte(fd, &byte2send, 0);
+    status = 1;
+    // reschedule event: turn off --tobedone--
+    if(gatmp.action && (gatmp.activetime > 0))
+    {
+      for(i1=0;i1<50;i1++)
+      {
+        if(tga[i1].id == 0)
         {
-          byte2send |= 0x40;
-        }
-        if(gatmp.port)
-        {
-          byte2send |= 0x80;
-        }
-        writeByte(bus, &byte2send, 0);
-        status = 1;
-  // reschedule event: turn off --tobedone--
-        if(gatmp.action && (gatmp.activetime > 0))
-        {
-          for(i1=0;i1<50;i1++)
+          gatmp.t = akt_time;
+          gatmp.t.tv_sec += gatmp.activetime / 1000;
+          gatmp.t.tv_usec += (gatmp.activetime % 1000) * 1000;
+          if(gatmp.t.tv_usec > 1000000)
           {
-            if(tga[i1].id == 0)
-            {
-              gatmp.t = akt_time;
-              gatmp.t.tv_sec += gatmp.activetime / 1000;
-              gatmp.t.tv_usec += (gatmp.activetime % 1000) * 1000;
-              if(gatmp.t.tv_usec > 1000000)
-              {
-                gatmp.t.tv_sec++;
-                gatmp.t.tv_usec -= 1000000;
-              }
-              tga[i] = gatmp;
-              status = 0;
-              syslog(LOG_INFO, "GA %i für Abschaltung um %i,%i auf %i", tga[i].id, (int)tga[i].t.tv_sec, (int)tga[i].t.tv_usec, i);
-              break;
-            }
+            gatmp.t.tv_sec++;
+            gatmp.t.tv_usec -= 1000000;
           }
-        }
-        readByte(bus, &rr);
-        if(status)
-        {
-          setGA(bus, addr, gatmp);
+          tga[i] = gatmp;
+          status = 0;
+          syslog(LOG_INFO, "GA %i für Abschaltung um %i,%i auf %i", tga[i].id, (int)tga[i].t.tv_sec, (int)tga[i].t.tv_usec, i);
+          break;
         }
       }
+    }
+    readByte(fd, &rr);
+    if(status)
+    {
+      setGA(bus, addr, gatmp);
+    }
+  }
 }
 
-void
-send_command_gl(int bus)
+void send_command_gl(int bus)
 {
   int temp;
   int addr=0;
@@ -275,60 +262,60 @@ send_command_gl(int bus)
   /* Lokdecoder */
   //fprintf(stderr, "LOK's... ");
   /* nur senden, wenn wirklich etwas vorliegt */
-  if(! queue_GL_isempty(bus)) {
-        unqueueNextGL(bus, &gltmp);
-        getGL(bus, addr, &glakt);
-        addr  = gltmp.id;
-        // speed, direction or function changed ?
-        if((gltmp.direction != glakt.direction) ||
-           (gltmp.speed != glakt.speed) ||
-           (gltmp.funcs != glakt.funcs))
+  if(! queue_GL_isempty(bus))
+  {
+    unqueueNextGL(bus, &gltmp);
+    getGL(bus, addr, &glakt);
+    addr  = gltmp.id;
+    // speed, direction or function changed ?
+    if((gltmp.direction != glakt.direction) ||
+       (gltmp.speed != glakt.speed) ||
+       (gltmp.funcs != glakt.funcs))
+    {
+      // Lokkommando soll gesendet werden
+      byte2send = 0x80;
+      writeByte(fd, &byte2send,0);
+      // send lowbyte of adress
+      temp = gltmp.id;
+      temp &= 0x00FF;
+      byte2send = temp;
+      writeByte(fd, &byte2send,0);
+      // send highbyte of adress
+      temp = gltmp.id;
+      temp >>= 8;
+      byte2send = temp;
+      writeByte(fd, &byte2send,0);
+      if(gltmp.direction == 2)       // Nothalt ausgelöst ?
+      {
+        byte2send = 1;              // Nothalt setzen
+      }
+      else
+      {
+        byte2send = gltmp.speed; // Geschwindigkeit senden
+        if(byte2send > 0)
         {
-          // Lokkommando soll gesendet werden
-          byte2send = 0x80;
-          writeByte(bus, &byte2send,0);
-          // send lowbyte of adress
-          temp = gltmp.id;
-          temp &= 0x00FF;
-          byte2send = temp;
-          writeByte(bus, &byte2send,0);
-          // send highbyte of adress
-          temp = gltmp.id;
-          temp >>= 8;
-          byte2send = temp;
-          writeByte(bus, &byte2send,0);
-          if(gltmp.direction == 2)       // Nothalt ausgelöst ?
-          {
-            byte2send = 1;              // Nothalt setzen
-          }
-          else
-          {
-            byte2send = gltmp.speed; // Geschwindigkeit senden
-            if(byte2send > 0)
-            {
-              byte2send++;
-            }
-          }
-          writeByte(bus, &byte2send,0);
-          // setting direction, light and function
-          byte2send = gltmp.funcs;
-          byte2send |= 0xc0;
-          if(gltmp.direction)
-          {
-            byte2send |= 0x20;
-          }
-          writeByte(bus, &byte2send,2);
-          readByte(bus, &status);
-          if((status == 0) || (status == 0x41) || (status == 0x42))
-          {
-            setGL(bus, addr, gltmp);
-          }
+          byte2send++;
         }
       }
+      writeByte(fd, &byte2send,0);
+      // setting direction, light and function
+      byte2send = gltmp.funcs;
+      byte2send |= 0xc0;
+      if(gltmp.direction)
+      {
+        byte2send |= 0x20;
+      }
+      writeByte(fd, &byte2send,2);
+      readByte(fd, &status);
+      if((status == 0) || (status == 0x41) || (status == 0x42))
+      {
+        setGL(bus, addr, gltmp);
+      }
+    }
+  }
 }
 
-void
-check_status(int bus)
+void check_status(int bus)
 {
   int i;
   int temp;
@@ -343,6 +330,9 @@ check_status(int bus)
      1. Änderungen an S88-Modulen
      2. manuelle Lokbefehle
      3. manuelle Weichenbefehle */
+
+#warning "add loconet"
+
   byte2send = 0xC8;
   writeByte(fd, &byte2send, 2);
   xevnt2 = 0x00;
@@ -435,13 +425,12 @@ check_status(int bus)
   }
 }
 
-int
-init_comport(int bus)
+int init_comport(int busnumber)
 {
   int status;
   int fd;
-  int baud=busses[bus].baud;
-  char *name = busses[bus].device;
+  int baud=busses[busnumber].baud;
+  char *name = busses[busnumber].device;
   unsigned char rr;
   struct termios interface;
 
@@ -465,17 +454,13 @@ init_comport(int bus)
     tcsetattr(fd, TCSANOW, &interface);
     status = 0;
     sleep(1);
-#ifdef TESTMODE
-    if(testmode == 0)
-#endif
     while(status != -1)
       status = readByte(fd, &rr);
   }
   return fd;
 }
 
-int
-open_comport(int bus)
+int open_comport(int busnumber)
 {
   int fd, baud;
   int status;
@@ -484,13 +469,9 @@ open_comport(int bus)
   unsigned char byte2send;
   struct termios interface;
   struct serial_struct serial_line;
-  char *name = busses[bus].device;
+  char *name = busses[busnumber].device;
   printf("Begin detecting IB on serial line: %s\n", name);
 
-#ifdef TESTMODE
-  if(testmode)  
-    return 0;        // testmode, also is a virtual IB always availible
-#endif
 
   printf("Opening serial line %s for 2400 baud\n", name);
   fd=open(name, O_RDWR);
@@ -539,7 +520,7 @@ open_comport(int bus)
   printf("BREAK sucessfully send\n");
 
   baud = B2400;
-  fd = init_comport(bus);
+  fd = init_comport(busnumber);
   if(fd < 0)
   {
     printf("init comport fehlgeschlagen\n");
@@ -590,7 +571,7 @@ open_comport(int bus)
   close_comport(fd);
     
   baud = B38400;
-  fd = init_comport(bus);
+  fd = init_comport(busnumber);
   if(fd < 0)
   {
     printf("init comport fehlgeschlagen\n");
@@ -607,7 +588,7 @@ open_comport(int bus)
     return(2);
   }
   
-  busses[bus].fd = fd;
+  busses[busnumber].fd = fd;
   return 0;
 }
 
