@@ -71,9 +71,9 @@ const unsigned long LPT_BASE[] = { 0x3BC, 0x378, 0x278 };
 // number of possible parallel ports
 const unsigned int LPT_NUM = 3;
 // values of the bits in a byte
+// const char BIT_VALUES[] = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
 const char BIT_VALUES[] =
-    { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
-
+    { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
 void readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
     int i;
@@ -87,12 +87,16 @@ void readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     ((DDL_S88_DATA *) busses[busnumber].driverdata)->clockscale = 35;
     ((DDL_S88_DATA *) busses[busnumber].driverdata)->refresh = 100;
     strcpy(busses[busnumber].description, "FB POWER");
-     for(i=1; i<4;i++) {
-       busses[busnumber+i].type = SERVER_S88;
-       busses[busnumber+i].init_func = NULL;
-       busses[busnumber+i].term_func = NULL;
-       busses[busnumber+i].thr_func = &thr_sendrec_dummy;
-       busses[busnumber+i].driverdata = NULL;
+    ((DDL_S88_DATA *) busses[busnumber].driverdata)->number_fb[0] = 1;
+    ((DDL_S88_DATA *) busses[busnumber].driverdata)->number_fb[1] = 1;
+    ((DDL_S88_DATA *) busses[busnumber].driverdata)->number_fb[2] = 1;
+    ((DDL_S88_DATA *) busses[busnumber].driverdata)->number_fb[3] = 1;
+    for (i = 1; i < 4; i++) {
+	busses[busnumber + i].type = SERVER_S88;
+	busses[busnumber + i].init_func = NULL;
+	busses[busnumber + i].term_func = NULL;
+	busses[busnumber + i].thr_func = &thr_sendrec_dummy;
+	busses[busnumber + i].driverdata = NULL;
     }
     while (child) {
 	if (strncmp(child->name, "text", 4) == 0) {
@@ -102,59 +106,42 @@ void readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 	if (strcmp(child->name, "ioport") == 0) {
 	    char *txt =
 		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-	    ((DDL_S88_DATA *) busses[busnumber].driverdata)->port =
-		atoi(txt);
+	    ((DDL_S88_DATA *) busses[busnumber].driverdata)->port = strtol(txt, (char **) NULL, 0);	// better than atoi(3)
 	    free(txt);
 	}
 
 
 	if (strcmp(child->name, "clockscale") == 0) {
-	    char *txt =
-		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-	    ((DDL_S88_DATA *) busses[busnumber].driverdata)->clockscale =
-		atoi(txt);
+	    char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+	    ((DDL_S88_DATA *) busses[busnumber].driverdata)->clockscale = atoi(txt);
 	    free(txt);
 	}
 
 	if (strcmp(child->name, "refresh") == 0) {
-	    char *txt =
-		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-	    ((DDL_S88_DATA *) busses[busnumber].driverdata)->refresh =
-		atoi(txt);
+	    char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+	    ((DDL_S88_DATA *) busses[busnumber].driverdata)->refresh = atoi(txt);
 	    free(txt);
 	}
-
-
-
 	if (strcmp(child->name, "number_fb_1") == 0) {
-	    char *txt =
-		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-	    ((DDL_S88_DATA *) busses[busnumber].driverdata)->number_fb[0] =
-		atoi(txt);
+	    char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+	    ((DDL_S88_DATA *) busses[busnumber].driverdata)->number_fb[0] = atoi(txt);
 	    free(txt);
 	}
 	if (strcmp(child->name, "number_fb_2") == 0) {
-	    char *txt =
-		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-	    ((DDL_S88_DATA *) busses[busnumber].driverdata)->number_fb[1] =
-		atoi(txt);
+	    char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+	    ((DDL_S88_DATA *) busses[busnumber].driverdata)->number_fb[1] = atoi(txt);
 	    free(txt);
 	}
 	if (strcmp(child->name, "number_fb_3") == 0) {
-	    char *txt =
-		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-	    ((DDL_S88_DATA *) busses[busnumber].driverdata)->number_fb[2] =
-		atoi(txt);
+	    char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+	    ((DDL_S88_DATA *) busses[busnumber].driverdata)->number_fb[2] = atoi(txt);
 	    free(txt);
 	}
 	if (strcmp(child->name, "number_fb_4") == 0) {
-	    char *txt =
-		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-	    ((DDL_S88_DATA *) busses[busnumber].driverdata)->number_fb[3] =
-		atoi(txt);
+	    char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+	    ((DDL_S88_DATA *) busses[busnumber].driverdata)->number_fb[3] = atoi(txt);
 	    free(txt);
 	}
-
 	child = child->next;
     }
 }
@@ -246,7 +233,7 @@ void s88load(int bus)
 {
     int i, j, k, inbyte;
     struct timeval nowtime;
-    char s88data[S88_MAXPORTSB * S88_MAXBUSSES];	//valid bus-data
+    unsigned int s88data[S88_MAXPORTSB * S88_MAXBUSSES];	//valid bus-data
     int S88PORT = ((DDL_S88_DATA *) busses[bus].driverdata)->port;
     int S88CLOCK_SCALE =
 	((DDL_S88_DATA *) busses[bus].driverdata)->clockscale;
@@ -290,10 +277,25 @@ void s88load(int bus)
 		    S88_WRITE(S88_CLOCK);
 		    S88_WRITE(S88_QUIET);
 		}
-		setFBmodul(bus, j, s88data[j]);
-		setFBmodul(bus + 1, j, s88data[j + S88_MAXPORTSB]);
-		setFBmodul(bus + 2, j, s88data[j + 2 * S88_MAXPORTSB]);
-		setFBmodul(bus + 3, j, s88data[j + 3 * S88_MAXPORTSB]);
+		if (j <
+		    ((DDL_S88_DATA *) busses[bus].driverdata)->
+		    number_fb[0] * 2)
+		    setFBmodul8(bus, j + 1, s88data[j]);
+		if (j <
+		    ((DDL_S88_DATA *) busses[bus].driverdata)->
+		    number_fb[1] * 2)
+		    setFBmodul8(bus + 1, j + 1,
+				s88data[j + S88_MAXPORTSB]);
+		if (j <
+		    ((DDL_S88_DATA *) busses[bus].driverdata)->
+		    number_fb[2] * 2)
+		    setFBmodul8(bus + 2, j + 1,
+				s88data[j + 2 * S88_MAXPORTSB]);
+		if (j <
+		    ((DDL_S88_DATA *) busses[bus].driverdata)->
+		    number_fb[3] * 2)
+		    setFBmodul8(bus + 3, j + 1,
+				s88data[j + 3 * S88_MAXPORTSB]);
 	    }
 	    nowtime.tv_usec += S88REFRESH * 1000;
 	    ((DDL_S88_DATA *) busses[bus].driverdata)->s88valid.tv_usec =
@@ -315,9 +317,7 @@ void *thr_sendrec_S88(void *v)
 {
     int bus = (int) v;
     unsigned long sleepusec = 100000;
-    int S88PORT = ((DDL_S88_DATA *) busses[bus].driverdata)->port;
-    int S88CLOCK_SCALE =
-	((DDL_S88_DATA *) busses[bus].driverdata)->clockscale;
+
     int S88REFRESH = ((DDL_S88_DATA *) busses[bus].driverdata)->refresh;
 
     // set refresh-cycle

@@ -113,10 +113,7 @@ int main(int argc, char **argv)
   struct _THREADS cmds;
   install_signal_handler();
 
-  printf("MAXPATHLEN = %i\n", MAXPATHLEN);
-  strcpy(conffile, "/usr/local/etc/srcpd.conf");
-  printf("conffile = \"%s\"\n", conffile);
-
+  strcpy(conffile, "/etc/srcpd.conf");
   /* Parameter auswerten */
   opterr=0;
   while((c=getopt(argc, argv, "f:hv")) != EOF)
@@ -133,6 +130,7 @@ int main(int argc, char **argv)
       case 'h':
         printf("srcpd -f <conffile> -v -h\n");
         printf("v           -  prints program version and exits\n");
+        printf("f            -  use another config file (default /etc/srcpd.conf)\n");
         exit(1);
         break;
       default:
@@ -143,6 +141,7 @@ int main(int argc, char **argv)
     }
   }
   // zuerst die Konfigurationsdatei lesen
+  printf("conffile = \"%s\"\n", conffile);
   readConfig(conffile);
   // check for resolv all needed malloc's
   for(i=0;i<MAX_BUSSES;i++)
