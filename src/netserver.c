@@ -219,16 +219,25 @@ int handleSET(int sessionid, int bus, char *device, char *parameter, char *reply
        &laddr, &direction, &speed, &maxspeed, &func, &f1, &f2, &f3, &f4);
     if (anzparms > 5)
     {
-      /* Only if not locked!! */
-      rc = queueGL(bus, laddr, direction, speed, maxspeed, func, f1, f2, f3, f4);
+      long int lockid;
+      /* Only if not locked or emergency stop !! */
+      getlockGL(bus, laddr, &lockid);
+      if(lockid==0 || lockid==sessionid || direction==2) {
+          rc = queueGL(bus, laddr, direction, speed, maxspeed, func, f1, f2, f3, f4);
+      }
     }
   }
   if (strncasecmp(device, "GA", 2) == 0)
   {
     long gaddr, port, aktion, delay;
+    long int lockid;
     sscanf(parameter, "%ld %ld %ld %ld", &gaddr, &port, &aktion, &delay);
     /* Port 0,1; Aktion 0,1 */
-    rc = queueGA(bus, gaddr, port, aktion, delay);
+    /* Only if not locked!! */
+    getlockGL(bus, gaddr, &lockid);
+    if(lockid==0 || lockid==sessionid) {
+          rc = queueGA(bus, gaddr, port, aktion, delay);
+     }
   }
   if (strncasecmp(device, "SM", 2) == 0)
   {
