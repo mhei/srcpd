@@ -122,11 +122,9 @@ driverspezifische Daten, der auch NULL sein kann.
 
 Es ist ein primitives OO Design (im Sinne von Klassenvererbung) damit verbunden.
 
-
 10. SRCP Hacking
 
 Nur entsprechend der SRCP Spezifikation. Keine eigenmächtigen Veränderungen.
-Nur Fehlerbehebung.
 
 11. Andere Betriebssysteme
 
@@ -134,3 +132,14 @@ Sollten nicht ignoriert werden. Linux (aktuell zudem) ist aber Schwerpunkt.
 Portabel geht aber vor genial. Ein 386er kann, muß aber nicht ausreichen.
 
 OS, die wesentlich von Unix abweichen, kommen später; vielleicht.
+
+12. CVS Benutzung.
+
+Das erste, was nach einem CVS Checkout ansteht, ist ein
+
+make -f Makefile.dist
+
+Damit wird das autoconf System initialisiert und steht für den configure-
+Lauf bereit.
+
+Wer CVS Schreibrechte haben möchte, wende sich an den/die Projektbetreuer.
