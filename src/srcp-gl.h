@@ -34,13 +34,13 @@ extern volatile struct _GL ogl[MAX_BUSSES][QUEUEGL_LEN];      // manuelle Änderu
 extern volatile int writer_gl[MAX_BUSSES];
 extern volatile int reader_gl[MAX_BUSSES];
 
-void setGL(int bus, int addr, int dir, int speed, int maxspeed, int f, 
-     int n_fkt, int f1, int f2, int f3, int f4);
+int setGL(int bus, int addr, int dir, int speed, int maxspeed, int f, 
+     int f1, int f2, int f3, int f4);
      
 int getGL(int bus, int addr, struct _GL *l);
-void infoGL(struct _GL gl, char* msg);
+int infoGL(int bus, int addr, char* msg);
 int cmpGL(struct _GL a, struct _GL b);
-void initGL(void);
+int initGL(void);
 int calcspeed(int vs, int vmax, int n_fs);
 
 #endif

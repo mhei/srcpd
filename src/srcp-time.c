@@ -11,32 +11,36 @@
 #include <stdio.h>
 #include <syslog.h>
 
-#include "srcp-time.h"
 #include "config-srcpd.h"
+#include "srcp-error.h"
 
+#include "srcp-time.h"
 struct _VTIME vtime;
 
-void setTime(int d, int h, int m, int s, int rx, int ry)
+int setTime(int d, int h, int m, int s, int rx, int ry)
 {
   if(d<0 || h<0 || h>23 || m<0 || m>59 || s<0 || s>59 || rx<0 || ry<0)
-    return;
+    return SRCP_WRONGVALUE;
   vtime.day     = d;
   vtime.hour    = h;
   vtime.min     = m;
   vtime.sec     = s;
   vtime.ratio_x = rx;
   vtime.ratio_y = ry;
+  return SRCP_OK;
 }
 
-void getTime(struct _VTIME *vt)
+int getTime(struct _VTIME *vt)
 {
   *vt = vtime;
+  return SRCP_OK;
 }
 
-void infoTime(struct _VTIME vt, char *msg)
+int infoTime(struct _VTIME vt, char *msg)
 {
-  sprintf(msg, "INFO TIME %d %d %d %d %d %d\n", vt.day, vt.hour,
+  sprintf(msg, "0 TIME %d %d %d %d %d %d", vt.day, vt.hour,
       vt.min, vt.sec, vt.ratio_x, vt.ratio_y);
+  return SRCP_INFO;
 }
 
 int cmpTime(struct timeval *t1, struct timeval *t2)

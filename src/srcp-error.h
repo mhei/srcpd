@@ -6,5 +6,25 @@
  *
  */
 
-#define SRCP_OK 0
-#define SRCP_LOCKED 1
+#ifndef SRCP_ERROR_H
+#define SRCP_ERROR_H 1
+
+/* Handshake */
+#define SRCP_OK_GO 200
+#define SRCP_OK_PROTOCOL 201
+#define SRCP_OK_CONNMODE 202
+
+#define SRCP_HS_UNKNOWN 401
+
+/* COMMAND MODE */
+#define SRCP_INFO 100
+#define SRCP_OK 200
+
+#define SRCP_WRONGVALUE 412
+#define SRCP_NODATA 416
+
+#define SRCP_UNSUPPORTED 423
+
+int srcp_fmt_msg(int errno, char *msg);
+
+#endif

@@ -2,7 +2,8 @@
                           srcpd.c  -  description
                              -------------------
     begin                : Wed Jul 4 2001
-    copyright            : (C) 2001 by the srcpd team
+    copyright            : (C) 2001,2002 by the srcpd team
+    $Id$
  ***************************************************************************/
 
 /***************************************************************************
@@ -64,7 +65,6 @@ void CreatePIDFile(int pid) {
 }
 
 void DeletePIDFile() {
-    FILE *f;
     unlink(PIDFILE);
 }
 
@@ -141,8 +141,6 @@ int main(int argc, char **argv)
     }
   }
 
-  openlog("srcpd", LOG_CONS, LOG_USER);
-  syslog(LOG_INFO, "%s", WELCOME_MSG);
   /* forken */
   if((pid=fork())<0)
   {
@@ -158,7 +156,11 @@ int main(int argc, char **argv)
   // ab hier keine Konsole mehr... Wir sind ein Dämon geworden!
   chdir("/");
 
+  openlog("srcpd", LOG_CONS, LOG_USER);
+  syslog(LOG_INFO, "%s", WELCOME_MSG);
+
   CreatePIDFile(getpid());
+
   /* Now we have to initialize all busses */
   for(i=1; i<=num_busses; i++) {
       (*busses[i].init_func)(i);
@@ -179,10 +181,10 @@ int main(int argc, char **argv)
   }
   pthread_detach(ttid_clock);
 
-  syslog(LOG_INFO, "Starte %d Threads for the busses", num_busses);
+  syslog(LOG_INFO, "Going to start %d Interface Threads for the busses", num_busses);
   /* Jetzt die Threads für die Busse */
   for (i=1; i<=num_busses; i++) {
-      syslog(LOG_INFO, "Starte Thread für Bus %d type(%d)", i, busses[i].type);
+      syslog(LOG_INFO, "going to start Interface Thread  %d type(%d)", i, busses[i].type);
       error = pthread_create(&ttid_pid, NULL, busses[i].thr_func, (void *)i);
       if(error)
       { 
@@ -191,13 +193,14 @@ int main(int argc, char **argv)
       }
       pthread_detach(ttid_pid);
       busses[i].pid = ttid_pid;
-      syslog(LOG_INFO, "Gestartet Thread für Bus %d type(%d): pid %d", i, busses[i].type, busses[i].pid);
+      syslog(LOG_INFO, "Interface Thread %d started successfully type(%d): pid %d", i, busses[i].type, busses[i].pid);
   }
   syslog(LOG_INFO, "All Threads started");
   server_shutdown_state = 0;
 
   while(1)  {
     if(server_shutdown_state == 1) {
+      sleep(2); /* Protokollforderung */
       pthread_cancel(ttid_cmd);
       pthread_cancel(ttid_clock);
       /* und jetzt die ganzen Busse */
@@ -206,16 +209,17 @@ int main(int argc, char **argv)
       }
       break;
     }
+    sleep(1);
     /* Jetzt Wachhund spielen, falls gewünscht */
     for(i=1; i<=num_busses; i++) {
       if(busses[i].watchdog == 0 && (busses[i].flags && USE_WATCHDOG))  {
-	  syslog(LOG_INFO, "Oops: Thread nangs, restarting it: (old pid: %d, %d)", busses[i].pid, busses[i].watchdog);
+	  syslog(LOG_INFO, "Oops: Interface Thread %d hangs, restarting it: (old pid: %d, %d)", i, busses[i].pid, busses[i].watchdog);
 	  pthread_cancel(busses[i].pid);
 	  sleep(1);
 	  error = pthread_create(&ttid_pid, NULL, busses[i].thr_func, (void *)i);
 	  if(error)
 	      {
-		  perror("cannot start Interface Thread!");
+		  perror("cannot restart Interface Thread!");
 		  exit(1);
 	      }
 	  busses[i].pid = ttid_pid;
@@ -223,14 +227,13 @@ int main(int argc, char **argv)
       }
       busses[i].watchdog = 0;
     }
-    sleep(1);
   }
-  syslog(LOG_INFO, "Shutdown server...");
+  syslog(LOG_INFO, "Shutting down server...");
   /* hierher kommen wir nur nach einem break */
   for(i=1; i<=num_busses; i++) {
       (*busses[i].term_func)(i);
   }
   DeletePIDFile();
-  syslog(LOG_INFO, "und tschüß..");
+  syslog(LOG_INFO, "und tschüß.. ;=)");
   exit(0);
 }

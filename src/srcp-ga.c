@@ -20,6 +20,7 @@
 #include <sys/time.h>
 
 #include "config-srcpd.h"
+#include "srcp-error.h"
 #include "srcp-ga.h"
 
 volatile struct _GA ga[MAX_BUSSES][MAXGAS];   // soviele Generic Accessoires gibts
@@ -83,17 +84,23 @@ int getGA(int bus, int addr, struct _GA *a)
   if((addr > 0) && (addr <= busses[bus].number_ga))
   {
     *a = ga[bus][addr];
-    return 0;
+    return SRCP_OK;
   }
   else
   {
-    return 1;
+    return SRCP_NODATA;
   }
 }
 
-int infoGA(struct _GA a, char *msg)
+int infoGA(int bus, int addr, char *msg)
 {
-  sprintf(msg, "INFO GA %d %d %d %ld\n", a.id, a.port, a.action, a.activetime);
+  if((addr > 0) && (addr <= busses[bus].number_ga))
+  {
+    sprintf(msg, "INFO %d GA %d %d %d %ld", bus, addr, ga[bus][addr].port, ga[bus][addr].action, ga[bus][addr].activetime);
+    return SRCP_OK;
+  } else {
+    return SRCP_NODATA;
+  }
   return 0;
 }    
 
@@ -103,7 +110,7 @@ int cmpGA(struct _GA a, struct _GA b)
       (a.port   == b.port));
 }
 
-void initGA()
+int initGA()
 {
   int bus, i;
   for(bus=0; bus<MAX_BUSSES; bus++) {
@@ -118,4 +125,5 @@ void initGA()
       tga[bus][i].id = 0;
     }
   }
+  return SRCP_OK;
 }

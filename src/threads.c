@@ -69,7 +69,7 @@ void* thr_handlePort(void *v)
     perror("listen()");
     exit(1);
   }
-
+  syslog(LOG_INFO, "listening...");
   while (1)
   {
     if((sckt=accept(boundSocket,(struct sockaddr*)&socketAddr,&addrlen)) < 0)
