@@ -303,19 +303,37 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
   {
     long int nelem, port;
     nelem = sscanf(parameter, "%ld", &port);
-    rc = infoFB(bus, port, reply);
+    if(nelem == 1)
+      rc = infoFB(bus, port, reply);
+    else {
+      rc = 418;
+    }
+      
   }
   if (strncasecmp(device, "GL", 2) == 0)
   {
-    long addr;
-    sscanf(parameter, "%ld", &addr);
-    rc = infoGL(bus, addr, reply);
+    long nelem, addr;
+    nelem = sscanf(parameter, "%ld", &addr);
+    if(nelem == 1)
+      rc = infoGL(bus, addr, reply);
+    else
+      rc = 418;
   }
   if (strncasecmp(device, "GA", 2) == 0)
   {
-    long addr, port;
-    sscanf(parameter, "%ld %ld", &addr, &port);
-    rc = infoGA(bus, addr, port, reply);
+    long addr, port, nelem;
+    nelem = sscanf(parameter, "%ld %ld", &addr, &port);
+    switch (nelem) {
+      case 0:
+      case 1:
+        rc = 419;
+        break;
+      case 2:
+        rc = infoGA(bus, addr, port, reply);
+        break;
+      default:
+        rc = 418;
+      }
   }
   if (strncasecmp(device, "SM", 2) == 0)
   {
@@ -561,7 +579,7 @@ int doCmdClient(int Socket, int sessionid)
     memset(reply, 0, sizeof(reply));
     sscanf(line, "%s %ld %s %900c", command, &bus, devicegroup, parameter);
     DBG(bus, DBG_INFO, "getting command from session %ld: %s %s %s", sessionid, command,  devicegroup, parameter);
-    rc = SRCP_WRONGVALUE;
+    rc = SRCP_UNKNOWNCOMMAND;
     reply[0] = 0x00;
 
     if((bus >= 0) && (bus < MAX_BUSSES))

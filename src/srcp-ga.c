@@ -220,6 +220,8 @@ int initGA(int busnumber, int addr, const char *protocol)
     free(ga[busnumber].gastate[addr].protocol);
     ga[busnumber].gastate[addr].protocol = malloc(strlen(protocol+1));
     strcpy(ga[busnumber].gastate[addr].protocol, protocol);
+    ga[busnumber].gastate[addr].activetime = 0;
+    ga[busnumber].gastate[addr].action = 0;
     return SRCP_OK;
   }
   else
@@ -316,7 +318,8 @@ int init_GA(int busnumber, int number)
     ga[busnumber].numberOfGa = number;
     for(i=0;i<number;i++) {
       ga[busnumber].gastate[i].protocol = NULL;
-			ga[busnumber].gastate[i].locked_by = 0;
+	ga[busnumber].gastate[i].locked_by = 0;
+      ga[busnumber].gastate[i].action = 0;    
 		}
   }
   return 0;
