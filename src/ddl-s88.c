@@ -328,6 +328,6 @@ void *thr_sendrec_S88(void *v)
 
 void *thr_sendrec_dummy(void *v)
 {
-    while (1)
-	sleep(1);
+  while(1)
+    sleep(1);
 }
