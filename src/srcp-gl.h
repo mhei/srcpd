@@ -52,7 +52,7 @@ int termGL(int busnumber, int addr);
 int isInitializedGL(int busnumber, int addr);
 
 int lockGL(int busnumber, int addr, long int sessionid);
-int getlockGL(int busnumber, int addr, long int sessionid);
+int getlockGL(int busnumber, int addr, long int *sessionid);
 int unlockGL(int busnumber, int addr, long int sessionid);
 void unlock_gl_bysessionid(long int sessionid);
 

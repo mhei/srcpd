@@ -271,14 +271,29 @@ int infoGL(int busnumber, int addr, char* msg)
   return SRCP_INFO;
 }
 
+/* has to use a semaphore, must be atomare! */
 int lockGL(int busnumber, int addr, long int sessionid)
 {
-  return SRCP_NOTSUPPORTED;
+  if(gl[busnumber].glstate[addr].locked_by==sessionid)
+  {
+    return SRCP_OK;
+  }
+  else
+  {
+    if(gl[busnumber].glstate[addr].locked_by==0) {
+        gl[busnumber].glstate[addr].locked_by=sessionid;
+        return SRCP_OK;
+    } else {
+        return SRCP_DEVICELOCKED;      
+    }
+  }
+  /* unreached */
 }
 
-int getlockGL(int busnumber, int addr, long int sessionid)
+int getlockGL(int busnumber, int addr, long int *session_id)
 {
-  return SRCP_NOTSUPPORTED;
+  *session_id = gl[busnumber].glstate[addr].locked_by;
+  return SRCP_OK;
 }
 
 
