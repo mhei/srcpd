@@ -35,7 +35,7 @@ int startup_FB(void);
 int init_FB(int bus, int number);
 int get_number_fb(int bus);
 
-int getFB(int bus, int port, struct timeval *time);
+int getFB(int bus, int port, struct timeval *time, int *value);
 void updateFB(int bus, int port, int value);
 /* setzt alle Binärports auf einmal */
 int setFBmodul(int bus, int mod, int values);

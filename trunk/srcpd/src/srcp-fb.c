@@ -92,10 +92,10 @@ static void queue_reset_fb(int busnumber, int port, struct timeval *ctime)
   pthread_mutex_unlock(&queue_mutex_reset[busnumber]);
 }
 
-int getFB(int bus, int port, struct timeval *time)
+int getFB(int bus, int port, struct timeval *time, int *value)
 {
-  int result;
-  result = fb[bus].fbstate[port-1].state;
+  int result=SRCP_OK;
+  *value = fb[bus].fbstate[port-1].state;
   *time  = fb[bus].fbstate[port-1].timestamp;
   return result;
 }
@@ -205,8 +205,9 @@ int setFBmodul(int bus, int modul, int values)
 int infoFB(int bus, int port, char *msg)
 {
   struct timeval time;
-  int state = getFB(bus, port, &time);
-  if(state>=0)
+  int state;
+  int rc = getFB(bus, port, &time, &state);
+  if(rc>=SRCP_OK)
   {
     sprintf(msg, "%ld.%ld 100 INFO %d FB %d %d",
      time.tv_sec, time.tv_usec/1000, bus, port, state);
