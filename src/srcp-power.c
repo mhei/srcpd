@@ -15,7 +15,8 @@
 
 #include "srcp-power.h"
 
-int setPower(int bus, int state, char *msg)
+int
+setPower(int bus, int state, char *msg)
 {
   busses[bus].power_state = state;
   strcpy(busses[bus].power_msg, msg);
@@ -23,18 +24,21 @@ int setPower(int bus, int state, char *msg)
   return SRCP_OK;
 }
 
-int getPower(int bus)
+int
+getPower(int bus)
 {
   return busses[bus].power_state;
 }
 
-int infoPower(int bus, char *msg)
+int
+infoPower(int bus, char *msg)
 {
   sprintf(msg, "%d POWER %s %s", bus, busses[bus].power_state?"ON":"OFF", busses[bus].power_msg);
   return SRCP_INFO;
 }
 
-int initPower(int bus)
+int
+initPower(int bus)
 {
     return SRCP_OK;
 }

@@ -30,7 +30,7 @@
 volatile struct _GL gl[MAX_BUSSES][MAXGLS];   // aktueller Stand, mehr gibt es nicht
 
 /* Kommandoqueues pro Bus */
-static struct _GL queue[MAX_BUSSES][QUEUELEN];	// Kommandoqueue.
+static struct _GL queue[MAX_BUSSES][QUEUELEN];  // Kommandoqueue.
 static pthread_mutex_t queue_mutex[MAX_BUSSES];
 static int out[MAX_BUSSES], in[MAX_BUSSES];
 
@@ -39,79 +39,89 @@ static int queue_len(int bus);
 static int queue_isfull(int bus);
 
 /* Übernehme die neuen Angaben für die Lok, einige wenige Prüfungen */
-int queueGL(int bus, int addr, int dir, int speed, int maxspeed, int f,  int f1, int f2, int f3, int f4)
+int
+queueGL(int bus, int addr, int dir, int speed, int maxspeed, int f,  int f1, int f2, int f3, int f4)
 {
   struct timeval akt_time;
 
   syslog(LOG_INFO, "setGL für %i", addr);
-  if ((addr > 0) && (addr <= busses[bus].number_gl) ) {
-	while (queue_isfull(bus)) {
-	    usleep(1000);
-	}
-
-	pthread_mutex_lock(&queue_mutex[bus]);
-
-      queue[bus][in[bus]].speed     = speed;
-      queue[bus][in[bus]].maxspeed  = maxspeed;
-      queue[bus][in[bus]].direction = dir;
-      queue[bus][in[bus]].funcs     = f1 + (f2 << 1) + (f3 << 2) + (f4 << 3) + (f << 4);
-      gettimeofday(&akt_time, NULL);
-      queue[bus][in[bus]].tv        = akt_time;
-      queue[bus][in[bus]].id        = addr;
-	in[bus]++;
-	if (in[bus] == QUEUELEN)
-	    in[bus] = 0;
-	    
-	pthread_mutex_unlock(&queue_mutex[bus]);
-    } else {
-	return -1;
+  if ((addr > 0) && (addr <= busses[bus].number_gl) )
+  {
+    while (queue_isfull(bus))
+    {
+      usleep(1000);
     }
-    return SRCP_OK;
+
+    pthread_mutex_lock(&queue_mutex[bus]);
+
+    queue[bus][in[bus]].speed     = speed;
+    queue[bus][in[bus]].maxspeed  = maxspeed;
+    queue[bus][in[bus]].direction = dir;
+    queue[bus][in[bus]].funcs     = f1 + (f2 << 1) + (f3 << 2) + (f4 << 3) + (f << 4);
+    gettimeofday(&akt_time, NULL);
+    queue[bus][in[bus]].tv        = akt_time;
+    queue[bus][in[bus]].id        = addr;
+    in[bus]++;
+    if (in[bus] == QUEUELEN)
+      in[bus] = 0;
+      
+    pthread_mutex_unlock(&queue_mutex[bus]);
+  }
+  else
+  {
+    return -1;
+  }
+  return SRCP_OK;
 }
 
-int queue_GL_isempty(int bus)
+int
+queue_GL_isempty(int bus)
 {
-    return (in[bus] == out[bus]);
+  return (in[bus] == out[bus]);
 }
 
-static int queue_len(int bus)
+static int
+queue_len(int bus)
 {
-    if (in[bus] >= out[bus])
-	return in[bus] - out[bus];
-    else
-	return QUEUELEN + in[bus] - out[bus];
+  if (in[bus] >= out[bus])
+    return in[bus] - out[bus];
+  else
+    return QUEUELEN + in[bus] - out[bus];
 }
 
 /* maybe, 1 element in the queue cannot be used.. */
-static int queue_isfull(int bus)
+static int
+queue_isfull(int bus)
 {
-    return queue_len(bus) >= QUEUELEN - 1;
+  return queue_len(bus) >= QUEUELEN - 1;
 }
 
 /** liefert nächsten Eintrag und >=0, oder -1 */
-int getNextGL(int bus, struct _GL *gl)
+int
+getNextGL(int bus, struct _GL *gl)
 {
-    if (in[bus] == out[bus])
-	return -1;
-    *gl = queue[bus][out[bus]];
-    return out[bus];
+  if (in[bus] == out[bus])
+    return -1;
+  *gl = queue[bus][out[bus]];
+  return out[bus];
 }
 
 /** liefert nächsten Eintrag oder -1, setzt fifo pointer neu! */
-int unqueueNextGL(int bus, struct _GL *gl)
+int
+unqueueNextGL(int bus, struct _GL *gl)
 {
-    if (in[bus] == out[bus])
-	return -1;
+  if (in[bus] == out[bus])
+    return -1;
 
-    *gl = queue[bus][out[bus]];
-    out[bus]++;
-    if (out[bus] == QUEUELEN)
-	out[bus] = 0;
-    return out[bus];
+  *gl = queue[bus][out[bus]];
+  out[bus]++;
+  if (out[bus] == QUEUELEN)
+    out[bus] = 0;
+  return out[bus];
 }
 
-
-int getGL(int bus, int addr, struct _GL *l)
+int
+getGL(int bus, int addr, struct _GL *l)
 {
   if((addr>0) && (addr <= busses[bus].number_gl))
   {
@@ -127,7 +137,8 @@ int getGL(int bus, int addr, struct _GL *l)
 /**
 
 */
-int setGL(int bus, int addr, struct _GL l)
+int
+setGL(int bus, int addr, struct _GL l)
 {
   if((addr>0) && (addr <= busses[bus].number_gl))
   {
@@ -141,19 +152,22 @@ int setGL(int bus, int addr, struct _GL l)
   }
 }
 
-int initGL(int bus, int addr, const char *protocol, int protoversion, int n_fs, int n_func) {
-    gl[bus][addr].n_fs=n_fs;
-    gl[bus][addr].n_func=n_func;
-    gl[bus][addr].protoversion=protoversion;
-    strncpy(&gl[bus][addr].protocol, protocol, sizeof(gl[bus][addr].protocol));
-    return SRCP_OK;
+int
+initGL(int bus, int addr, const char *protocol, int protoversion, int n_fs, int n_func)
+{
+  gl[bus][addr].n_fs=n_fs;
+  gl[bus][addr].n_func=n_func;
+  gl[bus][addr].protoversion=protoversion;
+  strncpy(&gl[bus][addr].protocol, protocol, sizeof(gl[bus][addr].protocol));
+  return SRCP_OK;
 }
 
-int infoGL(int bus, int addr, char* msg)
+int
+infoGL(int bus, int addr, char* msg)
 {
   if((addr>0) && (addr <= busses[bus].number_gl))
   {
-  sprintf(msg, "%d GL %d %d %d %d %d %d %d %d %d",
+    sprintf(msg, "%d GL %d %d %d %d %d %d %d %d %d",
       bus, addr, gl[bus][addr].direction, gl[bus][addr].speed, gl[bus][addr].maxspeed, 
       (gl[bus][addr].funcs & 0x10)?1:0,
       (gl[bus][addr].funcs & 0x01)?1:0,
@@ -168,26 +182,32 @@ int infoGL(int bus, int addr, char* msg)
   return SRCP_INFO;
 }
 
-int cmpGL(struct _GL a, struct _GL b){
+int
+cmpGL(struct _GL a, struct _GL b)
+{
   return ((a.direction == b.direction) &&
       (a.speed     == b.speed)     &&
       (a.maxspeed  == b.maxspeed)  &&
-      (a.n_func     == b.n_func)     &&
+      (a.n_func     == b.n_func)   &&
       (a.n_fs      == b.n_fs)      &&
       (a.funcs     == b.funcs));
 }
 
-int startup_GL(void){
+int
+startup_GL(void)
+{
   int bus;
-  for(bus=0; bus<MAX_BUSSES; bus++) {
-       pthread_mutex_init(&queue_mutex[bus], NULL);
+  for(bus=0; bus<MAX_BUSSES; bus++)
+  {
+    pthread_mutex_init(&queue_mutex[bus], NULL);
   }
   return SRCP_OK;
 }
 
 // es gibt Decoder für 14, 27, 28 und 128 FS
 // Achtung bei IB alles auf 126 FS bezogen (wenn Ergebnis > 0, dann noch eins aufaddieren)
-int calcspeed(int vs, int vmax, int n_fs)
+int
+calcspeed(int vs, int vmax, int n_fs)
 {
   int rs;
   if(0==vmax)

@@ -29,7 +29,8 @@
 #include "io.h"
 #include "config-srcpd.h"
 
-int readByte(int bus, unsigned char *the_byte)
+int
+readByte(int bus, unsigned char *the_byte)
 {
   int i;
 
@@ -55,7 +56,8 @@ int readByte(int bus, unsigned char *the_byte)
   return (i == 1 ? 0 : -1);
 }
 
-void writeByte(int bus, unsigned char *b, unsigned long msecs)
+void
+writeByte(int bus, unsigned char *b, unsigned long msecs)
 {
   if(busses[bus].debuglevel == 0)
   {
@@ -68,7 +70,8 @@ void writeByte(int bus, unsigned char *b, unsigned long msecs)
   usleep(msecs * 1000);
 }
 
-void save_comport(int businfo)
+void
+save_comport(int businfo)
 {
   int fd;
 
@@ -84,7 +87,8 @@ void save_comport(int businfo)
   }
 }
 
-void restore_comport(int bus)
+void
+restore_comport(int bus)
 {
   int fd;
 
@@ -103,7 +107,8 @@ void restore_comport(int bus)
   }
 }
 
-void close_comport(int bus)
+void
+close_comport(int bus)
 {
   struct termios interface;
   syslog(LOG_INFO, "Closing serial line");

@@ -7,8 +7,8 @@
  */
 
 
-#ifndef _SRCPGA_H_
-#define _SRCPGA_H_
+#ifndef _SRCP_GA_H
+#define _SRCP_GA_H
 
 #include <sys/time.h>
 

@@ -7,8 +7,8 @@
  */
 
 
-#ifndef _SRCPTIME_H
-#define _SRCPTIME_H
+#ifndef _SRCP_TIME_H
+#define _SRCP_TIME_H
 
 #include <sys/time.h>
 
@@ -22,6 +22,8 @@ struct _VTIME
   int ratio_x; /* ratio_x == 0 und die Uhr steht */
   int ratio_y;
 };
+
+int startup_TIME(void);
 
 int setTime(int d, int h, int m, int s, int rx, int ry);
 int getTime(struct _VTIME *vt);

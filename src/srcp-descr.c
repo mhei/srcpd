@@ -6,6 +6,10 @@
  *
  */
 
- int startup_DESCRIPTION(void) {
-    return 0;
- }
+#include "srcp-descr.h"
+
+int
+startup_DESCRIPTION(void)
+{
+  return 0;
+}

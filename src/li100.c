@@ -58,7 +58,8 @@ extern int testmode;
 static volatile struct _GA tga[50];
 
 #if 0
-void* thr_sendrecli100(void *v)
+void*
+thr_sendrecli100(void *v)
 {
   int fd;
   unsigned char byte2send;
@@ -103,7 +104,8 @@ void* thr_sendrecli100(void *v)
   }      // Ende WHILE(1)
 }
 
-void send_command_ga_li(int fd)
+void
+send_command_ga_li(int fd)
 {
   int i, i1;
   int temp;
@@ -199,7 +201,8 @@ void send_command_ga_li(int fd)
       }
 }
 
-void send_command_gl_li(int fd)
+void
+send_command_gl_li(int fd)
 {
   int i;
   int temp;
@@ -264,7 +267,8 @@ void send_command_gl_li(int fd)
   }
 }
 
-void check_status_li(int fd)
+void
+check_status_li(int fd)
 {
   int i;
   int temp;
@@ -370,7 +374,8 @@ void check_status_li(int fd)
   }
 }
 
-int send_command(int fd, char *str)
+int
+send_command(int fd, char *str)
 {
   int ctr, i;
   int status;
@@ -406,7 +411,8 @@ int send_command(int fd, char *str)
 //9232 RETURN
 }
 
-int init_lineLI100(char *name)
+int
+init_lineLI100(char *name)
 {
   int status;
   int fd;

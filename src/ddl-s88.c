@@ -31,15 +31,21 @@
 #include "config-srcpd.h"
 #include "ddl-s88.h"
 
-int init_bus_S88(int bus) {
-    return 0;
+int
+init_bus_S88(int bus)
+{
+  return 0;
 }
 
-int term_bus_S88(int bus) {
-    return 0;
+int
+term_bus_S88(int bus)
+{
+  return 0;
 }
+
 //Initializing S88-modules (or compatible) on i.e. printerport
-int init_s88(char *name)
+int
+init_s88(char *name)
 {
   unsigned char byte2send;
   int fd;
@@ -61,7 +67,8 @@ int init_s88(char *name)
   return fd;
 }
 
-void load_s88(int fd)
+void
+load_s88(int fd)
 {
   unsigned char byte2send;
 
@@ -77,7 +84,8 @@ void load_s88(int fd)
   write(fd, &byte2send, 1);
 }
 
-int get_s88(int fd)
+int
+get_s88(int fd)
 {
   int ret, i, tmp;
   unsigned int byte2send;
@@ -98,7 +106,8 @@ int get_s88(int fd)
   return ret;
 }
 
-void clear_s88(int bus)
+void
+clear_s88(int bus)
 {
   int i;
 
@@ -107,7 +116,8 @@ void clear_s88(int bus)
     get_s88(bus);
 }
 
-void* thr_sendrec_S88(void *v)
+void *
+thr_sendrec_S88(void *v)
 {
   int i;
   int fd;

@@ -14,6 +14,11 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-int startup_SESSION(void) {
-    return 0;
+
+#include "srcp-session.h"
+
+int
+startup_SESSION(void)
+{
+  return 0;
 }

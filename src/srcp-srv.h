@@ -7,8 +7,10 @@
  */
 
 
-#ifndef _SRCPSRV_H_
-#define _SRCPSRV_H_
+#ifndef _SRCP_SRV_H
+#define _SRCP_SRV_H
+
+int startup_SERVER(void);
 
 int init_bus_server(int);
 int term_bus_server(int);

@@ -14,8 +14,8 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-#ifndef DDL_S88_H
-#define DDL_S88_H
+#ifndef _DDL_S88_H
+#define _DDL_S88_H
 
 int init_bus_S88();
 int term_bus_S88();

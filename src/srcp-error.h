@@ -6,8 +6,8 @@
  *
  */
 
-#ifndef SRCP_ERROR_H
-#define SRCP_ERROR_H 1
+#ifndef _SRCP_ERROR_H
+#define _SRCP_ERROR_H
 
 /* Handshake */
 #define SRCP_OK_GO 200
