@@ -17,11 +17,6 @@
 
 #include "config-srcpd.h"
 #include "io.h"
-
-#include "ib.h"
-#include "m605x.h"
-#include "loopback.h"
-
 #include "netserver.h"
 #include "srcp-descr.h"
 #include "srcp-fb.h"
@@ -97,14 +92,13 @@ int main(int argc, char **argv)
   int error, i;
   int sleep_ctr;
   pid_t pid;
-  char c, conffile[MAXPATHLEN];
+  char c, *conffile;
   pthread_t ttid_cmd, ttid_clock, ttid_pid;
   struct _THREADS cmds;
   install_signal_handler();
 
-  // MAM 01/13/03 Pfad wird von Automake erzeugt
-  //
-  sprintf(conffile, "%s/srcpd.conf",PREFIX);
+  conffile = malloc(strlen(PREFIX+12));
+  sprintf(conffile, "%s/srcpd.conf", PREFIX);
 
   /* Parameter auswerten */
   opterr=0;
@@ -113,6 +107,8 @@ int main(int argc, char **argv)
     switch(c)
     {
       case 'f':
+        free(conffile);
+        conffile = malloc(strlen(optarg)+1);
         strcpy(conffile, optarg);
         break;
       case 'v':
