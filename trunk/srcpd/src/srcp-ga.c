@@ -233,12 +233,15 @@ int initGA(int busnumber, int addr, const char *protocol)
   DBG(busnumber, DBG_DEBUG, "init GA: %d %s", addr, protocol);
   if((addr > 0) && (addr <= number_ga))
   {
+    char msg[100];
     free(ga[busnumber].gastate[addr].protocol);
     gettimeofday( &ga[busnumber].gastate[addr].inittime, NULL);
     ga[busnumber].gastate[addr].protocol = malloc(strlen(protocol+1));
     strcpy(ga[busnumber].gastate[addr].protocol, protocol);
     ga[busnumber].gastate[addr].activetime = 0;
     ga[busnumber].gastate[addr].action = 0;
+    describeGA(busnumber, addr, msg);
+    queueInfoMessage(msg);
     return SRCP_OK;
   }
   else
