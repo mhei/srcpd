@@ -39,7 +39,7 @@ void readconfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   busses[busnumber].driverdata = malloc(sizeof(struct _HSI_88_DATA));
   busses[busnumber].flags |= FB_ORDER_0;
   busses[busnumber].flags |= FB_16_PORTS;
-  strcpy(busses[busnumber].description, "FB POWER");
+  strcpy(busses[busnumber].description, "FB");
   __hsi->refresh = 10000;
   __hsi->number_fb[0] = 0;
   __hsi->number_fb[1] = 0;
@@ -294,13 +294,14 @@ void* thr_sendrec_HSI_88(void *v)
 
   busnumber = (int)v;
   refresh_time = __hsi->refresh;
-  DBG(busnumber, DBG_INFO, "thr_sendrec_hsi_88 is startet");
+  DBG(busnumber, DBG_INFO, "thr_sendrec_HSI_88 is startet");
 
   zaehler1 = 0;
   fb_zaehler1 = 0;
   fb_zaehler2 = 1;
   i = 0;
   temp = 1;
+
   if (busses[busnumber].debuglevel <= DBG_DEBUG)
   {
     status = 1;
@@ -350,11 +351,6 @@ void* thr_sendrec_HSI_88(void *v)
         }
       }
     }
-  }
-  else
-  {
-    i = 0;
-    temp = 1;
   }
 
   while(1)
