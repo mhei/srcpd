@@ -385,8 +385,10 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
         rc = SRCP_LISTTOOSHORT;
     } else {
         rc = SRCP_UNSUPPORTEDDEVICEGROUP;
-        if(strncmp(devgrp, "GL", 2)==0)
-            rc = getlockGL(bus, addr, 0 /* change to session-id */);
+        if(strncmp(devgrp, "GL", 2)==0) {
+            long int session_id;
+            rc = getlockGL(bus, addr, &session_id);
+        }
         if(strncmp(devgrp, "GA", 2)==0)
             rc = getlockGA(bus, addr, 0 /* change to session-id */);
     }
