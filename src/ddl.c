@@ -15,6 +15,7 @@
 #include "srcp-power.h"
 #include "srcp-srv.h"
 #include "srcp-info.h"
+#include "srcp-error.h"
 
 #define __DDL ((DDL_DATA*)busses[busnumber].driverdata)
 
@@ -856,6 +857,30 @@ void *thr_refresh_cycle(void *v) {
    return NULL;
 } 
 
+int init_gl_DDL(struct _GLSTATE *gl) {
+    switch(gl->protocol) {
+	    case 'M': /* Motorola Codes */
+		return ( gl -> protocolversion>0 && gl->protocolversion<=5) ? SRCP_OK : SRCP_WRONGVALUE;
+		break;
+	    case 'N':
+		return ( gl -> protocolversion>0 && gl->protocolversion<=5) ? SRCP_OK : SRCP_WRONGVALUE;
+		break;
+    }
+    return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
+}
+
+int init_ga_DDL(struct _GASTATE *ga) {
+    switch(ga->protocol) {
+	    case 'M': /* Motorola Codes */
+		return SRCP_OK;
+		break;
+	    case 'N':
+		return SRCP_OK;
+		break;
+    }
+    return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
+}
+
 
 void readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
@@ -864,6 +889,9 @@ void readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   busses[busnumber].type = SERVER_DDL;
   busses[busnumber].init_func = &init_bus_DDL;
   busses[busnumber].term_func = &term_bus_DDL;
+  busses[busnumber].init_gl_func = &init_gl_DDL;
+  busses[busnumber].init_ga_func = &init_ga_DDL;  
+
   busses[busnumber].thr_func = &thr_sendrec_DDL;
 
   busses[busnumber].driverdata = malloc(sizeof(struct _DDL_DATA));
@@ -892,6 +920,20 @@ void readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, int busnumber)
       child = child -> next;
       continue;
     }
+    if (strcmp(child->name, "number_gl") == 0)
+    {
+      char *txt =
+      xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      __DDL->number_gl = atoi(txt);
+      free(txt);
+    }
+    if (strcmp(child->name, "number_ga") == 0)
+    {
+      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      __DDL->number_ga = atoi(txt);
+      free(txt);
+    }
+
     if (strcmp(child->name, "enable_ringindicator_checking") == 0)
     {
       char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);

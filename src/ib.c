@@ -42,6 +42,7 @@
 #include "srcp-fb.h"
 #include "srcp-power.h"
 #include "srcp-info.h"
+#include "srcp-error.h"
 
 #define __ib ((IB_DATA*)busses[busnumber].driverdata)
 
@@ -69,9 +70,8 @@ void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   busses[busnumber].driverdata = malloc(sizeof(struct _IB_DATA));
   busses[busnumber].flags |= FB_16_PORTS;
   busses[busnumber].baudrate = B38400;
-  busses[busnumber].numberOfSM = 9999;
-  strcpy(busses[busnumber].description, "GA GL FB SM POWER LOCK DESCRIPTION");
 
+  strcpy(busses[busnumber].description, "GA GL FB SM POWER LOCK DESCRIPTION");
   __ib->number_fb = 0;            // max. 31 for S88; Loconet is missing this time
   __ib->number_ga = 256;
   __ib->number_gl = 80;
@@ -138,7 +138,7 @@ int init_gl_IB(struct _GLSTATE *gl) {
 	gl -> n_fs = 126;
 	gl -> n_func = 5;
 	gl -> protocol = 'P';
-	return 0;
+	return SRCP_OK;
 }
 /**
  * initGA: modifies the ga data used to initialize the device
@@ -146,7 +146,7 @@ int init_gl_IB(struct _GLSTATE *gl) {
  */
 int init_ga_IB(struct _GASTATE *ga) {
 	ga -> protocol = 'M';
-	return 0;
+	return SRCP_OK;
 }
 
 int init_bus_IB(int busnumber)

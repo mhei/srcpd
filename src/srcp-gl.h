@@ -20,7 +20,7 @@ struct _GLSTATE
   int protocolversion;
   int n_func;
   int n_fs;
-  int id;       /* Adresse, wird auch als Semaphor genutzt! */
+  int id;       /* Adresse  */
   int speed;    /* Sollgeschwindigkeit skal. auf 0..14      */
   int direction;/* 0/1/2                                    */
   int funcs;   /* Fx..F1, F                                */
@@ -53,7 +53,6 @@ int infoGL(int busnumber, int addr, char* info);
 int describeGL(int busnumber, int addr, char *msg);
 int initGL(int busnumber, int addr, const char protocol, int protoversion, int n_fs, int n_func);
 int termGL(int busnumber, int addr);
-
 
 int lockGL(int busnumber, int addr, long int duration, long int sessionid);
 int getlockGL(int busnumber, int addr, long int *sessionid);

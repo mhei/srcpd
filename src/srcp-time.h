@@ -30,6 +30,7 @@ int setTIME(int d, int h, int m, int s);
 int initTIME(int fx, int fy);
 int getTIME(struct _VTIME *vt);
 int infoTIME(char *msg);
+int waitTIME(int d, int h, int m, int s, char *reply);
 
 int describeTIME(char *reply);
 void* thr_clock(void *);

@@ -15,6 +15,7 @@
 #include "srcp-power.h"
 #include "srcp-srv.h"
 #include "srcp-info.h"
+#include "srcp-error.h"
 
 #define __loopback ((LOOPBACK_DATA*)busses[busnumber].driverdata)
 
@@ -102,7 +103,7 @@ int term_bus_Loopback(int bus)
  
  */
 int init_gl_Loopback(struct _GLSTATE *gl) {
-	return 0;
+	return SRCP_OK;
 }
 
 /**
@@ -110,7 +111,7 @@ int init_gl_Loopback(struct _GLSTATE *gl) {
 
  */
 int init_ga_Loopback(struct _GASTATE *ga) {
-	return 0;
+	return SRCP_OK;
 }
 
 /* Initialisiere den Bus, signalisiere Fehler */
