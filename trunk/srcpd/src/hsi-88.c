@@ -39,7 +39,7 @@ void readconfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   busses[busnumber].driverdata = malloc(sizeof(struct _HSI_88_DATA));
   busses[busnumber].flags |= FB_ORDER_0;
   busses[busnumber].flags |= FB_16_PORTS;
-  strcpy(busses[busnumber].description, "FB");
+  strcpy(busses[busnumber].description, "FB POWER");
   __hsi->refresh = 10000;
   __hsi->number_fb[0] = 0;
   __hsi->number_fb[1] = 0;
