@@ -138,7 +138,7 @@ int unqueueNextSM(int busnumber, struct _SM *l)
   return out[busnumber];
 }
 
-int setSM(int busnumber, int type, int addr, int typeaddr, int bit, int value)
+int setSM(int busnumber, int type, int addr, int typeaddr, int bit, int value, int return_code)
 {
   int number_sm = get_number_sm(busnumber);
   struct timeval tv;
@@ -148,7 +148,7 @@ int setSM(int busnumber, int type, int addr, int typeaddr, int bit, int value)
   if ( (addr == -1) || ((addr > 0) && (addr <= number_sm) && (type == CV)) )
   {
     gettimeofday(&tv, NULL);
-    queueInfoSM(busnumber, addr, type, typeaddr, bit, value, &tv);
+    queueInfoSM(busnumber, addr, type, typeaddr, bit, value, return_code, &tv);
     return SRCP_OK;
   }
   else

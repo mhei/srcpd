@@ -163,7 +163,7 @@ int queueInfoFB(int busnumber, int port, int action, struct timeval *akt_time)
   return SRCP_OK;
 }
 
-int queueInfoSM(int busnumber, int addr, int type, int typeaddr, int bit, int value, struct timeval *akt_time)
+int queueInfoSM(int busnumber, int addr, int type, int typeaddr, int bit, int value, int return_code, struct timeval *akt_time)
 {
   if (number_of_clients > 0)
   {
@@ -177,20 +177,71 @@ int queueInfoSM(int busnumber, int addr, int type, int typeaddr, int bit, int va
     
     pthread_mutex_lock(&queue_mutex_info);
 
-    sprintf(buffer, "%ld.%ld 100 INFO %d SM %d",
-      akt_time->tv_sec, akt_time->tv_usec/1000,
-      busnumber, addr);
-    switch (type)
+    if (return_code == 0)
     {
-      case REGISTER:
-        sprintf(tmp, "REG %d %d", typeaddr, value);
-        break;
-      case CV:
-        sprintf(tmp, "CV %d %d", typeaddr, value);
-        break;
-      case CV_BIT:
-        sprintf(tmp, "CVBIT %d %d %d", typeaddr, bit, value);
-        break;
+      sprintf(buffer, "%ld.%ld 100 INFO %d SM %d",
+        akt_time->tv_sec, akt_time->tv_usec/1000,
+        busnumber, addr);
+      switch (type)
+      {
+        case REGISTER:
+          sprintf(tmp, "REG %d %d", typeaddr, value);
+          break;
+        case CV:
+          sprintf(tmp, "CV %d %d", typeaddr, value);
+          break;
+        case CV_BIT:
+          sprintf(tmp, "CVBIT %d %d %d", typeaddr, bit, value);
+          break;
+      }
+    }
+    else
+    {
+      sprintf(buffer, "%ld.%ld 600 ERROR %d SM %d",
+        akt_time->tv_sec, akt_time->tv_usec/1000,
+        busnumber, addr);
+      switch (return_code)
+      {
+        case 0xF2:
+          sprintf(tmp, "Cannot terminate task ");
+          break;
+        case 0xF3:
+          sprintf(tmp, "No task to terminate");
+          break;
+        case 0xF4:
+          sprintf(tmp, "Task terminated");
+          break;
+        case 0xF6:
+          sprintf(tmp, "XPT_DCCQD: Not Ok (direkt bit read mode is (probably) not supported)");
+          break;
+        case 0xF7:
+          sprintf(tmp, "XPT_DCCQD: Ok (direkt bit read mode is (probably) supported)");
+          break;
+        case 0xF8:
+          sprintf(tmp, "Error during Selectrix read");
+          break;
+        case 0xF9:
+          sprintf(tmp, "No acknowledge to paged operation (paged r/w not supported?)");
+          break;
+        case 0xFA:
+          sprintf(tmp, "Error during DCC direct bit mode operation");
+          break;
+        case 0xFB:
+          sprintf(tmp, "Generic Error");
+          break;
+        case 0xFC:
+          sprintf(tmp, "No decoder detected");
+          break;
+        case 0xFD:
+          sprintf(tmp, "Short! (on the PT)");
+          break;
+        case 0xFE:
+          sprintf(tmp, "No acknowledge from decoder (but a write maybe was successful)");
+          break;
+        case 0xFF:
+          sprintf(tmp, "Timeout");
+          break;
+      }
     }
     sprintf(info_queue[in], "%s %s\n", buffer, tmp);
     in++;

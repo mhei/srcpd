@@ -63,6 +63,10 @@
 static struct _GASTATE tga[50];
 static int working_IB;
 
+static int last_type[MAX_BUSSES];
+static int last_typeaddr[MAX_BUSSES];
+static int last_bit[MAX_BUSSES];
+
 static int init_line_IB(int);
 
 void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node, int busnumber)
@@ -158,6 +162,7 @@ int init_bus_IB(int busnumber)
     working_IB = 1;
 
   printf("INIT_BUS_IB mit Code: %d\n", status);
+  last_type[busnumber] = -1;
   return status;
 }
 
@@ -562,6 +567,11 @@ void send_command_sm(int busnumber)
   {
     unqueueNextSM(busnumber, &smakt);
 
+    last_type[busnumber]     = smakt.type;
+    last_typeaddr[busnumber] = smakt.typeaddr;
+    last_bit[busnumber]      = smakt.bit;
+
+    syslog(LOG_INFO, "in send_command_sm: last_type[%d] = %d", busnumber, last_type[busnumber]);    
     switch (smakt.command)
     {
       case SET:
@@ -602,7 +612,6 @@ void send_command_sm(int busnumber)
       case VERIFY:
         break;
     }
-    check_status_pt(busnumber);
   }
 }
 
@@ -716,7 +725,7 @@ void check_status(int busnumber)
       readByte(busnumber, 1, &rr);
   }
 
-  if(xevnt1 & 0x01)        // we should send an XPT_event-command
+  if(xevnt3 & 0x01)        // we should send an XPT_event-command
     check_status_pt(busnumber);
 }
 
@@ -748,6 +757,11 @@ void check_status_pt(int busnumber)
   for (i=0;i<(int)rr[0];i++)
     readByte(busnumber, 1, &rr[i+1]);
 
+  if(last_type[busnumber] != -1)
+  {
+    setSM(busnumber, last_type[busnumber], -1, last_typeaddr[busnumber], last_bit[busnumber], (int)rr[2], (int)rr[1]);
+    last_type[busnumber]     = -1;
+  }
 }
 
 static int open_comport(int busnumber, speed_t baud)

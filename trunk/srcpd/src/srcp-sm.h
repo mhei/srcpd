@@ -55,7 +55,7 @@ int queue_SM_isempty(int busnumber);
 int unqueueNextSM(int busnumber, struct _SM *l);
 
 int getSM(int busnumber, int addr, struct _SM *l);
-int setSM(int busnumber, int type, int addr, int typeaddr, int bit, int value);
+int setSM(int busnumber, int type, int addr, int typeaddr, int bit, int value, int return_value);
 int infoSM(int busnumber, int command, int type, int addr, int typeaddr, int bit, int value, char* info);
 
 #endif
