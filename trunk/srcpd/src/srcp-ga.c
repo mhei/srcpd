@@ -7,72 +7,123 @@
  * This software is published under the restrictions of the 
  * GNU License Version2
  *
+ * 04.07.2001 Frank Schmischke
+ *            - Feld f|r Vormerkungen wurde auf 50 reduziert
+ *            - Position im Feld f|r Vormerkung ist jetzt unabhngig von der
+ *              Decoderadresse
  */
 
-#include <sys/time.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/time.h>
+
+#include "config-srcpd.h"
 #include "srcp-ga.h"
 
-volatile struct _GA ga_mm[MAXGAS];  /* soviele Generic Accessoires gibts             */
-volatile struct _GA nga_mm[MAXGAS]; /* soviele Generic Accessoires gibts, neue Werte */
+volatile struct _GA ga[MAXGAS];   // soviele Generic Accessoires gibts
+volatile struct _GA nga[50];      // max. 50 Änderungen puffern, neue Werte noch nicht gesendet
+volatile struct _GA oga[50];      // manuelle Änderungen
+volatile struct _GA tga[50];      // max. 50 Änderungen puffern, neue Werte sind aktiv, warten auf inaktiv
 
+volatile int commands_ga	= 0;
+volatile int sending_ga		= 0;
+
+int MAXGAS_SERVER[NUMBER_SERVERS] =
+{
+  1024, 256, 1024, 1024
+};
+
+extern int working_server;
 
 /* setze den Schaltdekoder, einige wenige Prüfungen, max. 2/3 Sekunde warten */
-int setGA(char *prot, int addr, int port, int aktion, long activetime) {
-    int i;
-    struct timezone dummy;
-    /* Only Marklin Protocol is relevant, P only if inside the address space */
-    /* P is considered the same as M */
-    if( (strncasecmp(prot, "M", 1)==0 || strncasecmp(prot, "P", 1)==0) && addr>0 && addr<MAXGAS) {
-	i=0;
-	do {
-	    if(nga_mm[addr].id) {
-		i++;
-		usleep(1000);
-	    }
-	    if(nga_mm[addr].id==0) {
-		strcpy((void *) nga_mm[addr].prot, prot);
-		nga_mm[addr].action     = aktion;
-		nga_mm[addr].port       = port;
-		nga_mm[addr].activetime = activetime;
-		gettimeofday(&nga_mm[addr].tv[port], &dummy);
-		nga_mm[addr].id         = addr;
-		break;
-	    }
-	} while(i<660);
-	return 1;
+int setGA(char *prot, int addr, int port, int aktion, long activetime)
+{
+  int i;
+  int status;
+  struct timeval akt_time;
+
+  status = 0;
+  if((addr > 0) && (addr < MAXGAS_SERVER[working_server]))
+  {
+    for(i=0;i<100;i++)					// warte auf Freigabe
+    {
+    	if(sending_ga == 0)				// es wird nichts gesendet
+    		break;
+    	usleep(10);
     }
-    return 0;
+
+  	for(i=0;i<50;i++)
+	  {
+	  	if((nga[i].id = addr))	  // alten Auftrag wieder löschen
+	  	{
+	  		nga[i].id = 0;
+	  	  break;
+	  	}
+	  }
+	  if(i==50)
+	  	for(i=0;i<50;i++)					// suche freien Platz in Liste
+		  {
+	  		if((nga[i].id == 0))
+	  	  	break;
+	  	}
+
+    if(i<50)
+    {
+	    strcpy((void *) nga[i].prot, prot);
+			nga[i].action     = aktion;
+			nga[i].port       = port;
+			nga[i].activetime = activetime;
+	    gettimeofday(&akt_time, NULL);
+	    nga[i].tv[port]   = akt_time;
+			nga[i].id         = addr;
+			commands_ga = 1;
+			status = 1;
+		}
+	}
+	return status;
 }
 
-
-int getGA(char *prot, int addr, struct _GA *a) {
-    if(strncasecmp(prot, "M", 1)==0 && addr>0 && addr<MAXGAS) {
-	*a = ga_mm[addr];
-	return 0;
-    } else {
-	return 1;
-    }
+int getGA(char *prot, int addr, struct _GA *a)
+{
+  if((addr > 0) && (addr < MAXGAS_SERVER[working_server]))
+  {
+  	*a = ga[addr];
+	  return 0;
+  }
+  else
+  {
+	  return 1;
+  }
 }
 
-int infoGA(struct _GA a, char *msg) {
-    sprintf(msg, "INFO GA %s %d %d %d %ld\n", a.prot, a.id, a.port, a.action, a.activetime);
-    return 0;
+int infoGA(struct _GA a, char *msg)
+{
+  sprintf(msg, "INFO GA %s %d %d %d %ld\n", a.prot, a.id, a.port, a.action, a.activetime);
+  return 0;
 }    
 
-int cmpGA(struct _GA a, struct _GA b) {
-    return ((a.action == b.action) &&
-	    (a.port   == b.port)   
-	    );
+int cmpGA(struct _GA a, struct _GA b)
+{
+  return ((a.action == b.action) &&
+	    (a.port   == b.port));
 }
 
-void initGA() {
-    int i;
-    for(i=0; i<MAXGAS;i++) {
-	strcpy((void *) ga_mm[i].prot, "M");
-	ga_mm[i].id = i;
-    }
-
+void initGA()
+{
+  int i;
+  for(i=0; i<MAXGAS;i++)
+  {
+	  strcpy((void *) ga[i].prot, "M");
+	  ga[i].id = i;
+  }
+  for(i=0; i<50;i++)
+  {
+	  strcpy((void *) nga[i].prot, "M");
+	  nga[i].id = i;
+	  strcpy((void *) oga[i].prot, "M");
+	  oga[i].id = i;
+	  strcpy((void *) tga[i].prot, "M");
+	  tga[i].id = i;
+  }
 }

@@ -10,13 +10,15 @@
 #include "m605x.h"
 #include "srcp-srv.h"
 
+extern int server_reset_state;
+extern int server_shutdown_state;
 
 void server_reset()
 {
-    server_reset_state = 1;
+  server_reset_state = 1;
 }
 
 void server_shutdown()
 {
-    server_shutdown_state = 1;
+  server_shutdown_state = 1;
 }

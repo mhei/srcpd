@@ -10,13 +10,12 @@
 #ifndef _THREADS_H_
 #define _THREADS_H_
 
-typedef struct _THREADS {
-    int socket;
-    void *func;
+typedef struct _THREADS
+{
+  int socket;
+  void *func;
 } THREADS;
 
 void* thr_handlePort(void *);
-
-extern struct _VTIME vtime;
 
 #endif

@@ -7,8 +7,8 @@
  */
 
 
-#ifndef _NETSERVER_H_
-#define _NETSERVER_H_
+#ifndef _NETSERVER_H
+#define _NETSERVER_H
 
 int   socket_readline(int socket, char *line, int len);
 void* thr_doCmdClient(void* v);
