@@ -103,7 +103,11 @@ int main(int argc, char **argv)
   struct _THREADS cmds;
   install_signal_handler();
 
+#ifdef __FreeBSD__
+  strcpy(conffile, "/usr/local/etc/srcpd.conf");
+#else
   strcpy(conffile, "/etc/srcpd.conf");
+#endif
   /* Parameter auswerten */
   opterr=0;
   while((c=getopt(argc, argv, "f:hv")) != EOF)
@@ -226,7 +230,7 @@ int main(int argc, char **argv)
     }
     pthread_detach(ttid_pid);
     busses[i].pid = ttid_pid;
-    syslog(LOG_INFO, "Interface Thread %d started successfully type(%d): pid %ld", i, busses[i].type, busses[i].pid);
+    syslog(LOG_INFO, "Interface Thread %d started successfully type(%d): pid %ld", i, busses[i].type, (long)(busses[i].pid));
   }
   syslog(LOG_INFO, "All Threads started");
   server_shutdown_state = 0;
@@ -253,9 +257,9 @@ int main(int argc, char **argv)
       {
         if(busses[i].watchdog == 0 && (busses[i].flags & USE_WATCHDOG))
         {
-          syslog(LOG_INFO, "Oops: Interface Thread %d hangs, restarting it: (old pid: %ld, %d)", i, busses[i].pid, busses[i].watchdog);
+          syslog(LOG_INFO, "Oops: Interface Thread %d hangs, restarting it: (old pid: %ld, %d)", i, (long) busses[i].pid, busses[i].watchdog);
           pthread_cancel(busses[i].pid);
-          waitpid(busses[i].pid, NULL, 0);
+          waitpid((long) busses[i].pid, NULL, 0);
           error = pthread_create(&ttid_pid, NULL, busses[i].thr_func, (void *)i);
           if(error)
           {
