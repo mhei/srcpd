@@ -21,6 +21,7 @@
 #include <sys/param.h>
 #include <stdarg.h>
 
+#include "config.h"
 #include "srcp-gl.h"
 #include "srcp-ga.h"
 
