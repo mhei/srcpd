@@ -34,7 +34,7 @@ ln -sf ../../etc/init.d/srcpd /usr/sbin/rcsrcpd
 #
 # Initialize runlevel links
 #
-sbin/insserv etc/init.d/srcpd
+usr/lib/lsb/install_initd /etc/init.d/srcpd
 
 %files
 %defattr(-,root,root)
@@ -47,4 +47,4 @@ sbin/insserv etc/init.d/srcpd
 
 %preun
 etc/init.d/srcpd stop
-sbin/insserv -r etc/init.d/srcpd
+usr/lib/lsb/remove_initd /etc/init.d/srcpd
