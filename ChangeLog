@@ -1,3 +1,9 @@
+2005-03-28  Frank Schmischke  <frank.schmischke@t-online.de>
+
+ * hsi-88: improve detect interface on usb-seriell-adapter
+ * li100: check version of LZ100
+             send GL for version >= 3.00
+
 2005-03-14  Manuel Borchers <manuel@matronix.de>
 
  * i2c-dev: major modifications of writting to i2c-devices
