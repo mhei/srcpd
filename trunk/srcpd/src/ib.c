@@ -278,6 +278,7 @@ void send_command_ga(int busnumber)
         }
         writeByte(busnumber, &byte2send, 2);
         readByte(busnumber, 1, &rr);
+        gatmp.action=0;
         setGA(busnumber, addr, gatmp);
         tga[i].id=0;
       }
@@ -324,7 +325,6 @@ void send_command_ga(int busnumber)
             gatmp.t.tv_usec -= 1000000;
           }
           tga[i1] = gatmp;
-          status = 0;
           DBG(busnumber, DBG_DEBUG, "GA %i für Abschaltung um %i,%i auf %i", tga[i].id, (int)tga[i].t.tv_sec, (int)tga[i].t.tv_usec, i);
           break;
         }
