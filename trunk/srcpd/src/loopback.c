@@ -111,7 +111,9 @@ int init_gl_Loopback(struct _GLSTATE *gl) {
 
  */
 int init_ga_Loopback(struct _GASTATE *ga) {
-	return SRCP_OK;
+  if( (ga -> protocol == 'M') ||  (ga -> protocol == 'N') ||  (ga -> protocol == 'P') )
+      return SRCP_OK;
+  return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
 }
 
 /* Initialisiere den Bus, signalisiere Fehler */

@@ -168,7 +168,7 @@ for (busnumber = 0; busnumber <= num_busses; busnumber++)
         for (port = 0; port <=1; port++) {
           rc = infoGA(busnumber, i, port, reply);
           if ( (rc == SRCP_INFO) ) {
-      socket_writereply(Socket, reply);*reply = 0x00;
+	      socket_writereply(Socket, reply);*reply = 0x00;
           }
       }
       getlockGA(busnumber, i, &lockid);

@@ -184,7 +184,7 @@ int infoGA(int busnumber, int addr, int port, char* msg)
 {
   int number_ga = get_number_ga(busnumber);
 
-  if((addr>0) && (addr <= number_ga) && (port>=0) && (port<MAXGAPORT) && (ga[busnumber].gastate[addr].tv[port].tv_sec>0) )
+  if((addr>0) && (addr <= number_ga) && (port>=0) && (port<MAXGAPORT) ) // && (ga[busnumber].gastate[addr].tv[port].tv_sec>0) )
   {
     sprintf(msg, "%ld.%ld 100 INFO %d GA %d %d %d\n",
       ga[busnumber].gastate[addr].tv[port].tv_sec,
@@ -203,23 +203,27 @@ int infoGA(int busnumber, int addr, int port, char* msg)
 
 int initGA(int busnumber, int addr, const char protocol)
 {
+  int rc = SRCP_OK;
   int number_ga = get_number_ga(busnumber);
   DBG(busnumber, DBG_DEBUG, "init GA: %d %c", addr, protocol);
   if((addr > 0) && (addr <= number_ga))
   {
     char msg[100];
-    gettimeofday( &ga[busnumber].gastate[addr].inittime, NULL);
     ga[busnumber].gastate[addr].protocol = protocol;
+    gettimeofday( &ga[busnumber].gastate[addr].inittime, NULL);
     ga[busnumber].gastate[addr].activetime = 0;
     ga[busnumber].gastate[addr].action = 0;
     ga[busnumber].gastate[addr].tv[0].tv_sec=0;
     ga[busnumber].gastate[addr].tv[1].tv_sec=0;
+
     if(busses[busnumber].init_ga_func && ga[busnumber].gastate[addr].state == 0)
-	    (*busses[busnumber].init_ga_func)(&ga[busnumber].gastate[addr]);
-    ga[busnumber].gastate[addr].state = 1;
-    describeGA(busnumber, addr, msg);
-    queueInfoMessage(msg);
-    return SRCP_OK;
+	    rc = (*busses[busnumber].init_ga_func)(&ga[busnumber].gastate[addr]);
+    if (rc ==SRCP_OK) {
+	ga[busnumber].gastate[addr].state = 1;
+        describeGA(busnumber, addr, msg);
+        queueInfoMessage(msg);
+    }
+    return rc;
   }
   else
   {
