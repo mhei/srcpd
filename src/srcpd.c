@@ -123,12 +123,13 @@ int main(int argc, char **argv)
       case 'h':
         printf("srcpd -f <conffile> -v -h\n");
         printf("v           -  prints program version and exits\n");
-        printf("f            -  use another config file (default /etc/srcpd.conf)\n");
+        printf("f            -  use another config file (default %s)\n", conffile);
+        printf("h           -  prints this text and exits\n");
         exit(1);
         break;
       default:
         printf("unknown Parameter\n");
-        printf("use: \"srcpd -h\" for help\n");
+        printf("use: \"srcpd -h\" for help, exiting\n");
         exit(1);
         break;
     }
