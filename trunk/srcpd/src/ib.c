@@ -99,22 +99,6 @@ void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     child = child->next;
   }
 
-  if(init_GA(busnumber, __ib->number_ga))
-  {
-    __ib->number_ga = 0;
-    DBG(busnumber, DBG_ERROR, "Can't create array for assesoirs");
-  }
-
-  if(init_GL(busnumber, __ib->number_gl))
-  {
-    __ib->number_gl = 0;
-    DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
-  }
-  if(init_FB(busnumber, __ib->number_fb*16))
-  {
-    __ib->number_fb = 0;
-    DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
-  }
 }
 
 int cmpTime(struct timeval *t1, struct timeval *t2)
@@ -160,7 +144,24 @@ int init_ga_IB(struct _GASTATE *ga) {
 int init_bus_IB(int busnumber)
 {
   int status;
+	
+	if(init_GA(busnumber, __ib->number_ga))
+  {
+    __ib->number_ga = 0;
+    DBG(busnumber, DBG_ERROR, "Can't create array for assesoirs");
+  }
 
+  if(init_GL(busnumber, __ib->number_gl))
+  {
+    __ib->number_gl = 0;
+    DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
+  }
+  if(init_FB(busnumber, __ib->number_fb*16))
+  {
+    __ib->number_fb = 0;
+    DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
+  }
+	
   status = 0;
   printf("Bus %d with debuglevel %d\n", busnumber, busses[busnumber].debuglevel);
   if(busses[busnumber].type != SERVER_IB)
@@ -694,7 +695,9 @@ void check_status_ib(int busnumber)
   {
     readByte(busnumber, 1, &xevnt2);
     if(xevnt2 & 0x80)
+		{
       readByte(busnumber, 1, &xevnt3);
+		}
   }
 
   if(xevnt1 & 0x01)        // mindestens eine Lok wurde von Hand gesteuert
@@ -744,7 +747,7 @@ void check_status_ib(int busnumber)
       // get old data, to know which FS the user wants to have...
 	  getGL(busnumber, gltmp.id, &glakt);
 	  // recalc speed
-	  gltmp.speed = (gltmp.speed * glakt.n_fs) / 126; 
+	  gltmp.speed = (gltmp.speed * glakt.n_fs) / 126;
 		setGL(busnumber, gltmp.id, gltmp);
 	  
 	  // 5. byte real speed (is ignored)
