@@ -23,7 +23,6 @@
 #include <sys/ioctl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <syslog.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -35,8 +34,8 @@ int readByte(int bus, int wait, unsigned char *the_byte)
   int i;
   int status;
 
-  // with debuglevel 7, we will not really work on hardware
-  if (busses[bus].debuglevel > 6)
+  // with debuglevel beyond DBG_DEBUG, we will not really work on hardware
+  if (busses[bus].debuglevel > DBG_DEBUG)
   {  
     i = 1;
     *the_byte = 0;
@@ -45,23 +44,18 @@ int readByte(int bus, int wait, unsigned char *the_byte)
   {
     status = ioctl(busses[bus].fd, FIONREAD, &i);
     if(status < 0)
-      syslog(LOG_INFO, "IOCTL   status: %d with errno = %d", status, errno);
-    if(busses[bus].debuglevel > 5)
-    {
-      syslog(LOG_INFO, "on bus %d (fd = %d), there are bytes to read: %d", bus, busses[bus].fd, i);
-    }
+      DBG(bus, DBG_ERROR, "IOCTL   status: %d with errno = %d", status, errno);
+    DBG(bus, DBG_DEBUG, "on bus %d (fd = %d), there are bytes to read: %d", bus, busses[bus].fd, i);
+
     // read only, if there is really an input
     if ((i > 0) || (wait == 1))
     {
       i = read(busses[bus].fd, the_byte, 1);
       if(i < 0)
-        syslog(LOG_INFO, "READ    status: %d with errno = %d", i, errno);
-      if(busses[bus].debuglevel >= 2)
-      {
+        DBG(bus, DBG_ERROR, "READ    status: %d with errno = %d", i, errno);
         if (i > 0)
-          syslog(LOG_INFO, "bus %d byte read: 0x%02x", bus, *the_byte);
+          DBG(bus, DBG_DEBUG, "bus %d byte read: 0x%02x", bus, *the_byte);
       }
-    }
   }
   return (i > 0 ? 0 : -1);
 }
@@ -73,10 +67,7 @@ void writeByte(int bus, unsigned char *b, unsigned long msecs)
     write(busses[bus].fd, b, 1);
     tcflush(busses[bus].fd, TCOFLUSH);
   }
-  if(busses[bus].debuglevel >= 2)
-  {
-    syslog(LOG_INFO, "bus %d (FD: %d) byte sent: 0x%02x", bus, busses[bus].fd, *b);
-  }
+  DBG(bus, DBG_DEBUG, "bus %d (FD: %d) byte sent: 0x%02x", bus, busses[bus].fd, *b);
   usleep(msecs * 1000);
 }
 
@@ -100,25 +91,25 @@ void restore_comport(int bus)
 {
   int fd;
 
-  syslog(LOG_INFO, "Restoreing attributes for serial line %s", busses[bus].device);
+  DBG(bus, DBG_INFO, "Restoreing attributes for serial line %s", busses[bus].device);
   fd=open(busses[bus].device,O_RDWR);
   if (fd == -1)
   {
-    syslog(LOG_INFO, "dammit, couldn't open device.");
+    DBG(bus, DBG_ERROR, "dammit, couldn't open device.");
   }
   else
   {
-    syslog(LOG_INFO, "alte Werte werden wiederhergestellt");
+    DBG(bus, DBG_INFO, "alte Werte werden wiederhergestellt");
     tcsetattr(fd, TCSANOW, &busses[bus].devicesettings);
     close(fd);
-    syslog(LOG_INFO, "erfolgreich wiederhergestellt");
+    DBG(bus, DBG_INFO, "erfolgreich wiederhergestellt");
   }
 }
 
 void close_comport(int bus)
 {
   struct termios interface;
-  syslog(LOG_INFO, "Closing serial line");
+  DBG(bus, DBG_INFO,  "Closing serial line");
 
   tcgetattr(busses[bus].fd, &interface);
   cfsetispeed(&interface, B0);

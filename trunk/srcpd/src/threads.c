@@ -19,7 +19,6 @@
 #include <termios.h>
 #include <fcntl.h>
 #include <signal.h>
-#include <syslog.h>
 
 #include <grp.h>
 #include <pwd.h>
@@ -45,16 +44,16 @@ void change_privileges(int bus)
     {
       if (setegid(group->gr_gid) != 0)
       {
-        syslog(LOG_INFO, "could not change to group %s: %s",group->gr_name,strerror(errno));
+            DBG(0, DBG_WARN, "could not change to group %s: %s",group->gr_name,strerror(errno));
       }
       else
       {
-        syslog(LOG_INFO, "changed to group %s",group->gr_name);
+            DBG(0, DBG_INFO, "changed to group %s",group->gr_name);
       }
     }
     else
     {
-      syslog(LOG_INFO, "could not change to group %s: invalid group or ENOMEM",grp);
+          DBG(0,  DBG_WARN, "could not change to group %s: invalid group or ENOMEM",grp);
     }
   }
 
@@ -65,16 +64,16 @@ void change_privileges(int bus)
     {
       if (seteuid(passwd->pw_uid) != 0)
       {
-        syslog(LOG_INFO,"could not change to user %s: %s",passwd->pw_name,strerror(errno));
+            DBG(0, DBG_WARN,"could not change to user %s: %s",passwd->pw_name,strerror(errno));
       }
       else
       {
-        syslog(LOG_INFO,"changed to user %s",passwd->pw_name);
+        DBG(0, DBG_INFO, "changed to user %s",passwd->pw_name);
       }
     }
     else
     {
-      syslog(LOG_INFO,"could not change to user %s: invalid user or ENOMEM", uid);
+      DBG(0, DBG_WARN,"could not change to user %s: invalid user or ENOMEM", uid);
     }
   }
 }
@@ -141,7 +140,7 @@ thr_handlePort(void *v)
       setsockopt(sckt, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val));
 
       if(busses[0].debuglevel)
-        syslog(LOG_INFO, "New Client at Port %d from %s:%d", ti.socket,
+        DBG(0, DBG_INFO, "New Client at Port %d from %s:%d", ti.socket,
      inet_ntoa(socketAddr.sin_addr), ntohs(socketAddr.sin_port));
      error = pthread_create(&ttid, NULL, ti.func, (void*)sckt);
       if(error)

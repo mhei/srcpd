@@ -18,7 +18,6 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-#include <syslog.h>
 #include <sys/time.h>
 #include <pthread.h>
 
@@ -264,11 +263,11 @@ void unlock_ga_bysessionid(long int sessionid)
 {
   int i,j;
   int number;
-  syslog(LOG_INFO, "unlock GA by session-ID %ld", sessionid);
+  DBG(0, DBG_DEBUG, "unlock GA by session-ID %ld", sessionid);
   for(i=0; i<MAX_BUSSES; i++)
   {
     number = get_number_ga(i);
-    syslog(LOG_INFO, "number of GA for busnumber %d is %d", i, number);
+    DBG(i, DBG_DEBUG, "number of GA for busnumber %d is %d", i, number);
     for(j=0;j<number; j++)
     {
       if(ga[i].gastate[j].locked_by == sessionid)

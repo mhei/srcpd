@@ -30,7 +30,7 @@
 #include <termios.h>
 #include <fcntl.h>
 #include <signal.h>
-#include <syslog.h>
+
 #include <sys/time.h>
 
 #include "srcp-gl.h"
@@ -153,7 +153,7 @@ int queueInfoFB(int busnumber, int port, int action, struct timeval *akt_time)
     sprintf(info_queue[in], "%ld.%ld 100 INFO %d FB %d %d\n",
       akt_time->tv_sec, akt_time->tv_usec/1000,
       busnumber, port, action);
-    syslog(LOG_INFO, "data queued: %s", info_queue[in]);
+      DBG(busnumber, DBG_INFO, "data queued: %s", info_queue[in]);
     in++;
     if (in == QUEUELENGTH_INFO)
       in = 0;
@@ -267,7 +267,6 @@ int getNextInfo(char *info)
   pthread_mutex_lock(&queue_mutex_info);
   strcpy(info, info_queue[out]);
   pthread_mutex_unlock(&queue_mutex_info);
-  syslog(LOG_INFO, "getNextInfo: %s", info);
   return out;
 }
 
@@ -283,7 +282,6 @@ int unqueueNextInfo(char *info)
   if (out == QUEUELENGTH_INFO)
     out = 0;
   pthread_mutex_unlock(&queue_mutex_info);
-  syslog(LOG_INFO, "unqueueNextInfo: %s", info);
   return out;
 }
 
@@ -304,7 +302,7 @@ int startup_INFO(void)
 // if it is first client, start thread
 static int addNewClient(int Socket, int sessionid)
 {
-  syslog(LOG_INFO, "addNewClient");
+  DBG(0, DBG_INFO, "addNewClient %ld", sessionid);
   pthread_mutex_lock(&queue_mutex_client);
   if(number_of_clients == max_clients)
   {
@@ -334,7 +332,7 @@ static int addNewClient(int Socket, int sessionid)
       socketOfClients = malloc(max_clients * sizeof(int));
       sessionOfClients = malloc(max_clients * sizeof(int));
       if(pthread_create(&ttid_info, NULL, thr_doInfoClient, NULL))
-        syslog(LOG_INFO, "cannot start Info Thread!");
+        DBG(0, DBG_ERROR, "cannot start Info Thread!");
       pthread_detach(ttid_info);
     }
   }
@@ -342,8 +340,6 @@ static int addNewClient(int Socket, int sessionid)
   sessionOfClients[number_of_clients] = sessionid;
   number_of_clients++;
   pthread_mutex_unlock(&queue_mutex_client);
-
-  syslog(LOG_INFO, "addNewClient done");
   return SRCP_OK;
 }
 
@@ -352,7 +348,7 @@ static int addNewClient(int Socket, int sessionid)
 // if it was last client, cancel thread
 static int removeClient(int client)
 {
-  syslog(LOG_INFO, "removeClient");
+  DBG(0, DBG_DEBUG, "removeClient %ld", client);
   pthread_mutex_lock(&queue_mutex_client);
   if (number_of_clients == 1)
   {
@@ -375,7 +371,6 @@ static int removeClient(int client)
     number_of_clients--;
   }
   pthread_mutex_unlock(&queue_mutex_client);
-  syslog(LOG_INFO, "removeClient done");
   return SRCP_OK;
 }
 
@@ -395,12 +390,12 @@ void sendInfos(int current)
     while (unqueueNextInfo(temp) != -1)
     {
       strcat(reply, temp);
-      syslog(LOG_INFO, "reply-length = %d", strlen(reply));
+      DBG(0, DBG_DEBUG, "reply-length = %d", strlen(reply));
       if(strlen(reply) > 900)
       {
         for (i = 0; i < number_of_clients; i++)
         {
-	  syslog(LOG_INFO, "send infos to client %d", i);
+	    DBG(0, DBG_DEBUG, "send infos to client %d", i);
           status = write(socketOfClients[i], reply, strlen(reply));
           if (status < 0)
           {
@@ -415,12 +410,12 @@ void sendInfos(int current)
       if (ctr <= 0)
         break;        // check for new clients
     }
-    syslog(LOG_INFO, "reply-length after loop = %d", strlen(reply));
+    DBG(0, DBG_DEBUG, "reply-length after loop = %d", strlen(reply));
     if(strlen(reply) > 0)
     {
       for (i = 0; i < number_of_clients; i++)
       {
-        syslog(LOG_INFO, "write infos to client %d at socket %d", i, socketOfClients[i]);
+        DBG(0, DBG_DEBUG, "write infos to client %d at socket %d", i, socketOfClients[i]);
         status = write(socketOfClients[i], reply, strlen(reply));
         if (status < 0)
         {
@@ -447,11 +442,11 @@ void sendInfos(int current)
     for (busnumber = 0; busnumber < MAX_BUSSES; busnumber++)
     {
 
-      syslog(LOG_INFO, "send all data for busnumber %d to new client", busnumber);
+      DBG(busnumber, DBG_DEBUG, "send all data for busnumber %d to new client", busnumber);
       // send all needed generic locomotivs
       gettimeofday(&start_time, NULL);
       number = get_number_gl(busnumber);
-      syslog(LOG_INFO, "send all locomotivs from busnumber %d to new client", busnumber);
+      DBG(busnumber, DBG_DEBUG, "send all locomotivs from busnumber %d to new client", busnumber);
       for (i = 1; i <= number; i++)
       {
         if(!isInitializedGL(busnumber, i))
@@ -478,7 +473,7 @@ void sendInfos(int current)
       // send all needed generic assesoires
       gettimeofday(&start_time, NULL);
       number = get_number_ga(busnumber);
-      syslog(LOG_INFO, "send all assesoirs from busnumber %d to new client", busnumber);
+      DBG(busnumber, DBG_DEBUG,  "send all assesoirs from busnumber %d to new client", busnumber);
       for (i = 1; i <= number; i++)
       {
         if(!isInitializedGA(busnumber, i))
@@ -503,7 +498,7 @@ void sendInfos(int current)
       // send all needed feedbacks
       gettimeofday(&start_time, NULL);
       number = get_number_fb(busnumber);
-      syslog(LOG_INFO, "send all feedbacks from busnumber %d to new client", busnumber);
+      DBG(busnumber, DBG_DEBUG,  "send all feedbacks from busnumber %d to new client", busnumber);
       for (i = 1; i <= number; i++)
       {
         value = getFB(busnumber, i, &cmp_time);
@@ -532,7 +527,7 @@ void sendInfos(int current)
     {
       write(socketOfClients[current], reply, strlen(reply));
     }
-    syslog(LOG_INFO, "all datas to new Info-Client sended");
+    DBG(0, DBG_DEBUG,  "all datas to new Info-Client sended");
   }
 }
 
@@ -547,10 +542,9 @@ int doInfoClient(int Socket, int sessionid)
 {
   int ret_code;
 
-  syslog(LOG_INFO, "new Info-client detected");
+  DBG(0, DBG_DEBUG, "new Info-client detected %ld", sessionid);
   if(addNewClient(Socket, sessionid) == SRCP_OK)
   {
-    syslog(LOG_INFO, "send all known datas");
     sendInfos(number_of_clients - 1);
     ret_code = SRCP_OK;
   }
@@ -568,7 +562,7 @@ void *thr_doInfoClient(void *v)
 {
   while(1)
   {
-    syslog(LOG_INFO, "I'm living with %d clients and %d entries in queue", number_of_clients, queueLengthInfo());
+    DBG(0, DBG_DEBUG, "I'm living with %d clients and %d entries in queue", number_of_clients, queueLengthInfo());
     if (number_of_clients == 0)
     {
       // no client is present, also wait a second

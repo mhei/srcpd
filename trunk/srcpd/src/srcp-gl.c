@@ -15,7 +15,6 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-#include <syslog.h>
 #include <pthread.h>
 #include <sys/time.h>
 
@@ -97,7 +96,7 @@ int queueGL(int busnumber, int addr, int dir, int speed, int maxspeed, int f,  i
 {
   struct timeval akt_time;
   int number_gl = get_number_gl(busnumber);
-  syslog(LOG_INFO, "setGL für %i", addr);
+  DBG(busnumber, DBG_DEBUG, "setGL für %i", addr);
   if ((addr > 0) && (addr <= number_gl) )
   {
     if (!isInitializedGL(busnumber, addr))
@@ -315,11 +314,11 @@ void unlock_gl_bysessionid(long int sessionid)
 {
   int i,j;
   int number;
-  syslog(LOG_INFO, "unlock GL by session-ID %ld", sessionid);
+  DBG(0, DBG_DEBUG, "unlock GL by session-ID %ld", sessionid);
   for(i=0; i<MAX_BUSSES; i++)
   {
     number = get_number_gl(i);
-    syslog(LOG_INFO, "number of gl for busnumber %d is %d", i, number);
+    DBG(i, DBG_DEBUG, "number of gl for busnumber %d is %d", i, number);
     for(j=0;j<number; j++)
     {
       if(gl[i].glstate[j].locked_by == sessionid)

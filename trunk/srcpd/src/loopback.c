@@ -15,7 +15,7 @@
 #include <termios.h>
 #include <fcntl.h>
 #include <signal.h>
-#include <syslog.h>
+// #include <syslog.h>
 
 #include <libxml/tree.h>
 
@@ -77,25 +77,25 @@ void readconfig_loopback(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   if(init_GL(busnumber, __loopback->number_gl))
   {
     __loopback->number_gl = 0;
-    syslog(LOG_INFO, "Can't create array for locomotivs");
+    DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
   }
   if(init_FB(busnumber, __loopback->number_fb))
   {
     __loopback->number_fb = 0;
-    syslog(LOG_INFO, "Can't create array for feedback");
+    DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
   }
 }
 
 int init_lineLoopback (char *name)
 {
   int FD;
-  syslog(LOG_INFO,"loopback open device %s (not really!)", name);
   FD = -1;
   return FD;
 }
 
 int term_bus_Loopback(int bus)
 {
+  DBG(bus, DBG_INFO, "loopback bus %d terminating", bus);
   return 0;
 }
 
@@ -104,16 +104,17 @@ int term_bus_Loopback(int bus)
 /* return code wird ignoriert (vorerst) */
 int init_bus_Loopback(int i)
 {
-  syslog(LOG_INFO,"loopback init: bus #%d, debug %d", i, busses[i].debuglevel);
+  DBG(i, DBG_INFO,"loopback init: bus #%d, debug %d", i, busses[i].debuglevel);
   if(busses[i].debuglevel==0)
   {
+   DBG(i, DBG_INFO, "loopback bus %d open device %s (not really!)", i, busses[i].device);
     busses[i].fd = init_lineLoopback(busses[i].device);
   }
   else
   {
     busses[i].fd = -1;
   }
-  syslog(LOG_INFO, "loopback init done");
+  DBG(i, DBG_INFO, "loopback init done");
   return 0;
 }
 
@@ -124,7 +125,7 @@ void* thr_sendrec_Loopback (void *v)
   int addr;
   int bus = (int) v;
   
-  syslog(LOG_INFO,"loopback started, bus #%d, %s", bus, busses[bus].device);
+  DBG(bus, DBG_INFO, "loopback started, bus #%d, %s", bus, busses[bus].device);
 
   busses[bus].watchdog = 1;
 

@@ -35,6 +35,18 @@ Konfiguration
     Per Default werden einige Parameter vorgegeben. Dies hat den Effekt, das
     nur Änderungen anegeben werden brauchen. Die Defaultwerte werden sich nicht
     "heimlich" ändern.
+
+    Verbosity
+    
+    Die Verbosity stellt den Umfang der syslog Meldungen ein.
+    
+    0 keine Meldungen außer Start/Stop
+    1 nur Fatale Fehler
+    2 zusätzlich Fehler
+    3 zusätzlich Warnungen
+    4 zusätzlich Informationen
+    5 zusätzlich Debugmeldungen
+    >5 Hardware nicht immer tatsächlich angesprochen
     
     DDL S88
     
