@@ -18,7 +18,7 @@
 struct _GL
 {
   char protocol[5];
-  int protoversion;
+  int protocolversion;
   int n_func;
   int n_fs;
   int id;       /* Adresse, wird auch als Semaphor genutzt! */
@@ -39,6 +39,7 @@ int unqueueNextGL(int bus, struct _GL *);
 int getGL(int bus, int addr, struct _GL *l);
 int setGL(int bus, int addr, struct _GL l);
 int infoGL(int bus, int addr, char* info);
+int describeGL(int bus, int addr, char *msg);
 int initGL(int bus, int addr, const char *protocol, int protoversion, int n_fs, int n_func);
 int termGL(int bus, int addr);
 

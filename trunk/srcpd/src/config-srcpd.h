@@ -60,6 +60,7 @@ typedef struct _BUS
   int power_state;
   int power_changed;
   char power_msg[100];
+  char description[100]; // bus description
   /* driver specific */
   void *driverdata;
 #if 0

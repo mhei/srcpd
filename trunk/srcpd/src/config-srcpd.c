@@ -106,6 +106,58 @@ static void register_bus(xmlDocPtr doc, xmlNodePtr node)
     }
     if (busnumber < MAX_BUSSES)
     {
+      if (strcmp(child->name, "type") == 0)
+      {
+        if (strcmp(txt, "M605X") == 0)
+        {
+          busses[busnumber].type = SERVER_M605X;
+          busses[busnumber].init_func = &init_bus_M6051;
+          busses[busnumber].term_func = &term_bus_M6051;
+          busses[busnumber].thr_func = &thr_sendrec_M6051;
+          busses[busnumber].driverdata = malloc(sizeof(struct _M6051_DATA));
+          ( (M6051_DATA *) busses[busnumber].driverdata)  -> number_fb = 0; /* max 31 */
+          ( (M6051_DATA *) busses[busnumber].driverdata)  -> number_ga = 256;
+          ( (M6051_DATA *) busses[busnumber].driverdata)  -> number_gl = 80;
+          strcpy(busses[busnumber].description, "GA GL FB POWER");
+        }
+        if (strcmp(txt, "IB") == 0)
+        {
+          busses[busnumber].type = SERVER_IB;
+          busses[busnumber].init_func = &init_bus_IB;
+          busses[busnumber].term_func = &term_bus_IB;
+          busses[busnumber].thr_func = &thr_sendrec_IB;
+          busses[busnumber].driverdata = malloc(sizeof(struct _IB_DATA));
+          strcpy(busses[busnumber].description, "GA GL FB POWER");
+        }
+        if (strcmp(txt, "LOOPBACK") == 0)
+        {
+          busses[busnumber].type = SERVER_LOOPBACK;
+          busses[busnumber].init_func = &init_bus_Loopback;
+          busses[busnumber].term_func = &term_bus_Loopback;
+          busses[busnumber].thr_func = &thr_sendrec_Loopback;
+          busses[busnumber].driverdata = malloc(sizeof(struct _LOOPBACK_DATA));
+          strcpy(busses[busnumber].description, "GA GL FB POWER");
+        }
+        if (strcmp(txt, "S88") == 0)
+        {
+          busses[busnumber].type = SERVER_S88;
+          busses[busnumber].init_func = &init_bus_S88;
+          busses[busnumber].term_func = &term_bus_S88;
+          busses[busnumber].thr_func = &thr_sendrec_S88;
+          busses[busnumber].driverdata = malloc(sizeof(struct _DDL_S88_DATA));
+          strcpy(busses[busnumber].description, "FB POWER");
+        }
+        if (strcmp(txt, "HSI-88") == 0)
+        {
+          busses[busnumber].type = SERVER_HSI_88;
+          busses[busnumber].init_func = &init_bus_HSI_88;
+          busses[busnumber].term_func = &term_bus_HSI_88;
+          busses[busnumber].thr_func = &thr_sendrec_HSI_88;
+          busses[busnumber].driverdata = malloc(sizeof(struct _HSI_S88_DATA));
+          strcpy(busses[busnumber].description, "FB POWER");
+        }
+      }
+
       if (strcmp(child->name, "device") == 0)
       {
         free(busses[busnumber].device);
@@ -117,47 +169,6 @@ static void register_bus(xmlDocPtr doc, xmlNodePtr node)
         }
         strcpy(busses[busnumber].device, txt);
       }
-      if (strcmp(child->name, "type") == 0)
-      {
-        if (strcmp(txt, "M605X") == 0)
-        {
-          busses[busnumber].type = SERVER_M605X;
-          busses[busnumber].init_func = &init_bus_M6051;
-          busses[busnumber].term_func = &term_bus_M6051;
-          busses[busnumber].thr_func = &thr_sendrec_M6051;
-          busses[busnumber].driverdata = malloc(sizeof(struct _M6051_DATA));
-        }
-        if (strcmp(txt, "IB") == 0)
-        {
-          busses[busnumber].type = SERVER_IB;
-          busses[busnumber].init_func = &init_bus_IB;
-          busses[busnumber].term_func = &term_bus_IB;
-          busses[busnumber].thr_func = &thr_sendrec_IB;
-//          busses[busnumber].driverdata = malloc(sizeof(struct _IB_DATA));
-        }
-        if (strcmp(txt, "LOOPBACK") == 0)
-        {
-          busses[busnumber].type = SERVER_LOOPBACK;
-          busses[busnumber].init_func = &init_bus_Loopback;
-          busses[busnumber].term_func = &term_bus_Loopback;
-          busses[busnumber].thr_func = &thr_sendrec_Loopback;
-        }
-        if (strcmp(txt, "S88") == 0)
-        {
-          busses[busnumber].type = SERVER_S88;
-          busses[busnumber].init_func = &init_bus_S88;
-          busses[busnumber].term_func = &term_bus_S88;
-          busses[busnumber].thr_func = &thr_sendrec_S88;
-        }
-        if (strcmp(txt, "HSI-88") == 0)
-        {
-          busses[busnumber].type = SERVER_HSI_88;
-          busses[busnumber].init_func = &init_bus_HSI_88;
-          busses[busnumber].term_func = &term_bus_HSI_88;
-          busses[busnumber].thr_func = &thr_sendrec_HSI_88;
-        }
-      }
-
       if (strcmp(child->name, "verbosity") == 0) {
         busses[busnumber].debuglevel = atoi(txt);
       }
@@ -179,16 +190,42 @@ static void register_bus(xmlDocPtr doc, xmlNodePtr node)
             case SERVER_M605X:
                 ( (M6051_DATA *) busses[busnumber].driverdata)  -> number_fb = atoi(txt);
                 break;
+            case SERVER_IB:
+                ( (IB_DATA *) busses[busnumber].driverdata)  -> number_fb = atoi(txt);
+                break;
+            case SERVER_LOOPBACK:
+                ( (LOOPBACK_DATA *) busses[busnumber].driverdata)  -> number_fb = atoi(txt);
+                break;
         }
       }
 
       if (strcmp(child->name, "maximum_address_for_locomotiv") == 0)
       {
-        ( (M6051_DATA *) busses[busnumber].driverdata)  -> number_gl = atoi(txt);
+        switch (busses[busnumber].type) {
+            case SERVER_M605X:
+                ( (M6051_DATA *) busses[busnumber].driverdata)  -> number_gl = atoi(txt);
+                break;
+            case SERVER_IB:
+                ( (IB_DATA *) busses[busnumber].driverdata)  -> number_gl = atoi(txt);
+                break;
+            case SERVER_LOOPBACK:
+                ( (LOOPBACK_DATA *) busses[busnumber].driverdata)  -> number_gl = atoi(txt);
+                break;
+        }
       }
       if (strcmp(child->name, "maximum_address_for_accessoire") == 0)
       {
-        ( (M6051_DATA *) busses[busnumber].driverdata)  -> number_ga = atoi(txt);
+        switch (busses[busnumber].type) {
+            case SERVER_M605X:
+                ( (M6051_DATA *) busses[busnumber].driverdata)  -> number_ga = atoi(txt);
+                break;
+            case SERVER_IB:
+                ( (IB_DATA *) busses[busnumber].driverdata)  -> number_ga = atoi(txt);
+                break;
+            case SERVER_LOOPBACK:
+                ( (LOOPBACK_DATA *) busses[busnumber].driverdata)  -> number_ga = atoi(txt);
+                break;
+        }
       }
 
       if (strcmp(child->name, "MODE_M6020") == 0)
@@ -234,10 +271,10 @@ void readConfig(const char *filename) {
   busses[0].type = SERVER_SERVER;
   busses[0].init_func = &init_bus_server;
   busses[0].term_func = &term_bus_server;
+  strcpy(busses[0].description, "SESSION SERVER TIME");
 
   /* some defaults */
   strcpy(PIDFILE, "/var/run/srcpd.pid");
-
   doc = load_config_xml(filename);
   if (doc != 0)  {
     walk_config_xml(doc);

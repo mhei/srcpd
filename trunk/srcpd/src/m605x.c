@@ -244,7 +244,7 @@ thr_sendrec_M6051(void *v)
       temp <<= 8;
       busses[bus].watchdog = 9;
       readByte(fd, &rr);
-      setFBmodul(bus, akt_S88-1, temp | rr);  // 0 based array index..
+      setFBmodul(bus, akt_S88, temp | rr);
       akt_S88++;
       if (akt_S88 > number_fb)
         akt_S88 = 1;

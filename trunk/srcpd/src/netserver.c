@@ -232,9 +232,7 @@ handleSET(int clientid, int bus, char *device, char *parameter, char *reply)
   return rc;
 }
 
-int
-handleGET(int clientid, int bus, char *device, char *parameter, char *reply)
-{
+int handleGET(int clientid, int bus, char *device, char *parameter, char *reply) {
   int rc = 423;
   *reply = 0x00;
   /* es wird etwas abgefragt */
@@ -267,13 +265,28 @@ handleGET(int clientid, int bus, char *device, char *parameter, char *reply)
       rc = infoTime(vtime, reply);
     }
   }
+  if(strncasecmp(device, "DESCRIPTION", 11) == 0) {
+    /* Beschreibungen gibt es deren 2 */
+    long int addr;
+    char devgrp[10];
+    int nelem=-1;
+    if(strlen(parameter)>0)
+        nelem = sscanf(parameter, "%s %ld", devgrp, &addr);
+    if(nelem <= 0) {
+        sprintf(reply, "%d DESCRIPTION %s", bus, busses[bus].description);
+        rc = SRCP_INFO;
+    } else {
+        if(strncmp(devgrp, "GL", 2)==0)
+            rc = describeGL(bus, addr, reply);
+    }
+  }
   return rc;
 }
 
 int
 handleRESET(int clientid, int bus, char *device, char *parameter, char *reply)
 {
-  return SRCP_UNSUPPORTED;
+  return SRCP_NOTSUPPORTED;
 }
 
 int
@@ -361,11 +374,9 @@ handleTERM(int clientid, int bus, char *device, char *parameter, char *reply)
   return rc;
 }
 
-int
-handleINIT(int clientid, int bus, char *device, char *parameter, char *reply)
-{
-  int rc = SRCP_UNSUPPORTED;
-  if (strncasecmp(device, "GL", 4) == 0)
+int handleINIT(int clientid, int bus, char *device, char *parameter, char *reply) {
+  int rc = SRCP_NOTSUPPORTED;
+  if (strncasecmp(device, "GL", 2) == 0)
   {
     long addr, protversion, n_fs, n_func;
     char prot[10];
@@ -385,13 +396,13 @@ handleINIT(int clientid, int bus, char *device, char *parameter, char *reply)
 int
 handleVERIFY(int clientid, int bus, char *device, char *parameter, char *reply)
 {
-  return SRCP_UNSUPPORTED;
+  return SRCP_NOTSUPPORTED;
 }
 
 int
 handleCHECK(int clientid, int bus, char *device, char *parameter, char *reply)
 {
-  return SRCP_UNSUPPORTED;
+  return SRCP_NOTSUPPORTED;
 }
 
 /***************************************************************
