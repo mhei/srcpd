@@ -1,6 +1,6 @@
 
-/* 
- * Vorliegende Software unterliegt der General Public License, 
+/*
+ * Vorliegende Software unterliegt der General Public License,
  * Version 2, 1991. (c) Matthias Trute & the srcpd team, 2000-2003.
  *
  */
@@ -15,10 +15,10 @@
 #define QUEUELEN 50
 
 /* aktueller Stand */
-static struct _GL gl[MAX_BUSSES]; 
+static struct _GL gl[MAX_BUSSES];
 
 /* Kommandoqueues pro Bus */
-static struct _GLSTATE queue[MAX_BUSSES][QUEUELEN]; 
+static struct _GLSTATE queue[MAX_BUSSES][QUEUELEN];
 static pthread_mutex_t queue_mutex[MAX_BUSSES];
 /* Schreibposition für die Writer der Queue */
 static int out[MAX_BUSSES], in[MAX_BUSSES];
@@ -32,7 +32,7 @@ static int queue_isfull(int busnumber);
  * returns true or false. false, if not all requierements are met.
  */
 int isValidGL(busnumber, addr) {
-    DBG(busnumber, DBG_INFO, "GL VALID: %d %d %d %d", busnumber, addr, num_busses, gl[busnumber].numberOfGl);
+    DBG(busnumber, DBG_INFO, "GL VALID: %d %d (from %d to %d)", busnumber, addr, num_busses, gl[busnumber].numberOfGl-1);
     if (busnumber > 0 &&  		/* in bus 0 GL are not allowed */
 	busnumber <= num_busses &&       /* only num_busses are configured */
 	gl[busnumber].numberOfGl > 0 && /* number of GL is set */
@@ -41,12 +41,11 @@ int isValidGL(busnumber, addr) {
 	return 1==1;
     } else {
 	return 1==0;
-	DBG(busnumber, DBG_DEBUG, "isValidGL: %d %d", busnumber, addr);
     }
 }
 
 /**
- * getMaxAddrGL: returns the maximum Address for GL on the given bus 
+ * getMaxAddrGL: returns the maximum Address for GL on the given bus
  * returns: <0: invalid busnumber
             =0: no GL on that bus
 	    >0: maximum address
@@ -121,9 +120,9 @@ int queueGL(int busnumber, int addr, int dir, int speed, int maxspeed, const int
 	// Protokollbezeichner und sonstige INIT Werte in die Queue kopieren!
 	queue[busnumber][in[busnumber]].protocol        = gl[busnumber].glstate[addr].protocol;
 	queue[busnumber][in[busnumber]].protocolversion = gl[busnumber].glstate[addr].protocolversion;
-	
+
 	queue[busnumber][in[busnumber]].speed     = calcspeed(speed, maxspeed, gl[busnumber].glstate[addr].n_fs);
-	
+
 	queue[busnumber][in[busnumber]].direction = dir;
 	queue[busnumber][in[busnumber]].funcs     = f;
 	gettimeofday(&akt_time, NULL);
@@ -226,7 +225,7 @@ int initGL(int busnumber, int addr, const char protocol, int protoversion, int n
     memset(&tgl, 0, sizeof(tgl));
     rc = SRCP_OK;
     gettimeofday(&tgl.inittime, NULL);
-    gettimeofday(&tgl.tv, NULL);    
+    gettimeofday(&tgl.tv, NULL);
     tgl.n_fs=n_fs;
     tgl.n_func=n_func;
     tgl.protocolversion=protoversion;
@@ -268,7 +267,7 @@ int resetGL(int busnumber, int addr) {
 	return SRCP_OK;
     } else {
 	return SRCP_NODATA;
-    }	
+    }
 }
 int describeGL(int busnumber, int addr, char *msg)
 {
@@ -295,7 +294,7 @@ int infoGL(int busnumber, int addr, char* msg)
     sprintf(msg, "%lu.%.3lu 100 INFO %d GL %d %d %d %d %d",
       gl[busnumber].glstate[addr].tv.tv_sec,
       gl[busnumber].glstate[addr].tv.tv_usec/1000,
-          
+
       busnumber, addr, gl[busnumber].glstate[addr].direction,
       gl[busnumber].glstate[addr].speed,
       gl[busnumber].glstate[addr].n_fs, (gl[busnumber].glstate[addr].funcs & 0x01)?1:0);
@@ -398,7 +397,6 @@ void unlock_gl_bysessionid(long int sessionid)
   for(i=0; i<=num_busses; i++)
   {
     number = getMaxAddrGL(i);
-    DBG(i, DBG_DEBUG, "number of gl for busnumber %d is %d", i, number);
     for(j=1;j<=number; j++)
     {
       if(gl[i].glstate[j].locked_by == sessionid)
