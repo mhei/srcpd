@@ -151,6 +151,8 @@ handleSET(int sessionid, int bus, char *device, char *parameter,
 		rc = queueGL(bus, laddr, direction, speed, maxspeed, func,
 			     f1, f2, f3, f4);
 	    }
+	} else {
+		rc = SRCP_LISTTOOSHORT;
 	}
     }
 
