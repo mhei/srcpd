@@ -91,24 +91,27 @@ init_line6051 (char *name)
   struct termios interface;
 
   if (debuglevel)
+  {
     printf ("Opening 605x: %s\n", name);
+  }
   if ((FD = open (name, O_RDWR)) == -1)
+  {
     printf ("couldn't open device.\n");
-  else
-    {
-      tcgetattr (FD, &interface);
-      interface.c_oflag = ONOCR | ONLRET;
-      interface.c_oflag &= ~(OLCUC | ONLCR | OCRNL);
-      interface.c_cflag = CS8 | CRTSCTS;
-      interface.c_cflag &= ~(CSTOPB | PARENB);
-      interface.c_iflag = IGNBRK | IGNPAR;
-      interface.c_iflag &= ~(ISTRIP | IXON | IXOFF | IXANY);
-      interface.c_lflag = NOFLSH | IEXTEN;
-      interface.c_lflag &= ~(ISIG | ICANON | ECHO | ECHOE | TOSTOP | PENDIN);
-      cfsetospeed (&interface, B2400);
-      cfsetispeed (&interface, B2400);
-      tcsetattr (FD, TCSAFLUSH, &interface);
-    }
+    return -1;
+  }
+  tcgetattr (FD, &interface);
+  interface.c_oflag = ONOCR | ONLRET;
+  interface.c_oflag &= ~(OLCUC | ONLCR | OCRNL);
+  interface.c_cflag = CS8 | CRTSCTS;
+  interface.c_cflag &= ~(CSTOPB | PARENB);
+  interface.c_iflag = IGNBRK | IGNPAR;
+  interface.c_iflag &= ~(ISTRIP | IXON | IXOFF | IXANY);
+  interface.c_lflag = NOFLSH | IEXTEN;
+  interface.c_lflag &= ~(ISIG | ICANON | ECHO | ECHOE | TOSTOP | PENDIN);
+  cfsetospeed (&interface, B2400);
+  cfsetispeed (&interface, B2400);
+  tcsetattr (FD, TCSAFLUSH, &interface);
+
   return FD;
 }
 
@@ -276,7 +279,7 @@ thr_sendrec6051 (void *v)
 	      readByte (fd, &rr);
 	      fb[i] = temp | rr;
 	    }
-	  usleep (pause_between_cmd);
+	  usleep (pause_between_cmd * 1000);
 	}
       io_thread_running = 9;
       // fprintf(stderr, " ende\n");
