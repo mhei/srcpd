@@ -101,6 +101,7 @@ int main(int argc, char **argv)
   int error, tmp_state;
   pid_t pid;
   char c;
+  char *dev_com_default = "/dev/ttyS0";
   pthread_t ttid_iface, ttid_cmd, ttid_fb, ttid_info, ttid_clock, ttid_i8255;
   struct _THREADS cmds = {CMDPORT,      thr_doCmdClient};
   struct _THREADS fbs  = {FEEDBACKPORT, thr_doFBClient};
@@ -115,6 +116,14 @@ int main(int argc, char **argv)
   };
 
   install_signal_handler();
+
+  DEV_COMPORT = malloc(sizeof(dev_com_default));
+  if(DEV_COMPORT == NULL)
+  {
+    printf("cannot allocate memory\n");
+    exit(1);
+  }
+  strcpy(DEV_COMPORT, dev_com_default);
 
   // zuerst die Konfigurationsdatei lesen
   readConfig();
@@ -135,7 +144,14 @@ int main(int argc, char **argv)
         infos.socket= cmds.socket+2;
         break;
       case 'd':
-        DEV_COMPORT = optarg;
+        free(DEV_COMPORT);
+        DEV_COMPORT = malloc(sizeof(optarg));
+        if(DEV_COMPORT == NULL)
+        {
+          printf("cannot allocate memory\n");
+          exit(1);
+        }
+        strcpy(DEV_COMPORT, optarg);
         break;
       case 'S':
         DEV_I8255 = optarg;
@@ -192,20 +208,20 @@ int main(int argc, char **argv)
       file_descriptor[SERVER_M605X] = init_line6051(DEV_COMPORT);
       if(file_descriptor[SERVER_M605X] < 0)
       {
-        printf("Interface 6051 %s nicht vorhanden?!\n", DEV_COMPORT);
-  if(restore_com_parms) {
+        printf("Interface M605x an %s nicht vorhanden?!\n", DEV_COMPORT);
+        if(restore_com_parms) {
           restore_comport(DEV_COMPORT);
-  }
-  exit(1);
+        }
+        exit(1);
       }
       break;
     case SERVER_IB:
       if(open_comport(&file_descriptor[SERVER_IB], DEV_COMPORT) != 0)
       {
-      printf("Intellibox nicht gefunden !!!\n");
-  if(restore_com_parms) {
-            restore_comport(DEV_COMPORT);
-  }
+        printf("Intellibox an %s nicht gefunden !!!\n", DEV_COMPORT);
+        if(restore_com_parms) {
+          restore_comport(DEV_COMPORT);
+        }
         exit(1);
       }
   }
