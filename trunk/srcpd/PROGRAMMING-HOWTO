@@ -95,6 +95,7 @@ Andere Gerätegruppen brauchen die nicht.
 if(!queue_GA_isempty(bus)) {
     unqueueNextGA(&ga);
     process_single_ga(ga);
+    setGA(ga)
 }
 
 Die Routine unqueueNextGA() (sinngemäß für die restlichen Gerätegruppen)
@@ -103,6 +104,9 @@ der Queue. Die Queue ist eine simple First-In-First-Out Queue.
 
 Mit der Funktion getNextGA läßt sich der nächste Befehl auslesen, _ohne_
 ihn aus der Queue selbst zu entfernen.
+
+setGA aktualisiert alle internen Daten und veranlasst das Kundtun auf
+den Infokanälen.
 
 9. Namenskonventionen
 

@@ -867,7 +867,7 @@ void readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   busses[busnumber].thr_func = &thr_sendrec_DDL;
 
   busses[busnumber].driverdata = malloc(sizeof(struct _DDL_DATA));
-  strcpy(busses[busnumber].description, "GA GL POWER SM LOCK DESCRIPTION");
+  strcpy(busses[busnumber].description, "GA GL POWER LOCK DESCRIPTION");
 
   __DDL -> number_gl = 81;
   __DDL -> number_ga = 320;
@@ -892,6 +892,85 @@ void readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, int busnumber)
       child = child -> next;
       continue;
     }
+    if (strcmp(child->name, "enable_ringindicator_checking") == 0)
+    {
+      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      __DDL->RI_CHECK = (strcmp(txt, "yes") == 0) ? TRUE:FALSE;
+      free(txt);
+    }
+
+    if (strcmp(child->name, "enable_checkshort_checking") == 0)
+    {
+      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      __DDL->CHECKSHORT = (strcmp(txt, "yes") == 0) ? TRUE:FALSE;
+      free(txt);
+    }
+    if (strcmp(child->name, "inverse_dsr_handling") == 0)
+    {
+      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      __DDL->DSR_INVERSE = (strcmp(txt, "yes") == 0) ? TRUE:FALSE;
+      free(txt);
+    }
+
+    if (strcmp(child->name, "enable_maerklin") == 0)
+    {
+      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      if (strcmp(txt, "yes") == 0)
+      {
+        __DDL->ENABLED_PROTOCOLS |= EP_MAERKLIN;
+      } else {
+        __DDL->ENABLED_PROTOCOLS &= ~EP_MAERKLIN;
+      }      
+      free(txt);
+    }
+
+    if (strcmp(child->name, "enable_nmradcc") == 0)
+    {
+      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      if (strcmp(txt, "yes") == 0)
+      {
+        __DDL->ENABLED_PROTOCOLS |= EP_NMRADCC;
+      } else {
+        __DDL->ENABLED_PROTOCOLS &= ~EP_NMRADCC;
+      }      
+      free(txt);
+    }
+
+    if (strcmp(child->name, "improve_nmradcc_timing") == 0)
+    {
+      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      __DDL->IMPROVE_NMRADCC_TIMING = (strcmp(txt, "yes") == 0) ? TRUE:FALSE;
+      free(txt);
+    }
+
+    if (strcmp(child->name, "shortcut_failure_delay") == 0)
+    {
+      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      __DDL->SHORTCUTDELAY = atoi(txt);
+      free(txt);
+    }
+
+    if (strcmp(child->name, "nmradcc_translation_routine") == 0)
+    {
+      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      __DDL->NMRADCC_TR_V = atoi(txt);
+      free(txt);
+    }
+
+    if (strcmp(child->name, "enable_ulseep_patch") == 0)
+    {
+      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      __DDL->WAITUART_USLEEP_PATCH = (strcmp(txt, "yes") == 0) ? TRUE:FALSE;
+      free(txt);
+    }
+
+    if (strcmp(child->name, "usleep_usec") == 0)
+    {
+      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      __DDL->WAITUART_USLEEP_USEC = atoi(txt);
+      free(txt);
+    }
+
     child = child -> next;
   } // while
   if(init_GA(busnumber, __DDL->number_ga))
@@ -905,7 +984,6 @@ void readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     __DDL->number_gl = 0;
     DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
   }
-
 }
 
 int term_bus_DDL(int bus)
@@ -1055,7 +1133,7 @@ void* thr_sendrec_DDL (void *v)
 		comp_maerklin_ms(bus, addr, gatmp.port, gatmp.action);
 		break;
 	    case 'N':
-		comp_nmra_accessory(addr, gatmp.port, gatmp.action);
+		comp_nmra_accessory(bus, addr, gatmp.port, gatmp.action);
 		break;
           }
           setGA(bus, addr, gatmp);
