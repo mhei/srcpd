@@ -5,8 +5,8 @@
  *
  */
 
-
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
 
@@ -18,16 +18,15 @@
 
 #include "srcp-fb-i8255.h"
 
-/* one huge array of all possible feedbacks */
-/* not visible outside of this module       */
-static struct _FBSTATE _fbstate[MAX_BUSSES][MAXFBS];
-// 20 x 256 x 16 x 10 bytes = 819200 bytes.
+/* one array for all busses             */
+/* not visible outside of this module   */
+static struct _FB fb[MAX_BUSSES];
 
 int getFB(int bus, int port, struct timeval *time)
 {
   int result;
-  result = _fbstate[bus-1][port-1].state;
-  *time  = _fbstate[bus-1][port-1].timestamp;
+  result = fb[bus].fbstate[port-1].state;
+  *time  = fb[bus].fbstate[port-1].timestamp;
   return result;
 }
 
@@ -38,15 +37,15 @@ void updateFB(int bus, int port, int value)
 
   // we read 8 or 16 ports at once, but we will only change those ports,
   // which are really changed
-  if(_fbstate[bus-1][port-1].state != value)
+  if(fb[bus].fbstate[port-1].state != value)
   {
     // send_event()
     syslog(LOG_INFO, "changed: %d FB %d %d -> %d", bus, port,
-      _fbstate[bus-1][port-1].state, value);
+      fb[bus].fbstate[port-1].state, value);
 
     gettimeofday(&akt_time, &dummy);
-    _fbstate[bus-1][port-1].state = value;
-    _fbstate[bus-1][port-1].timestamp = akt_time;
+    fb[bus].fbstate[port-1].state = value;
+    fb[bus].fbstate[port-1].timestamp = akt_time;
 
     // queue changes for writing info-message
     queueInfoFB(bus, port, value, &akt_time);
@@ -115,16 +114,42 @@ int describeFB(int bus, int addr, char *reply)
 
 int startup_FB()
 {
-  struct timeval akt_time;
-  int i, j;
-  gettimeofday(&akt_time, NULL);
+  int i;
   for(i=0;i<MAX_BUSSES;i++)
   {
-    for(j=0;j<MAXFBS;j++)
+    fb[i].numberOfFb = 0;
+    fb[i].fbstate = NULL;
+  }
+  return 0;
+}
+
+int init_FB(int bus, int number)
+{
+  struct timeval akt_time;
+  int i;
+
+  if (bus >= MAX_BUSSES)
+    return 1;
+
+  if (number > 0)
+  {
+    gettimeofday(&akt_time, NULL);
+
+    fb[bus].fbstate = malloc(number * sizeof(struct _FBSTATE));
+    if (fb[bus].fbstate == NULL)
+      return 1;
+    fb[bus].numberOfFb = number;
+    for(i=0;i<number;i++)
     {
-      _fbstate[i][j].state = -1;
-      _fbstate[i][j].timestamp = akt_time;
+      fb[bus].fbstate[i].state = -1;
+      fb[bus].fbstate[i].timestamp = akt_time;
     }
   }
   return 0;
 }
+
+int get_number_fb(int bus)
+{
+  return fb[bus].numberOfFb;
+}
+

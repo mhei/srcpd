@@ -44,6 +44,8 @@ static int working_HSI88;
 
 void readconfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
+  int number;
+
   xmlNodePtr child = node->children;
 
   busses[busnumber].type = SERVER_HSI_88;
@@ -91,6 +93,18 @@ void readconfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
       free(txt);
     }
     child = child->next;
+  }
+
+  // create an array for feedbacks;
+  number  = __hsi->number_fb[0];
+  number += __hsi->number_fb[1];
+  number += __hsi->number_fb[2];
+  if(init_FB(busnumber, number))
+  {
+    __hsi->number_fb[0] = 0;
+    __hsi->number_fb[1] = 0;
+    __hsi->number_fb[2] = 0;
+    syslog(LOG_INFO, "Can't create array for feedback");
   }
 }
 

@@ -10,31 +10,31 @@
 #define _SRCP_ERROR_H
 
 /* Handshake */
-#define SRCP_OK_GO 200
-#define SRCP_OK_PROTOCOL 201
-#define SRCP_OK_CONNMODE 202
+#define SRCP_OK_GO                      200
+#define SRCP_OK_PROTOCOL                201
+#define SRCP_OK_CONNMODE                202
 
-#define SRCP_HS_UNKNOWN 401
+#define SRCP_HS_UNKNOWN                 401
 
 /* COMMAND MODE */
-#define SRCP_INFO 100
-#define SRCP_OK 200
-#define SRCP_UNKNOWNCOMMAND 410
-#define SRCP_UNKNOWNVALUE 411
-#define SRCP_WRONGVALUE 412
-#define SRCP_TEMPORARILYPROHIBITED 413
-#define SRCP_DEVICELOCKED 414
-#define SRCP_FORBIDDEN 415
-#define SRCP_NODATA 416
-#define SRCP_TIMEOUT 417
-#define SRCP_LISTTOOLONG 418
-#define SRCP_LISTTOOSHORT 419
-#define SRCP_UNSUPPORTEDDEVICEPROTOCOL 420
-#define SRCP_UNSUPPORTEDDEVICE 421
-#define SRCP_UNSUPPORTEDDEVICEGROUP 422
-#define SRCP_UNSUPPORTEDOPERATION 423
-#define SRCP_DEVICEREINITIALIZED 424
-#define SRCP_NOTSUPPORTED 425
+#define SRCP_INFO                       100
+#define SRCP_OK                         200
+#define SRCP_UNKNOWNCOMMAND             410
+#define SRCP_UNKNOWNVALUE               411
+#define SRCP_WRONGVALUE                 412
+#define SRCP_TEMPORARILYPROHIBITED      413
+#define SRCP_DEVICELOCKED               414
+#define SRCP_FORBIDDEN                  415
+#define SRCP_NODATA                     416
+#define SRCP_TIMEOUT                    417
+#define SRCP_LISTTOOLONG                418
+#define SRCP_LISTTOOSHORT               419
+#define SRCP_UNSUPPORTEDDEVICEPROTOCOL  420
+#define SRCP_UNSUPPORTEDDEVICE          421
+#define SRCP_UNSUPPORTEDDEVICEGROUP     422
+#define SRCP_UNSUPPORTEDOPERATION       423
+#define SRCP_DEVICEREINITIALIZED        424
+#define SRCP_NOTSUPPORTED               425
 
 int srcp_fmt_msg(int errorcode, char *msg);
 

@@ -18,10 +18,6 @@
 #ifndef _SRCP_INFO_H
 #define _SRCP_INFO_H
 
-#include "srcp-gl.h"
-#include "srcp-ga.h"
-#include "srcp-fb.h"
-
 enum TypeOfInfo
 {
   INFO_GL = 0,

@@ -33,6 +33,9 @@
 #include <syslog.h>
 #include <sys/time.h>
 
+#include "srcp-gl.h"
+#include "srcp-ga.h"
+#include "srcp-fb.h"
 #include "srcp-info.h"
 #include "srcp-error.h"
 #include "config-srcpd.h"
@@ -371,52 +374,78 @@ void sendInfos(int current)
     struct timeval cmp_time;
     int busnumber;
     int value;
+    int number;
+    struct _GASTATE gatmp;
+    struct _GLSTATE gltmp;
 
     reply[0] = '\0';
 
-    gettimeofday(&start_time, NULL);
-
-    for (busnumber = 1; busnumber < MAX_BUSSES; busnumber++)
+    for (busnumber = 0; busnumber < MAX_BUSSES; busnumber++)
     {
-      // only for busses with an interface
-      if (busses[busnumber].type > 0)
+
+      // send all needed generic locomotivs
+      gettimeofday(&start_time, NULL);
+      number = get_number_gl(busnumber);
+      for (i = 1; i <= number; i++)
       {
-        // send all needed generic locomotivs
-        for (i = 1; i <= MAXGLS; i++)
+        if(!isInitializedGL(busnumber, i))
         {
-          if(!isInitializedGL(busnumber, i))
+          #warning complete me
+          getGL(busnumber, i, &gltmp);
+          if (compareTime(gltmp.tv, start_time))
           {
-            #warning complete me
+            sprintf(temp, "%ld.%ld 100 INFO %d GL %d %d %d %d %d %d %d %d\n",
+              gltmp.tv.tv_sec, gltmp.tv.tv_usec/1000,
+              busnumber, i,
+              gltmp.direction, gltmp.speed, gltmp.maxspeed,
+              0, 0, 0, 0);
+            strcat(reply, temp);
+            if (strlen(reply) > 900)
+              sendInfoS(current, reply);
           }
         }
+      }
 
-        // send all needed generic assesoires
-        for (i = 1; i <= MAXGAS; i++)
+      // send all needed generic assesoires
+      gettimeofday(&start_time, NULL);
+      number = get_number_ga(busnumber);
+      for (i = 1; i <= number; i++)
+      {
+        if(!isInitializedGA(busnumber, i))
         {
-          if(!isInitializedGA(busnumber, i))
+          getGA(busnumber, i, &gatmp);
+          value = gatmp.port;
+          if (compareTime(gatmp.tv[value], start_time))
           {
-            #warning complete me
+            sprintf(temp, "%ld.%ld 100 INFO %d GA %d %d %d\n",
+              gatmp.tv[value].tv_sec, gatmp.tv[value].tv_usec/1000,
+              busnumber, i, value, gatmp.action);
+            strcat(reply, temp);
+            if (strlen(reply) > 900)
+              sendInfoS(current, reply);
           }
         }
+      }
 
-        // send all needed feedbacks
-        for (i = 1; i <= MAXFBS; i++)
+      // send all needed feedbacks
+      gettimeofday(&start_time, NULL);
+      number = get_number_fb(busnumber);
+      for (i = 1; i <= number; i++)
+      {
+        value = getFB(busnumber, i, &cmp_time);
+        if (value != -1)
         {
-          value = getFB(busnumber, i, &cmp_time);
-          if (value != -1)
+          // time is modified
+          if (compareTime(cmp_time, start_time))
           {
-            // time is modified
-            if (compareTime(cmp_time, start_time))
+            // last change is before we startet
+            if (value)
             {
-              // last change is before we startet
-              if (value)
-              {
-                // last change isn't a reset
-                sprintf(temp, "%ld.%ld 100 INFO %d FB %d %d\n", cmp_time.tv_sec, cmp_time.tv_usec/1000, busnumber, i, value);
-                strcat(reply, temp);
-                if (strlen(reply) > 900)
-                  sendInfoS(current, reply);
-              }
+              // last change isn't a reset
+              sprintf(temp, "%ld.%ld 100 INFO %d FB %d %d\n", cmp_time.tv_sec, cmp_time.tv_usec/1000, busnumber, i, value);
+              strcat(reply, temp);
+              if (strlen(reply) > 900)
+                sendInfoS(current, reply);
             }
           }
         }

@@ -59,7 +59,7 @@
 
 #define __ib ((IB_DATA*)busses[busnumber].driverdata)
 
-static struct _GA tga[50];
+static struct _GASTATE tga[50];
 
 void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
@@ -99,6 +99,23 @@ void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node, int busnumber)
       free(txt);
     }
     child = child->next;
+  }
+
+  if(init_GA(busnumber, __ib->number_ga))
+  {
+    __ib->number_ga = 0;
+    syslog(LOG_INFO, "Can't create array for assesoirs");
+  }
+
+  if(init_GL(busnumber, __ib->number_gl))
+  {
+    __ib->number_gl = 0;
+    syslog(LOG_INFO, "Can't create array for locomotivs");
+  }
+  if(init_FB(busnumber, __ib->number_fb))
+  {
+    __ib->number_fb = 0;
+    syslog(LOG_INFO, "Can't create array for feedback");
   }
 }
 
@@ -160,7 +177,7 @@ void send_command_ga(int bus)
   unsigned char byte2send;
   unsigned char status;
   unsigned char rr;
-  struct _GA gatmp;
+  struct _GASTATE gatmp;
   struct timeval akt_time, cmp_time;
 
   gettimeofday(&akt_time, NULL);
@@ -256,7 +273,7 @@ void send_command_gl(int bus)
   int addr=0;
   unsigned char byte2send;
   unsigned char status;
-  struct _GL gltmp, glakt;
+  struct _GLSTATE gltmp, glakt;
 
   /* Lokdecoder */
   //fprintf(stderr, "LOK's... ");
@@ -321,8 +338,8 @@ void check_status(int bus)
   unsigned char byte2send;
   unsigned char rr;
   unsigned char xevnt1, xevnt2, xevnt3;
-  struct _GL gltmp;
-  struct _GA gatmp;
+  struct _GLSTATE gltmp;
+  struct _GASTATE gatmp;
 
   /* Abfrage auf Statusänderungen :
      1. Änderungen an S88-Modulen
