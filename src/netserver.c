@@ -578,26 +578,32 @@ int doCmdClient(int Socket, int sessionid)
 	if (nelem < 3)
 	    rc = SRCP_LISTTOOSHORT;
 	if ((nelem >= 3) && (bus >= 0) && (bus <= num_busses)) {
+	    int found=0;
 	    rc = SRCP_WRONGVALUE;
 	    if (strncasecmp(command, "SET", 3) == 0) {
 		rc = handleSET(sessionid, bus, devicegroup, parameter,
 			       reply);
+		found++;
 	    }
 	    if (strncasecmp(command, "GET", 3) == 0) {
 		rc = handleGET(sessionid, bus, devicegroup, parameter,
 			       reply);
+		found++;
 	    }
 	    if (strncasecmp(command, "WAIT", 4) == 0) {
 		rc = handleWAIT(sessionid, bus, devicegroup, parameter,
 				reply);
+		found++;
 	    }
 	    if (strncasecmp(command, "INIT", 4) == 0) {
 		rc = handleINIT(sessionid, bus, devicegroup, parameter,
 				reply);
+		found++;
 	    }
 	    if (strncasecmp(command, "TERM", 4) == 0) {
 		rc = handleTERM(sessionid, bus, devicegroup, parameter,
 				reply);
+		found++;
 		if (rc < 0)
 		    break;
 		rc = abs(rc);
@@ -605,10 +611,16 @@ int doCmdClient(int Socket, int sessionid)
 	    if (strncasecmp(command, "VERIFY", 6) == 0) {
 		rc = handleVERIFY(sessionid, bus, devicegroup, parameter,
 				  reply);
+		found++;
 	    }
 	    if (strncasecmp(command, "RESET", 5) == 0) {
 		rc = handleRESET(sessionid, bus, devicegroup, parameter,
 				 reply);
+		found++;
+	    }
+	    if (found==0) { /* MAM 02/26/03 */
+		    gettimeofday(&akt_time, NULL);
+		    srcp_fmt_msg(SRCP_UNKNOWNCOMMAND, reply, akt_time);
 	    }
 	} else {
 	    gettimeofday(&akt_time, NULL);
