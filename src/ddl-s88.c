@@ -88,7 +88,15 @@ void readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   busses[busnumber].driverdata = malloc(sizeof(struct _DDL_S88_DATA));
 
   __ddl_s88->port = 0x0378;
+#ifdef __FreeBSD__
+  // da wir ueber eine viel langsamere Schnittstelle gehen, ist es
+  // unnoetig, soviel Zeit zu verblasen. Wahrscheinlich reicht sogar
+  // ein einziger Schreibversuch. MAM
+  __ddl_s88->clockscale = 3;
+#else
   __ddl_s88->clockscale = 35;
+#endif
+
   __ddl_s88->refresh = 100;
 
 #ifdef __FreeBSD__
