@@ -14,6 +14,8 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
+#include "stdincludes.h"
+
 #include "config-srcpd.h"
 #include "srcp-session.h"
 #include "srcp-ga.h"

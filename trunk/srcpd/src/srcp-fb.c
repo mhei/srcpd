@@ -5,12 +5,7 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <pthread.h>
-#include <unistd.h>
-#include <sys/time.h>
+#include "stdincludes.h"
 
 #include "config-srcpd.h"
 #include "srcp-error.h"
@@ -203,7 +198,7 @@ int infoFB(int bus, int port, char *msg)
   int rc = getFB(bus, port, &time, &state);
   if(rc>=SRCP_OK)
   {
-    sprintf(msg, "%ld.%ld 100 INFO %d FB %d %d",
+    sprintf(msg, "%lu.%lu 100 INFO %d FB %d %d\n",
      time.tv_sec, time.tv_usec/1000, bus, port, state);
     return SRCP_INFO;
   }

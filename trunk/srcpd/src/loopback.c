@@ -4,20 +4,7 @@
  *
  */
  
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <unistd.h>
-#include <termios.h>
-#include <fcntl.h>
-#include <signal.h>
-// #include <syslog.h>
-
-#include <libxml/tree.h>
+#include "stdincludes.h"
 
 #include "config-srcpd.h"
 #include "io.h"

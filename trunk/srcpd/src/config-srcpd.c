@@ -10,21 +10,7 @@
 *
 */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <syslog.h>
-#include <stdarg.h>                                 
-
-#include <libxml/xmlmemory.h>
-#include <libxml/parser.h>
-#include <libxml/tree.h>
-
+#include "stdincludes.h"
 #include "config-srcpd.h"
 #include "srcp-fb.h"
 #include "srcp-srv.h"
@@ -113,8 +99,12 @@ static int register_bus(xmlDocPtr doc, xmlNodePtr node)
    if (strcmp(child->name, "intellibox") == 0)
    {
      check_bus(busnumber);
+#ifdef linux
      readconfig_intellibox(doc, child, busnumber);
      found = 1;
+#else
+	printf("Sorry, Intellibox support only available on Linux (yet)\n");
+#endif
    }
    if (strcmp(child->name, "loopback") == 0)
    {
@@ -125,8 +115,12 @@ static int register_bus(xmlDocPtr doc, xmlNodePtr node)
    if (strcmp(child->name, "ddl-s88") == 0)
    {
      check_bus(busnumber);
+#ifdef linux
      readconfig_DDL_S88(doc, child, busnumber);
      found = 1;
+#else
+	printf("Sorry, DDL_S88 only available on Linux (yet)\n");
+#endif
    }
    if (strcmp(child->name, "hsi-88") == 0)
    {
@@ -249,15 +243,20 @@ void DBG(int busnumber, int dbglevel, const char *fmt, ...)
   va_start(parm, fmt);
    /* need some more checks, may segfault! */
    if (dbglevel <= busses[busnumber].debuglevel) {
-    char *msg;
-    msg = (char *)malloc (sizeof(char) * (strlen(fmt) + 10));
-    if (msg == NULL)    {
-	      syslog (LOG_DEBUG, "malloc() failed\n");
-	      vsyslog (LOG_DEBUG, fmt, parm);
-    }  else   {
-	      sprintf (msg, "[bus %d] %s", busnumber, fmt);
-            vsyslog(LOG_DEBUG, msg, parm);
-	      free (msg);
+	if (busses[busnumber].debuglevel>DBG_WARN)
+	{
+	    fprintf(stderr,"[bus %d] ",busnumber);
+	    vfprintf(stderr,fmt,parm);
+	    if (strchr(fmt,'\n'==NULL)) fprintf(stderr,"\n");
+	}
+	else
+	{
+            char *msg;
+            msg = (char *)malloc (sizeof(char) * (strlen(fmt) + 10));
+	    if (msg == NULL) return; // MAM: Wat solls? Ist eh am Ende
+	    sprintf (msg, "[bus %d] %s", busnumber, fmt);
+            vsyslog(LOG_INFO, msg, parm);
+            free (msg);
+	}
     }
-  }
 }

@@ -24,28 +24,12 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <stdincludes.h>
 
-#include <netdb.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <pthread.h>
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <termios.h>
-#include <unistd.h>
-#include <sys/io.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <netinet/in.h>
+#ifdef linux
 #include <linux/serial.h>
+#include <sys/io.h>
 
-#include <libxml/tree.h>
 
 #include "config-srcpd.h"
 #include "ib.h"
@@ -934,3 +918,4 @@ static int init_line_IB(int busnumber)
   
   return 0;
 }
+#endif // Linux

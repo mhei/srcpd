@@ -13,18 +13,7 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-#include <fcntl.h>
-#include <pthread.h>
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <syslog.h>
-#include <unistd.h>
-#include <sys/wait.h>
+#include "stdincludes.h"
 
 #include "config-srcpd.h"
 #include "io.h"
@@ -179,7 +168,7 @@ int main(int argc, char **argv)
   }
 
   // a little help for debugging the threads
-  if (busses[0].debuglevel < 9)
+  if (busses[0].debuglevel > DBG_WARN)
   {
     /* forken */
     if((pid=fork())<0)

@@ -21,27 +21,12 @@
  *                                                                         *
  *                                                                         *
  ***************************************************************************/
+#include "stdincludes.h"
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-#include <netdb.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <pthread.h>
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <termios.h>
-#include <unistd.h>
+#ifdef linux
 #include <sys/io.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <netinet/in.h>
 #include <linux/serial.h>
+#endif
 
 #include "config-srcpd.h"
 #include "li100.h"

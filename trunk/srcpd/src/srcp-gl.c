@@ -11,12 +11,7 @@
  *              auch NMRA verarbeitet
  */
 
-
-#include <unistd.h>
-#include <stdio.h>
-#include <string.h>
-#include <pthread.h>
-#include <sys/time.h>
+#include "stdincludes.h"
 
 #include "config-srcpd.h"
 #include "srcp-gl.h"

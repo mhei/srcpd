@@ -14,24 +14,7 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <unistd.h>
-#include <termios.h>
-#include <fcntl.h>
-#include <signal.h>
-
-#include <sys/time.h>
+#include "stdincludes.h"
 
 #include "srcp-gl.h"
 #include "srcp-ga.h"
