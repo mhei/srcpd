@@ -57,7 +57,7 @@ int infoTIME(char *msg)
 }
 
 int describeTIME(char *reply) {
-  sprintf(reply, "%lu.%.3lu 101 INIT 0 TIME %d %d\n", vtime.inittime.tv_sec, vtime.inittime.tv_usec/1000, vtime.ratio_x, vtime.ratio_y);
+  sprintf(reply, "%lu.%.3lu 101 INFO 0 TIME %d %d\n", vtime.inittime.tv_sec, vtime.inittime.tv_usec/1000, vtime.ratio_x, vtime.ratio_y);
   return SRCP_OK;
 }
 

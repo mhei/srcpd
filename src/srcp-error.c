@@ -17,10 +17,10 @@ int srcp_fmt_msg(int errorcode, char *msg, struct timeval time)
       sprintf(msg, "%lu.%.3lu %d INFO\n", time.tv_sec, time.tv_usec/1000, errorcode);
       break;
     case 101:
-      sprintf(msg, "%lu.%.3lu %d TERM\n", time.tv_sec, time.tv_usec/1000, errorcode);
+      sprintf(msg, "%lu.%.3lu %d INFO\n", time.tv_sec, time.tv_usec/1000, errorcode);
       break;
     case 102:
-      sprintf(msg, "%lu.%.3lu %d INIT\n", time.tv_sec, time.tv_usec/1000, errorcode);
+      sprintf(msg, "%lu.%.3lu %d INFO\n", time.tv_sec, time.tv_usec/1000, errorcode);
       break;
     case 110:
       sprintf(msg, "%lu.%.3lu %d INFO\n", time.tv_sec, time.tv_usec/1000, errorcode);
