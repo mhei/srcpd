@@ -27,8 +27,10 @@ typedef struct _IB_DATA
     int last_bit;
     int last_type;
     int last_typeaddr;
+    int last_value;
     struct _GASTATE tga[50];
     int working_IB;
+    int emergency_on_ib;
 } IB_DATA;
 
 void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node,  int busnumber);
