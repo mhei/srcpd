@@ -48,7 +48,7 @@ static int initGL_default(int busnumber, int addr)
   switch (busses[busnumber].type)
   {
     case SERVER_M605X:
-        initGL(busnumber, addr, "M", 1, 14, 5);
+        initGL(busnumber, addr, "M", 2, 14, 5);
         break;
     case SERVER_IB:
         gl[busnumber].glstate[addr].n_fs =  126;
@@ -218,11 +218,14 @@ int initGL(int busnumber, int addr, const char *protocol, int protoversion, int 
     return SRCP_UNSUPPORTEDDEVICEGROUP;
   if((addr>0) && (addr <= number_gl))
   {
+    char msg[1000];
     gettimeofday(&gl[busnumber].glstate[addr].inittime, NULL);
     gl[busnumber].glstate[addr].n_fs=n_fs;
     gl[busnumber].glstate[addr].n_func=n_func;
     gl[busnumber].glstate[addr].protocolversion=protoversion;
     strncpy(gl[busnumber].glstate[addr].protocol, protocol, sizeof(gl[busnumber].glstate[addr].protocol));
+    describeGL(busnumber, addr, msg);
+    queueInfoMessage(msg);
     return SRCP_OK;
   }
   return SRCP_WRONGVALUE;
@@ -313,7 +316,7 @@ int describeLOCKGL(int bus, int addr, char *reply) {
 
 int unlockGL(int busnumber, int addr, long int sessionid)
 {
-  if(gl[busnumber].glstate[addr].locked_by==sessionid)
+  if(gl[busnumber].glstate[addr].locked_by==sessionid || gl[busnumber].glstate[addr].locked_by==0)
   { char msg[256];
     gl[busnumber].glstate[addr].locked_by = 0;
     gettimeofday(& gl[busnumber].glstate[addr].locktime, NULL);
