@@ -21,9 +21,6 @@
 #include <syslog.h>
 
 #include "threads.h"
-#include "iochannel.h"
-
-extern int debuglevel;
 
 /*******************************************************************
  * Die Metathread, die an den tcp/ip Ports lauschen und
@@ -40,12 +37,14 @@ void* thr_handlePort(void *v)
   int       sckt, val;
   int        boundSocket;
   struct     sockaddr_in socketAddr;
-  int        addrlen=0;
+  int        addrlen=sizeof(socketAddr);
   struct _THREADS ti = *((THREADS *)v);
+
+  syslog(LOG_INFO,"tcp-port: going to start");
 
   if((boundSocket = socket(AF_INET, SOCK_STREAM, 0 )) == -1)
   {
-    syslog(LOG_INFO,"socket()");
+    syslog(LOG_INFO,"error: socket()");
     perror("socket()");
     exit(1);
   }
@@ -60,7 +59,7 @@ void* thr_handlePort(void *v)
 
   if(bind(boundSocket, (struct sockaddr *) &socketAddr, sizeof(socketAddr)) < 0)
   {
-    syslog(LOG_INFO,"bind() %d", htons(ti.socket));
+    syslog(LOG_INFO,"error: bind() %d", htons(ti.socket));
     perror("bind()");
     exit(1);
   }
@@ -76,12 +75,12 @@ void* thr_handlePort(void *v)
     if((sckt=accept(boundSocket,(struct sockaddr*)&socketAddr,&addrlen)) < 0)
     {
       perror("accept()\n");
-      syslog(LOG_INFO,"accept() %d", htons(ti.socket));
+      syslog(LOG_INFO,"error: accept() %d", htons(ti.socket));
 
     }
     if(sckt)
     {
-      /* here ist the right place for access control */
+      syslog(LOG_INFO, "New Client: IP: %s, port %hd", inet_ntoa(socketAddr.sin_addr), ntohs(socketAddr.sin_port));
       error = pthread_create(&ttid, NULL, ti.func, (void*)sckt);
       if(error)
       {

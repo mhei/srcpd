@@ -11,79 +11,51 @@
 #include <string.h>
 #include <syslog.h>
 
+#include "config-srcpd.h"
+
 #include "srcp-fb.h"
 #include "srcp-fb-s88.h"
 #include "srcp-fb-i8255.h"
 
-void getFBall(const char *proto, char *reply)
-{
-  int i;
+/* one huge array of all possible feedbacks */
+/* not visible outside of this module       */
+static struct _FBSTATE _fbstate[MAX_BUSSES][MAXFBS];
+// 20 x 32 x 16 x 2 bytes = 20480 bytes.
 
-  if(strncmp(proto, "M6051", 5)==0)
-  {
-    strcpy(reply, "INFO FB M6051 * ");   // und hier wird in d das Ergebnis aufgebaut
-    for(i=0; i<getPortCount_S88(); i++)
-    {
-      char cc[5];
-      sprintf(cc, "%d", getFB_S88(i));
-      strcat(reply, cc);
-    }
-    strcat(reply, "\n");
-  }
-  else
-    if (strncmp(proto, "i8255", 5)==0)
-    {
-      strcpy(reply, "INFO FB I8255 * ");   // und hier wird in d das Ergebnis aufgebaut
-      for(i=1; i<=getPortCount_I8255(); i++)
-      {
-        char cc[5];
-        sprintf(cc, "%d", getFB_I8255(i));
-        strcat(reply, cc);
-      }
-    }
-    else
-    {
-      sprintf(reply, "INFO -1");
-    }
-    strcat(reply, "\n");
-}
-
-int getFBone(const char *proto, int port)
+int getFB(int bus, int port)
 {
   int result;
-
-  result = -1;
-  if(strcmp(proto, "M6051") == 0)
-  {
-    result = getFB_S88(port);
-  }
-  if(strcmp(proto, "IB") == 0)
-  {
-    result = getFB_S88(port);
-  }
-  if(strcmp(proto, "I8255") == 0)
-  {
-    result = getFB_I8255(port);
-  }
+  result = _fbstate[bus-1][port-1].state;
   return result;
 }
 
-void infoFB(const char *proto, int port, char *msg)
+void updateFB(int bus, int port, int value) {
+  struct timezone dummy;
+  if(_fbstate[bus-1][port-1].state != value) {
+    // send_event()
+  }
+  _fbstate[bus-1][port-1].state = value;
+  gettimeofday(& _fbstate[bus-1][port-1].timestamp, &dummy);
+}
+
+void setFBmodule(int bus, int mod, int values) {
+  int i;
+  for(i=0; i<16;i++) {
+    int c = (values & (1 << (15-i))) ? 1 : 0;
+    updateFB(bus, (mod-1)*16 + i + 1, c);
+  }
+}
+  
+void infoFB(int bus, int port, char *msg)
 {
-  int state = getFBone(proto, port);
-//  syslog(LOG_INFO, "infoFBone result: %i", state);
+  int state = getFB(bus, port);
   if(state>=0)
   {
-    sprintf(msg, "INFO FB %s %d %d\n", proto, port + 1, state);
+    sprintf(msg, "INFO FB %d %d %d\n", bus, port, state);
   }
   else
   {
-    sprintf(msg, "INFO -2\n");
+    sprintf(msg, "ERROR no data\n");
   }
-  syslog(LOG_INFO, "%s", msg);
 }
 
-void initFB()
-{
-  initFB_S88();
-}

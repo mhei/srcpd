@@ -11,8 +11,8 @@
 #define _NETSERVER_H
 
 int   socket_readline(int socket, char *line, int len);
-void* thr_doCmdClient(void* v);
-void* thr_doFBClient(void* v);
-void* thr_doInfoClient(void *v);
+void* thr_doClient(void* v);
+void* doInfoClient(int, int);
+void* doCmdClient(int, int);
 
 #endif

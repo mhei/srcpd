@@ -1676,24 +1676,6 @@ else
 fi
 ])
 
-AC_DEFUN(AC_ENABLE_TESTMODE,
-[
- AC_ARG_ENABLE(testmode,[  --enable-testmode       build for testing without an interface[default=no]],
- [
-  if test $enableval = "no"; dnl
-  then
-    srcpd_testmode="no"
-  else
-    srcpd_testmode="yes"
-   fi
- ], [srcpd_testmode="no"
- ])
- if test $srcpd_testmode = "yes"; dnl
- then
-   AC_DEFINE_UNQUOTED(TESTMODE, 1, [Defines if your system should use testmode])
- fi
-])
-
 AC_DEFUN(AC_CHECK_COMPILERS,
 [
   dnl this is somehow a fat lie, but prevents other macros from double checking

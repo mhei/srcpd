@@ -17,9 +17,9 @@
 #ifndef IB_H
 #define IB_H
 
-void close_comport(int fd);
-int init_comport(char*);
-int open_comport(int*, char*);
-void* thr_sendrecintellibox(void*);
+int init_comport(int);
+int open_comport(int);
 
+void* thr_sendrecintellibox(void*);
+int init_bus_IB(int);
 #endif

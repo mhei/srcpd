@@ -9,8 +9,10 @@
 
 #include <unistd.h>
 #include <stdio.h>
+#include <syslog.h>
 
 #include "srcp-time.h"
+#include "config-srcpd.h"
 
 struct _VTIME vtime;
 
@@ -67,15 +69,20 @@ int cmpTime(struct timeval *t1, struct timeval *t2)
 void* thr_clock(void* v)
 {
   struct _VTIME vt;
-
+  int bus = (int) v;
+  
   vtime.ratio_x=0;
   vtime.ratio_y=0;
+
   while(1)
   {
     unsigned long sleeptime;
+    if(busses[bus].debuglevel) {
+      syslog(LOG_INFO, "time: %d %d %d %d %d %d", vtime.day, vtime.hour, vtime.min, vtime.sec,  vtime.ratio_x, vtime.ratio_y);
+     }
     if(vtime.ratio_x==0 || vtime.ratio_y==0)
     {
-      usleep(10000);
+      sleep(1);
       continue;
     }
     /* delta Modellzeit = delta realzeit * ratio_y/ratio_x */
@@ -99,6 +106,5 @@ void* thr_clock(void* v)
       vt.hour = 0;
     }
     vtime = vt;
-    // syslog(LOG_INFO, "time: %d %d %d %d %d %d", vtime.day, vtime.hour, vtime.min, vtime.sec,  vtime.ratio_x, vtime.ratio_y);
   }
 }

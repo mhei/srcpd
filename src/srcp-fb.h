@@ -10,10 +10,22 @@
 #ifndef _SRCPFB_H_
 #define _SRCPFB_H_
 
-int getFBone(const char *proto, int port);
-void getFBall(const char *proto, char *reply);
+#include <sys/time.h>
 
-void infoFB(const char *proto, int port, char *msg);
-void initFB(void);
+#define MAXFBS 32
+
+typedef struct _FBSTATE {
+    struct timeval timestamp;
+    short int state;
+} FBSTATE;
+
+int getFB(int bus, int port);
+
+void updateFB(int bus, int port, int value);
+
+/* setzt 16 Binärports auf einmal, für alle S88 Routinen */
+void setFBmodule(int bus, int mod, int values);
+
+void infoFB(int bus, int port, char *msg);
 
 #endif

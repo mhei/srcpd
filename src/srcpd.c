@@ -2,8 +2,7 @@
                           srcpd.c  -  description
                              -------------------
     begin                : Wed Jul 4 2001
-    copyright            : (C) 2001 by Dipl.-Ing. Frank Schmischke
-    email                : frank.schmischke@t-online.de
+    copyright            : (C) 2001 by the srcpd team
  ***************************************************************************/
 
 /***************************************************************************
@@ -43,27 +42,12 @@ void hup_handler(int);
 void term_handler(int);
 void install_signal_handler(void);
 
-int file_descriptor[NUMBER_SERVERS];
-
 extern int CMDPORT;
 extern int FEEDBACKPORT;
 extern int INFOPORT;
-extern int M6020MODE;
-extern int NUMBER_FB;
 
 extern int server_shutdown_state;
 extern int server_reset_state;
-extern int io_thread_running;
-extern int working_server;
-extern int use_i8255;
-extern int use_watchdog;
-extern int restore_com_parms;
-#ifdef TESTMODE
-extern int testmode;
-#endif
-
-extern char *DEV_COMPORT;
-extern char *DEV_I8255;
 extern const char *WELCOME_MSG;
 
 void hup_handler(int s)
@@ -86,154 +70,62 @@ void term_handler(int s)
 
 void install_signal_handler()
 {
-  if(restore_com_parms) {
-    signal(SIGTERM, term_handler);
-    signal(SIGABRT, term_handler);
-    signal(SIGINT, term_handler);
-    signal(SIGHUP, hup_handler);
-  }
+  signal(SIGTERM, term_handler);
+  signal(SIGABRT, term_handler);
+  signal(SIGINT, term_handler);
+  signal(SIGHUP, hup_handler);
   signal(SIGPIPE, SIG_IGN);    /* important, because write() on sockets */
                                         /* should return errors                */
 }
 
 int main(int argc, char **argv)
 {
-  int error, tmp_state;
+  int error, i;
   pid_t pid;
   char c;
-  char *dev_com_default = "/dev/ttyS0";
-  pthread_t ttid_iface, ttid_cmd, ttid_fb, ttid_info, ttid_clock, ttid_i8255;
-  struct _THREADS cmds = {CMDPORT,      thr_doCmdClient};
-  struct _THREADS fbs  = {FEEDBACKPORT, thr_doFBClient};
-  struct _THREADS infos= {INFOPORT,     thr_doInfoClient};
-
-  void* server_fkt[NUMBER_SERVERS] =
-  {
-    NULL,
-    thr_sendrec6051,
-    thr_sendrecintellibox,
-    NULL
-  };
+  pthread_t ttid_cmd, ttid_clock, ttid_pid;
+  struct _THREADS cmds = {CMDPORT,      thr_doClient};
 
   install_signal_handler();
-
-  DEV_COMPORT = malloc(strlen(dev_com_default) + 1);
-  if(DEV_COMPORT == NULL)
-  {
-    printf("cannot allocate memory\n");
-    exit(1);
-  }
-  strcpy(DEV_COMPORT, dev_com_default);
 
   // zuerst die Konfigurationsdatei lesen
   readConfig();
 
   cmds.socket = CMDPORT;
-  fbs.socket  = FEEDBACKPORT;
-  infos.socket= INFOPORT;
 
   /* Parameter auswerten */
   opterr=0;
-#ifndef TESTMODE
-  while((c=getopt(argc, argv, "f:p:d:hoS:v")) != EOF)
-#else
-  while((c=getopt(argc, argv, "f:p:d:hotS:v")) != EOF)
-#endif
+  while((c=getopt(argc, argv, "p:htv")) != EOF)
   {
     switch(c)
     {
       case 'p':
         cmds.socket = atoi(optarg);
-        fbs.socket  = cmds.socket+1;
-        infos.socket= cmds.socket+2;
         break;
       case 'v':
-        printf("srcpd version 1.0, speaks SRCP 0.7.3\n");
+        printf("srcpd version 1.1, speaks SRCP between 0.7 and 0.8, do not use!\n");
 	exit(1);
-      case 'd':
-        free(DEV_COMPORT);
-        DEV_COMPORT = malloc(sizeof(optarg));
-        if(DEV_COMPORT == NULL)
-        {
-          printf("cannot allocate memory\n");
-          exit(1);
-        }
-        strcpy(DEV_COMPORT, optarg);
         break;
-      case 'S':
-        DEV_I8255 = optarg;
-        break;
-      case 'o':
-        M6020MODE = 1;
-        break;
-      case 'f':
-        NUMBER_FB = atoi(optarg);
-        break;
-#ifdef TESTMODE
-      case 't':
-        testmode = 1;
-        break;
-#endif
       case 'h':
-#ifndef TESTMODE
-        printf("srcpd -f <nr> -p <Portnummer> -d <Devicepath> -S <I8255-dev> -o -v\n");
-#else
-        printf("srcpd -f <nr> -p <Portnummer> -d <Devicepath>  -S <I8255-dev> -o -t -v\n");
-#endif
-        printf("nr          -  Number of feedback-modules\n");
+        printf("srcpd -p <Portnumber> -t -v\n");
         printf("Portnumber  -  first Communicationport via TCP/IP (default: 12345)\n");
         printf("               Portnumber + 0 = Commandport for SRCP-Commands\n");
         printf("               Portnumber + 1 = Feedbackport for SRCP-Commands\n");
         printf("               Portnumber + 2 = Infoport for SRCP\n");
-        printf("Devicepath  -  name of serial port to use (default: /dev/ttyS0)\n");
-        printf("I8255-dev   -  name of port for I8255\n");
-        printf("o           -  use M605X-server in M6020-mode\n");
-#ifdef TESTMODE
         printf("t           -  start server in testmode (without connection to real interface)\n");
-#endif
 	printf("v           -  prints program version and exits\n");
         exit(1);
         break;
       default:
-  printf("unknown Parameter\n");
-  printf("use: \"srcpd -h\" for help\n");
-  exit(1);
-  break;
+	printf("unknown Parameter\n");
+	printf("use: \"srcpd -h\" for help\n");
+	exit(1);
+	break;
     }
   }
 
   openlog("srcpd", LOG_CONS, LOG_USER);
   syslog(LOG_INFO, "%s", WELCOME_MSG);
-
-  // aktuelle Einstellungen des Com-Ports sichern
-  if(restore_com_parms) {
-    save_comport(DEV_COMPORT);
-  }
-  // Initialisierung der seriellen Schnittstelle
-  switch (working_server)
-  {
-    case SERVER_M605X:
-      file_descriptor[SERVER_M605X] = init_line6051(DEV_COMPORT);
-      if(file_descriptor[SERVER_M605X] < 0)
-      {
-        printf("Interface M605x an %s nicht vorhanden?!\n", DEV_COMPORT);
-        if(restore_com_parms) {
-          restore_comport(DEV_COMPORT);
-        }
-        exit(1);
-      }
-      break;
-    case SERVER_IB:
-      if(open_comport(&file_descriptor[SERVER_IB], DEV_COMPORT) != 0)
-      {
-        printf("Intellibox an %s nicht gefunden !!!\n", DEV_COMPORT);
-        if(restore_com_parms) {
-          restore_comport(DEV_COMPORT);
-        }
-        exit(1);
-      }
-  }
-
   /* forken */
   if((pid=fork())<0)
   {
@@ -247,126 +139,89 @@ int main(int argc, char **argv)
     }
   }
   // ab hier keine Konsole mehr... Wir sind ein Dämon geworden!
-  /* Initialisieren der Werte... */
-  initGL();
-  initGA();
-  initFB();
-  initPower();
-
   chdir("/");
+
+  /* Now we have to initialize all busses */
+  for(i=1; i<=num_busses; i++) {
+    switch (busses[i].type)
+    {
+      case SERVER_M605X:
+        init_bus_M6051(i);
+        break;
+      case SERVER_IB:
+        init_bus_IB(i);
+        break;
+    }
+  }
   /* die Threads starten */
   error = pthread_create(&ttid_cmd, NULL, thr_handlePort, &cmds);
   if(error)
   {
-    perror("cannot start Command Thread!");
+    syslog(LOG_INFO, "cannot start Command Thread #%d: %d", i, error);
     exit(1);
   }
   pthread_detach(ttid_cmd);
 
-  error = pthread_create(&ttid_fb, NULL, thr_handlePort, &fbs);
-  if(error)
-  {
-    perror("cannot start FeedBack Thread!");
-    exit(1);
-  }
-  pthread_detach(ttid_fb);
-
-  error = pthread_create(&ttid_info, NULL, thr_handlePort, &infos);
-  if(error)
-  {
-    perror("cannot start Info Thread!");
-    exit(1);
-  }
-  pthread_detach(ttid_info);
-
-  error = pthread_create(&ttid_iface, NULL, server_fkt[working_server], NULL);
-  if(error)
-  {
-    perror("cannot start Interface Thread!");
-    exit(1);
-  }
-  pthread_detach(ttid_iface);
-
   error = pthread_create(&ttid_clock, NULL, thr_clock, NULL);
   if(error)
   {
-    perror("cannot start Clock Thread!");
-    exit(1);
+    syslog(LOG_INFO, "cannot start Clock Thread!");
   }
   pthread_detach(ttid_clock);
 
-  if(use_i8255)
-  {
-    error = pthread_create(&ttid_i8255, NULL, thr_doi8255polling, (void*)DEV_I8255);
-    if(error)
-    {
-      perror("cannot start I8255 Thread!");
-      exit(1);
-    }
-    pthread_detach(ttid_i8255);
+  syslog(LOG_INFO, "Starte %d Threads for the busses", num_busses);
+  /* Jetzt die Threads für die Busse */
+  for (i=1; i<=num_busses; i++) {
+      syslog(LOG_INFO, "Starte Thread für Bus %d type(%d)", i, busses[i].type);
+      error = pthread_create(&ttid_pid, NULL, busses[i].thr_func, (void *)i);
+      if(error)
+      { 
+        syslog(LOG_INFO, "cannot start Interface Thread # %d", i);
+        exit(1);
+      }
+      pthread_detach(ttid_pid);
+      busses[i].pid = ttid_pid;
+      syslog(LOG_INFO, "Gestartet Thread für Bus %d type(%d): pid %d", i, busses[i].type, busses[i].pid);
   }
+  syslog(LOG_INFO, "All Threads started");
+  server_shutdown_state = 0;
 
-  tmp_state = 0;
-  /* Wachhund */
   while(1)
   {
     if(server_shutdown_state == 1)
     {
       pthread_cancel(ttid_cmd);
-      pthread_cancel(ttid_fb);
-      pthread_cancel(ttid_info);
-      pthread_cancel(ttid_iface);
       pthread_cancel(ttid_clock);
-      if(use_i8255)
-      {
-        pthread_cancel(ttid_i8255);
+      /* und jetzt die ganzen Busse */
+      for(i=1; i<=num_busses;i++) {
+        pthread_cancel(busses[i].pid);
       }
       break;
     }
-    io_thread_running = use_watchdog - 1;
-    sleep(2); /* einmal in 2 Sekunden, ist eng?! */
-  
-    if(io_thread_running==0 || server_reset_state)
-    {
-      if(!server_reset_state)
+    /* Jetzt Wachhund spielen, falls gewünscht */
+    for(i=1; i<=num_busses; i++) {
+      if(busses[i].watchdog == 0 && (busses[i].flags && USE_WATCHDOG))
       {
-        syslog(LOG_INFO, "Oops: 6051 Thread hängt (%d)? Neustart desselben..\n", tmp_state);
-      }      
-      pthread_cancel(ttid_iface);
-      if(use_i8255)
-      {
-        pthread_cancel(ttid_i8255);
-      }
-      sleep(1); // Zeit lassen für Neustart
-      error = pthread_create(&ttid_iface, NULL, server_fkt[working_server], (void*)DEV_COMPORT);
-      if(error)
-      {
-        perror("cannot start Interface Thread!");
-        exit(1);
-      }
-      pthread_detach(ttid_iface);
-
-      if(use_i8255)
-      {
-        error = pthread_create(&ttid_i8255, NULL, thr_doi8255polling, (void*)DEV_I8255);
+        error = pthread_create(&ttid_pid, NULL, busses[i].thr_func, (void *)i);
         if(error)
         {
-          perror("cannot start i8255'er Thread!");
+          perror("cannot start Interface Thread!");
           exit(1);
-    }
+        }
+	busses[i].pid = ttid_pid;
+        pthread_detach(busses[i].pid);
       }
-      pthread_detach(ttid_i8255);
-  
-      server_reset_state = 0;
+      busses[i].watchdog = 0;
     }
-    else
-    {
-      tmp_state = io_thread_running;
-    }
+    sleep(1);
   }
-  if(restore_com_parms) {
-    close_comport(file_descriptor[working_server]);
-    restore_comport(DEV_COMPORT);
+  syslog(LOG_INFO, "Ending server...");
+  /* hierher kommen wir nur nach einem break */
+  for(i=1; i<=num_busses; i++) {
+    close_comport(i);
+    if(busses[i].deviceflags && RESTORE_COM_SETTINGS) {
+      restore_comport(i);
+    }
   }
   syslog(LOG_INFO, "und tschüß..");
   exit(0);

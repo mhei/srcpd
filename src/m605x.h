@@ -10,7 +10,12 @@
 #ifndef _M605X_H
 #define _M605X_H
 
-int init_line6051(char *name);
-void* thr_sendrec6051(void *v);
+typedef struct _M6051_DATA {
+    int cmd32_pending;
+} M6051_DATA;
+
+int init_line6051(char *);
+int init_bus_M6051(int );
+void* thr_sendrec6051(void *);
 
 #endif
