@@ -172,7 +172,7 @@ int init_bus_IB(int busnumber)
   if (status == 0)
     working_IB = 1;
 
-  printf("INIT_BUS_IB mit Code: %d\n", status);
+  printf("INIT_BUS_IB exited with code: %d\n", status);
   last_type[busnumber] = -1;
   return status;
 }
@@ -363,8 +363,9 @@ void send_command_gl_ib(int busnumber)
   if(! queue_GL_isempty(busnumber))
   {
     unqueueNextGL(busnumber, &gltmp);
-    getGL(busnumber, addr, &glakt);
     addr  = gltmp.id;
+    getGL(busnumber, addr, &glakt);
+
     // speed, direction or function changed ?
     if((gltmp.direction != glakt.direction) ||
        (gltmp.speed != glakt.speed) ||
@@ -389,7 +390,16 @@ void send_command_gl_ib(int busnumber)
       }
       else
       {
-        byte2send = gltmp.speed; // Geschwindigkeit senden
+		
+		// IB scales speeds INTERNALLY down!
+		// but gltmp.speed can already contain down-scaled speed
+		
+		// IB has general range of 0..127, independent of decoder type!
+		byte2send = (unsigned char) ((gltmp.speed * 126) / glakt.n_fs);
+		
+		//printf("send_cmd_gl(): speed = %d, n_fs = %d\n", gltmp.speed, glakt.n_fs); 
+		//printf("send_cmd_gl(): sending speed %d to IB\n", byte2send);
+		
         if(byte2send > 0)
         {
           byte2send++;
@@ -704,9 +714,17 @@ void check_status_ib(int busnumber)
         gltmp.funcs |= 0x010;    // Licht ist an
       rr &= 0x3F;
       gltmp.id |= rr << 8;
+	  gltmp.n_fs = 126;
       setGL(busnumber, gltmp.id, gltmp);
+	  
+	  //printf("got GL data from IB: lok# = %d, speed = %d, dir = %d\n", 
+	  //	gltmp.id, gltmp.speed, gltmp.direction); 
+
       // 5. byte real speed (is ignored)
       readByte(busnumber, 1, &rr);
+	  
+	  //printf("speed reported in 5th byte: speed = %d\n", rr);
+	  
       // next 1. byte
       readByte(busnumber, 1, &rr);
     }
@@ -844,7 +862,7 @@ static int open_comport(int busnumber, speed_t baud)
 
   DBG(busnumber, DBG_INFO, "try opening serial line %s for %i baud", name, (2400 * (1 << (baud - 11))));
   fd = open(name, O_RDWR);
-  DBG(busnumber, DBG_DEBUG, "fd nach open(...) = %d", fd);
+  DBG(busnumber, DBG_DEBUG, "fd after open(...) = %d", fd);
   busses[busnumber].fd = fd;
   if (fd < 0)
   {
@@ -891,7 +909,7 @@ static int init_line_IB(int busnumber)
   unsigned int LSR;
 #endif
   char *name = busses[busnumber].device;
-  printf("Begin detecting IB on serial line: %s\n", name);
+  printf("Begining to detect IB on serial line: %s\n", name);
 
   DBG(busnumber, DBG_INFO, "Opening serial line %s for 2400 baud\n", name);
   fd=open(name, O_RDWR);
@@ -915,7 +933,7 @@ static int init_line_IB(int busnumber)
 
   status = 0;
   sleep(1);
-  printf("clearing input-buffer\n");
+  printf("Clearing input-buffer\n");
   while(status != -1)
     status = readByte(busnumber, 1, &rr);
 
@@ -925,7 +943,7 @@ static int init_line_IB(int busnumber)
 
   sleep(1);
   LSR = serial_line.port + 3;
-  printf("sending BREAK\n");
+  printf("Sending BREAK\n");
   fd = open("/dev/ibox", O_RDWR);
   DBG(busnumber, DBG_INFO, "fd for ibox-dev = %d", fd);
   if(fd < 0)
@@ -955,13 +973,13 @@ static int init_line_IB(int busnumber)
   close(fd);
 #endif
 
-  printf("BREAK sucessfully send\n");
+  printf("BREAK sucessfully sent\n");
 
   baud = B2400;
   fd = open_comport(busnumber, baud);
   if(fd < 0)
   {
-    printf("init comport fehlgeschlagen\n");
+    printf("Init comport faild\n");
     return(-1);
   }
   sleep(1);
@@ -975,7 +993,7 @@ static int init_line_IB(int busnumber)
     printf("Intellibox in download mode.\nDO NOT PROCEED !!!\n");
     return(2);
   }
-  printf("switch off P50-commands\n");
+  printf("Switching off P50-commands\n");
   byte2send = 'x';
   writeByte(busnumber, byte2send, 0);
   byte2send = 'Z';
@@ -991,7 +1009,7 @@ static int init_line_IB(int busnumber)
   status = readByte(busnumber, 1, &rr);
   if(status != 0)
     return 1;
-  printf("change baudrate to 38400 bps\n");
+  printf("Changing baudrate to 38400 bps\n");
   byte2send = 'B';
   writeByte(busnumber, byte2send, 0);
   byte2send = '3';
@@ -1011,10 +1029,10 @@ static int init_line_IB(int busnumber)
 
   sleep(1);
   fd = open_comport(busnumber, busses[busnumber].baudrate);
-  DBG(busnumber, DBG_DEBUG, "fd nach open_comport = %d", fd);
+  DBG(busnumber, DBG_DEBUG, "fd after open_comport = %d", fd);
   if(fd < 0)
   {
-    printf("init comport fehlgeschlagen\n");
+    printf("Init comport failed\n");
     return(-1);
   }
   byte2send = 0xC4;
