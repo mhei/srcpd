@@ -63,7 +63,7 @@ static int register_bus(xmlDocPtr doc, xmlNodePtr node)
   proptxt = xmlGetProp(node, "number");
   busnumber = atoi(proptxt);
   free(proptxt);
-  if (busnumber > MAX_BUSSES || busnumber < 0)
+  if (busnumber >= MAX_BUSSES || busnumber < 0)
   {
     // you need to recompile
     return 1;

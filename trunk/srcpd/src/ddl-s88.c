@@ -155,22 +155,22 @@ void readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     }
     child = child->next;
   }
-  if(init_FB(busnumber, __ddl_s88->number_fb[0]))
+  if(init_FB(busnumber, __ddl_s88->number_fb[0]*16))
   {
     __ddl_s88->number_fb[0] = 0;
     syslog(LOG_INFO, "Can't create array for feedback");
   }
-  if(init_FB(busnumber, __ddl_s88->number_fb[1]))
+  if(init_FB(busnumber, __ddl_s88->number_fb[1]*16))
   {
     __ddl_s88->number_fb[1] = 0;
     syslog(LOG_INFO, "Can't create array for feedback");
   }
-  if(init_FB(busnumber, __ddl_s88->number_fb[2]))
+  if(init_FB(busnumber, __ddl_s88->number_fb[2]*16))
   {
     __ddl_s88->number_fb[2] = 0;
     syslog(LOG_INFO, "Can't create array for feedback");
   }
-  if(init_FB(busnumber, __ddl_s88->number_fb[3]))
+  if(init_FB(busnumber, __ddl_s88->number_fb[3]*16))
   {
     __ddl_s88->number_fb[3] = 0;
     syslog(LOG_INFO, "Can't create array for feedback");

@@ -44,7 +44,7 @@
 #define QUEUELENGTH_INFO 1000
 
 /* Kommandoqueues pro Bus */
-static struct _INFO info_queue[QUEUELENGTH_INFO];            // info queue.
+static char info_queue[QUEUELENGTH_INFO][200];   // info queue.
 static pthread_mutex_t queue_mutex_info;
 static pthread_mutex_t queue_mutex_client;
 static pthread_t ttid_info;
@@ -101,14 +101,10 @@ int queueInfoGL(int bus, int addr, int dir, int speed, int maxspeed, int f,  int
 
     pthread_mutex_lock(&queue_mutex_info);
 
-    info_queue[in].infoType  = INFO_GL;
-    info_queue[in].bus       = bus;
-    info_queue[in].speed     = speed;
-    info_queue[in].maxspeed  = maxspeed;
-    info_queue[in].direction = dir;
-    info_queue[in].funcs     = f1 + (f2 << 1) + (f3 << 2) + (f4 << 3) + (f << 4);
-    info_queue[in].id        = addr;
-    info_queue[in].akt_time  = *akt_time;
+    sprintf(info_queue[in], "%ld.%ld 100 INFO %d GL %d %d %d %d %d %d %d %d %d\n",
+      akt_time->tv_sec, akt_time->tv_usec/1000, bus, addr,
+      dir, speed, maxspeed,
+      f, f1, f2, f3, f4);
     in++;
     if (in == QUEUELENGTH_INFO)
       in = 0;
@@ -129,12 +125,9 @@ int queueInfoGA(int bus, int addr, int port, int action, struct timeval *akt_tim
 
     pthread_mutex_lock(&queue_mutex_info);
 
-    info_queue[in].infoType = INFO_GA;
-    info_queue[in].bus      = bus;
-    info_queue[in].id       = addr;
-    info_queue[in].port     = port;
-    info_queue[in].action   = action;
-    info_queue[in].akt_time = *akt_time;
+    sprintf(info_queue[in], "%ld.%ld 100 INFO %d GA %d %d %d\n",
+      akt_time->tv_sec, akt_time->tv_usec/1000,
+      bus, addr, port, action);
     in++;
     if (in == QUEUELENGTH_INFO)
       in = 0;
@@ -146,6 +139,7 @@ int queueInfoGA(int bus, int addr, int port, int action, struct timeval *akt_tim
 
 int queueInfoFB(int bus, int port, int action, struct timeval *akt_time)
 {
+  syslog(LOG_INFO, "enter queueInfoFB");
   if (number_of_clients > 0)
   {
     while (queueIsFullInfo())
@@ -155,11 +149,10 @@ int queueInfoFB(int bus, int port, int action, struct timeval *akt_time)
 
     pthread_mutex_lock(&queue_mutex_info);
 
-    info_queue[in].infoType = INFO_FB;
-    info_queue[in].bus      = bus;
-    info_queue[in].id       = port;
-    info_queue[in].action   = action;
-    info_queue[in].akt_time = *akt_time;
+    sprintf(info_queue[in], "%ld.%ld 100 INFO %d FB %d %d\n",
+      akt_time->tv_sec, akt_time->tv_usec/1000,
+      bus, port, action);
+    syslog(LOG_INFO, "data queued: %s", info_queue[in]);  
     in++;
     if (in == QUEUELENGTH_INFO)
       in = 0;
@@ -180,9 +173,9 @@ int queueInfoSM(int bus, int addr, struct timeval *akt_time)
 
     pthread_mutex_lock(&queue_mutex_info);
 
-    info_queue[in].infoType = INFO_SM;
-    info_queue[in].bus      = bus;
-    info_queue[in].id       = addr;
+    sprintf(info_queue[in], "%ld.%ld 100 INFO %d SM %d\n",
+      akt_time->tv_sec, akt_time->tv_usec/1000,
+      bus, addr);
     in++;
     if (in == QUEUELENGTH_INFO)
       in = 0;
@@ -198,24 +191,30 @@ int queueIsEmptyInfo(void)
 }
 
 /** liefert nächsten Eintrag und >=0, oder -1 */
-int getNextInfo(struct _INFO *info)
+int getNextInfo(char *info)
 {
   if (in == out)
     return -1;
-  *info = info_queue[out];
+  pthread_mutex_lock(&queue_mutex_info);
+  strcpy(info, info_queue[out]);
+  pthread_mutex_unlock(&queue_mutex_info);
+  syslog(LOG_INFO, "getNextInfo: %s", info);
   return out;
 }
 
 /** liefert nächsten Eintrag oder -1, setzt fifo pointer neu! */
-int unqueueNextInfo(struct _INFO *info)
+int unqueueNextInfo(char *info)
 {
   if (in == out)
     return -1;
 
-  *info = info_queue[out];
+  pthread_mutex_lock(&queue_mutex_info);
+  strcpy(info, info_queue[out]);
   out++;
   if (out == QUEUELENGTH_INFO)
     out = 0;
+  pthread_mutex_unlock(&queue_mutex_info);
+  syslog(LOG_INFO, "unqueueNextInfo: %s", info);
   return out;
 }
 
@@ -234,6 +233,7 @@ int startup_INFO(void)
 // if it is first client, start thread
 static int addNewClient(int Socket, int sessionid)
 {
+  syslog(LOG_INFO, "addNewClient");
   pthread_mutex_lock(&queue_mutex_client);
   if(number_of_clients == max_clients)
   {
@@ -272,6 +272,7 @@ static int addNewClient(int Socket, int sessionid)
   number_of_clients++;
   pthread_mutex_unlock(&queue_mutex_client);
 
+  syslog(LOG_INFO, "addNewClient done");
   return SRCP_OK;
 }
 
@@ -280,6 +281,7 @@ static int addNewClient(int Socket, int sessionid)
 // if it was last client, cancel thread
 static int removeClient(int client)
 {
+  syslog(LOG_INFO, "removeClient");
   pthread_mutex_lock(&queue_mutex_client);
   if (number_of_clients == 1)
   {
@@ -302,59 +304,53 @@ static int removeClient(int client)
     number_of_clients--;
   }
   pthread_mutex_unlock(&queue_mutex_client);
+  syslog(LOG_INFO, "removeClient done");
   return SRCP_OK;
-}
-
-static int generate_info_msg(struct _INFO *info_t, char *reply)
-{
-  int error_code = SRCP_INFO;
-  switch (info_t->infoType)
-  {
-    case INFO_GL:
-      sprintf(reply, "%ld.%ld 100 INFO %d GL %d", info_t->akt_time.tv_sec, info_t->akt_time.tv_usec/1000, info_t->bus, info_t->id);
-      break;
-    case INFO_GA:
-      sprintf(reply, "%ld.%ld 100 INFO %d GA %d %d %d", info_t->akt_time.tv_sec, info_t->akt_time.tv_usec/1000, info_t->bus, info_t->id, info_t->port, info_t->action);
-      break;
-    case INFO_FB:
-      sprintf(reply, "%ld.%ld 100 INFO %d FB %d %d", info_t->akt_time.tv_sec, info_t->akt_time.tv_usec/1000, info_t->bus, info_t->id, info_t->action);
-      break;
-    case INFO_SM:
-      sprintf(reply, "%ld.%ld 100 INFO %d SM %d", info_t->akt_time.tv_sec, info_t->akt_time.tv_usec/1000, info_t->bus, info_t->id);
-      break;
-    default:
-      error_code = SRCP_NOTSUPPORTED;
-      break;
-  }
-  return error_code;
-}
-
-static void sendInfoS(int socket, char *reply)
-{
-  socket_writereply(socketOfClients[socket], SRCP_INFO, reply, NULL);
-  reply[0] = '\0';
 }
 
 void sendInfos(int current)
 {
-  int error_code;
   int ctr;
   int i;
   int status;
   char reply[1000];
-  char temp[80];
-  struct _INFO info_t;
+  char temp[200];
 
   // if -1 then send the message to all registrated clients
   if(current == -1)
   {
-    ctr = 2000;
-    while (unqueueNextInfo(&info_t) != -1)
+    ctr = 50;
+    reply[0] = '\0';
+    while (unqueueNextInfo(temp) != -1)
     {
-      error_code = generate_info_msg(&info_t, reply);
+      strcat(reply, temp);
+      syslog(LOG_INFO, "reply-length = %d", strlen(reply));
+      if(strlen(reply) > 900)
+      {
+        for (i = 0; i < number_of_clients; i++)
+        {
+	  syslog(LOG_INFO, "send infos to client %d", i);
+          status = write(socketOfClients[i], reply, strlen(reply));
+          if (status < 0)
+          {
+            removeClient(i);
+            i--;                  // disable "i++" for this time
+                                  // so we will not skip next client
+          }
+        }
+        reply[0] = '\0';
+      }
+      ctr--;
+      if (ctr <= 0)
+        break;        // check for new clients
+    }
+    syslog(LOG_INFO, "reply-length after loop = %d", strlen(reply));
+    if(strlen(reply) > 0)
+    {
       for (i = 0; i < number_of_clients; i++)
       {
-        status = socket_writereply(socketOfClients[i], error_code, reply, NULL);
+        syslog(LOG_INFO, "write infos to client %d at socket %d", i, socketOfClients[i]); 
+        status = write(socketOfClients[i], reply, strlen(reply));
         if (status < 0)
         {
           removeClient(i);
@@ -362,9 +358,6 @@ void sendInfos(int current)
                                 // so we will not skip next client
         }
       }
-      ctr--;
-      if (ctr <= 0)
-        break;        // check for new clients
     }
   }
   else
@@ -383,9 +376,11 @@ void sendInfos(int current)
     for (busnumber = 0; busnumber < MAX_BUSSES; busnumber++)
     {
 
+      syslog(LOG_INFO, "send all data for bus %d to new client", busnumber);
       // send all needed generic locomotivs
       gettimeofday(&start_time, NULL);
       number = get_number_gl(busnumber);
+      syslog(LOG_INFO, "send all locomotivs from bus %d to new client", busnumber);
       for (i = 1; i <= number; i++)
       {
         if(!isInitializedGL(busnumber, i))
@@ -401,7 +396,10 @@ void sendInfos(int current)
               0, 0, 0, 0);
             strcat(reply, temp);
             if (strlen(reply) > 900)
-              sendInfoS(current, reply);
+            {
+              write(socketOfClients[current], reply, strlen(reply));
+              reply[0] = '\0';
+            }
           }
         }
       }
@@ -409,6 +407,7 @@ void sendInfos(int current)
       // send all needed generic assesoires
       gettimeofday(&start_time, NULL);
       number = get_number_ga(busnumber);
+      syslog(LOG_INFO, "send all assesoirs from bus %d to new client", busnumber);
       for (i = 1; i <= number; i++)
       {
         if(!isInitializedGA(busnumber, i))
@@ -422,7 +421,10 @@ void sendInfos(int current)
               busnumber, i, value, gatmp.action);
             strcat(reply, temp);
             if (strlen(reply) > 900)
-              sendInfoS(current, reply);
+            {
+	      write(socketOfClients[current], reply, strlen(reply));
+              reply[0] = '\0';
+            }
           }
         }
       }
@@ -430,6 +432,7 @@ void sendInfos(int current)
       // send all needed feedbacks
       gettimeofday(&start_time, NULL);
       number = get_number_fb(busnumber);
+      syslog(LOG_INFO, "send all feedbacks from bus %d to new client", busnumber);
       for (i = 1; i <= number; i++)
       {
         value = getFB(busnumber, i, &cmp_time);
@@ -445,7 +448,10 @@ void sendInfos(int current)
               sprintf(temp, "%ld.%ld 100 INFO %d FB %d %d\n", cmp_time.tv_sec, cmp_time.tv_usec/1000, busnumber, i, value);
               strcat(reply, temp);
               if (strlen(reply) > 900)
-                sendInfoS(current, reply);
+              {
+                write(socketOfClients[current], reply, strlen(reply));
+                reply[0] = '\0';
+	      }
             }
           }
         }
@@ -453,8 +459,9 @@ void sendInfos(int current)
     }
     if (strlen(reply) > 0)
     {
-      sendInfoS(current, reply);
+      write(socketOfClients[current], reply, strlen(reply));
     }
+    syslog(LOG_INFO, "all datas to new Info-Client sended");
   }
 }
 
@@ -469,8 +476,10 @@ int doInfoClient(int Socket, int sessionid)
 {
   int ret_code;
 
-  if(!addNewClient(Socket, sessionid))
+  syslog(LOG_INFO, "new Info-client detected");
+  if(addNewClient(Socket, sessionid) == SRCP_OK)
   {
+    syslog(LOG_INFO, "send all known datas");
     sendInfos(number_of_clients - 1);
     ret_code = SRCP_OK;
   }
@@ -503,7 +512,7 @@ void *thr_doInfoClient(void *v)
         pthread_mutex_unlock(&queue_mutex_client);
       }
       else
-        usleep(10000);
+        usleep(100);
 
     }
   }

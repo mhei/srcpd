@@ -99,7 +99,7 @@ void readconfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   number  = __hsi->number_fb[0];
   number += __hsi->number_fb[1];
   number += __hsi->number_fb[2];
-  if(init_FB(busnumber, number))
+  if(init_FB(busnumber, number * 16))
   {
     __hsi->number_fb[0] = 0;
     __hsi->number_fb[1] = 0;
@@ -234,14 +234,15 @@ int init_bus_HSI_88(int busnumber)
   int anzahl;
 
   status = 0;
+  printf("Bus %d mit Debuglevel %d\n", busnumber, busses[busnumber].debuglevel);
   if(busses[busnumber].type != SERVER_HSI_88)
   {
-    status = -1;
+    status = -2;
   }
   else
   {
     if(busses[busnumber].fd > 0)
-      status = -1;              // bus is already in use
+      status = -3;              // bus is already in use
   }
 
   if (status == 0)
@@ -254,7 +255,7 @@ int init_bus_HSI_88(int busnumber)
     if (anzahl > 31)
     {
       printf("number of feedback-modules greater than 31 !!!");
-      status = -1;
+      status = -4;
     }
   }
 
@@ -270,7 +271,7 @@ int init_bus_HSI_88(int busnumber)
           __hsi->number_fb[1], __hsi->number_fb[2]);
       }
       else
-        status = -1;
+        status = -5;
     }
   }
   else

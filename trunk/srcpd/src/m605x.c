@@ -117,7 +117,7 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     __m6051->number_gl = 0;
     syslog(LOG_INFO, "Can't create array for locomotivs");
   }
-  if(init_FB(busnumber, __m6051->number_fb))
+  if(init_FB(busnumber, __m6051->number_fb*16))
   {
     __m6051->number_fb = 0;
     syslog(LOG_INFO, "Can't create array for feedback");

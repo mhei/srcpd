@@ -260,14 +260,16 @@ void unlock_ga_bysessionid(long int sessionid)
 {
   int i,j;
   int number;
+  syslog(LOG_INFO, "unlock GA by session-ID %d", sessionid);
   for(i=0; i<MAX_BUSSES; i++)
   {
     number = get_number_ga(i);
+    syslog(LOG_INFO, "number of GA for bus %d is %d", i, number);
     for(j=0;j<number; j++)
     {
       if(ga[i].gastate[j].locked_by == sessionid)
       {
-        unlockGA(i+1, j+1, sessionid);
+        unlockGA(i, j+1, sessionid);
       }
     }
   }
