@@ -32,6 +32,8 @@
 #include <signal.h>
 #include <syslog.h>
 
+#include <libxml/tree.h>
+
 #include "config-srcpd.h"
 #include "io.h"
 #include "m605x.h"
@@ -41,10 +43,61 @@
 #include "srcp-power.h"
 #include "srcp-srv.h"
 
-/* Folgende Werte lassen sich z.T. verändern, siehe Kommandozeilen/Configdatei */
-/* unveränderliche sind mit const markiert                                     */
+/** readconfig_m605x: liest den Teilbaum der xml Configuration und parametriert
+     den busspezifischen Datenteil, wird von register_bus() aufgerufen */
 
-/* einige Zeitkonstanten, alles Millisekunden */
+int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, int busnumber)
+{
+    xmlNodePtr child = node->children;
+    busses[busnumber].type = SERVER_M605X;
+    busses[busnumber].init_func = &init_bus_M6051;
+    busses[busnumber].term_func = &term_bus_M6051;
+    busses[busnumber].thr_func = &thr_sendrec_M6051;
+    busses[busnumber].driverdata = malloc(sizeof(struct _M6051_DATA));
+    ((M6051_DATA *) busses[busnumber].driverdata)->number_fb = 0;	/* max 31 */
+    ((M6051_DATA *) busses[busnumber].driverdata)->number_ga = 256;
+    ((M6051_DATA *) busses[busnumber].driverdata)->number_gl = 80;
+    ((M6051_DATA *) busses[busnumber].driverdata)->ga_min_active_time = 75;
+    ((M6051_DATA *) busses[busnumber].driverdata)->pause_between_cmd = 200;
+    ((M6051_DATA *) busses[busnumber].driverdata)->pause_between_bytes = 2;
+    strcpy(busses[busnumber].description, "GA GL FB POWER");
+
+    while (child) {
+	if (strcmp(child->name, "maximum_address_for_feedback") == 0) {
+	    char *txt =
+		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+	    ((M6051_DATA *) busses[busnumber].driverdata)->number_fb =
+		atoi(txt);
+	    free(txt);
+	}
+
+	if (strcmp(child->name, "maximum_address_for_locomotiv") == 0) {
+	    char *txt =
+		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+	    ((M6051_DATA *) busses[busnumber].driverdata)->number_gl =
+		atoi(txt);
+	    free(txt);
+	}
+	if (strcmp(child->name, "maximum_address_for_accessoire") == 0) {
+	    char *txt =
+		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+	    ((M6051_DATA *) busses[busnumber].driverdata)->number_ga =
+		atoi(txt);
+	    free(txt);
+	}
+	if (strcmp(child->name, "MODE_M6020") == 0) {
+	    char *txt =
+		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+	    if (strcmp(txt, "yes") == 0) {
+		((M6051_DATA *) busses[busnumber].driverdata)->flags |=
+		    M6020_MODE;
+	    }
+	    free(txt);
+	}
+	child = child->next;
+    }
+    return 0;
+}
 
 
 /*******************************************************
