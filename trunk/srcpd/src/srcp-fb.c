@@ -124,7 +124,7 @@ void updateFB(int bus, int port, int value)
         fb[bus].fbstate[port_t].state = value;
         fb[bus].fbstate[port_t].timestamp = akt_time;
         fb[bus].fbstate[port_t].change = 0;
-        queueInfoFB(bus, port, value, &akt_time);
+        queueInfoFB(bus, port);
       }
       else
       {
@@ -148,7 +148,7 @@ void updateFB(int bus, int port, int value)
         fb[bus].fbstate[port_t].change = 0;
         pthread_mutex_unlock(&queue_mutex_fb);
         // queue changes for writing info-message
-        queueInfoFB(bus, port, value, &akt_time);
+        queueInfoFB(bus, port);
       }
     }
   }
@@ -197,9 +197,10 @@ int infoFB(int bus, int port, char *msg)
   struct timeval time;
   int state;
   int rc = getFB(bus, port, &time, &state);
+  msg[0]=0x00;
   if(rc>=SRCP_OK)
   {
-    sprintf(msg, "%lu.%.3lu 100 INFO %d FB %d %d\n",
+    sprintf(msg, "%lu.%.3lu 100 INFO %d FB %d %d \n",
      time.tv_sec, time.tv_usec/1000, bus, port, state);
     return SRCP_INFO;
   }
@@ -303,7 +304,7 @@ void check_reset_fb(void)
           fb[i].fbstate[reset_fb.port].timestamp = fb[i].fbstate[reset_fb.port].timestamp;
           fb[i].fbstate[reset_fb.port].change = 0;
           pthread_mutex_unlock(&queue_mutex_fb);
-          queueInfoFB(i, reset_fb.port + 1, 0, &reset_fb.timestamp);
+          queueInfoFB(i, reset_fb.port + 1);
         }
       }
     }  

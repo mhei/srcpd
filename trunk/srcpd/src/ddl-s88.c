@@ -36,7 +36,7 @@
 #include "srcp-fb.h"
 #include "ddl-s88.h"
 #include "io.h"
-
+#include "srcp-power.h"
 
 /***************************************************************/
 /* erddcd - Electric Railroad Direct Digital Command Daemon    */
@@ -371,6 +371,12 @@ void *thr_sendrec_S88(void *v)
     sleepusec = S88REFRESH * 1000;
   while (1)
   {
+    if(busses[busnumber].power_changed==1) {
+      char msg[110];
+      busses[busnumber].power_changed = 0;
+      infoPower(busnumber, msg);
+      queueMessage(msg);
+    }
     if(busses[busnumber].power_state==0) {
           usleep(1000);
           continue;

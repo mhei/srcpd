@@ -24,6 +24,7 @@
 #include "srcp-info.h"
 #include "srcp-error.h"
 #include "srcp-descr.h"
+#include "srcp-time.h"
 #include "config-srcpd.h"
 #include "netserver.h"
 
@@ -53,14 +54,10 @@ int queueMessage(char *msg) {
   return SRCP_OK;
 }
 
-int queueInfoGL(int busnumber, int addr, int dir, int speed, int maxspeed, int f,  int f1, int f2, int f3, int f4, struct timeval *akt_time)
+int queueInfoGL(int busnumber, int addr)
 {
     pthread_mutex_lock(&queue_mutex_info);
-    sprintf(info_queue[in], "%lu.%.3lu 100 INFO %d GL %d %d %d %d %d %d %d %d %d\n",
-      akt_time->tv_sec, akt_time->tv_usec/1000, busnumber, addr,
-      dir, speed, maxspeed,
-      f, f1, f2, f3, f4);
-    DBG(busnumber, DBG_INFO, "data queued: %s", info_queue[in]);
+    infoGL(busnumber, addr, info_queue[in]);
     in++;
     if (in == QUEUELENGTH_INFO)
       in = 0;
@@ -68,14 +65,10 @@ int queueInfoGL(int busnumber, int addr, int dir, int speed, int maxspeed, int f
   return SRCP_OK;
 }
 
-int queueInfoGA(int busnumber, int addr, int port, int action, struct timeval *akt_time)
+int queueInfoGA(int busnumber, int addr, int port)
 {
     pthread_mutex_lock(&queue_mutex_info);
-
-    sprintf(info_queue[in], "%lu.%.3lu 100 INFO %d GA %d %d %d\n",
-      akt_time->tv_sec, akt_time->tv_usec/1000,
-      busnumber, addr, port, action);
-    DBG(busnumber, DBG_INFO, "data queued: %s", info_queue[in]);
+    infoGA(busnumber, addr, port, info_queue[in]);
     in++;
     if (in == QUEUELENGTH_INFO)
       in = 0;
@@ -84,14 +77,10 @@ int queueInfoGA(int busnumber, int addr, int port, int action, struct timeval *a
   return SRCP_OK;
 }
 
-int queueInfoFB(int busnumber, int port, int action, struct timeval *akt_time)
+int queueInfoFB(int busnumber, int port)
 {
     pthread_mutex_lock(&queue_mutex_info);
-
-    sprintf(info_queue[in], "%lu.%.3lu 100 INFO %d FB %d %d\n",
-      akt_time->tv_sec, akt_time->tv_usec/1000,
-      busnumber, port, action);
-      DBG(busnumber, DBG_INFO, "data queued: %s", info_queue[in]);
+    infoFB(busnumber, port, info_queue[in]);
     in++;
     if (in == QUEUELENGTH_INFO)
       in = 0;
@@ -109,7 +98,7 @@ int queueInfoSM(int busnumber, int addr, int type, int typeaddr, int bit, int va
 
     if (return_code == 0)
     {
-      sprintf(buffer, "%lu.%.3lu 100 INFO %d SM %d",
+      sprintf(buffer, "%ld.%ld 100 INFO %d SM %d",
         akt_time->tv_sec, akt_time->tv_usec/1000,
         busnumber, addr);
       switch (type)
@@ -127,7 +116,7 @@ int queueInfoSM(int busnumber, int addr, int type, int typeaddr, int bit, int va
     }
     else
     {
-      sprintf(buffer, "%lu.%.3lu 600 ERROR %d SM %d",
+      sprintf(buffer, "%ld.%ld 600 ERROR %d SM %d",
         akt_time->tv_sec, akt_time->tv_usec/1000,
         busnumber, addr);
       switch (return_code)
@@ -221,43 +210,54 @@ int startup_INFO(void)
 
 int doInfoClient(int Socket, int sessionid)
 {
-  int status, i, current;
-  char reply[1000];
+  int status, i, current, number, value;
+  char reply[1000], description[1000];
   
     // send startup-infos to a new client
-    struct timeval start_time;        // for comparsation
     struct timeval cmp_time;
     int busnumber;
-    int value;
-    int number;
-
-    reply[0] = '\0';
-
     DBG(0, DBG_DEBUG, "new Info-client requested %ld", sessionid);
     for (busnumber = 0; busnumber <= num_busses; busnumber++)
     {
       DBG(busnumber, DBG_DEBUG, "send all data for busnumber %d to new client", busnumber);
       // first some global bus data
-      infoPower(busnumber, reply);
-      if (strlen(reply) > 0) {
-              write(Socket, reply, strlen(reply));
-      }
       reply[0] = '\0';
       // send Descriptions for busses
       describeBus(busnumber, reply);
       if (strlen(reply) > 0) {
               write(Socket, reply, strlen(reply));
       }
+      strcpy(description, reply);
       reply[0] = '\0';
+      if(strstr(description, "POWER")) {
+        infoPower(busnumber, reply);
+        if (strlen(reply) > 0) {
+              write(Socket, reply, strlen(reply));
+        }
+      }
+      if(strstr(description, "TIME")) {
+        DBG(busnumber, DBG_DEBUG, "send model time to new client");
+        describeTIME(reply);
+        if (strlen(reply) > 0) {
+              write(Socket, reply, strlen(reply));
+        }
+        reply[0] = '\0';
+        infoTIME(reply);
+        if (strlen(reply) > 0) {
+              write(Socket, reply, strlen(reply));
+        }
+        reply[0] = '\0';
+      }
 
       // send all needed generic locomotivs
-      gettimeofday(&start_time, NULL);
-      number = get_number_gl(busnumber);
-      DBG(busnumber, DBG_DEBUG, "send all (max. %d) locomotivs from busnumber %d to new client", number, busnumber);
-      for (i = 1; i <= number; i++)
-      {
-        if(isInitializedGL(busnumber, i))
+
+      if(strstr(description, "GL")) {
+        number = get_number_gl(busnumber);
+        DBG(busnumber, DBG_DEBUG, "send all (max. %d) locomotivs from busnumber %d to new client", number, busnumber);
+        for (i = 1; i <= number; i++)
         {
+          if(isInitializedGL(busnumber, i))
+          {
             describeGL(busnumber, i, reply);
             if (strlen(reply) > 0) {
               write(Socket, reply, strlen(reply));
@@ -269,17 +269,17 @@ int doInfoClient(int Socket, int sessionid)
               write(Socket, reply, strlen(reply));
             }
             reply[0] = '\0';
+          }
         }
       }
-
       // send all needed generic assesoires
-      gettimeofday(&start_time, NULL);
-      number = get_number_ga(busnumber);
-      DBG(busnumber, DBG_DEBUG,  "send all (max. %d) assesoirs from busnumber %d to new client", number, busnumber);
-      for (i = 1; i <= number; i++)
-      {
-        if(isInitializedGA(busnumber, i))
+      if(strstr(description, "GA")) {
+        number = get_number_ga(busnumber);
+        DBG(busnumber, DBG_DEBUG,  "send all (max. %d) assesoirs from busnumber %d to new client", number, busnumber);
+        for (i = 1; i <= number; i++)
         {
+          if(isInitializedGA(busnumber, i))
+          {
             describeGA(busnumber, i, reply);
             if (strlen(reply) > 0) {
               write(Socket, reply, strlen(reply));
@@ -294,35 +294,36 @@ int doInfoClient(int Socket, int sessionid)
             write(Socket, reply, strlen(reply));
           }
           reply[0] = '\0';
-        }
+         }
+       }
       }
-
-      // send all needed feedbacks
-      gettimeofday(&start_time, NULL);
-      number = get_number_fb(busnumber);
-      DBG(busnumber, DBG_DEBUG,  "send all feedbacks from busnumber %d to new client", busnumber);
-      for (i = 1; i <= number; i++)
-      {
-        int rc = getFB(busnumber, i, &cmp_time, &value);
-        if (rc == SRCP_OK && value!=0) {
+      if(strstr(description, "FB")) {
+        // send all needed feedbacks
+        number = get_number_fb(busnumber);
+        DBG(busnumber, DBG_DEBUG,  "send all feedbacks from busnumber %d to new client", busnumber);
+         for (i = 1; i <= number; i++)
+         {
+           int rc = getFB(busnumber, i, &cmp_time, &value);
+           if (rc == SRCP_OK && value!=0) {
               infoFB(busnumber, i, reply);
               if(strlen(reply)>0) {
                 write(Socket, reply, strlen(reply));
               }
               reply[0] = '\0';
+            }
+          }
         }
       }
-   }
-   DBG(0, DBG_DEBUG,  "all data to new Info-Client (%ld) sent", sessionid);
-   current = in;
-   while (1==1)   {
-      while(queueIsEmptyInfo(current)) usleep(1000);
-      current = unqueueNextInfo(current, reply);
-      DBG(0, DBG_DEBUG, "reply-length = %d", strlen(reply));
-      status = write(Socket, reply, strlen(reply));
-      if (status < 0) {
-         break;
+      DBG(0, DBG_DEBUG,  "all data to new Info-Client (%ld) sent", sessionid);
+      current = in;
+      while (1==1)   {
+        while(queueIsEmptyInfo(current)) usleep(1000);
+        current = unqueueNextInfo(current, reply);
+        DBG(0, DBG_DEBUG, "reply-length = %d", strlen(reply));
+        status = write(Socket, reply, strlen(reply));
+        if (status < 0) {
+          break;
+        }
       }
-   }
-   return 0;
+      return 0;
 }

@@ -40,6 +40,9 @@
 #include "srcp-sm.h"
 #include "srcp-time.h"
 #include "srcp-fb.h"
+#include "srcp-power.h"
+#include "srcp-info.h"
+
 #ifdef linux
 #include "ibox/ibox.h"
 #endif
@@ -116,6 +119,28 @@ void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   }
 }
 
+int cmpTime(struct timeval *t1, struct timeval *t2)
+{
+  int result;
+
+  result = 0;
+  if(t2->tv_sec > t1->tv_sec)
+  {
+    result = 1;
+  }
+  else
+  {
+    if(t2->tv_sec == t1->tv_sec)
+    {
+      if(t2->tv_usec > t1->tv_usec)
+      {
+        result = 1;
+      }
+    }
+  }
+  return result;
+}
+
 int init_bus_IB(int busnumber)
 {
   int status;
@@ -185,11 +210,9 @@ void* thr_sendrec_IB(void *v)
 
   while(1)
   {
-  //  syslog(LOG_INFO, "thr_sendrecintellibox Start in Schleife");
-    /* Start/Stop */
-    //fprintf(stderr, "START/STOP... ");
     if(busses[busnumber].power_changed)
     {
+      char msg[110];
       byte2send = busses[busnumber].power_state ? 0xA7 : 0xA6;
       writeByte(busnumber, &byte2send, 250);
       status = readByte(busnumber, 1, &rr);
@@ -200,6 +223,13 @@ void* thr_sendrec_IB(void *v)
       }
       if(rr == 0x00)                  // war alles OK ?
         busses[busnumber].power_changed = 0;
+      infoPower(busnumber, msg);
+      queueMessage(msg);
+    }
+
+    if(busses[busnumber].power_state==0) {
+          usleep(1000);
+          continue;
     }
 
     send_command_gl(busnumber);

@@ -21,17 +21,17 @@ struct _VTIME
   int sec;
   int ratio_x; /* ratio_x == 0 und die Uhr steht */
   int ratio_y;
+  struct timeval inittime;
 };
 
 int startup_TIME(void);
 
-int setTime(int d, int h, int m, int s);
-int initTime(int fx, int fy);
-int getTime(struct _VTIME *vt);
-int infoTime(struct _VTIME, char *msg);
-int cmpTime(struct timeval *t1, struct timeval *t2);
+int setTIME(int d, int h, int m, int s);
+int initTIME(int fx, int fy);
+int getTIME(struct _VTIME *vt);
+int infoTIME(char *msg);
 
-int describeTIME(int bus, int addr, char *reply);
+int describeTIME(char *reply);
 void* thr_clock(void *);
 
 #endif

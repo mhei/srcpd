@@ -23,6 +23,7 @@
 #include "srcp-srv.h"
 #include "srcp-session.h"
 #include "srcp-descr.h"
+#include "srcp-time.h"
 #include "srcp-info.h"
 #include "netserver.h"
 #include "m605x.h"
@@ -251,7 +252,7 @@ int handleSET(int sessionid, int bus, char *device, char *parameter, char *reply
     long d, h, m, s, nelem;
     nelem=sscanf(parameter, "%ld %ld %ld %ld", &d, &h, &m, &s);
     if(nelem >= 4)
-       rc = setTime(d, h, m, s);
+       rc = setTIME(d, h, m, s);
     else
        rc = SRCP_LISTTOOSHORT;
   }
@@ -278,7 +279,7 @@ int handleSET(int sessionid, int bus, char *device, char *parameter, char *reply
     char state[5], msg[256];
     memset(msg, 0, sizeof(msg));
     nelem = sscanf(parameter, "%s %100c", state, msg);
-    if(nelem<1) {
+    if(nelem>=1) {
       rc = SRCP_WRONGVALUE;
        if (strncasecmp(state, "OFF", 3) == 0) {
          rc = setPower(bus, 0, msg);
@@ -358,7 +359,7 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
   {
     if (vtime.ratio_x && vtime.ratio_y)
     {
-      rc = infoTime(vtime, reply);
+      rc = infoTIME(reply);
     }
     else
     {
@@ -388,7 +389,7 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
         if(strncmp(devgrp, "SESSION", 7)==0)
             rc = describeSESSION(bus, addr, reply);
         if(strncmp(devgrp, "TIME", 4)==0)
-            rc = describeTIME(bus, addr, reply);
+            rc = describeTIME(reply);
         if(strncmp(devgrp, "SERVER", 6)==0)
             rc = describeSERVER(bus, addr, reply);
     }
@@ -476,7 +477,7 @@ int handleWAIT(int sessionid, int bus, char *device, char *parameter, char *repl
     {
       usleep(1000);  /* wir warten 1ms realzeit.. */
     }
-    rc = infoTime(vtime, reply);
+    rc = infoTIME(reply);
   }
   return rc;
 }
@@ -543,7 +544,7 @@ int handleINIT(int sessionid, int bus, char *device, char *parameter, char *repl
     long rx, ry, nelem;
     nelem = sscanf(parameter, "%ld %ld", &rx, &ry);
     if (nelem==2)
-       rc = initTime(rx, ry);  /* prüft auch die Werte! */
+       rc = initTIME(rx, ry);  /* prüft auch die Werte! */
     else
        rc = SRCP_LISTTOOSHORT;
   }
