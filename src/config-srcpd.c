@@ -163,7 +163,7 @@ static void register_bus(xmlDocPtr doc, xmlNodePtr node)
     {
       found = 1;
       if (strcmp(txt, "yes") == 0)
-        busses[busnumber].deviceflags |= RESTORE_COM_SETTINGS;
+        busses[busnumber].flags |= RESTORE_COM_SETTINGS;
     }
     if (!found)
     {

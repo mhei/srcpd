@@ -110,7 +110,7 @@ int main(int argc, char **argv)
   int error, i;
   pid_t pid;
   char c, conffile[MAXPATHLEN];
-  pthread_t ttid_cmd, ttid_clock, ttid_pid;
+  pthread_t ttid_cmd, ttid_clock, ttid_pid, ttid_info;
   struct _THREADS cmds;
   install_signal_handler();
 
@@ -219,6 +219,13 @@ int main(int argc, char **argv)
     syslog(LOG_INFO, "cannot start Clock Thread!");
   }
   pthread_detach(ttid_clock);
+  /* start info-thread (first time it does nothing) */
+  error = pthread_create(&ttid_info, NULL, thr_doInfoClient, NULL);
+  if(error)
+  {
+    syslog(LOG_INFO, "cannot start Info Thread!");
+  }
+  pthread_detach(ttid_info);
   /* und jetzt die Bustreiber selbst starten. Das Device ist offen, die Datenstrukturen
      initialisiert */
   syslog(LOG_INFO, "Going to start %d Interface Threads for the busses", num_busses);

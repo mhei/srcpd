@@ -53,43 +53,55 @@ void updateFB(int bus, int port, int value)
   }
 }
 
-#warning make one funktion from the 2 above \
- and make it more common
-/* Normales Modul mit 16 Ports */
+/* all moduls with 8 or 16 ports */
 int setFBmodul(int bus, int modul, int values)
 {
   int i;
   int c;
   int fb_contact;
+  int ports;
+  int dir;
+  int mask;
 
+  ports = (busses[bus].flags & FB_16_PORTS) ? 16 : 8;
+  if (busses[bus].flags & FB_ORDER_0)
+  {
+    dir = 0;
+    mask = 1;
+  }
+  else
+  {
+    dir = 1;
+    mask = 1 << (ports - 1);
+  }
   // compute startcontact ( (modul - 1) * 16 + 1 )
   fb_contact = modul - 1;
-  fb_contact <<= 4;
+  fb_contact *= ports;
   fb_contact++;
 
-  for(i=0; i<16;i++)
+  for(i=0; i<ports;i++)
   {
-    // pay attention for different order on HSI-88
-    if (busses[bus].type == SERVER_HSI_88)
-      c = (values & (1 << i)) ? 1 : 0;
-    else
-      c = (values & (1 << (15-i))) ? 1 : 0;
+    c = (values & mask) ? 1 : 0;
     updateFB(bus, fb_contact++, c);
+    if (dir)
+      mask >>= 1;
+    else
+      mask <<= 1;
   }
   return SRCP_OK;
 }
 
-/* Kurzes Modul mit 8 Ports, u.a. DDL S88 */
-int setFBmodul8(int bus, int mod, int values)
-{
-  int i;
-  for(i=0; i<8;i++)
-  {
-    int c = (values & (1 << (7-i))) ? 1 : 0;
-    updateFB(bus, (mod-1)*8 + i + 1, c);
-  }
-  return SRCP_OK;
-}
+///* Kurzes Modul mit 8 Ports, u.a. DDL S88 */
+//int setFBmodul8(int bus, int mod, int values)
+//{
+//  int i;
+//  for(i=0; i<8;i++)
+//  {
+//    int c = (values & (1 << (7-i))) ? 1 : 0;
+//    updateFB(bus, (mod-1)*8 + i + 1, c);
+//  }
+//  return SRCP_OK;
+//}
 
 int infoFB(int bus, int port, char *msg)
 {
