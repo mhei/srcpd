@@ -22,22 +22,22 @@ struct _GL
   int maxspeed; /* Maximalgeschwindigkeit                   */
   int direction;/* 0/1/2                                    */
   int n_fkt;    /* 0 oder 4, Anzahl der Zusatzfunktionen    */
-  int flags;   /* F1..F4, F                                */
+  char flags;   /* F1..F4, F                                */
   int n_fs;     /* Anzahl der "wahren" Fahrstufen des Dekoders */
   struct timeval tv; /* Last time of change                 */
-  int locked_by;     /* Session ID */
 };
 
 extern volatile struct _GL gl[MAX_BUSSES][MAXGLS];   // aktueller Stand, mehr gibt es nicht
 extern volatile struct _GL ngl[MAX_BUSSES][50];      // max. 50 neue Werte puffern
-extern volatile struct _GL ogl[MAX_BUSSES][50];      // manuelle Änderungenx 
-int setGL(int sessionid, int bus, int addr, int dir, int speed, int maxspeed, int f, 
+extern volatile struct _GL ogl[MAX_BUSSES][50];      // manuelle Änderungen
+
+void setGL(int bus, int addr, int dir, int speed, int maxspeed, int f, 
      int n_fkt, int f1, int f2, int f3, int f4);
      
 int getGL(int bus, int addr, struct _GL *l);
 void infoGL(struct _GL gl, char* msg);
 int cmpGL(struct _GL a, struct _GL b);
-int initGL(int sessionid);
+void initGL(void);
 int calcspeed(int vs, int vmax, int n_fs);
 
 #endif

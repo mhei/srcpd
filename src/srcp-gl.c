@@ -19,7 +19,6 @@
 #include <syslog.h>
 #include <sys/time.h>
 
-#include "srcp-error.h"
 #include "config-srcpd.h"
 #include "srcp-gl.h"
 
@@ -28,53 +27,55 @@ volatile struct _GL ngl[MAX_BUSSES][50];      // max. 50 neue Werte puffern
 volatile struct _GL ogl[MAX_BUSSES][50];      // manuelle Änderungen
 
 /* Übernehme die neuen Angaben für die Lok, einige wenige Prüfungen */
-int setGL(int sessionid, int bus, int addr, int dir, int speed, int maxspeed, int f, 
+void setGL(int bus, int addr, int dir, int speed, int maxspeed, int f, 
      int n_fkt, int f1, int f2, int f3, int f4)
 {
   int i, n_fs;
   struct timeval akt_time;
-  /* could be lazy evaluated... */
-  if(!gl[bus][i].locked_by || (gl[bus][i].locked_by && gl[bus][i].locked_by == sessionid)) {
-      n_fs = gl[bus][addr].n_fs;
-      
-      /* Daten einfüllen, aber nur, wenn id == 0!!, darauf warten wir max. 1 Sekunde */
-      if((addr > 0) && (addr <= busses[bus].number_gl)){
-	  for(i=0;i<1000;i++){
-	      if(busses[bus].sending_gl == 0)
-		  break;
-		      usleep(100);
-	  }
-	  
-	  for(i=0;i<50;i++) {
-	      if(ngl[bus][i].id == addr){
-		  ngl[bus][i].id = 0;
-		  break;
-	      }
-	  }
-	  if(i == 50){
-	      for(i=0;i<50;i++){
-		  if(ngl[bus][i].id == 0)
-		      break;
-	      }
-	  }
-	  if(i < 50) {
-	      ngl[bus][i].speed     = speed;
-	      ngl[bus][i].maxspeed  = maxspeed;
-	      ngl[bus][i].direction = dir;
-	      ngl[bus][i].n_fkt     = n_fkt;
-	      ngl[bus][i].flags     = f1 + (f2 << 1) + (f3 << 2) + (f4 << 3) + (f << 4);
-	      ngl[bus][i].n_fs      = n_fs;
-	      gettimeofday(&akt_time, NULL);
-	      ngl[bus][i].tv        = akt_time;
-	      ngl[bus][i].id        = addr;
-	      syslog(LOG_INFO, "GL %i Position %i", addr, i);
-	      busses[bus].command_gl = 1;
-	  }
+
+  n_fs = gl[bus][addr].n_fs;
+
+  /* Daten einfüllen, aber nur, wenn id == 0!!, darauf warten wir max. 1 Sekunde */
+  if((addr > 0) && (addr <= busses[bus].number_gl))
+  {
+    for(i=0;i<1000;i++)
+    {
+      if(busses[bus].sending_gl == 0)
+        break;
+      usleep(100);
+    }
+
+    for(i=0;i<50;i++)
+    {
+      if(ngl[bus][i].id == addr)
+      {
+        ngl[bus][i].id = 0;
+        break;
       }
-  } else {
-      return SRCP_LOCKED;
+    }
+    if(i == 50)
+    {
+      for(i=0;i<50;i++)
+      {
+        if(ngl[bus][i].id == 0)
+          break;
+      }
+    }
+    if(i < 50)
+    {
+      ngl[bus][i].speed     = speed;
+      ngl[bus][i].maxspeed  = maxspeed;
+      ngl[bus][i].direction = dir;
+      ngl[bus][i].n_fkt     = n_fkt;
+      ngl[bus][i].flags     = f1 + (f2 << 1) + (f3 << 2) + (f4 << 3) + (f << 4);
+      ngl[bus][i].n_fs      = n_fs;
+      gettimeofday(&akt_time, NULL);
+      ngl[bus][i].tv        = akt_time;
+      ngl[bus][i].id        = addr;
+      syslog(LOG_INFO, "GL %i Position %i", addr, i);
+      busses[bus].command_gl = 1;
+    }
   }
-  return SRCP_OK;
 }
 
 int getGL(int bus, int addr, struct _GL *l)
@@ -112,7 +113,7 @@ int cmpGL(struct _GL a, struct _GL b)
       (a.flags     == b.flags));
 }
 
-int initGL(int sessionid)
+void initGL()
 {
   int bus, i;
   for(bus=0; bus<MAX_BUSSES; bus++) {

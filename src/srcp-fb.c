@@ -55,7 +55,7 @@ void infoFB(int bus, int port, char *msg)
   }
   else
   {
-    sprintf(msg, "ERROR no data\n");
+    sprintf(msg, "INFO -2\n");
   }
 }
 

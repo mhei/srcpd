@@ -87,15 +87,18 @@ int socket_writereply(int socket, char *line) {
  *********************
  */
 
-int ClientID=0;
+int ClientID=1;
+pthread_mutex_t ClientID_mut = PTHREAD_MUTEX_INITIALIZER;
 
 void* thr_doClient(void* v) {
   int socket = (int) v;
   char line[1000], cmd[1000], setcmd[1000], parameter[1000], reply[1000];
   int mode = COMMAND;
+  int clientid;
 
-  /* hmm. eigentlich wird eine Semaphore gebraucht...*/  
-  int clientid = ClientID++;
+  pthread_mutex_lock(&ClientID_mut);
+  clientid = ClientID++;
+  pthread_mutex_unlock(&ClientID_mut);
   
   if(write(socket, WELCOME_MSG, strlen(WELCOME_MSG))<0 )
   {
@@ -128,6 +131,7 @@ void* thr_doClient(void* v) {
 	    return doInfoClient(socket, clientid);
 	    break;
 	}
+	return NULL;
     }	
     if(strncasecmp(cmd, "SET", 3) == 0) {
       char p[1000];
@@ -155,142 +159,103 @@ void* thr_doClient(void* v) {
   }
 }
 
-/***************************************************************
- *  Für jeden Client läuft ein Thread, er macht das
- *  SRCP indem er die Datenstrukturen passend füllt
- *  und die Ergebnisse passend zurückschreibt
- ***************************************************************
- */
-
-void* doCmdClient(int socket, int sessionid)
-{
-  char cmd[256], reply[4095];
-  char command[20], spec[20], parameter[256];
-
-  while(1)
-  {
-    memset(reply, 0, sizeof(reply));
-    memset(cmd, 0, sizeof(cmd));
-    if(socket_readline(socket, cmd, sizeof(cmd)-1)<0)
-    {
-      shutdown(socket, 0);
-      close(socket);
-      return NULL;
-    }
-    memset(command, 0, sizeof(command));
-    memset(spec, 0, sizeof(spec));
-    memset(parameter, 0, sizeof(parameter));
-    sscanf(cmd, "%s %s %200c", command, spec, parameter);
-    if(strncasecmp(command, "LOGOUT", 5) == 0)
-    {
-      shutdown(socket, 0);
-      close(socket);
-      return NULL;
-    }
-    if(strncasecmp(command, "RESET", 5) == 0)
-      server_reset();
-    if(strncasecmp(command, "SHUTDOWN", 8) == 0)
-      server_shutdown();
-    /* Befehl ermitteln */
-    if(strncasecmp(command, "SET", 3) == 0)
-    {
+void handleSET(int clientid, int bus, char *device, char *parameter, char *reply) {
+    strcpy(reply, "422 ERROR no such device group on bus");
       /* es wird etwas gesetzt.. */
-      if(strncasecmp(spec, "GL", 2) == 0)
+      if(strncasecmp(device, "GL", 2) == 0)
       {
-        long bus, laddr, direction, speed, maxspeed, func, n_fkt, f1, f2, f3, f4;
+        long laddr, direction, speed, maxspeed, func, n_fkt, f1, f2, f3, f4;
         int anzparms;
-        anzparms = sscanf(parameter, "%ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld", &bus,
+        anzparms = sscanf(parameter, "%ld %ld %ld %ld %ld %ld %ld %ld %ld %ld",
            &laddr, &direction, &speed, &maxspeed, &func, &n_fkt, &f1, &f2, &f3, &f4);
         if(anzparms>5)
         {
-          setGL(sessionid, bus, laddr, direction, speed, maxspeed, func, n_fkt, f1, f2, f3, f4);
+          setGL(bus, laddr, direction, speed, maxspeed, func, n_fkt, f1, f2, f3, f4);
         }
       }
-      if(strncasecmp(spec, "GA", 2) == 0)
+      if(strncasecmp(device, "GA", 2) == 0)
       {
-        long bus, gaddr, port, aktion, delay;
-        sscanf(parameter, "%ld %ld %ld %ld %ld", &bus, &gaddr, &port, &aktion, &delay);
+        long gaddr, port, aktion, delay;
+        sscanf(parameter, "%ld %ld %ld %ld", &gaddr, &port, &aktion, &delay);
         /* Port 0,1; Aktion 0,1 */
-        setGA(sessionid, bus, gaddr, port, aktion, delay);
+        setGA(bus, gaddr, port, aktion, delay);
       }
-      if(strncasecmp(spec, "TIME", 4) == 0)
+      if(strncasecmp(device, "TIME", 4) == 0)
       {
         long d, h, m, s, rx, ry;
         sscanf(parameter, "%ld %ld %ld %ld %ld %ld", &d, &h, &m, &s, &rx, &ry);
         setTime(d, h, m, s, rx, ry);
       }
-      if(strncasecmp(spec, "POWER", 5) == 0)
+      if(strncasecmp(device, "POWER", 5) == 0)
       {
         char state[5], msg[256];
         memset(msg, 0, sizeof(msg));
         sscanf(parameter, "%s %100c", state, msg);
         if(strncasecmp(state, "OFF", 3) == 0)
         {
-          setPower(0, msg);
+          setPower(bus, 0, msg);
         }
         else
         {
           if(strncasecmp(state, "ON", 2) == 0)
-            setPower(1, msg);
+            setPower(bus, 1, msg);
         }
       }
-    }
-    if(strncasecmp(command, "GET", 3) == 0)
-    {
-      strcpy(reply, "INFO -1");
+
+}
+void handleGET(int clientid, int bus, char *device, char *parameter, char *reply) {
+      strcpy(reply, "423 ERROR unsupported operation");
       /* es wird etwas abgefragt */
-      if(strncasecmp(spec, "FB", 2) == 0)
+      if(strncasecmp(device, "FB", 2) == 0)
       {
-        long int nelem, bus, port;
-        unsigned char parm[127], d[4096];
-        nelem = sscanf(parameter, "%s %s", d, parm);
-        port = atol(parm);
-	bus  = atol(d);
-        infoFB(bus, port, d);
-        strcpy(reply, d);
+        long int nelem, port;
+        nelem = sscanf(parameter, "%ld", port);
+        infoFB(bus, port, reply);
       }
-      if(strncasecmp(spec, "GL", 2) == 0)
+      if(strncasecmp(device, "GL", 2) == 0)
       {
-        long bus, laddr;
+        long laddr;
         struct _GL l;
-        sscanf(parameter, "%ld %ld", &bus, &laddr);
+        sscanf(parameter, "%ld", &laddr);
         if(getGL(bus, laddr, &l))
           infoGL(l, reply);
         else
-          strcpy(reply, "INFO -2");
+          strcpy(reply, "416 ERROR no data");
       }
-      if(strncasecmp(spec, "GA", 2) == 0)
+      if(strncasecmp(device, "GA", 2) == 0)
       {
-        long bus, addr;
+        long addr;
         struct _GA a;
-        sscanf(parameter, "%ld %ld", &bus, &addr);
+        sscanf(parameter, "%ld", &addr);
         if(getGA(bus, addr, &a))
           infoGA(a, reply);
         else
-          strcpy(reply, "INFO -2");
+          strcpy(reply, "416 ERROR no data");
       }
-      if(strncasecmp(spec, "POWER", 5) == 0)
-        infoPower(reply);
-      if(strncasecmp(spec, "TIME", 4) == 0)
+      if(strncasecmp(device, "POWER", 5) == 0)
+        infoPower(bus, reply);
+      if(strncasecmp(device, "TIME", 4) == 0)
       {
         if(vtime.ratio_x && vtime.ratio_y)
         {
           infoTime(vtime, reply);
         }
       }
-    }
-    if(strncasecmp(command, "WAIT", 4) == 0)
-    {
+
+}
+
+void handleRESET(int clientid, int bus, char *device, char *parameter, char *reply) {
+}
+void handleWAIT(int clientid, int bus, char *device, char *parameter, char *reply) {
       /* Wir warten.. */
       strcpy(reply, "INFO -1");
-      if(strncasecmp(spec, "FB", 2) == 0)
+      if(strncasecmp(device, "FB", 2) == 0)
       {
-        long int bus, port, waitvalue, aktvalue, timeout;
-        unsigned char d[256];
-        sscanf(parameter, "%ld %ld %ld %ld", &bus, &port, &waitvalue, &timeout);
-        if(getFBone(bus, port)==waitvalue)
+        long int port, waitvalue, aktvalue, timeout;
+        sscanf(parameter, "%ld %ld %ld", &port, &waitvalue, &timeout);
+        if(getFB(bus, port)==waitvalue)
         {
-          infoFB(bus, port, d);
+          infoFB(bus, port, reply);
         }
         else
         {
@@ -300,17 +265,16 @@ void* doCmdClient(int socket, int sessionid)
           {
             /* fprintf(stderr, "waiting %d (noch %d sekunden)\n", port, timeout); */
             usleep(10000);
-            aktvalue = getFBone(bus, port);
+            aktvalue = getFB(bus, port);
             timeout--;
           } while (timeout>=0 && aktvalue!=waitvalue);
           if(timeout<0)
-            strcpy(d, "INFO -3");
+            strcpy(reply, "417 ERROR timeout");
           else
-            infoFB(bus, port, d);
+            infoFB(bus, port, reply);
         }
-        strcpy(reply, d);
       }
-      if(strncasecmp(spec, "TIME", 4) == 0)
+      if(strncasecmp(device, "TIME", 4) == 0)
       {
         unsigned long d, h, m, s;
         sscanf(parameter, "%ld %ld %ld %ld", &d, &h, &m, &s);
@@ -321,41 +285,106 @@ void* doCmdClient(int socket, int sessionid)
         }
         infoTime(vtime, reply);
       }
-    }
-    if(strncasecmp(command, "INIT", 4) == 0)
-    {
-      if(strncasecmp(spec, "FB", 2) == 0)
+
+}
+
+int handleTERM(int clientid, int bus, char *device, char *parameter, char *reply) {
+    int rc = 0;
+      strcpy(reply, "421 ERROR unsupported device");
+      if(strncasecmp(device, "FB", 2) == 0)
       {
-        char proto[256];
-        long int portnum, baseport, nelem;
-        nelem = sscanf(parameter, "%s %ld %ld ", proto, &portnum, &baseport);
       }
-      if(strncasecmp(spec, "TIME", 4) == 0)
+      if(strncasecmp(device, "SERVER", 6) == 0) {
+        if(bus==0) {
+	    strcpy(reply, "200 OK");
+            server_shutdown(bus);
+	} else {
+	    strcpy(reply, "422 ERROR");
+	}
+      }
+      if(strncasecmp(device, "SESSION", 7) == 0) {
+        if(bus==0) {
+	    strcpy(reply, "200 OK");
+	    rc = 1;
+	} else {
+	    strcpy(reply, "422 ERROR");
+	}
+      }
+    return rc;
+}
+void handleINIT(int clientid, int bus, char *device, char *parameter, char *reply) {
+      if(strncasecmp(device, "TIME", 4) == 0)
       {
         long d, h, m, s, rx, ry;
         sscanf(parameter, "%ld %ld %ld %ld %ld %ld", &d, &h, &m, &s, &rx, &ry);
         setTime(d, h, m, s, rx, ry); /* prüft auch die Werte! */
       }
-    }
-    if(strncasecmp(command, "TERM", 4) == 0)
-    {
-      if(strncasecmp(spec, "FB", 2) == 0)
-      {
-      }
-    }
-    if(strncasecmp(command, "VERIFY", 6) == 0)
-      strcpy(reply, "INFO -1");
-    if(strlen(reply)>0)
-      if(socket_writereply(socket, reply) < 0)
-      {
-        shutdown(socket, 2);
-        close(socket);
-        return NULL;
-      }
-  }
+
+}
+void handleVERIFY(int clientid, int bus, char *device, char *parameter, char *reply) {
+}
+void handleCHECK(int clientid, int bus, char *device, char *parameter, char *reply) {
 }
 
-void* doInfoClient(int socket, int sessionid) {
+/***************************************************************
+ *  Für jeden Client läuft ein Thread, er macht das
+ *  SRCP indem er die Datenstrukturen passend füllt
+ *  und die Ergebnisse passend zurückschreibt
+ ***************************************************************
+ */
+
+void* doCmdClient(int socket, int clientid)
+{
+  char line[1024], reply[4095];
+  char command[20], device[20], parameter[900];
+  long int bus;
+
+  while(1)
+  {
+    memset(line, 0, sizeof(line));
+    strcpy(reply, "410 ERROR unsupported command");
+    if(socket_readline(socket, line, sizeof(line)-1)<0)
+    {
+      shutdown(socket, 0);
+      close(socket);
+      return NULL;
+    }
+    memset(command, 0, sizeof(command));
+    memset(device, 0, sizeof(device));
+    memset(parameter, 0, sizeof(parameter));
+    sscanf(line, "%s %ld %s %200c", command, &bus, device, parameter);
+    if(strncasecmp(command, "SET", 3) == 0) {
+      handleSET(clientid, bus, device, parameter, reply);
+    }
+    if(strncasecmp(command, "GET", 3) == 0) {
+      handleGET(clientid, bus, device, parameter, reply);
+    }
+    if(strncasecmp(command, "WAIT", 4) == 0)    {
+      handleWAIT(clientid, bus, device, parameter, reply);
+    }
+    if(strncasecmp(command, "INIT", 4) == 0)    {
+      handleINIT(clientid, bus, device, parameter, reply);
+    }
+    if(strncasecmp(command, "TERM", 4) == 0)    {
+      if(handleTERM(clientid, bus, device, parameter, reply))
+        break;
+    }
+    if(strncasecmp(command, "VERIFY", 6) == 0) {
+      handleVERIFY(clientid, bus, device, parameter, reply);
+    }
+    if(strncasecmp(command, "RESET", 5) == 0) {
+      handleRESET(clientid, bus, device, parameter, reply);
+    }
+    if(socket_writereply(socket, reply) < 0)  {
+      break;
+    }
+  }
+  shutdown(socket, 2);
+  close(socket);
+  return NULL;
+}
+
+void* doInfoClient(int socket, int clientid) {
     char reply[1000];
     while(1) {	
 	strcpy(reply, "I'm alive");
