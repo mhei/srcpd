@@ -53,9 +53,9 @@ void readconfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   busses[busnumber].driverdata = malloc(sizeof(struct _HSI_88_DATA));
   strcpy(busses[busnumber].description, "FB POWER");
   __hsi->refresh = 10000;
-  __hsi->number_fb[0] = 2;
-  __hsi->number_fb[1] = 2;
-  __hsi->number_fb[2] = 2;
+  __hsi->number_fb[0] = 0;
+  __hsi->number_fb[1] = 0;
+  __hsi->number_fb[2] = 0;
 
   while (child)
   {
@@ -85,7 +85,7 @@ void readconfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     if (strcmp(child->name, "number_fb_right") == 0)
     {
       char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      __hsi->number_fb[1] = atoi(txt);
+      __hsi->number_fb[2] = atoi(txt);
       free(txt);
     }
     child = child->next;
@@ -124,56 +124,56 @@ static int init_lineHSI88(int busnumber, int modules_left, int modules_center, i
   int status;
   int anzahl;
   int anzahl_cur;
-  int i;
+  int i, fd;
   int ctr;
   unsigned char byte2send;
   unsigned char rr;
 
-//  fd = busses[busnumber].fd;
+  fd = busses[busnumber].fd;
   sleep(1);
   byte2send = 0x0d;
   for(i=0;i<10;i++)
-    writeByte(busnumber, &byte2send, 2);
+    writeByte(fd, &byte2send, 2);
 
-  while(readByte(busnumber, &rr) == 0)
+  while(readByte(fd, &rr) == 0)
   {
   }
 
-  // HSI-88 initialisieren
-  // ausschalten Terminalmode
+  // HSI-88 initialize
+  // switch off terminal-mode
   i = 1;
   while(i)
   {
     byte2send = 't';
-    writeByte(busnumber, &byte2send, 0);
+    writeByte(fd, &byte2send, 0);
     byte2send = 0x0d;
-    writeByte(busnumber, &byte2send, 2);
+    writeByte(fd, &byte2send, 2);
     rr = 0;
     ctr = 0;
-    status = readByte(busnumber, &rr);
+    status = readByte(fd, &rr);
     while(rr != 't')
     {
       usleep(100000);
-      status = readByte(busnumber, &rr);
+      status = readByte(fd, &rr);
       if(status == -1)
         ctr++;
       if(ctr > 20)
         return -1;
     }
-    readByte(busnumber, &rr);
+    readByte(fd, &rr);
     if(rr == '0')
       i = 0;
-    readByte(busnumber, &rr);
+    readByte(fd, &rr);
   }
-  // Version abfragen
+  // looking for version of HSI
   byte2send = 'v';
-  writeByte(busnumber, &byte2send, 0);
+  writeByte(fd, &byte2send, 0);
   byte2send = 0x0d;
-  writeByte(busnumber, &byte2send, 2);
+  writeByte(fd, &byte2send, 2);
 
   for(i=0;i<49;i++)
   {
-    status = readByte(busnumber, &rr);
+    status = readByte(fd, &rr);
     if(status == -1)
       break;
     __hsi->v_text[i] = (char)rr;
@@ -187,33 +187,33 @@ static int init_lineHSI88(int busnumber, int modules_left, int modules_center, i
   {
     // Modulbelegung initialisieren
     byte2send = 's';
-    writeByte(busnumber, &byte2send, 0);
+    writeByte(fd, &byte2send, 0);
     byte2send = modules_left;
-    writeByte(busnumber, &byte2send, 0);
+    writeByte(fd, &byte2send, 0);
     byte2send = modules_center;
-    writeByte(busnumber, &byte2send, 0);
+    writeByte(fd, &byte2send, 0);
     byte2send = modules_right;
-    writeByte(busnumber, &byte2send, 0);
+    writeByte(fd, &byte2send, 0);
     byte2send = 0x0d;
-    writeByte(busnumber, &byte2send, 0);
+    writeByte(fd, &byte2send, 0);
     byte2send = 0x0d;
-    writeByte(busnumber, &byte2send, 0);
+    writeByte(fd, &byte2send, 0);
     byte2send = 0x0d;
-    writeByte(busnumber, &byte2send, 0);
+    writeByte(fd, &byte2send, 0);
     byte2send = 0x0d;
-    writeByte(busnumber, &byte2send, 5);
+    writeByte(fd, &byte2send, 5);
 
     rr = 0;
-    readByte(busnumber, &rr);            // Antwort lesen drei Byte
+    readByte(fd, &rr);            // read answer (three bytes)
     while(rr != 's')
     {
       usleep(100000);
-      readByte(busnumber, &rr);
+      readByte(fd, &rr);
     }
-    readByte(busnumber, &rr);            // Anzahl angemeldeter Module
+    readByte(fd, &rr);            // Anzahl angemeldeter Module
     anzahl_cur = (int)rr;
     printf("number of modules: %i", anzahl_cur);
-    if(anzahl == anzahl_cur)  // HSI initialisation correct ?
+    if(anzahl == anzahl_cur)      // HSI initialisation correct ?
     {
       status = 0;
     }
@@ -221,7 +221,7 @@ static int init_lineHSI88(int busnumber, int modules_left, int modules_center, i
     {
       printf("error while initialisation");
       sleep(1);
-      while(readByte(busnumber, &rr) == 0)
+      while(readByte(fd, &rr) == 0)
       {
       }
     }
@@ -309,7 +309,7 @@ void* thr_sendrec_HSI_88(void *v)
 
   busnumber = (int)v;
   refresh_time = __hsi->refresh;
-  syslog(LOG_INFO, "thr_sendrec_hsi_88 gestartet");
+  syslog(LOG_INFO, "thr_sendrec_hsi_88 is startet");
 
   fd = busses[busnumber].fd;
   zaehler1 = 0;
@@ -321,13 +321,13 @@ void* thr_sendrec_HSI_88(void *v)
   {
     // Modulbelegung initialisieren
     byte2send = 's';
-    writeByte(busnumber, &byte2send, 0);
+    writeByte(fd, &byte2send, 0);
     byte2send = __hsi->number_fb[0];
-    writeByte(busnumber, &byte2send, 0);
+    writeByte(fd, &byte2send, 0);
     byte2send = __hsi->number_fb[1];
-    writeByte(busnumber, &byte2send, 0);
+    writeByte(fd, &byte2send, 0);
     byte2send = __hsi->number_fb[2];
-    writeByte(busnumber, &byte2send, 0);
+    writeByte(fd, &byte2send, 0);
     byte2send = 0x0d;
     writeByte(busnumber, &byte2send, 0);
     byte2send = 0x0d;
@@ -338,7 +338,7 @@ void* thr_sendrec_HSI_88(void *v)
     writeByte(busnumber, &byte2send, 5);
 
     rr = 0;
-    readByte(busnumber, &rr);            // Antwort lesen drei Byte
+    readByte(fd, &rr);            // read answer (three bytes)
     while(rr != 's')
     {
       usleep(100000);
@@ -350,7 +350,7 @@ void* thr_sendrec_HSI_88(void *v)
     anzahl -= __hsi->number_fb[0];
     anzahl -= __hsi->number_fb[1];
     anzahl -= __hsi->number_fb[2];
-    if(anzahl == 0)         // HSI initialisation correct ?
+    if(anzahl == 0)               // HSI initialisation correct ?
     {
       status = 0;
     }
@@ -370,7 +370,7 @@ void* thr_sendrec_HSI_88(void *v)
     while(rr != 'i')
     {
       usleep(refresh_time);
-      readByte(busnumber, &rr);
+      readByte(fd, &rr);
     }
     readByte(busnumber, &rr);            // Anzahl zu meldender Module
     anzahl = (int)rr;
@@ -382,11 +382,11 @@ void* thr_sendrec_HSI_88(void *v)
       readByte(busnumber, &rr);
       temp = rr;
       temp <<= 8;
-      readByte(busnumber, &rr);
+      readByte(fd, &rr);
       setFBmodul(busnumber, i, temp | rr);
       if (busses[busnumber].debuglevel > 6)
         syslog(LOG_INFO, "Rückmeldung %i mit 0x%02x", i, temp|rr);
     }
-    readByte(busnumber, &rr);            // <CR>
+    readByte(fd, &rr);            // <CR>
   }
 }
