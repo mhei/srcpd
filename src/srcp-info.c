@@ -31,19 +31,24 @@
 #define QUEUELENGTH_INFO 1000
 
 /* Kommandoqueues pro Bus */
-static char info_queue[QUEUELENGTH_INFO][256];   // info queue.
+static char *info_queue[QUEUELENGTH_INFO];
 static pthread_mutex_t queue_mutex_info;
 
 static int  in=0;
 
 /* queue a pre-formatted message */
 int queueInfoMessage(char *msg) {
+    int index;
     pthread_mutex_lock(&queue_mutex_info);
-    sprintf(info_queue[in], "%s", msg);
+    index = in;
     in++;
     if (in == QUEUELENGTH_INFO)
       in = 0;
     pthread_mutex_unlock(&queue_mutex_info);
+    /* Queue macht Kopien der Werte */
+    free(info_queue[index]);
+    info_queue[index]=calloc(strlen(msg)+1, 1);
+    strcpy(info_queue[index], msg);
   return SRCP_OK;
 }
 
@@ -69,8 +74,12 @@ int unqueueNextInfo(int current, char *info)
 
 int startup_INFO(void)
 {
+  int i;
   pthread_mutex_init(&queue_mutex_info, NULL);
   in = 0;
+  for (i=0; i<QUEUELENGTH_INFO;i++) {
+    info_queue[i] = NULL;
+  }
   return SRCP_OK;
 }
 
