@@ -1,3 +1,6 @@
+2004-11-03	Matthias Trute	<mtrute@users.sourceforge.net>
+	* varios files : made some regression tests. Improved error handling.
+
 2004-07-20  Frank Schmischke  <frank.schmischke@t-online.de>
 
 	* ib.c : correct logic for emergency-stop and pressing "POWER ON"-Button at IB

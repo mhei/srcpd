@@ -39,8 +39,6 @@ int start_session(long int sessionid, int mode)
      (mode==1?"COMMAND":"INFO"));
   queueInfoMessage(msg);
   return SRCP_OK;
-
-  return SRCP_OK;
 }
 
 /**

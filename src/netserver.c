@@ -803,8 +803,13 @@ int doCmdClient(int Socket, int sessionid)
         if (strncasecmp(command, "TERM", 4) == 0)
         {
           rc = handleTERM(sessionid, bus, devicegroup, parameter, reply);
-          if (rc < 0)
+          if (rc < 0) {
+	    if (socket_writereply(Socket, reply) < 0)
+	    {
+	      break;
+	    }
             break;
+	    }
           rc = abs(rc);
         }
         if (strncasecmp(command, "VERIFY", 6) == 0)

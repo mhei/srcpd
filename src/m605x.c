@@ -209,9 +209,10 @@ int term_bus_M6051(int bus)
  *
  */
 int init_gl_M6051(struct _GLSTATE *gl) {
-  gl -> direction = 1; /* undocumented feature of the 6021: 9193 is a hard reset */
+  if( gl -> protocol != 'M' ) 
+    return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
+  gl -> direction = 1;
   gl -> n_fs = 14;
-  gl -> protocol = 'M';
   return SRCP_OK;
 }
 
@@ -220,7 +221,8 @@ int init_gl_M6051(struct _GLSTATE *gl) {
 
  */
 int init_ga_M6051(struct _GASTATE *ga) {
-  ga -> protocol = 'M';
+  if( (ga -> protocol != 'M') ||  (ga -> protocol != 'P')  ) 
+    return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
   return SRCP_OK;
 }
 

@@ -73,8 +73,8 @@ typedef struct _BUS
   void *thr_func;                            //! addr of the thread function
   int (*init_func)(int);                     //! addr of init function
   int (*term_func)(int);                     //! addr of init function
-  int (*init_gl_func) ( struct _GLSTATE *);  //! called to modify default init
-  int (*init_ga_func) ( struct _GASTATE *);  //! called to modify default init
+  int (*init_gl_func) ( struct _GLSTATE *);  //! called to check default init
+  int (*init_ga_func) ( struct _GASTATE *);  //! called to check default init
   int watchdog;                              //! used to monitor the thread
   int power_state;
   int power_changed;
