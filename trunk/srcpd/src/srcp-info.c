@@ -233,7 +233,7 @@ int doInfoClient(int Socket, int sessionid)
     reply[0] = '\0';
 
     DBG(0, DBG_DEBUG, "new Info-client requested %ld", sessionid);
-    for (busnumber = 1; busnumber <= num_busses; busnumber++)
+    for (busnumber = 0; busnumber <= num_busses; busnumber++)
     {
       DBG(busnumber, DBG_DEBUG, "send all data for busnumber %d to new client", busnumber);
       // first some global bus data
@@ -242,7 +242,13 @@ int doInfoClient(int Socket, int sessionid)
               write(Socket, reply, strlen(reply));
       }
       reply[0] = '\0';
-      
+      // send Descriptions for busses
+      describeBus(busnumber, reply);
+      if (strlen(reply) > 0) {
+              write(Socket, reply, strlen(reply));
+      }
+      reply[0] = '\0';
+
       // send all needed generic locomotivs
       gettimeofday(&start_time, NULL);
       number = get_number_gl(busnumber);
