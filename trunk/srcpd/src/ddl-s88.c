@@ -188,7 +188,7 @@ int init_bus_S88(int bus) {
 				syslog(LOG_INFO, "   warning: There is no port for s88 at 0x%X.",S88PORT);
 				ioperm(S88PORT,3,0); // stopping access to port address
 				return 0;
-            }
+                  }
 		}
 		else {
 			syslog(LOG_INFO, "   warning: Access to port 0x%X denied.",S88PORT);

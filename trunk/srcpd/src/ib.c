@@ -305,7 +305,7 @@ send_command_gl(int bus)
           }
           else
           {
-            byte2send = calcspeed(gltmp.speed, gltmp.maxspeed, 126); // Geschwindigkeit senden
+            byte2send = gltmp.speed; // Geschwindigkeit senden
             if(byte2send > 0)
             {
               byte2send++;

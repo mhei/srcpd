@@ -223,15 +223,33 @@ int infoGL(int bus, int addr, char* msg)
   return SRCP_INFO;
 }
 
-int
-cmpGL(struct _GL a, struct _GL b)
-{
-  return ((a.direction == b.direction) &&
-      (a.speed     == b.speed)     &&
-      (a.maxspeed  == b.maxspeed)  &&
-      (a.n_func     == b.n_func)   &&
-      (a.n_fs      == b.n_fs)      &&
-      (a.funcs     == b.funcs));
+int lockGL(int bus, int addr, long int sessionid) {
+  return SRCP_NOTSUPPORTED;
+}
+
+int getlockGL(int bus, int addr, long int sessionid) {
+  return SRCP_NOTSUPPORTED;
+}
+
+
+int unlockGL(int bus, int addr, long int sessionid) {
+  if(gl[bus-1][addr].locked_by==sessionid) {
+    gl[bus-1][addr].locked_by = 0;
+    return SRCP_OK;
+  } else {
+     return SRCP_DEVICELOCKED;
+  }
+}
+
+void unlock_gl_bysessionid(long int sessionid){
+  int i,j;
+  for(i=0; i<MAX_BUSSES; i++) {
+       for(j=0;j<MAXGLS; j++) {
+           if(gl[i][j].locked_by == sessionid) {
+                         unlockGL(i+1, j+1, sessionid);
+           }
+       }
+  }
 }
 
 int startup_GL(void) {
@@ -246,8 +264,7 @@ int startup_GL(void) {
 
 // es gibt Decoder für 14, 27, 28 und 128 FS
 // Achtung bei IB alles auf 126 FS bezogen (wenn Ergebnis > 0, dann noch eins aufaddieren)
-int
-calcspeed(int vs, int vmax, int n_fs)
+static int calcspeed(int vs, int vmax, int n_fs)
 {
   int rs;
   if(0==vmax)

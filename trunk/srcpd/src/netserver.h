@@ -13,7 +13,7 @@
 int   socket_readline(int socket, char *line, int len);
 
 void* thr_doClient(void* v);
-void* doInfoClient(int, int);
-void* doCmdClient(int, int);
+int doInfoClient(int, int);
+int doCmdClient(int, int);
 
 #endif

@@ -30,6 +30,7 @@ int getTime(struct _VTIME *vt);
 int infoTime(struct _VTIME, char *msg);
 int cmpTime(struct timeval *t1, struct timeval *t2);
 
+int describeTIME(int bus, int addr, char *reply);
 void* thr_clock(void *);
 
 #endif

@@ -74,6 +74,9 @@ cmpTime(struct timeval *t1, struct timeval *t2)
 }
 
 
+int describeTIME(int bus, int addr, char *reply) {
+   return SRCP_NOTSUPPORTED;
+}
 
 /***********************************************************************
  * Zeitgeber, aktualisiert die Datenstrukturen im Modellsekundenraster *

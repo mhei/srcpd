@@ -70,6 +70,9 @@ infoFB(int bus, int port, char *msg)
   }
 }
 
+int describeFB(int bus, int addr, char *reply) {
+    return SRCP_NOTSUPPORTED;
+}
 int
 startup_FB()
 {

@@ -223,8 +223,7 @@ thr_sendrec_M6051(void *v)
            ((gltmp.funcs & 0x10) != (glakt.funcs & 0x10)) ||
             (gltmp.direction != glakt.direction))
         {
-          c = calcspeed(gltmp.speed, gltmp.maxspeed, gltmp.n_fs) +
-              16 * ((gltmp.funcs & 0x10) ? 1 : 0);
+          c = gltmp.speed + 16 * ((gltmp.funcs & 0x10) ? 1 : 0);
           /* jetzt aufpassen: n_fs erzwingt ggf. mehrfache Ansteuerungen des Dekoders */
           /* das Protokoll ist da wirklich eigenwillig, vorerst ignoriert!            */
           writeByte(fd, &c, pause_between_bytes);
