@@ -123,8 +123,7 @@ int queueGL(int busnumber, int addr, int dir, int speed, int maxspeed, const int
 	queue[busnumber][in[busnumber]].tv        = akt_time;
 	queue[busnumber][in[busnumber]].id        = addr;
 	in[busnumber]++;
-	if (in[busnumber] == QUEUELEN)
-        in[busnumber] = 0;
+	if (in[busnumber] == QUEUELEN) in[busnumber] = 0;
 
 	pthread_mutex_unlock(&queue_mutex[busnumber]);
 	return SRCP_OK;
@@ -150,15 +149,6 @@ static int queue_len(int busnumber)
 static int queue_isfull(int busnumber)
 {
   return queue_len(busnumber) >= QUEUELEN - 1;
-}
-
-/** liefert nächsten Eintrag und >=0, oder -1 */
-int getNextGL(int busnumber, struct _GLSTATE *l)
-{
-  if (in[busnumber] == out[busnumber])
-    return -1;
-  *l = queue[busnumber][out[busnumber]];
-  return out[busnumber];
 }
 
 /** liefert nächsten Eintrag oder -1, setzt fifo pointer neu! */
@@ -221,26 +211,33 @@ int setGL(int busnumber, int addr, struct _GLSTATE l)
 
 int initGL(int busnumber, int addr, const char protocol, int protoversion, int n_fs, int n_func)
 {
+  int rc = SRCP_WRONGVALUE;
   if( isValidGL(busnumber, addr) )
   {
     char msg[1000];
-    gettimeofday(&gl[busnumber].glstate[addr].inittime, NULL);
-    gettimeofday(&gl[busnumber].glstate[addr].tv, NULL);    
-    gl[busnumber].glstate[addr].n_fs=n_fs;
-    gl[busnumber].glstate[addr].n_func=n_func;
-    gl[busnumber].glstate[addr].protocolversion=protoversion;
-    gl[busnumber].glstate[addr].protocol=protocol;
+    struct _GLSTATE tgl;
+    memset(&tgl, 0, sizeof(tgl));
+    rc = SRCP_OK;
+    gettimeofday(&tgl.inittime, NULL);
+    gettimeofday(&tgl.tv, NULL);    
+    tgl.n_fs=n_fs;
+    tgl.n_func=n_func;
+    tgl.protocolversion=protoversion;
+    tgl.protocol=protocol;
+    tgl.id = addr;
     if(busses[busnumber].init_gl_func && gl[busnumber].glstate[addr].state == 0)
-	    (*busses[busnumber].init_gl_func)(&gl[busnumber].glstate[addr]);
-    gl[busnumber].glstate[addr].state = 1;
-    describeGL(busnumber, addr, msg);
-    queueInfoMessage(msg);
-    queueGL(busnumber, addr, 0, 0, 1, 0);
-    return SRCP_OK;
+	    rc = (*busses[busnumber].init_gl_func)(&tgl);
+    if(rc == SRCP_OK) {
+	gl[busnumber].glstate[addr] = tgl;
+        gl[busnumber].glstate[addr].state = 1;
+	describeGL(busnumber, addr, msg);
+        queueInfoMessage(msg);
+	queueGL(busnumber, addr, 0, 0, 1, 0);
+    }
   } else {
-  DBG(busnumber, DBG_WARN, "init GL: %d %c %d %d %d", addr, protocol, protoversion, n_fs, n_func);
-     return SRCP_WRONGVALUE;
+    rc = SRCP_WRONGVALUE;
   }
+  return rc;
 }
 
 

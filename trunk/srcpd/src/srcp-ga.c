@@ -100,15 +100,6 @@ static int queue_isfull(int busnumber)
   return queue_len(busnumber) >= QUEUELEN - 1;
 }
 
-/** liefert nächsten Eintrag und >=0, oder -1 */
-int getNextGA(int busnumber, struct _GASTATE *a)
-{
-  if (in[busnumber] == out[busnumber])
-    return -1;
-  *a = queue[busnumber][out[busnumber]];
-  return out[busnumber];
-}
-
 /** liefert nächsten Eintrag oder -1, setzt fifo pointer neu! */
 int unqueueNextGA(int busnumber, struct _GASTATE *a)
 {

@@ -781,24 +781,15 @@ int comp_nmra_accessory(int busnumber, int nr, int output, int activate) {
 
    int j;        
 
-#ifdef _DEBUG_
-   int i;
-#endif
-
-#ifdef _DEBUG_
-   printf("\ncommand for NMRA protocol for accessory decoders (NA) received\n");
-#endif   
+   DBG(busnumber, DBG_DEBUG, "command for NMRA protocol for accessory decoders (NA) received");
 
    /* no special error handling, it's job of the clients */
    if (nr<1 || nr>4096 || output<0 || output>1 ||
        activate<0 || activate>1)
       return 1;
-#if 0
+#if 0 // GA Packet Cache
    /* get the calculated packet if available */
    j=getNMRAGaPacket(nr,output,activate,&p_packetstream);
-#ifdef _DEBUG_
-   fprintf(stdout,"NMRA-GA: got calculated packet of length %d\n",j);
-#endif
    if (j==0) {
 #endif
       /* packet is not available */
@@ -823,19 +814,9 @@ int comp_nmra_accessory(int busnumber, int nr, int output, int activate) {
       strcat(bitstream, byte3);
       strcat(bitstream, "1");
 
-#ifdef _DEBUG_
-   printf("   bitstream     : %s\n", bitstream);
-#endif
-
       j=translateBitstream2Packetstream(busnumber, bitstream, packetstream, TRUE);
 #if 0 // GA Packet Cache
    }
-
-#ifdef _DEBUG_
-   printf("   pktstream     : ");
-   for (i=0; i<j; i++) printf("%x ", (unsigned char)*(p_packetstream+i));
-   printf("\n");
-#endif
 #endif
    if (j>0) {
       queue_add(address,p_packetstream,QNBACCPKT,j);
@@ -859,13 +840,7 @@ int comp_nmra_baseline(int busnumber, int address, int direction, int speed) {
    int adr       = 0;
    int j;
 
-#ifdef _DEBUG_
-   int i;
-#endif
-
-#ifdef _DEBUG_
-   printf("\ncommand for NMRA protocol baseline (NB) received\n");
-#endif 
+   DBG(busnumber, DBG_DEBUG, "command for NMRA protocol baseline (NB) received");
 
    adr=address;
 
@@ -889,17 +864,7 @@ int comp_nmra_baseline(int busnumber, int address, int direction, int speed) {
    strcat(bitstream, byte3);
    strcat(bitstream, "1");
 
-#ifdef _DEBUG_
-   printf("   bitstream     : %s\n", bitstream);          
-#endif
-
    j=translateBitstream2Packetstream(busnumber, bitstream, packetstream, FALSE);
-
-#ifdef _DEBUG_
-   printf("   pktstream     : ");
-   for (i=0; i<j; i++) printf("%x ", (unsigned char)packetstream[i]);
-   printf("\n");
-#endif 
 
    if (j>0) {
       update_NMRAPacketPool(busnumber, adr,packetstream,j,packetstream,j);   
@@ -929,9 +894,7 @@ int comp_nmra_f4b7s28(int busnumber, int address, int direction, int speed, int 
    int f[5];
    int i,j,jj;
 
-#ifdef _DEBUG_
-   printf("\ncommand for NMRA protocol 4f7b28fs (N1) received\n");
-#endif 
+   DBG(busnumber, DBG_DEBUG, "command for NMRA protocol 4f7b28fs (N1) received");
 
    adr=address;
    f[0]=func; f[1]=f1; f[2]=f2; f[3]=f3; f[4]=f4;
@@ -973,22 +936,8 @@ int comp_nmra_f4b7s28(int busnumber, int address, int direction, int speed, int 
    strcat(bitstream2, errdbyte);
    strcat(bitstream2, "1");
 
-#ifdef _DEBUG_
-   printf("   bitstream(sp) : %s\n", bitstream); 
-   printf("   bitstream(fx) : %s\n", bitstream2);         
-#endif
-
    j=translateBitstream2Packetstream(busnumber, bitstream, packetstream, FALSE);
    jj=translateBitstream2Packetstream(busnumber, bitstream2, packetstream2, FALSE);
-
-#ifdef _DEBUG_
-   printf("   pktstream(sp) : ");
-   for (i=0; i<j; i++) printf("%x ", (unsigned char)packetstream[i]);
-   printf("\n");
-   printf("   pktstream(fx) : ");
-   for (i=0; i<jj; i++) printf("%x ", (unsigned char)packetstream2[i]);
-   printf("\n");
-#endif 
 
    if (j>0 && jj>0) {
       update_NMRAPacketPool(busnumber, adr,packetstream,j,packetstream2,jj);   
@@ -1021,9 +970,7 @@ int comp_nmra_f4b7s128(int busnumber, int address, int direction, int speed, int
    int f[5];
    int i,j,jj;
 
-#ifdef _DEBUG_
-   printf("\ncommand for NMRA protocol 4f7b128fs (N2) received\n");
-#endif
+   DBG(busnumber, DBG_DEBUG, "command for NMRA protocol 4f7b128fs (N2) received");
 
    adr=address;
    f[0]=func; f[1]=f1; f[2]=f2; f[3]=f3; f[4]=f4;
@@ -1068,22 +1015,8 @@ int comp_nmra_f4b7s128(int busnumber, int address, int direction, int speed, int
    strcat(bitstream2, errdbyte);
    strcat(bitstream2, "1");
 
-#ifdef _DEBUG_
-   printf("   bitstream(sp) : %s\n", bitstream);
-   printf("   bitstream(fx) : %s\n", bitstream2);
-#endif
-
    j=translateBitstream2Packetstream(busnumber, bitstream, packetstream, FALSE);
    jj=translateBitstream2Packetstream(busnumber, bitstream2, packetstream2, FALSE);
-
-#ifdef _DEBUG_
-   printf("   pktstream(sp) : ");
-   for (i=0; i<j; i++) printf("%x ", (unsigned char)packetstream[i]);
-   printf("\n");   
-   printf("   pktstream(fx) : ");
-   for (i=0; i<jj; i++) printf("%x ", (unsigned char)packetstream2[i]);
-   printf("\n");
-#endif
 
    if (j>0 && jj>0) {
       update_NMRAPacketPool(busnumber, adr,packetstream,j,packetstream2,jj);
@@ -1115,10 +1048,8 @@ int comp_nmra_f4b14s28(int busnumber, int address, int direction, int speed, int
    int adr       = 0;
    int f[5];
    int i,j,jj;
- 
-#ifdef _DEBUG_
-   printf("\ncommand for NMRA protocol 4f14b28fs (N3) received\n");
-#endif
+
+   DBG(busnumber, DBG_DEBUG,"command for NMRA protocol 4f14b28fs (N3) received");
  
    adr=address;
    f[0]=func; f[1]=f1; f[2]=f2; f[3]=f3; f[4]=f4;
@@ -1167,22 +1098,8 @@ int comp_nmra_f4b14s28(int busnumber, int address, int direction, int speed, int
    strcat(bitstream2, errdbyte);
    strcat(bitstream2, "1");
  
-#ifdef _DEBUG_
-   printf("   bitstream(sp) : %s\n", bitstream);
-   printf("   bitstream(fx) : %s\n", bitstream2);
-#endif
- 
    j=translateBitstream2Packetstream(busnumber, bitstream, packetstream, FALSE);
    jj=translateBitstream2Packetstream(busnumber, bitstream2, packetstream2, FALSE);
- 
-#ifdef _DEBUG_
-   printf("   pktstream(sp) : ");
-   for (i=0; i<j; i++) printf("%x ", (unsigned char)packetstream[i]);
-   printf("\n");
-   printf("   pktstream(fx) : ");
-   for (i=0; i<jj; i++) printf("%x ", (unsigned char)packetstream2[i]);
-   printf("\n");
-#endif
  
    if (j>0 && jj>0) {
       update_NMRAPacketPool(busnumber, adr+ADDR14BIT_OFFSET,packetstream,j,packetstream2,jj);
@@ -1216,9 +1133,7 @@ int comp_nmra_f4b14s128(int busnumber, int address, int direction, int speed, in
    int f[5];
    int i,j,jj;
  
-#ifdef _DEBUG_
-   printf("\ncommand for NMRA protocol 4f14b128fs (N4) received\n");
-#endif
+   DBG(busnumber, DBG_DEBUG, "command for NMRA protocol 4f14b128fs (N4) received");
  
    adr=address;
    f[0]=func; f[1]=f1; f[2]=f2; f[3]=f3; f[4]=f4;
@@ -1269,22 +1184,8 @@ int comp_nmra_f4b14s128(int busnumber, int address, int direction, int speed, in
    strcat(bitstream2, errdbyte);
    strcat(bitstream2, "1");
  
-#ifdef _DEBUG_
-   printf("   bitstream(sp) : %s\n", bitstream);
-   printf("   bitstream(fx) : %s\n", bitstream2);
-#endif
- 
    j=translateBitstream2Packetstream(busnumber, bitstream, packetstream, FALSE);
    jj=translateBitstream2Packetstream(busnumber,bitstream2, packetstream2, FALSE);
- 
-#ifdef _DEBUG_
-   printf("   pktstream(sp) : ");
-   for (i=0; i<j; i++) printf("%x ", (unsigned char)packetstream[i]);
-   printf("\n");
-   printf("   pktstream(fx) : ");
-   for (i=0; i<jj; i++) printf("%x ", (unsigned char)packetstream2[i]);
-   printf("\n");
-#endif
  
    if (j>0 && jj>0) {
       update_NMRAPacketPool(busnumber, adr+ADDR14BIT_OFFSET,packetstream,j,packetstream2,jj);
@@ -1371,9 +1272,7 @@ void protocol_nmra_sm_direct_cvbyte(int busnumber, int sckt, int cv, int value, 
 
    int i,j,l,ack;
 
-#ifdef _DEBUG_
-   printf("\ncommand for NMRA service mode instruction (SMDWY) received\n");
-#endif
+   DBG(busnumber, DBG_DEBUG, "command for NMRA service mode instruction (SMDWY) received");
 
    /* no special error handling, it's job of the clients */
    if (cv<0 || cv>1024 || value<0 || value>255) return;
@@ -1437,17 +1336,7 @@ void protocol_nmra_sm_direct_cvbyte(int busnumber, int sckt, int cv, int value, 
    strcat(bitstream, byte5);
    strcat(bitstream, "1");
 
-#ifdef _DEBUG_
-   printf("   bitstream     : %s\n", bitstream);
-#endif                              
-
    j=translateBitstream2Packetstream(busnumber, bitstream, packetstream, FALSE);
-
-#ifdef _DEBUG_
-   printf("   pktstream     : ");
-   for (i=0; i<j; i++) printf("%x ", (unsigned char)packetstream[i]);
-   printf("\n");
-#endif
 
    memset(SendStream,0,2048);
 
@@ -1495,9 +1384,7 @@ void protocol_nmra_sm_write_cvbit(int bus, int sckt, int cv, int bit, int value)
 
    int i,j,l,ack;
 
-#ifdef _DEBUG_
-   printf("\ncommand for NMRA service mode instruction (SMDWB) received\n");
-#endif
+   DBG(bus, DBG_DEBUG, "command for NMRA service mode instruction (SMDWB) received");
 
    /* no special error handling, it's job of the clients */
    if (cv<0 || cv>1023 || bit<0 || bit>7 || value<0 || value>1) return;
@@ -1560,17 +1447,7 @@ void protocol_nmra_sm_write_cvbit(int bus, int sckt, int cv, int bit, int value)
    strcat(bitstream, byte5);
    strcat(bitstream, "1");
 
-#ifdef _DEBUG_
-   printf("   bitstream     : %s\n", bitstream); 
-#endif
-
    j=translateBitstream2Packetstream(bus, bitstream, packetstream, FALSE);
-
-#ifdef _DEBUG_
-   printf("   pktstream     : ");
-   for (i=0; i<j; i++) printf("%x ", (unsigned char)packetstream[i]);
-   printf("\n");
-#endif
 
    memset(SendStream,0,2048);
    for (l=0; l<50; l++) strcat(SendStream, idlestream);
@@ -1600,9 +1477,7 @@ void protocol_nmra_sm_phregister(int bus, int sckt,int reg,int value,int verify)
 
    int i,j,l,y,ack;
 
-#ifdef _DEBUG_
-   printf("\ncommand for NMRA service mode instruction (SMPRA) received\n");
-#endif
+   DBG(bus, DBG_DEBUG, "command for NMRA service mode instruction (SMPRA) received");
 
    /* no special error handling, it's job of the clients */
    if (reg<1 || reg>8 || value<0 || value>255) return;      
@@ -1651,18 +1526,8 @@ void protocol_nmra_sm_phregister(int bus, int sckt,int reg,int value,int verify)
    strcat(bitstream, byte3);
    strcat(bitstream, "10");
 
-#ifdef _DEBUG_
-   printf("   bitstream     : %s\n", bitstream);
-#endif
-
    memset(packetstream, 0, PKTSIZE);
    j=translateBitstream2Packetstream(bus, bitstream, packetstream, TRUE);
-
-#ifdef _DEBUG_
-   printf("   pktstream     : ");
-   for (i=0; i<j; i++) printf("%x ", (unsigned char)packetstream[i]);
-   printf("\n");
-#endif
 
    memset(SendStream,0,4096);
 

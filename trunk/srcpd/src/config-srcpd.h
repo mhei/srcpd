@@ -24,64 +24,67 @@
 #include "srcp-gl.h"
 #include "srcp-ga.h"
 
-#define MAX_BUSSES             20         // max number of integrated busses in srcpd
-#define MAXSRCPLINELEN       1001         // max number of bytes per line plus 0x00
+#define MAX_BUSSES             20         //! max number of integrated busses in srcpd
+#define MAXSRCPLINELEN       1001         //! max number of bytes per line plus 0x00
 
 #define SERVER_SERVER           0
-#define SERVER_DDL              1         // srcpd arbeitet als DDL-Server
-#define SERVER_M605X            2         // srcpd arbeitet als M605X-Server
-#define SERVER_IB               3         // srcpd arbeitet als IB-Server
-#define SERVER_LI100            4         // srcpd arbeitet als Lenz-Server
-#define SERVER_LOOPBACK         5         // dummy driver, no real hardware
-#define SERVER_S88              6         // S88 am Parallelport
-#define SERVER_HSI_88	          7
-#define SERVER_I2C_DEV          8         // srcpd arbeitet als I2C-DEV-Server
-#define SERVER_ZIMO             9         // Zimo MX1
+#define SERVER_DDL              1         //! srcpd arbeitet als DDL-Server
+#define SERVER_M605X            2         //! srcpd arbeitet als M605X-Server
+#define SERVER_IB               3         //! srcpd arbeitet als IB-Server
+#define SERVER_LI100            4         //! srcpd arbeitet als Lenz-Server
+#define SERVER_LOOPBACK         5         //! dummy driver, no real hardware
+#define SERVER_S88              6         //! S88 am Parallelport
+#define SERVER_HSI_88	          7       //! srcpd arbeitet als HSI 88 Server
+#define SERVER_I2C_DEV          8         //! srcpd arbeitet als I2C-DEV-Server
+#define SERVER_ZIMO             9         //! Zimo MX1
 
-/* generic flags */
-#define USE_WATCHDOG          0x0001      // use watchdog
-#define AUTO_POWER_ON         0x0002      // start Power on startup
-#define RESTORE_COM_SETTINGS  0x0004      // restore com-port settings after close
+/** generic flags */
+#define USE_WATCHDOG          0x0001      //! use watchdog
+#define AUTO_POWER_ON         0x0002      //! start Power on startup
+#define RESTORE_COM_SETTINGS  0x0004      //! restore com-port settings after close
 
-/* driver specific flags */
-#define M6020_MODE            0x0100      // Subtyp zum M605X
-#define FB_ORDER_0            0x0200      // feedback port 0 is bit 0
-#define FB_16_PORTS           0x0400      // feedback-modul has 16 ports
+/** driver specific flags */
+// #define M6020_MODE            0x0100      //! Subtyp zum M605X
+#define FB_ORDER_0            0x0200      //! feedback port 0 is bit 0
+#define FB_16_PORTS           0x0400      //! feedback-modul has 16 ports
 
 
 /* Busstruktur */
 typedef struct _BUS
 {
-  int number;      // Nummer
-  int debuglevel;  // testmodus
-  int type;        // SERVER_IB, SERVER_M605X...
-
-  char *device;    // Path_to_device
-  speed_t baudrate;
-    
-  /* Now internally used data */
-  int fd;          // file descriptor of device
-  struct termios devicesettings; // Device Settings, if used
-  /* statistics */
+  int number;      //! busnumber
+  int debuglevel;  //! verbosity level of syslog
+  int type;        //! which bustype 
+  char description[100]; //! bus description
+  
+  char *device;    //! Path to device, if not null
+  /** statistics */
   unsigned int bytes_recevied;
   unsigned int bytes_sent;
   unsigned int commands_processed;
-  pthread_t pid;   // PID of the thread
-  void *thr_func;  // addr of the thread function
-  int (*init_func)(int); // addr of init function
-  int (*term_func)(int); // addr of init function
-  int (*init_gl_func) ( struct _GLSTATE *); // called to modify default init
-  int (*init_ga_func) ( struct _GASTATE *); // called to modify default init
-  int watchdog;    // used to monitor the thread
+
+  /* serial device parameters */
+  speed_t baudrate; //! 
+  struct termios devicesettings; //! save Device Settings, if used
+      
+  /** Now internally used data */
+  int fd;          //! file descriptor of device
+
+  pthread_t pid;   //! PID of the thread
+  void *thr_func;  //! addr of the thread function
+  int (*init_func)(int); //! addr of init function
+  int (*term_func)(int); //! addr of init function
+  int (*init_gl_func) ( struct _GLSTATE *); //! called to modify default init
+  int (*init_ga_func) ( struct _GASTATE *); //! called to modify default init
+  int watchdog;    //! used to monitor the thread
   int power_state;
   int power_changed;
   struct timeval power_change_time;
   char power_msg[100];
-  char description[100]; // bus description
+
   /* driver specific */
-  void *driverdata;
-  int flags;            // Watchdog
-  int numberOfSM;       // maximumnumber for programing
+  void *driverdata; //! pointer to driverspecific data
+  int flags;            //! Watchdog fla
 } BUS;
 
 extern struct _BUS busses[];
