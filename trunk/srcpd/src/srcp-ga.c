@@ -25,6 +25,7 @@
 #include "config-srcpd.h"
 #include "srcp-ga.h"
 #include "srcp-error.h"
+#include "srcp-info.h"
 
 #include "m605x.h"
 #include "ib.h"
@@ -41,39 +42,39 @@ static pthread_mutex_t queue_mutex[MAX_BUSSES];
 static int out[MAX_BUSSES], in[MAX_BUSSES];
 
 /* internal functions */
-static int queue_len(int bus);
-static int queue_isfull(int bus);
+static int queue_len(int busnumber);
+static int queue_isfull(int busnumber);
 
-int get_number_ga (int bus)
+int get_number_ga (int busnumber)
 {
-  return ga[bus].numberOfGa;
+  return ga[busnumber].numberOfGa;
 }
 
 /* Übernehme die neuen Angaben für die Weiche, einige wenige Prüfungen */
-int queueGA(int bus, int addr, int port, int action, long int activetime)
+int queueGA(int busnumber, int addr, int port, int action, long int activetime)
 {
   struct timeval akt_time;
-  int number_ga = get_number_ga(bus);
+  int number_ga = get_number_ga(busnumber);
 
   if ((addr > 0) && (addr <= number_ga) )
   {
-    while (queue_isfull(bus))
+    while (queue_isfull(busnumber))
     {
       usleep(1000);
     }
 
-    pthread_mutex_lock(&queue_mutex[bus]);
-    queue[bus][in[bus]].action = action;
-    queue[bus][in[bus]].port = port;
-    queue[bus][in[bus]].activetime = activetime;
+    pthread_mutex_lock(&queue_mutex[busnumber]);
+    queue[busnumber][in[busnumber]].action = action;
+    queue[busnumber][in[busnumber]].port = port;
+    queue[busnumber][in[busnumber]].activetime = activetime;
     gettimeofday(&akt_time, NULL);
-    queue[bus][in[bus]].tv[port] = akt_time;
-    queue[bus][in[bus]].id = addr;
-    in[bus]++;
-    if (in[bus] == QUEUELEN)
-      in[bus] = 0;
-  
-    pthread_mutex_unlock(&queue_mutex[bus]);
+    queue[busnumber][in[busnumber]].tv[port] = akt_time;
+    queue[busnumber][in[busnumber]].id = addr;
+    in[busnumber]++;
+    if (in[busnumber] == QUEUELEN)
+      in[busnumber] = 0;
+
+    pthread_mutex_unlock(&queue_mutex[busnumber]);
   }
   else
   {
@@ -82,54 +83,54 @@ int queueGA(int bus, int addr, int port, int action, long int activetime)
   return SRCP_OK;
 }
 
-int queue_GA_isempty(int bus)
+int queue_GA_isempty(int busnumber)
 {
-  return (in[bus] == out[bus]);
+  return (in[busnumber] == out[busnumber]);
 }
 
-static int queue_len(int bus)
+static int queue_len(int busnumber)
 {
-  if (in[bus] >= out[bus])
-    return in[bus] - out[bus];
+  if (in[busnumber] >= out[busnumber])
+    return in[busnumber] - out[busnumber];
   else
-    return QUEUELEN + in[bus] - out[bus];
+    return QUEUELEN + in[busnumber] - out[busnumber];
 }
 
 /* maybe, 1 element in the queue cannot be used.. */
-static int queue_isfull(int bus)
+static int queue_isfull(int busnumber)
 {
-  return queue_len(bus) >= QUEUELEN - 1;
+  return queue_len(busnumber) >= QUEUELEN - 1;
 }
 
 /** liefert nächsten Eintrag und >=0, oder -1 */
-int getNextGA(int bus, struct _GASTATE *a)
+int getNextGA(int busnumber, struct _GASTATE *a)
 {
-  if (in[bus] == out[bus])
+  if (in[busnumber] == out[busnumber])
     return -1;
-  *a = queue[bus][out[bus]];
-  return out[bus];
+  *a = queue[busnumber][out[busnumber]];
+  return out[busnumber];
 }
 
 /** liefert nächsten Eintrag oder -1, setzt fifo pointer neu! */
-int unqueueNextGA(int bus, struct _GASTATE *a)
+int unqueueNextGA(int busnumber, struct _GASTATE *a)
 {
-  if (in[bus] == out[bus])
+  if (in[busnumber] == out[busnumber])
     return -1;
 
-  *a = queue[bus][out[bus]];
-  out[bus]++;
-  if (out[bus] == QUEUELEN)
-    out[bus] = 0;
-  return out[bus];
+  *a = queue[busnumber][out[busnumber]];
+  out[busnumber]++;
+  if (out[busnumber] == QUEUELEN)
+    out[busnumber] = 0;
+  return out[busnumber];
 }
 
-int getGA(int bus, int addr, struct _GASTATE *a)
+int getGA(int busnumber, int addr, struct _GASTATE *a)
 {
-  int number_ga = get_number_ga(bus);
+  int number_ga = get_number_ga(busnumber);
 
   if((addr>0) && (addr <= number_ga))
   {
-    *a = ga[bus].gastate[addr];
+    *a = ga[busnumber].gastate[addr];
     return SRCP_OK;
   }
   else
@@ -138,13 +139,13 @@ int getGA(int bus, int addr, struct _GASTATE *a)
   }
 }
 
-static int initGA_default(int bus, int addr)
+static int initGA_default(int busnumber, int addr)
 {
-  int number_ga = get_number_ga(bus);
-  
+  int number_ga = get_number_ga(busnumber);
+
   if((addr > 0) && (addr <= number_ga))
   {
-    strcpy(ga[bus].gastate[addr].protocol, "P");
+    strcpy(ga[busnumber].gastate[addr].protocol, "P");
     return SRCP_OK;
   }
   else
@@ -153,24 +154,27 @@ static int initGA_default(int bus, int addr)
   }
 }
 
-int isInitializedGA(int bus, int addr)
+int isInitializedGA(int busnumber, int addr)
 {
-  return ga[bus].gastate[addr].protocol == NULL;
+  return ga[busnumber].gastate[addr].protocol == NULL;
 }
 
 /* ********************
      SRCP Kommandos
 */
-int setGA(int bus, int addr, struct _GASTATE a)
+int setGA(int busnumber, int addr, struct _GASTATE a, int info)
 {
-  int number_ga = get_number_ga(bus);
+  int number_ga = get_number_ga(busnumber);
 
   if((addr>0) && (addr <= number_ga))
   {
-    if(!isInitializedGA(bus, addr))
-      initGA_default(bus, addr);
-    ga[bus].gastate[addr] = a;
-    gettimeofday((struct timeval*)&ga[bus].gastate[addr].tv, NULL);
+    if(!isInitializedGA(busnumber, addr))
+      initGA_default(busnumber, addr);
+    ga[busnumber].gastate[addr] = a;
+    gettimeofday(&ga[busnumber].gastate[addr].tv[ga[busnumber].gastate[addr].port], NULL);
+    if (info == 1)
+      queueInfoGA(busnumber, addr, ga[busnumber].gastate[addr].port, ga[busnumber].gastate[addr].action,
+        &ga[busnumber].gastate[addr].tv[ga[busnumber].gastate[addr].port]);
     return SRCP_OK;
   }
   else
@@ -179,18 +183,18 @@ int setGA(int bus, int addr, struct _GASTATE a)
   }
 }
 
-int describeGA(int bus, int addr, char *msg)
+int describeGA(int busnumber, int addr, char *msg)
 {
-  int number_ga = get_number_ga(bus);
+  int number_ga = get_number_ga(busnumber);
 
   if(number_ga<0)
     return SRCP_UNSUPPORTEDDEVICEGROUP;
 
-  if((addr>0) && (addr <= number_ga) && (ga[bus].gastate[addr].protocol) )
+  if((addr>0) && (addr <= number_ga) && (ga[busnumber].gastate[addr].protocol) )
   {
-    sprintf(msg, "%d GA %d %s", bus, addr, ga[bus].gastate[addr].protocol);
-  } 
-  else 
+    sprintf(msg, "%d GA %d %s", busnumber, addr, ga[busnumber].gastate[addr].protocol);
+  }
+  else
   {
     strcpy(msg, "");
     return SRCP_NODATA;
@@ -198,17 +202,17 @@ int describeGA(int bus, int addr, char *msg)
   return SRCP_INFO;
 }
 
-int infoGA(int bus, int addr, int port, char* msg)
+int infoGA(int busnumber, int addr, int port, char* msg)
 {
-  int number_ga = get_number_ga(bus);
+  int number_ga = get_number_ga(busnumber);
 
   if((addr>0) && (addr <= number_ga))
   {
-    sprintf(msg, "%ld.%ld 100 INFO %d GA %d %d %d\n", 
-      ga[bus].gastate[addr].tv[port].tv_sec,
-      ga[bus].gastate[addr].tv[port].tv_usec/1000, bus,
-      ga[bus].gastate[addr].id, ga[bus].gastate[addr].port,
-      ga[bus].gastate[addr].action);
+    sprintf(msg, "%ld.%ld 100 INFO %d GA %d %d %d\n",
+      ga[busnumber].gastate[addr].tv[port].tv_sec,
+      ga[busnumber].gastate[addr].tv[port].tv_usec/1000, busnumber,
+      ga[busnumber].gastate[addr].id, ga[busnumber].gastate[addr].port,
+      ga[busnumber].gastate[addr].action);
   }
   else
   {
@@ -217,13 +221,13 @@ int infoGA(int bus, int addr, int port, char* msg)
   return SRCP_INFO;
 }
 
-int initGA(int bus, int addr, const char *protocol)
+int initGA(int busnumber, int addr, const char *protocol)
 {
-  int number_ga = get_number_ga(bus);
-  
+  int number_ga = get_number_ga(busnumber);
+
   if((addr > 0) && (addr <= number_ga))
   {
-    strcpy(ga[bus].gastate[addr].protocol, protocol);
+    strcpy(ga[busnumber].gastate[addr].protocol, protocol);
     return SRCP_OK;
   }
   else
@@ -232,22 +236,22 @@ int initGA(int bus, int addr, const char *protocol)
   }
 }
 
-int lockGA(int bus, int addr, long int sessionid)
+int lockGA(int busnumber, int addr, long int sessionid)
 {
   return SRCP_NOTSUPPORTED;
 }
 
-int getlockGA(int bus, int addr, long int sessionid)
+int getlockGA(int busnumber, int addr, long int sessionid)
 {
   return SRCP_NOTSUPPORTED;
 }
 
 
-int unlockGA(int bus, int addr, int sessionid)
+int unlockGA(int busnumber, int addr, int sessionid)
 {
-  if(ga[bus].gastate[addr].locked_by==sessionid)
+  if(ga[busnumber].gastate[addr].locked_by==sessionid)
   {
-    ga[bus].gastate[addr].locked_by = 0;
+    ga[busnumber].gastate[addr].locked_by = 0;
     return SRCP_OK;
   }
   else
@@ -264,7 +268,7 @@ void unlock_ga_bysessionid(long int sessionid)
   for(i=0; i<MAX_BUSSES; i++)
   {
     number = get_number_ga(i);
-    syslog(LOG_INFO, "number of GA for bus %d is %d", i, number);
+    syslog(LOG_INFO, "number of GA for busnumber %d is %d", i, number);
     for(j=0;j<number; j++)
     {
       if(ga[i].gastate[j].locked_by == sessionid)
@@ -289,21 +293,21 @@ int startup_GA(void)
   return 0;
 }
 
-int init_GA(int bus, int number)
+int init_GA(int busnumber, int number)
 {
   int i;
 
-  if (bus >= MAX_BUSSES)
+  if (busnumber >= MAX_BUSSES)
     return 1;
 
   if(number > 0)
   {
-    ga[bus].gastate = malloc(number * sizeof(struct _GASTATE));
-    if (ga[bus].gastate == NULL)
+    ga[busnumber].gastate = malloc(number * sizeof(struct _GASTATE));
+    if (ga[busnumber].gastate == NULL)
       return 1;
-    ga[bus].numberOfGa = number;
+    ga[busnumber].numberOfGa = number;
     for(i=0;i<number;i++)
-      ga[bus].gastate[i].protocol = NULL;
+      ga[busnumber].gastate[i].protocol = NULL;
   }
   return 0;
 }

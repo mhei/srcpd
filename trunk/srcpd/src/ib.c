@@ -53,6 +53,7 @@
 #include "io.h"
 #include "srcp-ga.h"
 #include "srcp-gl.h"
+#include "srcp-sm.h"
 #include "srcp-time.h"
 #include "srcp-fb.h"
 #include "ibox/ibox.h"
@@ -76,7 +77,8 @@ void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   busses[busnumber].driverdata = malloc(sizeof(struct _IB_DATA));
   busses[busnumber].flags |= FB_16_PORTS;
   busses[busnumber].baudrate = B38400;
-  strcpy(busses[busnumber].description, "GA GL FB POWER");
+  busses[busnumber].numberOfSM = 9999;
+  strcpy(busses[busnumber].description, "GA GL FB SM POWER");
 
   __ib->number_fb = 0;            // max. 31 for S88; Loconet is missing this time
   __ib->number_ga = 256;
@@ -212,6 +214,7 @@ void* thr_sendrec_IB(void *v)
     send_command_gl(busnumber);
     send_command_ga(busnumber);
     check_status(busnumber);
+    send_command_sm(busnumber);
     usleep(50000);
   }      // Ende WHILE(1)
 }
@@ -254,7 +257,7 @@ void send_command_ga(int busnumber)
         }
         writeByte(busnumber, &byte2send, 2);
         readByte(busnumber, 1, &rr);
-        setGA(busnumber, addr, gatmp);
+        setGA(busnumber, addr, gatmp, 0);
         tga[i].id=0;
       }
     }
@@ -309,7 +312,7 @@ void send_command_ga(int busnumber)
     readByte(busnumber, 1, &rr);
     if(status)
     {
-      setGA(busnumber, addr, gatmp);
+      setGA(busnumber, addr, gatmp, 0);
     }
   }
 }
@@ -372,9 +375,234 @@ void send_command_gl(int busnumber)
       readByte(busnumber, 1, &status);
       if((status == 0) || (status == 0x41) || (status == 0x42))
       {
-        setGL(busnumber, addr, gltmp);
+        setGL(busnumber, addr, gltmp, 0);
       }
     }
+  }
+}
+
+int read_register(int busnumber, int reg)
+{
+  unsigned char byte2send;
+  unsigned char status;
+
+  byte2send = 0xEC;
+  writeByte(busnumber, &byte2send, 0);
+  byte2send = reg;
+  writeByte(busnumber, &byte2send, 0);
+  byte2send = 0;
+  writeByte(busnumber, &byte2send, 2);
+
+  readByte(busnumber, 1, &status);
+
+  return status;
+}
+
+int read_cv(int busnumber, int cv)
+{
+  unsigned char byte2send;
+  unsigned char status;
+  int tmp;
+  
+  byte2send = 0xF0;
+  writeByte(busnumber, &byte2send, 0);
+  // low-byte of cv
+  tmp = cv & 0xFF;
+  byte2send = tmp;
+  writeByte(busnumber, &byte2send, 0);
+  // high-byte of cv
+  tmp = cv >> 8;
+  byte2send = tmp;
+  writeByte(busnumber, &byte2send, 2);
+
+  readByte(busnumber, 1, &status);
+
+  return status;
+}
+
+int read_cvbit(int busnumber, int cv, int bit)
+{
+  unsigned char byte2send;
+  unsigned char status;
+  int tmp;
+
+  byte2send = 0xF2;
+  writeByte(busnumber, &byte2send, 0);
+  // low-byte of cv
+  tmp = cv & 0xFF;
+  byte2send = tmp;
+  writeByte(busnumber, &byte2send, 0);
+  // high-byte of cv
+  tmp = cv >> 8;
+  byte2send = tmp;
+  writeByte(busnumber, &byte2send, 2);
+
+  readByte(busnumber, 1, &status);
+
+  return status;
+}
+
+int write_register(int busnumber, int reg, int value)
+{
+  unsigned char byte2send;
+  unsigned char status;
+
+  byte2send = 0xED;
+  writeByte(busnumber, &byte2send, 0);
+  byte2send = reg;
+  writeByte(busnumber, &byte2send, 0);
+  byte2send = 0;
+  writeByte(busnumber, &byte2send, 0);
+  byte2send = value;
+  writeByte(busnumber, &byte2send, 2);
+
+  readByte(busnumber, 1, &status);
+
+  return status;
+}
+
+int write_cv(int busnumber, int cv, int value)
+{
+  unsigned char byte2send;
+  unsigned char status;
+  int tmp;
+
+  byte2send = 0xF1;
+  writeByte(busnumber, &byte2send, 0);
+  // low-byte of cv
+  tmp = cv & 0xFF;
+  byte2send = tmp;
+  writeByte(busnumber, &byte2send, 0);
+  // high-byte of cv
+  tmp = cv >> 8;
+  byte2send = tmp;
+  writeByte(busnumber, &byte2send, 0);
+  byte2send = value;
+  writeByte(busnumber, &byte2send, 200);
+
+  readByte(busnumber, 1, &status);
+
+  return status;
+}
+
+int write_cvbit(int busnumber, int cv, int bit, int value)
+{
+  unsigned char byte2send;
+  unsigned char status;
+  int tmp;
+
+  byte2send = 0xF3;
+  writeByte(busnumber, &byte2send, 0);
+  // low-byte of cv
+  tmp = cv & 0xFF;
+  byte2send = tmp;
+  writeByte(busnumber, &byte2send, 0);
+  // high-byte of cv
+  tmp = cv >> 8;
+  byte2send = tmp;
+  writeByte(busnumber, &byte2send, 0);
+  byte2send = bit;
+  writeByte(busnumber, &byte2send, 0);
+  byte2send = value;
+  writeByte(busnumber, &byte2send, 2);
+
+  readByte(busnumber, 1, &status);
+
+  return status;
+}
+
+// program decoder on the main
+int send_pom(int busnumber, int addr, int cv, int value)
+{
+  unsigned char byte2send;
+  unsigned char status;
+  int ret_val;
+  int tmp;
+
+  // send pom-command
+  byte2send = 0xDE;
+  writeByte(busnumber, &byte2send, 0);
+  // low-byte of decoder-adress
+  tmp = addr & 0xFF;
+  byte2send = tmp;
+  writeByte(busnumber, &byte2send, 0);
+  // high-byte of decoder-adress
+  tmp = addr >> 8;
+  byte2send = tmp;
+  writeByte(busnumber, &byte2send, 0);
+  // low-byte of cv
+  tmp = cv & 0xff;
+  byte2send = tmp;
+  writeByte(busnumber, &byte2send, 0);
+  // high-byte of cv
+  tmp = cv >> 8;
+  byte2send = tmp;
+  writeByte(busnumber, &byte2send, 0);
+  byte2send = value;
+  writeByte(busnumber, &byte2send, 2);
+
+  readByte(busnumber, 1, &status);
+
+  ret_val = 0;
+  if (status != 0)
+    ret_val = -1;
+  return ret_val;
+}
+
+void send_command_sm(int busnumber)
+{
+  unsigned char byte2send;
+  unsigned char status;
+  struct _SM smakt;
+
+  /* Lokdecoder */
+  //fprintf(stderr, "LOK's... ");
+  /* nur senden, wenn wirklich etwas vorliegt */
+  if(! queue_SM_isempty(busnumber))
+  {
+    unqueueNextSM(busnumber, &smakt);
+
+    switch (smakt.command)
+    {
+      case SET:
+        if (smakt.addr == -1)
+        {
+          switch (smakt.type)
+          {
+            case REGISTER:
+              write_register(busnumber, smakt.typeaddr, smakt.value);
+              break;
+            case CV:
+              write_cv(busnumber, smakt.typeaddr, smakt.value);
+              break;
+            case CV_BIT:
+              write_cvbit(busnumber, smakt.typeaddr, smakt.bit, smakt.value);
+              break;
+          }
+        }
+        else
+        {
+          send_pom(busnumber, smakt.addr, smakt.typeaddr, smakt.value);
+        }
+        break;
+      case GET:
+        switch (smakt.type)
+        {
+          case REGISTER:
+            read_register(busnumber, smakt.typeaddr);
+            break;
+          case CV:
+            read_cv(busnumber, smakt.typeaddr);
+            break;
+          case CV_BIT:
+            read_cvbit(busnumber, smakt.typeaddr, smakt.bit);
+            break;
+        }
+        break;
+      case VERIFY:
+        break;
+    }
+    check_status_pt(busnumber);
   }
 }
 
@@ -437,6 +665,7 @@ void check_status(int busnumber)
         gltmp.funcs |= 0x010;    // Licht ist an
       rr &= 0x3F;
       gltmp.id |= rr << 8;
+      setGL(busnumber, gltmp.id, gltmp, 1);
       readByte(busnumber, 1, &rr);
       readByte(busnumber, 1, &rr);
     }
@@ -455,10 +684,8 @@ void check_status(int busnumber)
       temp = rr;
       temp <<= 8;
       readByte(busnumber, 1, &rr);
-//      fb[i] = temp | rr;
       setFBmodul(busnumber, i, temp|rr);
       readByte(busnumber, 1, &rr);
-//      syslog(LOG_INFO, "Rückmeldung %i mit 0x%02x", i, fb[i]);
     }
   }
 
@@ -473,7 +700,10 @@ void check_status(int busnumber)
       readByte(busnumber, 1, &rr);
       gatmp.id = rr;
       readByte(busnumber, 1, &rr);
-      gatmp.id |= (rr & 0x07) << 8;
+      gatmp.id    |= (rr & 0x07) << 8;
+      gatmp.port   = (rr & 0x80) ? 1 : 0;
+      gatmp.action = (rr & 0x40) ? 1 : 0;
+      setGA(busnumber, gatmp.id, gatmp, 1);
     }
   }
 
@@ -485,6 +715,39 @@ void check_status(int busnumber)
     if(rr & 0x80)
       readByte(busnumber, 1, &rr);
   }
+
+  if(xevnt1 & 0x01)        // we should send an XPT_event-command
+    check_status_pt(busnumber);
+}
+
+void check_status_pt(int busnumber)
+{
+  int i;
+  int temp;
+  int status;
+  unsigned char byte2send;
+  unsigned char rr[7];
+
+  i = -1;
+  byte2send = 0xCE;
+  while(i == -1)
+  {
+    writeByte(busnumber, &byte2send, 2);
+    i = readByte(busnumber, 1, &rr[0]);
+    if (i == 0)
+    {
+      // wait for an answer of our programming
+      if (rr[0] == 0xF5)
+      {
+        // sleep for one second, if answer is not avalible yet
+        i = -1;
+        sleep(1);
+      }
+    }
+  }
+  for (i=0;i<(int)rr[0];i++)
+    readByte(busnumber, 1, &rr[i+1]);
+
 }
 
 static int open_comport(int busnumber, speed_t baud)
@@ -605,7 +868,7 @@ static int init_line_IB(int busnumber)
     printf("Intellibox in download mode.\nDO NOT PROCEED !!!\n");
     return(2);
   }
-  printf("switch of P50-commands\n");
+  printf("switch off P50-commands\n");
   byte2send = 'x';
   writeByte(busnumber, &byte2send, 0);
   byte2send = 'Z';

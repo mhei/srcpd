@@ -35,25 +35,25 @@ typedef struct _GL
 } GL;
 
 int startup_GL(void);
-int init_GL(int bus, int number);
-int get_number_gl(int bus);
+int init_GL(int busnumber, int number);
+int get_number_gl(int busnumber);
 
-int queueGL(int bus, int addr, int dir, int speed, int maxspeed, int f, 
+int queueGL(int busnumber, int addr, int dir, int speed, int maxspeed, int f, 
       int f1, int f2, int f3, int f4);
-int queue_GL_isempty(int bus);
-int unqueueNextGL(int bus, struct _GLSTATE *l);
+int queue_GL_isempty(int busnumber);
+int unqueueNextGL(int busnumber, struct _GLSTATE *l);
 
-int getGL(int bus, int addr, struct _GLSTATE *l);
-int setGL(int bus, int addr, struct _GLSTATE l);
-int infoGL(int bus, int addr, char* info);
-int describeGL(int bus, int addr, char *msg);
-int initGL(int bus, int addr, const char *protocol, int protoversion, int n_fs, int n_func);
-int termGL(int bus, int addr);
-int isInitializedGL(int bus, int addr);
+int getGL(int busnumber, int addr, struct _GLSTATE *l);
+int setGL(int busnumber, int addr, struct _GLSTATE l, int info);
+int infoGL(int busnumber, int addr, char* info);
+int describeGL(int busnumber, int addr, char *msg);
+int initGL(int busnumber, int addr, const char *protocol, int protoversion, int n_fs, int n_func);
+int termGL(int busnumber, int addr);
+int isInitializedGL(int busnumber, int addr);
 
-int lockGL(int bus, int addr, long int sessionid);
-int getlockGL(int bus, int addr, long int sessionid);
-int unlockGL(int bus, int addr, long int sessionid);
+int lockGL(int busnumber, int addr, long int sessionid);
+int getlockGL(int busnumber, int addr, long int sessionid);
+int unlockGL(int busnumber, int addr, long int sessionid);
 void unlock_gl_bysessionid(long int sessionid);
 
 #endif

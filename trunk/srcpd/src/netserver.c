@@ -35,6 +35,7 @@
 #include "srcp-ga.h"
 #include "srcp-gl.h"
 #include "srcp-power.h"
+#include "srcp-sm.h"
 #include "srcp-srv.h"
 #include "srcp-session.h"
 #include "srcp-info.h"
@@ -228,6 +229,26 @@ int handleSET(int sessionid, int bus, char *device, char *parameter, char *reply
     /* Port 0,1; Aktion 0,1 */
     rc = queueGA(bus, gaddr, port, aktion, delay);
   }
+  if (strncasecmp(device, "SM", 2) == 0)
+  {
+    long addr, value1, value2, value3;
+    int type;
+    char *ctype;
+
+    ctype = malloc(1000);
+    sscanf(parameter, "%ld %s %ld %ld %ld", &addr, ctype, &value1, &value2, &value3);
+    type = CV;
+    if (strcasecmp(ctype, "REG") == 0)
+      type = REGISTER;
+    else
+      if (strcasecmp(ctype, "CVBIT") == 0)
+        type = CV_BIT;
+    free(ctype);
+    if (type == CV_BIT)
+      rc = infoSM(bus, SET, type, addr, value1, value2, value3, reply);
+    else
+      rc = infoSM(bus, SET, type, addr, value1, 0, value2, reply);
+  }
   if (strncasecmp(device, "TIME", 4) == 0)
   {
     long d, h, m, s;
@@ -292,6 +313,23 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
     long addr, port;
     sscanf(parameter, "%ld %ld", &addr, &port);
     rc = infoGA(bus, addr, port, reply);
+  }
+  if (strncasecmp(device, "SM", 2) == 0)
+  {
+    long addr, value1, value2;
+    int type;
+    char *ctype;
+
+    ctype = malloc(1000);
+    sscanf(parameter, "%ld %s %ld %ld", &addr, ctype, &value1, &value2);
+    type = CV;
+    if (strcasecmp(ctype, "REG") == 0)
+      type = REGISTER;
+    else
+      if (strcasecmp(ctype, "CVBIT") == 0)
+        type = CV_BIT;
+    free(ctype);
+    rc = infoSM(bus, GET, type, addr, value1, value2, 0, reply);
   }
   if (strncasecmp(device, "POWER", 5) == 0)
   {

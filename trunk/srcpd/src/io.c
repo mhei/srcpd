@@ -18,6 +18,7 @@
 #include <config.h>
 #endif
 
+#include <errno.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <stdio.h>
@@ -32,6 +33,7 @@
 int readByte(int bus, int wait, unsigned char *the_byte)
 {
   int i;
+  int status;
 
   // with debuglevel 7, we will not really work on hardware
   if (busses[bus].debuglevel > 6)
@@ -41,16 +43,24 @@ int readByte(int bus, int wait, unsigned char *the_byte)
   }
   else
   {
-    ioctl(busses[bus].fd, FIONREAD, &i);
+    status = ioctl(busses[bus].fd, FIONREAD, &i);
+    if(status < 0)
+      syslog(LOG_INFO, "IOCTL   status: %d with errno = %d", status, errno);
     if(busses[bus].debuglevel > 5)
+    {
       syslog(LOG_INFO, "on bus %d (fd = %d), there are bytes to read: %d", bus, busses[bus].fd, i);
+    }
     // read only, if there is really an input
     if ((i > 0) || (wait == 1))
     {
       i = read(busses[bus].fd, the_byte, 1);
-      if(busses[bus].debuglevel > 5)
+      if(i < 0)
+        syslog(LOG_INFO, "READ    status: %d with errno = %d", i, errno);
+      if(busses[bus].debuglevel >= 2)
+      {
         if (i > 0)
-        syslog(LOG_INFO, "bus %d byte read: 0x%02x", bus, *the_byte);
+          syslog(LOG_INFO, "bus %d byte read: 0x%02x", bus, *the_byte);
+      }
     }
   }
   return (i > 0 ? 0 : -1);

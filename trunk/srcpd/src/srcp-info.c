@@ -36,6 +36,7 @@
 #include "srcp-gl.h"
 #include "srcp-ga.h"
 #include "srcp-fb.h"
+#include "srcp-sm.h"
 #include "srcp-info.h"
 #include "srcp-error.h"
 #include "config-srcpd.h"
@@ -90,7 +91,7 @@ static int compareTime(struct timeval t1, struct timeval t2)
 // take changes from server
 // we need changes only, if there is a receiver for our info-messages
 
-int queueInfoGL(int bus, int addr, int dir, int speed, int maxspeed, int f,  int f1, int f2, int f3, int f4, struct timeval *akt_time)
+int queueInfoGL(int busnumber, int addr, int dir, int speed, int maxspeed, int f,  int f1, int f2, int f3, int f4, struct timeval *akt_time)
 {
   if (number_of_clients > 0)
   {
@@ -102,7 +103,7 @@ int queueInfoGL(int bus, int addr, int dir, int speed, int maxspeed, int f,  int
     pthread_mutex_lock(&queue_mutex_info);
 
     sprintf(info_queue[in], "%ld.%ld 100 INFO %d GL %d %d %d %d %d %d %d %d %d\n",
-      akt_time->tv_sec, akt_time->tv_usec/1000, bus, addr,
+      akt_time->tv_sec, akt_time->tv_usec/1000, busnumber, addr,
       dir, speed, maxspeed,
       f, f1, f2, f3, f4);
     in++;
@@ -114,7 +115,7 @@ int queueInfoGL(int bus, int addr, int dir, int speed, int maxspeed, int f,  int
   return SRCP_OK;
 }
 
-int queueInfoGA(int bus, int addr, int port, int action, struct timeval *akt_time)
+int queueInfoGA(int busnumber, int addr, int port, int action, struct timeval *akt_time)
 {
   if (number_of_clients > 0)
   {
@@ -127,7 +128,7 @@ int queueInfoGA(int bus, int addr, int port, int action, struct timeval *akt_tim
 
     sprintf(info_queue[in], "%ld.%ld 100 INFO %d GA %d %d %d\n",
       akt_time->tv_sec, akt_time->tv_usec/1000,
-      bus, addr, port, action);
+      busnumber, addr, port, action);
     in++;
     if (in == QUEUELENGTH_INFO)
       in = 0;
@@ -137,7 +138,7 @@ int queueInfoGA(int bus, int addr, int port, int action, struct timeval *akt_tim
   return SRCP_OK;
 }
 
-int queueInfoFB(int bus, int port, int action, struct timeval *akt_time)
+int queueInfoFB(int busnumber, int port, int action, struct timeval *akt_time)
 {
 //  syslog(LOG_INFO, "enter queueInfoFB");
   if (number_of_clients > 0)
@@ -151,8 +152,8 @@ int queueInfoFB(int bus, int port, int action, struct timeval *akt_time)
 
     sprintf(info_queue[in], "%ld.%ld 100 INFO %d FB %d %d\n",
       akt_time->tv_sec, akt_time->tv_usec/1000,
-      bus, port, action);
-    syslog(LOG_INFO, "data queued: %s", info_queue[in]);  
+      busnumber, port, action);
+    syslog(LOG_INFO, "data queued: %s", info_queue[in]);
     in++;
     if (in == QUEUELENGTH_INFO)
       in = 0;
@@ -162,7 +163,7 @@ int queueInfoFB(int bus, int port, int action, struct timeval *akt_time)
   return SRCP_OK;
 }
 
-int queueInfoSM(int bus, int addr, struct timeval *akt_time)
+int queueInfoSM(int busnumber, int addr, int type, int typeaddr, int bit, int value, struct timeval *akt_time)
 {
   if (number_of_clients > 0)
   {
@@ -171,11 +172,27 @@ int queueInfoSM(int bus, int addr, struct timeval *akt_time)
       usleep(1000);
     }
 
+    char buffer[1000];
+    char tmp[100];
+    
     pthread_mutex_lock(&queue_mutex_info);
 
-    sprintf(info_queue[in], "%ld.%ld 100 INFO %d SM %d\n",
+    sprintf(buffer, "%ld.%ld 100 INFO %d SM %d",
       akt_time->tv_sec, akt_time->tv_usec/1000,
-      bus, addr);
+      busnumber, addr);
+    switch (type)
+    {
+      case REGISTER:
+        sprintf(tmp, "REG %d %d", typeaddr, value);
+        break;
+      case CV:
+        sprintf(tmp, "CV %d %d", typeaddr, value);
+        break;
+      case CV_BIT:
+        sprintf(tmp, "CVBIT %d %d %d", typeaddr, bit, value);
+        break;
+    }
+    sprintf(info_queue[in], "%s %s\n", buffer, tmp);
     in++;
     if (in == QUEUELENGTH_INFO)
       in = 0;
@@ -351,7 +368,7 @@ void sendInfos(int current)
     {
       for (i = 0; i < number_of_clients; i++)
       {
-        syslog(LOG_INFO, "write infos to client %d at socket %d", i, socketOfClients[i]); 
+        syslog(LOG_INFO, "write infos to client %d at socket %d", i, socketOfClients[i]);
         status = write(socketOfClients[i], reply, strlen(reply));
         if (status < 0)
         {
@@ -378,11 +395,11 @@ void sendInfos(int current)
     for (busnumber = 0; busnumber < MAX_BUSSES; busnumber++)
     {
 
-      syslog(LOG_INFO, "send all data for bus %d to new client", busnumber);
+      syslog(LOG_INFO, "send all data for busnumber %d to new client", busnumber);
       // send all needed generic locomotivs
       gettimeofday(&start_time, NULL);
       number = get_number_gl(busnumber);
-      syslog(LOG_INFO, "send all locomotivs from bus %d to new client", busnumber);
+      syslog(LOG_INFO, "send all locomotivs from busnumber %d to new client", busnumber);
       for (i = 1; i <= number; i++)
       {
         if(!isInitializedGL(busnumber, i))
@@ -409,7 +426,7 @@ void sendInfos(int current)
       // send all needed generic assesoires
       gettimeofday(&start_time, NULL);
       number = get_number_ga(busnumber);
-      syslog(LOG_INFO, "send all assesoirs from bus %d to new client", busnumber);
+      syslog(LOG_INFO, "send all assesoirs from busnumber %d to new client", busnumber);
       for (i = 1; i <= number; i++)
       {
         if(!isInitializedGA(busnumber, i))
@@ -424,7 +441,7 @@ void sendInfos(int current)
             strcat(reply, temp);
             if (strlen(reply) > 900)
             {
-	      write(socketOfClients[current], reply, strlen(reply));
+              write(socketOfClients[current], reply, strlen(reply));
               reply[0] = '\0';
             }
           }
@@ -434,7 +451,7 @@ void sendInfos(int current)
       // send all needed feedbacks
       gettimeofday(&start_time, NULL);
       number = get_number_fb(busnumber);
-      syslog(LOG_INFO, "send all feedbacks from bus %d to new client", busnumber);
+      syslog(LOG_INFO, "send all feedbacks from busnumber %d to new client", busnumber);
       for (i = 1; i <= number; i++)
       {
         value = getFB(busnumber, i, &cmp_time);
