@@ -13,12 +13,23 @@
 int server_reset_state;
 int server_shutdown_state;
 
-void server_reset(int bus)
+int startup_SERVER(void) {
+    return 0;
+}
+int init_bus_server(int bus) {
+    return 0;
+}
+
+int term_bus_server(int bus) {
+    return 0;
+}
+
+void server_reset()
 {
   server_reset_state = 1;
 }
 
-void server_shutdown(int bus)
+void server_shutdown()
 {
   server_shutdown_state = 1;
 }

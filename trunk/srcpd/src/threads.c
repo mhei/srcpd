@@ -12,6 +12,7 @@
 #include <string.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -26,8 +27,8 @@
 #include <errno.h>
 
 #include "threads.h"
+#include "config-srcpd.h"
 
-extern int debuglevel;
 extern char *username;
 extern char *groupname;
 
@@ -123,7 +124,7 @@ void* thr_handlePort(void *v)
       val = 1;
       setsockopt(sckt, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val));
 
-      if(debuglevel)
+      if(busses[0].debuglevel)
         syslog(LOG_INFO, "New Client at Port %d from %s:%d", ti.socket,
 	   inet_ntoa(socketAddr.sin_addr), ntohs(socketAddr.sin_port));
       error = pthread_create(&ttid, NULL, ti.func, (void*)sckt);

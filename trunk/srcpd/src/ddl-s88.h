@@ -17,12 +17,14 @@
 #ifndef DDL_S88_H
 #define DDL_S88_H
 
+int init_bus_S88();
+int term_bus_S88();
+void * thr_sendrec_S88(void *);
+
 int init_s88(char*);
 int get_s88(int);
 
 void load_s88(int);
 void clear_s88(int);
-
-void *thr_ddl_s88(void*);
 
 #endif

@@ -22,11 +22,14 @@
 
 #define MAX_BUSSES        20        // Anzahl der im srcpd integrierten Busse
 
+#define SERVER_SERVER 0
 #define SERVER_DDL        1         // srcpd arbeitet als DDL-Server
 #define SERVER_M605X      2         // srcpd arbeitet als M605X-Server
 #define SERVER_IB         3         // srcpd arbeitet als IB-Server
 #define SERVER_LI100      4         // srcpd arbeitet als Lenz-Server
 #define SERVER_LOOPBACK   5	    // dummy driver, no real hardware
+#define SERVER_S88        6         // S88 am Parallelport
+#define SERVER_HSI_88	    7
 
 /* flags */
 #define USE_WATCHDOG      1         // use watchdog
@@ -40,10 +43,6 @@ typedef struct _BUS {
     int number;      // Nummer
     int debuglevel;  // testmodus
     int type;        // SERVER_IB, SERVER_M605X...
-    int number_ga;   // 0 oder Anzahl
-    int number_gl;   // 0 oder Anzahl
-    int number_fb;   // 0 oder Anzahl
-    int flags;       // M6020, Watchdog
 
     int deviceflags; // restore com port
     char *device;    // Path_to_device
@@ -60,11 +59,12 @@ typedef struct _BUS {
     int power_state;
     int power_changed;
     char power_msg[100];
-    int sending_ga;
-    int command_ga;
-    int sending_gl;
-    int command_gl;
+    /* driver specific */
     int cmd32_pending;
+    int number_ga;   // 0 oder Anzahl
+    int number_gl;   // 0 oder Anzahl
+    int number_fb;   // 0 oder Anzahl
+    int flags;       // M6020, Watchdog
 } BUS;
 
 extern struct _BUS busses[];

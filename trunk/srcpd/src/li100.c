@@ -1,8 +1,8 @@
 /***************************************************************************
-                            ib.c  -  description
+                           li100.c  -  description
                              -------------------
-    begin                : Don Apr 19 17:35:13 MEST 2001
-    copyright            : (C) 2001 by Dipl.-Ing. Frank Schmischke
+    begin                : Tue Jan 22 11:35:13 MEST 2002
+    copyright            : (C) 2002 by Dipl.-Ing. Frank Schmischke
     email                : frank.schmischke@t-online.de
  ***************************************************************************/
 
@@ -19,8 +19,6 @@
  *                                                                         *
  *  Changes:                                                               *
  *                                                                         *
- *  17.01.2002 Frank Schmischke                                            *
- *   - using of kernelmodul/-device "ibox"                                 *
  *                                                                         *
  ***************************************************************************/
 
@@ -47,54 +45,47 @@
 #include <linux/serial.h>
 
 #include "config-srcpd.h"
-#include "ib.h"
+#include "li100.h"
 #include "io.h"
 #include "srcp-ga.h"
 #include "srcp-gl.h"
 #include "srcp-time.h"
-#include "ibox/ibox.h"
 
 #ifdef TESTMODE
 extern int testmode;
 #endif
 
-static struct _GA tga[50];
+static volatile struct _GA tga[50];
 
-int init_bus_IB(int bus) {
-    return 0;
-}
-
-int term_bus_IB(int bus) {
-    return 0;
-}
-void* thr_sendrec_IB(void *v)
+#if 0
+void* thr_sendrecli100(void *v)
 {
   int fd;
   unsigned char byte2send;
-  int status;
   unsigned char rr;
-  int bus;
-  int zaehler1, fb_zaehler1, fb_zaehler2;
-#ifndef TESTMODE
-  syslog(LOG_INFO, "thr_sendrecintellibox gestartet");
-#else
-  syslog(LOG_INFO, "thr_sendrecintellibox gestartet, testmode=%i",testmode);
-#endif
-  bus = (int) v;
+  int status;
 
-  fd = busses[bus].fd;
+  int zaehler1, fb_zaehler1, fb_zaehler2;
+
+#ifndef TESTMODE
+  syslog(LOG_INFO, "thr_sendrecli100 gestartet");
+#else
+  syslog(LOG_INFO, "thr_sendrecli100 gestartet, testmode=%i",testmode);
+#endif
+
+  fd = file_descriptor[SERVER_LI100];
   zaehler1 = 0;
   fb_zaehler1 = 0;
   fb_zaehler2 = 1;
 
   while(1)
   {
-  //  syslog(LOG_INFO, "thr_sendrecintellibox Start in Schleife");
+  //  syslog(LOG_INFO, "thr_sendrecli100 Start in Schleife");
     /* Start/Stop */
     //fprintf(stderr, "START/STOP... ");
-    if(busses[bus].power_changed)
+    if(power_changed)
     {
-      byte2send = busses[bus].power_state ? 0xA7 : 0xA6;
+      byte2send = power_state ? 0xA7 : 0xA6;
       writeByte(fd, &byte2send, 250);
       status = readByte(fd, &rr);
       while(status == -1)
@@ -103,21 +94,20 @@ void* thr_sendrec_IB(void *v)
         status = readByte(fd, &rr);
       }
       if(rr == 0x00)                  // war alles OK ?
-        busses[bus].power_changed = 0;
+        power_changed = 0;
     }
 
-    send_command_gl(bus);
-    send_command_ga(bus);
-    check_status(bus);
+    send_command_gl_li(fd);
+    send_command_ga_li(fd);
+    check_status_li(fd);
   }      // Ende WHILE(1)
 }
 
-void send_command_ga(int bus)
+void send_command_ga_li(int fd)
 {
   int i, i1;
   int temp;
   int addr;
-  int fd = busses[bus].fd;
   unsigned char byte2send;
   unsigned char status;
   unsigned char rr;
@@ -151,16 +141,16 @@ void send_command_ga(int bus)
         }
         writeByte(fd, &byte2send, 2);
         readByte(fd, &rr);
-        setGA(bus, addr, gatmp);
+        ga[addr]=gatmp;
         tga[i].id=0;
       }
     }
   }
 
   // Decoder einschalten
-  if(! queue_GA_isempty(bus)) {
-        unqueueNextGA(bus, &gatmp);
-        addr = gatmp.id;
+  if (!queue_ga_empty()) {
+	    unqueueNextGA(&gatmp);
+	    addr = gatmp.id;
         byte2send = 0x90;
         writeByte(fd, &byte2send,0);
         temp = gatmp.id;
@@ -180,7 +170,6 @@ void send_command_ga(int bus)
         }
         writeByte(fd, &byte2send, 0);
         status = 1;
-	// reschedule event: turn off --tobedone--
         if(gatmp.action && (gatmp.activetime > 0))
         {
           for(i1=0;i1<50;i1++)
@@ -205,41 +194,42 @@ void send_command_ga(int bus)
         readByte(fd, &rr);
         if(status)
         {
-          setGA(bus, addr, gatmp);
+          ga[addr] = gatmp;
         }
       }
 }
 
-void send_command_gl(int bus)
+void send_command_gl_li(int fd)
 {
+  int i;
   int temp;
-  int addr=0;
-  int fd = busses[bus].fd;
+  int addr;
+  int commands_ok;
   unsigned char byte2send;
   unsigned char status;
-  struct _GL gltmp, glakt;
+  struct _GL gltmp;
 
   /* Lokdecoder */
   //fprintf(stderr, "LOK's... ");
   /* nur senden, wenn wirklich etwas vorliegt */
-  if(! queue_GL_isempty(bus)) {
-        unqueueNextGL(bus, &gltmp);
-        getGL(bus, addr, &glakt);
-        addr  = gltmp.id;
-        // speed, direction or function changed ?
-        if((gltmp.direction != glakt.direction) ||
-           (gltmp.speed != glakt.speed) ||
-           (gltmp.funcs != glakt.funcs))
+  if (!queue_gl_empty()) {
+	    unqueueNextGL(&gltmp);
+	    addr = gltmp.id;
+
+        // Fahrrichtung, Geschwindigkeit od. eine Funktion geändert ?
+        if((gltmp.direction != gl[addr].direction) ||
+           (gltmp.speed != gl[addr].speed) ||
+           (gltmp.flags != gl[addr].flags))
         {
           // Lokkommando soll gesendet werden
           byte2send = 0x80;
           writeByte(fd, &byte2send,0);
-          // send lowbyte of adress
+          // lowbyte der Adresse senden
           temp = gltmp.id;
           temp &= 0x00FF;
           byte2send = temp;
           writeByte(fd, &byte2send,0);
-          // send highbyte of adress
+          // highbyte der Adresse senden
           temp = gltmp.id;
           temp >>= 8;
           byte2send = temp;
@@ -257,8 +247,8 @@ void send_command_gl(int bus)
             }
           }
           writeByte(fd, &byte2send,0);
-          // setting direction, light and function
-          byte2send = gltmp.funcs;
+          // Richtung, Licht und Funktionen setzen
+          byte2send = gltmp.flags;
           byte2send |= 0xc0;
           if(gltmp.direction)
           {
@@ -268,17 +258,17 @@ void send_command_gl(int bus)
           readByte(fd, &status);
           if((status == 0) || (status == 0x41) || (status == 0x42))
           {
-            setGL(bus, addr, gltmp);
+            gl[addr] = gltmp;
           }
-        }
-      }
+    }
+  }
 }
 
-void check_status(int bus)
+void check_status_li(int fd)
 {
   int i;
   int temp;
-  int fd = busses[bus].fd;
+  int addr;
   unsigned char byte2send;
   unsigned char rr;
   unsigned char xevnt1, xevnt2, xevnt3;
@@ -321,14 +311,14 @@ void check_status(int bus)
           gltmp.speed--;
       }
       readByte(fd, &rr);
-      gltmp.funcs = rr & 0xf0;;
+      gltmp.flags = rr & 0xf0;;
       readByte(fd, &rr);
       gltmp.id = rr;
       readByte(fd, &rr);
       if((rr & 0x80) && (gltmp.direction == 0))
         gltmp.direction = 1;    // Richtung ist vorwärts
       if(rr & 0x40)
-        gltmp.funcs |= 0x010;    // Licht ist an
+        gltmp.flags |= 0x010;    // Licht ist an
       rr &= 0x3F;
       gltmp.id |= rr << 8;
       readByte(fd, &rr);
@@ -349,9 +339,9 @@ void check_status(int bus)
       temp = rr;
       temp <<= 8;
       readByte(fd, &rr);
-//      fb[i] = temp | rr;
+      fb[i] = temp | rr;
       readByte(fd, &rr);
-//      syslog(LOG_INFO, "Rückmeldung %i mit 0x%02x", i, fb[i]);
+      syslog(LOG_INFO, "Rückmeldung %i mit 0x%02x", i, fb[i]);
     }
   }
 
@@ -380,17 +370,55 @@ void check_status(int bus)
   }
 }
 
-int init_comport(int bus)
+int send_command(int fd, char *str)
+{
+  int ctr, i;
+  int status;
+
+  str[19] = 0x00;                   // control-byte for xor
+  ctr = str[0] & 0x0f;              // generate length of command
+  ctr++;
+  for(i=0;i<ctr;i++)                // send command
+  {
+    str[19] ^= str[i];
+    writeByte(fd, &str[i], 0);
+  }
+
+  status = -1;                      // wait for answer
+  while(status == -1)
+  {
+    usleep(2000);
+    status = readByte(fd, &str[0]);
+  }
+  ctr = str[0] & 0x0f;              // generate length of answer
+  ctr += 2;
+  for(i=1;i<ctr;i++)                // read answer
+    readByte(fd, &str[i]);
+
+//9216 PRINT #2, SEND$; : IST$ = "--": GOSUB 9000           'senden
+//9218 '
+//9220 IF IST$ = "OK" THEN RETURN                           'alles klar
+//9222 IF IST$ = "TA" THEN GOSUB 9240                       'fehler timeout
+//9224 IF IST$ = "PC" THEN GOSUB 9250                       'fehler PC -> LI
+//9226 IF IST$ = "LZ" THEN GOSUB 9260                       'fehler LI -> LZ
+//9228 IF IST$ = "??" THEN GOSUB 9270                       'befehl unbekannt
+//9230 IF IST$ = "KA" THEN GOSUB 9280                       'keine antwort
+//9232 RETURN
+}
+
+int init_lineLI100(char *name)
 {
   int status;
   int fd;
-  int baud=busses[bus].baud;
-  char *name = busses[bus].device;
+  int i;
+  int ctr;
+  unsigned char byte2send;
   unsigned char rr;
+  char v_text[50];
   struct termios interface;
 
-  printf("try opening serial line %s for %i baud\n", name, (2400 * (1 << (baud-11))));
-  fd = open(name,O_RDWR);
+  printf("try opening serial line %s for 9600 baud\n", name);
+  fd = open(name, O_RDWR);
   if (fd == -1)
   {
     printf("dammit, couldn't open device.\n");
@@ -402,155 +430,14 @@ int init_comport(int bus)
     interface.c_cflag = CS8 | CRTSCTS | CSTOPB | CLOCAL | CREAD | HUPCL;
     interface.c_iflag = IGNBRK;
     interface.c_lflag = IEXTEN;
-    cfsetispeed(&interface, baud);
-    cfsetospeed(&interface, baud);
+    cfsetispeed(&interface, B9600);
+    cfsetospeed(&interface, B9600);
     interface.c_cc[VMIN] = 0;
     interface.c_cc[VTIME] = 1;
     tcsetattr(fd, TCSANOW, &interface);
     status = 0;
     sleep(1);
-#ifdef TESTMODE
-    if(testmode == 0)
-#endif
-    while(status != -1)
-      status = readByte(fd, &rr);
   }
-  return fd;
 }
 
-int open_comport(int bus)
-{
-  int fd, baud;
-  int status;
-  unsigned int LSR;
-  unsigned char rr;
-  unsigned char byte2send;
-  struct termios interface;
-  struct serial_struct serial_line;
-  char *name = busses[bus].device;
-  printf("Begin detecting IB on serial line: %s\n", name);
-
-#ifdef TESTMODE
-  if(testmode)  
-    return 0;        // testmode, also is a virtual IB always availible
 #endif
-
-  printf("Opening serial line %s for 2400 baud\n", name);
-  fd=open(name, O_RDWR);
-  if (fd == -1)
-  {
-    printf("dammit, couldn't open device.\n");
-    return 1;
-  }
-  tcgetattr(fd, &interface);
-  interface.c_oflag = ONOCR;
-  interface.c_cflag = CS8 | CRTSCTS | CSTOPB | CLOCAL | CREAD | HUPCL;
-  interface.c_iflag = IGNBRK;
-  interface.c_lflag = IEXTEN;
-  cfsetispeed(&interface, B2400);
-  cfsetospeed(&interface, B2400);
-  interface.c_cc[VMIN] = 0;
-  interface.c_cc[VTIME] = 1;
-  tcsetattr(fd, TCSANOW, &interface);
-  
-  status = 0;
-  sleep(1);
-  printf("clearing input-buffer\n");
-  while(status != -1)
-    status = readByte(fd, &rr);
-
-  ioctl(fd, TIOCGSERIAL, &serial_line);
-  close(fd);
-  
-  sleep(1);
-  LSR = serial_line.port + 3;
-  printf("sending BREAK\n");
-  fd = open("/dev/ibox", O_RDWR);
-  if(fd < 0)
-    return(-1);
-  if(ioctl(fd, IB_IOCTINIT, LSR) < 0)
-    return(-1);
-  usleep(200000);
-  if(ioctl(fd, IB_IOCTBREAK, 1) < 0)
-    return(-1);
-  usleep(1000000);
-  if(ioctl(fd, IB_IOCTBREAK, 0) < 0)
-    return(-1);
-  usleep(600000);
-  close(fd);
-  sleep(1);
-  printf("BREAK sucessfully send\n");
-
-  baud = B2400;
-  fd = init_comport(bus);
-  if(fd < 0)
-  {
-    printf("init comport fehlgeschlagen\n");
-    return(-1);
-  }
-  byte2send = 0xC4;
-  writeByte(fd, &byte2send,2);
-  status = readByte(fd, &rr);
-  if(status == -1)
-    return(1);
-  if(rr=='D')
-  {
-    printf("Intellibox in download mode.\nDO NOT PROCEED !!!\n");
-    return(2);
-  }
-  printf("switch of P50-commands\n");
-  byte2send = 'x';
-  writeByte(fd, &byte2send, 0);
-  byte2send = 'Z';
-  writeByte(fd, &byte2send, 0);
-  byte2send = 'z';
-  writeByte(fd, &byte2send, 0);
-  byte2send = 'A';
-  writeByte(fd, &byte2send, 0);
-  byte2send = '1';
-  writeByte(fd, &byte2send, 0);
-  byte2send = 0x0d;
-  writeByte(fd, &byte2send, 2);
-  status = readByte(fd, &rr);
-  if(status != 0)
-    return 1;
-  printf("change baudrate to 38400 bps\n");
-  byte2send = 'B';
-  writeByte(fd, &byte2send, 0);  
-  byte2send = '3';
-  writeByte(fd, &byte2send, 0);  
-  byte2send = '8';
-  writeByte(fd, &byte2send, 0);  
-  byte2send = '4';
-  writeByte(fd, &byte2send, 0);  
-  byte2send = '0';
-  writeByte(fd, &byte2send, 0);  
-  writeByte(fd, &byte2send, 0);
-  byte2send = 0x0d;
-  writeByte(fd, &byte2send, 0);  
-  
-  sleep(1);
-  close_comport(fd);
-    
-  baud = B38400;
-  fd = init_comport(bus);
-  if(fd < 0)
-  {
-    printf("init comport fehlgeschlagen\n");
-    return(-1);
-  }
-  byte2send = 0xC4;
-  writeByte(fd, &byte2send,2);
-  status = readByte(fd, &rr);
-  if(status == -1)
-    return(1);
-  if(rr=='D')
-  {
-    printf("Intellibox in download mode.\nDO NOT PROCEED !!!\n");
-    return(2);
-  }
-  
-  busses[bus].fd = fd;
-  return 0;
-}
-

@@ -19,13 +19,12 @@ typedef struct _FBSTATE {
     short int state;
 } FBSTATE;
 
+int startup_FB(void);
+
 int getFB(int bus, int port);
-
 void updateFB(int bus, int port, int value);
-
 /* setzt 16 Binärports auf einmal, für alle S88 Routinen */
-void setFBmodule(int bus, int mod, int values);
-
+int setFBmodul(int bus, int mod, int values);
 int infoFB(int bus, int port, char *msg);
 
 #endif

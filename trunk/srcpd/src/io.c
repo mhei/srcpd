@@ -19,6 +19,7 @@
 #endif
 
 #include <fcntl.h>
+#include <sys/ioctl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <syslog.h>
@@ -26,11 +27,14 @@
 #include <unistd.h>
 
 #include "io.h"
+#include "config-srcpd.h"
 
 int readByte(int bus, unsigned char *the_byte)
 {
   int i;
 
+  ioctl(busses[bus].fd, FIONREAD, &i);
+  syslog(LOG_INFO, "Bytes zu lesen: %d", i);
   if(busses[bus].debuglevel > 0)
   {  
     i = 1;

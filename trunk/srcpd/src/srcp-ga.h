@@ -18,21 +18,27 @@
 /* Schaltdekoder */
 struct _GA
 {
-  char prot[5];         /* Protokoll      */
+  char *protocol;  /* Protocolid */
   int id;               /* Der Identifier */
   int port;             /* Portnummer     */
   int action;           /* 0,1,2,3...     */
   long activetime;      /* Aktivierungszeit in msec bis das 32 Kommando kommen soll */
   struct timeval tv[MAXGAPORT]; /* Zeitpunkt der letzten Aktivierungen, ein Wert pro Port   */
-  struct timeval t;     // Auschaltzeitpunkt
+  struct timeval t;     /* Auschaltzeitpunkt */
+  long int lockid;     /* wer hält den Lock? */
+
 };
 
-void initGA(void);
-int queueGA(char *prot, int addr, int port, int aktion, long activetime);
-int unqueueNextGA(struct _GA *);
+int startup_GA(void);
 
-int getGA(char *prot, int addr, struct _GA *a);
-int infoGA(struct _GA a, char *msg);
+int queueGA(int bus, int addr, int port, int aktion, long activetime);
+int unqueueNextGA(int bus, struct _GA *);
+int queue_GA_isempty(int bus);
+
+int getGA(int bus, int addr, struct _GA *a);
+int setGA(int bus, int addr, struct _GA a);
+void initGA(int bus, int addr, struct _GA a);
+int infoGA(int bus, int addr, char* msg);
 int cmpGA(struct _GA a, struct _GA b);
 
 #endif

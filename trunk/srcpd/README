@@ -1,5 +1,5 @@
 Autor: Matthias Trute, mailto:mtrute@web.de
-Datum: Frühjahr 2002
+Datum: Winter 2002
 Version: 2 ($Id$)
 Lizenz: GPL v2 für das gesamte Packet
 
@@ -14,7 +14,21 @@ SRCP?
     Simple Railroad Command Protocol
     eine Entwicklung aus dem usenet (news:de.rec.modelle.bahn) um Modellbahnen
     mit dem Computer zu steuern. Die Betonung liegt auf dem S ;=)
-    Aktuell ist Version 0.8.1
+    Aktuell ist Version 0.7.3, die Version 0.8 ist in den
+    Startlöchern.
+
+
+SRCP Parameter (für die Insider, alle anderen bitte ignorieren):
+    Für GL gilt das Protokoll PS, es werden aber alle Protokolle
+     außer SM wohlwollend akzeptiert (n_fkt sollte aber 4 sein, anderes 
+     ist noch nicht allzu ausführlich getestet).
+    Für GA wird das Protokoll (M, N) ignoriert, die minimale
+     Einschaltzeit wird auf 75 msec gesetzt, egal was im Befehl steht.
+    FB's sind vom Typ S88 und brauchen nicht initialisiert zu werden,
+     das erfolgt hardcoded im Quelltext.
+    INFO Ausgaben spiegeln den zuletzt erfolgreich an die Anlage übermittelten 
+     Status wider.
+
 
 Installieren und Benutzen:
 

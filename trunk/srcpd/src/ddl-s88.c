@@ -30,11 +30,14 @@
 
 #include "config-srcpd.h"
 #include "ddl-s88.h"
-#include "srcp-fb-s88.h"
 
-extern volatile int fb[MAXFBS];
-extern int file_descriptor[NUMBER_SERVERS];
+int init_bus_S88(int bus) {
+    return 0;
+}
 
+int term_bus_S88(int bus) {
+    return 0;
+}
 //Initializing S88-modules (or compatible) on i.e. printerport
 int init_s88(char *name)
 {
@@ -95,29 +98,29 @@ int get_s88(int fd)
   return ret;
 }
 
-void clear_s88(int fd)
+void clear_s88(int bus)
 {
   int i;
 
-  load_s88(fd);
-  for(i=0;i<MAXFBS;i++)
-    get_s88(fd);
+  load_s88(bus);
+  for(i=0;i<busses[bus].number_fb;i++)
+    get_s88(bus);
 }
 
-void* thr_ddl_s88(void *v)
+void* thr_sendrec_S88(void *v)
 {
   int i;
   int fd;
-
-  fd = file_descriptor[SERVER_DDL_S88];
+  int bus = (int)v;
+  fd = busses[bus].fd;
 
   while(1)
   {
     usleep(10000);
     load_s88(fd);
-    for(i=0;i<MAXFBS;i++)
+    for(i=0;i<busses[bus].number_fb;i++)
     {
-      fb[i] = get_s88(fd);
+//      fb[i] = get_s88(fd);
     }
   }
 }

@@ -17,26 +17,31 @@
 /* Lokdekoder */
 struct _GL
 {
-  char prot[5]; /* Protokolltyp, defaults to PS             */
+  char protocol[5];
+  int protoversion;
+  int n_func;
+  int n_fs;
   int id;       /* Adresse, wird auch als Semaphor genutzt! */
   int speed;    /* Sollgeschwindigkeit skal. auf 0..14      */
   int maxspeed; /* Maximalgeschwindigkeit                   */
   int direction;/* 0/1/2                                    */
-  int n_fkt;    /* 0 oder 4, Anzahl der Zusatzfunktionen    */
-  char flags;   /* F1..F4, F                                */
-  int n_fs;     /* Anzahl der "wahren" Fahrstufen des Dekoders */
+  char funcs;   /* F1..F4, F                                */
   struct timeval tv; /* Last time of change                 */
 };
 
-int queueGL(char *prot, int addr, int dir, int speed, int maxspeed, int f, 
-     int n_fkt, int f1, int f2, int f3, int f4);
+int startup_GL(void);
 
-int unqueueNextGL(struct _GL *);
+int queueGL(int bus, int addr, int dir, int speed, int maxspeed, int f, 
+      int f1, int f2, int f3, int f4);
+int queue_GL_isempty(int bus);
+int unqueueNextGL(int bus, struct _GL *);
 
-int getGL(char *prot, int addr, struct _GL *l);
-void infoGL(struct _GL gl, char* msg);
+int getGL(int bus, int addr, struct _GL *l);
+int setGL(int bus, int addr, struct _GL l);
+int infoGL(int bus, int addr, char* info);
+int initGL(int bus, int addr, const char *protocol, int protoversion, int n_fs, int n_func);
+int termGL(int bus, int addr);
+
 int cmpGL(struct _GL a, struct _GL b);
-void initGL(void);
 int calcspeed(int vs, int vmax, int n_fs);
-
 #endif

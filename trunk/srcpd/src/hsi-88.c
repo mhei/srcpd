@@ -34,19 +34,7 @@
 #include "config-srcpd.h"
 #include "hsi-88.h"
 #include "io.h"
-#include "srcp-fb-s88.h"
-
-#ifdef TESTMODE
-extern int testmode;
-#endif
-
-extern volatile int fb[MAXFBS];
-extern int file_descriptor[NUMBER_SERVERS];
-
-extern volatile int HSI_MODULES_LEFT;
-extern volatile int HSI_MODULES_CENTER;
-extern volatile int HSI_MODULES_RIGHT;
-extern volatile int NUMBER_FB;
+#include "srcp-fb.h"
 
 int init_lineHSI88(char *name)
 {
@@ -136,20 +124,25 @@ int init_lineHSI88(char *name)
 
 void* thr_sendrec_hsi_88(void *v)
 {
-  int fd;
+  int fd, bus;
   int anzahl, i, temp;
   unsigned char byte2send;
   unsigned char rr;
   int status;
   int zaehler1, fb_zaehler1, fb_zaehler2;
 
+ int HSI_MODULES_LEFT=0;
+ int HSI_MODULES_CENTER=0;
+ int HSI_MODULES_RIGHT=0;
+
+  bus = (int)v;
 #ifndef TESTMODE
   syslog(LOG_INFO, "thr_sendrec_hsi_88 gestartet");
 #else
   syslog(LOG_INFO, "thr_sendrec_hsi_88 gestartet, testmode=%i",testmode);
 #endif
 
-  fd = file_descriptor[SERVER_HSI_88];
+  fd = busses[bus].fd;
   zaehler1 = 0;
   fb_zaehler1 = 0;
   fb_zaehler2 = 1;
@@ -185,7 +178,7 @@ void* thr_sendrec_hsi_88(void *v)
     readByte(fd, &rr);            // Anzahl angemeldeter Module
     anzahl = (int)rr;
     syslog(LOG_INFO, "Anzahl Module: %i", anzahl);
-    if(anzahl == NUMBER_FB)         // HSI initialisation correct ?
+    if(anzahl == busses[bus].number_fb)         // HSI initialisation correct ?
     {
       status = 0;
     }
@@ -218,8 +211,8 @@ void* thr_sendrec_hsi_88(void *v)
       temp = rr;
       temp <<= 8;
       readByte(fd, &rr);
-      fb[i] = temp | rr;
-      syslog(LOG_INFO, "Rückmeldung %i mit 0x%02x", i, fb[i]);
+      setFBmodul(bus, i, temp | rr);
+      syslog(LOG_INFO, "Rückmeldung %i mit 0x%02x", i, temp|rr);
     }
     readByte(fd, &rr);            // <CR>
 #ifdef TESTMODE

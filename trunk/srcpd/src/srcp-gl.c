@@ -22,180 +22,167 @@
 
 #include "config-srcpd.h"
 #include "srcp-gl.h"
+#include "srcp-error.h"
 
-#define QUEUELEN 500
+#define QUEUELEN 50
 
-volatile struct _GL gl[MAXGLS];   // aktueller Stand, mehr gibt es nicht
+/* aktueller Stand */
+volatile struct _GL gl[MAX_BUSSES][MAXGLS];   // aktueller Stand, mehr gibt es nicht
 
-static struct _GL queue[QUEUELEN];	// Kommandoqueue.
-static pthread_mutex_t queue_mutex = PTHREAD_MUTEX_INITIALIZER;	/* mutex to synchronize queue inserts */
-static int out = 0, in = 0;
+/* Kommandoqueues pro Bus */
+static struct _GL queue[MAX_BUSSES][QUEUELEN];	// Kommandoqueue.
+static pthread_mutex_t queue_mutex[MAX_BUSSES];
+static int out[MAX_BUSSES], in[MAX_BUSSES];
 
-extern int NUMBER_GL;
+/* internal functions */
+static int queue_len(int bus);
+static int queue_isfull(int bus);
 
 /* Übernehme die neuen Angaben für die Lok, einige wenige Prüfungen */
-int queueGL(char *prot, int addr, int dir, int speed, int maxspeed, int f, 
-     int n_fkt, int f1, int f2, int f3, int f4)
+int queueGL(int bus, int addr, int dir, int speed, int maxspeed, int f,  int f1, int f2, int f3, int f4)
 {
-  int i, n_fs;
   struct timeval akt_time;
 
-  n_fs = 14;
-  if(strncasecmp(prot, "M3", 2) == 0)
-  {
-    n_fs = 28;
-  }
-  else
-  {
-    if(strncasecmp(prot, "M5", 2) == 0)
-    {
-      n_fs = 27;
-    }
-    else
-    {
-      if(strncasecmp(prot, "N1", 2) == 0)
-      {
-        n_fs = 28;
-      }
-      else
-      {
-        if(strncasecmp(prot, "N2", 2) == 0)
-        {
-          n_fs = 128;
-        }
-        else
-        {
-          if(strncasecmp(prot, "N3", 2) == 0)
-          {
-            n_fs = 28;
-          }
-          else
-          {
-            if(strncasecmp(prot, "N4", 2) == 0)
-            {
-              n_fs = 128;
-            }
-          }
-        }
-      }
-    }
-  }
-  syslog(LOG_INFO, "in setGL für %i", addr);
-  if ((addr > 0) && (addr <= NUMBER_GL) ) {
-	while (queue_isfull()) {
+  syslog(LOG_INFO, "setGL für %i", addr);
+  if ((addr > 0) && (addr <= busses[bus].number_gl) ) {
+	while (queue_isfull(bus)) {
 	    usleep(1000);
 	}
 
-	pthread_mutex_lock(&queue_mutex);
+	pthread_mutex_lock(&queue_mutex[bus]);
 
-      strcpy((void*)queue[in].prot, prot);
-      queue[in].speed     = speed;
-      queue[in].maxspeed  = maxspeed;
-      queue[in].direction = dir;
-      queue[in].n_fkt     = n_fkt;
-      queue[in].flags     = f1 + (f2 << 1) + (f3 << 2) + (f4 << 3) + (f << 4);
-      queue[in].n_fs      = n_fs;
+      queue[bus][in[bus]].speed     = speed;
+      queue[bus][in[bus]].maxspeed  = maxspeed;
+      queue[bus][in[bus]].direction = dir;
+      queue[bus][in[bus]].funcs     = f1 + (f2 << 1) + (f3 << 2) + (f4 << 3) + (f << 4);
       gettimeofday(&akt_time, NULL);
-      queue[in].tv        = akt_time;
-      queue[in].id        = addr;
-	in++;
-	if (in == QUEUELEN)
-	    in = 0;
+      queue[bus][in[bus]].tv        = akt_time;
+      queue[bus][in[bus]].id        = addr;
+	in[bus]++;
+	if (in[bus] == QUEUELEN)
+	    in[bus] = 0;
 	    
-	pthread_mutex_unlock(&queue_mutex);
+	pthread_mutex_unlock(&queue_mutex[bus]);
     } else {
 	return -1;
     }
-    return 0;
+    return SRCP_OK;
 }
 
-int queue_gl_empty()
+int queue_GL_isempty(int bus)
 {
-    return (in == out);
+    return (in[bus] == out[bus]);
 }
 
-static int queue_len()
+static int queue_len(int bus)
 {
-    if (in >= out)
-	return in - out;
+    if (in[bus] >= out[bus])
+	return in[bus] - out[bus];
     else
-	return QUEUELEN + in - out;
+	return QUEUELEN + in[bus] - out[bus];
 }
 
 /* maybe, 1 element in the queue cannot be used.. */
-static int queue_isfull()
+static int queue_isfull(int bus)
 {
-    return queue_len() >= QUEUELEN - 1;
+    return queue_len(bus) >= QUEUELEN - 1;
 }
 
 /** liefert nächsten Eintrag und >=0, oder -1 */
-int getNextGL(struct _GL *gl)
+int getNextGL(int bus, struct _GL *gl)
 {
-    if (in == out)
+    if (in[bus] == out[bus])
 	return -1;
-    *gl = queue[out];
-    return out;
+    *gl = queue[bus][out[bus]];
+    return out[bus];
 }
 
 /** liefert nächsten Eintrag oder -1, setzt fifo pointer neu! */
-int unqueueNextGL(struct _GL *gl)
+int unqueueNextGL(int bus, struct _GL *gl)
 {
-    if (in == out)
+    if (in[bus] == out[bus])
 	return -1;
 
-    *gl = queue[out];
-    out++;
-    if (out == QUEUELEN)
-	out = 0;
-    return out;
+    *gl = queue[bus][out[bus]];
+    out[bus]++;
+    if (out[bus] == QUEUELEN)
+	out[bus] = 0;
+    return out[bus];
 }
 
-int getGL(char *prot, int addr, struct _GL *l)
+
+int getGL(int bus, int addr, struct _GL *l)
 {
-  if((addr>0) && (addr <= NUMBER_GL))
+  if((addr>0) && (addr <= busses[bus].number_gl))
   {
-    *l = gl[addr];
-    return 1;
+    *l = gl[bus][addr];
+    return SRCP_OK;
   }
   else
   {
-    return 0;
+    return SRCP_NODATA;
   }
 }
 
-void infoGL(struct _GL gl, char* msg)
+/**
+
+*/
+int setGL(int bus, int addr, struct _GL l)
 {
-  sprintf(msg, "INFO GL %s %d %d %d %d %d %d %d %d %d %d\n",
-      gl.prot, gl.id, gl.direction, gl.speed, gl.maxspeed, 
-      (gl.flags & 0x10)?1:0, 
-      4, 
-      (gl.flags & 0x01)?1:0,
-      (gl.flags & 0x02)?1:0,
-      (gl.flags & 0x04)?1:0,
-      (gl.flags & 0x08)?1:0);
+  if((addr>0) && (addr <= busses[bus].number_gl))
+  {
+    gl[bus][addr] = l;
+    gettimeofday(&gl[bus][addr].tv, NULL);
+    return SRCP_OK;
+  }
+  else
+  {
+    return SRCP_NODATA;
+  }
 }
 
-int cmpGL(struct _GL a, struct _GL b)
+int initGL(int bus, int addr, const char *protocol, int protoversion, int n_fs, int n_func) {
+    gl[bus][addr].n_fs=n_fs;
+    gl[bus][addr].n_func=n_func;
+    gl[bus][addr].protoversion=protoversion;
+    strncpy(&gl[bus][addr].protocol, protocol, sizeof(gl[bus][addr].protocol));
+    return SRCP_OK;
+}
+
+int infoGL(int bus, int addr, char* msg)
 {
+  if((addr>0) && (addr <= busses[bus].number_gl))
+  {
+  sprintf(msg, "%d GL %d %d %d %d %d %d %d %d %d",
+      bus, addr, gl[bus][addr].direction, gl[bus][addr].speed, gl[bus][addr].maxspeed, 
+      (gl[bus][addr].funcs & 0x10)?1:0,
+      (gl[bus][addr].funcs & 0x01)?1:0,
+      (gl[bus][addr].funcs & 0x02)?1:0,
+      (gl[bus][addr].funcs & 0x04)?1:0,
+      (gl[bus][addr].funcs & 0x08)?1:0);
+  }
+  else
+  {
+    return SRCP_NODATA;
+  }
+  return SRCP_INFO;
+}
+
+int cmpGL(struct _GL a, struct _GL b){
   return ((a.direction == b.direction) &&
       (a.speed     == b.speed)     &&
       (a.maxspeed  == b.maxspeed)  &&
-      (a.n_fkt     == b.n_fkt)     &&
+      (a.n_func     == b.n_func)     &&
       (a.n_fs      == b.n_fs)      &&
-      (a.flags     == b.flags));
+      (a.funcs     == b.funcs));
 }
 
-void initGL()
-{
-  int i;
-  for(i=0; i<MAXGLS;i++)
-  {
-    strcpy((void *)gl[i].prot, "PS");
-    gl[i].direction = 1;
-    gl[i].id = i;
+int startup_GL(void){
+  int bus;
+  for(bus=0; bus<MAX_BUSSES; bus++) {
+       pthread_mutex_init(&queue_mutex[bus], NULL);
   }
-    in = 0;
-    out = 0;
+  return SRCP_OK;
 }
 
 // es gibt Decoder für 14, 27, 28 und 128 FS
