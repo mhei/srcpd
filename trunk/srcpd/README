@@ -1,130 +1,111 @@
-Autor: Matthias Trute, mailto:mtrute@web.de
-Datum: Winter 2002
+Autor: Matthias Trute, mailto:mtrute@web.de et al
+Datum: Sommer 2002
 Version: 2 ($Id$)
 Lizenz: GPL v2 für das gesamte Packet
 
 Zweck des Programms: 
     SRCP Kommandos werden über das Netzwerk entgegengenommen und mit
-    einem am Server angeschlossenen Interface (zur Zeit Märklin
-    Interface 6050/6051 und Intellibox) an die Modellbahn übermittelt
-    und die Rückmeldemodule eingelesen.
+    einem am Server angeschlossenen Interfaces (zur Zeit Märklin
+    Interface 6050/6051 und Intellibox, HSI-S88 und S88 am Parallelport) 
+    an die Modellbahn übermittelt und die Rückmeldemodule eingelesen.
 
 
 SRCP?
     Simple Railroad Command Protocol
     eine Entwicklung aus dem usenet (news:de.rec.modelle.bahn) um Modellbahnen
     mit dem Computer zu steuern. Die Betonung liegt auf dem S ;=)
-    Aktuell ist Version 0.7.3, die Version 0.8 ist in den
-    Startlöchern.
+    Aktuell ist Version 0.8.
 
+Konfiguration
 
-SRCP Parameter (für die Insider, alle anderen bitte ignorieren):
-    Für GL gilt das Protokoll PS, es werden aber alle Protokolle
-     außer SM wohlwollend akzeptiert (n_fkt sollte aber 4 sein, anderes 
-     ist noch nicht allzu ausführlich getestet).
-    Für GA wird das Protokoll (M, N) ignoriert, die minimale
-     Einschaltzeit wird auf 75 msec gesetzt, egal was im Befehl steht.
-    FB's sind vom Typ S88 und brauchen nicht initialisiert zu werden,
-     das erfolgt hardcoded im Quelltext.
-    INFO Ausgaben spiegeln den zuletzt erfolgreich an die Anlage übermittelten 
-     Status wider.
-
-
+    Der Dämon wird ausschließlich über eine Konfigurationsdatei konfiguriert.
+    Diese heißt standardmäßig /etc/srcpd.conf. Es handelt sich um eine Textdatei
+    im XML Format, die mit jedem Editor bearbeitet werden kann.
+    
+    Die Dokumentstruktur basiert auf der Busstruktur des SRCP 0.8.x. 
+    
+    Die Datei wird sequentiell ausgewertet. Dies bedeutet, das die Busse
+    in der numerisch korrekten Reihenfolge angegeben werden müssen. Zu
+    beachten ist, das einige Treiber mehr als nur einen Bus belegen. Dies
+    muß in der korrekten Nummerierung beachtet werden. Etwaige Fehler werden
+    nicht immer erkannt. Bei Problemen an dieser Stelle bitte immer die
+    Konfigurationsdatei _und_ eine verbale Beschreibung der angeschlossenen
+    Hardware mitteilen!
+    
+    Per Default werden einige Parameter vorgegeben. Dies hat den Effekt, das
+    nur Änderungen anegeben werden brauchen. Die Defaultwerte werden sich nicht
+    "heimlich" ändern.
+    
+    DDL S88
+    
+    Dieser Treiber benutzt 4 Busse. Dies wird entsprechend dem Anschlußschema
+    des DDL Dämonen (www.vogt-it.com/OpenSource/DDL) übernommen. Die Anschlußstränge
+    entsprechend der Schaltung von Martin Wolf werden als separate Busse geführt.
+    Auch wenn nur ein Bus angeschlossen ist, werden immer 4 Busse belegt. Der ioport
+    sollte im Hexadezimalformat angegeben werden.
+    
+    Beispiel:
+    <bus number="1">
+      <ddl-s88>
+	<ioport>0x378</ioport>
+	<number_fb_1>1</number_fb_1>
+	<number_fb_2>0</number_fb_2>
+	<number_fb_3>0</number_fb_3>
+	<number_fb_4>0</number_fb_4>
+      </ddl-s88>
+      <device>/dev/lp0</device>
+      <use_watchdog>no</use_watchdog>
+      <restore_device_settings>no</restore_device_settings>
+      <verbosity>7</verbosity>
+    </bus>
+    
+    Märklin 6051
+    Das Märklin Interface belegt einen Bus, der die Gerätegruppen
+    GA, GL, FB und POWER unterstützt.
+    
+     <bus number="5">
+        <m605x>
+	  <number_fb>2</number_fb>
+        </m605x>
+        <device>/dev/ttyS1</device>
+        <use_watchdog>yes</use_watchdog>
+        <restore_device_settings>no</restore_device_settings>
+        <verbosity>1</verbosity>
+      </bus>
+    
+    
 Installieren und Benutzen:
 
     Installation der rpm Packete ist wie immer bei solchen mit
     "rpm -i <dateiname.rpm>". Dabei werden die erforderlichen
     Links zum Starten des Daemons in /etc/init.d angelegt (aber
-    nicht aktiviert). Manuell kann der Daemon dann mit den
+    nicht automatisch gestartet). Manuell kann der Daemon dann mit den
     Standardverfahren gestartet und gestoppt werden. Da sich die
     Distributoren leider noch  nicht geeinigt haben, funktioniert
-    das nur unter aktuellen (7.x) SuSE Versionen. 
+    das nur unter aktuellen (7.x, 8.0) SuSE Versionen. 
     
     Das Deinstallieren stoppt einen laufenden Daemon zuerst, bevor
     die Dateien entfernt werden.
 
-    
-    Das Interface ist entsprechend den Hinweisen des jeweiligen
-    Herstellers an /dev/ttySx anzuschließen und mit der Modellbahnanlage
-    zu verbinden (vorher beide ausschalten).
-    In der Datei /etc/srcpd.conf können verschiedene
-    Parameter gesetzt werden.
-
-    Der Quelltext ist auch Quell für alles noch nicht
-    erledigte sowie kleinere und größere Ungenauigkeiten
-    bei der Interpretation des SRCP, die allerdings aus
-    einer gewissen Großzügigkeit entspringen soll(t)en.
-    
-    Auch ist ein Einsatz von Autoconf Version 2.52 
-    nicht möglich (wird von SuSE 7.3 standardmäßig installiert). 
-    Version 2.13 tut aber (von SuSE 7.2).
-    
-    Probleme können eigentlich nur beim 6051 und
-    bei den pthread's auftreten. Die libpthread muß
-    installiert sein 
-    
-    Beim Selbstbau der glibc darf glibc-linuxthreads-... nicht
-    vergessen werden. 
+    Hardware sollte im eigenen Interesse nur im komplett ausgeschaltetem
+    Zustand angeschlossen und entfernt werden.
     
     Mit srcpd -h erhält man eine Übersicht über die möglichen
-    Parameter (sollte aber wegen der srcpd.conf nicht nötig sein).
-    Wenn das Packet mit --enable-testmode konfiguriert wurde, kann
-    mit der Option -t der Testmodus eingeschaltet werden. Der Server
-    verhält sich ganz normal, jedoch findet keine Überprüfung des
-    angeschlossenen Interfaces statt, und es wird nicht wirklich auf
-    das Interface zugegriffen.
+    Parameter, das sind aber nicht allzuviele. Alle Einstellungen werden
+    ausschließlich über die beschriebene Konfigurationsdatei vorgenommen.
+    
+    Dann einfach das Programm mit "/usr/sbin/rcsrcpd start" starten. 
+    Je nach angeschlossener Hardware muß dies ggf. als root erfolgen.
 
-    Dann einfach das Programm mit "/usr/sbin/rcsrcpd start" starten 
-    (für die IB muß dies als root wegen verschiedener Portzugriffe 
-    geschehen, beim 6051 ist dies nicht erforderlich) und laufen lassen.
-    Dann die Clientprogramme aufrufen und mit dem Server
-    verbinden: tcp Port's 12345/12346/12347, telnet reicht ;=)
+    Je nach eingestellter <verbosity> werden mehr oder weniger viele Daten
+    in das Systemprotokoll geschrieben. Hierzu wird der syslog Dienst benutzt,
+    der die LOG_INFO des srcpd normalerweise nach /var/log/messages schreibt.
+    Wird die <verbosity> auf null gesetzt, werden nur gravierende Meldungen
+    geschrieben, höherer Werte können, je nach Treiber, zu einem bitgenauem
+    Tätigkeitsprotokoll führen.
 
-    Das 6051 ist mitunter recht widerspenstig, der Thread
-    muß mitunter neu gestartet werden. Da hilft wohl
-    nur ein kurzes serielles Kabel zwischen Interface und
-    Rechner (meines ist wohl 6-7m lang). Das regelt aber der
-    interne Wachhund ganz gut, Im Zweifel den info-Port beobachten,
-    was dort herauskommt hat das Interface auch erreicht.
-    
-    Weiter schreibt der Dämon alles auch ins syslog des
-    Systems (INFO), je nach Konfiguration steht dann
-    in /var/log/messages ein hilfreicher Hinweis (insb.
-    Oopse des SRCPD sind zu beachten). Dabei steht auch
-    fast immer eine Zahl, die gibt den Abbruchort an. Diese
-    Zahl zusammen mit dem Welcome-String an Matthias Trute senden,
-    falls es einer Hilfe bedarf.
-    
-    Beendet wird der Server durch den Befehl shutdown auf
-    dem Kommandoport (siehe SRCP Spezifikation)
-
-Programmstruktur
-    Das Programm liest zuerst eine eventuell vorhandene
-    Konfigurationsdatei und wertet anschließend die Parameter der
-    Kommandozeile aus. Wenn dann die Initialisierung des
-    Interfaces erfolgreich verlaufen ist, wird das Programm ein
-    Dämon und startet für jeden Netzwerkport einen eigenen Thread.
-    Daneben wird für jedes angeschlossene Gerät (Interface, I8255, S88)
-    ein eigener Thread gestartet. D.h. im Grundzustand
-    laufen 1 master, 1 pthread-interner, 3 für die Netzwerk-
-    Ports, je einer für das Interface, 8255 und S88 und einer
-    für das TIME Feature. Macht 9 Threads. Aber keine Angst: wir
-    haben den Überblick.
-    
-    In diesem Zustand werden bereits alle FB Module ausgelesen, 
-    sofern initialisiert.
-     
-    Jede aktive Verbindung wird daneben wiederum von jeweils
-    einem eigenen Thread bedient. Bricht eine Verbindung ab,
-    ohne das ein LOGOUT stattfand, erkennt dies der Server
-    irgendwann von selbst. In einigen Fällen aber auch nicht.
-    Hinweise oder gar Bugfixes werden gerne angenommen.
-    
 Bekannte Unzulänglichkeiten
     Das Timing der Datenübermittlung ist kritisch und "handverlesen"
-
-    Andere Protokolle außer dem M2 (6090x) sind beim M605X nicht
-    vollständig getestet, die Absicherungen sind eher unterentwickelt.
 
     Die Totzeit bis zum Wirksamwerden eines Befehls kann schon mal
     länger dauern, vor allem wenn viele Befehle für ein Gerät anstehen.
@@ -136,14 +117,13 @@ Bekannte Unzulänglichkeiten
     fast immer neu gesendet. Das "fast" ist aber wirklich Pech.
 
 Ausrüstung beim Autor (Matthias Trute):
-    6021 mit 6051, daran ein Vissmann 5217 (S88 komp.)
+    6021 mit 6051, daran einige Vissmann 5217 (S88 komp.)
     8 Weichenantriebe, 3 Entkupplungsgleise über k83
-    4 Loks mit Digitaldekoder (delta, 6090x)
+    4 Loks mit Digitaldekoder (delta, 6090x), zusätzlich ein S88 am
+    Parallelport.
     
-    2Pentium's, zusammen 366MHz und 10MBit dazwischen.
-    jeweils SuSE 7.x, 2.2.x und 2.4.x; Achtung: mit dem
-    Kernel 2.4.16 habe ich den Server noch nicht zu laufen
-    gebracht. Im Zweifel bitte die Standardkernel verwenden.
+    2Pentium's, zusammen 366MHz und 100MBit dazwischen.
+    jeweils SuSE 7.x, 2.2.x und 2.4.x Kernel; 
 
 Ausrüstung beim Autor (Frank Schmischke):
     (im Aufbau befindliche Vereinsanlage der
@@ -160,11 +140,14 @@ Ausrüstung beim Autor (Frank Schmischke):
 Verwandte Programme:
     siehe http://www.der-moba.de/Digital
 
-Rechtliches: Für die vorliegende Software wird keine Haftung übernommen. Aus der
+Rechtliches: 
+
+    Für die vorliegende Software wird keine Haftung übernommen. Aus der
     Tatsache, das es bei den Autoren zu deren Zufriedenheit funktioniert kann niemals 
     geschlußfolgert werden, das es auch bei anderen funktioniert und keinen 
     Schaden anrichtet. Wer dieses Programm benutzt, tut es auf eigene Gefahr. Es gab
-    schon irreparable Hardwareschäden (dies aber wirklich nur für die Advokaten)!
+    schon irreparable Hardwareschäden! Wenn jemanden dies widerfährt, hat er unser
+    Mitgefühl. Mehr aber auch nicht. Wir erstellen die Software nicht gewerblich.
     
 Sonst noch was?
     Jede Änderung und jeder Erfahrungsbericht ist a) willkommen und b) sollte irgendwie
@@ -175,6 +158,6 @@ Last But Not Least:
     Dank geht an die Truppe von www.der_moba.de.
     
 Weitere Informationen: 
-    http://www.der-moba.de/Digital
     http://srcpd.sourceforge.net
+    http://www.der-moba.de/Digital
     
