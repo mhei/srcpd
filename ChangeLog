@@ -1,3 +1,33 @@
+2003-11-02 19:40  mborchers
+
+	* ib.c: major fix in init-procedure
+
+2003-11-02 15:59  sieloff
+
+	* srcpd.c: readConfig must be called after startup* in current
+	configuration
+
+2003-10-22 18:07  mtrute
+
+	* ChangeLog, Makefile.in, README, srcp-ga.c, srcp-session.c,
+	srcp-srv.c, srcpd.c: minor cleanups.
+
+2003-10-22 18:06  mtrute
+
+	* ib.c, ib.h: moved some static data to bus-structure...
+
+2003-10-22 18:01  mtrute
+
+	* config-srcpd.h: removed unused variables
+
+2003-10-22 17:57  mtrute
+
+	* srcpd.8: man page with less confusion
+
+2003-10-22 17:56  mtrute
+
+	* srcpd.lsm, srcpd.spec: release updates
+
 2003-10-17 14:07  mborchers
 
 	* README.ibox, ibox/README: updated documentation for 'dead' ibox
