@@ -33,12 +33,16 @@
 #define SERVER_HSI_88	          7
 #define SERVER_I2C_DEV					8					// srcpd arbeitet als I2C-DEV-Server
 
-/* flags */
+/* generic flags */
 #define USE_WATCHDOG          0x0001      // use watchdog
-#define M6020_MODE            0x0002      // Subtyp zum M605X
-#define FB_ORDER_0            0x0010      // feedback port 0 is bit 0
-#define FB_16_PORTS           0x0020      // feedback-modul has 16 ports
-#define RESTORE_COM_SETTINGS  0x0100      // restore com-port settings after close
+#define AUTO_POWER_ON        0x0002      // start Power on startup
+#define RESTORE_COM_SETTINGS  0x004      // restore com-port settings after close
+
+/* driver specific flags */
+#define M6020_MODE            0x0100      // Subtyp zum M605X
+#define FB_ORDER_0            0x0110      // feedback port 0 is bit 0
+#define FB_16_PORTS           0x0120      // feedback-modul has 16 ports
+
 
 /* Busstruktur */
 typedef struct _BUS

@@ -163,6 +163,7 @@ int init_bus_M6051(int bus) {
   }
   DBG(bus, DBG_INFO, "M605x init done, fd=%d",  bus, busses[bus].fd);
   DBG(bus, DBG_INFO, "M605x: %s",busses[bus].description);
+  DBG(bus, DBG_INFO, "M605x flags: %d", busses[bus].flags & AUTO_POWER_ON);
   return 0;
 }
 
@@ -196,7 +197,12 @@ void* thr_sendrec_M6051(void *v)
     writeByte(bus, &SendByte, pause_between_cmd);
     ( (M6051_DATA *) busses[bus].driverdata)  -> cmd32_pending = 0;
   }
-
+  /* maybe, this little if() has to be elsewhere... */
+  if (( (busses[bus].flags & AUTO_POWER_ON) == AUTO_POWER_ON) ) {
+    setPower(bus, 1, "AUTO POWER ON");
+  } else {
+    setPower(bus, 0, "AUTO POWER OFF");
+  }
   while (1)
   {
     busses[bus].watchdog = 2;
@@ -207,6 +213,11 @@ void* thr_sendrec_M6051(void *v)
       writeByte(bus, &SendByte, pause_between_cmd);
       writeByte(bus, &SendByte, pause_between_cmd);  /* zweimal, wir sind paranoid */
       busses[bus].power_changed = 0;
+    }
+    /* do nothing, if power off */
+    if(busses[bus].power_state==0) {
+          usleep(1000);
+          continue;
     }
     busses[bus].watchdog = 3;
     /* Lokdecoder */
@@ -239,7 +250,7 @@ void* thr_sendrec_M6051(void *v)
         SendByte = addr;
         writeByte(bus, &SendByte, pause_between_cmd);
         /* Erweiterte Funktionen des 6021 senden, manchmal */
-        if (( (busses[bus].flags & M6020_MODE) == 0) && (gltmp.funcs != glakt.funcs))
+        if (( !(busses[bus].flags & M6020_MODE) == M6020_MODE) && (gltmp.funcs != glakt.funcs))
         {
           c = (gltmp.funcs & 0x0f) + 64;
           writeByte(bus, &c, pause_between_bytes);
