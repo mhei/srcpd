@@ -352,8 +352,6 @@ void *thr_sendrec_I2C_DEV(void *v)
 	    if ((addr % 65) >= 33)
 			i2c_base_addr = 112;
 		
-	    //i2c_addr = i2c_base_addr + 2 * ((int) ((addr % ((32 * mult_busnum) + 1)) / 4));
-		//i2c_addr = i2c_base_addr + 2 * (addr - ((int)(addr / 5) * 5) - (addr % 5));
 		
 		// first project all higher multiplexed busses to the first bus
 		i2c_addr = addr - (64 * (mult_busnum-1));
@@ -368,11 +366,6 @@ void *thr_sendrec_I2C_DEV(void *v)
 			i2c_base_addr, i2c_addr, mult_busnum);
 
 	    // calculate bit-value from command
-		// FIXME, does not work for addresses > 32
-		//i2c_val = (char) pow(2, (((addr - 1) % 4) * 2 + port));
-	    //i2c_val = (char) pow(2, (((addr % ((32 * mult_busnum) +1) - 1) % 4) * 2 + port));
-		//i2c_val = (char) pow(2, (((addr % ((32 * mult_busnum) +1) - 1) % 4) * 2 + port));
-		
 		i2c_val = (char) pow(2, ((((addr - ((char)(addr/32)) * 32) - 1) % 4) * 2 + port));
 
 	    // select the device
