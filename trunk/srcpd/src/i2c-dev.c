@@ -22,7 +22,6 @@
 
 #include <linux/i2c-dev.h>
 // we have to use kernel-headers directly, sorry!
-
 #include <math.h>
 // needed for pow()
 
