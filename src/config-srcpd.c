@@ -90,7 +90,7 @@ void readConfig()
         {
           offset = &buffer[8];
           free(DEV_COMPORT);
-          DEV_COMPORT = malloc(sizeof(offset));
+          DEV_COMPORT = malloc(strlen(offset)+1);
           if(DEV_COMPORT == NULL)
           {
             printf("cannot allocate memory\n");
