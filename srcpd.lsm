@@ -1,15 +1,15 @@
 Begin3
 Title:          Srcpd 
 Version:        0.1
-Entered-date:   
-Description:    
-Keywords:        
+Entered-date:   15.6.2001
+Description:    SRCPD is a network demon speaking srcp
+Keywords:       SRCP der-moba.de maerklin intellibox
 Author:         Matthias Trute <mtrute@web.de> 
 		Dipl.-Ing. Frank Schmischke <frank.schmischke@t-online.de> 
 Maintained-by:  Matthias Trute <mtrute@web.de> 
-Primary-site:   	        
+Primary-site:	http://www.der-moba.de/Digital
 Home-page:      http://srcpd.sourceforge.net 
 Original-site:  
-Platforms:       Linux and other Unices
+Platforms:      Linux and other Unices
 Copying-policy: GNU Public License
 End
