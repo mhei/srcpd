@@ -121,10 +121,11 @@ int main(int argc, char **argv)
 		strcpy(conffile, optarg);
         break;
       case 'v':
-        printf("srcpd version 2.0, speaks SRCP 0.8!\n");
+        printf(WELCOME_MSG);
         exit(1);
         break;
       case 'h':
+        printf(WELCOME_MSG);
         printf("srcpd -f <conffile> -v -h\n");
         printf("v           -  prints program version and exits\n");
         printf("f           -  use another config file (default %s)\n", conffile);
