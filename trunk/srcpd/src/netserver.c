@@ -318,7 +318,7 @@ handleGET(int sessionid, int bus, char *device, char *parameter,
 	char devgrp[10];
 	int nelem = 0;
 	if (strlen(parameter) > 0)
-	    nelem = sscanf(parameter, "%10c %ld", devgrp, &addr);
+	    nelem = sscanf(parameter, "%s %ld", devgrp, &addr);
 	if (nelem <= 0) {
 	    rc = describeBus(bus, reply);
 	} else {
