@@ -418,9 +418,9 @@ int handleWAIT(int sessionid, int bus, char *device, char *parameter, char *repl
   /* check, if bus has FB's */
   if (strncasecmp(device, "FB", 2) == 0)
   {
-    long int port, waitvalue, aktvalue, timeout;
-    int value;
-    sscanf(parameter, "%ld %ld %ld", &port, &waitvalue, &timeout);
+    long int port,  timeout;
+    int value, waitvalue, aktvalue;
+    sscanf(parameter, "%ld %d %ld", &port, &waitvalue, &timeout);
     
     if (getFB(bus, port, &time, &value) == SRCP_OK && value==waitvalue)
     {
@@ -561,7 +561,7 @@ int doCmdClient(int Socket, int sessionid)
     memset(parameter, 0, sizeof(parameter));
     memset(reply, 0, sizeof(reply));
     sscanf(line, "%s %ld %s %900c", command, &bus, devicegroup, parameter);
-    DBG(bus, DBG_INFO, "getting command: %s %ld %s %s", command, bus, devicegroup, parameter);
+    DBG(bus, DBG_INFO, "getting command from session %ld: %s %s %s", sessionid, command,  devicegroup, parameter);
     rc = SRCP_WRONGVALUE;
     reply[0] = 0x00;
 

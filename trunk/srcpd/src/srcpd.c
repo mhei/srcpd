@@ -173,7 +173,6 @@ int main(int argc, char **argv)
   {
     if(busses[i].init_func)
     {
-#warning complete me ?
       if ((*busses[i].init_func)(i) != 0)
         exit(1);           // error while initialize
     }

@@ -21,7 +21,6 @@ struct _GLSTATE
   int n_fs;
   int id;       /* Adresse, wird auch als Semaphor genutzt! */
   int speed;    /* Sollgeschwindigkeit skal. auf 0..14      */
-  int maxspeed; /* Maximalgeschwindigkeit                   */
   int direction;/* 0/1/2                                    */
   char funcs;   /* F1..F4, F                                */
   struct timeval tv; /* Last time of change                 */
