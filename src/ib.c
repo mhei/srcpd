@@ -82,18 +82,18 @@ void* thr_sendrecintellibox(void *v)
 {
   int i, i1;
   int temp;
-	int addr;
-	int commands_ok;
-	int fd;
-	unsigned char byte2send;
+  int addr;
+  int commands_ok;
+  int fd;
+  unsigned char byte2send;
   unsigned char status;
-	unsigned char rr;
-	unsigned char xevnt1, xevnt2, xevnt3;
-	struct _GL gltmp;
-	struct _GA gatmp;
+  unsigned char rr;
+  unsigned char xevnt1, xevnt2, xevnt3;
+  struct _GL gltmp;
+  struct _GA gatmp;
   struct timeval akt_time, cmp_time;
 		
-	int zaehler1, fb_zaehler1, fb_zaehler2;
+  int zaehler1, fb_zaehler1, fb_zaehler2;
 	
 #ifndef TESTMODE
   syslog(LOG_INFO, "thr_sendrecintellibox gestartet");
@@ -102,19 +102,19 @@ void* thr_sendrecintellibox(void *v)
 #endif
 
   fd = file_descriptor[SERVER_IB];
-	zaehler1 = 0;
-	fb_zaehler1 = 0;
-	fb_zaehler2 = 1;
+  zaehler1 = 0;
+  fb_zaehler1 = 0;
+  fb_zaehler2 = 1;
 
   while(1)
-	{
+  {
 	//	syslog(LOG_INFO, "thr_sendrecintellibox Start in Schleife");
 		/* Start/Stop */
 		//fprintf(stderr, "START/STOP... ");
 		if(power_changed)
 		{
 			byte2send = power_state ? 0xA7 : 0xA6;
-  	  writeByte(fd, &byte2send, 250000);
+  	  writeByte(fd, &byte2send, 250);
     	readByte(fd, &status);
 	    if(status == 0x00)									// war alles OK ?
 		    power_changed = 0;
@@ -151,19 +151,25 @@ void* thr_sendrecintellibox(void *v)
 						byte2send = temp;
 						writeByte(fd, &byte2send,0); 			
 			    	if(gltmp.direction == 2) 			// Nothalt ausgelöst ?
+						{	
 							byte2send = 1;							// Nothalt setzen
+						}
 						else
 						{
 							byte2send = calcspeed(gltmp.speed, gltmp.maxspeed, 126); // Geschwindigkeit senden
 						  if(byte2send > 0)
+						  {
 						    byte2send++;
+						  }
 						}
 						writeByte(fd, &byte2send,0); 			
 						// Richtung, Licht und Funktionen setzen
 						byte2send = gltmp.flags;
 						byte2send |= 0xc0;
 						if(gltmp.direction)
+						{	
 							byte2send |= 0x20;
+						}
 						writeByte(fd, &byte2send,2);
 			      readByte(fd, &status);
 			      if((status == 0) || (status == 0x41) || (status == 0x42))
@@ -174,14 +180,18 @@ void* thr_sendrecintellibox(void *v)
 						else
 						{
 							if((status == 2) || (status == 0x0C))
-								ngl[i].id = 0;
+							{	
+							  ngl[i].id = 0;
+							}
 						}
 		    	}
 				}
 			}
 			sending_gl = 0;
 			if(commands_ok)
+			{
 				commands_gl = 0;
+			}
 		}
 		
 		gettimeofday(&akt_time, NULL);
@@ -190,6 +200,7 @@ void* thr_sendrecintellibox(void *v)
 		{
 			if(tga[i].id)
 			{
+				syslog(LOG_INFO, "Zeit %i,%i", (int)akt_time.tv_sec, (int)akt_time.tv_usec);
 				cmp_time = tga[i].t;
 				if(cmpTime(&cmp_time, &akt_time))			// Ausschaltzeitpunkt erreicht ?
 				{
@@ -204,7 +215,9 @@ void* thr_sendrecintellibox(void *v)
 		    	temp >>= 8;
 			    byte2send = temp;
 		  	  if(gatmp.port)
+		    	{	
 		    		byte2send |= 0x80;
+		    	}
 			    writeByte(fd, &byte2send, 2);
 					readByte(fd, &rr);
 					ga[addr]=gatmp;
@@ -234,9 +247,13 @@ void* thr_sendrecintellibox(void *v)
 		    	temp >>= 8;
 			    byte2send = temp;
 			    if(gatmp.action)
+		    	{	
 		    		byte2send |= 0x40;
+		  	  }
 		  	  if(gatmp.port)
+		    	{
 		    		byte2send |= 0x80;
+			    }
 			    writeByte(fd, &byte2send, 0);
 			    status = 1;
 					if(gatmp.action && (gatmp.activetime > 0))
@@ -255,6 +272,7 @@ void* thr_sendrecintellibox(void *v)
 								}
 								tga[i] = gatmp;
 								status = 0;
+								syslog(LOG_INFO, "GA %i für Abschaltung um %i,%i auf %i", tga[i].id, (int)tga[i].t.tv_sec, (int)tga[i].t.tv_usec, i);
 								break;
 							}
 						}
