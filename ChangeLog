@@ -1,3 +1,7 @@
+2004-07-20  Frank Schmischke  <frank.schmischke@t-online.de>
+
+	* ib.c : correct logic for emergency-stop and pressing "POWER ON"-Button at IB
+
 2004-06-13  Frank Schmischke  <frank.schmischke@t-online.de>
 
 	* hsi-88.c: change position for calling check_reset_fb() to solve some problems

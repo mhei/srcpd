@@ -394,7 +394,7 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
     }
   }
 
-  if (bus_has_devicegroup(bus, DG_SM) &&strncasecmp(device, "SM", 2) == 0)
+  if (bus_has_devicegroup(bus, DG_SM) && strncasecmp(device, "SM", 2) == 0)
   {
     long /*addr, */value1, value2;
     int type;
@@ -562,7 +562,7 @@ int handleWAIT(int sessionid, int bus, char *device, char *parameter, char *repl
     {
       if(nelem >= 4)
       {
-        /* es wird nicht gerechnet!, der Zeitfluß ist nicht gleichmäßig! */
+        /* es wird nicht gerechnet!, der Zeitfluï¿½ist nicht gleichmï¿½ig! */
         while ( (((d*24+h)*60+m)*60+s) >= (((vtime.day*24+vtime.hour)*60+ vtime.min)*60 + vtime.sec) )
         {
           usleep(10000);  /* wir warten 10ms realzeit.. */
@@ -722,7 +722,7 @@ int handleINIT(int sessionid, int bus, char *device, char *parameter, char *repl
     nelem = sscanf(parameter, "%ld %ld", &rx, &ry);
     if (nelem >= 2)
     {
-      rc = initTIME(rx, ry);  /* prüft auch die Werte! */
+      rc = initTIME(rx, ry);  /* prft auch die Werte! */
     }
     else
     {

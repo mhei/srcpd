@@ -2,8 +2,8 @@
                           srcp-info.c  -  description
                              -------------------
     begin                : Mon May 20 2002
-    copyright            : (C) 2002 by 
-    email                : 
+    copyright            : (C) 2002 by
+    email                :
  ***************************************************************************/
 
 /***************************************************************************
@@ -14,18 +14,18 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
- 
-/* 
+
+/*
    Manages the INFO SESSIONs. Every Hardwaredriver must call (directly or
    via set<devicegroup> functions the queueInfoMessage. This function will
    copy the preformatted string into internal buffer (allocated) and sets
    the current writer position (variable in). To avoid confusion, a semaphore
    protects this process.
-   
+
    On the other end of the pipe are numerous threads waiting for
    new data. Each and every of these threads maintains its own readerposition
    (parameter current) to unqueue the recently added messages.
-   
+
    When a new INFO sessions starts, it will send all status data and after that
    will enter the reader cycle.
  */
@@ -72,7 +72,7 @@ int queueIsEmptyInfo(int current)
   return (in == current);
 }
 
-/** liefert nächsten Eintrag oder -1, setzt fifo pointer neu! */
+/** liefert nï¿½hsten Eintrag oder -1, setzt fifo pointer neu! */
 int unqueueNextInfo(int current, char *info)
 {
   if (in == current)
@@ -108,107 +108,107 @@ int doInfoClient(int Socket, int sessionid)
   int status, i, current, number, value;
   char reply[1000], description[1000];
 
-    // send startup-infos to a new client
-    struct timeval cmp_time;
-    int busnumber;
-    current = in;
-    DBG(0, DBG_DEBUG, "new Info-client requested %ld", sessionid);
-    for (busnumber = 0; busnumber <= num_busses; busnumber++)
+// send startup-infos to a new client
+struct timeval cmp_time;
+int busnumber;
+current = in;
+DBG(0, DBG_DEBUG, "new Info-client requested %ld", sessionid);
+for (busnumber = 0; busnumber <= num_busses; busnumber++)
+{
+  DBG(busnumber, DBG_DEBUG, "send all data for busnumber %d to new client", busnumber);
+  // first some global bus data
+  // send Descriptions for busses
+  describeBus(busnumber, reply);
+  socket_writereply(Socket, reply);
+  strcpy(description, reply);
+  *reply = 0x00;
+  if(strstr(description, "POWER")) {
+    infoPower(busnumber, reply);
+    socket_writereply(Socket, reply);*reply = 0x00;
+  }
+  if(strstr(description, "TIME")) {
+    describeTIME(reply);
+    socket_writereply(Socket, reply);*reply = 0x00;
+    infoTIME(reply);
+    socket_writereply(Socket, reply);*reply = 0x00;
+  }
+
+  // send all needed generic locomotivs
+
+  if(strstr(description, "GL")) {
+    number = getMaxAddrGL(busnumber);
+    for (i = 1; i <= number; i++)
     {
-      DBG(busnumber, DBG_DEBUG, "send all data for busnumber %d to new client", busnumber);
-      // first some global bus data
-      // send Descriptions for busses
-      describeBus(busnumber, reply);
-      socket_writereply(Socket, reply); 
-      strcpy(description, reply);
-      *reply = 0x00;
-      if(strstr(description, "POWER")) {
-        infoPower(busnumber, reply);
+      if(isInitializedGL(busnumber, i))
+      {
+        long int lockid;
+        describeGL(busnumber, i, reply);
         socket_writereply(Socket, reply);*reply = 0x00;
-      }
-      if(strstr(description, "TIME")) {
-        describeTIME(reply);
+        infoGL(busnumber, i, reply);
         socket_writereply(Socket, reply);*reply = 0x00;
-        infoTIME(reply);
-        socket_writereply(Socket, reply);*reply = 0x00;
-      }
-
-      // send all needed generic locomotivs
-
-      if(strstr(description, "GL")) {
-        number = getMaxAddrGL(busnumber);
-        for (i = 1; i <= number; i++)
-        {
-          if(isInitializedGL(busnumber, i))
-          {
-            long int lockid;
-            describeGL(busnumber, i, reply);
-            socket_writereply(Socket, reply);*reply = 0x00;
-            infoGL(busnumber, i, reply);
-            socket_writereply(Socket, reply);*reply = 0x00;
-            getlockGL(busnumber, i, &lockid);
-            if(lockid != 0) {
-              describeLOCKGL(busnumber,  i, reply);
-              socket_writereply(Socket, reply);*reply = 0x00;              
-            }
-          }
+        getlockGL(busnumber, i, &lockid);
+        if(lockid != 0) {
+          describeLOCKGL(busnumber,  i, reply);
+          socket_writereply(Socket, reply);*reply = 0x00;
         }
       }
-      // send all needed generic assesoires
-      if(strstr(description, "GA")) {
-        number = get_number_ga(busnumber);
-        for (i = 1; i <= number; i++)
-        {
-          if(isInitializedGA(busnumber, i))
-          {
-            long int lockid;
-            int rc, port;
-            describeGA(busnumber, i, reply);
-            socket_writereply(Socket, reply);*reply = 0x00;
-            for (port = 0; port <=1; port++) {
-              rc = infoGA(busnumber, i, port, reply);
-              if ( (rc == SRCP_INFO) ) {
-		      socket_writereply(Socket, reply);*reply = 0x00;		      
-              }
+    }
+  }
+  // send all needed generic assesoires
+  if(strstr(description, "GA")) {
+    number = get_number_ga(busnumber);
+    for (i = 1; i <= number; i++)
+    {
+      if(isInitializedGA(busnumber, i))
+      {
+        long int lockid;
+        int rc, port;
+        describeGA(busnumber, i, reply);
+        socket_writereply(Socket, reply);*reply = 0x00;
+        for (port = 0; port <=1; port++) {
+          rc = infoGA(busnumber, i, port, reply);
+          if ( (rc == SRCP_INFO) ) {
+      socket_writereply(Socket, reply);*reply = 0x00;
           }
-          getlockGA(busnumber, i, &lockid);
-          if(lockid != 0) {
-              describeLOCKGA(busnumber,  i, reply);
-              socket_writereply(Socket, reply);*reply = 0x00;            
-          }
+      }
+      getlockGA(busnumber, i, &lockid);
+      if(lockid != 0) {
+          describeLOCKGA(busnumber,  i, reply);
+          socket_writereply(Socket, reply);*reply = 0x00;
+      }
 
-         }
-       }
       }
-      if(strstr(description, "FB")) {
-        // send all needed feedbacks
-        number = get_number_fb(busnumber);
-         for (i = 1; i <= number; i++)
-         {
-           int rc = getFB(busnumber, i, &cmp_time, &value);
-           if (rc == SRCP_OK && value!=0) {
-              infoFB(busnumber, i, reply);
-              socket_writereply(Socket, reply);*reply = 0x00;
-            }
-          }
+    }
+  }
+  if(strstr(description, "FB")) {
+    // send all needed feedbacks
+    number = get_number_fb(busnumber);
+      for (i = 1; i <= number; i++)
+      {
+        int rc = getFB(busnumber, i, &cmp_time, &value);
+        if (rc == SRCP_OK && value!=0) {
+          infoFB(busnumber, i, reply);
+          socket_writereply(Socket, reply);*reply = 0x00;
         }
       }
-      DBG(0, DBG_DEBUG,  "all data to new Info-Client (%ld) sent", sessionid);
-      /* this is a racing condition: we should stop
-         queing new messages until we reach this this point, it
-         is possible to miss some data changed since we started this thread */
-      if(in != current) {
-        DBG(0, DBG_WARN, "INFO queue dropped some information (%d elements). Sorry", abs(in - current));
-      }
-      current = in;
-      while (1)   {
-        while(queueIsEmptyInfo(current)) usleep(2000); // busy waiting, anyone with better code out there?
-        current = unqueueNextInfo(current, reply);
-        DBG(0, DBG_DEBUG, "reply-length = %d", strlen(reply));
-        status = socket_writereply(Socket, reply);
-        if (status < 0) {
-          break;
-        }
-      }
-      return 0;
+    }
+  }
+  DBG(0, DBG_DEBUG,  "all data to new Info-Client (%ld) sent", sessionid);
+  /* this is a racing condition: we should stop
+      queing new messages until we reach this this point, it
+      is possible to miss some data changed since we started this thread */
+  if(in != current) {
+    DBG(0, DBG_WARN, "INFO queue dropped some information (%d elements). Sorry", abs(in - current));
+  }
+  current = in;
+  while (1)   {
+    while(queueIsEmptyInfo(current)) usleep(2000); // busy waiting, anyone with better code out there?
+    current = unqueueNextInfo(current, reply);
+    DBG(0, DBG_DEBUG, "reply-length = %d", strlen(reply));
+    status = socket_writereply(Socket, reply);
+    if (status < 0) {
+      break;
+    }
+  }
+  return 0;
 }

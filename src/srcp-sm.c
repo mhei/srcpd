@@ -140,7 +140,7 @@ int queueSM(int busnumber, int command, int type, int addr, int typeaddr, int bi
 {
   struct timeval akt_time;
   int number_sm = get_number_sm(busnumber);
-  DBG(busnumber, DBG_DEBUG, "queueSM für %i", addr);
+  DBG(busnumber, DBG_DEBUG, "queueSM fr %i", addr);
   // addr == -1 means using separate progrm-track
   // addr != -1 means programming on the main (only availible with CV)
   if ( (addr == -1) || ((addr > 0) && (addr <= number_sm) && (type == CV)) )
@@ -192,7 +192,7 @@ static int queue_isfull(int busnumber)
   return queue_len(busnumber) >= QUEUELEN - 1;
 }
 
-/** liefert nächsten Eintrag und >=0, oder -1 */
+/** liefert nï¿½hsten Eintrag und >=0, oder -1 */
 int getNextSM(int busnumber, struct _SM *l)
 {
   if (in[busnumber] == out[busnumber])
@@ -201,7 +201,7 @@ int getNextSM(int busnumber, struct _SM *l)
   return out[busnumber];
 }
 
-/** liefert nächsten Eintrag oder -1, setzt fifo pointer neu! */
+/** liefert nï¿½hsten Eintrag oder -1, setzt fifo pointer neu! */
 int unqueueNextSM(int busnumber, struct _SM *l)
 {
   if (in[busnumber] == out[busnumber])
@@ -217,6 +217,7 @@ int unqueueNextSM(int busnumber, struct _SM *l)
 int setSM(int busnumber, int type, int addr, int typeaddr, int bit, int value, int return_code)
 {
   int number_sm = get_number_sm(busnumber);
+  DBG(busnumber, DBG_DEBUG, "in setSM with number_sm=%i", number_sm);
   struct timeval tv;
   if(number_sm == 0)
     return SRCP_UNSUPPORTEDDEVICEGROUP;
