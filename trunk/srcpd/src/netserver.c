@@ -140,16 +140,23 @@ static int handle_setverify(int sessionid, int bus, char *device, char *paramete
     int rc = SRCP_UNSUPPORTEDDEVICEGROUP;
     *reply = 0x00;
     if (bus_has_devicegroup(bus, DG_GL)	&& strncasecmp(device, "GL", 2) == 0) {
-	long laddr, direction, speed, maxspeed, func, f1, f2, f3, f4;
-	int anzparms;
-	anzparms = sscanf(parameter, "%ld %ld %ld %ld %ld %ld %ld %ld %ld", &laddr, &direction, &speed, &maxspeed, &func, &f1, &f2, &f3, &f4);
+	long laddr, direction, speed, maxspeed, f[13];
+	int func, i, anzparms;
+	func = 0;
+	/* We could provide a maximum of 32 on/off functions, but for now 12+1 will good enough */
+	anzparms = sscanf(parameter, "%ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld",
+		&laddr, &direction, &speed, &maxspeed,
+		&f[0],&f[1],&f[2],&f[3],&f[4],&f[5],&f[6],&f[7],&f[8],&f[9],&f[10],&f[11],&f[12]);
+	for(i=0;i<anzparms-4; i++) {
+		func += (f[i]?1:0) << i;
+	}
 	if (anzparms >= 4) {
 	    long int lockid;
 	    /* Only if not locked or emergency stop !! */
 	    getlockGL(bus, laddr, &lockid);
 	    if (lockid == 0 || lockid == sessionid || direction == 2) {
 		    rc = SRCP_OK;
-		    if (setorverify==1)	rc = queueGL(bus, laddr, direction, speed, maxspeed, func, f1, f2, f3, f4);
+		    if (setorverify==1)	rc = queueGL(bus, laddr, direction, speed, maxspeed, func);
 	    } else {
 		rc = SRCP_DEVICELOCKED;
 	    }
@@ -469,6 +476,22 @@ int handleTERM(int sessionid, int bus, char *device, char *parameter, char *repl
     struct timeval akt_time;
     int rc = SRCP_UNSUPPORTEDDEVICEGROUP;
     *reply = 0x00;
+    if (bus_has_devicegroup(bus, DG_GL)	&& strncasecmp(device, "GL", 2) == 0) {
+	long int addr = 0;
+	int nelem = 0;
+	if (strlen(parameter) > 0)
+		nelem = sscanf(parameter, "%ld", &addr);
+	if (nelem == 1) {
+	    long int lockid;
+	    getlockGL(bus, addr, &lockid);
+	    if (lockid == 0 || lockid == sessionid) {
+		    rc = unlockGL(bus, addr, sessionid);
+		    rc = termGL(bus, addr);
+	    } else {
+		rc = SRCP_DEVICELOCKED;
+	    }
+	}
+    }
     if (bus_has_devicegroup(bus, DG_LOCK)
 	&& strncasecmp(device, "LOCK", 4) == 0) {
 	long int addr;

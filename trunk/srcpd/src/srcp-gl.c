@@ -49,6 +49,7 @@ static int initGL_default(int busnumber, int addr)
   {
     case SERVER_M605X:
         initGL(busnumber, addr, 'M', 1, 14, 1);
+        gl[busnumber].glstate[addr].direction = 1; /* undocumented feature: enter 9193 on the 6021 */
         break;
     case SERVER_IB:
         initGL(busnumber, addr, 'P', 1, 126, 5);
@@ -80,20 +81,16 @@ static int calcspeed(int vs, int vmax, int n_fs)
 
 int isInitializedGL(int busnumber, int addr)
 {
-   return (gl[busnumber].glstate[addr].n_fs != 0);
+   return (gl[busnumber].glstate[addr].state == 1);
 }
 
 /* Übernehme die neuen Angaben für die Lok, einige wenige Prüfungen. Lock wird ignoriert!
    Lock wird in den SRCP Routinen beachtet, hier ist das nicht angebracht (Notstop)
 */
 
-int queueGL(int busnumber, int addr, int dir, int speed, int maxspeed, int f,  ...)
+int queueGL(int busnumber, int addr, int dir, int speed, int maxspeed, const int f)
 {
   struct timeval akt_time;
-  int i=0;
-  va_list funcs;
-
-
   int number_gl = get_number_gl(busnumber);
   if ((addr > 0) && (addr <= number_gl) )
   {
@@ -112,12 +109,6 @@ int queueGL(int busnumber, int addr, int dir, int speed, int maxspeed, int f,  .
     queue[busnumber][in[busnumber]].speed     = calcspeed(speed, maxspeed, gl[busnumber].glstate[addr].n_fs);
     queue[busnumber][in[busnumber]].direction = dir;
     queue[busnumber][in[busnumber]].funcs     = f;
-    va_start(funcs, f);
-    for(i=1;i<gl[busnumber].glstate[addr].n_func; i++) {
-      int fi = va_arg(funcs, int);
-      queue[busnumber][in[busnumber]].funcs += ( (fi?1:0) << i);
-    }
-    va_end(funcs);
     gettimeofday(&akt_time, NULL);
     queue[busnumber][in[busnumber]].tv        = akt_time;
     queue[busnumber][in[busnumber]].id        = addr;
@@ -208,7 +199,14 @@ int setGL(int busnumber, int addr, struct _GLSTATE l)
      gl[busnumber].glstate[addr].speed = l.speed;
      gl[busnumber].glstate[addr].funcs = l.funcs;
      gettimeofday(&gl[busnumber].glstate[addr].tv, NULL);
-     infoGL(busnumber, addr, msg);
+     if (gl[busnumber].glstate[addr].state == 2) {
+	     bzero(&gl[busnumber].glstate[addr], sizeof(struct _GLSTATE));
+	     sprintf(msg, "%lu.%.3lu 102 INFO %d GL %d",
+	       gl[busnumber].glstate[addr].tv.tv_sec, gl[busnumber].glstate[addr].tv.tv_usec/1000,
+	       busnumber, addr);
+     } else {
+	     infoGL(busnumber, addr, msg);
+     }
      queueInfoMessage(msg);
     return SRCP_OK;
   }
@@ -232,11 +230,25 @@ int initGL(int busnumber, int addr, const char protocol, int protoversion, int n
     gl[busnumber].glstate[addr].n_func=n_func;
     gl[busnumber].glstate[addr].protocolversion=protoversion;
     gl[busnumber].glstate[addr].protocol=protocol;
+    gl[busnumber].glstate[addr].state = 1;
     describeGL(busnumber, addr, msg);
     queueInfoMessage(msg);
+    queueGL(busnumber, addr, 0, 0, 1, 0);
     return SRCP_OK;
   }
   return SRCP_WRONGVALUE;
+}
+
+
+int termGL(busnumber, addr) {
+	if(isInitializedGL(busnumber, addr)){
+		gl[busnumber].glstate[addr].state = 2;
+		queueGL(busnumber, addr, 0, 0, 1, 0);
+		return SRCP_OK;
+	} else {
+		return SRCP_NODATA;
+	}
+
 }
 
 int describeGL(int busnumber, int addr, char *msg)
