@@ -28,12 +28,9 @@
 
 #include "threads.h"
 #include "config-srcpd.h"
+#include "srcp-srv.h"
 
-extern char *username;
-extern char *groupname;
-
-void
-change_privileges(const char *uid, const char *grp)
+void change_privileges(const char *uid, const char *grp)
 {
   struct group *group;
   struct passwd *passwd;
@@ -126,7 +123,8 @@ thr_handlePort(void *v)
 
   if(getuid() == 0)
   {
-    change_privileges(username, groupname);
+    change_privileges(((SERVER_DATA *) busses[0].driverdata)->username,
+        ((SERVER_DATA *) busses[0].driverdata)->groupname);
   }
 
   while (1)

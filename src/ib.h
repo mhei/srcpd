@@ -17,11 +17,15 @@
 #ifndef _IB_H
 #define _IB_H
 
+#include <libxml/tree.h>
+
 typedef struct _IB_DATA {
     int number_ga;
     int number_gl;
     int number_fb;
 } IB_DATA;
+
+void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node,  int busnumber);
 
 
 int init_bus_IB(int);

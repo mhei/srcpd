@@ -72,6 +72,18 @@ const unsigned int LPT_NUM = 3;
 // values of the bits in a byte
 const char BIT_VALUES[] = {0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80}; 
 
+void readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber){
+    busses[busnumber].type = SERVER_S88;
+    busses[busnumber].init_func = &init_bus_S88;
+    busses[busnumber].term_func = &term_bus_S88;
+    busses[busnumber].thr_func = &thr_sendrec_S88;
+    busses[busnumber].driverdata = malloc(sizeof(struct _DDL_S88_DATA));
+    ((DDL_S88_DATA *) busses[busnumber].driverdata)->port = 0x0378;
+    ((DDL_S88_DATA *) busses[busnumber].driverdata)->clockscale = 35;
+    ((DDL_S88_DATA *) busses[busnumber].driverdata)->refresh = 100;
+    strcpy(busses[busnumber].description, "FB POWER");
+}
+
 /****************************************************************
 * function s88init                                              *
 *                                                               *
