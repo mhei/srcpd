@@ -70,7 +70,7 @@ dnl in this space add everything you want to check for
 dnl examples are specific headers, libraries, etc.
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS(fcntl.h sys/time.h syslog.h unistd.h)
+AC_CHECK_HEADERS(fcntl.h sys/time.h syslog.h unistd.h gnome-xml/tree.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
