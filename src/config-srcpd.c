@@ -48,6 +48,7 @@ int NUMBER_GL       = 80;           // Anzahl an Lokadressen
 int M6020MODE       = 0;            /* die 6020 mag keine erweiterten Befehle */
 int use_i8255       = 0;            // soll auch I8255 genutzt werden ?
 int use_watchdog    = 0;            // soll der interne Wachhund genutzt werden ?
+int restore_com_parms = 0;          // sollen die com-port Einstellungen gesichert werden?
 
 // Lesen der Konfigurationsdatei /usr/local/etc/srcpd.conf bzw. /etc/srcpd.conf
 void readConfig()
@@ -134,7 +135,14 @@ void readConfig()
 			    offset = &buffer[10];
 			    if(strcmp(offset, "yes") == 0)
   			    M6020MODE = 1;
-  			}
+			  }
+			  if(strncmp(buffer, "restore_com_parms=", 18) == 0)
+			  {
+			    offset = &buffer[18];
+			    if(strcmp(offset, "yes") == 0)
+			      restore_com_parms = 1;
+			  }
+
 			}
 		}
 		fclose(fp);

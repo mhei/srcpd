@@ -185,8 +185,7 @@ thr_sendrec6051 (void *v)
 			  ((gltmp.flags & 0x10) != (gl[addr].flags & 0x10)) ||
 			  (gltmp.direction != gl[addr].direction))
 			{
-			  c =
-			    calcspeed (gltmp.speed, gltmp.maxspeed,
+			  c = calcspeed (gltmp.speed, gltmp.maxspeed,
 				       gltmp.n_fs) +
 			    16 * ((gltmp.flags & 0x10) ? 1 : 0);
 			  /* jetzt aufpassen: n_fs erzwingt ggf. mehrfache Ansteuerungen des Dekoders */

@@ -27,10 +27,8 @@
 
 #include "io.h"
 
-#ifdef REINIT_COMPORT
 struct termios interface_org;
 int org_status_saved = 0;
-#endif
 
 #ifdef TESTMODE
 extern int testmode;
@@ -81,7 +79,6 @@ void writeByte(int FD, unsigned char *b, unsigned long msecs)
 #endif
 }
 
-#ifdef REINIT_COMPORT
 void save_comport(char *name)
 {
   int fd;
@@ -118,4 +115,3 @@ void restore_comport(char *name)
     syslog(LOG_INFO, "erfolgreich wiederhergestellt");
   }
 }
-#endif

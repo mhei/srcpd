@@ -39,10 +39,8 @@
 #include "srcp-time.h"
 #include "threads.h"
 
-#ifdef REINIT_COMPORT
 void hup_handler(int);
 void term_handler(int);
-#endif
 void install_signal_handler(void);
 
 int file_descriptor[NUMBER_SERVERS];
@@ -59,6 +57,7 @@ extern int io_thread_running;
 extern int working_server;
 extern int use_i8255;
 extern int use_watchdog;
+extern int restore_com_parms;
 #ifdef TESTMODE
 extern int testmode;
 #endif
@@ -67,7 +66,6 @@ extern char *DEV_COMPORT;
 extern char *DEV_I8255;
 extern const char *WELCOME_MSG;
 
-#ifdef REINIT_COMPORT
 void hup_handler(int s)
 {
   /* signal SIGHUP(1) caught */
@@ -85,16 +83,15 @@ void term_handler(int s)
   syslog(LOG_INFO,"SIGTERM(15) received! Terminating ...");
   server_shutdown_state = 1;
 }
-#endif
 
 void install_signal_handler()
 {
-#ifdef REINIT_COMPORT
-  signal(SIGTERM, term_handler);
-  signal(SIGABRT, term_handler);
-  signal(SIGINT, term_handler);
-  signal(SIGHUP, hup_handler);
-#endif
+  if(restore_com_parms) {
+    signal(SIGTERM, term_handler);
+    signal(SIGABRT, term_handler);
+    signal(SIGINT, term_handler);
+    signal(SIGHUP, hup_handler);
+  }
   signal(SIGPIPE, SIG_IGN);		/* important, because write() on sockets */
                                         /* should return errors								*/
 }
@@ -184,11 +181,10 @@ int main(int argc, char **argv)
   openlog("srcpd", LOG_CONS, LOG_USER);
   syslog(LOG_INFO, "%s", WELCOME_MSG);
 
-#ifdef REINIT_COMPORT
   // aktuelle Einstellungen des Com-Ports sichern
-  save_comport(DEV_COMPORT);
-#endif
-
+  if(restore_com_parms) {
+    save_comport(DEV_COMPORT);
+  }
   // Initialisierung der seriellen Schnittstelle
   switch (working_server)
   {
@@ -197,9 +193,9 @@ int main(int argc, char **argv)
       if(file_descriptor[SERVER_M605X] < 0)
       {
         printf("Interface 6051 %s nicht vorhanden?!\n", DEV_COMPORT);
-#ifdef REINIT_COMPORT
-        restore_comport(DEV_COMPORT);
-#endif
+	if(restore_com_parms) {
+    	    restore_comport(DEV_COMPORT);
+	}
 	exit(1);
       }
       break;
@@ -207,9 +203,9 @@ int main(int argc, char **argv)
       if(open_comport(&file_descriptor[SERVER_IB], DEV_COMPORT) != 0)
       {
     	printf("Intellibox nicht gefunden !!!\n");
-#ifdef REINIT_COMPORT
-        restore_comport(DEV_COMPORT);
-#endif
+	if(restore_com_parms) {
+            restore_comport(DEV_COMPORT);
+	}
         exit(1);
       }
   }
@@ -344,11 +340,10 @@ int main(int argc, char **argv)
       tmp_state = io_thread_running;
     }
   }
-
-#ifdef REINIT_COMPORT
-  close_comport(file_descriptor[working_server]);
-  restore_comport(DEV_COMPORT);
-#endif
+  if(restore_com_parms) {
+    close_comport(file_descriptor[working_server]);
+    restore_comport(DEV_COMPORT);
+  }
   syslog(LOG_INFO, "und tschüß..");
   exit(0);
 }
