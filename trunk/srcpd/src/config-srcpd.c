@@ -116,11 +116,11 @@ static int register_bus(xmlDocPtr doc, xmlNodePtr node)
    if (strcmp(child->name, "ddl-s88") == 0)
    {
      check_bus(busnumber);
-#ifdef linux
+#if defined linux || defined __FreeBSD__
      readconfig_DDL_S88(doc, child, busnumber);
      found = 1;
 #else
-	printf("Sorry, DDL_S88 only available on Linux (yet)\n");
+	printf("Sorry, DDL_S88 only available on Linux and FreeBSD (yet)\n");
 #endif
    }
    if (strcmp(child->name, "hsi-88") == 0)
