@@ -29,13 +29,11 @@
 #include "io.h"
 #include "config-srcpd.h"
 
-int readByte(int bus, unsigned char *the_byte)
+int readByte(int bus, int wait, unsigned char *the_byte)
 {
   int i;
 
   // with debuglevel 7, we will not really work on hardware
-  if (busses[bus].debuglevel > 3)
-    syslog(LOG_INFO, "fd = %d", busses[bus].fd);
   if (busses[bus].debuglevel > 6)
   {  
     i = 1;
@@ -45,21 +43,17 @@ int readByte(int bus, unsigned char *the_byte)
   {
     ioctl(busses[bus].fd, FIONREAD, &i);
     if(busses[bus].debuglevel > 5)
-      syslog(LOG_INFO, "on bus %d, there are bytes to read: %d", bus, i);
-    if (i > 0)
+      syslog(LOG_INFO, "on bus %d (fd = %d), there are bytes to read: %d", bus, busses[bus].fd, i);
+    // read only, if there is really an input
+    if ((i > 0) || (wait == 1))
     {
-      // read only, if there is really an input
       i = read(busses[bus].fd, the_byte, 1);
       if(busses[bus].debuglevel > 5)
-      {
-        if(i == 1)
-           syslog(LOG_INFO, "bus %d byte read: 0x%02x", bus, *the_byte);
-        else
-          syslog(LOG_INFO, "no byte read");
-      }
+        if (i > 0)
+        syslog(LOG_INFO, "bus %d byte read: 0x%02x", bus, *the_byte);
     }
   }
-  return (i == 1 ? 0 : -1);
+  return (i > 0 ? 0 : -1);
 }
 
 void writeByte(int bus, unsigned char *b, unsigned long msecs)

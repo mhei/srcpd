@@ -71,21 +71,23 @@ static int initGL_default(int bus, int addr)
 static int calcspeed(int vs, int vmax, int n_fs)
 {
   int rs;
-  if(0==vmax)
+
+  if (vmax == 0)
     return vs;
-  if(vs<0)
+  if (vs < 0)
     vs = 0;
-  if(vs>vmax)
+  if (vs > vmax)
     vs = vmax;
   rs = (vs * n_fs) / vmax;
-  if((rs==0) && (vs!=0))
+  if ((rs == 0) && (vs != 0))
     rs = 1;
+    
   return rs;
 }
 
 int isInitializedGL(int bus, int addr)
 {
-   return gl[bus].glstate[addr].n_fs==0;
+   return (gl[bus].glstate[addr].n_fs != 0);
 }
 
 /* Übernehme die neuen Angaben für die Lok, einige wenige Prüfungen */

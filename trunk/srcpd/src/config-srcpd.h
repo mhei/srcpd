@@ -46,7 +46,7 @@ typedef struct _BUS
   int type;        // SERVER_IB, SERVER_M605X...
 
   char *device;    // Path_to_device
-  speed_t baud;
+  speed_t baudrate;
     
   /* Now internally used data */
   int fd;          // file descriptor of device

@@ -75,6 +75,7 @@ void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   busses[busnumber].thr_func = &thr_sendrec_IB;
   busses[busnumber].driverdata = malloc(sizeof(struct _IB_DATA));
   busses[busnumber].flags |= FB_16_PORTS;
+  busses[busnumber].baudrate = B38400;
   strcpy(busses[busnumber].description, "GA GL FB POWER");
 
   __ib->number_fb = 0;            // max. 31 for S88; Loconet is missing this time
@@ -179,11 +180,11 @@ void* thr_sendrec_IB(void *v)
   unsigned char byte2send;
   int status;
   unsigned char rr;
-  int bus;
+  int busnumber;
   int zaehler1, fb_zaehler1, fb_zaehler2;
 
-  bus = (int) v;
-  syslog(LOG_INFO, "thr_sendrecintellibox is startet as bus %i", bus);
+  busnumber = (int) v;
+  syslog(LOG_INFO, "thr_sendrecintellibox is startet as bus %i", busnumber);
 
   zaehler1 = 0;
   fb_zaehler1 = 0;
@@ -194,28 +195,28 @@ void* thr_sendrec_IB(void *v)
   //  syslog(LOG_INFO, "thr_sendrecintellibox Start in Schleife");
     /* Start/Stop */
     //fprintf(stderr, "START/STOP... ");
-    if(busses[bus].power_changed)
+    if(busses[busnumber].power_changed)
     {
-      byte2send = busses[bus].power_state ? 0xA7 : 0xA6;
-      writeByte(bus, &byte2send, 250);
-      status = readByte(bus, &rr);
+      byte2send = busses[busnumber].power_state ? 0xA7 : 0xA6;
+      writeByte(busnumber, &byte2send, 250);
+      status = readByte(busnumber, 1, &rr);
       while(status == -1)
       {
         usleep(100000);
-        status = readByte(bus, &rr);
+        status = readByte(busnumber, 1, &rr);
       }
       if(rr == 0x00)                  // war alles OK ?
-        busses[bus].power_changed = 0;
+        busses[busnumber].power_changed = 0;
     }
 
-    send_command_gl(bus);
-    send_command_ga(bus);
-    check_status(bus);
+    send_command_gl(busnumber);
+    send_command_ga(busnumber);
+    check_status(busnumber);
     usleep(50000);
   }      // Ende WHILE(1)
 }
 
-void send_command_ga(int bus)
+void send_command_ga(int busnumber)
 {
   int i, i1;
   int temp;
@@ -239,11 +240,11 @@ void send_command_ga(int bus)
         gatmp = tga[i];
         addr = gatmp.id;
         byte2send = 0x90;
-        writeByte(bus, &byte2send,0);
+        writeByte(busnumber, &byte2send, 0);
         temp = gatmp.id;
         temp &= 0x00FF;
         byte2send = temp;
-        writeByte(bus, &byte2send,0);
+        writeByte(busnumber, &byte2send, 0);
         temp = gatmp.id;
         temp >>= 8;
         byte2send = temp;
@@ -251,25 +252,25 @@ void send_command_ga(int bus)
         {
           byte2send |= 0x80;
         }
-        writeByte(bus, &byte2send, 2);
-        readByte(bus, &rr);
-        setGA(bus, addr, gatmp);
+        writeByte(busnumber, &byte2send, 2);
+        readByte(busnumber, 1, &rr);
+        setGA(busnumber, addr, gatmp);
         tga[i].id=0;
       }
     }
   }
 
   // Decoder einschalten
-  if(! queue_GA_isempty(bus))
+  if(! queue_GA_isempty(busnumber))
   {
-    unqueueNextGA(bus, &gatmp);
+    unqueueNextGA(busnumber, &gatmp);
     addr = gatmp.id;
     byte2send = 0x90;
-    writeByte(bus, &byte2send,0);
+    writeByte(busnumber, &byte2send, 0);
     temp = gatmp.id;
     temp &= 0x00FF;
     byte2send = temp;
-    writeByte(bus, &byte2send,0);
+    writeByte(busnumber, &byte2send, 0);
     temp = gatmp.id;
     temp >>= 8;
     byte2send = temp;
@@ -281,7 +282,7 @@ void send_command_ga(int bus)
     {
       byte2send |= 0x80;
     }
-    writeByte(bus, &byte2send, 0);
+    writeByte(busnumber, &byte2send, 0);
     status = 1;
     // reschedule event: turn off --tobedone--
     if(gatmp.action && (gatmp.activetime > 0))
@@ -305,15 +306,15 @@ void send_command_ga(int bus)
         }
       }
     }
-    readByte(bus, &rr);
+    readByte(busnumber, 1, &rr);
     if(status)
     {
-      setGA(bus, addr, gatmp);
+      setGA(busnumber, addr, gatmp);
     }
   }
 }
 
-void send_command_gl(int bus)
+void send_command_gl(int busnumber)
 {
   int temp;
   int addr=0;
@@ -324,10 +325,10 @@ void send_command_gl(int bus)
   /* Lokdecoder */
   //fprintf(stderr, "LOK's... ");
   /* nur senden, wenn wirklich etwas vorliegt */
-  if(! queue_GL_isempty(bus))
+  if(! queue_GL_isempty(busnumber))
   {
-    unqueueNextGL(bus, &gltmp);
-    getGL(bus, addr, &glakt);
+    unqueueNextGL(busnumber, &gltmp);
+    getGL(busnumber, addr, &glakt);
     addr  = gltmp.id;
     // speed, direction or function changed ?
     if((gltmp.direction != glakt.direction) ||
@@ -336,17 +337,17 @@ void send_command_gl(int bus)
     {
       // Lokkommando soll gesendet werden
       byte2send = 0x80;
-      writeByte(bus, &byte2send,0);
+      writeByte(busnumber, &byte2send, 0);
       // send lowbyte of adress
       temp = gltmp.id;
       temp &= 0x00FF;
       byte2send = temp;
-      writeByte(bus, &byte2send,0);
+      writeByte(busnumber, &byte2send, 0);
       // send highbyte of adress
       temp = gltmp.id;
       temp >>= 8;
       byte2send = temp;
-      writeByte(bus, &byte2send,0);
+      writeByte(busnumber, &byte2send, 0);
       if(gltmp.direction == 2)       // Nothalt ausgelöst ?
       {
         byte2send = 1;              // Nothalt setzen
@@ -359,7 +360,7 @@ void send_command_gl(int bus)
           byte2send++;
         }
       }
-      writeByte(bus, &byte2send,0);
+      writeByte(busnumber, &byte2send, 0);
       // setting direction, light and function
       byte2send = gltmp.funcs;
       byte2send |= 0xc0;
@@ -367,17 +368,17 @@ void send_command_gl(int bus)
       {
         byte2send |= 0x20;
       }
-      writeByte(bus, &byte2send,2);
-      readByte(bus, &status);
+      writeByte(busnumber, &byte2send, 2);
+      readByte(busnumber, 1, &status);
       if((status == 0) || (status == 0x41) || (status == 0x42))
       {
-        setGL(bus, addr, gltmp);
+        setGL(busnumber, addr, gltmp);
       }
     }
   }
 }
 
-void check_status(int bus)
+void check_status(int busnumber)
 {
   int i;
   int temp;
@@ -395,22 +396,22 @@ void check_status(int bus)
 #warning add loconet
 
   byte2send = 0xC8;
-  writeByte(bus, &byte2send, 2);
+  writeByte(busnumber, &byte2send, 2);
   xevnt2 = 0x00;
   xevnt3 = 0x00;
-  readByte(bus, &xevnt1);
+  readByte(busnumber, 1, &xevnt1);
   if(xevnt1 & 0x80)
   {
-    readByte(bus, &xevnt2);
+    readByte(busnumber, 1, &xevnt2);
     if(xevnt2 & 0x80)
-      readByte(bus, &xevnt3);
+      readByte(busnumber, 1, &xevnt3);
   }
 
   if(xevnt1 & 0x01)        // mindestens eine Lok wurde von Hand gesteuert
   {
     byte2send = 0xC9;
-    writeByte(bus, &byte2send,2);
-    readByte(bus, &rr);
+    writeByte(busnumber, &byte2send, 2);
+    readByte(busnumber, 1, &rr);
     while(rr != 0x80)
     {
       if(rr == 1)
@@ -425,38 +426,38 @@ void check_status(int bus)
         if(gltmp.speed > 0)
           gltmp.speed--;
       }
-      readByte(bus, &rr);
+      readByte(busnumber, 1, &rr);
       gltmp.funcs = rr & 0xf0;;
-      readByte(bus, &rr);
+      readByte(busnumber, 1, &rr);
       gltmp.id = rr;
-      readByte(bus, &rr);
+      readByte(busnumber, 1, &rr);
       if((rr & 0x80) && (gltmp.direction == 0))
         gltmp.direction = 1;    // Richtung ist vorwärts
       if(rr & 0x40)
         gltmp.funcs |= 0x010;    // Licht ist an
       rr &= 0x3F;
       gltmp.id |= rr << 8;
-      readByte(bus, &rr);
-      readByte(bus, &rr);
+      readByte(busnumber, 1, &rr);
+      readByte(busnumber, 1, &rr);
     }
   }
 
   if(xevnt1 & 0x04)        // mindestens eine Rückmeldung hat sich geändert
   {
     byte2send = 0xCB;
-    writeByte(bus, &byte2send,2);
-    readByte(bus, &rr);
+    writeByte(busnumber, &byte2send, 2);
+    readByte(busnumber, 1, &rr);
     while(rr != 0x00)
     {
       rr--;
       i = rr;
-      readByte(bus, &rr);
+      readByte(busnumber, 1, &rr);
       temp = rr;
       temp <<= 8;
-      readByte(bus, &rr);
+      readByte(busnumber, 1, &rr);
 //      fb[i] = temp | rr;
-      setFBmodul(bus, i, temp|rr);
-      readByte(bus, &rr);
+      setFBmodul(busnumber, i, temp|rr);
+      readByte(busnumber, 1, &rr);
 //      syslog(LOG_INFO, "Rückmeldung %i mit 0x%02x", i, fb[i]);
     }
   }
@@ -464,14 +465,14 @@ void check_status(int bus)
   if(xevnt1 & 0x20)        // mindestens eine Weiche wurde von Hand geschaltet
   {
     byte2send = 0xCA;
-    writeByte(bus, &byte2send,0);
-    readByte(bus, &rr);
+    writeByte(busnumber, &byte2send, 0);
+    readByte(busnumber, 1, &rr);
     temp = rr;
     for(i=0;i<temp;i++)
     {
-      readByte(bus, &rr);
+      readByte(busnumber, 1, &rr);
       gatmp.id = rr;
-      readByte(bus, &rr);
+      readByte(busnumber, 1, &rr);
       gatmp.id |= (rr & 0x07) << 8;
     }
   }
@@ -479,25 +480,27 @@ void check_status(int bus)
   if(xevnt2 & 0x40)        // we should send an XStatus-command
   {
     byte2send = 0xA2;
-    writeByte(bus, &byte2send,2);
-    readByte(bus, &rr);
+    writeByte(busnumber, &byte2send, 2);
+    readByte(busnumber, 1, &rr);
     if(rr & 0x80)
-      readByte(bus, &rr);
+      readByte(busnumber, 1, &rr);
   }
 }
 
-static int init_comport(int busnumber, speed_t baud)
+static int open_comport(int busnumber, speed_t baud)
 {
   int status;
   int fd;
-//  int baud = busses[busnumber].baud;
   char *name = busses[busnumber].device;
   unsigned char rr;
   struct termios interface;
 
   printf("try opening serial line %s for %i baud\n", name, (2400 * (1 << (baud - 11))));
+  syslog(LOG_INFO, "try opening serial line %s for %i baud", name, (2400 * (1 << (baud - 11))));
   fd = open(name, O_RDWR);
-  if (fd == -1)
+  syslog(LOG_INFO, "fd nach open(...) = %d", fd);
+  busses[busnumber].fd = fd;
+  if (fd < 0)
   {
     printf("dammit, couldn't open device.\n");
   }
@@ -516,7 +519,7 @@ static int init_comport(int busnumber, speed_t baud)
     status = 0;
     sleep(1);
     while(status != -1)
-      status = readByte(fd, &rr);
+      status = readByte(busnumber, 1, &rr);
   }
   return fd;
 }
@@ -537,6 +540,7 @@ static int init_line_IB(int busnumber)
 
   printf("Opening serial line %s for 2400 baud\n", name);
   fd=open(name, O_RDWR);
+  syslog(LOG_INFO, "fd = %d", fd);
   if (fd == -1)
   {
     printf("dammit, couldn't open device.\n");
@@ -558,7 +562,7 @@ static int init_line_IB(int busnumber)
   sleep(1);
   printf("clearing input-buffer\n");
   while(status != -1)
-    status = readByte(busnumber, &rr);
+    status = readByte(busnumber, 1, &rr);
 
   ioctl(fd, TIOCGSERIAL, &serial_line);
   close(fd);
@@ -567,6 +571,7 @@ static int init_line_IB(int busnumber)
   LSR = serial_line.port + 3;
   printf("sending BREAK\n");
   fd = open("/dev/ibox", O_RDWR);
+  syslog(LOG_INFO, "fd for ibox-dev = %d", fd);
   if(fd < 0)
     return(-1);
   if(ioctl(fd, IB_IOCTINIT, LSR) < 0)
@@ -583,17 +588,16 @@ static int init_line_IB(int busnumber)
   printf("BREAK sucessfully send\n");
 
   baud = B2400;
-  fd = init_comport(busnumber, baud);
+  fd = open_comport(busnumber, baud);
   if(fd < 0)
   {
     printf("init comport fehlgeschlagen\n");
     return(-1);
   }
-  busses[busnumber].fd = fd;
   sleep(1);
   byte2send = 0xC4;
-  writeByte(busnumber, &byte2send, 2000);
-  status = readByte(busnumber, &rr);
+  writeByte(busnumber, &byte2send, 2);
+  status = readByte(busnumber, 1, &rr);
   if(status == -1)
     return(1);
   if(rr=='D')
@@ -614,7 +618,7 @@ static int init_line_IB(int busnumber)
   writeByte(busnumber, &byte2send, 0);
   byte2send = 0x0d;
   writeByte(busnumber, &byte2send, 2);
-  status = readByte(busnumber, &rr);
+  status = readByte(busnumber, 1, &rr);
   if(status != 0)
     return 1;
   printf("change baudrate to 38400 bps\n");
@@ -635,17 +639,17 @@ static int init_line_IB(int busnumber)
   sleep(1);
   close_comport(fd);
     
-  baud = B38400;
-  fd = init_comport(busnumber, baud);
+  sleep(1);
+  fd = open_comport(busnumber, busses[busnumber].baudrate);
+  syslog(LOG_INFO, "fd nach open_comport = %d", fd);
   if(fd < 0)
   {
     printf("init comport fehlgeschlagen\n");
     return(-1);
   }
-  busses[busnumber].fd = fd;
   byte2send = 0xC4;
-  writeByte(busnumber, &byte2send,2000);
-  status = readByte(busnumber, &rr);
+  writeByte(busnumber, &byte2send, 2);
+  status = readByte(busnumber, 1, &rr);
   if(status == -1)
     return(1);
   if(rr=='D')
