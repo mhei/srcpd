@@ -20,6 +20,7 @@
 #include "srcp-ga.h"
 #include "srcp-fb.h"
 #include "srcp-sm.h"
+#include "srcp-power.h"
 #include "srcp-info.h"
 #include "srcp-error.h"
 #include "config-srcpd.h"
@@ -37,26 +38,19 @@ static int number_of_clients = 0;               // number of registerated client
 static int max_clients = 0;                     // number of clients, that can hold in field
 
 
-static int compareTime(struct timeval t1, struct timeval t2)
-{
-  int result;
-
-  result = 0;
-  if (t1.tv_sec < t2.tv_sec)
-    result = 1;
-  else
-  {
-    if (t1.tv_sec == t2.tv_sec)
-    {
-      if (t1.tv_usec < t2.tv_usec)
-        result = 1;
-    }
-  }
-  return result;
-}
-
 // take changes from server
 // we need changes only, if there is a receiver for our info-messages
+
+/* queue a pre-formatted message */
+int queueMessage(char *msg) {
+    pthread_mutex_lock(&queue_mutex_info);
+    sprintf(info_queue[in], "%s", msg);
+    in++;
+    if (in == QUEUELENGTH_INFO)
+      in = 0;
+    pthread_mutex_unlock(&queue_mutex_info);
+  return SRCP_OK;
+}
 
 int queueInfoGL(int busnumber, int addr, int dir, int speed, int maxspeed, int f,  int f1, int f2, int f3, int f4, struct timeval *akt_time)
 {
@@ -239,10 +233,16 @@ int doInfoClient(int Socket, int sessionid)
     reply[0] = '\0';
 
     DBG(0, DBG_DEBUG, "new Info-client requested %ld", sessionid);
-    for (busnumber = 0; busnumber < MAX_BUSSES; busnumber++)
+    for (busnumber = 1; busnumber <= num_busses; busnumber++)
     {
-
       DBG(busnumber, DBG_DEBUG, "send all data for busnumber %d to new client", busnumber);
+      // first some global bus data
+      infoPower(busnumber, reply);
+      if (strlen(reply) > 0) {
+              write(Socket, reply, strlen(reply));
+      }
+      reply[0] = '\0';
+      
       // send all needed generic locomotivs
       gettimeofday(&start_time, NULL);
       number = get_number_gl(busnumber);
@@ -252,11 +252,10 @@ int doInfoClient(int Socket, int sessionid)
         if(isInitializedGL(busnumber, i))
         {
             infoGL(busnumber, i, reply);
-            if (strlen(reply) > 0)
-            {
+            if (strlen(reply) > 0) {
               write(Socket, reply, strlen(reply));
-              reply[0] = '\0';
             }
+            reply[0] = '\0';
         }
       }
 
@@ -268,14 +267,13 @@ int doInfoClient(int Socket, int sessionid)
       {
         if(isInitializedGA(busnumber, i))
         {
-          DBG(busnumber, DBG_DEBUG, "GA initialized: %d", i);
           infoGA(busnumber, i, 0, reply);
           if (strlen(reply) > 0)
             write(Socket, reply, strlen(reply));
           infoGA(busnumber, i, 1, reply);
-          if (strlen(reply) > 0)
+          if (strlen(reply) > 0) {
             write(Socket, reply, strlen(reply));
-
+          }
           reply[0] = '\0';
         }
       }
@@ -287,28 +285,15 @@ int doInfoClient(int Socket, int sessionid)
       for (i = 1; i <= number; i++)
       {
         int rc = getFB(busnumber, i, &cmp_time, &value);
-        if (rc != SRCP_OK)
-        {
-          // time is modified
-          if (compareTime(cmp_time, start_time))
-          {
-            // last change is before we startet
-            if (value)
-            {
-              char temp[1000];
-              // last change isn't a reset
-              sprintf(temp, "%ld.%ld 100 INFO %d FB %d %d\n", cmp_time.tv_sec, cmp_time.tv_usec/1000, busnumber, i, value);
-              strcat(reply, temp);
-              if (strlen(reply) > 900)
-              {
+        if (rc == SRCP_OK && value!=0) {
+              infoFB(busnumber, i, reply);
+              if(strlen(reply)>0) {
                 write(Socket, reply, strlen(reply));
-                reply[0] = '\0';
-	      }
-            }
-          }
+              }
+              reply[0] = '\0';
         }
       }
-    }
+   }
    DBG(0, DBG_DEBUG,  "all data to new Info-Client (%ld) sent", sessionid);
    current = in;
    while (1==1)   {

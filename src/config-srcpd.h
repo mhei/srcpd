@@ -64,6 +64,7 @@ typedef struct _BUS
   int watchdog;    // used to monitor the thread
   int power_state;
   int power_changed;
+  struct timeval power_change_time;
   char power_msg[100];
   char description[100]; // bus description
   /* driver specific */

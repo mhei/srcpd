@@ -215,10 +215,10 @@ int init_bus_S88(int busnumber)
   int S88PORT = __ddl_s88->port;
   int S88CLOCK_SCALE = __ddl_s88->clockscale;
 #ifdef linux
-  DBG(busnumber, DBG_INFO, "init_bus DDL(Linux) S88%d", busnumber);
+  DBG(busnumber, DBG_INFO, "init_bus DDL(Linux) S88");
 #else
 #ifdef __FreeBSD__
-  DBG(busnumber, DBG_INFO, "init_bus DDL(FreeBSD) S88%d", busnumber);
+  DBG(busnumber, DBG_INFO, "init_bus DDL(FreeBSD) S88");
 #endif
 #endif
   // is the port disabled from user, everything is fine
@@ -371,6 +371,10 @@ void *thr_sendrec_S88(void *v)
     sleepusec = S88REFRESH * 1000;
   while (1)
   {
+    if(busses[busnumber].power_state==0) {
+          usleep(1000);
+          continue;
+    }
     usleep(sleepusec);
     s88load(busnumber);
   }
