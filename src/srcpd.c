@@ -103,11 +103,10 @@ int main(int argc, char **argv)
   struct _THREADS cmds;
   install_signal_handler();
 
-#ifdef __FreeBSD__
-  strcpy(conffile, "/usr/local/etc/srcpd.conf");
-#else
-  strcpy(conffile, "/etc/srcpd.conf");
-#endif
+  // MAM 01/13/03 Pfad wird von Automake erzeugt
+  //
+  sprintf(conffile, "%s/etc/srcpd.conf",PREFIX);
+
   /* Parameter auswerten */
   opterr=0;
   while((c=getopt(argc, argv, "f:hv")) != EOF)
