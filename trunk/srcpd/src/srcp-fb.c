@@ -306,9 +306,9 @@ void check_reset_fb(int busnumber)
           DBG(busnumber, DBG_DEBUG, "set %d feedback to 0", reset_fb.port);
           unqueueNextFB(busnumber);
           pthread_mutex_lock(&queue_mutex_fb);
-          fb[busnumber].fbstate[reset_fb.port].state = 0;
-//          fb[i].fbstate[reset_fb.port].timestamp = fb[i].fbstate[reset_fb.port].timestamp;
-          fb[busnumber].fbstate[reset_fb.port].change = 0;
+          fb[i].fbstate[reset_fb.port].state = 0;
+          fb[i].fbstate[reset_fb.port].timestamp = reset_fb.timestamp;
+          fb[i].fbstate[reset_fb.port].change = 0;
           pthread_mutex_unlock(&queue_mutex_fb);
           queueInfoFB(busnumber, reset_fb.port + 1);
         }
