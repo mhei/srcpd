@@ -11,12 +11,20 @@
 #define _I2C_DEV_H
 
 typedef struct _I2CDEV_DATA {
+	
     int number_ga;
 	int first_ga_bus;
 	int last_ga_bus;
-    int number_gl;
-    int number_fb;
+	int port_swap;
+ 
+ 	int number_gl;
+	
+	int number_fb;
+	int first_fb_bus;
+	int last_fb_bus;
+ 
 	int ga_min_active_time;
+	
 } I2CDEV_DATA;
 
 void readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, int busnumber);
@@ -28,5 +36,6 @@ void* thr_sendrec_I2C_DEV(void *);
 
 // helper functions
 void reset_ga(int busnumber, int busfd);
+void select_bus(int mult_busnum, int busfd, int busnumber);
 
 #endif
