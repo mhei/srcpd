@@ -92,12 +92,11 @@ int main(int argc, char **argv)
   int error, i;
   int sleep_ctr;
   pid_t pid;
-  char c, *conffile;
+  char c, conffile[MAXPATHLEN];
   pthread_t ttid_cmd, ttid_clock, ttid_pid;
   struct _THREADS cmds;
   install_signal_handler();
 
-  conffile = malloc(strlen(PREFIX+12));
   sprintf(conffile, "%s/srcpd.conf", PREFIX);
 
   /* Parameter auswerten */
@@ -107,9 +106,8 @@ int main(int argc, char **argv)
     switch(c)
     {
       case 'f':
-        free(conffile);
-        conffile = malloc(strlen(optarg)+1);
-        strcpy(conffile, optarg);
+        if(strlen(optarg)<MAXPATHLEN-1)
+		strcpy(conffile, optarg);
         break;
       case 'v':
         printf("srcpd version 2.0, speaks SRCP between 0.7 and 0.8, do not use!\n");
@@ -130,14 +128,16 @@ int main(int argc, char **argv)
     }
   }
 
+  openlog("srcpd", LOG_CONS, LOG_USER);
+  syslog(LOG_INFO, "%s", WELCOME_MSG);
+
   startup_GL();
   startup_GA();
   startup_FB();
 
-  // zuerst die Konfigurationsdatei lesen
+    // zuerst die Konfigurationsdatei lesen
   printf("conffile = \"%s\"\n", conffile);
-  openlog("srcpd", LOG_CONS, LOG_USER);
-  syslog(LOG_INFO, "%s", WELCOME_MSG);
+  printf("HALLOHALLO");
 
   readConfig(conffile);
   // check for resolv all needed malloc's
