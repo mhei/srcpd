@@ -15,6 +15,7 @@
 /* Lokdekoder */
 struct _GLSTATE
 {
+  int state ;   /* 0==dead, 1==living, 2==terminating */
   char protocol;
   int protocolversion;
   int n_func;
@@ -40,7 +41,7 @@ int startup_GL(void);
 int init_GL(int busnumber, int number);
 int get_number_gl(int busnumber);
 
-int queueGL(int busnumber, int addr, int dir, int speed, int maxspeed, int f, ...);
+int queueGL(int busnumber, int addr, int dir, int speed, int maxspeed, int f);
 int queue_GL_isempty(int busnumber);
 int unqueueNextGL(int busnumber, struct _GLSTATE *l);
 
