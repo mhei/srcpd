@@ -37,8 +37,8 @@ typedef struct _DDL_S88_DATA {
 
 void readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber);
 
-int init_bus_S88();
-int term_bus_S88();
+int init_bus_S88(int);
+int term_bus_S88(int);
 void * thr_sendrec_S88(void *);
 
 

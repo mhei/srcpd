@@ -11,6 +11,7 @@
 #include <libxml/tree.h>
 #include <syslog.h>
 #include "config-srcpd.h"
+#include "srcp-error.h"
 
 int server_reset_state;
 int server_shutdown_state;
@@ -75,6 +76,9 @@ startup_SERVER(void)
   return 0;
 }
 
+int describeSERVER(int bus, int addr, char *reply) {
+   return SRCP_NOTSUPPORTED;
+}
 int
 init_bus_server(int bus)
 {

@@ -20,4 +20,7 @@
 
 int startup_SESSION(void);
 
+int start_session(long int sessionid, int mode);
+int stop_session(long int sessionid);
+int describeSESSION(int bus, int sessionid, char *reply);
 #endif

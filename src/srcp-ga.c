@@ -28,6 +28,8 @@
 #include "srcp-error.h"
 
 #include "m605x.h"
+#include "ib.h"
+#include "loopback.h"
 
 #define QUEUELEN 500
 
@@ -43,9 +45,24 @@ static int out[MAX_BUSSES], in[MAX_BUSSES];
 static int queue_len(int bus);
 static int queue_isfull(int bus);
 
-/* Übernehme die neuen Angaben für die Lok, einige wenige Prüfungen */
-int
-queueGA(int bus, int addr, int port, int action, long int activetime)
+static int get_number_ga (int bus) {
+  int number_ga = -1;
+  switch (busses[bus].type) {
+    case SERVER_M605X:
+        number_ga =   ( (M6051_DATA *) busses[bus].driverdata)  -> number_ga;
+        break;
+    case SERVER_IB:
+        number_ga =   ( (IB_DATA *) busses[bus].driverdata)  -> number_ga;
+        break;
+    case SERVER_LOOPBACK:
+        number_ga =   ( (LOOPBACK_DATA *) busses[bus].driverdata)  -> number_ga;
+        break;
+ }
+ return number_ga;
+}
+
+/* Übernehme die neuen Angaben für die Weiche, einige wenige Prüfungen */
+int queueGA(int bus, int addr, int port, int action, long int activetime)
 {
   struct timeval akt_time;
   int number_ga;
@@ -175,9 +192,22 @@ setGA(int bus, int addr, struct _GA l)
   }
 }
 
-int
-infoGA(int bus, int addr, char* msg)
-{
+int describeGA(int bus, int addr, char *msg) {
+  int number_ga = get_number_ga(bus);
+
+  if(number_ga<0) return SRCP_UNSUPPORTEDDEVICEGROUP;
+
+  if((addr>0) && (addr <= number_ga) && (ga[bus][addr].protocol) ) {
+    sprintf(msg, "%d GA %d %s",
+      bus, addr, ga[bus][addr].protocol);
+  } else {
+    strcpy(msg, "");
+    return SRCP_NODATA;
+  }
+  return SRCP_INFO;
+}
+
+int infoGA(int bus, int addr, char* msg) {
   int number_ga;
   if(busses[bus].type == SERVER_M605X) {
     number_ga =   ( (M6051_DATA *) busses[bus].driverdata)  -> number_ga;
@@ -197,15 +227,36 @@ infoGA(int bus, int addr, char* msg)
   return SRCP_INFO;
 }
 
-int
-cmpga(struct _GA a, struct _GA b)
-{
-  return ((a.action == b.action) && (a.port == b.port));
+int lockGA(int bus, int addr, long int sessionid) {
+  return SRCP_NOTSUPPORTED;
 }
 
-int
-startup_GA(void)
-{
+int getlockGA(int bus, int addr, long int sessionid) {
+  return SRCP_NOTSUPPORTED;
+}
+
+
+int unlockGA(int bus, int addr, int sessionid) {
+  if(ga[bus-1][addr].locked_by==sessionid) {
+    ga[bus-1][addr].locked_by = 0;
+    return SRCP_OK;
+  } else {
+         return SRCP_DEVICELOCKED;
+  }
+}
+
+void unlock_ga_bysessionid(long int sessionid){
+  int i,j;
+  for(i=0; i<MAX_BUSSES; i++) {
+       for(j=0;j<MAXGAS; j++) {
+           if(ga[i][j].locked_by == sessionid) {
+                         unlockGA(i+1, j+1, sessionid);
+           }
+       }
+  }
+}
+
+int startup_GA(void){
   int bus;
   for(bus=0; bus<MAX_BUSSES; bus++)
   {

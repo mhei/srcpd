@@ -27,6 +27,7 @@ struct _GL
   int direction;/* 0/1/2                                    */
   char funcs;   /* F1..F4, F                                */
   struct timeval tv; /* Last time of change                 */
+  long int locked_by;
 };
 
 int startup_GL(void);
@@ -43,6 +44,9 @@ int describeGL(int bus, int addr, char *msg);
 int initGL(int bus, int addr, const char *protocol, int protoversion, int n_fs, int n_func);
 int termGL(int bus, int addr);
 
-int cmpGL(struct _GL a, struct _GL b);
-int calcspeed(int vs, int vmax, int n_fs);
+int lockGL(int bus, int addr, long int sessionid);
+int getlockGL(int bus, int addr, long int sessionid);
+int unlockGL(int bus, int addr, long int sessionid);
+void unlock_gl_bysessionid(long int sessionid);
+
 #endif

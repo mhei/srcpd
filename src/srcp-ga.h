@@ -25,8 +25,7 @@ struct _GA
   long activetime;      /* Aktivierungszeit in msec bis das 32 Kommando kommen soll */
   struct timeval tv[MAXGAPORT]; /* Zeitpunkt der letzten Aktivierungen, ein Wert pro Port   */
   struct timeval t;     /* Auschaltzeitpunkt */
-  long int lockid;     /* wer hält den Lock? */
-
+  long int locked_by;     /* wer hält den Lock? */
 };
 
 int startup_GA(void);
@@ -38,7 +37,12 @@ int queue_GA_isempty(int bus);
 int getGA(int bus, int addr, struct _GA *a);
 int setGA(int bus, int addr, struct _GA a);
 void initGA(int bus, int addr, struct _GA a);
+int describeGA(int bus, int addr, char *msg);
 int infoGA(int bus, int addr, char* msg);
 int cmpGA(struct _GA a, struct _GA b);
 
+int lockGA(int bus, int addr, long int sessionid);
+int getlockGA(int bus, int addr, long int sessionid);
+int unlockGA(int bus, int addr, int sessionid);
+void unlock_ga_bysessionid(long int);
 #endif

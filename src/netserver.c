@@ -29,6 +29,7 @@
 #include "srcp-gl.h"
 #include "srcp-power.h"
 #include "srcp-srv.h"
+#include "srcp-session.h"
 #include "netserver.h"
 #include "m605x.h"
 
@@ -93,20 +94,15 @@ socket_writereply(int socket, int srcpcode, const char *line)
  *********************
  */
 
-long int ClientID = 1;
-pthread_mutex_t ClientID_mut = PTHREAD_MUTEX_INITIALIZER;
+long int SessionID = 1;
+pthread_mutex_t SessionID_mut = PTHREAD_MUTEX_INITIALIZER;
 
-void*
-thr_doClient(void *v)
+void * thr_doClient(void *v)
 {
   int socket = (int) v;
   char line[1000], cmd[1000], setcmd[1000], parameter[1000], reply[1000];
   int mode = COMMAND;
-  long int clientid, rc;
-
-  pthread_mutex_lock(&ClientID_mut);
-  clientid = ClientID++;
-  pthread_mutex_unlock(&ClientID_mut);
+  long int sessionid, rc;
 
   if (write(socket, WELCOME_MSG, strlen(WELCOME_MSG)) < 0)
   {
@@ -128,7 +124,11 @@ thr_doClient(void *v)
     sscanf(line, "%s %1000c", cmd, parameter);
     if (strncasecmp(cmd, "GO", 2) == 0)
     {
-      sprintf(reply, "GO %ld", clientid);
+      pthread_mutex_lock(&SessionID_mut);
+      sessionid = SessionID++;
+      pthread_mutex_unlock(&SessionID_mut);
+
+      sprintf(reply, "GO %ld", sessionid);
       if (socket_writereply(socket, SRCP_OK_GO, reply) < 0)
       {
         shutdown(socket, 2);
@@ -138,10 +138,16 @@ thr_doClient(void *v)
       switch (mode)
       {
         case COMMAND:
-                      return doCmdClient(socket, clientid);
+                      start_session(sessionid, mode);
+                      rc = doCmdClient(socket, sessionid);
+                      stop_session(sessionid);
+                      return NULL;
                       break;
         case INFO:
-                      return doInfoClient(socket, clientid);
+                      start_session(sessionid, mode);
+                      rc = doInfoClient(socket, sessionid);
+                      stop_session(sessionid);
+                      return NULL;
                       break;
       }
       return NULL;
@@ -180,9 +186,7 @@ thr_doClient(void *v)
   }
 }
 
-int
-handleSET(int clientid, int bus, char *device, char *parameter, char *reply)
-{
+int handleSET(int sessionid, int bus, char *device, char *parameter, char *reply) {
   int rc = 422;
   *reply = 0x00;
   /* es wird etwas gesetzt.. */
@@ -212,6 +216,23 @@ handleSET(int clientid, int bus, char *device, char *parameter, char *reply)
     sscanf(parameter, "%ld %ld %ld %ld %ld %ld", &d, &h, &m, &s, &rx, &ry);
     rc = setTime(d, h, m, s, rx, ry);
   }
+  if(strncasecmp(device, "LOCK", 4) == 0) {
+    long int addr;
+    char devgrp[10];
+    int nelem=-1;
+    if(strlen(parameter)>0)
+        nelem = sscanf(parameter, "%s %ld", devgrp, &addr);
+    if(nelem <= 0) {
+        rc = SRCP_LISTTOOSHORT;
+    } else {
+        rc = SRCP_UNSUPPORTEDDEVICEGROUP;
+        if(strncmp(devgrp, "GL", 2)==0)
+            rc = lockGL(bus, addr, sessionid);
+        if(strncmp(devgrp, "GA", 2)==0)
+            rc = getlockGA(bus, addr, sessionid);
+    }
+  }
+
   if (strncasecmp(device, "POWER", 5) == 0)
   {
     char state[5], msg[256];
@@ -232,7 +253,7 @@ handleSET(int clientid, int bus, char *device, char *parameter, char *reply)
   return rc;
 }
 
-int handleGET(int clientid, int bus, char *device, char *parameter, char *reply) {
+int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply) {
   int rc = 423;
   *reply = 0x00;
   /* es wird etwas abgefragt */
@@ -278,19 +299,43 @@ int handleGET(int clientid, int bus, char *device, char *parameter, char *reply)
     } else {
         if(strncmp(devgrp, "GL", 2)==0)
             rc = describeGL(bus, addr, reply);
+        if(strncmp(devgrp, "GA", 2)==0)
+            rc = describeGA(bus, addr, reply);
+        if(strncmp(devgrp, "FB", 2)==0)
+            rc = describeFB(bus, addr, reply);
+        if(strncmp(devgrp, "SESSION", 7)==0)
+            rc = describeSESSION(bus, addr, reply);
+        if(strncmp(devgrp, "TIME", 4)==0)
+            rc = describeTIME(bus, addr, reply);
+        if(strncmp(devgrp, "SERVER", 6)==0)
+            rc = describeSERVER(bus, addr, reply);
+    }
+  }
+  if(strncasecmp(device, "LOCK", 4) == 0) {
+    long int addr;
+    char devgrp[10];
+    int nelem=-1;
+    if(strlen(parameter)>0)
+        nelem = sscanf(parameter, "%s %ld", devgrp, &addr);
+    if(nelem <= 0) {
+        rc = SRCP_LISTTOOSHORT;
+    } else {
+        rc = SRCP_UNSUPPORTEDDEVICEGROUP;
+        if(strncmp(devgrp, "GL", 2)==0)
+            rc = getlockGL(bus, addr, reply);
+        if(strncmp(devgrp, "GA", 2)==0)
+            rc = getlockGA(bus, addr, reply);
     }
   }
   return rc;
 }
 
-int
-handleRESET(int clientid, int bus, char *device, char *parameter, char *reply)
-{
+int handleRESET(int sessionid, int bus, char *device, char *parameter, char *reply) {
   return SRCP_NOTSUPPORTED;
 }
 
 int
-handleWAIT(int clientid, int bus, char *device, char *parameter, char *reply)
+handleWAIT(int sessionid, int bus, char *device, char *parameter, char *reply)
 {
   int rc=SRCP_OK;
   *reply = 0x00;
@@ -341,7 +386,7 @@ handleWAIT(int clientid, int bus, char *device, char *parameter, char *reply)
 
 /* negative return code will terminate current session! */
 int
-handleTERM(int clientid, int bus, char *device, char *parameter, char *reply)
+handleTERM(int sessionid, int bus, char *device, char *parameter, char *reply)
 {
   int rc = 421;
   *reply = 0x00;
@@ -374,7 +419,7 @@ handleTERM(int clientid, int bus, char *device, char *parameter, char *reply)
   return rc;
 }
 
-int handleINIT(int clientid, int bus, char *device, char *parameter, char *reply) {
+int handleINIT(int sessionid, int bus, char *device, char *parameter, char *reply) {
   int rc = SRCP_NOTSUPPORTED;
   if (strncasecmp(device, "GL", 2) == 0)
   {
@@ -394,13 +439,13 @@ int handleINIT(int clientid, int bus, char *device, char *parameter, char *reply
 }
 
 int
-handleVERIFY(int clientid, int bus, char *device, char *parameter, char *reply)
+handleVERIFY(int sessionid, int bus, char *device, char *parameter, char *reply)
 {
   return SRCP_NOTSUPPORTED;
 }
 
 int
-handleCHECK(int clientid, int bus, char *device, char *parameter, char *reply)
+handleCHECK(int sessionid, int bus, char *device, char *parameter, char *reply)
 {
   return SRCP_NOTSUPPORTED;
 }
@@ -412,8 +457,7 @@ handleCHECK(int clientid, int bus, char *device, char *parameter, char *reply)
  ***************************************************************
  */
 
-void*
-doCmdClient(int socket, int clientid)
+int doCmdClient(int socket, int sessionid)
 {
   char line[1024], reply[4095];
   char command[20], devicegroup[20], parameter[900];
@@ -427,7 +471,7 @@ doCmdClient(int socket, int clientid)
     {
       shutdown(socket, 0);
       close(socket);
-      return NULL;
+      return -1;
     }
     memset(command, 0, sizeof(command));
     memset(devicegroup, 0, sizeof(devicegroup));
@@ -437,34 +481,34 @@ doCmdClient(int socket, int clientid)
     rc = 412;
     if (strncasecmp(command, "SET", 3) == 0)
     {
-      rc = handleSET(clientid, bus, devicegroup, parameter, reply);
+      rc = handleSET(sessionid, bus, devicegroup, parameter, reply);
     }
     if (strncasecmp(command, "GET", 3) == 0)
     {
-      rc = handleGET(clientid, bus, devicegroup, parameter, reply);
+      rc = handleGET(sessionid, bus, devicegroup, parameter, reply);
     }
     if (strncasecmp(command, "WAIT", 4) == 0)
     {
-      rc = handleWAIT(clientid, bus, devicegroup, parameter, reply);
+      rc = handleWAIT(sessionid, bus, devicegroup, parameter, reply);
     }
     if (strncasecmp(command, "INIT", 4) == 0)
     {
-      rc = handleINIT(clientid, bus, devicegroup, parameter, reply);
+      rc = handleINIT(sessionid, bus, devicegroup, parameter, reply);
     }
     if (strncasecmp(command, "TERM", 4) == 0)
     {
-      rc = handleTERM(clientid, bus, devicegroup, parameter, reply);
+      rc = handleTERM(sessionid, bus, devicegroup, parameter, reply);
       if(rc < 0) 
         break;
       rc = abs(rc);
     }
     if (strncasecmp(command, "VERIFY", 6) == 0)
     {
-      rc = handleVERIFY(clientid, bus, devicegroup, parameter, reply);
+      rc = handleVERIFY(sessionid, bus, devicegroup, parameter, reply);
     }
     if (strncasecmp(command, "RESET", 5) == 0)
     {
-      rc = handleRESET(clientid, bus, devicegroup, parameter, reply);
+      rc = handleRESET(sessionid, bus, devicegroup, parameter, reply);
     }
     if (socket_writereply(socket, rc, reply) < 0)
     {
@@ -473,12 +517,10 @@ doCmdClient(int socket, int clientid)
   }
   shutdown(socket, 2);
   close(socket);
-  return NULL;
+  return 0;
 }
 
-void*
-doInfoClient(int socket, int clientid)
-{
+int doInfoClient(int socket, int sessionidid){
   char reply[1000];
   while (1)
   {

@@ -34,5 +34,6 @@ int term_bus_server(int);
 void server_reset(void);
 void server_shutdown(void);
 
+int describeSERVER(int bus, int addr, char *reply);
 #endif
 
