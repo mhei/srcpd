@@ -55,22 +55,35 @@ void writeByte(int bus, unsigned char *b, unsigned long msecs)
   if(busses[bus].debuglevel <= DBG_DEBUG)
   {
 #ifdef __FreeBSD__
-	if (busses[bus].type == SERVER_M605X)
+	if (busses[bus].type == SERVER_M605X && busses[bus].flags & USE_WATCHDOG)
 	{
 		// gucken, ob RTS&CTS an sind, wenn nicht, schlafen legen
 		int State;
 		int ok=0;
+		int SleepTime=0;
 
 		do
 		{
 			ioctl(busses[bus].fd,TIOCMGET,&State);
 			if ( (State & TIOCM_RTS)== 0 || (State & TIOCM_CTS) == 0)
 			{
-				//DBG(bus,DBG_INFO,"bus %d output not possible. Sleeping...",bus);
+				if (SleepTime==5) DBG(bus,DBG_ERROR,"bus %d output staled for more than five seconds. Assuming interface went down.",bus);
+				busses[bus].watchdog++; // calm down watchdog
+				SleepTime++;
 				sleep(1);
 			}
 			else ok=1;
 		} while (ok == 0);
+		//
+		// wenn wir laenger als 10s warten mussten, dann stimmt was
+		// nicht mit der Anlage. Lassen wir den watchdog unseren
+		// Thread neu starten und kommen so wieder in einen
+		// sauberen Status
+		if (SleepTime > 10 )
+		{
+			DBG(bus,DBG_INFO,"bus %d write was blocked for %d seconds. Thread will terminate and restart soon",bus,SleepTime);
+			while(1) { sleep(10); }
+		}
 	}
 #endif
     write(busses[bus].fd, b, 1);
