@@ -42,12 +42,20 @@ int cmpTime(struct timeval *t1, struct timeval *t2)
 	int result;
 
 	result = 0;
-	if(t1->tv_sec > t2->tv_sec)
+	if(t2->tv_sec > t1->tv_sec)
+	{
 		result = 1;
+	}
 	else
-		if(t1->tv_sec == t2->tv_sec)
-			if(t1->tv_usec > t2->tv_usec)
+	{
+		if(t2->tv_sec == t1->tv_sec)
+		{
+			if(t2->tv_usec > t1->tv_usec)
+			{
 				result = 1;
+			}
+		}
+	}
 	return result;
 }
 

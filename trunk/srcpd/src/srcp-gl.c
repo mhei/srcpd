@@ -13,10 +13,11 @@
  */
 
 
-#include <sys/time.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <syslog.h>
+#include <sys/time.h>
 
 #include "config-srcpd.h"
 #include "srcp-gl.h"
@@ -48,68 +49,81 @@ void setGL(char *prot, int addr, int dir, int speed, int maxspeed, int f,
 	  n_fs = 28;
   }
   else
+  {
     if(strncasecmp(prot, "M5", 2) == 0)
     {
 	    n_fs = 27;
     }
     else
+    {
       if(strncasecmp(prot, "N1", 2) == 0)
       {
 	      n_fs = 28;
       }
       else
+      {
         if(strncasecmp(prot, "N2", 2) == 0)
         {
         	n_fs = 128;
         }
         else
+        {
           if(strncasecmp(prot, "N3", 2) == 0)
           {
           	n_fs = 28;
           }
           else
+          {
             if(strncasecmp(prot, "N4", 2) == 0)
             {
             	n_fs = 128;
             }
+          }
+        }
+      }
+    }
+  }
+  syslog(LOG_INFO, "in setGL für %i", addr);
 
   /* Daten einfüllen, aber nur, wenn id == 0!!, darauf warten wir max. 1 Sekunde */
   if((addr > 0) && (addr < MAXGLS_SERVER[working_server]))
   {
-    for(i=0;i<100;i++)
+    for(i=0;i<1000;i++)
     {
     	if(sending_gl == 0)
     		break;
-    	usleep(10);
+    	usleep(100);
     }
 
   	for(i=0;i<50;i++)
 	  {
-	  	if((ngl[i].id = addr))
+	  	if(ngl[i].id == addr)
 	  	{
 	  		ngl[i].id = 0;
 	  	  break;
 	  	}
 	  }
-	  if(i==50)
+	  if(i == 50)
+	  {
 	  	for(i=0;i<50;i++)
 		  {
-	  		if((ngl[i].id == 0))
+	  		if(ngl[i].id == 0)
 	  	  	break;
 	  	}
-
-    if(i<50)
+    }
+    if(i < 50)
     {
-	    strcpy((void*)ngl[addr].prot, prot);
+	    strcpy((void*)ngl[i].prot, prot);
 			ngl[i].speed     = speed;
 			ngl[i].maxspeed  = maxspeed;
 			ngl[i].direction = dir;
 			ngl[i].n_fkt     = n_fkt;
 			ngl[i].flags     = f1 + (f2 << 1) + (f3 << 2) + (f4 << 3) + (f << 4);
-	    ngl[addr].n_fs   = n_fs;
+	    ngl[i].n_fs      = n_fs;
 	    gettimeofday(&akt_time, NULL);
-		  ngl[addr].tv     = akt_time;
+		  ngl[i].tv        = akt_time;
 			ngl[i].id 			 = addr;
+      syslog(LOG_INFO, "GL %i Position %i", addr, i);
 			commands_gl = 1;
 		}
 	}
