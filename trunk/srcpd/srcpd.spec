@@ -2,7 +2,7 @@ Summary: srcpd is a server daemon to control (some) digital model railroads
 Name: srcpd
 Version: 2.0
 Release: 2
-Source0: %{name}-%{version}.tar.gz
+Source0: %{name}-%{version}-%{release}.tar.gz
 License: GPL
 Group: Games/Daemon
 Packager: Matthias Trute <mtrute@users.sf.net>
@@ -20,9 +20,11 @@ More information about SRCP and links to many really cool clients (and
 other servers for different hardware) can be found at 
 http://srcpd.sourceforge.net and http://www.der-moba.de/Digital
 
+This is a beta release, do not use for production!
 %prep
 %setup -q
 %build
+make -f Makefile.dist
 ./configure --prefix=/usr --mandir=/usr/share/man --sysconfdir=/etc
 make
 
@@ -31,7 +33,6 @@ make install
 cp rcsrcpd /etc/init.d/srcpd
 chmod 744 /etc/init.d/srcpd
 ln -sf ../../etc/init.d/srcpd /usr/sbin/rcsrcpd
-install -m 644 ibox/README  $RPM_BUILD_ROOT%{_defaultdocdir}/%{name}/ibox/
 
 %post
 #
@@ -46,8 +47,7 @@ fi
 /etc/init.d/srcpd
 /usr/sbin/rcsrcpd
 %config(noreplace) /etc/srcpd.conf
-%doc COPYING AUTHORS README NEWS 
-%doc ibox/
+%doc COPYING AUTHORS README NEWS README.ibox README.freebsd
 
 %preun
 /etc/init.d/srcpd stop
