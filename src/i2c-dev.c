@@ -15,11 +15,12 @@
  *					Copyright:		(c) 2002 by Manuel Borchers <webmaster@matronix.de>
  *
  */
-
 #ifdef linux
+
 #include "stdincludes.h"
 #include "i2c-dev.h"
 #include <linux/i2c-dev.h>
+
 // we have to use kernel-headers directly, sorry!
 #include <math.h>
 // needed for pow()
