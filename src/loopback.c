@@ -27,7 +27,7 @@ void readconfig_loopback(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   busses[busnumber].term_func = &term_bus_Loopback;
   busses[busnumber].thr_func = &thr_sendrec_Loopback;
   busses[busnumber].driverdata = malloc(sizeof(struct _LOOPBACK_DATA));
-  strcpy(busses[busnumber].description, "GA GL FB POWER LOCK");
+  strcpy(busses[busnumber].description, "GA GL FB POWER LOCK DESCRIPTION");
 
   __loopback->number_fb = 0;  /* max 31 */
   __loopback->number_ga = 256;

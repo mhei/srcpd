@@ -27,7 +27,7 @@ void readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   busses[busnumber].term_func = &term_bus_zimo;
   busses[busnumber].thr_func = &thr_sendrec_zimo;
   busses[busnumber].driverdata = malloc(sizeof(struct _zimo_DATA));
-  strcpy(busses[busnumber].description, "GA GL POWER LOCK");
+  strcpy(busses[busnumber].description, "GA GL POWER LOCK DESCRIPTION");
 
   __zimo->number_fb = 0;  /* max 31 */
   __zimo->number_ga = 256;
@@ -128,7 +128,7 @@ int init_bus_zimo(int i)
 void* thr_sendrec_zimo (void *v)
 {
   struct _GLSTATE gltmp, glakt;
-  struct _GASTATE gatmp;
+  struct _GASTATE gatmp, gaakt;
   int addr, temp, i;
   int bus = (int) v;
   char msg[20];  
@@ -153,7 +153,7 @@ void* thr_sendrec_zimo (void *v)
 	msg[i]=rr;
 	msg[i+1]=0x00;
     }
-    DBG(bus, DBG_INFO, "status response: %s ", msg);
+    DBG(bus, DBG_DEBUG, "status response: %s ", msg);
 
     if(busses[bus].power_state==0) {
           usleep(1000);
@@ -167,7 +167,7 @@ void* thr_sendrec_zimo (void *v)
         addr = gltmp.id;
         getGL(bus, addr, &glakt);
         databyte1 = (gltmp.direction?0:32);
-	databyte1 |= (gltmp.funcs & 0x10) ? 16 : 0;
+        databyte1 |= (gltmp.funcs & 0x10) ? 16 : 0;
         if(glakt.n_fs == 128)
           databyte1 |= 12;
         if(glakt.n_fs == 28)
@@ -180,22 +180,36 @@ void* thr_sendrec_zimo (void *v)
         sprintf(msg, "F%c%02X%02X%02X%02X%02X%c", glakt.protocol, addr, gltmp.speed, databyte1, databyte2, databyte3, 13);
         DBG(bus, DBG_DEBUG, "%s", msg);
         writeString(bus, msg, 0);
-	ioctl(busses[bus].fd, FIONREAD, &temp);
-	while (temp > 0)  {
-	    char rr;
+        ioctl(busses[bus].fd, FIONREAD, &temp);
+        while (temp > 0)  {
+            char rr;
     	    readByte(bus, 0, &rr);
     	    ioctl(busses[bus].fd, FIONREAD, &temp);
     	    DBG(bus, DBG_INFO, "ignoring unread byte: %d (%c)", rr, rr);
-	}
-        setGL(bus, addr, gltmp);
+       }
+       setGL(bus, addr, gltmp);
     }
     busses[bus].watchdog = 4;
     if (!queue_GA_isempty(bus)) {
+          unsigned char databyte, address;
           unqueueNextGA(bus, &gatmp);
           addr = gatmp.id;
-          if(gatmp.action == 1) {
-            gettimeofday(&gatmp.tv[gatmp.port], NULL);
-          }
+          getGA(bus, addr, &gaakt);
+          // "M(N|M|Z)<addr><databyte>#13"
+          databyte = (addr % 4)+1 + (gatmp.action?8:0);
+          address  = addr / 4 + 1;
+          DBG(bus,DBG_INFO, "Protocol= %c, modul=%d, databyte=%d: ein/aus=%d subadresse=%d port=%d ", gaakt.protocol, address, databyte,
+            gatmp.action, (addr % 4)+1, gatmp.port);
+          sprintf(msg, "M%c%02X%02X%c", gaakt.protocol, address, databyte, 13);
+          DBG(bus, DBG_INFO, "%s", msg);
+          writeString(bus, msg, 0);
+        ioctl(busses[bus].fd, FIONREAD, &temp);
+        while (temp > 0)  {
+            char rr;
+    	    readByte(bus, 0, &rr);
+    	    ioctl(busses[bus].fd, FIONREAD, &temp);
+    	    DBG(bus, DBG_INFO, "ignoring unread byte: %d (%c)", rr, rr);
+       }
           setGA(bus, addr, gatmp);
           busses[bus].watchdog = 6;
     }

@@ -45,7 +45,7 @@ void readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     busses[busnumber].term_func = &term_bus_I2C_DEV;
     busses[busnumber].thr_func = &thr_sendrec_I2C_DEV;
     busses[busnumber].driverdata = malloc(sizeof(struct _I2CDEV_DATA));
-    strcpy(busses[busnumber].description, "GA POWER");
+    strcpy(busses[busnumber].description, "GA POWER DESCRIPTION");
 
     __i2cdev->number_fb = 0;
     __i2cdev->number_ga = 64;

@@ -1,3 +1,86 @@
+2003-08-07 11:25  mborchers
+
+	* i2c-dev.c: [no log message]
+
+2003-08-07 11:21  mborchers
+
+	* i2c-dev.h: small cleanup
+
+2003-08-07 11:11  mborchers
+
+	* i2c-dev.c: first changes to support new hardware modules
+
+2003-08-07 10:58  mborchers
+
+	* i2c-dev.h: first changes for new hardware
+
+2003-07-19 17:48  mtrute
+
+	* srcp-srv.c, srcp-srv.h, threads.c: Added listenip config
+	parameter to specify IP adress the server listenes on
+
+2003-06-03 13:58  mborchers
+
+	* i2c-dev.c: catch port and value settings above 1 for SET GA
+
+2003-06-01 21:26  schmischi
+
+	* hsi-88.c, ib.c, ib.h, io.c, srcp-ga.c, srcpd.kdevprj: [no log
+	message]
+
+2003-05-24 17:53  schmischi
+
+	* .cvsignore: [no log message]
+
+2003-05-24 17:48  schmischi
+
+	* aclocal.m4, config-srcpd.h, config.h.in, configure, hsi-88.c,
+	ib.c, io.c, srcp-fb.c, srcp-ga.h, srcp-power.c, srcpd.kdevprj: show
+	emergency-states of IB
+
+2003-05-18 19:35  schmischi
+
+	* ib.c, ib.h, srcp-info.c, srcp-info.h: send changes in power-state
+	to clients
+
+2003-05-18 19:33  schmischi
+
+	* hsi-88.c: remove POWER from description
+
+2003-04-25 16:01  mtrute
+
+	* m605x.c: Wrong initialization with newer linux Kernel (2.4.x)
+
+2003-04-25 16:01  mtrute
+
+	* io.c: Minor Bugfixes
+
+2003-04-15 17:37  mtrute
+
+	* Makefile.in: more convenient for hackes..
+
+2003-04-15 17:35  mtrute
+
+	* ChangeLog, Makefile.am, aclocal.m4, config-srcpd.h, config.h.in,
+	configure, zimo.c, zimo.h: added driver for zimo mx1, only POWER
+	and some of the GL implemented, more to come...
+
+2003-04-15 17:32  mtrute
+
+	* rcsrcpd: newer SuSEn without /etc/rc.config
+
+2003-04-15 17:31  mtrute
+
+	* srcp-srv.c, config-srcpd.c, srcp-descr.c, srcp-gl.h, hsi-88.c,
+	ib.c, srcp-ga.h, i2c-dev.c, m605x.c, netserver.c, srcp-gl.c,
+	srcp-ga.c, io.c, io.h: API Umbauten
+
+2003-02-26 09:10  mamba123
+
+	* netserver.c: 
+	bei eingabe eines unbekannten befehls kam keine fehlermeldung.	nun
+	wird "ERROR unkown command" ausgegeben.
+
 2003-02-22 16:06  mtrute
 
 	* AUTHORS, ChangeLog: added Franz
@@ -923,12 +1006,7 @@
 
 2002-02-10 18:23  schmischi
 
-	* srcpd.kdevses: file srcpd.kdevses was initially added on branch
-	RELEASE_1_MAINTENANCE.
-
-2002-02-10 18:23  schmischi
-
-	* .cvsignore: file .cvsignore was initially added on branch
+	* srcpd.kdevprj: file srcpd.kdevprj was initially added on branch
 	RELEASE_1_MAINTENANCE.
 
 2002-02-10 18:23  schmischi
@@ -937,12 +1015,47 @@
 
 2002-02-10 18:23  schmischi
 
-	* srcpd.kdevprj: file srcpd.kdevprj was initially added on branch
+	* srcpd.kdevses: file srcpd.kdevses was initially added on branch
+	RELEASE_1_MAINTENANCE.
+
+2002-02-10 18:23  schmischi
+
+	* .cvsignore: file .cvsignore was initially added on branch
 	RELEASE_1_MAINTENANCE.
 
 2002-02-10 18:12  schmischi
 
 	* ddl-s88.h: file ddl-s88.h was initially added on branch
+	RELEASE_1_MAINTENANCE.
+
+2002-02-10 18:12  schmischi
+
+	* ddl-s88.c: file ddl-s88.c was initially added on branch
+	RELEASE_1_MAINTENANCE.
+
+2002-02-10 18:12  schmischi
+
+	* pv.h: file pv.h was initially added on branch
+	RELEASE_1_MAINTENANCE.
+
+2002-02-10 18:12  schmischi
+
+	* hsi-88.h: file hsi-88.h was initially added on branch
+	RELEASE_1_MAINTENANCE.
+
+2002-02-10 18:12  schmischi
+
+	* ibox/ibox.h: file ibox.h was initially added on branch
+	RELEASE_1_MAINTENANCE.
+
+2002-02-10 18:12  schmischi
+
+	* hsi-88.c: file hsi-88.c was initially added on branch
+	RELEASE_1_MAINTENANCE.
+
+2002-02-10 18:12  schmischi
+
+	* pv.c: file pv.c was initially added on branch
 	RELEASE_1_MAINTENANCE.
 
 2002-02-10 18:12  schmischi
@@ -953,7 +1066,7 @@
 
 2002-02-10 18:12  schmischi
 
-	* hsi-88.h: file hsi-88.h was initially added on branch
+	* li100.c: file li100.c was initially added on branch
 	RELEASE_1_MAINTENANCE.
 
 2002-02-10 18:12  schmischi
@@ -963,12 +1076,7 @@
 
 2002-02-10 18:12  schmischi
 
-	* pv.c: file pv.c was initially added on branch
-	RELEASE_1_MAINTENANCE.
-
-2002-02-10 18:12  schmischi
-
-	* li100.c: file li100.c was initially added on branch
+	* ibox/Makefile: file Makefile was initially added on branch
 	RELEASE_1_MAINTENANCE.
 
 2002-02-10 18:12  schmischi
@@ -978,7 +1086,7 @@
 
 2002-02-10 18:12  schmischi
 
-	* ibox/Makefile: file Makefile was initially added on branch
+	* li100.h: file li100.h was initially added on branch
 	RELEASE_1_MAINTENANCE.
 
 2002-02-10 18:12  schmischi
@@ -988,32 +1096,7 @@
 
 2002-02-10 18:12  schmischi
 
-	* pv.h: file pv.h was initially added on branch
-	RELEASE_1_MAINTENANCE.
-
-2002-02-10 18:12  schmischi
-
 	* ibox/mkibox.sh: file mkibox.sh was initially added on branch
-	RELEASE_1_MAINTENANCE.
-
-2002-02-10 18:12  schmischi
-
-	* li100.h: file li100.h was initially added on branch
-	RELEASE_1_MAINTENANCE.
-
-2002-02-10 18:12  schmischi
-
-	* ibox/ibox.h: file ibox.h was initially added on branch
-	RELEASE_1_MAINTENANCE.
-
-2002-02-10 18:12  schmischi
-
-	* ddl-s88.c: file ddl-s88.c was initially added on branch
-	RELEASE_1_MAINTENANCE.
-
-2002-02-10 18:12  schmischi
-
-	* hsi-88.c: file hsi-88.c was initially added on branch
 	RELEASE_1_MAINTENANCE.
 
 2002-02-10 10:31  mtrute
