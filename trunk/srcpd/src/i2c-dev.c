@@ -49,6 +49,8 @@ void readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 
     __i2cdev->number_fb = 0;
     __i2cdev->number_ga = 64;
+	__i2cdev->first_ga_bus = 0;
+	__i2cdev->last_ga_bus = 0;
     __i2cdev->number_gl = 0;
     __i2cdev->ga_min_active_time = 75;
 
@@ -76,6 +78,21 @@ void readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 	    __i2cdev->number_ga = atoi(txt);
 	    free(txt);
 	}
+	
+	if (strcmp(child->name, "first_ga_bus") == 0) {
+	    char *txt =
+		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+	    __i2cdev->first_ga_bus = atoi(txt);
+	    free(txt);
+	}
+	
+	if (strcmp(child->name, "last_ga_bus") == 0) {
+	    char *txt =
+		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+	    __i2cdev->last_ga_bus = atoi(txt);
+	    free(txt);
+	}
+	
 	child = child->next;
     }				// while
 
@@ -98,8 +115,6 @@ void readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 int init_lineI2C_DEV(int bus)
 {
     int FD;
-    int i, end_addr, number_ga, temp;
-    char buf = 0xff;
 
     if (busses[bus].debuglevel > 0) {
 	DBG(bus, DBG_INFO, "Opening i2c-dev: %s", busses[bus].device);
@@ -113,8 +128,23 @@ int init_lineI2C_DEV(int bus)
 	FD = -1;
     } else {
 
-	// reset all GA devices
-	number_ga = (((I2CDEV_DATA *) busses[bus].driverdata)->number_ga);
+		reset_ga(bus, FD);
+
+    }
+
+    return FD;
+
+}
+
+void reset_ga(int busnumber, int busfd) {
+	
+	int i, end_addr, number_ga, temp;
+	int first_ga_bus, last_ga_bus;
+	char buf = 0xff;
+	
+	number_ga = __i2cdev->number_ga;
+	first_ga_bus = __i2cdev->first_ga_bus;
+	last_ga_bus = __i2cdev->last_ga_bus;
 
 	// first PCF 8574 P
 	temp = number_ga;
@@ -123,8 +153,8 @@ int init_lineI2C_DEV(int bus)
 	end_addr = 63 + 2 * temp;
 
 	for (i = 64; i <= end_addr; i++) {
-	    ioctl(FD, I2C_SLAVE, (i >> 1));
-	    write(FD, &buf, 1);
+	    ioctl(busfd, I2C_SLAVE, (i >> 1));
+	    write(busfd, &buf, 1);
 	    i++;
 	}
 
@@ -134,16 +164,12 @@ int init_lineI2C_DEV(int bus)
 	    end_addr = 112 + (2 * (temp - 32));
 
 	    for (i = 112; i <= end_addr; i++) {
-		ioctl(FD, I2C_SLAVE, (i >> 1));
-		write(FD, &buf, 1);
+		ioctl(busfd, I2C_SLAVE, (i >> 1));
+		write(busfd, &buf, 1);
 		i++;
 	    }
 	}
-
-    }
-
-    return FD;
-
+	
 }
 
 int term_bus_I2C_DEV(int bus)
