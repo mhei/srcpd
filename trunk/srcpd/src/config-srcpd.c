@@ -5,9 +5,14 @@
  * Version 2, 1991. (c) Matthias Trute, 2000-2001.
  *
  * 04.07.2001 Frank Schmischke
- *            Einf|hrung der Konfigurationsdatei    
+ *            Einführung der Konfigurationsdatei
  *
  */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,6 +24,10 @@
 /* unveränderliche sind mit const markiert                                     */
 
 int debuglevel = 1; /* stellt die Geschwätzigkeit          */
+
+#ifdef TESTMODE
+int testmode		= 0;
+#endif
 
 /* Anschlußport */
 /* globale Informationen für den Netzwerkanschluß */

@@ -14,10 +14,17 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#include <syslog.h>
 #include <termios.h>
 #include <unistd.h>
 
 #include "io.h"
+
+extern int testmode;
 
 int readByte(int FD, unsigned char *the_byte)
 {
@@ -46,8 +53,15 @@ void writeByte(int FD, unsigned char *b, unsigned long usecs)
 {
 #ifdef TESTMODE
 	syslog(LOG_INFO, "Byte geschrieben : 0x%02x", *b);
-#endif
+	if(testmode == 0)
+	{
+  	write(FD, b, 1);
+	  tcflush(FD, TCOFLUSH);
+	  usleep(usecs);
+	}
+#else	
 	write(FD, b, 1);
 	tcflush(FD, TCOFLUSH);
 	usleep(usecs);
+#endif
 }

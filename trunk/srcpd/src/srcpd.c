@@ -14,6 +14,10 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <fcntl.h>
 #include <pthread.h>
 #include <signal.h>
@@ -52,6 +56,9 @@ extern int io_thread_running;
 extern int working_server;
 extern int use_i8255;
 extern int use_watchdog;
+#ifdef TESTMODE
+extern int testmode;
+#endif
 
 extern char *DEV_COMPORT;
 extern char *DEV_I8255;
@@ -110,7 +117,11 @@ int main(int argc, char **argv)
 
   /* Parameter auswerten */
   opterr=0;
-  while((c=getopt(argc, argv, "f:p:d:h:oS:")) != EOF)
+#ifndef TESTMODE
+  while((c=getopt(argc, argv, "f:p:d:hoS:")) != EOF)
+#else
+  while((c=getopt(argc, argv, "f:p:d:hotS:")) != EOF)
+#endif
   {
 	  switch(c)
 	  {
@@ -130,12 +141,41 @@ int main(int argc, char **argv)
 	      break;
 	    case 'f':
 	      NUMBER_FB = atoi(optarg);
+	      break;
+#ifdef TESTMODE
+			case 't':
+				testmode = 1;
+				break;
+#endif
 	    case 'h':
-	      printf("m6051d -f <nr> -p <Portnummer> -d <Devicepath> -S <I8255-devicepath> -o\n");
+#ifndef TESTMODE
+				printf("srcpd -f <nr> -p <Portnummer> -d <Devicepath> -S <I8255-dev> -o\n");
+#else
+				printf("srcpd -f <nr> -p <Portnummer> -d <Devicepath>  -S <I8255-dev> -o -t\n");
+#endif
+				printf("nr          -  Number of feedback-modules\n");
+				printf("Portnumber  -  first Communicationport via TCP/IP (default: 12345)\n");
+				printf("               Portnumber + 0 = Commandport for SRCP-Commands\n");
+				printf("               Portnumber + 1 = Feedbackport for SRCP-Commands\n");
+				printf("               Portnumber + 2 = Infoport for SRCP\n");
+				printf("Devicepath  -  name of serial port to use (default: /dev/ttyS0)\n");
+        printf("I8255-dev   -  name of port for I8255\n");
+        printf("o           -  use M605X-server in M6020-mode\n");
+#ifdef TESTMODE
+				printf("t           -  start server in testmode (without connection to real interface)\n");
+#endif
 	      exit(1);
 	      break;
+			default:
+				printf("unknown Parameter\n");
+				printf("use: \"srcpd -h\" for help\n");
+				exit(1);
+				break;
 	  }
   }
+
+  openlog("srcpd", LOG_CONS, LOG_USER);
+  syslog(LOG_INFO, "%s", WELCOME_MSG);
 
 	// aktuelle Einstellungen des Com-Ports sichern
 	save_comport(DEV_COMPORT);
@@ -161,8 +201,6 @@ int main(int argc, char **argv)
       }
   }
 
-  openlog("srcpd", LOG_CONS, LOG_USER);
-  syslog(LOG_INFO, "%s", WELCOME_MSG);
   /* forken */
   if((pid=fork())<0)
   {
@@ -230,7 +268,7 @@ int main(int argc, char **argv)
 	    perror("cannot start I8255 Thread!");
 	    exit(1);
     }
-  pthread_detach(ttid_i8255);
+    pthread_detach(ttid_i8255);
   }
 
   tmp_state = 0;
@@ -244,10 +282,11 @@ int main(int argc, char **argv)
 	    pthread_cancel(ttid_info);
 	    pthread_cancel(ttid_iface);
 	    pthread_cancel(ttid_clock);
-	    pthread_cancel(ttid_i8255);
+	    if(use_i8255)
+  	    pthread_cancel(ttid_i8255);
 	    break;
 	  }
-	  io_thread_running = 0;
+	  io_thread_running = use_watchdog - 1;
 	  sleep(2); /* einmal in 2 Sekunden, ist eng?! */
 	
 	  if(io_thread_running==0 || server_reset_state)
