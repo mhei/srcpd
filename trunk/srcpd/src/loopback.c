@@ -62,17 +62,8 @@ int init_bus_Loopback(int i)
 void*
 thr_sendrec_Loopback (void *v)
 {
-  int bus, i, commands_ok, addr;
-  int temp, NUMBER_FB;
-  char c;
-  unsigned char rr;
-  struct _GL gltmp;
-  struct _GA gatmp;
-  unsigned char SendByte;
- 
-  bus = (int) v;
+  int bus = (int) v;
   
-  NUMBER_FB = busses[bus].number_fb;
   syslog(LOG_INFO,"loopback started, bus #%d, %s", bus, busses[bus].device);
 
   busses[bus].watchdog = 1;

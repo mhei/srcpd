@@ -163,11 +163,11 @@ thr_sendrec_HSI_88(void *v)
     // Modulbelegung initialisieren
     byte2send = 's';
     writeByte(fd, &byte2send, 0);
-    byte2send = busses[bus].number_fb[0];
+    byte2send = ( (HSI_S88_DATA *) busses[bus].driverdata)  -> number_fb[0];
     writeByte(fd, &byte2send, 0);
-    byte2send = busses[bus].number_fb[1];
+    byte2send = ( (HSI_S88_DATA *) busses[bus].driverdata)  -> number_fb[1];
     writeByte(fd, &byte2send, 0);
-    byte2send = busses[bus].number_fb[2];
+    byte2send = ( (HSI_S88_DATA *) busses[bus].driverdata)  -> number_fb[2];
     writeByte(fd, &byte2send, 0);
     byte2send = 0x0d;
     writeByte(fd, &byte2send, 0);
@@ -188,9 +188,9 @@ thr_sendrec_HSI_88(void *v)
     readByte(fd, &rr);            // Anzahl angemeldeter Module
     anzahl = (int)rr;
     syslog(LOG_INFO, "Anzahl Module: %i", anzahl);
-    anzahl -= busses[bus].number_fb[0];
-    anzahl -= busses[bus].number_fb[1];
-    anzahl -= busses[bus].number_fb[2];
+    anzahl -= ( (HSI_S88_DATA *) busses[bus].driverdata)  -> number_fb[0];
+    anzahl -= ( (HSI_S88_DATA *) busses[bus].driverdata)  -> number_fb[1];
+    anzahl -= ( (HSI_S88_DATA *) busses[bus].driverdata)  -> number_fb[2];
     if(anzahl == 0)         // HSI initialisation correct ?
     {
       status = 0;

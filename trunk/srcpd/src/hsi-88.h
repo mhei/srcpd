@@ -17,6 +17,11 @@
 #ifndef _HSI_88_H
 #define _HSI_88_H
 
+typedef struct _HSI_S88_DATA {
+    int number_fb[3];
+} HSI_S88_DATA;
+
+
 int init_bus_HSI_88(int);
 int term_bus_HSI_88(int );
 
