@@ -35,8 +35,14 @@ int srcp_fmt_msg(int errorcode, char *msg)
     case 202:
       sprintf(msg, "%d OK PROTOCOL SRCP", errorcode);
       break;
+    case 400:
+        sprintf(msg, "%d ERROR unsupported protocol", errorcode);
+        break;
+    case 401:
+        sprintf(msg, "%d ERROR unsupported connectionmode", errorcode);
+        break;
     case 402:
-        sprintf(msg, "%d ERROR WRONG COMMAND", errorcode);
+        sprintf(msg, "%d ERROR unsufficient data", errorcode);
         break;
     case 410:
       sprintf(msg, "%d ERROR unknown command", errorcode);

@@ -5,15 +5,6 @@
  *
  */
 
-/*
-  changes:
-    22.05.2002 Frank Schmischke
-      - socket_writereply(..)
-          timeval as argument from caller
-
-
- */
-
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
@@ -83,30 +74,32 @@ int socket_readline(int Socket, char *line, int len)
  * noch ganz klar ein schoenwetter code!
  *
  */
-int socket_writereply(int Socket, int srcpcode, const char *line, struct timeval *akt_time)
+int socket_writereply(int Socket, int srcpcode, const char *line, struct timeval *timestamp)
 {
-  char buf[1024];
-  char buf2[511];
+  char *buf=NULL;
   int status;
   if(srcpcode == SRCP_INFO)
   {
+    buf=malloc(strlen(line));
     strcpy(buf, line);
   }
   else
   {
+    char buf2[511];
     srcp_fmt_msg(srcpcode, buf2);
-    sprintf(buf, "%ld.%ld %s %s\n", akt_time->tv_sec, akt_time->tv_usec / 1000, buf2, line);
+    buf=malloc(strlen(buf2)+50+strlen(line));
+    sprintf(buf, "%ld.%ld %s %s\n", timestamp->tv_sec, timestamp->tv_usec / 1000, buf2, line);
   }
   DBG(0, DBG_DEBUG, "socket %d, write %s", Socket, buf);
   status = write(Socket, buf, strlen(buf));
-  DBG(0, DBG_DEBUG, "status from write %d", status);
+  DBG(0, DBG_DEBUG, "status from write: %d", status);
+  free(buf);
   return status;
 }
 
-/******************
- * handles shakehand phase
+/**
+ * Shakehand phase.
  *
- *********************
  */
 
 long int SessionID = 1;
@@ -120,8 +113,9 @@ void *thr_doClient(void *v)
   char line[1000], cmd[1000], setcmd[1000], parameter[1000], reply[1000];
   int mode = COMMAND;
   long int sessionid, rc;
-
+  /* drop root permission for this thread */
   change_privileges(0);
+  
   if (write(Socket, WELCOME_MSG, strlen(WELCOME_MSG)) < 0)
   {
     shutdown(Socket, 2);
@@ -130,7 +124,7 @@ void *thr_doClient(void *v)
   }
   while (1)
   {
-    rc = 402;
+    rc = SRCP_HS_NODATA;
     reply[0] = 0x00;
     memset(cmd, 0, sizeof(cmd));
     if (socket_readline(Socket, line, sizeof(line) - 1) < 0)
@@ -139,36 +133,30 @@ void *thr_doClient(void *v)
       close(Socket);
       return NULL;
     }
-    sscanf(line, "%s %1000c", cmd, parameter);
-    if (strncasecmp(cmd, "GO", 2) == 0)
+    rc = sscanf(line, "%s %1000c", cmd, parameter);
+    if (rc >0 && strncasecmp(cmd, "GO", 2) == 0)
     {
       pthread_mutex_lock(&SessionID_mut);
       sessionid = SessionID++;
-      pthread_mutex_unlock(&SessionID_mut);
-
-      sprintf(reply, "GO %ld", sessionid);
       gettimeofday(&akt_time, NULL);
+      pthread_mutex_unlock(&SessionID_mut);
+      sprintf(reply, "GO %ld", sessionid);
       if (socket_writereply(Socket, SRCP_OK_GO, reply, &akt_time) < 0)
       {
         shutdown(Socket, 2);
         close(Socket);
         return NULL;
       }
-      switch (mode)
-      {
+      start_session(sessionid, mode);
+      switch (mode) {
         case COMMAND:
-                      start_session(sessionid, mode);
                       rc = doCmdClient(Socket, sessionid);
-                      stop_session(sessionid);
-                      return NULL;
                       break;
         case INFO:
-                      start_session(sessionid, mode);
                       rc = doInfoClient(Socket, sessionid);
-                      stop_session(sessionid);
-                      return NULL;
                       break;
       }
+      stop_session(sessionid);
       return NULL;
     }
     if (strncasecmp(cmd, "SET", 3) == 0)
@@ -177,7 +165,7 @@ void *thr_doClient(void *v)
       sscanf(parameter, "%s %1000c", setcmd, p);
       if (strncasecmp(setcmd, "CONNECTIONMODE", 3) == 0)
       {
-        rc = 401;
+        rc = SRCP_HS_WRONGCONNMODE;
         if (strncasecmp(p, "SRCP INFO", 9) == 0)
         {
           mode = INFO;
@@ -193,7 +181,7 @@ void *thr_doClient(void *v)
       }
       if (strncasecmp(setcmd, "PROTOCOL", 3) == 0)
       {
-        rc = 401;
+        rc = SRCP_HS_WRONGPROTOCOL;
         if (strncasecmp(p, "SRCP 0.8", 8) == 0)
         {
           strcpy(reply, "PROTOCOL SRCP");
@@ -206,11 +194,18 @@ void *thr_doClient(void *v)
   }
 }
 
+/**
+ * Core SRCP Commands
+ * handle all aspects of the command for all commands
+ */
+
+/**
+ * SET
+ */
 int handleSET(int sessionid, int bus, char *device, char *parameter, char *reply)
 {
   int rc = SRCP_UNSUPPORTEDDEVICEGROUP;
   *reply = 0x00;
-  /* es wird etwas gesetzt.. */
   if (strncasecmp(device, "GL", 2) == 0)
   {
     long laddr, direction, speed, maxspeed, func, f1, f2, f3, f4;
@@ -303,9 +298,8 @@ int handleSET(int sessionid, int bus, char *device, char *parameter, char *reply
 }
 
 int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply) {
-  int rc = SRCP_UNSUPPORTEDOPERATION;
+  int rc = SRCP_UNSUPPORTEDDEVICEGROUP;
   *reply = 0x00;
-  /* es wird etwas abgefragt */
   if (strncasecmp(device, "FB", 2) == 0)
   {
     long int nelem, port;
@@ -419,14 +413,16 @@ int handleRESET(int sessionid, int bus, char *device, char *parameter, char *rep
 int handleWAIT(int sessionid, int bus, char *device, char *parameter, char *reply)
 {
   struct timeval time;
-  int rc=SRCP_OK;
+  int rc = SRCP_UNSUPPORTEDDEVICEGROUP;
   *reply = 0x00;
-  /* Wir warten.. */
+  /* check, if bus has FB's */
   if (strncasecmp(device, "FB", 2) == 0)
   {
     long int port, waitvalue, aktvalue, timeout;
+    int value;
     sscanf(parameter, "%ld %ld %ld", &port, &waitvalue, &timeout);
-    if (getFB(bus, port, &time) == waitvalue)
+    
+    if (getFB(bus, port, &time, &value) == SRCP_OK && value==waitvalue)
     {
       rc = infoFB(bus, port, reply);
     }
@@ -438,7 +434,7 @@ int handleWAIT(int sessionid, int bus, char *device, char *parameter, char *repl
       {
         /* fprintf(stderr, "waiting %d (noch %d sekunden)\n", port, timeout); */
         usleep(10000);
-        aktvalue = getFB(bus, port, &time);
+        getFB(bus, port, &time, &aktvalue);
         timeout--;
       }
       while (timeout >= 0 && aktvalue != waitvalue);
@@ -456,7 +452,7 @@ int handleWAIT(int sessionid, int bus, char *device, char *parameter, char *repl
   {
     unsigned long d, h, m, s;
     sscanf(parameter, "%ld %ld %ld %ld", &d, &h, &m, &s);
-    /* es wird nicht gerechnet!, der Zeitfluﬂ nicht gleichm‰ﬂig! */
+    /* es wird nicht gerechnet!, der Zeitfluﬂ ist nicht gleichm‰ﬂig! */
     while (d < vtime.day && h < vtime.hour && m < vtime.min && s < vtime.sec)
     {
       usleep(1000);  /* wir warten 1ms realzeit.. */

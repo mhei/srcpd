@@ -14,7 +14,10 @@
 #define SRCP_OK_PROTOCOL                201
 #define SRCP_OK_CONNMODE                202
 
-#define SRCP_HS_UNKNOWN                 401
+/* HandShake */
+#define SRCP_HS_WRONGPROTOCOL   400
+#define SRCP_HS_WRONGCONNMODE  401
+#define SRCP_HS_NODATA    402
 
 /* COMMAND MODE */
 #define SRCP_INFO                       100

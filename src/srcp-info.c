@@ -501,8 +501,8 @@ void sendInfos(int current)
       DBG(busnumber, DBG_DEBUG,  "send all feedbacks from busnumber %d to new client", busnumber);
       for (i = 1; i <= number; i++)
       {
-        value = getFB(busnumber, i, &cmp_time);
-        if (value != -1)
+        int rc = getFB(busnumber, i, &cmp_time, &value);
+        if (rc != SRCP_OK)
         {
           // time is modified
           if (compareTime(cmp_time, start_time))
