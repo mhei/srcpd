@@ -250,6 +250,10 @@ int main(int argc, char **argv)
     }
     /* Wachhund einmal pro Sekunde */
     sleep(1);
+    
+    // test for feedbacks changed back to "0"
+    check_reset_fb();
+
     /* Jetzt Wachhund spielen, falls gewünscht */
     for(i=1; i<=num_busses; i++)
     {
