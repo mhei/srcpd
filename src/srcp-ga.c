@@ -194,12 +194,13 @@ int describeGA(int bus, int addr, char *msg) {
   return SRCP_INFO;
 }
 
-int infoGA(int bus, int addr, char* msg) {
+int infoGA(int bus, int addr, int port, char* msg) {
   int number_ga = get_number_ga(bus);
   if((addr>0) && (addr <= number_ga))
   {
-    sprintf(msg, "GA %d %d %d %ld\n", ga[bus][addr].id, ga[bus][addr].port,
-      ga[bus][addr].action, ga[bus][addr].activetime);
+    sprintf(msg, "%ld.%ld 100 INFO %d GA %d %d %d\n",
+    ga[bus][addr].tv[port].tv_sec, ga[bus][addr].tv[port].tv_usec/1000, bus,
+    ga[bus][addr].id, ga[bus][addr].port, ga[bus][addr].action);
   }
   else
   {

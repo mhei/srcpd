@@ -48,8 +48,10 @@ int getTime(struct _VTIME *vt)
 
 int infoTime(struct _VTIME vt, char *msg)
 {
-  sprintf(msg, "INFO 0 TIME %d %d %d %d", vt.day, vt.hour, vt.min, vt.sec);
-  return SRCP_OK;
+  struct timeval akt_time;
+  gettimeofday(&akt_time, NULL);
+  sprintf(msg, "%ld.%ld 100 INFO 0 TIME %d %d %d %d", akt_time.tv_sec, akt_time.tv_usec / 1000, vt.day, vt.hour, vt.min, vt.sec);
+  return SRCP_INFO;
 }
 
 int cmpTime(struct timeval *t1, struct timeval *t2)

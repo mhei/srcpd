@@ -22,7 +22,7 @@ struct _GA
   int id;               /* Der Identifier */
   int port;             /* Portnummer     */
   int action;           /* 0,1,2,3...     */
-  long activetime;      /* Aktivierungszeit in msec bis das 32 Kommando kommen soll */
+  long activetime;      /* Aktivierungszeit in msec bis das automatische AUS kommen soll */
   struct timeval tv[MAXGAPORT]; /* Zeitpunkt der letzten Aktivierungen, ein Wert pro Port   */
   struct timeval t;     /* Auschaltzeitpunkt */
   long int locked_by;     /* wer hält den Lock? */
@@ -38,7 +38,7 @@ int getGA(int bus, int addr, struct _GA *a);
 int setGA(int bus, int addr, struct _GA a);
 int initGA(int bus, int addr, const char *protocol);
 int describeGA(int bus, int addr, char *msg);
-int infoGA(int bus, int addr, char* msg);
+int infoGA(int bus, int addr, int port, char* msg);
 int cmpGA(struct _GA a, struct _GA b);
 
 int lockGA(int bus, int addr, long int sessionid);
