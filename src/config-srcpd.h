@@ -79,6 +79,17 @@ extern char PIDFILE[MAXPATHLEN];
 
 int readConfig(const char *filename);
 
+#define DG_SESSION 1
+#define DG_TIME 2
+#define DG_GA 3
+#define DG_GL 4
+#define DG_FB 5
+#define DG_SM 6
+#define DG_LOCK 7
+#define DG_DESCRIPTION 8
+#define DG_SERVER 9
+#define DG_POWER 10
+int bus_has_devicegroup(int bus, int dg);
 
 #define DGB_NONE 0
 #define DBG_FATAL 1
@@ -86,6 +97,7 @@ int readConfig(const char *filename);
 #define DBG_WARN 3
 #define DBG_INFO 4
 #define DBG_DEBUG 5
+
 
 void DBG(int busnumber, int dbglevel, const char *fmt, ...);
 #endif

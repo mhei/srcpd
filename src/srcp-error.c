@@ -90,7 +90,6 @@ int srcp_fmt_msg(int errorcode, char *msg, struct timeval time)
       break;
     default:
       sprintf(msg, "%lu.%.3lu 600 ERROR internal error %d, please report to srcpd-devel@srcpd.sorceforge.net\n", time.tv_sec, time.tv_usec/1000, errorcode);
-      return 1;
   }
-  return 0;
+  return errorcode;
 }
