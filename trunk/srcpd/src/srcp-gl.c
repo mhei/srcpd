@@ -104,10 +104,10 @@ int queueGL(int busnumber, int addr, int dir, int speed, int maxspeed, const int
     	    initGL( busnumber, addr, 'P', 1, 14, 1);
 	    DBG(busnumber, DBG_WARN, "GL default init for %d-%d", busnumber, addr);
 	}
-	while (queue_isfull(busnumber))
+	if (queue_isfull(busnumber))
 	{
     	    DBG(busnumber, DBG_WARN, "GL Command Queue full");
-    	    sleep(1);
+    	    return SRCP_TEMPORARILYPROHIBITED;
 	}
 
 	pthread_mutex_lock(&queue_mutex[busnumber]);

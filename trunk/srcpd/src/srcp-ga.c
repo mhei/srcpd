@@ -27,7 +27,7 @@
 #include "srcp-error.h"
 #include "srcp-info.h"
 
-#define QUEUELEN 500
+#define QUEUELEN 50
 
 /* aktueller Stand */
 static volatile struct _GA ga[MAX_BUSSES];   // aktueller Stand, mehr gibt es nicht
@@ -54,10 +54,10 @@ int queueGA(int busnumber, int addr, int port, int action, long int activetime)
   
   if ((addr > 0) && (addr <= number_ga) )
   {
-    while (queue_isfull(busnumber))
+    if (queue_isfull(busnumber))
     {
       DBG(busnumber, DBG_WARN, "GA Command Queue full");
-      sleep(1);
+      return SRCP_TEMPORARILYPROHIBITED;
     }
 
     pthread_mutex_lock(&queue_mutex[busnumber]);
