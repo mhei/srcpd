@@ -42,6 +42,7 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   busses[busnumber].init_func = &init_bus_M6051;
   busses[busnumber].term_func = &term_bus_M6051;
   busses[busnumber].thr_func = &thr_sendrec_M6051;
+  busses[busnumber].init_gl_func = &init_gl_M6051;
   busses[busnumber].driverdata = malloc(sizeof(struct _M6051_DATA));
   busses[busnumber].flags |= FB_16_PORTS;
   __m6051->number_fb = 0;  /* max 31 */
@@ -172,6 +173,17 @@ int term_bus_M6051(int bus)
 {
   DBG(bus, DBG_INFO, "M605x bus term done, fd=%d",  busses[bus].fd);
   return 0;
+}
+
+/**
+ * initGL: modifies the gl data used to initialize the device
+ 
+ */
+int init_gl_M6051(struct _GLSTATE *gl) {
+	gl -> direction = 1; /* undocumented feature of the 6021: 9193 is a hard reset */
+	gl -> n_fs = 14;
+	gl -> protocol = 'M';
+	return 0;
 }
 
 void* thr_sendrec_M6051(void *v)
