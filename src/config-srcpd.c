@@ -26,15 +26,17 @@
 #include <libxml/tree.h>
 
 #include "config-srcpd.h"
+#include "m605x.h"
+#include "ib.h"
+#include "loopback.h"
 
 /* Einstellungen für Bus 0 */
-int CMDPORT = 12345;		/* default command port         */
-int FEEDBACKPORT = 12346;	/* default feedback port        */
-int INFOPORT = 12347;		/* default info port            */
+int TCPPORT = 12345;		/* default command port         */
+
 int TIMER_RUNNING = 1;          /* Running timer module         */
 
 /* Willkommensmeldung */
-const char *WELCOME_MSG = "srcpd V1.1; SRCP undefined; do not use\n";
+const char *WELCOME_MSG = "srcpd V2; SRCP 0.8.0; do not use\n";
 
 struct _BUS busses[MAX_BUSSES];
 int num_busses;
@@ -65,9 +67,7 @@ register_bus (xmlDocPtr doc, xmlNodePtr node)
 	{
 	  if (strcmp (child->name, "baseport") == 0)
 	    {
-	      CMDPORT = atoi (txt);
-	      FEEDBACKPORT = CMDPORT + 1;
-	      INFOPORT = CMDPORT + 2;
+	      TCPPORT = atoi (txt);
 	    }
 
 	}
@@ -102,10 +102,25 @@ register_bus (xmlDocPtr doc, xmlNodePtr node)
 	    }
 	  if (strcmp (child->name, "type") == 0)
 	    {
-	      if (strcmp (txt, "M605X") == 0)
-		 busses[busnumber].type = SERVER_M605X;
-	      if (strcmp (txt, "IB") == 0)
-		 busses[busnumber].type = SERVER_IB;
+		if (strcmp (txt, "M605X") == 0) {
+		    busses[busnumber].type = SERVER_M605X;
+		    busses[busnumber].init_func = &init_bus_M6051;
+		    busses[busnumber].term_func = &term_bus_M6051;
+		    busses[busnumber].thr_func = &thr_sendrec_M6051;
+		}
+		if (strcmp (txt, "IB") == 0) {
+		    busses[busnumber].type = SERVER_IB;
+		    busses[busnumber].init_func = &init_bus_IB;
+		    busses[busnumber].term_func = &term_bus_IB;
+		    busses[busnumber].thr_func = &thr_sendrec_IB;
+		}
+		if (strcmp(txt, "LOOPBACK") == 0) {
+		    busses[busnumber].type = SERVER_LOOPBACK;
+		    busses[busnumber].init_func = &init_bus_Loopback;
+		    busses[busnumber].term_func = &term_bus_Loopback;
+		    busses[busnumber].thr_func = &thr_sendrec_Loopback;
+		}
+
 	    }
 	  if (strcmp (child->name, "use_M6020") == 0)
 	    {

@@ -16,6 +16,8 @@ typedef struct _M6051_DATA {
 
 int init_line6051(char *);
 int init_bus_M6051(int );
-void* thr_sendrec6051(void *);
+int term_bus_M6051(int );
+
+void* thr_sendrec_M6051(void *);
 
 #endif

@@ -25,6 +25,7 @@
 #define SERVER_M605X      2         // srcpd arbeitet als M605X-Server
 #define SERVER_IB         3         // srcpd arbeitet als IB-Server
 #define SERVER_LI100      4         // srcpd arbeitet als Lenz-Server
+#define SERVER_LOOPBACK   5	    // dummy driver, no real hardware
 
 /* flags */
 #define USE_WATCHDOG      1         // use watchdog
@@ -52,6 +53,8 @@ typedef struct _BUS {
     struct termios devicesettings; // Device Settings, if used
     pthread_t pid;   // PID of the thread
     void *thr_func;  // addr of the thread function
+    void (*init_func)(int); // addr of init function
+    void (*term_func)(int); // addr of init function
     int watchdog;    // used to monitor the thread
     int power_state;
     int power_changed;

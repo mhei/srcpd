@@ -4,6 +4,9 @@
  * Vorliegende Software unterliegt der General Public License, 
  * Version 2, 1991. (c) Matthias Trute, 2000-2001.
  *
+ * 25.12.2001 Matthias Trute
+ *            - Queue geändert
+ *
  * 04.07.2001 Frank Schmischke
  *            - Feld für Vormerkungen wurde auf 50 reduziert
  *            - Position in Vormerkung ist jetzt unabhängig von der
@@ -18,64 +21,44 @@
 #include <string.h>
 #include <syslog.h>
 #include <sys/time.h>
+#include <pthread.h>
 
 #include "config-srcpd.h"
 #include "srcp-gl.h"
 
+/* aktueller Stand */
 volatile struct _GL gl[MAX_BUSSES][MAXGLS];   // aktueller Stand, mehr gibt es nicht
-volatile struct _GL ngl[MAX_BUSSES][50];      // max. 50 neue Werte puffern
-volatile struct _GL ogl[MAX_BUSSES][50];      // manuelle Änderungen
+
+/* queue fuer neue Aktionen */
+volatile struct _GL ngl[MAX_BUSSES][QUEUEGL_LEN];      // max. 50 neue Werte puffern
+volatile int writer_gl[MAX_BUSSES];
+volatile int reader_gl[MAX_BUSSES];
+pthread_mutex_t writer_gl_mut[MAX_BUSSES]; // = PTHREAD_MUTEX_INITIALIZER;
+
+volatile struct _GL ogl[MAX_BUSSES][QUEUEGL_LEN];      // manuelle Änderungen
 
 /* Übernehme die neuen Angaben für die Lok, einige wenige Prüfungen */
 void setGL(int bus, int addr, int dir, int speed, int maxspeed, int f, 
      int n_fkt, int f1, int f2, int f3, int f4)
 {
-  int i, n_fs;
+  int i;
   struct timeval akt_time;
+  pthread_mutex_lock(&writer_gl_mut[bus]);
+  i = writer_gl[bus]; /* das ist jetzt unsere Lok */
+  ngl[bus][i].speed     = speed;
+  ngl[bus][i].maxspeed  = maxspeed;
+  ngl[bus][i].direction = dir;
+  ngl[bus][i].n_fkt     = gl[bus][addr].n_fkt;
+  ngl[bus][i].flags     = f1 + (f2 << 1) + (f3 << 2) + (f4 << 3) + (f << 4);
+  ngl[bus][i].n_fs      = gl[bus][addr].n_fs;
+  gettimeofday(&akt_time, NULL);
+  ngl[bus][i].tv        = akt_time;
+  ngl[bus][i].id        = addr;
+  syslog(LOG_INFO, "GL %i Position %i", addr, i);
 
-  n_fs = gl[bus][addr].n_fs;
-
-  /* Daten einfüllen, aber nur, wenn id == 0!!, darauf warten wir max. 1 Sekunde */
-  if((addr > 0) && (addr <= busses[bus].number_gl))
-  {
-    for(i=0;i<1000;i++)
-    {
-      if(busses[bus].sending_gl == 0)
-        break;
-      usleep(100);
-    }
-
-    for(i=0;i<50;i++)
-    {
-      if(ngl[bus][i].id == addr)
-      {
-        ngl[bus][i].id = 0;
-        break;
-      }
-    }
-    if(i == 50)
-    {
-      for(i=0;i<50;i++)
-      {
-        if(ngl[bus][i].id == 0)
-          break;
-      }
-    }
-    if(i < 50)
-    {
-      ngl[bus][i].speed     = speed;
-      ngl[bus][i].maxspeed  = maxspeed;
-      ngl[bus][i].direction = dir;
-      ngl[bus][i].n_fkt     = n_fkt;
-      ngl[bus][i].flags     = f1 + (f2 << 1) + (f3 << 2) + (f4 << 3) + (f << 4);
-      ngl[bus][i].n_fs      = n_fs;
-      gettimeofday(&akt_time, NULL);
-      ngl[bus][i].tv        = akt_time;
-      ngl[bus][i].id        = addr;
-      syslog(LOG_INFO, "GL %i Position %i", addr, i);
-      busses[bus].command_gl = 1;
-    }
-  }
+  writer_gl[bus]++;    /* der nächste bekommt die hier */
+  if(writer_gl[bus]>=QUEUEGL_LEN) writer_gl[bus]=0;
+  pthread_mutex_unlock(&writer_gl_mut[bus]);
 }
 
 int getGL(int bus, int addr, struct _GL *l)
@@ -117,12 +100,14 @@ void initGL()
 {
   int bus, i;
   for(bus=0; bus<MAX_BUSSES; bus++) {
+      //      writer_gl_mut[bus] = PTHREAD_MUTEX_INITIALIZER;
+
     for(i=0; i<MAXGLS;i++)
     {
       gl[bus][i].direction = 1;
       gl[bus][i].id = i;
     }
-    for(i=0;i<50;i++)
+    for(i=0;i<QUEUEGL_LEN;i++)
     {
       ngl[bus][i].direction = 1;
       ngl[bus][i].id = 0;

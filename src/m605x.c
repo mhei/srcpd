@@ -87,7 +87,6 @@ int init_line6051 (char *name)
 /* Initialisiere den Bus, signalisiere Fehler */
 int init_bus_M6051(int i) {
   syslog(LOG_INFO,"m605x init: bus #%d, debug %d", i, busses[i].debuglevel);
-  busses[i].thr_func = thr_sendrec6051;
   if(busses[i].debuglevel==0) {
     busses[i].fd = init_line6051(busses[i].device);
     if(busses[i].fd < 0)
@@ -102,7 +101,11 @@ int init_bus_M6051(int i) {
   return 1;
 }
 
-void* thr_sendrec6051 (void *v)
+int term_bus_M6051(int bus) {
+    return 0;
+}
+
+void* thr_sendrec_M6051 (void *v)
 {
   int bus, i, commands_ok, addr;
   int temp, NUMBER_FB;
