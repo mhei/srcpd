@@ -258,7 +258,7 @@ int main(int argc, char **argv)
     /* Jetzt Wachhund spielen, falls gewünscht */
     for(i=1; i<=num_busses; i++)
     {
-      if(busses[i].watchdog == 0 && (busses[i].flags && USE_WATCHDOG))
+      if(busses[i].watchdog == 0 && (busses[i].flags & USE_WATCHDOG))
       {
         syslog(LOG_INFO, "Oops: Interface Thread %d hangs, restarting it: (old pid: %ld, %d)", i, busses[i].pid, busses[i].watchdog);
         pthread_cancel(busses[i].pid);

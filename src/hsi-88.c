@@ -244,20 +244,23 @@ int init_bus_HSI_88(int busnumber)
     }
   }
 
-  if (status == 0)
+  if (busses[busnumber].debuglevel < 7)
   {
-    fd = open_lineHSI88(busses[busnumber].device);
-    if(fd > 0)
+    if (status == 0)
     {
-      busses[busnumber].fd = fd;
-      status = 0;
-      status = init_lineHSI88(busnumber, __hsi->number_fb[0],
-        __hsi->number_fb[1], __hsi->number_fb[2]);
+      fd = open_lineHSI88(busses[busnumber].device);
+      if(fd > 0)
+      {
+        busses[busnumber].fd = fd;
+        status = init_lineHSI88(busnumber, __hsi->number_fb[0],
+          __hsi->number_fb[1], __hsi->number_fb[2]);
+      }
+      else
+        status = -1;
     }
-    else
-      status = -1;
   }
-
+  else
+     busses[busnumber].fd = 9999;
   if (status == 0)
     working_HSI88 = 1;
 
@@ -298,77 +301,100 @@ void* thr_sendrec_HSI_88(void *v)
   fb_zaehler1 = 0;
   fb_zaehler2 = 1;
 
-  status = 1;
-  while(status)
+  if (busses[busnumber].debuglevel < 7)
   {
-    // Modulbelegung initialisieren
-    byte2send = 's';
-    writeByte(busnumber, &byte2send, 0);
-    byte2send = __hsi->number_fb[0];
-    writeByte(busnumber, &byte2send, 0);
-    byte2send = __hsi->number_fb[1];
-    writeByte(busnumber, &byte2send, 0);
-    byte2send = __hsi->number_fb[2];
-    writeByte(busnumber, &byte2send, 0);
-    byte2send = 0x0d;
-    writeByte(busnumber, &byte2send, 0);
-    byte2send = 0x0d;
-    writeByte(busnumber, &byte2send, 0);
-    byte2send = 0x0d;
-    writeByte(busnumber, &byte2send, 0);
-    byte2send = 0x0d;
-    writeByte(busnumber, &byte2send, 5);
+    status = 1;
+    while(status)
+    {
+      // Modulbelegung initialisieren
+      byte2send = 's';
+      writeByte(busnumber, &byte2send, 0);
+      byte2send = __hsi->number_fb[0];
+      writeByte(busnumber, &byte2send, 0);
+      byte2send = __hsi->number_fb[1];
+      writeByte(busnumber, &byte2send, 0);
+      byte2send = __hsi->number_fb[2];
+      writeByte(busnumber, &byte2send, 0);
+      byte2send = 0x0d;
+      writeByte(busnumber, &byte2send, 0);
+      byte2send = 0x0d;
+      writeByte(busnumber, &byte2send, 0);
+      byte2send = 0x0d;
+      writeByte(busnumber, &byte2send, 0);
+      byte2send = 0x0d;
+      writeByte(busnumber, &byte2send, 5);
 
-    rr = 0;
-    readByte(busnumber, &rr);           // read answer (three bytes)
-    while(rr != 's')
-    {
-      usleep(100000);
-      readByte(busnumber, &rr);
-    }
-    readByte(busnumber, &rr);           // Anzahl angemeldeter Module
-    anzahl = (int)rr;
-    syslog(LOG_INFO, "Anzahl Module: %i", anzahl);
-    anzahl -= __hsi->number_fb[0];
-    anzahl -= __hsi->number_fb[1];
-    anzahl -= __hsi->number_fb[2];
-    if(anzahl == 0)                     // HSI initialisation correct ?
-    {
-      status = 0;
-    }
-    else
-    {
-      syslog(LOG_INFO, "Fehler bei Initialisierung");
-      sleep(1);
-      while(readByte(busnumber, &rr) == 0)
+      rr = 0;
+      readByte(busnumber, &rr);           // read answer (three bytes)
+      while(rr != 's')
       {
+        usleep(100000);
+        readByte(busnumber, &rr);
+      }
+      readByte(busnumber, &rr);           // Anzahl angemeldeter Module
+      anzahl = (int)rr;
+      syslog(LOG_INFO, "Anzahl Module: %i", anzahl);
+      anzahl -= __hsi->number_fb[0];
+      anzahl -= __hsi->number_fb[1];
+      anzahl -= __hsi->number_fb[2];
+      if(anzahl == 0)                     // HSI initialisation correct ?
+      {
+        status = 0;
+      }
+      else
+      {
+        syslog(LOG_INFO, "Fehler bei Initialisierung");
+        sleep(1);
+        while(readByte(busnumber, &rr) == 0)
+        {
+        }
       }
     }
+  }
+  else
+  {
+    i = 0;
+    temp = 1;
   }
 
   while(1)
   {
-    rr = 0;
-    while(rr != 'i')
+    if (busses[busnumber].debuglevel < 7)
     {
-      usleep(refresh_time);
-      readByte(busnumber, &rr);
+      rr = 0;
+      while(rr != 'i')
+      {
+        usleep(refresh_time);
+        readByte(busnumber, &rr);
+      }
+      readByte(busnumber, &rr);            // Anzahl zu meldender Module
+      anzahl = (int)rr;
+      for(zaehler1=0;zaehler1<anzahl;zaehler1++)
+      {
+        readByte(busnumber, &rr);
+        rr--;
+        i = rr;
+        readByte(busnumber, &rr);
+        temp = rr;
+        temp <<= 8;
+        readByte(busnumber, &rr);
+        setFBmodul(busnumber, i, temp | rr);
+        if (busses[busnumber].debuglevel > 4)
+          syslog(LOG_INFO, "Rückmeldung %i mit 0x%02x", i, temp|rr);
+      }
+      readByte(busnumber, &rr);            // <CR>
     }
-    readByte(busnumber, &rr);            // Anzahl zu meldender Module
-    anzahl = (int)rr;
-    for(zaehler1=0;zaehler1<anzahl;zaehler1++)
+    else
     {
-      readByte(busnumber, &rr);
-      rr--;
-      i = rr;
-      readByte(busnumber, &rr);
-      temp = rr;
-      temp <<= 8;
-      readByte(busnumber, &rr);
-      setFBmodul(busnumber, i, temp | rr);
-      if (busses[busnumber].debuglevel > 6)
-        syslog(LOG_INFO, "Rückmeldung %i mit 0x%02x", i, temp|rr);
+      setFBmodul(busnumber, 1, temp);
+      i++;
+      temp <<= 1;
+      if  (i > 16)
+      {
+        i = 0;
+        temp = 1;
+      }
+      sleep(2);
     }
-    readByte(busnumber, &rr);            // <CR>
   }
 }

@@ -317,6 +317,7 @@ void *thr_doInfoClient(void *v)
 {
   while(1)
   {
+    syslog(LOG_INFO, "I'm living with %d clients and %d entries in queue", number_of_clients, queueLengthInfo());
     if (number_of_clients == 0)
     {
       // no client is present, also wait a second
@@ -324,7 +325,7 @@ void *thr_doInfoClient(void *v)
     }
     else
     {
-      if (queueIsEmptyInfo())
+      if (!queueIsEmptyInfo())
       {
         pthread_mutex_lock(&queue_mutex_client);
         sendInfos(-1);

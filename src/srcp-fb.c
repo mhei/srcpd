@@ -74,13 +74,14 @@ int setFBmodul(int bus, int modul, int values)
     dir = 1;
     mask = 1 << (ports - 1);
   }
-  // compute startcontact ( (modul - 1) * 16 + 1 )
+  // compute startcontact ( (modul - 1) * ports + 1 )
   fb_contact = modul - 1;
   fb_contact *= ports;
   fb_contact++;
 
-  for(i=0; i<ports;i++)
+  for(i=0; i<ports; i++)
   {
+//    syslog(LOG_INFO, "%d ports, order %d, mask 0x%04x, value 0x%04x", ports, dir, mask, values);
     c = (values & mask) ? 1 : 0;
     updateFB(bus, fb_contact++, c);
     if (dir)
