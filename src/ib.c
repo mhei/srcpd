@@ -31,9 +31,11 @@
 #include <termios.h>
 #include <unistd.h>
 #include <sys/io.h>
+#include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <netinet/in.h>
+#include <linux/serial.h>
 
 #include "config-srcpd.h"
 #include "ib.h"
@@ -447,10 +449,11 @@ int open_comport(int *file, char *name)
 {
   int fd;
   int status;
-  unsigned short int LSR;
+  unsigned int LSR;
   unsigned char rr;
   unsigned char byte2send;
   struct termios interface;
+  struct serial_struct serial_line;
   
   printf("Begin detecting IB on serial line: %s\n", name);
 
@@ -483,11 +486,12 @@ int open_comport(int *file, char *name)
   while(status != -1)
     status = readByte(fd, &rr);
 
-  close(fd);  
+  ioctl(fd, TIOCGSERIAL, &serial_line);
+  close(fd);
   
   sleep(1);
+  LSR = serial_line.port + 3;
   printf("sending BREAK\n");
-  LSR = 0x3F8 + 3;
   status = ioperm(LSR, 1, 1);
   usleep(200000);
   outb((inb(LSR) | 0x040), LSR);
@@ -498,7 +502,8 @@ int open_comport(int *file, char *name)
   sleep(1);
   printf("BREAK sucessfully send\n");
   
-    
+  close(fd);
+
   baud = B2400;
   fd = init_comport(name);
   if(fd < 0)
