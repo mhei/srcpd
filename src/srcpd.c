@@ -110,13 +110,13 @@ int main(int argc, char **argv)
 		strcpy(conffile, optarg);
         break;
       case 'v':
-        printf("srcpd version 2.0, speaks SRCP between 0.7 and 0.8, do not use!\n");
+        printf("srcpd version 2.0, speaks SRCP 0.8!\n");
         exit(1);
         break;
       case 'h':
         printf("srcpd -f <conffile> -v -h\n");
         printf("v           -  prints program version and exits\n");
-        printf("f            -  use another config file (default %s)\n", conffile);
+        printf("f           -  use another config file (default %s)\n", conffile);
         printf("h           -  prints this text and exits\n");
         exit(1);
         break;
@@ -130,17 +130,15 @@ int main(int argc, char **argv)
 
   openlog("srcpd", LOG_CONS, LOG_USER);
   syslog(LOG_INFO, "%s", WELCOME_MSG);
+  DBG(0, DBG_INFO, "conffile = \"%s\"\n", conffile);
+  readConfig(conffile);
 
   startup_GL();
   startup_GA();
   startup_FB();
 
-    // zuerst die Konfigurationsdatei lesen
-  printf("conffile = \"%s\"\n", conffile);
-
-  readConfig(conffile);
   // check for resolv all needed malloc's
-  for(i=0;i<MAX_BUSSES;i++)
+  for(i=0;i<num_busses;i++)
   {
     if (busses[i].number > -1)
     {

@@ -160,7 +160,12 @@ Konfiguration
     Beim 6021, das einige Befehle vom 6051 erst beim normalen Refresh 
     einarbeitet, kann es systembedingt einige Sekunden dauern... Ohne, das
     man was daran ändern könnte.
-	
+
+    Um den Defaultzustand herzustellen, sollte vor dem Starten des srcpd am
+    6021 die Adressfolge 9193 eingegeben werden. Damit werden alle Loks auf
+    einen definierten Zustand gesetzt, den der srcpd voraussetzt. Quelle:
+    Undocumented Features of the Maerklin 6021
+    
     Intellibox
     ~~~~~~~~~~
     xmltag: intellibox

@@ -51,26 +51,24 @@ void readconfig_server(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     if (strcmp(child->name, "listen-ip") == 0)
     {
       char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      DBG(busnumber, DBG_INFO, "listenip: %s", txt);
-      if (__srv->listenip != NULL)
-        free(__srv->listenip);
+      free(__srv->listenip);
       __srv->listenip = malloc(strlen(txt) + 1);
       strcpy(__srv->listenip, txt);
-      DBG(busnumber, DBG_INFO, "listenip: %s", txt);
+      DBG(busnumber, DBG_INFO, "listen-ip: %s", txt);
       free(txt);
     }
 
     if (strcmp(child->name, "pid-file") == 0)
     {
       char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      strcpy(__srv->PIDFILE, txt);
+      strncpy(__srv->PIDFILE, txt, MAXPATHLEN-2);
+      __srv->PIDFILE[MAXPATHLEN-1] = 0x00;
       free(txt);
     }
     if (strcmp(child->name, "username") == 0)
     {
       char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      if (__srv->username != NULL)
-        free(__srv->username);
+      free(__srv->username);
       __srv->username = malloc(strlen(txt) + 1);
       if (__srv->username == NULL)
       {
@@ -83,8 +81,7 @@ void readconfig_server(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     if (strcmp(child->name, "groupname") == 0)
     {
       char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      if (__srv->groupname != NULL)
-        free(__srv->groupname);
+      free(__srv->groupname);
       __srv->groupname = malloc(strlen(txt) + 1);
       if (__srv->groupname == NULL)
       {
@@ -124,16 +121,17 @@ int term_bus_server(int bus)
 
 void server_reset()
 {
+  char msg[100];
   server_reset_state = 1;
+  infoSERVER(msg);
+  queueInfoMessage(msg);
 }
 
 void server_shutdown()
 {
   char msg[100];
-  struct timeval akt_time;
-  gettimeofday(&akt_time, NULL);  
-  sprintf(msg, "%lu.%.3lu 100 INFO 0 SERVER TERMINATING\n", akt_time.tv_sec, akt_time.tv_usec/1000);
   server_shutdown_state = 1;
+  infoSERVER(msg);
   queueInfoMessage(msg);
 }
 
