@@ -23,12 +23,13 @@
 #ifdef linux
 #include <linux/lp.h>
 #include <sys/io.h>
-#endif
-#ifdef __FreeBSD__
+#else
+#if __FreeBSD__
 #include <dev/ppbus/ppi.h>
 #include <dev/ppbus/ppbconf.h>
 #else
 #error Dieser Treiber ist fuer Ihr Betriebssystem nicht geeignet
+#endif
 #endif
 
 #include "config-srcpd.h"
