@@ -91,7 +91,8 @@ int isInitializedGL(int busnumber, int addr)
    return (gl[busnumber].glstate[addr].n_fs == 0);
 }
 
-/* Übernehme die neuen Angaben für die Lok, einige wenige Prüfungen */
+/* Übernehme die neuen Angaben für die Lok, einige wenige Prüfungen. Lock wird ignoriert!
+*/
 int queueGL(int busnumber, int addr, int dir, int speed, int maxspeed, int f,  int f1, int f2, int f3, int f4)
 {
   struct timeval akt_time;
