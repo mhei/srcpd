@@ -219,6 +219,7 @@ int handleSET(int sessionid, int bus, char *device, char *parameter, char *reply
        &laddr, &direction, &speed, &maxspeed, &func, &f1, &f2, &f3, &f4);
     if (anzparms > 5)
     {
+      /* Only if not locked!! */
       rc = queueGL(bus, laddr, direction, speed, maxspeed, func, f1, f2, f3, f4);
     }
   }
@@ -388,6 +389,8 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
         if(strncmp(devgrp, "GL", 2)==0) {
             long int session_id;
             rc = getlockGL(bus, addr, &session_id);
+            if (rc==SRCP_OK)
+                sprintf(reply, "%d GL %ld %ld", bus, addr, session_id);
         }
         if(strncmp(devgrp, "GA", 2)==0)
             rc = getlockGA(bus, addr, 0 /* change to session-id */);
