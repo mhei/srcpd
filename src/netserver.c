@@ -439,12 +439,13 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
 
   if (strncasecmp(device, "DESCRIPTION", 11) == 0)
   {
+
     /* Beschreibungen gibt es deren 2 */
     long int addr;
     char devgrp[10];
     int nelem = 0;
     if (strlen(parameter) > 0)
-      nelem = sscanf(parameter, "%10c %ld", devgrp, &addr);
+      nelem = sscanf(parameter, "%10s %ld", devgrp, &addr);
     if (nelem <= 0)
     {
       rc = describeBus(bus, reply);
@@ -453,6 +454,7 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
     {
       if (bus_has_devicegroup(bus, DG_DESCRIPTION))
       {
+        DBG(bus, DBG_INFO, "DESCRIPTION: devgrp=%s addr=%ld", devgrp, addr);
         if (strncmp(devgrp, "GL", 2) == 0)
           rc = describeGL(bus, addr, reply);
         if (strncmp(devgrp, "GA", 2) == 0)
