@@ -6,6 +6,7 @@
     email                : frank.schmischke@t-online.de
 
     This source based on errdcd-sourcecode by Torsten Vogt.
+    full header statement below!
  ***************************************************************************/
 
 /***************************************************************************
@@ -24,6 +25,8 @@
 #include <fcntl.h>
 #include <linux/lp.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <syslog.h>
 #include <sys/ioctl.h>
 #include <sys/io.h>
@@ -46,11 +49,9 @@
 /*                                                             */
 /* last changes: Torsten Vogt, march 2000                      */
 /*               Martin Wolf, november 2000                    */
-/* modified for Matthias Trute, srcpd may 2002 */
+/* modified for srcpd: Matthias Trute, may 2002 */
 /*                                                             */
 /***************************************************************/
-
-
 
 // signals on the S88-Bus
 #define S88_QUIET 0x00 // all signals low
@@ -73,6 +74,7 @@ const unsigned int LPT_NUM = 3;
 const char BIT_VALUES[] = {0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80}; 
 
 void readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber){
+      xmlNodePtr child = node->children;
     busses[busnumber].type = SERVER_S88;
     busses[busnumber].init_func = &init_bus_S88;
     busses[busnumber].term_func = &term_bus_S88;
@@ -82,6 +84,60 @@ void readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber){
     ((DDL_S88_DATA *) busses[busnumber].driverdata)->clockscale = 35;
     ((DDL_S88_DATA *) busses[busnumber].driverdata)->refresh = 100;
     strcpy(busses[busnumber].description, "FB POWER");
+
+    while (child) {
+          if(strncmp(child->name, "text", 4)==0) {
+            child = child -> next;
+            continue;
+          }
+	if (strcmp(child->name, "ioport") == 0) {
+	    char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+    ((DDL_S88_DATA *) busses[busnumber].driverdata)->port = atoi(txt);
+	    free(txt);
+	}
+
+
+	if (strcmp(child->name, "clockscale") == 0) {
+	    char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+    ((DDL_S88_DATA *) busses[busnumber].driverdata)->clockscale = atoi(txt);
+	    free(txt);
+	}
+
+	if (strcmp(child->name, "refresh") == 0) {
+	    char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+    ((DDL_S88_DATA *) busses[busnumber].driverdata)->refresh = atoi(txt);
+	    free(txt);
+	}
+
+
+
+	if (strcmp(child->name, "number_fb_1") == 0) {
+	    char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+	    ((DDL_S88_DATA*) busses[busnumber].driverdata)->number_fb[0] =
+		atoi(txt);
+	    free(txt);
+	}
+ 	if (strcmp(child->name, "number_fb_2") == 0) {
+	    char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+	    ((DDL_S88_DATA*) busses[busnumber].driverdata)->number_fb[1] =
+		atoi(txt);
+	    free(txt);
+	}
+	if (strcmp(child->name, "number_fb_4") == 0) {
+	    char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+	    ((DDL_S88_DATA*) busses[busnumber].driverdata)->number_fb[2] =
+		atoi(txt);
+	    free(txt);
+	}
+	if (strcmp(child->name, "number_fb_4") == 0) {
+	    char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+	    ((DDL_S88_DATA*) busses[busnumber].driverdata)->number_fb[3] =
+		atoi(txt);
+	    free(txt);
+	}
+
+	child = child->next;
+    }
 }
 
 /****************************************************************
@@ -229,4 +285,9 @@ void * thr_sendrec_S88(void *v) {
         usleep(sleepusec);
         s88load(bus);
     }
+}
+
+void *thr_sendrec_dummy(void *v) {
+    while(1)
+        sleep(1);
 }
