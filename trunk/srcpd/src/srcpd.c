@@ -157,21 +157,25 @@ int main(int argc, char **argv)
   }
   cmds.socket = ((SERVER_DATA *) busses[0].driverdata)->TCPPORT;
   cmds.func = thr_doClient;
-  /* forken */
-  if((pid=fork())<0)
-  {
-    return -1;
-  }
-  else
-  {
-    if(pid != 0 )
-    {
-      exit(0);
-    }
-  }
-  // ab hier keine Konsole mehr... Wir sind ein Dämon geworden!
-  chdir("/");
 
+  // a little help for debugging the threads
+  if (busses[0].debuglevel < 9)
+  {
+    /* forken */
+    if((pid=fork())<0)
+    {
+      return -1;
+    }
+    else
+    {
+      if(pid != 0 )
+      {
+        exit(0);
+      }
+    }
+    // ab hier keine Konsole mehr... Wir sind ein Dämon geworden!
+    chdir("/");
+  }
   openlog("srcpd", LOG_CONS, LOG_USER);
   syslog(LOG_INFO, "%s", WELCOME_MSG);
 
