@@ -1,3 +1,11 @@
+2003-02-15 22:49  mtrute
+
+	* netserver.c, srcp-srv.c, srcp-srv.h: GET 0 SERVER
+
+2003-02-15 21:05  mtrute
+
+	* ChangeLog: cvs log in Changelog umgewandelt
+
 2003-02-15 21:02  mtrute
 
 	* netserver.c: WAIT TIME und FB repariert (haben z.T. noch nie
