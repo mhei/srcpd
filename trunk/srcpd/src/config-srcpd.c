@@ -27,7 +27,34 @@ const char *WELCOME_MSG = "srcpd V2 BETA; SRCP 0.8.2\n";
 struct _BUS busses[MAX_BUSSES];
 int num_busses;
 
+// check that a bus has a devicegroup or not
 
+int bus_has_devicegroup(int bus, int dg) {
+  switch (dg) {
+    case DG_SESSION:
+      return strstr(busses[bus].description, "SESSION") != NULL;
+    case DG_POWER:
+      return strstr(busses[bus].description, "POWER") != NULL;    
+    case DG_GA:
+      return strstr(busses[bus].description, "GA") != NULL;
+    case DG_GL:
+      return strstr(busses[bus].description, "GL") != NULL;
+    case DG_FB:
+      return strstr(busses[bus].description, "FB") != NULL;
+    case DG_SM:
+      return strstr(busses[bus].description, "SM") != NULL;
+    case DG_SERVER:
+      return strstr(busses[bus].description, "SERVER") != NULL;
+    case DG_TIME:
+      return strstr(busses[bus].description, "TIME") != NULL;
+    case DG_LOCK:
+      return strstr(busses[bus].description, "LOCK") != NULL;
+    case DG_DESCRIPTION:
+      return strstr(busses[bus].description, "DESCRIPTION") != NULL;
+
+  }
+  return 0;
+}
 // check that a real server is running on bus greather then zero
 static void check_bus(int busnumber)
 {
