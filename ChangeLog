@@ -1,5 +1,19 @@
+Version 1.0
+05.08.2001 Matthias Trute <mtrute@users.sourceforge.net>
+	- Umstellung conf-Format auf XML, erfordert libxml
+	  resp. gnome-xml
 
-Version 0.1	
+30.7.2001
+Version 1.0 -- RELEASE_1_0 --
+
+29.7.2001 Matthias Trute <mtrute@users.sourceforge.net>
+	  Frank Schmischke <schmisch@users.sourceforge.net>
+	  
+	- Option -v gibt Programmversion und SRCP Version aus,
+	  und beendet das Programm.
+	- Bugfixes und Workarounds.
+
+Version 0.1	-- released internally --
 14.07.2001 Matthias Trute
 	- Option --enable-comport wieder entfernt,
 	  es ist die runtime Option restore_com_parms
