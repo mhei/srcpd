@@ -202,8 +202,9 @@ void *thr_doClient(void *v)
   }
 }
 
-int handleSET(int sessionid, int bus, char *device, char *parameter, char *reply) {
-  int rc = 422;
+int handleSET(int sessionid, int bus, char *device, char *parameter, char *reply)
+{
+  int rc = SRCP_UNSUPPORTEDDEVICEGROUP;
   *reply = 0x00;
   /* es wird etwas gesetzt.. */
   if (strncasecmp(device, "GL", 2) == 0)
@@ -268,7 +269,7 @@ int handleSET(int sessionid, int bus, char *device, char *parameter, char *reply
 }
 
 int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply) {
-  int rc = 423;
+  int rc = SRCP_UNSUPPORTEDOPERATION;
   *reply = 0x00;
   /* es wird etwas abgefragt */
   if (strncasecmp(device, "FB", 2) == 0)
@@ -384,7 +385,7 @@ int handleWAIT(int sessionid, int bus, char *device, char *parameter, char *repl
       while (timeout >= 0 && aktvalue != waitvalue);
       if (timeout < 0)
       {
-        rc = 417;
+        rc = SRCP_TIMEOUT;
       }
       else
       {
@@ -409,7 +410,7 @@ int handleWAIT(int sessionid, int bus, char *device, char *parameter, char *repl
 /* negative return code will terminate current session! */
 int handleTERM(int sessionid, int bus, char *device, char *parameter, char *reply)
 {
-  int rc = 421;
+  int rc = SRCP_UNSUPPORTEDDEVICE;
   *reply = 0x00;
   if (strncasecmp(device, "FB", 2) == 0)
   {
@@ -423,7 +424,7 @@ int handleTERM(int sessionid, int bus, char *device, char *parameter, char *repl
     }
     else
     {
-      rc = 422;
+      rc = SRCP_UNSUPPORTEDDEVICEGROUP;
     }
   }
   if (strncasecmp(device, "SESSION", 7) == 0)
@@ -506,37 +507,42 @@ int doCmdClient(int Socket, int sessionid)
     memset(reply, 0, sizeof(reply));
     sscanf(line, "%s %ld %s %900c", command, &bus, devicegroup, parameter);
     syslog(LOG_INFO, "getting command: %s %ld %s %s", command, bus, devicegroup, parameter);
-    rc = 412;
-    if (strncasecmp(command, "SET", 3) == 0)
+    rc = SRCP_WRONGVALUE;
+    reply[0] = 0x00;
+
+    if((bus >= 0) && (bus < MAX_BUSSES))
     {
-      rc = handleSET(sessionid, bus, devicegroup, parameter, reply);
-    }
-    if (strncasecmp(command, "GET", 3) == 0)
-    {
-      rc = handleGET(sessionid, bus, devicegroup, parameter, reply);
-    }
-    if (strncasecmp(command, "WAIT", 4) == 0)
-    {
-      rc = handleWAIT(sessionid, bus, devicegroup, parameter, reply);
-    }
-    if (strncasecmp(command, "INIT", 4) == 0)
-    {
-      rc = handleINIT(sessionid, bus, devicegroup, parameter, reply);
-    }
-    if (strncasecmp(command, "TERM", 4) == 0)
-    {
-      rc = handleTERM(sessionid, bus, devicegroup, parameter, reply);
-      if(rc < 0) 
-        break;
-      rc = abs(rc);
-    }
-    if (strncasecmp(command, "VERIFY", 6) == 0)
-    {
-      rc = handleVERIFY(sessionid, bus, devicegroup, parameter, reply);
-    }
-    if (strncasecmp(command, "RESET", 5) == 0)
-    {
-      rc = handleRESET(sessionid, bus, devicegroup, parameter, reply);
+      if (strncasecmp(command, "SET", 3) == 0)
+      {
+        rc = handleSET(sessionid, bus, devicegroup, parameter, reply);
+      }
+      if (strncasecmp(command, "GET", 3) == 0)
+      {
+        rc = handleGET(sessionid, bus, devicegroup, parameter, reply);
+      }
+      if (strncasecmp(command, "WAIT", 4) == 0)
+      {
+        rc = handleWAIT(sessionid, bus, devicegroup, parameter, reply);
+      }
+      if (strncasecmp(command, "INIT", 4) == 0)
+      {
+        rc = handleINIT(sessionid, bus, devicegroup, parameter, reply);
+      }
+      if (strncasecmp(command, "TERM", 4) == 0)
+      {
+        rc = handleTERM(sessionid, bus, devicegroup, parameter, reply);
+        if(rc < 0)
+          break;
+        rc = abs(rc);
+      }
+      if (strncasecmp(command, "VERIFY", 6) == 0)
+      {
+        rc = handleVERIFY(sessionid, bus, devicegroup, parameter, reply);
+      }
+      if (strncasecmp(command, "RESET", 5) == 0)
+      {
+        rc = handleRESET(sessionid, bus, devicegroup, parameter, reply);
+      }
     }
     gettimeofday(&akt_time, NULL);
     if (socket_writereply(Socket, rc, reply, &akt_time) < 0)

@@ -12,15 +12,21 @@
 
 #include <sys/time.h>
 
-#define MAXFBS 256
-
 typedef struct _FBSTATE
 {
   struct timeval timestamp;
   short int state;
 } FBSTATE;
 
+typedef struct _FB
+{
+  int numberOfFb;
+  struct _FBSTATE *fbstate;
+} FB;
+
 int startup_FB(void);
+int init_FB(int bus, int number);
+int get_number_fb(int bus);
 
 int getFB(int bus, int port, struct timeval *time);
 void updateFB(int bus, int port, int value);

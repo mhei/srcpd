@@ -12,11 +12,10 @@
 
 #include <sys/time.h>
 
-#define MAXGAS 2049
 #define MAXGAPORT 2
 
 /* Schaltdekoder */
-struct _GA
+struct _GASTATE
 {
   char *protocol;  /* Protocolid */
   int id;               /* Der Identifier */
@@ -28,18 +27,26 @@ struct _GA
   long int locked_by;     /* wer hält den Lock? */
 };
 
+typedef struct _GA
+{
+  int numberOfGa;
+  struct _GASTATE *gastate;
+} GA;
+
 int startup_GA(void);
+int init_GA(int bus, int number);
+int get_number_ga(int bus);
 
 int queueGA(int bus, int addr, int port, int aktion, long activetime);
-int unqueueNextGA(int bus, struct _GA *);
+int unqueueNextGA(int bus, struct _GASTATE *);
 int queue_GA_isempty(int bus);
 
-int getGA(int bus, int addr, struct _GA *a);
-int setGA(int bus, int addr, struct _GA a);
+int getGA(int bus, int addr, struct _GASTATE *a);
+int setGA(int bus, int addr, struct _GASTATE a);
 int initGA(int bus, int addr, const char *protocol);
 int describeGA(int bus, int addr, char *msg);
 int infoGA(int bus, int addr, int port, char* msg);
-int cmpGA(struct _GA a, struct _GA b);
+int cmpGA(struct _GASTATE a, struct _GASTATE b);
 int isInitializedGA(int bus, int addr);
 
 int lockGA(int bus, int addr, long int sessionid);

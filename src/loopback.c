@@ -73,6 +73,17 @@ void readconfig_loopback(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     }
     child = child -> next;
   } // while
+
+  if(init_GL(busnumber, __loopback->number_gl))
+  {
+    __loopback->number_gl = 0;
+    syslog(LOG_INFO, "Can't create array for locomotivs");
+  }
+  if(init_FB(busnumber, __loopback->number_fb))
+  {
+    __loopback->number_fb = 0;
+    syslog(LOG_INFO, "Can't create array for feedback");
+  }
 }
 
 int init_lineLoopback (char *name)
@@ -108,8 +119,8 @@ int init_bus_Loopback(int i)
 
 void* thr_sendrec_Loopback (void *v)
 {
-  struct _GL gltmp, glakt;
-  struct _GA gatmp;
+  struct _GLSTATE gltmp, glakt;
+  struct _GASTATE gatmp;
   int addr;
   int bus = (int) v;
   
