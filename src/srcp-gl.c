@@ -88,7 +88,7 @@ static int calcspeed(int vs, int vmax, int n_fs)
 
 int isInitializedGL(int busnumber, int addr)
 {
-   return (gl[busnumber].glstate[addr].n_fs != 0);
+   return (gl[busnumber].glstate[addr].n_fs == 0);
 }
 
 /* Übernehme die neuen Angaben für die Lok, einige wenige Prüfungen */

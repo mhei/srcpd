@@ -29,6 +29,6 @@ int queueInfoGL(int busnumber, int addr, int dir, int speed, int maxspeed, int f
       int f1, int f2, int f3, int f4, struct timeval *akt_time);
 int queueInfoGA(int busnumber, int addr, int port, int action, struct timeval *akt_time);
 int queueInfoFB(int busnumber, int port, int action, struct timeval *akt_time);
-int queueInfoSM(int busnumber, int addr, int type, int typeaddr, int bit, int value, struct timeval *akt_time);
+int queueInfoSM(int busnumber, int addr, int type, int typeaddr, int bit, int value, int return_value, struct timeval *akt_time);
 
 #endif
