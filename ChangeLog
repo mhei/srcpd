@@ -1,3 +1,7 @@
+2003-02-22 16:06  mtrute
+
+	* AUTHORS, ChangeLog: added Franz
+
 2003-02-15 22:49  mtrute
 
 	* netserver.c, srcp-srv.c, srcp-srv.h: GET 0 SERVER
