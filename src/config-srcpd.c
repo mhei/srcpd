@@ -35,7 +35,7 @@
 #include "hsi-88.h"
 
 /* Willkommensmeldung */
-const char *WELCOME_MSG = "srcpd V2; SRCP 0.8.x; do not use\n";
+const char *WELCOME_MSG = "srcpd V2 BETA; SRCP 0.8\n";
 
 struct _BUS busses[MAX_BUSSES];
 int num_busses;
