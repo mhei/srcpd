@@ -139,7 +139,7 @@ int queueInfoGA(int bus, int addr, int port, int action, struct timeval *akt_tim
 
 int queueInfoFB(int bus, int port, int action, struct timeval *akt_time)
 {
-  syslog(LOG_INFO, "enter queueInfoFB");
+//  syslog(LOG_INFO, "enter queueInfoFB");
   if (number_of_clients > 0)
   {
     while (queueIsFullInfo())
@@ -225,6 +225,8 @@ int startup_INFO(void)
 
   number_of_clients = 0;
   max_clients = 0;
+  out = 0;
+  in = 0;
 
   return SRCP_OK;
 }

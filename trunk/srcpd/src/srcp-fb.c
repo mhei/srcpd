@@ -9,6 +9,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <sys/time.h>
 
 #include "config-srcpd.h"
 #include "srcp-error.h"
@@ -21,6 +24,75 @@
 /* one array for all busses             */
 /* not visible outside of this module   */
 static struct _FB fb[MAX_BUSSES];
+
+#define QUEUELENGTH_FB 1000
+
+static struct _RESET_FB reset_queue[QUEUELENGTH_FB];   // reset fb queue.
+static pthread_mutex_t queue_mutex_fb, queue_mutex_reset;
+static int out, in;
+
+
+/* internal functions */
+static int queueLengthFB(void)
+  {
+  if (in >= out)
+    return in - out;
+  else
+    return QUEUELENGTH_FB + in - out;
+}
+
+static int queueIsFullFB(void)
+{
+  return queueLengthFB() >= QUEUELENGTH_FB - 1;
+}
+
+int queueIsEmptyFB(void)
+{
+  return (in == out);
+}
+
+/** liefert nächsten Eintrag und >=0, oder -1 */
+static int getNextFB(struct _RESET_FB *info)
+{
+  if (in == out)
+    return -1;
+  pthread_mutex_lock(&queue_mutex_reset);
+  info->busnumber = reset_queue[out].busnumber;
+  info->port = reset_queue[out].port;
+  info->timestamp = reset_queue[out].timestamp;
+  pthread_mutex_unlock(&queue_mutex_reset);
+  return out;
+}
+
+/** liefert nächsten Eintrag oder -1, setzt fifo pointer neu! */
+static void unqueueNextFB(void)
+{
+  pthread_mutex_lock(&queue_mutex_reset);
+  out++;
+  if (out == QUEUELENGTH_FB)
+    out = 0;
+  pthread_mutex_unlock(&queue_mutex_reset);
+}
+
+static void queue_reset_fb(int bus, int port, struct timeval *ctime)
+{
+//  syslog(LOG_INFO, "enter queueInfoFB: %d, %d", bus, port);
+  while (queueIsFullFB())
+  {
+    usleep(1000);
+  }
+
+  pthread_mutex_lock(&queue_mutex_reset);
+
+  reset_queue[in].busnumber = bus;
+  reset_queue[in].port = port;
+  reset_queue[in].timestamp = *ctime;
+  in++;
+  if (in == QUEUELENGTH_FB)
+    in = 0;
+
+  pthread_mutex_unlock(&queue_mutex_reset);
+}
 
 int getFB(int bus, int port, struct timeval *time)
 {
@@ -35,20 +107,61 @@ void updateFB(int bus, int port, int value)
   struct timezone dummy;
   struct timeval akt_time;
 
+  int port_t;
+
+  // check range to disallow segmentation fault
+  if ((port > get_number_fb(bus)) || (port < 1))
+    return;
+
+  port_t = port - 1;
   // we read 8 or 16 ports at once, but we will only change those ports,
   // which are really changed
-  if(fb[bus].fbstate[port-1].state != value)
+  //
+  // if changed contact ist resetet, we will wait 2sec to
+  // minimalize problems from contacts bitween track and train
+//  syslog(LOG_INFO, "updateFB: %d FB %d %d", bus, port, value);
+  if(fb[bus].fbstate[port_t].state != value)
   {
-    // send_event()
-    syslog(LOG_INFO, "changed: %d FB %d %d -> %d", bus, port,
-      fb[bus].fbstate[port-1].state, value);
-
     gettimeofday(&akt_time, &dummy);
-    fb[bus].fbstate[port-1].state = value;
-    fb[bus].fbstate[port-1].timestamp = akt_time;
+    if (value == 0)
+    {
+      if (fb[bus].fbstate[port_t].state == -1)
+      {
+        fb[bus].fbstate[port_t].state = value;
+        fb[bus].fbstate[port_t].timestamp = akt_time;
+        fb[bus].fbstate[port_t].change = 0;
+        // queue changes for writing info-message
+        queueInfoFB(bus, port, value, &akt_time);
+      }
+      else
+      {
+        pthread_mutex_lock(&queue_mutex_fb);
+        fb[bus].fbstate[port_t].change = -1;
+        pthread_mutex_unlock(&queue_mutex_fb);
+        queue_reset_fb(bus, port_t, &akt_time);
+      }
+    }
+    else
+    {
+      if (fb[bus].fbstate[port_t].change < 0)
+      {
+        fb[bus].fbstate[port_t].change = 0;
+      }
+      else
+      {
+        // send_event()
+//        syslog(LOG_INFO, "changed: %d FB %d %d -> %d", bus, port,
+//          fb[bus].fbstate[port_t].state, value);
 
-    // queue changes for writing info-message
-    queueInfoFB(bus, port, value, &akt_time);
+        pthread_mutex_lock(&queue_mutex_fb);
+        fb[bus].fbstate[port_t].state = value;
+        fb[bus].fbstate[port_t].timestamp = akt_time;
+        fb[bus].fbstate[port_t].change = 0;
+        pthread_mutex_unlock(&queue_mutex_fb);
+        // queue changes for writing info-message
+        queueInfoFB(bus, port, value, &akt_time);
+      }
+    }
   }
 }
 
@@ -120,6 +233,8 @@ int startup_FB()
     fb[i].numberOfFb = 0;
     fb[i].fbstate = NULL;
   }
+  out = 0;
+  in = 0;
   return 0;
 }
 
@@ -142,6 +257,7 @@ int init_FB(int bus, int number)
     for(i=0;i<number;i++)
     {
       fb[bus].fbstate[i].state = -1;
+      fb[bus].fbstate[i].change = 0;
       fb[bus].fbstate[i].timestamp = akt_time;
     }
   }
@@ -153,3 +269,45 @@ int get_number_fb(int bus)
   return fb[bus].numberOfFb;
 }
 
+void check_reset_fb(void)
+{
+  struct _RESET_FB reset_fb;
+  struct timeval cmp_time, diff_time;
+  
+//  syslog(LOG_INFO, "start with checking for resetet feedbacks");
+  
+  while (getNextFB(&reset_fb) != -1)
+  {
+//    syslog(LOG_INFO, "status of change = %d", fb[reset_fb.busnumber].fbstate[reset_fb.port].change);
+    if (fb[reset_fb.busnumber].fbstate[reset_fb.port].change == 0)
+    {
+      // drop this reset of feedback, because we've got an new impulse
+      unqueueNextFB();
+    }
+    else
+    {
+      gettimeofday(&cmp_time, NULL);
+      diff_time.tv_sec  = cmp_time.tv_sec  - reset_fb.timestamp.tv_sec;
+      diff_time.tv_usec = cmp_time.tv_usec - reset_fb.timestamp.tv_usec;
+      if (diff_time.tv_usec < 0)
+        diff_time.tv_sec--;
+//      syslog(LOG_INFO, "diff of time is %ld - %ld = %ld",
+//        cmp_time.tv_sec, reset_fb.timestamp.tv_sec, diff_time.tv_sec);
+      if (diff_time.tv_sec < 3)
+      {
+        break;
+      }
+      else
+      {
+//        syslog(LOG_INFO, "set %d feedback to 0", reset_fb.port);
+        unqueueNextFB();
+        pthread_mutex_lock(&queue_mutex_fb);
+        fb[reset_fb.busnumber].fbstate[reset_fb.port].state = 0;
+        fb[reset_fb.busnumber].fbstate[reset_fb.port].timestamp = fb[reset_fb.busnumber].fbstate[reset_fb.port].timestamp;
+        fb[reset_fb.busnumber].fbstate[reset_fb.port].change = 0;
+        pthread_mutex_unlock(&queue_mutex_fb);
+        queueInfoFB(reset_fb.busnumber, reset_fb.port + 1, 0, &reset_fb.timestamp);
+      }
+    }
+  }  
+}

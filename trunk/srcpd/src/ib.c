@@ -60,6 +60,9 @@
 #define __ib ((IB_DATA*)busses[busnumber].driverdata)
 
 static struct _GASTATE tga[50];
+static int working_IB;
+
+static int init_line_IB(int);
 
 void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
@@ -119,13 +122,54 @@ void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   }
 }
 
-int init_bus_IB(int bus)
+int init_bus_IB(int busnumber)
 {
-  return 0;
+  int status;
+
+  status = 0;
+  printf("Bus %d mit Debuglevel %d\n", busnumber, busses[busnumber].debuglevel);
+  if(busses[busnumber].type != SERVER_IB)
+  {
+    status = -2;
+  }
+  else
+  {
+    if(busses[busnumber].fd > 0)
+      status = -3;              // bus is already in use
+  }
+
+  if (status == 0)
+  {
+    working_IB = 0;
+  }
+
+  if (busses[busnumber].debuglevel < 7)
+  {
+    if (status == 0)
+      status = init_line_IB(busnumber);
+  }
+  else
+     busses[busnumber].fd = 9999;
+  if (status == 0)
+    working_IB = 1;
+
+  printf("INIT_BUS_IB mit Code: %d\n", status);
+  return status;
 }
 
-int term_bus_IB(int bus)
+int term_bus_IB(int busnumber)
 {
+  if(busses[busnumber].type != SERVER_IB)
+    return 1;
+
+  if(busses[busnumber].pid == 0)
+    return 0;
+
+  working_IB = 0;
+
+  pthread_cancel(busses[busnumber].pid);
+  busses[busnumber].pid = 0;
+  close_comport(busnumber);
   return 0;
 }
 
@@ -440,7 +484,7 @@ void check_status(int bus)
   }
 }
 
-int init_comport(int busnumber)
+static int init_comport(int busnumber)
 {
   int status;
   int fd;
@@ -450,7 +494,7 @@ int init_comport(int busnumber)
   struct termios interface;
 
   printf("try opening serial line %s for %i baud\n", name, (2400 * (1 << (baud-11))));
-  fd = open(name,O_RDWR);
+  fd = open(name, O_RDWR);
   if (fd == -1)
   {
     printf("dammit, couldn't open device.\n");
@@ -475,7 +519,7 @@ int init_comport(int busnumber)
   return fd;
 }
 
-int open_comport(int busnumber)
+static int init_line_IB(int busnumber)
 {
   int fd, baud;
   int status;

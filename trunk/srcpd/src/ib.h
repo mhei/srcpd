@@ -19,7 +19,8 @@
 
 #include <libxml/tree.h>
 
-typedef struct _IB_DATA {
+typedef struct _IB_DATA 
+{
     int number_ga;
     int number_gl;
     int number_fb;
@@ -33,9 +34,6 @@ int term_bus_IB(int );
 
 void * thr_sendrec_IB(void *);
 
-void close_comport(int fd);
-int init_comport(int bus);
-int open_comport(int bus);
 void* thr_sendrecintellibox(void*);
 void send_command_ga(int fd);
 void send_command_gl(int fd);

@@ -16,6 +16,7 @@ typedef struct _FBSTATE
 {
   struct timeval timestamp;
   short int state;
+  short int change;
 } FBSTATE;
 
 typedef struct _FB
@@ -23,6 +24,13 @@ typedef struct _FB
   int numberOfFb;
   struct _FBSTATE *fbstate;
 } FB;
+
+typedef struct _RESET_FB
+{
+  int busnumber;
+  int port;
+  struct timeval timestamp;
+} reset_FB;
 
 int startup_FB(void);
 int init_FB(int bus, int number);
@@ -36,4 +44,5 @@ int setFBmodul(int bus, int mod, int values);
 //int setFBmodul8(int bus, int mod, int values);
 int infoFB(int bus, int port, char *msg);
 int describeFB(int bus, int addr, char *reply);
+void check_reset_fb(void);
 #endif
