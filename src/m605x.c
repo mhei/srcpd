@@ -257,7 +257,7 @@ void* thr_sendrec_M6051(void *v)
           SendByte = addr;
           writeByte(bus, &SendByte, pause_between_cmd);
         }
-        setGL(bus, addr, gltmp);
+        setGL(bus, addr, gltmp, 0);
       }
       busses[bus].watchdog = 4;
     }
@@ -271,7 +271,7 @@ void* thr_sendrec_M6051(void *v)
       if (gatmp.action == 1)
       {
         gettimeofday(&gatmp.tv[gatmp.port], NULL);
-        setGA(bus, addr, gatmp);
+        setGA(bus, addr, gatmp, 0);
         if (gatmp.activetime >= 0)
         {
           gatmp.activetime = (gatmp.activetime > ga_min_active_time) ?
@@ -296,7 +296,7 @@ void* thr_sendrec_M6051(void *v)
         writeByte(bus, &SendByte, pause_between_cmd);
         ( (M6051_DATA *) busses[bus].driverdata)  -> cmd32_pending = 0;
       }
-      setGA(bus, addr, gatmp);
+      setGA(bus, addr, gatmp, 0);
       busses[bus].watchdog = 6;
     }
     busses[bus].watchdog = 7;

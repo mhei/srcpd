@@ -63,6 +63,7 @@ typedef struct _BUS
   /* driver specific */
   void *driverdata;
   int flags;            // Watchdog
+  int numberOfSM;       // maximumnumber for programing
 } BUS;
 
 extern struct _BUS busses[];

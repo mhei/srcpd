@@ -34,23 +34,23 @@ typedef struct _GA
 } GA;
 
 int startup_GA(void);
-int init_GA(int bus, int number);
-int get_number_ga(int bus);
+int init_GA(int busnumber, int number);
+int get_number_ga(int busnumber);
 
-int queueGA(int bus, int addr, int port, int aktion, long activetime);
-int unqueueNextGA(int bus, struct _GASTATE *);
-int queue_GA_isempty(int bus);
+int queueGA(int busnumber, int addr, int port, int aktion, long activetime);
+int unqueueNextGA(int busnumber, struct _GASTATE *);
+int queue_GA_isempty(int busnumber);
 
-int getGA(int bus, int addr, struct _GASTATE *a);
-int setGA(int bus, int addr, struct _GASTATE a);
-int initGA(int bus, int addr, const char *protocol);
-int describeGA(int bus, int addr, char *msg);
-int infoGA(int bus, int addr, int port, char* msg);
+int getGA(int busnumber, int addr, struct _GASTATE *a);
+int setGA(int busnumber, int addr, struct _GASTATE a, int info);
+int initGA(int busnumber, int addr, const char *protocol);
+int describeGA(int busnumber, int addr, char *msg);
+int infoGA(int busnumber, int addr, int port, char* msg);
 int cmpGA(struct _GASTATE a, struct _GASTATE b);
-int isInitializedGA(int bus, int addr);
+int isInitializedGA(int busnumber, int addr);
 
-int lockGA(int bus, int addr, long int sessionid);
-int getlockGA(int bus, int addr, long int sessionid);
-int unlockGA(int bus, int addr, int sessionid);
+int lockGA(int busnumber, int addr, long int sessionid);
+int getlockGA(int busnumber, int addr, long int sessionid);
+int unlockGA(int busnumber, int addr, int sessionid);
 void unlock_ga_bysessionid(long int);
 #endif

@@ -78,6 +78,7 @@ static int register_bus(xmlDocPtr doc, xmlNodePtr node)
    exit(1);
  }
  busses[busnumber].number = busnumber;
+ busses[busnumber].numberOfSM = 0;          // default no SM avalible
  num_busses = busnumber;
  child = node->children;
  while (child)
