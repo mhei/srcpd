@@ -21,9 +21,9 @@
 #include <unistd.h>
 
 
-#include <gnome-xml/xmlmemory.h>
-#include <gnome-xml/parser.h>
-#include <gnome-xml/tree.h>
+#include <libxml/xmlmemory.h>
+#include <libxml/parser.h>
+#include <libxml/tree.h>
 
 #include "config-srcpd.h"
 
@@ -71,8 +71,8 @@ register_bus (xmlDocPtr doc, xmlNodePtr node)
   if (busnumber > 1){
 	  // not yet  
 	  return;
-      }
-  child = node->childs;
+  }
+  child = node->children;
   while (child)
     {
       char *txt;
@@ -145,7 +145,7 @@ static void
 walk_config_xml (xmlDocPtr doc)
 {
   xmlNodePtr child;
-  child = doc->root->childs;
+  child = doc->children->children;
   while (child)
     {
       register_bus (doc, child);

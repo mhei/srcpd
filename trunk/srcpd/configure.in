@@ -50,7 +50,7 @@ else
 fi
 
 dnl check for presence of dynamic-loading-library functions
-KDE_CHECK_LIBDL
+dnl KDE_CHECK_LIBDL
 
 dnl activate the following for some additional tests
 dnl   (compat, crypt, socket, nsl, ...)
@@ -58,7 +58,7 @@ dnl KDE_MISC_TESTS
 
 dnl add --with-extra-includes and --with-extra-libs switch to ./configure
 dnl
-AC_REQUIRE([KDE_CHECK_EXTRA_LIBS])
+dnl AC_REQUIRE([KDE_CHECK_EXTRA_LIBS])
 all_libraries="$all_libraries $USER_LDFLAGS"
 all_includes="$all_includes $USER_INCLUDES"
 AC_SUBST(all_includes)
@@ -70,7 +70,7 @@ dnl in this space add everything you want to check for
 dnl examples are specific headers, libraries, etc.
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS(fcntl.h sys/time.h syslog.h unistd.h gnome-xml/tree.h)
+AC_CHECK_HEADERS(fcntl.h sys/time.h syslog.h unistd.h libxml/tree.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
