@@ -11,7 +11,7 @@
 #define _NETSERVER_H
 
 int socket_readline(int Socket, char *line, int len);
-int socket_writereply(int Socket, int srcpcode, const char *line, struct timeval *akt_time);
+int socket_writereply(int Socket, const char *line);
 
 void* thr_doClient(void* v);
 int doCmdClient(int, int);
