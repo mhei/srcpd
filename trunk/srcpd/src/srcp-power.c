@@ -11,28 +11,25 @@
 #include <stdio.h>
 
 #include "srcp-power.h"
+#include "config-srcpd.h"
 
-volatile int power_state       = 0; /* liegt Spannung am GLeis?            */
-volatile int power_changed     = 1; /* bei jeder Änderung gesetzt               */
-char power_msg[1024];
-
-void setPower(int state, char *msg)
+void setPower(int bus, int state, char *msg)
 {
-  power_state = state;
-  strcpy(power_msg, msg);
-  power_changed = 1;
+  busses[bus].power_state = state;
+  strcpy(busses[bus].power_msg, msg);
+  busses[bus].power_changed = 1;
 }
 
-int getPower(void)
+int getPower(int bus)
 {
-  return power_state;
+  return busses[bus].power_state;
 }
 
-void infoPower(char *msg)
+void infoPower(int bus, char *msg)
 {
-  sprintf(msg, "INFO POWER %s %s\n", power_state?"ON":"OFF", power_msg);
+  sprintf(msg, "INFO POWER %s %s\n", busses[bus].power_state?"ON":"OFF", busses[bus].power_msg);
 }
 
-void initPower()
+void initPower(int bus)
 {
 }

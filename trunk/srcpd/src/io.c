@@ -27,26 +27,18 @@
 
 #include "io.h"
 
-struct termios interface_org;
-int org_status_saved = 0;
-
-#ifdef TESTMODE
-extern int testmode;
-#endif
-
-int readByte(int FD, unsigned char *the_byte)
+int readByte(int bus, unsigned char *the_byte)
 {
   int i;
 
-#ifdef TESTMODE
-  if(testmode)
+  if(busses[bus].debuglevel > 0)
   {  
     i = 1;
     *the_byte = 0;
   }
   else
   {
-    i = read(FD, the_byte, 1);
+    i = read(busses[bus].fd, the_byte, 1);
     if(i == 1)
     {
       syslog(LOG_INFO, "Byte gelesen : 0x%02x", *the_byte);
@@ -56,53 +48,44 @@ int readByte(int FD, unsigned char *the_byte)
       syslog(LOG_INFO, "kein Byte empfangen");
     }
   }
-#else
-  i = read(FD, the_byte, 1);
-#endif
   return (i == 1 ? 0 : -1);
 }
 
-void writeByte(int FD, unsigned char *b, unsigned long msecs)
+void writeByte(int bus, unsigned char *b, unsigned long msecs)
 {
-#ifdef TESTMODE
-  syslog(LOG_INFO, "Byte geschrieben : 0x%02x", *b);
-  if(testmode == 0)
+  if(busses[bus].debuglevel == 0)
   {
-    write(FD, b, 1);
-    tcflush(FD, TCOFLUSH);
-    usleep(msecs * 1000);
+    write(busses[bus].fd, b, 1);
+    tcflush(busses[bus].fd, TCOFLUSH);
+  } else {
+    if(busses[bus].debuglevel > 1)
+      syslog(LOG_INFO, "Byte geschrieben : 0x%02x", *b);
   }
-#else  
-  write(FD, b, 1);
-  tcflush(FD, TCOFLUSH);
   usleep(msecs * 1000);
-#endif
 }
 
-void save_comport(char *name)
+void save_comport(int businfo)
 {
   int fd;
 
-  printf("Saveing attribute for serial line %s\n", name);
-  fd=open(name, O_RDWR);
+  fd=open(busses[businfo].device, O_RDWR);
   if (fd == -1)
   {
     printf("dammit, couldn't open device.\n");
   }
   else
   {
-    tcgetattr(fd, &interface_org);
-    org_status_saved = 1;
+    tcgetattr(fd, &busses[businfo].devicesettings);
     close(fd);
   }
 }
 
-void restore_comport(char *name)
+void restore_comport(int bus)
 {
   int fd;
 
-  syslog(LOG_INFO, "Restoreing attributes for serial line %s", name);
-  fd=open(name,O_RDWR);
+  syslog(LOG_INFO, "Restoreing attributes for serial line %s", busses[bus].device);
+  fd=open(busses[bus].device,O_RDWR);
   if (fd == -1)
   {
     syslog(LOG_INFO, "dammit, couldn't open device.");
@@ -110,8 +93,20 @@ void restore_comport(char *name)
   else
   {
     syslog(LOG_INFO, "alte Werte werden wiederhergestellt");
-    tcsetattr(fd, TCSANOW, &interface_org);
+    tcsetattr(fd, TCSANOW, &busses[bus].devicesettings);
     close(fd);
     syslog(LOG_INFO, "erfolgreich wiederhergestellt");
   }
+}
+
+void close_comport(int bus)
+{
+  struct termios interface;
+  syslog(LOG_INFO, "Closing serial line");
+
+  tcgetattr(busses[bus].fd, &interface);
+  cfsetispeed(&interface, B0);
+  cfsetospeed(&interface, B0);
+  tcsetattr(busses[bus].fd, TCSANOW, &interface);
+  close(busses[bus].fd);
 }

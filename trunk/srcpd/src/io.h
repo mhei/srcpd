@@ -21,10 +21,14 @@
 #include <config.h>
 #endif
 
-int  readByte(int FD, unsigned char *the_byte);
-void writeByte(int FD, unsigned char *the_byte, unsigned long msec);
+#include "config-srcpd.h"
 
-void restore_comport(char*);
-void save_comport(char*);
+int  readByte(int, unsigned char *the_byte);
+void writeByte(int, unsigned char *the_byte, unsigned long msec);
+
+/* */
+void close_comport(int);
+void restore_comport(int);
+void save_comport(int);
 
 #endif

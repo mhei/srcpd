@@ -18,7 +18,6 @@
 /* Schaltdekoder */
 struct _GA
 {
-  char prot[5];         /* Protokoll      */
   int id;               /* Der Identifier */
   int port;             /* Portnummer     */
   int action;           /* 0,1,2,3...     */
@@ -27,10 +26,18 @@ struct _GA
   struct timeval t;     // Auschaltzeitpunkt
 };
 
+
+extern volatile struct _GA ga[MAX_BUSSES][MAXGAS];   // soviele Generic Accessoires gibts
+extern volatile struct _GA nga[MAX_BUSSES][50];      // max. 50 Änderungen puffern, neue Werte noch nicht gesendet
+extern volatile struct _GA oga[MAX_BUSSES][50];      // manuelle Änderungen
+extern volatile struct _GA tga[MAX_BUSSES][50];      // max. 50 Änderungen puffern, neue Werte sind aktiv, warten auf inaktiv
+
 void initGA(void);
-int setGA(char *prot, int addr, int port, int aktion, long activetime);
-int getGA(char *prot, int addr, struct _GA *a);
+int setGA(int bus, int addr, int port, int aktion, long activetime);
+int getGA(int bus, int addr, struct _GA *a);
 int infoGA(struct _GA a, char *msg);
 int cmpGA(struct _GA a, struct _GA b);
 
+/* used internally */
+int updateGA(int bus, int addr, int port, int state);
 #endif

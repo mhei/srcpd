@@ -27,35 +27,17 @@
 
 #include "config-srcpd.h"
 
-/* Folgende Werte lassen sich z.T. verändern, siehe Kommandozeilen/Configdatei */
-/* unveränderliche sind mit const markiert                                     */
-
-int debuglevel = 1;		/* stellt die Geschwätzigkeit          */
-
-#ifdef TESTMODE
-int testmode = 0;
-#endif
-
-/* Anschlußport */
-/* globale Informationen für den Netzwerkanschluß */
+/* Einstellungen für Bus 0 */
 int CMDPORT = 12345;		/* default command port         */
 int FEEDBACKPORT = 12346;	/* default feedback port        */
 int INFOPORT = 12347;		/* default info port            */
+int TIMER_RUNNING = 1;          /* Running timer module         */
 
 /* Willkommensmeldung */
-const char *WELCOME_MSG = "srcpd V1.1; SRCP 0.7.3; August 2001; WILLKOMMEN\n";
+const char *WELCOME_MSG = "srcpd V1.1; SRCP undefined; do not use\n";
 
-/* Anschlußport */
-char *DEV_COMPORT;
-
-int working_server = SERVER_M605X;	// Einstellung in welchem Modus srcpd arbeitet
-int NUMBER_FB = 2;		/* Anzahl der Feebackmodule     */
-int NUMBER_GA = 256;		// Anzahl der generischen Accessoires
-int NUMBER_GL = 80;		// Anzahl an Lokadressen
-int M6020MODE = 0;		/* die 6020 mag keine erweiterten Befehle */
-int use_i8255 = 0;		// soll auch I8255 genutzt werden ?
-int use_watchdog = 0;		// soll der interne Wachhund genutzt werden ?
-int restore_com_parms = 0;	// sollen die com-port Einstellungen gesichert werden?
+struct _BUS busses[MAX_BUSSES];
+int num_busses;
 
 static void
 register_bus (xmlDocPtr doc, xmlNodePtr node)
@@ -68,10 +50,11 @@ register_bus (xmlDocPtr doc, xmlNodePtr node)
   proptxt = xmlGetProp (node, "number");
   busnumber = atoi (proptxt);
   free (proptxt);
-  if (busnumber > 1){
-	  // not yet  
+  if (busnumber > MAX_BUSSES){
+	  // you need to recompile
 	  return;
   }
+  busses[busnumber].number = busnumber;
   child = node->children;
   while (child)
     {
@@ -88,64 +71,71 @@ register_bus (xmlDocPtr doc, xmlNodePtr node)
 	    }
 
 	}
-      if (busnumber == 1)
-	{
+      if(busnumber < MAX_BUSSES) {
 	  if (strcmp (child->name, "device") == 0)
 	    {
-	      free (DEV_COMPORT);
-	      DEV_COMPORT = malloc (strlen (txt) + 1);
-	      if (DEV_COMPORT == NULL)
+	      free (busses[busnumber].device);
+	      busses[busnumber].device = malloc (strlen (txt) + 1);
+	      if (busses[busnumber].device == NULL)
 		{
 		  printf ("cannot allocate memory\n");
 		  exit (1);
 		}
-	      strcpy (DEV_COMPORT, txt);
+	      strcpy (busses[busnumber].device, txt);
 	    }
 	  if (strcmp (child->name, "FB-modules") == 0)
 	    {
-	      NUMBER_FB = atoi (txt);
+	      busses[busnumber].number_fb = atoi (txt);
 	    }
 	  if (strcmp (child->name, "maximum_adress_for_locomotiv") == 0)
 	    {
-	      NUMBER_GL = atoi (txt);
+	      busses[busnumber].number_gl = atoi (txt);
 	    }
 	  if (strcmp (child->name, "maximum_adress_for_accessoires") == 0)
 	    {
-	      NUMBER_GA = atoi (txt);
+	       busses[busnumber].number_ga = atoi (txt);
 	    }
 	  if (strcmp (child->name, "use_watchdog") == 0)
 	    {
 	      if (strcmp (txt, "yes") == 0)
-		use_watchdog = 1;
+		 busses[busnumber].flags |= USE_WATCHDOG;
 	    }
-	  if (strcmp (child->name, "server") == 0)
+	  if (strcmp (child->name, "type") == 0)
 	    {
 	      if (strcmp (txt, "M605X") == 0)
-		working_server = SERVER_M605X;
+		 busses[busnumber].type = SERVER_M605X;
 	      if (strcmp (txt, "IB") == 0)
-		working_server = SERVER_IB;
+		 busses[busnumber].type = SERVER_IB;
 	    }
 	  if (strcmp (child->name, "use_M6020") == 0)
 	    {
 	      if (strcmp (txt, "yes") == 0)
-		M6020MODE = 1;
+		 busses[busnumber].flags |= M6020_MODE;
 	    }
 	  if (strcmp (child->name, "restore_com_parms") == 0)
 	    {
 	      if (strcmp (txt, "yes") == 0)
-		restore_com_parms = 1;
+		 busses[busnumber].deviceflags |= RESTORE_COM_SETTINGS;
 	    }
+	  if (strcmp (child->name, "debuglevel") == 0)
+	    {
+	      busses[busnumber].debuglevel = atoi(txt);
+	    }
+	} else {
+	    // to many busses, needs recompilation
 	}
       free (txt);
       child = child->next;
     }
+    num_busses = busnumber;
 }
 
 static void
 walk_config_xml (xmlDocPtr doc)
 {
-  xmlNodePtr child;
-  child = doc->children->children;
+  xmlNodePtr root, child;
+  root = xmlDocGetRootElement(doc);
+  child = root->children;
   while (child)
     {
       register_bus (doc, child);
@@ -163,6 +153,7 @@ void
 readConfig ()
 {
   xmlDocPtr doc;
+  memset(busses, 0, sizeof(busses));
 
   doc = load_config_xml ("/usr/local/etc/srcpd.xml");
   if (doc == 0)
