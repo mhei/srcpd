@@ -40,6 +40,6 @@ void updateFB(int bus, int port, int value);
 int setFBmodul(int bus, int mod, int values);
 int infoFB(int bus, int port, char *msg);
 int describeFB(int bus, int addr, char *reply);
-void check_reset_fb(void);
+void check_reset_fb(int busnumber);
 void set_min_time(int busnumber, int mt);
 #endif

@@ -97,6 +97,13 @@ void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node, int busnumber)
       __ib->number_ga = atoi(txt);
       free(txt);
     }
+    if (strcmp(child->name, "p_time") == 0)
+    {
+      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+     set_min_time(busnumber, atoi(txt));
+      free(txt);
+    }
+    
     child = child->next;
   }
 
@@ -228,7 +235,7 @@ void* thr_sendrec_IB(void *v)
     
   fb_zaehler1 = 0;
   fb_zaehler2 = 1;
-
+  check_reset_fb(busnumber);
   while(1)
   {
     if(busses[busnumber].power_changed)

@@ -144,6 +144,13 @@ void readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
       __ddl_s88->refresh = atoi(txt);
       free(txt);
     }
+    if (strcmp(child->name, "p_time") == 0)
+    {
+      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+     set_min_time(busnumber, atoi(txt));
+      free(txt);
+    }
+
     if (strcmp(child->name, "number_fb_1") == 0)
     {
       char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
@@ -366,7 +373,7 @@ void *thr_sendrec_S88(void *v)
   unsigned long sleepusec = 100000;
 
   int S88REFRESH = __ddl_s88->refresh;
-
+  check_reset_fb(busnumber);
   // set refresh-cycle
   if (sleepusec < S88REFRESH * 1000)
     sleepusec = S88REFRESH * 1000;
