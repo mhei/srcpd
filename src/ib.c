@@ -112,7 +112,7 @@ void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     __ib->number_gl = 0;
     syslog(LOG_INFO, "Can't create array for locomotivs");
   }
-  if(init_FB(busnumber, __ib->number_fb))
+  if(init_FB(busnumber, __ib->number_fb*16))
   {
     __ib->number_fb = 0;
     syslog(LOG_INFO, "Can't create array for feedback");

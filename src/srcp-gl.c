@@ -275,7 +275,8 @@ int getlockGL(int bus, int addr, long int sessionid)
 
 int unlockGL(int bus, int addr, long int sessionid)
 {
-  if(gl[bus].glstate[addr].locked_by==sessionid) {
+  if(gl[bus].glstate[addr].locked_by==sessionid) 
+  {
     gl[bus].glstate[addr].locked_by = 0;
     return SRCP_OK;
   }
@@ -289,14 +290,16 @@ void unlock_gl_bysessionid(long int sessionid)
 {
   int i,j;
   int number;
+  syslog(LOG_INFO, "unlock GL by session-ID %d", sessionid);
   for(i=0; i<MAX_BUSSES; i++)
   {
     number = get_number_gl(i);
+    syslog(LOG_INFO, "number of gl for bus %d is %d", i, number);
     for(j=0;j<number; j++)
     {
       if(gl[i].glstate[j].locked_by == sessionid)
       {
-        unlockGL(i+1, j+1, sessionid);
+        unlockGL(i, j+1, sessionid);
       }
     }
   }

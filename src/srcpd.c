@@ -113,7 +113,7 @@ int main(int argc, char **argv)
   struct _THREADS cmds;
   install_signal_handler();
 
-  strcpy(conffile, "/usr/local/etc/srcpd.conf");
+  strcpy(conffile, "/etc/srcpd.conf");
   /* Parameter auswerten */
   opterr=0;
   while((c=getopt(argc, argv, "f:hv")) != EOF)
@@ -140,6 +140,11 @@ int main(int argc, char **argv)
         break;
     }
   }
+
+  startup_GL();
+  startup_GA();
+  startup_FB();
+
   // zuerst die Konfigurationsdatei lesen
   printf("conffile = \"%s\"\n", conffile);
   openlog("srcpd", LOG_CONS, LOG_USER);
@@ -194,9 +199,6 @@ int main(int argc, char **argv)
 
   CreatePIDFile(getpid());
   /* First: Init the device data used internally*/
-  startup_GL();
-  startup_GA();
-  startup_FB();
   startup_INFO();
   startup_LOCK();
   startup_DESCRIPTION();
