@@ -240,6 +240,9 @@ void* thr_sendrec_IB( void *v )
 
   fb_zaehler1 = 0;
   fb_zaehler2 = 1;
+  byte2send = XSensOff;
+  writeByte( busnumber, byte2send, 0);
+  status = readByte( busnumber, 1, &rr );
   while ( 1 )
   {
     if ( busses[ busnumber ].power_changed )
