@@ -74,8 +74,17 @@ int cmpTime(struct timeval *t1, struct timeval *t2)
 
 
 int describeTIME(int bus, int addr, char *reply) {
-  sprintf(reply, "INFO 0 TIME %d %d", vtime.ratio_x, vtime.ratio_y);
-  return SRCP_OK;
+	
+	struct timeval tv;
+	
+	gettimeofday(&tv, NULL);
+	
+  //sprintf(reply, "INFO 0 TIME %d %d", vtime.ratio_x, vtime.ratio_y);
+	sprintf(reply, "%ld.%ld 100 INFO 0 TIME %d %d\n",
+		tv.tv_sec, tv.tv_usec/1000,
+		vtime.ratio_x, vtime.ratio_y);
+  
+	return SRCP_OK;
 }
 
 /***********************************************************************
