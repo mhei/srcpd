@@ -173,8 +173,8 @@ int setFBmodul(int bus, int modul, int values)
   int dir;
   int mask;
 
-  ports = (busses[bus].flags & FB_16_PORTS) ? 16 : 8;
-  if (busses[bus].flags & FB_ORDER_0)
+  ports = ( (busses[bus].flags & FB_16_PORTS) == FB_16_PORTS) ? 16 : 8;
+  if ( (busses[bus].flags & FB_ORDER_0) == FB_ORDER_0)
   {
     dir = 0;
     mask = 1;

@@ -40,8 +40,8 @@
 
 /* driver specific flags */
 #define M6020_MODE            0x0100      // Subtyp zum M605X
-#define FB_ORDER_0            0x0110      // feedback port 0 is bit 0
-#define FB_16_PORTS           0x0120      // feedback-modul has 16 ports
+#define FB_ORDER_0            0x0200      // feedback port 0 is bit 0
+#define FB_16_PORTS           0x0400      // feedback-modul has 16 ports
 
 
 /* Busstruktur */

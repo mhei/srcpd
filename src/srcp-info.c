@@ -130,6 +130,7 @@ int doInfoClient(int Socket, int sessionid)
         {
           if(isInitializedGL(busnumber, i))
           {
+            long int lockid;
             describeGL(busnumber, i, reply);
             if (strlen(reply) > 0) {
               write(Socket, reply, strlen(reply));
@@ -141,6 +142,13 @@ int doInfoClient(int Socket, int sessionid)
               write(Socket, reply, strlen(reply));
             }
             reply[0] = '\0';
+            getlockGL(busnumber, i, &lockid);
+            if(lockid != 0) {
+              describeLOCKGL(busnumber,  i, reply);
+              if (strlen(reply) > 0) {
+                 write(Socket, reply, strlen(reply));
+              }
+            }
           }
         }
       }
@@ -152,6 +160,7 @@ int doInfoClient(int Socket, int sessionid)
         {
           if(isInitializedGA(busnumber, i))
           {
+            long int lockid;
             describeGA(busnumber, i, reply);
             if (strlen(reply) > 0) {
               write(Socket, reply, strlen(reply));
@@ -166,6 +175,14 @@ int doInfoClient(int Socket, int sessionid)
             write(Socket, reply, strlen(reply));
           }
           reply[0] = '\0';
+          getlockGA(busnumber, i, &lockid);
+            if(lockid != 0) {
+              describeLOCKGA(busnumber,  i, reply);
+              if (strlen(reply) > 0) {
+                 write(Socket, reply, strlen(reply));
+              }
+            }
+
          }
        }
       }
