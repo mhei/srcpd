@@ -43,9 +43,11 @@
 #include "srcp-power.h"
 #include "srcp-info.h"
 
+/*
 #ifdef linux
 #include "ibox/ibox.h"
 #endif
+*/
 
 #define __ib ((IB_DATA*)busses[busnumber].driverdata)
 
@@ -60,7 +62,7 @@ static int init_line_IB(int);
 
 // IB helper functions
 static int sendBreak(const int fd);
-static int sendBreakViaIboxDevice(const int port);
+//static int sendBreakViaIboxDevice(const int port);
 static int switchOffP50Command(const int busnumber);
 static int readAnswer_ib(const int busnumber, const int generatePrintf);
 //static int readByte_ib(int bus, int wait, unsigned char *the_byte);
@@ -981,28 +983,10 @@ static int init_line_IB(int busnumber)
 	status = 0;
 	
 	printf("Sending BREAK... ");
-
-// do we still need the difference between Linux and BSD here?
-// on Linux we no send the break without the kernel-module, too!
-#ifdef linux
   
   status = sendBreak(fd);
   close(fd);
   
-#endif
-#ifdef __FreeBSD__
-/*
- * Eigentlich will er ja nur ein BREAK senden, das machen wir mal
- * etwas einfacher...
- */
- DBG(busnumber,DBG_INFO,"FBSD BREAK an Ibox senden");
- ioctl(fd,TIOCSBRK,0);
-  usleep(1000000);
- ioctl(fd,TIOCCBRK,0);
-  usleep(6000000);
-  close(fd);
-#endif
-
 	if (status == 0)
 	{
 		printf("successful.\n");
@@ -1079,8 +1063,11 @@ static int sendBreak(const int fd)
 }
 
 // old code preserved just in case, the new BREAK-style does not work as expected...
+/*
 static int sendBreakViaIboxDevice(const int port)
 {
+	
+#ifdef linux
       unsigned int LSR;
       int fd;
 
@@ -1101,8 +1088,11 @@ static int sendBreakViaIboxDevice(const int port)
       usleep(600000);
       close(fd);
       sleep(1);
+#endif
+
     return 0;
 }
+*/
 
 /**
  * checks the baudrate of the intellibox ; see interface description of intellibox
