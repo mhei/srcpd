@@ -53,7 +53,6 @@ static int  in=0;
 
 /* queue a pre-formatted message */
 int queueInfoMessage(char *msg) {
-    int index;
     pthread_mutex_lock(&queue_mutex_info);
     /* Queue macht Kopien der Werte */
     free(info_queue[in]);
