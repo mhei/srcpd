@@ -8,8 +8,7 @@
 
 #include "srcp-descr.h"
 
-int
-startup_DESCRIPTION(void)
+int startup_DESCRIPTION(void)
 {
   return 0;
 }

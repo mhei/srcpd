@@ -64,7 +64,7 @@ extern int testmode;
 static struct _GA tga[50];
 
 void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node,
-	       int busnumber)
+         int busnumber)
 {
     xmlNodePtr child = node->children;
 
@@ -75,35 +75,35 @@ void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node,
     busses[busnumber].driverdata = malloc(sizeof(struct _IB_DATA));
     strcpy(busses[busnumber].description, "GA GL FB POWER");
 
-    ((IB_DATA *) busses[busnumber].driverdata)->number_fb = 0;	/* max 31 */
+    ((IB_DATA *) busses[busnumber].driverdata)->number_fb = 0;  /* max 31 */
     ((IB_DATA *) busses[busnumber].driverdata)->number_ga = 256;
     ((IB_DATA *) busses[busnumber].driverdata)->number_gl = 80;
     strcpy(busses[busnumber].description, "GA GL FB POWER");
 
     while (child) {
-	if (strcmp(child->name, "maximum_address_for_feedback") == 0) {
-	    char *txt =
-		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-	    ((IB_DATA *) busses[busnumber].driverdata)->number_fb =
-		atoi(txt);
-	    free(txt);
-	}
+  if (strcmp(child->name, "maximum_address_for_feedback") == 0) {
+      char *txt =
+    xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      ((IB_DATA *) busses[busnumber].driverdata)->number_fb =
+    atoi(txt);
+      free(txt);
+  }
 
-	if (strcmp(child->name, "maximum_address_for_locomotiv") == 0) {
-	    char *txt =
-		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-	    ((IB_DATA *) busses[busnumber].driverdata)->number_gl =
-		atoi(txt);
-	    free(txt);
-	}
-	if (strcmp(child->name, "maximum_address_for_accessoire") == 0) {
-	    char *txt =
-		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-	    ((IB_DATA *) busses[busnumber].driverdata)->number_ga =
-		atoi(txt);
-	    free(txt);
-	}
-	child = child->next;
+  if (strcmp(child->name, "maximum_address_for_locomotiv") == 0) {
+      char *txt =
+    xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      ((IB_DATA *) busses[busnumber].driverdata)->number_gl =
+    atoi(txt);
+      free(txt);
+  }
+  if (strcmp(child->name, "maximum_address_for_accessoire") == 0) {
+      char *txt =
+    xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      ((IB_DATA *) busses[busnumber].driverdata)->number_ga =
+    atoi(txt);
+      free(txt);
+  }
+  child = child->next;
     }
 }
 
@@ -234,7 +234,7 @@ send_command_ga(int bus)
         }
         writeByte(fd, &byte2send, 0);
         status = 1;
-	// reschedule event: turn off --tobedone--
+  // reschedule event: turn off --tobedone--
         if(gatmp.action && (gatmp.activetime > 0))
         {
           for(i1=0;i1<50;i1++)

@@ -28,59 +28,62 @@
 #include "srcp-power.h"
 #include "srcp-srv.h"
 
+#define __loopback ((LOOPBACK_DATA*)busses[busnumber].driverdata)
+
 void readconfig_loopback(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
-    xmlNodePtr child = node->children;
+  xmlNodePtr child = node->children;
 
-    busses[busnumber].type = SERVER_LOOPBACK;
-    busses[busnumber].init_func = &init_bus_Loopback;
-    busses[busnumber].term_func = &term_bus_Loopback;
-    busses[busnumber].thr_func = &thr_sendrec_Loopback;
-    busses[busnumber].driverdata = malloc(sizeof(struct _LOOPBACK_DATA));
-    strcpy(busses[busnumber].description, "GA GL FB POWER");
+  busses[busnumber].type = SERVER_LOOPBACK;
+  busses[busnumber].init_func = &init_bus_Loopback;
+  busses[busnumber].term_func = &term_bus_Loopback;
+  busses[busnumber].thr_func = &thr_sendrec_Loopback;
+  busses[busnumber].driverdata = malloc(sizeof(struct _LOOPBACK_DATA));
+  strcpy(busses[busnumber].description, "GA GL FB POWER");
 
-    ((LOOPBACK_DATA *) busses[busnumber].driverdata)->number_fb = 0;	/* max 31 */
-    ((LOOPBACK_DATA *) busses[busnumber].driverdata)->number_ga = 256;
-    ((LOOPBACK_DATA *) busses[busnumber].driverdata)->number_gl = 80;
+  __loopback->number_fb = 0;  /* max 31 */
+  __loopback->number_ga = 256;
+  __loopback->number_gl = 80;
 
-    while (child) {
-          if(strncmp(child->name, "text", 4)==0) {
-            child = child -> next;
-            continue;
-          }
-
-	if (strcmp(child->name, "number_fb") == 0) {
-	    char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-	    ((LOOPBACK_DATA *) busses[busnumber].driverdata)->number_fb =
-		atoi(txt);
-	    free(txt);
-	}
- 	if (strcmp(child->name, "number_gl") == 0) {
-	    char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-	    ((LOOPBACK_DATA *) busses[busnumber].driverdata)->number_gl =
-		atoi(txt);
-	    free(txt);
-	}
-	if (strcmp(child->name, "number_ga") == 0) {
-	    char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-	    ((LOOPBACK_DATA *) busses[busnumber].driverdata)->number_ga =
-		atoi(txt);
-	    free(txt);
-	}
+  while (child)
+  {
+    if(strncmp(child->name, "text", 4)==0)
+    {
       child = child -> next;
-    } // while
+      continue;
+    }
 
+    if (strcmp(child->name, "number_fb") == 0)
+    {
+      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      __loopback->number_fb = atoi(txt);
+      free(txt);
+    }
+    if (strcmp(child->name, "number_gl") == 0)
+    {
+      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      __loopback->number_gl = atoi(txt);
+      free(txt);
+    }
+    if (strcmp(child->name, "number_ga") == 0)
+    {
+      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      __loopback->number_ga = atoi(txt);
+      free(txt);
+    }
+    child = child -> next;
+  } // while
 }
 
-int init_lineLoopback (char *name) {
+int init_lineLoopback (char *name)
+{
   int FD;
   syslog(LOG_INFO,"loopback open device %s (not really!)", name);
   FD = -1;
   return FD;
 }
 
-int
-term_bus_Loopback(int bus)
+int term_bus_Loopback(int bus)
 {
   return 0;
 }
@@ -103,8 +106,7 @@ int init_bus_Loopback(int i)
   return 1;
 }
 
-void*
-thr_sendrec_Loopback (void *v)
+void* thr_sendrec_Loopback (void *v)
 {
   struct _GL gltmp, glakt;
   struct _GA gatmp;

@@ -36,6 +36,6 @@
 #define SRCP_DEVICEREINITIALIZED 424
 #define SRCP_NOTSUPPORTED 425
 
-int srcp_fmt_msg(int errno, char *msg);
+int srcp_fmt_msg(int errorcode, char *msg);
 
 #endif

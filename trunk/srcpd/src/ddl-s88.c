@@ -123,7 +123,7 @@ void readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber){
 		atoi(txt);
 	    free(txt);
 	}
-	if (strcmp(child->name, "number_fb_4") == 0) {
+	if (strcmp(child->name, "number_fb_3") == 0) {
 	    char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
 	    ((DDL_S88_DATA*) busses[busnumber].driverdata)->number_fb[2] =
 		atoi(txt);
@@ -287,7 +287,8 @@ void * thr_sendrec_S88(void *v) {
     }
 }
 
-void *thr_sendrec_dummy(void *v) {
-    while(1)
-        sleep(1);
+void *thr_sendrec_dummy(void *v)
+{
+  while(1)
+    sleep(1);
 }

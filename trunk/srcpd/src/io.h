@@ -26,5 +26,6 @@ void writeByte(int FD, unsigned char *the_byte, unsigned long msec);
 
 void restore_comport(int bus);
 void save_comport(int bus);
+void close_comport(int bus);
 
 #endif
