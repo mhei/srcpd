@@ -158,14 +158,23 @@ int socket_readline(int Socket, char *line, int len)
  */
 int socket_writereply(int Socket, const char *line)
 {
-    int status;
+    int status=0;
     long int linelen = strlen(line);
+    char chunk[MAXSRCPLINELEN], tmp[MAXSRCPLINELEN];
+    int i=0;
+
     if (linelen<=0) return 0;
     DBG(0, DBG_DEBUG, "socket %d, write %s", Socket, line);
-    if (linelen >= 1000) {
-	/* split line into chunks as specified in SRCP, not yet implemented */
+    while(i<=linelen-MAXSRCPLINELEN-1) {
+        memset(tmp, 0, sizeof(tmp));
+	strncpy(tmp, line+i, MAXSRCPLINELEN-2);
+	sprintf(chunk, "%s\\\n", tmp);
+	status=write(Socket, chunk, strlen(chunk));
+	i+=MAXSRCPLINELEN-2;
     }
-    status = write(Socket, line, strlen(line));
+    if(i<linelen){
+	    status = write(Socket, line+i, linelen-i);
+    }
     DBG(0, DBG_DEBUG, "status from write: %d", status);
     return status;
 }

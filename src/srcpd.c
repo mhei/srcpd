@@ -137,7 +137,6 @@ int main(int argc, char **argv)
 
     // zuerst die Konfigurationsdatei lesen
   printf("conffile = \"%s\"\n", conffile);
-  printf("HALLOHALLO");
 
   readConfig(conffile);
   // check for resolv all needed malloc's

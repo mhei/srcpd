@@ -47,7 +47,7 @@ pthread_mutex_t SessionID_mut = PTHREAD_MUTEX_INITIALIZER;
 void *thr_doClient(void *v)
 {
     int Socket = (int) v;
-    char line[1000], cmd[1000], parameter[1000], reply[1000];
+    char line[MAXSRCPLINELEN], cmd[MAXSRCPLINELEN], parameter[MAXSRCPLINELEN], reply[MAXSRCPLINELEN];
     int mode = COMMAND;
     long int sessionid, rc, nelem;
     struct timeval time;
@@ -96,7 +96,7 @@ void *thr_doClient(void *v)
 		return NULL;
 	    }
 	    if (strncasecmp(cmd, "SET", 3) == 0) {
-		char p[1000], setcmd[1000];
+		char p[MAXSRCPLINELEN], setcmd[MAXSRCPLINELEN];
 		int n = sscanf(parameter, "%s %1000c", setcmd, p);
 		rc = SRCP_UNKNOWNCOMMAND;
 		if (n == 2 && strncasecmp(setcmd, "CONNECTIONMODE", 14) == 0) {
@@ -112,7 +112,7 @@ void *thr_doClient(void *v)
 		}
 		if (nelem == 2 && strncasecmp(setcmd, "PROTOCOL", 3) == 0) {
 		    rc = SRCP_HS_WRONGPROTOCOL;
-		    if (strncasecmp(p, "SRCP 0.8", 8) == 0) {
+		    if (strncasecmp(p, "SRCP 0.8.2", 10) == 0) {
 			rc = SRCP_OK_PROTOCOL;
 		    }
 		}
@@ -133,7 +133,7 @@ void *thr_doClient(void *v)
  * handle all aspects of the command for all commands
  */
 
-static int handle_setverify(int sessionid, int bus, char *device, char *parameter, char *reply, int setorverify)
+static int handle_setcheck(int sessionid, int bus, char *device, char *parameter, char *reply, int setorcheck)
 {
     struct timeval time;
     int rc = SRCP_UNSUPPORTEDDEVICEGROUP;
@@ -142,7 +142,7 @@ static int handle_setverify(int sessionid, int bus, char *device, char *paramete
 	long laddr, direction, speed, maxspeed, f[13];
 	int func, i, anzparms;
 	func = 0;
-	/* We could provide a maximum of 32 on/off functions, but for now 12+1 will good enough */
+	/* We could provide a maximum of 32 on/off functions, but for now 12+1 will be good enough */
 	anzparms = sscanf(parameter, "%ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld",
 		&laddr, &direction, &speed, &maxspeed,
 		&f[0],&f[1],&f[2],&f[3],&f[4],&f[5],&f[6],&f[7],&f[8],&f[9],&f[10],&f[11],&f[12]);
@@ -155,7 +155,7 @@ static int handle_setverify(int sessionid, int bus, char *device, char *paramete
 	    getlockGL(bus, laddr, &lockid);
 	    if (lockid == 0 || lockid == sessionid || direction == 2) {
 		    rc = SRCP_OK;
-		    if (setorverify==1)	rc = queueGL(bus, laddr, direction, speed, maxspeed, func);
+		    if (setorcheck==1)	rc = queueGL(bus, laddr, direction, speed, maxspeed, func);
 	    } else {
 		rc = SRCP_DEVICELOCKED;
 	    }
@@ -176,7 +176,7 @@ static int handle_setverify(int sessionid, int bus, char *device, char *paramete
 	    getlockGA(bus, gaddr, &lockid);
 	    if (lockid == 0 || lockid == sessionid) {
 		rc = SRCP_OK;		    
-		if (setorverify==1) rc = queueGA(bus, gaddr, port, aktion, delay);
+		if (setorcheck==1) rc = queueGA(bus, gaddr, port, aktion, delay);
 	    } else {
 		rc = SRCP_DEVICELOCKED;
 	    }
@@ -190,7 +190,7 @@ static int handle_setverify(int sessionid, int bus, char *device, char *paramete
 	int type;
 	char *ctype;
 
-	ctype = malloc(1000);
+	ctype = malloc(MAXSRCPLINELEN);
 	sscanf(parameter, "%ld %s %ld %ld %ld", &addr, ctype, &value1, &value2, &value3);
 	type = CV;
 	if (strcasecmp(ctype, "REG") == 0)
@@ -208,14 +208,14 @@ static int handle_setverify(int sessionid, int bus, char *device, char *paramete
 	nelem = sscanf(parameter, "%ld %ld %ld %ld", &d, &h, &m, &s);
 	if (nelem >= 4) {
 		rc = SRCP_OK;
-		if (setorverify==1) rc = setTIME(d, h, m, s);
+		if (setorcheck==1) rc = setTIME(d, h, m, s);
 	}
 	else
 	    rc = SRCP_LISTTOOSHORT;
     }
     if (bus_has_devicegroup(bus, DG_LOCK) && strncasecmp(device, "LOCK", 4) == 0) {
 	long int addr, duration;
-	char devgrp[1000];
+	char devgrp[MAXSRCPLINELEN];
 	int nelem = -1;
 	if (strlen(parameter) > 0) {
 	    nelem = sscanf(parameter, "%s %ld %ld", devgrp, &addr, &duration);
@@ -225,11 +225,11 @@ static int handle_setverify(int sessionid, int bus, char *device, char *paramete
 	    rc = SRCP_UNSUPPORTEDDEVICEGROUP;
 	    if (strncmp(devgrp, "GL", 2) == 0) {
 		    rc = SRCP_OK;
-		    if (setorverify==1)  rc = lockGL(bus, addr, duration, sessionid);
+		    if (setorcheck==1)  rc = lockGL(bus, addr, duration, sessionid);
 	    }
 	    if (strncmp(devgrp, "GA", 2) == 0) {
 		    rc = SRCP_OK;
-		    if (setorverify==1)  rc = lockGA(bus, addr, duration, sessionid);
+		    if (setorcheck==1)  rc = lockGA(bus, addr, duration, sessionid);
 	     }
 	} else {
 	    rc = SRCP_LISTTOOSHORT;
@@ -246,11 +246,11 @@ static int handle_setverify(int sessionid, int bus, char *device, char *paramete
 	    rc = SRCP_WRONGVALUE;
 	    if (strncasecmp(state, "OFF", 3) == 0) {
 		    rc = SRCP_OK;
-		    if (setorverify==1) rc = setPower(bus, 0, msg);
+		    if (setorcheck==1) rc = setPower(bus, 0, msg);
 	    }
 	    if (strncasecmp(state, "ON", 2) == 0) {
 		    rc = SRCP_OK;
-		    if (setorverify==1) rc = setPower(bus, 1, msg);
+		    if (setorcheck==1) rc = setPower(bus, 1, msg);
 	    }
 	} else {
 	    rc = SRCP_LISTTOOSHORT;
@@ -266,7 +266,7 @@ static int handle_setverify(int sessionid, int bus, char *device, char *paramete
  */
 int handleSET(int sessionid, int bus, char *device, char *parameter, char *reply)
 {
-    return handle_setverify(sessionid, bus, device, parameter, reply, 1);
+    return handle_setcheck(sessionid, bus, device, parameter, reply, 1);
 }
 
 /***
@@ -274,7 +274,7 @@ int handleSET(int sessionid, int bus, char *device, char *parameter, char *reply
  */
 int handleCHECK(int sessionid, int bus, char *device, char *parameter, char *reply)
 {
-    return handle_setverify(sessionid, bus, device, parameter, reply, 0);
+    return handle_setcheck(sessionid, bus, device, parameter, reply, 0);
 }
 
 /**
@@ -321,7 +321,7 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
 	long addr, value1, value2;
 	int type;
 	char *ctype;
-	ctype = malloc(1000);
+	ctype = malloc(MAXSRCPLINELEN);
 	sscanf(parameter, "%ld %s %ld %ld", &addr, ctype, &value1, &value2);
 	type = CV;
 	if (strcasecmp(ctype, "REG") == 0)
@@ -594,8 +594,8 @@ int handleRESET(int sessionid, int bus, char *device, char *parameter, char *rep
  */
 int doCmdClient(int Socket, int sessionid)
 {
-    char line[1024], reply[4095];
-    char cbus[1000], command[1000], devicegroup[1000], parameter[1000];
+    char line[MAXSRCPLINELEN], reply[MAXSRCPLINELEN];
+    char cbus[MAXSRCPLINELEN], command[MAXSRCPLINELEN], devicegroup[MAXSRCPLINELEN], parameter[MAXSRCPLINELEN];
     long int bus;
     long int rc, nelem;
     struct timeval akt_time;
