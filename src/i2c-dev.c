@@ -16,10 +16,12 @@
  *
  */
 
-#include "stdincludes"
+#include "stdincludes.h"
 
 #ifdef linux 
+#include "i2c-dev.h"
 #include <linux/i2c-dev.h>
+#include <fcntl.h>
 // we have to use kernel-headers directly, sorry!
 #include <math.h>
 // needed for pow()
