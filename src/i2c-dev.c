@@ -12,7 +12,7 @@
  * 					can be used to access hardware found on
  *					http://www.matronix.de/
  *
- *					Copyright:		(c) 2002,2003 by Manuel Borchers <manuel@matronix.de>
+ *					2002,2003 by Manuel Borchers <manuel@matronix.de>
  *
  */
 #ifdef linux
@@ -22,12 +22,17 @@
 
 #include <linux/i2c-dev.h>
 // we have to use kernel-headers directly, sorry!
+
+#ifndef I2C_SLAVE
+#define I2C_SLAVE	0x0703
+#warning "defined hardcoded I2C_SLAVE, due to an yet unknown problem with headers."
+#endif
+
 #include <math.h>
 // needed for pow()
 
 #include "config-srcpd.h"
 #include "io.h"
-#include "i2c-dev.h"
 #include "srcp-fb.h"
 #include "srcp-ga.h"
 #include "srcp-gl.h"
