@@ -34,7 +34,9 @@ int readByte(int bus, unsigned char *the_byte)
   int i;
 
   // with debuglevel 7, we will not really work on hardware
-  if(busses[bus].debuglevel > 6)
+  if (busses[bus].debuglevel > 3)
+    syslog(LOG_INFO, "fd = %d", busses[bus].fd);
+  if (busses[bus].debuglevel > 6)
   {  
     i = 1;
     *the_byte = 0;
@@ -43,7 +45,7 @@ int readByte(int bus, unsigned char *the_byte)
   {
     ioctl(busses[bus].fd, FIONREAD, &i);
     if(busses[bus].debuglevel > 5)
-      syslog(LOG_INFO, "on bus %d bytes to read: %d", bus, i);
+      syslog(LOG_INFO, "on bus %d, there are bytes to read: %d", bus, i);
     if (i > 0)
     {
       // read only, if there is really an input

@@ -241,7 +241,7 @@ int startup_FB()
 void set_min_time(int busnumber, int mt)
 {
   if ((busnumber >= 0) && (busnumber < MAX_BUSSES))
-    min_time[busnumber] = mt;
+    min_time[busnumber] = mt * 1000;
 }
 
 int init_FB(int bus, int number)
@@ -281,12 +281,12 @@ void check_reset_fb(void)
   struct timeval cmp_time, diff_time;
   int i;
     
-//  syslog(LOG_INFO, "start with checking for resetet feedbacks");
+  syslog(LOG_INFO, "start with checking for resetet feedbacks");
   for (i=0;i<MAX_BUSSES;i++)
   {  
     while (getNextFB(i, &reset_fb) != -1)
     {
-  //    syslog(LOG_INFO, "status of change = %d", fb[reset_fb.busnumber].fbstate[reset_fb.port].change);
+//      syslog(LOG_INFO, "status of change = %d", fb[reset_fb.busnumber].fbstate[reset_fb.port].change);
       if (fb[i].fbstate[reset_fb.port].change == 0)
       {
         // drop this reset of feedback, because we've got an new impulse
@@ -295,16 +295,20 @@ void check_reset_fb(void)
       else
       {
         gettimeofday(&cmp_time, NULL);
+        syslog(LOG_INFO, "time: %ld.%ld      compare: %ld.%ld", 
+	cmp_time.tv_sec, cmp_time.tv_usec, 
+	reset_fb.timestamp.tv_sec, reset_fb.timestamp.tv_usec);
         diff_time.tv_sec  = cmp_time.tv_sec  - reset_fb.timestamp.tv_sec;
         diff_time.tv_usec = cmp_time.tv_usec - reset_fb.timestamp.tv_usec;
-        diff_time.tv_usec += (diff_time.tv_sec * 1000);
-        if (diff_time.tv_sec < min_time[i])
+        diff_time.tv_usec += (diff_time.tv_sec * 1000000);
+        syslog(LOG_INFO, "time-diff = %ld us (need %d us)", diff_time.tv_usec, min_time[i]);
+        if (diff_time.tv_usec < min_time[i])
         {
           break;
         }
         else
         {
-  //        syslog(LOG_INFO, "set %d feedback to 0", reset_fb.port);
+          syslog(LOG_INFO, "set %d feedback to 0", reset_fb.port);
           unqueueNextFB(i);
           pthread_mutex_lock(&queue_mutex_fb);
           fb[i].fbstate[reset_fb.port].state = 0;

@@ -241,7 +241,7 @@ int main(int argc, char **argv)
   }
   syslog(LOG_INFO, "All Threads started");
   server_shutdown_state = 0;
-  sleep_ctr = 100;
+  sleep_ctr = 10;
   /* And now: Wait for _real_ tasks: shutdown, reset, watch for hanging processes */
   while(1)
   {
@@ -251,7 +251,7 @@ int main(int argc, char **argv)
       break; /* leave the while() loop */
     }
     /* Wachhund einmal pro Sekunde */
-    usleep(10);
+    usleep(100000);
     
     // test for feedbacks changed back to "0"
     check_reset_fb();
@@ -278,7 +278,7 @@ int main(int argc, char **argv)
         }
         busses[i].watchdog = 0;
       }
-      sleep_ctr = 100;
+      sleep_ctr = 10;
     }
   }
   syslog(LOG_INFO, "Shutting down server...");
