@@ -826,7 +826,8 @@ void check_status_ib(int busnumber)
       }
       // 2. byte functions
       readByte_ib(busnumber, 1, &rr);
-      gltmp.funcs = rr & 0xf0;
+      //gltmp.funcs = rr & 0xf0;
+			gltmp.funcs = ( rr << 1 );
       // 3. byte adress (low-part A7..A0)
       readByte_ib(busnumber, 1, &rr);
       gltmp.id = rr;
@@ -835,9 +836,13 @@ void check_status_ib(int busnumber)
       if((rr & 0x80) && (gltmp.direction == 0))
         gltmp.direction = 1;    // Richtung ist vorwärts
       if(rr & 0x40)
-        gltmp.funcs |= 0x010;    // Licht ist an
+        gltmp.funcs |= 0x01;    // Licht ist an
       rr &= 0x3F;
       gltmp.id |= rr << 8;
+			
+			// 5. byte real speed (is ignored)
+			readByte_ib(busnumber, 1, &rr);
+			//printf("speed reported in 5th byte: speed = %d\n", rr);
 
     //printf("got GL data from IB: lok# = %d, speed = %d, dir = %d\n",
     //  gltmp.id, gltmp.speed, gltmp.direction);
@@ -854,10 +859,6 @@ void check_status_ib(int busnumber)
     // recalc speed
     gltmp.speed = (gltmp.speed * glakt.n_fs) / 126;
     setGL(busnumber, gltmp.id, gltmp);
-
-    // 5. byte real speed (is ignored)
-    readByte_ib(busnumber, 1, &rr);
-    //printf("speed reported in 5th byte: speed = %d\n", rr);
 
       // next 1. byte
       readByte_ib(busnumber, 1, &rr);
