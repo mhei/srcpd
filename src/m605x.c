@@ -50,7 +50,7 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   __m6051->ga_min_active_time = 75;
   __m6051->pause_between_cmd = 200;
   __m6051->pause_between_bytes = 2;
-  strcpy(busses[busnumber].description, "GA GL FB POWER");
+  strcpy(busses[busnumber].description, "GA GL FB POWER LOCK");
 
   while (child)
   {

@@ -257,7 +257,13 @@ int lockGA(int busnumber, int addr, long int sessionid)
   else
   {
     if(ga[busnumber].gastate[addr].locked_by==0) {
+        char msg[256];
         ga[busnumber].gastate[addr].locked_by=sessionid;
+
+        ga[busnumber].gastate[addr].locked_by=sessionid;
+        gettimeofday(& ga[busnumber].gastate[addr].locktime, NULL);
+        describeLOCKGA(busnumber, addr, msg);
+        queueInfoMessage(msg);
         return SRCP_OK;
     } else {
         return SRCP_DEVICELOCKED;
@@ -274,12 +280,26 @@ int getlockGA(int busnumber, int addr, long int *sessionid)
 
 }
 
+int describeLOCKGA(int bus, int addr, char *reply) {
+    sprintf(reply, "%lu.%.3lu 100 INFO %d LOCK GA %d %ld\n",
+          ga[bus].gastate[addr].locktime.tv_sec,
+          ga[bus].gastate[addr].locktime.tv_usec/1000,
+          bus, addr, ga[bus].gastate[addr].locked_by);
+    return SRCP_OK;
+}
 
-int unlockGA(int busnumber, int addr, int sessionid)
+int unlockGA(int busnumber, int addr, long int sessionid)
 {
   if(ga[busnumber].gastate[addr].locked_by==sessionid)
   {
+    char msg[256];
     ga[busnumber].gastate[addr].locked_by = 0;
+    gettimeofday(& ga[busnumber].gastate[addr].locktime, NULL);
+    sprintf(msg, "%lu.%.3lu 102 INFO %d LOCK GA %d %ld\n",
+      ga[busnumber].gastate[addr].locktime.tv_sec,
+      ga[busnumber].gastate[addr].locktime.tv_usec/1000,
+      busnumber, addr, sessionid);
+    queueInfoMessage(msg);
     return SRCP_OK;
   }
   else
@@ -297,11 +317,11 @@ void unlock_ga_bysessionid(long int sessionid)
   {
     number = get_number_ga(i);
     DBG(i, DBG_DEBUG, "number of GA for busnumber %d is %d", i, number);
-    for(j=0;j<number; j++)
+    for(j=1;j<=number; j++)
     {
       if(ga[i].gastate[j].locked_by == sessionid)
       {
-        unlockGA(i, j+1, sessionid);
+        unlockGA(i, j, sessionid);
       }
     }
   }

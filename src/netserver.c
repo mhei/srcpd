@@ -184,7 +184,7 @@ handleSET(int sessionid, int bus, char *device, char *parameter,
 	anzparms = sscanf(parameter, "%ld %ld %ld %ld %ld %ld %ld %ld %ld",
 			  &laddr, &direction, &speed, &maxspeed, &func,
 			  &f1, &f2, &f3, &f4);
-	if (anzparms > 5) {
+	if (anzparms >= 4) {
 	    long int lockid;
 	    /* Only if not locked or emergency stop !! */
 	    getlockGL(bus, laddr, &lockid);
@@ -199,10 +199,9 @@ handleSET(int sessionid, int bus, char *device, char *parameter,
 	long gaddr, port, aktion, delay;
 	long int lockid;
 	int anzparms;
-	anzparms =
-	    sscanf(parameter, "%ld %ld %ld %ld", &gaddr, &port, &aktion,
+	anzparms = sscanf(parameter, "%ld %ld %ld %ld", &gaddr, &port, &aktion,
 		   &delay);
-	if (anzparms == 4) {
+	if (anzparms >= 4) {
 	    /* Port 0,1; Aktion 0,1 */
 	    /* Only if not locked!! */
 	    getlockGA(bus, gaddr, &lockid);
@@ -244,13 +243,15 @@ handleSET(int sessionid, int bus, char *device, char *parameter,
 	else
 	    rc = SRCP_LISTTOOSHORT;
     }
-    if (strncasecmp(device, "LOCK", 4) == 0) {
+    if (bus_has_devicegroup(bus, DG_LOCK) && strncasecmp(device, "LOCK", 4) == 0) {
 	long int addr;
 	char devgrp[10];
 	int nelem = -1;
-	if (strlen(parameter) > 0)
+	if (strlen(parameter) > 0) {
 	    nelem = sscanf(parameter, "%s %ld", devgrp, &addr);
-	if (nelem == 2) {
+          DBG(bus, DBG_INFO, "LOCK: %s", parameter);
+     }
+	if (nelem >= 2) {
 	    rc = SRCP_UNSUPPORTEDDEVICEGROUP;
 	    if (strncmp(devgrp, "GL", 2) == 0)
 		rc = lockGL(bus, addr, sessionid);
@@ -405,42 +406,23 @@ handleGET(int sessionid, int bus, char *device, char *parameter,
 				  akt_time);
 	    }
 	}
-	if (strncasecmp(device, "LOCK", 4) == 0) {
+    }
+    if (bus_has_devicegroup(bus, DG_LOCK) && (strncasecmp(device, "LOCK", 4) == 0) ) {
 	    long int addr;
 	    char devgrp[10];
 	    int nelem = -1;
-	    if (bus_has_devicegroup(bus, DG_LOCK)) {
-		if (strlen(parameter) > 0)
+          if (strlen(parameter) > 0)
 		    nelem = sscanf(parameter, "%s %ld", devgrp, &addr);
-		if (nelem <= 0) {
+          if (nelem <= 1) {
 		rc = srcp_fmt_msg(SRCP_LISTTOOSHORT, reply,
 				  akt_time);
-		} else {
+          } else {
 		    rc = SRCP_UNSUPPORTEDDEVICEGROUP;
-		    if (strncmp(devgrp, "GL", 2) == 0) {
-			long int session_id;
-			rc = getlockGL(bus, addr, &session_id);
-			if (rc == SRCP_OK)
-			    sprintf(reply, "%d GL %ld %ld", bus, addr,
-				    session_id);
-		    }
-		    if (strncmp(devgrp, "GA", 2) == 0) {
-			long int session_id;
-			rc = getlockGA(bus, addr, &session_id);
-			if (rc == SRCP_OK)
-			    sprintf(reply, "%d GA %ld %ld", bus, addr,
-				    session_id);
-		    }
-                if (rc!=SRCP_OK)
-               		rc = srcp_fmt_msg(rc, reply,
-				  akt_time);
-
-		}
-	    } else {
-		rc = srcp_fmt_msg(SRCP_UNSUPPORTEDDEVICEGROUP, reply,
-				  akt_time);
-	    }
-	}
+		    if (strncmp(devgrp, "GL", 2) == 0)
+                  rc = describeLOCKGL(bus, addr, reply);
+		    if (strncmp(devgrp, "GA", 2) == 0)
+                  rc = describeLOCKGA(bus, addr, reply);
+          }
     }
     if(reply[0]==0x00)
       rc = srcp_fmt_msg(rc, reply, akt_time);
@@ -510,11 +492,29 @@ int
 handleTERM(int sessionid, int bus, char *device, char *parameter,
 	   char *reply)
 {
-    struct timeval time;
-    int rc = SRCP_UNSUPPORTEDDEVICE;
+    struct timeval akt_time;
+    int rc = SRCP_UNSUPPORTEDDEVICEGROUP;
     *reply = 0x00;
-    if (strncasecmp(device, "FB", 2) == 0) {
+    if (bus_has_devicegroup(bus, DG_LOCK) && strncasecmp(device, "LOCK", 4) == 0) {
+	    long int addr;
+	    char devgrp[10];
+	    int nelem = -1;
+          if (strlen(parameter) > 0)
+		    nelem = sscanf(parameter, "%s %ld", devgrp, &addr);
+
+		if (nelem <= 1) {
+		   rc = SRCP_LISTTOOSHORT;
+		} else {
+		    rc = SRCP_UNSUPPORTEDDEVICE;
+		    if (strncmp(devgrp, "GL", 2) == 0) {
+			rc = unlockGL(bus, addr, sessionid);
+		    }
+		    if (strncmp(devgrp, "GA", 2) == 0) {
+			rc = unlockGA(bus, addr, sessionid);
+		    }
+		}
     }
+
     if (strncasecmp(device, "SERVER", 6) == 0) {
 	if (bus == 0) {
 	    rc = SRCP_OK;
@@ -536,8 +536,8 @@ handleTERM(int sessionid, int bus, char *device, char *parameter,
 	    rc = SRCP_UNSUPPORTEDDEVICEGROUP;
 	}
     }
-    gettimeofday(&time, NULL);
-    srcp_fmt_msg(rc, reply, time);
+    gettimeofday(&akt_time, NULL);
+    srcp_fmt_msg(abs(rc), reply, akt_time);
     return rc;
 }
 
@@ -550,10 +550,9 @@ handleINIT(int sessionid, int bus, char *device, char *parameter,
     if (strncasecmp(device, "GL", 2) == 0) {
 	long addr, protversion, n_fs, n_func, nelem;
 	char prot[10];
-	nelem =
-	    sscanf(parameter, "%ld %s %ld %ld %ld", &addr, prot,
+	nelem = sscanf(parameter, "%ld %s %ld %ld %ld", &addr, prot,
 		   &protversion, &n_fs, &n_func);
-	if (nelem == 5)
+	if (nelem >= 5)
 	    rc = initGL(bus, addr, prot, protversion, n_fs, n_func);
 	else
 	    rc = SRCP_LISTTOOSHORT;
@@ -562,7 +561,7 @@ handleINIT(int sessionid, int bus, char *device, char *parameter,
     if (strncasecmp(device, "TIME", 4) == 0) {
 	long rx, ry, nelem;
 	nelem = sscanf(parameter, "%ld %ld", &rx, &ry);
-	if (nelem == 2)
+	if (nelem >= 2)
 	    rc = initTIME(rx, ry);	/* prüft auch die Werte! */
 	else
 	    rc = SRCP_LISTTOOSHORT;
@@ -622,11 +621,10 @@ int doCmdClient(int Socket, int sessionid)
 	memset(devicegroup, 0, sizeof(devicegroup));
 	memset(parameter, 0, sizeof(parameter));
 	memset(reply, 0, sizeof(reply));
-	nelem =
-	    sscanf(line, "%s %ld %s %900c", command, &bus, devicegroup,
+	nelem = sscanf(line, "%s %ld %s %900c", command, &bus, devicegroup,
 		   parameter);
-	DBG(bus, DBG_INFO, "getting command from session %ld: %s %s %s",
-	    sessionid, command, devicegroup, parameter);
+	DBG(bus, DBG_INFO, "getting command from session %ld: %s %d %s %s",
+	    sessionid, command, bus, devicegroup, parameter);
 	rc = SRCP_UNKNOWNCOMMAND;
 	reply[0] = 0x00;
 	if (nelem < 3)
