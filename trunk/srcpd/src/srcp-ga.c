@@ -310,7 +310,7 @@ void unlock_ga_bysessionid(long int sessionid)
   int i,j;
   int number;
   DBG(0, DBG_DEBUG, "unlock GA by session-ID %ld", sessionid);
-  for(i=0; i<MAX_BUSSES; i++)
+  for(i=0; i<num_busses; i++)
   {
     number = get_number_ga(i);
     DBG(i, DBG_DEBUG, "number of GA for busnumber %d is %d", i, number);
@@ -329,7 +329,7 @@ void unlock_ga_bytime(void) {
   int i,j;
   int number;
   DBG(0, DBG_DEBUG, "unlock GA by time");
-  for(i=0; i<MAX_BUSSES; i++)
+  for(i=0; i<num_busses; i++)
   {
     number = get_number_ga(i);
     DBG(0, DBG_DEBUG, "number of GA for busnumber %d is %d", i, number);

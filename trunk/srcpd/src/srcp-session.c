@@ -43,6 +43,9 @@ int start_session(long int sessionid, int mode)
   return SRCP_OK;
 }
 
+/**
+ * called by netserver after finishing the session-loop
+ */
 int stop_session(long int sessionid)
 {
   char msg[1000];
@@ -63,6 +66,10 @@ int describeSESSION(int bus, int sessionid, char *reply)
   return SRCP_UNSUPPORTEDOPERATION;
 }
 
+/**
+ * called by srcp command session to finish a session; 
+ * return negative value of SRCP_OK to ack the request.
+ */
 int termSESSION(int bus, int sessionid, int termsessionid, char *reply)
 {
   if(sessionid == termsessionid || termsessionid == 0)

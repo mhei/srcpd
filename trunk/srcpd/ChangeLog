@@ -1,3 +1,34 @@
+2003-10-17 14:07  mborchers
+
+	* README.ibox, ibox/README: updated documentation for 'dead' ibox
+	kernel module
+
+2003-10-17 13:55  mborchers
+
+	* config-srcpd.c: resolved conflicting types of readConfig
+
+2003-10-17 13:55  mborchers
+
+	* ib.c: commented out all code of old ibox kernel-module init
+
+2003-10-12 16:17  mtrute
+
+	* io.c: check all writes...
+
+2003-10-11 11:36  mtrute
+
+	* ChangeLog, config-srcpd.h, io.c, netserver.c, srcpd.c: Code
+	cleanups, replies splitted by backslashed if too long (none
+	currently, but required by srcp)
+
+2003-10-09 19:41  mtrute
+
+	* srcpd.c: bugfixing bugfix, now it really works...
+
+2003-10-09 18:51  mtrute
+
+	* srcpd.c: Security fixes, part2
+
 2003-10-09 18:26  mtrute
 
 	* ChangeLog, README, netserver.c, srcp-fb.c, srcp-ga.c: Security
