@@ -197,8 +197,14 @@ int init_bus_IB(int busnumber)
   if (status == 0)
     __ib -> working_IB = 1;
 
-  printf("INIT_BUS_IB exited with code: %d\n", status);
-  __ib->last_type = -1;
+  printf("INIT_BUS_IB exited with code: %d\n", status)
+
+  __ib->last_type = -1
+
+  __ib->emergency_on_ib = 0
+
+
+
   return status;
 }
 
@@ -240,27 +246,49 @@ void* thr_sendrec_IB(void *v)
   {
     if(busses[busnumber].power_changed)
     {
-      char msg[110];
-      byte2send = busses[busnumber].power_state ? 0xA7 : 0xA6;
-      writeByte(busnumber, byte2send, 250);
-      status = readByte_ib(busnumber, 1, &rr);
-      while(status == -1)
+      if (emergency_on_ib[busnumber] == 1)
       {
-        usleep(100000);
-        status = readByte_ib(busnumber, 1, &rr);
+        DBG(busnumber, DBG_INFO, "send power off to IB off while emergency-stop");
+        emergency_on_ib[busnumber] = 2;
+        byte2send = 0xA6;
+        writeByte(busnumber, byte2send, 250);
+        status = readByte(busnumber, 1, &rr);
+        while(status == -1)
+        {
+          usleep(100000);
+          status = readByte(busnumber, 1, &rr);
+        }
+        // sleep(2);
       }
-      if(rr == 0x00)                  // war alles OK ?
-        busses[busnumber].power_changed = 0;
-      if(rr == 0x06)                  // power on not possible - overheating
+      else
       {
-        busses[busnumber].power_changed = 0;
-        busses[busnumber].power_state   = 0;
+        if ((emergency_on_ib[busnumber] == 2) && (busses[busnumber].power_state == 0))
+        {
+          usleep(1000);
+          continue;
+        }
+        char msg[110];
+        byte2send = busses[busnumber].power_state ? 0xA7 : 0xA6;
+        writeByte(busnumber, byte2send, 250);
+        status = readByte(busnumber, 1, &rr);
+        while(status == -1)
+        {
+          usleep(100000);
+          status = readByte(busnumber, 1, &rr);
+        }
+        if(rr == 0x00)                  // war alles OK ?
+          busses[busnumber].power_changed = 0;
+        if(rr == 0x06)                  // power on not possible - overheating
+        {
+          busses[busnumber].power_changed = 0;
+          busses[busnumber].power_state   = 0;
+        }
+        infoPower(busnumber, msg);
+        queueInfoMessage(msg);
       }
-      infoPower(busnumber, msg);
-      queueInfoMessage(msg);
     }
 
-    if(busses[busnumber].power_state==0)
+    if(busses[busnumber].power_state == 0)
     {
       usleep(1000);
       continue;
@@ -458,7 +486,77 @@ int read_register(int busnumber, int reg)
   byte2send = reg;
   writeByte(busnumber, byte2send, 0);
   byte2send = 0;
+  writeByte(busnumber, byte2send, 2);
+
+  readByte(busnumber, 1, &status);
+
+  return status;
+}
+
+int write_register(int busnumber, int reg, int value)
+{
+  unsigned char byte2send;
+  unsigned char status;
+
+  byte2send = 0xED;
   writeByte(busnumber, byte2send, 0);
+  byte2send = reg;
+  writeByte(busnumber, byte2send, 0);
+  byte2send = 0;
+  writeByte(busnumber, byte2send, 0);
+  byte2send = value;
+  writeByte(busnumber, byte2send, 2);
+
+  readByte_ib(busnumber, 1, &status);
+
+  return status;
+}
+
+int read_page(int busnumber, int cv)
+{
+  unsigned char byte2send;
+  unsigned char status;
+  int tmp;
+
+  byte2send = 0xEE;
+  writeByte(busnumber, byte2send, 0);
+  // low-byte of cv
+  tmp = cv & 0xFF;
+  byte2send = tmp;
+  writeByte(busnumber, byte2send, 0);
+  // high-byte of cv
+  tmp = cv >> 8;
+  byte2send = tmp;
+  writeByte(busnumber, byte2send, 0);
+
+  readByte_ib(busnumber, 1, &status);
+
+  return status;
+}
+
+int write_page(int busnumber, int cv, int value)
+{
+  unsigned char byte2send;
+  unsigned char status;
+  int tmp;
+
+  byte2send = 0xEF;
+  writeByte(busnumber, byte2send, 0);
+  // low-byte of cv
+  tmp = cv & 0xFF;
+  byte2send = tmp;
+  writeByte(busnumber, byte2send, 0);
+  // high-byte of cv
+  tmp = cv >> 8;
+  byte2send = tmp;
+  writeByte(busnumber, byte2send, 0)
+
+  byte2send = value
+
+  writeByte(busnumber, byte2send, 0)
+
+
+
 
   readByte_ib(busnumber, 1, &status);
 
@@ -480,48 +578,7 @@ int read_cv(int busnumber, int cv)
   // high-byte of cv
   tmp = cv >> 8;
   byte2send = tmp;
-  writeByte(busnumber, byte2send, 0);
-
-  readByte_ib(busnumber, 1, &status);
-
-  return status;
-}
-
-int read_cvbit(int busnumber, int cv, int bit)
-{
-  unsigned char byte2send;
-  unsigned char status;
-  int tmp;
-
-  byte2send = 0xF2;
-  writeByte(busnumber, byte2send, 0);
-  // low-byte of cv
-  tmp = cv & 0xFF;
-  byte2send = tmp;
-  writeByte(busnumber, byte2send, 0);
-  // high-byte of cv
-  tmp = cv >> 8;
-  byte2send = tmp;
-  writeByte(busnumber, byte2send, 0);
-
-  readByte_ib(busnumber, 1, &status);
-
-  return status;
-}
-
-int write_register(int busnumber, int reg, int value)
-{
-  unsigned char byte2send;
-  unsigned char status;
-
-  byte2send = 0xED;
-  writeByte(busnumber, byte2send, 0);
-  byte2send = reg;
-  writeByte(busnumber, byte2send, 0);
-  byte2send = 0;
-  writeByte(busnumber, byte2send, 0);
-  byte2send = value;
-  writeByte(busnumber, byte2send, 0);
+  writeByte(busnumber, byte2send, 2);
 
   readByte_ib(busnumber, 1, &status);
 
@@ -545,7 +602,29 @@ int write_cv(int busnumber, int cv, int value)
   byte2send = tmp;
   writeByte(busnumber, byte2send, 0);
   byte2send = value;
-  writeByte(busnumber, byte2send, 200);
+  writeByte(busnumber, byte2send, 2);
+
+  readByte(busnumber, 1, &status);
+
+  return status;
+}
+
+int read_cvbit(int busnumber, int cv, int bit)
+{
+  unsigned char byte2send;
+  unsigned char status;
+  int tmp;
+
+  byte2send = 0xF2;
+  writeByte(busnumber, byte2send, 0);
+  // low-byte of cv
+  tmp = cv & 0xFF;
+  byte2send = tmp;
+  writeByte(busnumber, byte2send, 0);
+  // high-byte of cv
+  tmp = cv >> 8;
+  byte2send = tmp;
+  writeByte(busnumber, byte2send, 2);
 
   readByte_ib(busnumber, 1, &status);
 
@@ -557,7 +636,6 @@ int write_cvbit(int busnumber, int cv, int bit, int value)
   unsigned char byte2send;
   unsigned char status;
   int tmp;
-
   byte2send = 0xF3;
   writeByte(busnumber, byte2send, 0);
   // low-byte of cv
@@ -616,6 +694,24 @@ int send_pom(int busnumber, int addr, int cv, int value)
   return ret_val;
 }
 
+int term_pgm(int busnumber)
+{
+  unsigned char byte2send;
+  unsigned char status;
+  int ret_val;
+
+  // send command turn off PT
+  byte2send = 0xE2;
+  writeByte(busnumber, byte2send, 0);
+
+  readByte(busnumber, 1, &status);
+
+  ret_val = 0;
+  if (status != 0)
+    ret_val = -1;
+  return ret_val;
+}
+
 void send_command_sm_ib(int busnumber)
 {
   //unsigned char byte2send;
@@ -629,9 +725,16 @@ void send_command_sm_ib(int busnumber)
   {
     unqueueNextSM(busnumber, &smakt);
 
-    __ib -> last_type     = smakt.type;
-    __ib -> last_typeaddr = smakt.typeaddr;
-    __ib -> last_bit      = smakt.bit;
+    __ib -> last_type     = smakt.type
+
+    __ib -> last_typeaddr = smakt.typeaddr
+
+    __ib -> last_bit      = smakt.bit
+
+    __ib -> last_value = smakt.value
+
+
+
 
     DBG(busnumber, DBG_DEBUG, "in send_command_sm: last_type[%d] = %d", busnumber, __ib -> last_type);
     switch (smakt.command)
@@ -650,6 +753,8 @@ void send_command_sm_ib(int busnumber)
             case CV_BIT:
               write_cvbit(busnumber, smakt.typeaddr, smakt.bit, smakt.value);
               break;
+            case PAGE:
+              write_page(busnumber, smakt.typeaddr, smakt.value);
           }
         }
         else
@@ -669,9 +774,14 @@ void send_command_sm_ib(int busnumber)
           case CV_BIT:
             read_cvbit(busnumber, smakt.typeaddr, smakt.bit);
             break;
+          case PAGE:
+            read_page(busnumber, smakt.typeaddr);
         }
         break;
       case VERIFY:
+        break;
+      case TERM:
+        term_pgm(busnumber);
         break;
     }
   }
@@ -805,23 +915,24 @@ void check_status_ib(int busnumber)
   if(xevnt2 & 0x3f)       // overheat, short on track etc.
   {
     DBG(busnumber, DBG_DEBUG, "on bus %i short detected; old-state is %i", busnumber, getPower(busnumber));
-    if(getPower(busnumber))
+    if ((emergency_on_ib[busnumber] == 0) && (getPower(busnumber)))
     {
       char msg[500];
       if(xevnt2 & 0x20)
-        setPower(busnumber, -1, "Overheating condition detected");
+        setPower(busnumber, 0, "Overheating condition detected");
       if(xevnt2 & 0x10)
-        setPower(busnumber, -1, "non-allowed electrical connection between programming track and rest of layout");
+        setPower(busnumber, 0, "non-allowed electrical connection between programming track and rest of layout");
       if(xevnt2 & 0x08)
-        setPower(busnumber, -1, "Overload on DCC-Booster or Loconet");
+        setPower(busnumber, 0, "Overload on DCC-Booster or Loconet");
       if(xevnt2 & 0x04)
-        setPower(busnumber, -1, "short on internal booster");
+        setPower(busnumber, 0, "short on internal booster");
       if(xevnt2 & 0x02)
-        setPower(busnumber, -1, "Overload on Lokmaus-bus");
+        setPower(busnumber, 0, "Overload on Lokmaus-bus");
       if(xevnt2 & 0x01)
-        setPower(busnumber, -1, "short on external booster");
+        setPower(busnumber, 0, "short on external booster");
       infoPower(busnumber, msg);
       queueInfoMessage(msg);
+      emergency_on_ib[busnumber] = 1;
     }
   }
 
@@ -835,12 +946,13 @@ void check_status_ib(int busnumber)
     if(!(rr & 0x08))
     {
       DBG(busnumber, DBG_DEBUG, "on bus %i no power detected; old-state is %i", busnumber, getPower(busnumber));
-      if(getPower(busnumber))
+      if ((emergency_on_ib[busnumber] == 0) && (getPower(busnumber)))
       {
         char msg[500];
-        setPower(busnumber, -1, "Emergency Stop");
+        setPower(busnumber, 0, "Emergency Stop");
         infoPower(busnumber, msg);
         queueInfoMessage(msg);
+        emergency_on_ib[busnumber] = 1;
       }
     }
     if(rr & 0x80)
@@ -860,8 +972,15 @@ void check_status_pt_ib(int busnumber)
   unsigned char byte2send;
   unsigned char rr[7];
 
+  DBG(busnumber, DBG_DEBUG, "we've got an answer from programming decoder");
   i = -1;
+  while(i == 0)
+  {
+    i = readByte(busnumber, 0, &rr[0]);
+  }
+
   byte2send = 0xCE;
+  i = -1;
   while(i == -1)
   {
     writeByte(busnumber, byte2send, 0);
@@ -880,7 +999,18 @@ void check_status_pt_ib(int busnumber)
   for (i=0;i<(int)rr[0];i++)
     readByte_ib(busnumber, 1, &rr[i+1]);
 
+  if ((int)rr[0] < 2
+
+    rr[2] = __ib->last_value;
+
+   
+
   if(__ib->last_type != -1)
+
+
+
+
+
   {
     setSM(busnumber, __ib -> last_type, -1, __ib -> last_typeaddr, __ib->last_bit, (int)rr[2], (int)rr[1]);
     __ib -> last_type     = -1;
@@ -903,7 +1033,7 @@ static int open_comport(int busnumber, speed_t baud)
   busses[busnumber].fd = fd;
   if (fd < 0)
   {
-    DBG(busnumber, DBG_ERROR,"dammit, couldn't open device.\n");
+    DBG(busnumber, DBG_ERROR, "dammit, couldn't open device.\n");
   }
   else
   {
@@ -932,6 +1062,182 @@ static int open_comport(int busnumber, speed_t baud)
   }
   return fd;
 }
+/**
+ * checks the baudrate of the intellibox ; see interface description of intellibox
+ *
+ * @param file descriptor of the port
+ * @param  busnumber inside srcp
+ * @return the correct baudrate or -1 if nor recognized
+**/
+speed_t checkBaudrate(const int fd, const int busnumber)
+{
+  int found = 0;
+  short error = 0;
+  int baudrate = 2400;
+  struct termios interface;
+  unsigned char eingabe[10];
+  unsigned char out;
+  short len = 0;
+  int i;
+  speed_t internalBaudrate = B0;
+  printf("Check baudrate inside IB, see special option S1 in IB-Handbook\n");
+  for (i = 0; i < 10; i++)
+    eingabe[i]=0;
+  while ((found == 0) && (baudrate <= 38400))
+  {
+    printf("baudrate = %d ?????\n", baudrate);
+    DBG(busnumber, DBG_INFO, "baudrate = %i\n" , baudrate);
+    error = tcgetattr(fd, &interface);
+    if ( error < 0)
+    {
+      DBG(busnumber, DBG_INFO, "CheckBaudrate: Error in tcgettattr, error [%d]\n", error);
+//      testErrorFlag(busnumber, 1);
+      return B0;
+    }
+    switch (baudrate)
+    {
+      case 2400:
+        internalBaudrate=B2400;
+        break;
+      case 4800:
+        internalBaudrate=B4800;
+        break;
+      case 9600:
+        internalBaudrate=B9600;
+        break;
+      case 19200:
+        internalBaudrate=B19200;
+        break;
+      case 38400:
+        internalBaudrate=B38400;
+        break;
+      default:
+        internalBaudrate=B19200;
+        break;
+    }
+    if (cfsetispeed(&interface, internalBaudrate) != 0)
+    {
+        DBG(busnumber, DBG_INFO,"CheckBaudate: Error in cfsetispeed, error [%d]\n", error);
+//        testErrorFlag(busnumber, 1);
+    }
+    tcflush(fd, TCOFLUSH);
+    error = tcsetattr(fd, TCSANOW, &interface);
+    if (error != 0)
+    {
+      DBG(busnumber, DBG_INFO, "CheckBaudate: Error in tcsetattr, error [%d]\n", error);
+//      testErrorFlag(busnumber, 1);
+      return B0;
+    }
+
+    out = 0xC4;
+    writeByte(busnumber, out, 0);
+    usleep(200000); /* 200 ms */
+
+    for (i = 0; i< 2; i++)
+    {
+      int erg = readByte(busnumber, 1, &eingabe[i]);
+      if (erg == 0)
+        len++;
+    }
+    switch (len)
+    {
+      case 1:
+        found = 1;
+        if(eingabe[i]=='D')
+        {
+          printf("Intellibox in download mode.\nDO NOT PROCEED !!!\n");
+          return(2);
+        }
+        break;
+      case 2:
+        found = 0;
+        break;
+      default:
+        found = 0;
+        break;
+    }
+    if (found == 0)
+    {
+      baudrate <<= 1;
+      internalBaudrate=B0;
+    }
+    usleep (200000);  // 200 ms
+  }
+  printf("Baudrate checked: %d\n", baudrate);
+  return internalBaudrate;
+}
+/**
+ * sends the command to switch of P50 commands, see interface description of intellibox
+ *
+ * the answer of the intellibox is shwon with printf
+ *
+ * @param  busnumber inside srcp
+ * @return 0 if ok
+**/
+int switchOffP50Command(const int busnumber)
+{
+  unsigned char byte2send;
+  int status;
+
+  printf("switch off P50-commands\n");
+  unsigned char* sendString = "xZzA1";
+  writeString(busnumber, sendString, 0);
+  byte2send = 0x0d;
+  writeByte(busnumber, byte2send, 0);
+
+  status = readAnswer(busnumber, 1);
+  if(status != 0)
+    return 1;
+  return 0;
+}
+/**
+ * reset the baudrate inside ib depending on par 1
+ * @param requested baudrate
+ * @return: 0 if successfull
+**/
+const int resetBaudrate(const speed_t speed, const int busnumber)
+{
+  unsigned char byte2send;
+  int status;
+  unsigned char* sendString = "";
+  switch (speed)
+  {
+    case B2400:
+      printf("change baudrate to 2400 bps\n");
+      sendString = "B2400";
+      writeString(busnumber, sendString, 0);
+      break;
+    case B4800:
+      printf("change baudrate to 4800 bps\n");
+      sendString = "B4800";
+      writeString(busnumber, sendString, 0);
+      break;
+    case B9600:
+      printf("change baudrate to 9600 bps\n");
+      sendString = "B9600";
+      writeString(busnumber, sendString, 0);
+      break;
+    case B19200:
+      printf("change baudrate to 19200 bps\n");
+      sendString = "B19200";
+      writeString(busnumber, sendString, 0);
+      break;
+    case B38400:
+      printf("change baudrate to 38400 bps\n");
+      sendString = "B38400";
+      writeString(busnumber, sendString, 0);
+      break;
+    default:
+      return -1;
+  }
+  byte2send = 0x0d;
+  writeByte(busnumber, byte2send, 0);
+  usleep(200000);          // 200 ms
+  status = readAnswer(busnumber, 1);
+  if(status != 0)
+    return 1;
+  return 0;
+}
 
 static int init_line_IB(int busnumber)
 {
@@ -944,7 +1250,7 @@ static int init_line_IB(int busnumber)
 /*
 #ifdef linux
   struct serial_struct serial_line;
-  unsigned int LSR;
+//  unsigned int LSR;
 #endif
 */
   char *name = busses[busnumber].device;
@@ -974,7 +1280,60 @@ static int init_line_IB(int busnumber)
   sleep(1);
   printf("Clearing input-buffer\n");
   while(status != -1)
-    status = readByte_ib(busnumber, 1, &rr);
+    status = readByte(busnumber, 1, &rr);
+
+#ifdef linux
+  ioctl(fd, TIOCGSERIAL, &serial_line);
+//  close(fd);
+
+//  sleep(1);
+  printf("sending BREAK\n");
+/*  fd = open("/dev/ibox", O_RDWR);
+  DBG(busnumber, DBG_INFO, "fd for ibox-dev = %d", fd);
+  if(fd < 0)
+    return(-1); */
+  // printf("sending BREAK\n");
+  if (tcflush(fd, TCIOFLUSH) != 0)
+  {
+    printf("sendBreak: Error in tcflush before break\n");
+    return -1;
+  }
+  tcflow(fd, TCOOFF);
+  usleep(200000); // 200 ms
+  if (tcsendbreak(fd, 100) != 0)
+  {
+    printf("sendBreak: Error in tcsendbreak \n");
+    return -1;
+  }
+  sleep(1);
+  tcflow(fd, TCOON);
+  usleep(600000); // 600 ms
+/*
+  if(ioctl(fd, IB_IOCTINIT, LSR) < 0)
+    return(-1);
+  usleep(200000);
+  if(ioctl(fd, IB_IOCTBREAK, 1) < 0)
+    return(-1);
+  usleep(1000000);
+  if(ioctl(fd, IB_IOCTBREAK, 0) < 0)
+    return(-1);
+  usleep(600000);
+*/
+  close(fd);
+  sleep(1);
+#endif
+#ifdef __FreeBSD__
+/*
+ * Eigentlich will er ja nur ein BREAK senden, das machen wir mal
+ * etwas einfacher...
+ */
+ DBG(busnumber,DBG_INFO,"FBSD BREAK an Ibox senden");
+ ioctl(fd,TIOCSBRK,0);
+  usleep(1000000);
+ ioctl(fd,TIOCCBRK,0);
+  usleep(6000000);
+  close(fd);
+#endif
 
 	status = 0;
 	
@@ -998,10 +1357,27 @@ static int init_line_IB(int busnumber)
     printf("open_comport() faild\n");
     return(-1);
   }
-	//printf("open_comport() successful; fd = %d\n", fd );
+  busses[busnumber].fd = fd;
+  printf("open comport ok fd = %d \n", fd );
 
+  baud = B38400;
   baud = checkBaudrate(fd, busnumber);
   if ((baud == B0) || (baud > B38400))
+  {
+      printf("baudrate check failed\n");
+      return -1;
+  }
+
+   busses[busnumber].baudrate = baud;
+   status = switchOffP50Command(busnumber);
+   status = resetBaudrate(busses[busnumber].baudrate, busnumber);
+/*  sleep(1);
+  byte2send = 0xC4;
+  writeByte(busnumber, byte2send, 2);
+  status = readByte(busnumber, 1, &rr);
+  if(status == -1)
+    return(1);
+  if(rr=='D')
   {
       printf("checkBaudrate() failed\n");
       return -1;
@@ -1034,7 +1410,44 @@ static int init_line_IB(int busnumber)
     printf("Intellibox in download mode.\nDO NOT PROCEED !!!\n");
     return(2);
   }
-  
+
+  return 0;
+}
+/**
+ * reads all s88 data exactly one time out of the intellibox.
+ *
+ * @return 0 if ok
+ **/
+const int
+readAllS88OneTime(const int busnumber)
+{
+  int numberFB = get_number_fb(busnumber)  / 16;
+  int i ;
+  int temp;
+  unsigned char rr =0;
+  unsigned char byte2send;
+  DBG(busnumber, DBG_INFO, "Read all FB, number of feedbacks: %d", numberFB);
+  for ( i=1; i<=numberFB; i++)
+  {
+    byte2send  = XSensor;
+    writeByte(busnumber, byte2send,  0);
+    byte2send  = i;
+    writeByte(busnumber, byte2send,  0);
+    readByte(busnumber, 1, &rr);
+    if (rr == 0)
+    {
+      readByte(busnumber, 1, &rr);
+      temp = rr;
+      temp <<= 8;
+      readByte(busnumber, 1, &rr);
+      setFBmodul(busnumber, i, temp | rr);
+    }
+    else
+    {
+//      checkReturnValueOfIBCommand(busnumber, rr);
+      return 1;
+    }
+  }
   return 0;
 }
 
