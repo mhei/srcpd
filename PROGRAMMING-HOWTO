@@ -139,9 +139,13 @@ Portabel geht aber vor genial. Ein 386er kann, muß aber nicht ausreichen.
 
 OS, die wesentlich von Unix abweichen, kommen später; vielleicht.
 
+FreeBSD ist zumindest teilweise (d.h. bei derjenigen Hardware, die nicht
+allzuweit vom PC angesiedelt ist) unterstützt
+
 12. CVS Benutzung.
 
-Lesen darf jeder.
+Lesen darf jeder. Anleitung findet sich auf 
+http://sourceforge.net/projects/srcpd, Rubrik CVS
 
 Das erste, was nach einem CVS Checkout ansteht, ist ein
 

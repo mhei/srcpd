@@ -76,7 +76,8 @@ Konfiguration
     
     Märklin 6051
     Das Märklin Interface belegt einen Bus, der die Gerätegruppen
-    GA, GL, FB und POWER unterstützt. Ebenso wird ein Watchdog unterstützt.
+    GA, GL, FB, LOCK und POWER unterstützt. Ebenso wird ein Watchdog 
+    unterstützt.
     
      <bus number="5">
         <m605x>
@@ -130,25 +131,6 @@ Bekannte Unzulänglichkeiten
     einarbeitet, kann es systembedingt einige Sekunden dauern... Ohne, das
     man was daran ändern könnte.
 
-Ausrüstung beim Autor (Matthias Trute):
-    6021 mit 6051, daran einige Vissmann 5217 (S88 komp.)
-    einige Weichenantriebe, 3 Entkupplungsgleise über k83
-    einige Loks mit Digitaldekoder (delta, 6090x, Sinus, Loksound), 
-    zusätzlich S88 am Parallelport (einfache Schaltung).
-    
-    3Pentium's, zusammen 2366MHz und 100MBit dazwischen.
-    jeweils SuSE 7.x/8.x, 2.2.x und 2.4.x Kernel; 
-
-Ausrüstung beim Autor (Frank Schmischke):
-    (im Aufbau befindliche Vereinsanlage der
-      Puhlheim-Frechener-Eisenbahnfreunde)
-    2 Intelliboxen, 50 Weichen, 3 S88-Module von Vissmann mit
-    Belegtmeldern von Uhlenbrock, 2 RM-GB-8 (S88-kompatible
-    8-fach Rückmelder mit intergrierten Belegtmeldern),
-    Loks zur Zeit zwischen 2 und 10 mit Decodern von Lenz und Kühne.
-
-    Celeron mit 366MHz/160MB mit glibc 2.2.2, kernel 2.4.5
-
 Verwandte Programme:
     siehe http://www.der-moba.de/Digital
 
@@ -166,9 +148,6 @@ Sonst noch was?
     auch bei den Autoren ankommen. Hilfreich sind dann Angaben zur Version (steht im Welcome des
     laufenden Servers).
 
-Last But Not Least:
-    Dank geht an die Truppe von www.der_moba.de.
-    
 Weitere Informationen: 
     http://srcpd.sourceforge.net
     http://www.der-moba.de/Digital
