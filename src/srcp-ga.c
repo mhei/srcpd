@@ -146,20 +146,20 @@ static int initGA_default(int busnumber, int addr)
     switch (busses[busnumber].type)
     {
     case SERVER_M605X:
-        rc = initGA(busnumber, addr, "M");
+        rc = initGA(busnumber, addr, 'M');
         break;
     case SERVER_IB:
-        rc = initGA(busnumber, addr, "M");
+        rc = initGA(busnumber, addr, 'M');
         break;
     default:
-      rc = initGA(busnumber, addr, "P");
+      rc = initGA(busnumber, addr, 'P');
     }
     return rc;
 }
 
 int isInitializedGA(int busnumber, int addr)
 {
-  return ga[busnumber].gastate[addr].protocol != NULL;
+  return ga[busnumber].gastate[addr].protocol != 0x00;
 }
 
 /* ********************
@@ -197,7 +197,7 @@ int describeGA(int busnumber, int addr, char *msg)
 
   if((addr>0) && (addr <= number_ga) && (ga[busnumber].gastate[addr].protocol) )
   {
-    sprintf(msg, "%ld.%.3ld 101 INFO %d GA %d %s\n",  ga[busnumber].gastate[addr].inittime.tv_sec,
+    sprintf(msg, "%ld.%.3ld 101 INFO %d GA %d %c\n",  ga[busnumber].gastate[addr].inittime.tv_sec,
       ga[busnumber].gastate[addr].inittime.tv_usec/1000, busnumber,
       addr, ga[busnumber].gastate[addr].protocol);
   }
@@ -227,17 +227,15 @@ int infoGA(int busnumber, int addr, int port, char* msg)
   return SRCP_INFO;
 }
 
-int initGA(int busnumber, int addr, const char *protocol)
+int initGA(int busnumber, int addr, const char protocol)
 {
   int number_ga = get_number_ga(busnumber);
-  DBG(busnumber, DBG_DEBUG, "init GA: %d %s", addr, protocol);
+  DBG(busnumber, DBG_DEBUG, "init GA: %d %c", addr, protocol);
   if((addr > 0) && (addr <= number_ga))
   {
     char msg[100];
-    free(ga[busnumber].gastate[addr].protocol);
     gettimeofday( &ga[busnumber].gastate[addr].inittime, NULL);
-    ga[busnumber].gastate[addr].protocol = malloc(strlen(protocol+1));
-    strcpy(ga[busnumber].gastate[addr].protocol, protocol);
+    ga[busnumber].gastate[addr].protocol = protocol;
     ga[busnumber].gastate[addr].activetime = 0;
     ga[busnumber].gastate[addr].action = 0;
     gettimeofday(&ga[busnumber].gastate[addr].tv[0], NULL);
@@ -332,7 +330,7 @@ void unlock_ga_bytime(void) {
   for(i=0; i<MAX_BUSSES; i++)
   {
     number = get_number_ga(i);
-    DBG(i, DBG_DEBUG, "number of GA for busnumber %d is %d", i, number);
+    DBG(0, DBG_DEBUG, "number of GA for busnumber %d is %d", i, number);
     for(j=1;j<=number; j++)
     {
       if(ga[i].gastate[j].lockduration-- == 1)
@@ -372,7 +370,7 @@ int init_GA(int busnumber, int number)
       return 1;
     ga[busnumber].numberOfGa = number;
     for(i=0;i<number;i++) {
-      ga[busnumber].gastate[i].protocol = NULL;
+      ga[busnumber].gastate[i].protocol = 0x00;
 	ga[busnumber].gastate[i].locked_by = 0;
       ga[busnumber].gastate[i].action = 0;    
 		}

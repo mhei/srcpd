@@ -15,7 +15,7 @@
 /* Lokdekoder */
 struct _GLSTATE
 {
-  char protocol[5];
+  char protocol;
   int protocolversion;
   int n_func;
   int n_fs;
@@ -49,7 +49,7 @@ int getGL(int busnumber, int addr, struct _GLSTATE *l);
 int setGL(int busnumber, int addr, struct _GLSTATE l);
 int infoGL(int busnumber, int addr, char* info);
 int describeGL(int busnumber, int addr, char *msg);
-int initGL(int busnumber, int addr, const char *protocol, int protoversion, int n_fs, int n_func);
+int initGL(int busnumber, int addr, const char protocol, int protoversion, int n_fs, int n_func);
 int termGL(int busnumber, int addr);
 int isInitializedGL(int busnumber, int addr);
 
