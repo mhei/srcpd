@@ -29,6 +29,7 @@
 #ifdef linux
 #include <linux/serial.h>
 #include <sys/io.h>
+#endif
 
 
 #include "config-srcpd.h"
@@ -39,7 +40,9 @@
 #include "srcp-sm.h"
 #include "srcp-time.h"
 #include "srcp-fb.h"
+#ifdef linux
 #include "ibox/ibox.h"
+#endif
 
 #define __ib ((IB_DATA*)busses[busnumber].driverdata)
 
@@ -539,8 +542,8 @@ int send_pom(int busnumber, int addr, int cv, int value)
 
 void send_command_sm(int busnumber)
 {
-  unsigned char byte2send;
-  unsigned char status;
+  //unsigned char byte2send;
+  //unsigned char status;
   struct _SM smakt;
 
   /* Lokdecoder */
@@ -715,8 +718,8 @@ void check_status(int busnumber)
 void check_status_pt(int busnumber)
 {
   int i;
-  int temp;
-  int status;
+  //int temp;
+  //int status;
   unsigned char byte2send;
   unsigned char rr[7];
 
@@ -749,10 +752,12 @@ void check_status_pt(int busnumber)
 
 static int open_comport(int busnumber, speed_t baud)
 {
-  int status;
   int fd;
   char *name = busses[busnumber].device;
+#ifdef linux
   unsigned char rr;
+  int status;
+#endif
   struct termios interface;
 
   DBG(busnumber, DBG_INFO, "try opening serial line %s for %i baud", name, (2400 * (1 << (baud - 11))));
@@ -765,6 +770,7 @@ static int open_comport(int busnumber, speed_t baud)
   }
   else
   {
+#ifdef linux
     tcgetattr(fd, &interface);
     interface.c_oflag = ONOCR;
     interface.c_cflag = CS8 | CRTSCTS | CSTOPB | CLOCAL | CREAD | HUPCL;
@@ -779,6 +785,13 @@ static int open_comport(int busnumber, speed_t baud)
     sleep(1);
     while(status != -1)
       status = readByte(busnumber, 1, &rr);
+#else
+  interface.c_ispeed = interface.c_ospeed = baud;
+  interface.c_cflag = CREAD  | HUPCL | CS8 | CSTOPB | CRTSCTS;
+  cfmakeraw(&interface);
+  tcsetattr(fd, TCSAFLUSH|TCSANOW, &interface);
+#endif
+
   }
   return fd;
 }
@@ -788,11 +801,13 @@ static int init_line_IB(int busnumber)
   int fd;
   int status;
   speed_t baud;
-  unsigned int LSR;
   unsigned char rr;
   unsigned char byte2send;
   struct termios interface;
+#ifdef linux
   struct serial_struct serial_line;
+  unsigned int LSR;
+#endif
   char *name = busses[busnumber].device;
   printf("Begin detecting IB on serial line: %s\n", name);
 
@@ -822,6 +837,7 @@ static int init_line_IB(int busnumber)
   while(status != -1)
     status = readByte(busnumber, 1, &rr);
 
+#ifdef linux
   ioctl(fd, TIOCGSERIAL, &serial_line);
   close(fd);
   
@@ -843,6 +859,20 @@ static int init_line_IB(int busnumber)
   usleep(600000);
   close(fd);
   sleep(1);
+#endif
+#ifdef __FreeBSD__
+/* 
+ * Eigentlich will er ja nur ein BREAK senden, das machen wir mal
+ * etwas einfacher...
+ */
+ DBG(busnumber,DBG_INFO,"FBSD BREAK an Ibox senden");
+ ioctl(fd,TIOCSBRK,0);
+  usleep(1000000);
+ ioctl(fd,TIOCCBRK,0);
+  usleep(6000000);
+  close(fd);
+#endif
+
   printf("BREAK sucessfully send\n");
 
   baud = B2400;
@@ -918,4 +948,3 @@ static int init_line_IB(int busnumber)
   
   return 0;
 }
-#endif // Linux
