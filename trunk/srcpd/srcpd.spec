@@ -12,11 +12,14 @@ URL: http://srcpd.sourceforge.net
 %description
 
 The srcpd is a server daemon that enables you to control and play with 
-a digital model railroad using any SRCP Client. Actually it requires an 
-Intellibox (tm) or a Marklin Interface 6050 or 6051 (tm?). More 
-information about SRCP and links to many really cool clients (and 
+a digital model railroad using any SRCP Client. Actually it supports an 
+Intellibox (tm), a Marklin Interface 6050 or 6051 (tm?), and many more
+interfaces. 
+
+More information about SRCP and links to many really cool clients (and 
 other servers for different hardware) can be found at 
 http://srcpd.sourceforge.net and http://www.der-moba.de/Digital
+
 %prep
 %setup -q
 %build

@@ -50,7 +50,7 @@ int cmpGA(struct _GASTATE a, struct _GASTATE b);
 int isInitializedGA(int busnumber, int addr);
 
 int lockGA(int busnumber, int addr, long int sessionid);
-int getlockGA(int busnumber, int addr, long int sessionid);
+int getlockGA(int busnumber, int addr, long int *sessionid);
 int unlockGA(int busnumber, int addr, int sessionid);
 void unlock_ga_bysessionid(long int);
 #endif
