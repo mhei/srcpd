@@ -42,7 +42,6 @@ void readconfig_server(xmlDocPtr doc, xmlNodePtr node, int busnumber)
       child = child -> next;
       continue;
     }
-//    syslog(LOG_INFO, "bus %d child %s", busnumber, child->name);
     if (strcmp(child->name, "tcp-port") == 0)
     {
       char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
@@ -52,12 +51,12 @@ void readconfig_server(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     if (strcmp(child->name, "listen-ip") == 0)
     {
       char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      DBG(DBG_INFO, "listenip: %s", txt);
+      DBG(busnumber, DBG_INFO, "listenip: %s", txt);
       if (__srv->listenip != NULL)
         free(__srv->listenip);
       __srv->listenip = malloc(strlen(txt) + 1);
       strcpy(__srv->listenip, txt);
-      DBG(DBG_INFO, "listenip: %s", txt);
+      DBG(busnumber, DBG_INFO, "listenip: %s", txt);
       free(txt);
     }
 
