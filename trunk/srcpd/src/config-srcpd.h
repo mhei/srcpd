@@ -32,6 +32,7 @@
 #define SERVER_S88              6         // S88 am Parallelport
 #define SERVER_HSI_88	          7
 #define SERVER_I2C_DEV					8					// srcpd arbeitet als I2C-DEV-Server
+#define SERVER_ZIMO     9 // Zimo MX1
 
 /* generic flags */
 #define USE_WATCHDOG          0x0001      // use watchdog
@@ -57,6 +58,10 @@ typedef struct _BUS
   /* Now internally used data */
   int fd;          // file descriptor of device
   struct termios devicesettings; // Device Settings, if used
+  /* statistics */
+  unsigned int bytes_recevied;
+  unsigned int bytes_sent;
+  unsigned int commands_processed;
   pthread_t pid;   // PID of the thread
   void *thr_func;  // addr of the thread function
   int (*init_func)(int); // addr of init function
