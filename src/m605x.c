@@ -306,18 +306,18 @@ void* thr_sendrec_M6051(void *v)
       ioctl(busses[bus].fd, FIONREAD, &temp);
       while (temp > 0)
       {
-        readByte(bus, &rr);
+        readByte(bus, 0, &rr);
         ioctl(busses[bus].fd, FIONREAD, &temp);
         syslog(LOG_INFO, "FB M6051: oops; ignoring unread byte: %d ", rr);
       }
       SendByte = 192 + akt_S88;
       writeByte(bus, &SendByte, pause_between_cmd);
       busses[bus].watchdog = 8;
-      readByte(bus, &rr);
+      readByte(bus, 0, &rr);
       temp = rr;
       temp <<= 8;
       busses[bus].watchdog = 9;
-      readByte(bus, &rr);
+      readByte(bus, 0, &rr);
       setFBmodul(bus, akt_S88, temp | rr);
       akt_S88++;
       if (akt_S88 > number_fb)

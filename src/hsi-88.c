@@ -146,9 +146,9 @@ static int init_lineHSI88(int busnumber, int modules_left, int modules_center, i
   sleep(1);
   byte2send = 0x0d;
   for(i=0;i<10;i++)
-    writeByte(busnumber, &byte2send, 2);
+    writeByte(busnumber, &byte2send, 500);
 
-  while(readByte(busnumber, &rr) == 0)
+  while(readByte(busnumber, 0, &rr) == 0)
   {
   }
 
@@ -160,33 +160,33 @@ static int init_lineHSI88(int busnumber, int modules_left, int modules_center, i
     byte2send = 't';
     writeByte(busnumber, &byte2send, 0);
     byte2send = 0x0d;
-    writeByte(busnumber, &byte2send, 2);
+    writeByte(busnumber, &byte2send, 200);
     rr = 0;
     ctr = 0;
-    status = readByte(busnumber, &rr);
+    status = readByte(busnumber, 0, &rr);
     while(rr != 't')
     {
       usleep(100000);
-      status = readByte(busnumber, &rr);
+      status = readByte(busnumber, 0, &rr);
       if(status == -1)
         ctr++;
       if(ctr > 20)
         return -1;
     }
-    readByte(busnumber, &rr);
+    readByte(busnumber, 0, &rr);
     if(rr == '0')
       i = 0;
-    readByte(busnumber, &rr);
+    readByte(busnumber, 0, &rr);
   }
   // looking for version of HSI
   byte2send = 'v';
   writeByte(busnumber, &byte2send, 0);
   byte2send = 0x0d;
-  writeByte(busnumber, &byte2send, 2);
+  writeByte(busnumber, &byte2send, 500);
 
   for(i=0;i<49;i++)
   {
-    status = readByte(busnumber, &rr);
+    status = readByte(busnumber, 0, &rr);
     if(status == -1)
       break;
     __hsi->v_text[i] = (char)rr;
@@ -215,13 +215,13 @@ static int init_lineHSI88(int busnumber, int modules_left, int modules_center, i
     writeByte(busnumber, &byte2send, 5);
 
     rr = 0;
-    readByte(busnumber, &rr);    // read answer (three bytes)
+    readByte(busnumber, 0, &rr);    // read answer (three bytes)
     while(rr != 's')
     {
       usleep(100000);
-      readByte(busnumber, &rr);
+      readByte(busnumber, 0, &rr);
     }
-    readByte(busnumber, &rr);    // Anzahl angemeldeter Module
+    readByte(busnumber, 0, &rr);    // Anzahl angemeldeter Module
     status = 0;
   }
   return 0;
@@ -337,16 +337,16 @@ void* thr_sendrec_HSI_88(void *v)
       byte2send = 0x0d;
       writeByte(busnumber, &byte2send, 0);
       byte2send = 0x0d;
-      writeByte(busnumber, &byte2send, 5);
+      writeByte(busnumber, &byte2send, 200);
 
       rr = 0;
-      readByte(busnumber, &rr);           // read answer (three bytes)
+      readByte(busnumber, 0, &rr);           // read answer (three bytes)
       while(rr != 's')
       {
         usleep(100000);
-        readByte(busnumber, &rr);
+        readByte(busnumber, 0, &rr);
       }
-      readByte(busnumber, &rr);           // Anzahl angemeldeter Module
+      readByte(busnumber, 0, &rr);           // Anzahl angemeldeter Module
       anzahl = (int)rr;
       syslog(LOG_INFO, "Anzahl Module: %i", anzahl);
       anzahl -= __hsi->number_fb[0];
@@ -360,7 +360,7 @@ void* thr_sendrec_HSI_88(void *v)
       {
         syslog(LOG_INFO, "Fehler bei Initialisierung");
         sleep(1);
-        while(readByte(busnumber, &rr) == 0)
+        while(readByte(busnumber, 0, &rr) == 0)
         {
         }
       }
@@ -380,23 +380,23 @@ void* thr_sendrec_HSI_88(void *v)
       while(rr != 'i')
       {
         usleep(refresh_time);
-        readByte(busnumber, &rr);
+        readByte(busnumber, 0, &rr);
       }
-      readByte(busnumber, &rr);            // Anzahl zu meldender Module
+      readByte(busnumber, 0, &rr);            // Anzahl zu meldender Module
       anzahl = (int)rr;
       for(zaehler1=0;zaehler1<anzahl;zaehler1++)
       {
-        readByte(busnumber, &rr);
+        readByte(busnumber, 0, &rr);
         i = rr;
-        readByte(busnumber, &rr);
+        readByte(busnumber, 0, &rr);
         temp = rr;
         temp <<= 8;
-        readByte(busnumber, &rr);
+        readByte(busnumber, 0, &rr);
         setFBmodul(busnumber, i, temp | rr);
         if (busses[busnumber].debuglevel > 4)
           syslog(LOG_INFO, "Rückmeldung %i mit 0x%02x", i, temp|rr);
       }
-      readByte(busnumber, &rr);            // <CR>
+      readByte(busnumber, 0, &rr);            // <CR>
     }
     else
     {
