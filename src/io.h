@@ -28,4 +28,7 @@ void restore_comport(int bus);
 void save_comport(int bus);
 void close_comport(int bus);
 
+int socket_readline(int Socket, char *line, int len);
+int socket_writereply(int Socket, const char *line);
+
 #endif
