@@ -50,6 +50,7 @@ struct _INFO
   struct timeval akt_time;
 };
 
+void *thr_doInfoClient(void *v);
 int doInfoClient(int Socket, int sessionid);
 int startup_INFO(void);
 

@@ -70,6 +70,7 @@ void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   busses[busnumber].term_func = &term_bus_IB;
   busses[busnumber].thr_func = &thr_sendrec_IB;
   busses[busnumber].driverdata = malloc(sizeof(struct _IB_DATA));
+  busses[busnumber].flags |= FB_16_PORTS;
   strcpy(busses[busnumber].description, "GA GL FB POWER");
 
   __ib->number_fb = 0;            // max. 31 for S88; Loconet is missing this time

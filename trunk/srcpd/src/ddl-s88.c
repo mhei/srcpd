@@ -277,21 +277,21 @@ void s88load(int bus)
 		if (j <
 		    ((DDL_S88_DATA *) busses[bus].driverdata)->
 		    number_fb[0] * 2)
-		    setFBmodul8(bus, j + 1, s88data[j]);
+		    setFBmodul(bus, j + 1, s88data[j]);
 		if (j <
 		    ((DDL_S88_DATA *) busses[bus].driverdata)->
 		    number_fb[1] * 2)
-		    setFBmodul8(bus + 1, j + 1,
+		    setFBmodul(bus + 1, j + 1,
 				s88data[j + S88_MAXPORTSB]);
 		if (j <
 		    ((DDL_S88_DATA *) busses[bus].driverdata)->
 		    number_fb[2] * 2)
-		    setFBmodul8(bus + 2, j + 1,
+		    setFBmodul(bus + 2, j + 1,
 				s88data[j + 2 * S88_MAXPORTSB]);
 		if (j <
 		    ((DDL_S88_DATA *) busses[bus].driverdata)->
 		    number_fb[3] * 2)
-		    setFBmodul8(bus + 3, j + 1,
+		    setFBmodul(bus + 3, j + 1,
 				s88data[j + 3 * S88_MAXPORTSB]);
 	    }
 	    nowtime.tv_usec += S88REFRESH * 1000;

@@ -20,23 +20,23 @@
 #include <termios.h>
 #include <sys/param.h>
 
-#define MAX_BUSSES        20        // Anzahl der im srcpd integrierten Busse
+#define MAX_BUSSES             20         // max number of integrated busses in srcpd
 
-#define SERVER_SERVER 0
-#define SERVER_DDL        1         // srcpd arbeitet als DDL-Server
-#define SERVER_M605X      2         // srcpd arbeitet als M605X-Server
-#define SERVER_IB         3         // srcpd arbeitet als IB-Server
-#define SERVER_LI100      4         // srcpd arbeitet als Lenz-Server
-#define SERVER_LOOPBACK   5	        // dummy driver, no real hardware
-#define SERVER_S88        6         // S88 am Parallelport
-#define SERVER_HSI_88	    7
+#define SERVER_SERVER           0
+#define SERVER_DDL              1         // srcpd arbeitet als DDL-Server
+#define SERVER_M605X            2         // srcpd arbeitet als M605X-Server
+#define SERVER_IB               3         // srcpd arbeitet als IB-Server
+#define SERVER_LI100            4         // srcpd arbeitet als Lenz-Server
+#define SERVER_LOOPBACK         5         // dummy driver, no real hardware
+#define SERVER_S88              6         // S88 am Parallelport
+#define SERVER_HSI_88	          7
 
 /* flags */
-#define USE_WATCHDOG      1         // use watchdog
-#define M6020_MODE        2         // Subtyp zum M605X
-
-/* device flags */
-#define RESTORE_COM_SETTINGS 1      //
+#define USE_WATCHDOG          0x0001      // use watchdog
+#define M6020_MODE            0x0002      // Subtyp zum M605X
+#define FB_ORDER_0            0x0010      // feedback port 0 is bit 0
+#define FB_16_PORTS           0x0020      // feedback-modul has 16 ports
+#define RESTORE_COM_SETTINGS  0x0100      // restore com-port settings after close
 
 /* Busstruktur */
 typedef struct _BUS
@@ -45,7 +45,6 @@ typedef struct _BUS
   int debuglevel;  // testmodus
   int type;        // SERVER_IB, SERVER_M605X...
 
-  int deviceflags; // restore com port
   char *device;    // Path_to_device
   speed_t baud;
     

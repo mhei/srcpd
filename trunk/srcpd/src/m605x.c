@@ -57,6 +57,7 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     busses[busnumber].term_func = &term_bus_M6051;
     busses[busnumber].thr_func = &thr_sendrec_M6051;
     busses[busnumber].driverdata = malloc(sizeof(struct _M6051_DATA));
+    busses[busnumber].flags |= FB_16_PORTS;
     ((M6051_DATA *) busses[busnumber].driverdata)->number_fb = 0;	/* max 31 */
     ((M6051_DATA *) busses[busnumber].driverdata)->number_ga = 256;
     ((M6051_DATA *) busses[busnumber].driverdata)->number_gl = 80;
