@@ -7,16 +7,17 @@
  */
 
 
-#ifndef _SRCPFB_H_
-#define _SRCPFB_H_
+#ifndef _SRCP_FB_H
+#define _SRCP_FB_H
 
 #include <sys/time.h>
 
 #define MAXFBS 32
 
-typedef struct _FBSTATE {
-    struct timeval timestamp;
-    short int state;
+typedef struct _FBSTATE
+{
+  struct timeval timestamp;
+  short int state;
 } FBSTATE;
 
 int startup_FB(void);

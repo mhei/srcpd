@@ -7,4 +7,9 @@
  */
 
 
+#ifndef _SRCP_LOCK_H
+#define _SRCP_LOCK_H
+
 int startup_LOCK(void);
+
+#endif

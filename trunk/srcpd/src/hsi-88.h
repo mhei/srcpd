@@ -14,10 +14,13 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-#ifndef HSI_88_H
-#define HSI_88_H
+#ifndef _HSI_88_H
+#define _HSI_88_H
+
+int init_bus_HSI_88(int);
+int term_bus_HSI_88(int );
 
 int init_lineHSI88(char*);
-void* thr_sendrec_hsi_88(void*);
+void* thr_sendrec_HSI_88(void*);
 
 #endif

@@ -7,8 +7,8 @@
  */
 
 
-#ifndef _SRCPGL_H_
-#define _SRCPGL_H_
+#ifndef _SRCP_GL_H
+#define _SRCP_GL_H
 
 #include <sys/time.h>
 

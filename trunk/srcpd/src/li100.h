@@ -14,8 +14,8 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-#ifndef LI100_H
-#define LI100_H
+#ifndef _LI100_H
+#define _LI100_H
 
 int init_lineLI100(char*);
 void* thr_sendrecli100(void*);

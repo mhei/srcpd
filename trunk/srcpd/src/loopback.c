@@ -26,7 +26,8 @@
 #include "srcp-power.h"
 #include "srcp-srv.h"
 
-int init_lineLoopback (char *name)
+int
+init_lineLoopback (char *name)
 {
   int FD;
   syslog(LOG_INFO,"loopback open device %s", name);
@@ -34,24 +35,31 @@ int init_lineLoopback (char *name)
   return FD;
 }
 
-int term_bus_Loopback(int bus)
+int
+term_bus_Loopback(int bus)
 {
-    return 0;
+  return 0;
 }
 
 /* Initialisiere den Bus, signalisiere Fehler */
-int init_bus_Loopback(int i) {
+int
+init_bus_Loopback(int i)
+{
   syslog(LOG_INFO,"loopback init: bus #%d, debug %d", i, busses[i].debuglevel);
-  if(busses[i].debuglevel==0) {
+  if(busses[i].debuglevel==0)
+  {
     busses[i].fd = init_lineLoopback(busses[i].device);
-  } else {
-      busses[i].fd = -1;
+  }
+  else
+  {
+    busses[i].fd = -1;
   }
   syslog(LOG_INFO, "loopback init done");
   return 1;
 }
 
-void* thr_sendrec_Loopback (void *v)
+void*
+thr_sendrec_Loopback (void *v)
 {
   int bus, i, commands_ok, addr;
   int temp, NUMBER_FB;

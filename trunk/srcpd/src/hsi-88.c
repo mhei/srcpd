@@ -36,7 +36,20 @@
 #include "io.h"
 #include "srcp-fb.h"
 
-int init_lineHSI88(char *name)
+int
+init_bus_HSI_88(int bus)
+{
+  return 0;
+}
+
+int
+term_bus_HSI_88(int bus)
+{
+  return 0;
+}
+
+int
+init_lineHSI88(char *name)
 {
   int status;
   int fd;
@@ -122,7 +135,8 @@ int init_lineHSI88(char *name)
   return fd;
 }
 
-void* thr_sendrec_hsi_88(void *v)
+void*
+thr_sendrec_HSI_88(void *v)
 {
   int fd, bus;
   int anzahl, i, temp;
@@ -130,10 +144,6 @@ void* thr_sendrec_hsi_88(void *v)
   unsigned char rr;
   int status;
   int zaehler1, fb_zaehler1, fb_zaehler2;
-
- int HSI_MODULES_LEFT=0;
- int HSI_MODULES_CENTER=0;
- int HSI_MODULES_RIGHT=0;
 
   bus = (int)v;
 #ifndef TESTMODE
@@ -153,11 +163,11 @@ void* thr_sendrec_hsi_88(void *v)
     // Modulbelegung initialisieren
     byte2send = 's';
     writeByte(fd, &byte2send, 0);
-    byte2send = HSI_MODULES_LEFT;
+    byte2send = busses[bus].number_fb[0];
     writeByte(fd, &byte2send, 0);
-    byte2send = HSI_MODULES_CENTER;
+    byte2send = busses[bus].number_fb[1];
     writeByte(fd, &byte2send, 0);
-    byte2send = HSI_MODULES_RIGHT;
+    byte2send = busses[bus].number_fb[2];
     writeByte(fd, &byte2send, 0);
     byte2send = 0x0d;
     writeByte(fd, &byte2send, 0);
@@ -178,7 +188,10 @@ void* thr_sendrec_hsi_88(void *v)
     readByte(fd, &rr);            // Anzahl angemeldeter Module
     anzahl = (int)rr;
     syslog(LOG_INFO, "Anzahl Module: %i", anzahl);
-    if(anzahl == busses[bus].number_fb)         // HSI initialisation correct ?
+    anzahl -= busses[bus].number_fb[0];
+    anzahl -= busses[bus].number_fb[1];
+    anzahl -= busses[bus].number_fb[2];
+    if(anzahl == 0)         // HSI initialisation correct ?
     {
       status = 0;
     }

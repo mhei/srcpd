@@ -60,14 +60,20 @@ extern int testmode;
 
 static struct _GA tga[50];
 
-int init_bus_IB(int bus) {
-    return 0;
+int
+init_bus_IB(int bus)
+{
+  return 0;
 }
 
-int term_bus_IB(int bus) {
-    return 0;
+int
+term_bus_IB(int bus)
+{
+  return 0;
 }
-void* thr_sendrec_IB(void *v)
+
+void*
+thr_sendrec_IB(void *v)
 {
   int fd;
   unsigned char byte2send;
@@ -112,7 +118,8 @@ void* thr_sendrec_IB(void *v)
   }      // Ende WHILE(1)
 }
 
-void send_command_ga(int bus)
+void
+send_command_ga(int bus)
 {
   int i, i1;
   int temp;
@@ -210,7 +217,8 @@ void send_command_ga(int bus)
       }
 }
 
-void send_command_gl(int bus)
+void
+send_command_gl(int bus)
 {
   int temp;
   int addr=0;
@@ -274,7 +282,8 @@ void send_command_gl(int bus)
       }
 }
 
-void check_status(int bus)
+void
+check_status(int bus)
 {
   int i;
   int temp;
@@ -380,7 +389,8 @@ void check_status(int bus)
   }
 }
 
-int init_comport(int bus)
+int
+init_comport(int bus)
 {
   int status;
   int fd;
@@ -418,7 +428,8 @@ int init_comport(int bus)
   return fd;
 }
 
-int open_comport(int bus)
+int
+open_comport(int bus)
 {
   int fd, baud;
   int status;

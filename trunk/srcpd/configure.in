@@ -4,8 +4,8 @@ AM_INIT_AUTOMAKE(srcpd, 2.0)
 
 AC_PREFIX_DEFAULT(/usr/local) 
 
-AC_CONFIG_HEADER(config.h)
-dnl AM_CONFIG_HEADER(config.h)
+dnl AC_CONFIG_HEADER(config.h)
+AM_CONFIG_HEADER(config.h)
 
 dnl Checks for programs.
 AC_PROG_CC
@@ -43,7 +43,7 @@ CXXFLAGS="$CXXFLAGS"
 dnl Checks for library functions.
 AC_FUNC_MEMCMP
 AC_CHECK_HEADERS(errno.h pthread.h pwd.h sys/time.h signal.h termios.h)
-AM_PATH_XML2(2.4.0, HAVE_XML2=yes, )
+AM_PATH_XML2(2.4.0, HAVE_XML2=yes, exit 1)
 
 CFLAGS="${CFLAGS} ${XML_CFLAGS}"
 LIBS="${LIBS} ${XML_LIBS}"

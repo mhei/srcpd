@@ -33,7 +33,7 @@
 volatile struct _GA ga[MAX_BUSSES][MAXGAS];   // aktueller Stand, mehr gibt es nicht
 
 /* Kommandoqueues pro Bus */
-static struct _GA queue[MAX_BUSSES][QUEUELEN];	// Kommandoqueue.
+static struct _GA queue[MAX_BUSSES][QUEUELEN];  // Kommandoqueue.
 static pthread_mutex_t queue_mutex[MAX_BUSSES];
 static int out[MAX_BUSSES], in[MAX_BUSSES];
 
@@ -42,77 +42,87 @@ static int queue_len(int bus);
 static int queue_isfull(int bus);
 
 /* Übernehme die neuen Angaben für die Lok, einige wenige Prüfungen */
-int queueGA(int bus, int addr, int port, int action, long int activetime)
+int
+queueGA(int bus, int addr, int port, int action, long int activetime)
 {
   struct timeval akt_time;
 
   syslog(LOG_INFO, "setga für %i", addr);
-  if ((addr > 0) && (addr <= busses[bus].number_ga) ) {
-	while (queue_isfull(bus)) {
-	    usleep(1000);
-	}
-
-	pthread_mutex_lock(&queue_mutex[bus]);
-	queue[bus][in[bus]].action = action;
-	queue[bus][in[bus]].port = port;
-	queue[bus][in[bus]].activetime = activetime;
-	gettimeofday(&akt_time, NULL);
-	queue[bus][in[bus]].tv[port] = akt_time;
-	queue[bus][in[bus]].id = addr;
-	in[bus]++;
-	if (in[bus] == QUEUELEN)
-	    in[bus] = 0;
-	
-	pthread_mutex_unlock(&queue_mutex[bus]);
-    } else {
-	return -1;
+  if ((addr > 0) && (addr <= busses[bus].number_ga) )
+  {
+    while (queue_isfull(bus))
+    {
+      usleep(1000);
     }
-    return SRCP_OK;
+
+    pthread_mutex_lock(&queue_mutex[bus]);
+    queue[bus][in[bus]].action = action;
+    queue[bus][in[bus]].port = port;
+    queue[bus][in[bus]].activetime = activetime;
+    gettimeofday(&akt_time, NULL);
+    queue[bus][in[bus]].tv[port] = akt_time;
+    queue[bus][in[bus]].id = addr;
+    in[bus]++;
+    if (in[bus] == QUEUELEN)
+      in[bus] = 0;
+  
+    pthread_mutex_unlock(&queue_mutex[bus]);
+  }
+  else
+  {
+    return -1;
+  }
+  return SRCP_OK;
 }
 
-int queue_GA_isempty(int bus)
+int
+queue_GA_isempty(int bus)
 {
-    return (in[bus] == out[bus]);
+  return (in[bus] == out[bus]);
 }
 
-static int queue_len(int bus)
+static int
+queue_len(int bus)
 {
-    if (in[bus] >= out[bus])
-	return in[bus] - out[bus];
-    else
-	return QUEUELEN + in[bus] - out[bus];
+  if (in[bus] >= out[bus])
+    return in[bus] - out[bus];
+  else
+    return QUEUELEN + in[bus] - out[bus];
 }
 
 /* maybe, 1 element in the queue cannot be used.. */
-static int queue_isfull(int bus)
+static int
+queue_isfull(int bus)
 {
-    return queue_len(bus) >= QUEUELEN - 1;
+  return queue_len(bus) >= QUEUELEN - 1;
 }
 
 /** liefert nächsten Eintrag und >=0, oder -1 */
-int getNextGA(int bus, struct _GA *ga)
+int
+getNextGA(int bus, struct _GA *ga)
 {
-    if (in[bus] == out[bus])
-	return -1;
-    *ga = queue[bus][out[bus]];
-    return out[bus];
+  if (in[bus] == out[bus])
+    return -1;
+  *ga = queue[bus][out[bus]];
+  return out[bus];
 }
 
 /** liefert nächsten Eintrag oder -1, setzt fifo pointer neu! */
-int unqueueNextGA(int bus, struct _GA *ga)
+int
+unqueueNextGA(int bus, struct _GA *ga)
 {
-    if (in[bus] == out[bus])
-	return -1;
+  if (in[bus] == out[bus])
+    return -1;
 
-    *ga = queue[bus][out[bus]];
-    out[bus]++;
-    if (out[bus] == QUEUELEN)
-	out[bus] = 0;
-    return out[bus];
+  *ga = queue[bus][out[bus]];
+  out[bus]++;
+  if (out[bus] == QUEUELEN)
+    out[bus] = 0;
+  return out[bus];
 }
 
-
-int getGA(int bus, int addr, struct _GA *l)
+int
+getGA(int bus, int addr, struct _GA *l)
 {
   if((addr>0) && (addr <= busses[bus].number_ga))
   {
@@ -128,7 +138,8 @@ int getGA(int bus, int addr, struct _GA *l)
 /**
 
 */
-int setGA(int bus, int addr, struct _GA l)
+int
+setGA(int bus, int addr, struct _GA l)
 {
   if((addr>0) && (addr <= busses[bus].number_ga))
   {
@@ -142,12 +153,13 @@ int setGA(int bus, int addr, struct _GA l)
   }
 }
 
-int infoGA(int bus, int addr, char* msg)
+int
+infoGA(int bus, int addr, char* msg)
 {
   if((addr>0) && (addr <= busses[bus].number_ga))
   {
-        sprintf(msg, "GA %d %d %d %ld\n", ga[bus][addr].id, ga[bus][addr].port,
-	    ga[bus][addr].action, ga[bus][addr].activetime);
+    sprintf(msg, "GA %d %d %d %ld\n", ga[bus][addr].id, ga[bus][addr].port,
+      ga[bus][addr].action, ga[bus][addr].activetime);
   }
   else
   {
@@ -156,17 +168,21 @@ int infoGA(int bus, int addr, char* msg)
   return SRCP_INFO;
 }
 
-int cmpga(struct _GA a, struct _GA b){
-      return ((a.action == b.action) && (a.port == b.port));
+int
+cmpga(struct _GA a, struct _GA b)
+{
+  return ((a.action == b.action) && (a.port == b.port));
 }
 
-int startup_GA(void){
+int
+startup_GA(void)
+{
   int bus;
-  for(bus=0; bus<MAX_BUSSES; bus++) {
-       pthread_mutex_init(&queue_mutex[bus], NULL);
-       in[bus]=0;
-       out[bus]=0;
+  for(bus=0; bus<MAX_BUSSES; bus++)
+  {
+    pthread_mutex_init(&queue_mutex[bus], NULL);
+    in[bus]=0;
+    out[bus]=0;
   }
   return SRCP_OK;
 }
-

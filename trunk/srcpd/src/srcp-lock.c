@@ -6,6 +6,11 @@
  *
  */
 
-int startup_LOCK(void) {
+#include "srcp-lock.h"
+
+
+int
+startup_LOCK(void)
+{
     return 0;
 }

@@ -7,8 +7,8 @@
  */
 
 
-#ifndef _THREADS_H_
-#define _THREADS_H_
+#ifndef _THREADS_H
+#define _THREADS_H
 
 typedef struct _THREADS
 {

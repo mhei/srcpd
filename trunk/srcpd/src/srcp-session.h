@@ -14,3 +14,10 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
+
+#ifndef _SRCP_SESSION_H
+#define _SRCP_SESSION_H
+
+int startup_SESSION(void);
+
+#endif

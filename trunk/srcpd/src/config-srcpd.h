@@ -27,7 +27,7 @@
 #define SERVER_M605X      2         // srcpd arbeitet als M605X-Server
 #define SERVER_IB         3         // srcpd arbeitet als IB-Server
 #define SERVER_LI100      4         // srcpd arbeitet als Lenz-Server
-#define SERVER_LOOPBACK   5	    // dummy driver, no real hardware
+#define SERVER_LOOPBACK   5	        // dummy driver, no real hardware
 #define SERVER_S88        6         // S88 am Parallelport
 #define SERVER_HSI_88	    7
 
@@ -39,32 +39,35 @@
 #define RESTORE_COM_SETTINGS 1      //
 
 /* Busstruktur */
-typedef struct _BUS {
-    int number;      // Nummer
-    int debuglevel;  // testmodus
-    int type;        // SERVER_IB, SERVER_M605X...
+typedef struct _BUS
+{
+  int number;      // Nummer
+  int debuglevel;  // testmodus
+  int type;        // SERVER_IB, SERVER_M605X...
 
-    int deviceflags; // restore com port
-    char *device;    // Path_to_device
-    speed_t baud;
+  int deviceflags; // restore com port
+  char *device;    // Path_to_device
+  speed_t baud;
     
-    /* Now internally used data */
-    int fd;          // file descriptor of device
-    struct termios devicesettings; // Device Settings, if used
-    pthread_t pid;   // PID of the thread
-    void *thr_func;  // addr of the thread function
-    int (*init_func)(int); // addr of init function
-    int (*term_func)(int); // addr of init function
-    int watchdog;    // used to monitor the thread
-    int power_state;
-    int power_changed;
-    char power_msg[100];
-    /* driver specific */
-    int cmd32_pending;
-    int number_ga;   // 0 oder Anzahl
-    int number_gl;   // 0 oder Anzahl
-    int number_fb;   // 0 oder Anzahl
-    int flags;       // M6020, Watchdog
+  /* Now internally used data */
+  int fd;          // file descriptor of device
+  struct termios devicesettings; // Device Settings, if used
+  pthread_t pid;   // PID of the thread
+  void *thr_func;  // addr of the thread function
+  int (*init_func)(int); // addr of init function
+  int (*term_func)(int); // addr of init function
+  int watchdog;    // used to monitor the thread
+  int power_state;
+  int power_changed;
+  char power_msg[100];
+  /* driver specific */
+  int cmd32_pending;
+  int number_ga;        // number of assecoirs (0 for none)
+  int number_gl;        // number of locomotivs (0 for none)
+  int number_fb[3];     // number of feedbacks (0 for none)
+                        // index 0 is normal feedback
+                        // index 0,1,2 is HSI-88 (left, center, right)
+  int flags;            // M6020, Watchdog
 } BUS;
 
 extern struct _BUS busses[];

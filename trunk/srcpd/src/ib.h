@@ -14,8 +14,8 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-#ifndef IB_H
-#define IB_H
+#ifndef _IB_H
+#define _IB_H
 
 int init_bus_IB(int);
 int term_bus_IB(int );

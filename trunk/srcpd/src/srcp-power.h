@@ -7,8 +7,8 @@
  */
 
 
-#ifndef _SRCPPOWER_H_
-#define _SRCPPOWER_H_
+#ifndef _SRCP_POWER_H
+#define _SRCP_POWER_H
 
 int initPower(int);
 int infoPower(int bus, char *msg);

@@ -32,36 +32,51 @@
 extern char *username;
 extern char *groupname;
 
-void change_privileges(const char *uid, const char *grp) {
-        struct group *group;
-        struct passwd *passwd;
-                
+void
+change_privileges(const char *uid, const char *grp)
+{
+  struct group *group;
+  struct passwd *passwd;
 
-        if (grp != NULL) {
-                if ((group = getgrnam(grp)) != NULL || 
-		    (group = getgrgid((gid_t)atoi(grp))) != NULL) {
-                        if (setgid(group->gr_gid) != 0) {
-                                syslog(LOG_INFO, "could not change to group %s: %s",group->gr_name,strerror(errno));
-                        } else {
-                                syslog(LOG_INFO, "changed to group %s",group->gr_name);
-                        }
-                } else {
-                        syslog(LOG_INFO, "could not change to group %s: invalid group or ENOMEM",grp);
-                }
-        }
-        
-        if (uid != NULL) {
-                if ((passwd = getpwnam(uid)) != NULL || 
-		    (passwd = getpwuid((uid_t)atoi(uid))) != NULL) {
-                        if (setuid(passwd->pw_uid) != 0) {
-                                syslog(LOG_INFO,"could not change to user %s: %s",passwd->pw_name,strerror(errno));
-                        } else {
-                                syslog(LOG_INFO,"changed to user %s",passwd->pw_name);
-                        }
-                } else {
-                        syslog(LOG_INFO,"could not change to user %s: invalid user or ENOMEM", uid);
-                }
-        }
+  if (grp != NULL)
+  {
+    if ((group = getgrnam(grp)) != NULL ||
+        (group = getgrgid((gid_t)atoi(grp))) != NULL)
+    {
+      if (setgid(group->gr_gid) != 0)
+      {
+        syslog(LOG_INFO, "could not change to group %s: %s",group->gr_name,strerror(errno));
+      }
+      else
+      {
+        syslog(LOG_INFO, "changed to group %s",group->gr_name);
+      }
+    }
+    else
+    {
+      syslog(LOG_INFO, "could not change to group %s: invalid group or ENOMEM",grp);
+    }
+  }
+
+  if (uid != NULL)
+  {
+    if ((passwd = getpwnam(uid)) != NULL ||
+      (passwd = getpwuid((uid_t)atoi(uid))) != NULL)
+    {
+      if (setuid(passwd->pw_uid) != 0)
+      {
+        syslog(LOG_INFO,"could not change to user %s: %s",passwd->pw_name,strerror(errno));
+      }
+      else
+      {
+        syslog(LOG_INFO,"changed to user %s",passwd->pw_name);
+      }
+    }
+    else
+    {
+      syslog(LOG_INFO,"could not change to user %s: invalid user or ENOMEM", uid);
+    }
+  }
 }
 
 /*******************************************************************
@@ -72,7 +87,8 @@ void change_privileges(const char *uid, const char *grp) {
  * Ein Thread hat einen Port und eine zugehörige Funktion, die
  * bei Aktivieren startet.
  */
-void* thr_handlePort(void *v)
+void*
+thr_handlePort(void *v)
 {
   pthread_t ttid;
   int       error, val;
@@ -126,7 +142,7 @@ void* thr_handlePort(void *v)
 
       if(busses[0].debuglevel)
         syslog(LOG_INFO, "New Client at Port %d from %s:%d", ti.socket,
-	   inet_ntoa(socketAddr.sin_addr), ntohs(socketAddr.sin_port));
+     inet_ntoa(socketAddr.sin_addr), ntohs(socketAddr.sin_port));
       error = pthread_create(&ttid, NULL, ti.func, (void*)sckt);
       if(error)
       {
