@@ -17,10 +17,6 @@
 #ifndef _IO_H
 #define _IO_H
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 int  readByte(int bus, int wait, unsigned char *the_byte);
 void writeByte(int bus, unsigned char the_byte, unsigned long msec);
 void writeString(int bus, unsigned char *the_string, unsigned long msecs);

@@ -1,3 +1,7 @@
+2005-01-09  Matthias Trute <mtrute@users.sourceforge.net>
+
+ * corrected some misplaced config.h occurancies.
+ 
 2005-01-08  Matthias Trute <mtrute@users.sourceforge.net>
 
  * XML configuration ignores property number for definition of
