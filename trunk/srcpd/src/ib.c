@@ -43,29 +43,14 @@
 #include "srcp-power.h"
 #include "srcp-info.h"
 
-/*
-#ifdef linux
-#include "ibox/ibox.h"
-#endif
-*/
-
 #define __ib ((IB_DATA*)busses[busnumber].driverdata)
-
-static struct _GASTATE tga[MAX_BUSSES][50];
-static int working_IB;
-
-static int last_type[MAX_BUSSES];
-static int last_typeaddr[MAX_BUSSES];
-static int last_bit[MAX_BUSSES];
 
 static int init_line_IB(int);
 
 // IB helper functions
 static int sendBreak(const int fd);
-//static int sendBreakViaIboxDevice(const int port);
 static int switchOffP50Command(const int busnumber);
 static int readAnswer_ib(const int busnumber, const int generatePrintf);
-//static int readByte_ib(int bus, int wait, unsigned char *the_byte);
 static speed_t checkBaudrate(const int fd, const int busnumber);
 static int resetBaudrate(const speed_t speed, const int busnumber);
 
@@ -190,7 +175,7 @@ int init_bus_IB(int busnumber)
 
   if (status == 0)
   {
-    working_IB = 0;
+    __ib -> working_IB = 0;
   }
 
   if (busses[busnumber].debuglevel < 7)
@@ -201,10 +186,10 @@ int init_bus_IB(int busnumber)
   else
      busses[busnumber].fd = 9999;
   if (status == 0)
-    working_IB = 1;
+    __ib -> working_IB = 1;
 
   printf("INIT_BUS_IB exited with code: %d\n", status);
-  last_type[busnumber] = -1;
+  __ib->last_type = -1;
   return status;
 }
 
@@ -216,7 +201,7 @@ int term_bus_IB(int busnumber)
   if(busses[busnumber].pid == 0)
     return 0;
 
-  working_IB = 0;
+  __ib -> working_IB = 0;
 
   pthread_cancel(busses[busnumber].pid);
   busses[busnumber].pid = 0;
@@ -237,7 +222,7 @@ void* thr_sendrec_IB(void *v)
 
   // initialize tga-structure
   for(zaehler1=0;zaehler1<50;zaehler1++)
-    tga[busnumber][zaehler1].id = 0;
+    __ib -> tga[zaehler1].id = 0;
     
   fb_zaehler1 = 0;
   fb_zaehler2 = 1;
@@ -295,13 +280,13 @@ void send_command_ga_ib(int busnumber)
   // zuerst eventuell Decoder abschalten
   for(i=0;i<50;i++)
   {
-    if(tga[busnumber][i].id)
+    if(__ib -> tga[i].id)
     {
       DBG(busnumber, DBG_DEBUG, "Zeit %i,%i", (int)akt_time.tv_sec, (int)akt_time.tv_usec);
-      cmp_time = tga[busnumber][i].t;
+      cmp_time = __ib -> tga[i].t;
       if(cmpTime(&cmp_time, &akt_time))      // Ausschaltzeitpunkt erreicht ?
       {
-        gatmp = tga[busnumber][i];
+        gatmp = __ib -> tga[i];
         addr = gatmp.id;
         byte2send = 0x90;
         writeByte(busnumber, byte2send, 0);
@@ -320,7 +305,7 @@ void send_command_ga_ib(int busnumber)
         readByte(busnumber, 1, &rr);
         gatmp.action=0;
         setGA(busnumber, addr, gatmp);
-        tga[busnumber][i].id=0;
+        __ib -> tga[i].id=0;
       }
     }
   }
@@ -355,7 +340,7 @@ void send_command_ga_ib(int busnumber)
       status = 1;
       for(i1=0;i1<50;i1++)
       {
-        if(tga[busnumber][i1].id == 0)
+        if(__ib -> tga[i1].id == 0)
         {
           gatmp.t = akt_time;
           gatmp.t.tv_sec += gatmp.activetime / 1000;
@@ -365,9 +350,9 @@ void send_command_ga_ib(int busnumber)
             gatmp.t.tv_sec++;
             gatmp.t.tv_usec -= 1000000;
           }
-          tga[busnumber][i1] = gatmp;
-          DBG(busnumber, DBG_DEBUG, "GA %i für Abschaltung um %i,%i auf %i", tga[busnumber][i1].id,
-            (int)tga[busnumber][i1].t.tv_sec, (int)tga[busnumber][i1].t.tv_usec, i1);
+          __ib -> tga[i1] = gatmp;
+          DBG(busnumber, DBG_DEBUG, "GA %i für Abschaltung um %i,%i auf %i", __ib -> tga[i1].id,
+            (int)__ib -> tga[i1].t.tv_sec, (int)__ib -> tga[i1].t.tv_usec, i1);
           break;
         }
       }
@@ -635,11 +620,11 @@ void send_command_sm_ib(int busnumber)
   {
     unqueueNextSM(busnumber, &smakt);
 
-    last_type[busnumber]     = smakt.type;
-    last_typeaddr[busnumber] = smakt.typeaddr;
-    last_bit[busnumber]      = smakt.bit;
+    __ib -> last_type     = smakt.type;
+    __ib -> last_typeaddr = smakt.typeaddr;
+    __ib -> last_bit      = smakt.bit;
 
-    DBG(busnumber, DBG_DEBUG, "in send_command_sm: last_type[%d] = %d", busnumber, last_type[busnumber]);
+    DBG(busnumber, DBG_DEBUG, "in send_command_sm: last_type[%d] = %d", busnumber, __ib -> last_type);
     switch (smakt.command)
     {
       case SET:
@@ -884,10 +869,10 @@ void check_status_pt_ib(int busnumber)
   for (i=0;i<(int)rr[0];i++)
     readByte(busnumber, 1, &rr[i+1]);
 
-  if(last_type[busnumber] != -1)
+  if(__ib->last_type != -1)
   {
-    setSM(busnumber, last_type[busnumber], -1, last_typeaddr[busnumber], last_bit[busnumber], (int)rr[2], (int)rr[1]);
-    last_type[busnumber]     = -1;
+    setSM(busnumber, __ib -> last_type, -1, __ib -> last_typeaddr, __ib->last_bit, (int)rr[2], (int)rr[1]);
+    __ib -> last_type     = -1;
   }
 }
 
@@ -983,10 +968,10 @@ static int init_line_IB(int busnumber)
 	status = 0;
 	
 	printf("Sending BREAK... ");
-  
-  status = sendBreak(fd);
-  close(fd);
-  
+	
+	status = sendBreak(fd);
+	close(fd);
+
 	if (status == 0)
 	{
 		printf("successful.\n");
@@ -1062,37 +1047,6 @@ static int sendBreak(const int fd)
 		 return 0;
 }
 
-// old code preserved just in case, the new BREAK-style does not work as expected...
-/*
-static int sendBreakViaIboxDevice(const int port)
-{
-	
-#ifdef linux
-      unsigned int LSR;
-      int fd;
-
-      LSR = port + 3;
-      printf("sending BREAK\n");
-      fd = open("/dev/ibox", O_RDWR);
-      syslog(LOG_INFO, "fd for ibox-dev = %d", fd);
-      if(fd < 0)
-           return(-1);
-      if(ioctl(fd, IB_IOCTINIT, LSR) < 0)
-           return(-1);
-      usleep(200000);
-      if(ioctl(fd, IB_IOCTBREAK, 1) < 0)
-           return(-1);
-      usleep(1000000);
-      if(ioctl(fd, IB_IOCTBREAK, 0) < 0)
-           return(-1);
-      usleep(600000);
-      close(fd);
-      sleep(1);
-#endif
-
-    return 0;
-}
-*/
 
 /**
  * checks the baudrate of the intellibox ; see interface description of intellibox
