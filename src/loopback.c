@@ -62,15 +62,69 @@ int init_bus_Loopback(int i)
 void*
 thr_sendrec_Loopback (void *v)
 {
+  struct _GL gltmp, glakt;
+  struct _GA gatmp;
+  int addr;
+  char c;
   int bus = (int) v;
   
   syslog(LOG_INFO,"loopback started, bus #%d, %s", bus, busses[bus].device);
 
   busses[bus].watchdog = 1;
 
-  while (1)
-  {
-    usleep(1000);
-    busses[bus].watchdog = 1;
+  while (1) {
+      if (!queue_GL_isempty(bus))  {
+        unqueueNextGL(bus, &gltmp);
+        addr = gltmp.id;
+        getGL(bus, addr, &glakt);
+
+        if (gltmp.direction == 2)  {
+          gltmp.speed = 0;
+          gltmp.direction = !glakt.direction;
+        }
+        // Vorwärts/Rückwärts
+        if (gltmp.direction != glakt.direction)
+        {
+          char c = 15 + 16 * ((gltmp.funcs & 0x10) ? 1 : 0);
+          syslog(LOG_INFO, "loopback %d: GL %d func: %d", bus, addr, c);
+        }
+        // Geschwindigkeit und Licht setzen, erst recht nach Richtungswechsel
+        if ((gltmp.speed != glakt.speed) ||
+           ((gltmp.funcs & 0x10) != (glakt.funcs & 0x10)) ||
+            (gltmp.direction != glakt.direction))
+        {
+          char c = calcspeed(gltmp.speed, gltmp.maxspeed, gltmp.n_fs) +
+              16 * ((gltmp.funcs & 0x10) ? 1 : 0);
+          /* jetzt aufpassen: n_fs erzwingt ggf. mehrfache Ansteuerungen des Dekoders */
+          /* das Protokoll ist da wirklich eigenwillig, vorerst ignoriert!            */
+        }
+        // Erweiterte Funktionen des 6021 senden, manchmal
+        if (( (busses[bus].flags & M6020_MODE) == 0) && (gltmp.funcs != glakt.funcs))
+        {
+          char c = (gltmp.funcs & 0x0f) + 64;
+        }
+        setGL(bus, addr, gltmp);
+      }
+      busses[bus].watchdog = 4;
+    }
+    busses[bus].watchdog = 5;
+    /* Magnetantriebe, die muessen irgendwann sehr bald abgeschaltet werden */
+    //fprintf(stderr, "und die Antriebe");
+    if (!queue_GA_isempty(bus))
+    {
+      unqueueNextGA(bus, &gatmp);
+      addr = gatmp.id;
+      if (gatmp.action == 1)
+      {
+        gettimeofday(&gatmp.tv[gatmp.port], NULL);
+        setGA(bus, addr, gatmp);
+        if (gatmp.activetime >= 0)
+        {
+          gatmp.action = 0;  // nächste Aktion ist automatisches Aus
+        }
+        c = 33 + (gatmp.port ? 0 : 1);
+      }
+      setGA(bus, addr, gatmp);
+      busses[bus].watchdog = 6;
   }
 }

@@ -4,6 +4,9 @@
 #define _LOOPBACK_H
 
 typedef struct _LOOPBACK_DATA {
+    int number_ga;
+    int number_gl;
+    int number_fb;
 } LOOPBACK_DATA;
 
 int init_lineLoopback(char *);

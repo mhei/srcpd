@@ -52,6 +52,7 @@
 #include "srcp-ga.h"
 #include "srcp-gl.h"
 #include "srcp-time.h"
+#include "srcp-fb.h"
 #include "ibox/ibox.h"
 
 #ifdef TESTMODE
@@ -359,6 +360,7 @@ check_status(int bus)
       temp <<= 8;
       readByte(fd, &rr);
 //      fb[i] = temp | rr;
+      setFBmodul(bus, i, temp|rr);
       readByte(fd, &rr);
 //      syslog(LOG_INFO, "Rückmeldung %i mit 0x%02x", i, fb[i]);
     }

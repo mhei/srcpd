@@ -36,6 +36,9 @@ srcp_fmt_msg(int errno, char *msg)
     case 202:  
       sprintf(msg, "%d OK PROTOCOL SRCP", errno);
       break;
+    case 402:
+        sprintf(msg, "%d ERROR WRONG COMMAND", errno);
+        break;
     case 410:
       sprintf(msg, "%d ERROR unknown command", errno);
       break;

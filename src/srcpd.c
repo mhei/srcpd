@@ -119,7 +119,6 @@ main(int argc, char **argv)
   char c, conffile[MAXPATHLEN];
   pthread_t ttid_cmd, ttid_clock, ttid_pid;
   struct _THREADS cmds = {TCPPORT, thr_doClient};
-
   install_signal_handler();
   cmds.socket = TCPPORT;
   strcpy(conffile, "/etc/srcpd.cond");
@@ -132,6 +131,7 @@ main(int argc, char **argv)
     {
       case 'f':
         strcpy(conffile, optarg);
+        break;
       case 'v':
         printf("srcpd version 2.0, speaks SRCP between 0.7 and 0.8, do not use!\n");
         exit(1);

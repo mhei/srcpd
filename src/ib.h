@@ -17,6 +17,13 @@
 #ifndef _IB_H
 #define _IB_H
 
+typedef struct _IB_DATA {
+    int number_ga;
+    int number_gl;
+    int number_fb;
+} IB_DATA;
+
+
 int init_bus_IB(int);
 int term_bus_IB(int );
 

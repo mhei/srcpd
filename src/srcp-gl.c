@@ -25,11 +25,13 @@
 #include "srcp-error.h"
 
 #include "m605x.h"
+#include "ib.h"
+#include "loopback.h"
 
 #define QUEUELEN 50
 
 /* aktueller Stand */
-volatile struct _GL gl[MAX_BUSSES][MAXGLS];   // aktueller Stand, mehr gibt es nicht
+static struct _GL gl[MAX_BUSSES][MAXGLS];   // aktueller Stand, mehr gibt es nicht
 
 /* Kommandoqueues pro Bus */
 static struct _GL queue[MAX_BUSSES][QUEUELEN];  // Kommandoqueue.
@@ -81,15 +83,11 @@ queueGL(int bus, int addr, int dir, int speed, int maxspeed, int f,  int f1, int
   return SRCP_OK;
 }
 
-int
-queue_GL_isempty(int bus)
-{
+int queue_GL_isempty(int bus){
   return (in[bus] == out[bus]);
 }
 
-static int
-queue_len(int bus)
-{
+static int queue_len(int bus) {
   if (in[bus] >= out[bus])
     return in[bus] - out[bus];
   else
@@ -97,16 +95,12 @@ queue_len(int bus)
 }
 
 /* maybe, 1 element in the queue cannot be used.. */
-static int
-queue_isfull(int bus)
-{
+static int queue_isfull(int bus) {
   return queue_len(bus) >= QUEUELEN - 1;
 }
 
 /** liefert nächsten Eintrag und >=0, oder -1 */
-int
-getNextGL(int bus, struct _GL *gl)
-{
+int getNextGL(int bus, struct _GL *gl) {
   if (in[bus] == out[bus])
     return -1;
   *gl = queue[bus][out[bus]];
@@ -127,15 +121,27 @@ unqueueNextGL(int bus, struct _GL *gl)
   return out[bus];
 }
 
-int
-getGL(int bus, int addr, struct _GL *l)
-{
-  int number_gl;
-  if(busses[bus].type == SERVER_M605X) {
-    number_gl =   ( (M6051_DATA *) busses[bus].driverdata)  -> number_gl;
-  } else {
-    return SRCP_UNSUPPORTEDDEVICEGROUP;
-  }
+static int get_number_gl (int bus) {
+  int number_gl = -1;
+  switch (busses[bus].type) {
+    case SERVER_M605X:
+        number_gl =   ( (M6051_DATA *) busses[bus].driverdata)  -> number_gl;
+        break;
+    case SERVER_IB:
+        number_gl =   ( (IB_DATA *) busses[bus].driverdata)  -> number_gl;
+        break;
+    case SERVER_LOOPBACK:
+        number_gl =   ( (LOOPBACK_DATA *) busses[bus].driverdata)  -> number_gl;
+        break;
+
+ }
+ return number_gl;
+}
+
+int getGL(int bus, int addr, struct _GL *l) {
+  int number_gl = get_number_gl(bus);
+  if(number_gl<0) return SRCP_UNSUPPORTEDDEVICEGROUP;
+
   if((addr>0) && (addr <= number_gl))
   {
     *l = gl[bus][addr];
@@ -153,12 +159,9 @@ getGL(int bus, int addr, struct _GL *l)
 int
 setGL(int bus, int addr, struct _GL l)
 {
-  int number_gl;
-  if(busses[bus].type == SERVER_M605X) {
-    number_gl =   ( (M6051_DATA *) busses[bus].driverdata)  -> number_gl;
-  } else {
-    return SRCP_UNSUPPORTEDDEVICEGROUP;
-  }
+  int number_gl = get_number_gl(bus);
+  if(number_gl<0) return SRCP_UNSUPPORTEDDEVICEGROUP;
+
   if((addr>0) && (addr <= number_gl))
   {
     gl[bus][addr] = l;
@@ -171,25 +174,38 @@ setGL(int bus, int addr, struct _GL l)
   }
 }
 
-int
-initGL(int bus, int addr, const char *protocol, int protoversion, int n_fs, int n_func)
+int initGL(int bus, int addr, const char *protocol, int protoversion, int n_fs, int n_func)
 {
-  gl[bus][addr].n_fs=n_fs;
-  gl[bus][addr].n_func=n_func;
-  gl[bus][addr].protoversion=protoversion;
-  strncpy(&gl[bus][addr].protocol, protocol, sizeof(gl[bus][addr].protocol));
-  return SRCP_OK;
+  int number_gl = get_number_gl(bus);
+  if(number_gl<0) return SRCP_UNSUPPORTEDDEVICEGROUP;
+  if((addr>0) && (addr <= number_gl)) {
+      gl[bus][addr].n_fs=n_fs;
+      gl[bus][addr].n_func=n_func;
+      gl[bus][addr].protocolversion=protoversion;
+      strncpy(gl[bus][addr].protocol, protocol, sizeof(gl[bus][addr].protocol));
+      return SRCP_OK;
+  }
+  return SRCP_WRONGVALUE;
 }
 
-int
-infoGL(int bus, int addr, char* msg)
-{
-  int number_gl;
-  if(busses[bus].type == SERVER_M605X) {
-    number_gl =   ( (M6051_DATA *) busses[bus].driverdata)  -> number_gl;
+int describeGL(int bus, int addr, char *msg) {
+  int number_gl = get_number_gl(bus);
+  if(number_gl<0) return SRCP_UNSUPPORTEDDEVICEGROUP;
+  if((addr>0) && (addr <= number_gl) && (gl[bus][addr].protocolversion>0) ) {
+    sprintf(msg, "%d GL %d %s %d %d %d ",
+      bus, addr, gl[bus][addr].protocol, gl[bus][addr].protocolversion,
+      gl[bus][addr].n_func,gl[bus][addr].n_fs);
   } else {
-    return SRCP_UNSUPPORTEDDEVICEGROUP;
+    strcpy(msg, "");
+    return SRCP_NODATA;
   }
+  return SRCP_INFO;
+}
+
+int infoGL(int bus, int addr, char* msg)
+{
+  int number_gl = get_number_gl(bus);
+  if(number_gl<0) return SRCP_UNSUPPORTEDDEVICEGROUP;
   if((addr>0) && (addr <= number_gl))
   {
     sprintf(msg, "%d GL %d %d %d %d %d %d %d %d %d",
@@ -218,13 +234,12 @@ cmpGL(struct _GL a, struct _GL b)
       (a.funcs     == b.funcs));
 }
 
-int
-startup_GL(void)
-{
+int startup_GL(void) {
   int bus;
   for(bus=0; bus<MAX_BUSSES; bus++)
   {
     pthread_mutex_init(&queue_mutex[bus], NULL);
+    bzero(gl, sizeof(gl));
   }
   return SRCP_OK;
 }
