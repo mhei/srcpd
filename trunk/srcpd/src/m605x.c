@@ -26,6 +26,7 @@
 #include "srcp-ga.h"
 #include "srcp-gl.h"
 #include "srcp-power.h"
+#include "srcp-info.h"
 #include "srcp-srv.h"
 
 
@@ -209,10 +210,13 @@ void* thr_sendrec_M6051(void *v)
     /* Start/Stop */
     if (busses[bus].power_changed)
     {
+      char msg[1000];
       SendByte = (busses[bus].power_state) ? 96 : 97;
       writeByte(bus, &SendByte, pause_between_cmd);
       writeByte(bus, &SendByte, pause_between_cmd);  /* zweimal, wir sind paranoid */
       busses[bus].power_changed = 0;
+      infoPower(bus, msg);
+      queueMessage(msg);
     }
     /* do nothing, if power off */
     if(busses[bus].power_state==0) {

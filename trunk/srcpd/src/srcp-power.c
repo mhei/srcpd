@@ -15,6 +15,7 @@
 int
 setPower(int bus, int state, char *msg)
 {
+  gettimeofday(&  busses[bus].power_change_time, NULL);
   busses[bus].power_state = state;
   strcpy(busses[bus].power_msg, msg);
   busses[bus].power_changed = 1;
@@ -30,7 +31,9 @@ getPower(int bus)
 int
 infoPower(int bus, char *msg)
 {
-  sprintf(msg, "%d POWER %s %s\n", bus, busses[bus].power_state?"ON":"OFF", busses[bus].power_msg);
+  sprintf(msg, "%lu.%lu 100 INFO %d POWER %s %s\n",
+  busses[bus].power_change_time.tv_sec,  busses[bus].power_change_time.tv_usec/1000,
+  bus, busses[bus].power_state?"ON":"OFF", busses[bus].power_msg);
   return SRCP_INFO;
 }
 

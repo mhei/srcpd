@@ -92,6 +92,7 @@ int getFB(int bus, int port, struct timeval *time, int *value)
     return SRCP_NODATA;
 
   *value = fb[bus].fbstate[port-1].state;
+  if(time!=NULL)
   *time  = fb[bus].fbstate[port-1].timestamp;
   return SRCP_OK;
 }
@@ -251,7 +252,7 @@ int init_FB(int bus, int number)
     fb[bus].numberOfFb = number;
     for(i=0;i<number;i++)
     {
-      fb[bus].fbstate[i].state = -1;
+      fb[bus].fbstate[i].state = 0;
       fb[bus].fbstate[i].change = 0;
       fb[bus].fbstate[i].timestamp = akt_time;
     }
