@@ -26,13 +26,13 @@ int srcp_fmt_msg(int errorcode, char *msg, struct timeval time)
       sprintf(msg, "%lu.%.3lu %d INFO\n", time.tv_sec, time.tv_usec/1000, errorcode);
       break;
     case 200:
-      sprintf(msg, "%lu.%.3lu %d OK\n\n", time.tv_sec, time.tv_usec/1000, errorcode);
+      sprintf(msg, "%lu.%.3lu %d OK\n", time.tv_sec, time.tv_usec/1000, errorcode);
       break;
     case 202:
-      sprintf(msg, "%lu.%.3lu %d OK CONNECTION MODE\n\n", time.tv_sec, time.tv_usec/1000, errorcode);
+      sprintf(msg, "%lu.%.3lu %d OK CONNECTION MODE\n", time.tv_sec, time.tv_usec/1000, errorcode);
       break;
     case 201:
-      sprintf(msg, "%lu.%.3lu %d OK PROTOCOL SRCP\n\n", time.tv_sec, time.tv_usec/1000, errorcode);
+      sprintf(msg, "%lu.%.3lu %d OK PROTOCOL SRCP\n", time.tv_sec, time.tv_usec/1000, errorcode);
       break;
     case 400:
         sprintf(msg, "%lu.%.3lu %d ERROR unsupported protocol\n", time.tv_sec, time.tv_usec/1000, errorcode);
@@ -44,7 +44,7 @@ int srcp_fmt_msg(int errorcode, char *msg, struct timeval time)
         sprintf(msg, "%lu.%.3lu %d ERROR unsufficient data\n", time.tv_sec, time.tv_usec/1000, errorcode);
         break;
     case 410:
-      sprintf(msg, "%lu.%.3lu %d ERROR unknown command\n\n", time.tv_sec, time.tv_usec/1000, errorcode);
+      sprintf(msg, "%lu.%.3lu %d ERROR unknown command\n", time.tv_sec, time.tv_usec/1000, errorcode);
       break;
     case 411:
       sprintf(msg, "%lu.%.3lu %d ERROR unknown value\n", time.tv_sec, time.tv_usec/1000, errorcode);
