@@ -61,6 +61,7 @@ int queueGA(int busnumber, int addr, int port, int action, long int activetime)
     }
 
     pthread_mutex_lock(&queue_mutex[busnumber]);
+    queue[busnumber][in[busnumber]].protocol = ga[busnumber].gastate[addr].protocol;
     queue[busnumber][in[busnumber]].action = action;
     queue[busnumber][in[busnumber]].port = port;
     queue[busnumber][in[busnumber]].activetime = activetime;
@@ -135,24 +136,7 @@ int getGA(int busnumber, int addr, struct _GASTATE *a)
     return SRCP_NODATA;
   }
 }
-#if 0
-static int initGA_default(int busnumber, int addr)
-{
-    int rc;
-    switch (busses[busnumber].type)
-    {
-    case SERVER_M605X:
-        rc = initGA(busnumber, addr, 'M');
-        break;
-    case SERVER_IB:
-        rc = initGA(busnumber, addr, 'M');
-        break;
-    default:
-      rc = initGA(busnumber, addr, 'P');
-    }
-    return rc;
-}
-#endif
+
 int isInitializedGA(int busnumber, int addr)
 {
   return ga[busnumber].gastate[addr].protocol != 0x00;

@@ -4,7 +4,7 @@ srcpd_SOURCES = config-srcpd.c srcpd.c ib.c io.c threads.c srcp-time.c \
 		srcp-srv.c srcp-power.c srcp-gl.c srcp-ga.c srcp-fb.c \
 		netserver.c m605x.c ddl-s88.c hsi-88.c li100.c loopback.c srcp-error.c \
 		srcp-lock.c srcp-session.c srcp-descr.c srcp-info.c srcp-sm.c i2c-dev.c \
-		zimo.c
+		zimo.c ddl.c ddl_maerklin.c ddl_nmra.c
 
 EXTRA_DIST = AUTHORS COPYING ChangeLog INSTALL README TODO srcpd.lsm srcpd.conf m605x.c \
 	    m605x.h netserver.c netserver.h srcp-fb.c \
@@ -14,6 +14,7 @@ EXTRA_DIST = AUTHORS COPYING ChangeLog INSTALL README TODO srcpd.lsm srcpd.conf 
 	    hsi-88.h li100.c li100.h loopback.h loopback.c srcp-error.c srcp-error.h \
 	    srcp-session.c srcp-descr.c srcp-session.h srcp-descr.h srcp-lock.c srcp-lock.h \
 	    srcp-info.c srcp-info.h srcp-sm.c srcp-sm.h zimo.c zimo.h \
+	    ddl.c ddl_maerklin.c ddl_nmra.c ddl.h ddl_maerklin.h ddl_nmra.h \
 	    ibox/ibox.h ibox/ibox.c ibox/Makefile ibox/mkibox.sh ibox/README  rcsrcpd
 
 ####### kdevelop will overwrite this part!!! (end)############
@@ -32,5 +33,5 @@ install-data-local:
 	$(INSTALL_DATA) $(srcdir)/srcpd.conf $(sysconfdir)
 
 uninstall-local:
-	-rm -f $(prefix)/etc
+	-rm -f $(prefix)/etc/srcpd.conf
 

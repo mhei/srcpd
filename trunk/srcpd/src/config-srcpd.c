@@ -14,6 +14,7 @@
 #include "config-srcpd.h"
 #include "srcp-fb.h"
 #include "srcp-srv.h"
+#include "ddl.h"
 #include "m605x.h"
 #include "ib.h"
 #include "loopback.h"
@@ -93,7 +94,6 @@ static int register_bus(xmlDocPtr doc, xmlNodePtr node)
    exit(1);
  }
  busses[busnumber].number = busnumber;
- busses[busnumber].numberOfSM = 0;          // default no SM avalible
  num_busses = busnumber;
  child = node->children;
  while (child)
@@ -123,6 +123,12 @@ static int register_bus(xmlDocPtr doc, xmlNodePtr node)
    {
      check_bus(busnumber);
      readconfig_zimo(doc, child, busnumber);
+     found = 1;
+   }
+   if (strcmp(child->name, "ddl") == 0)
+   {
+     check_bus(busnumber);
+     readconfig_DDL(doc, child, busnumber);
      found = 1;
    }
 
@@ -275,6 +281,20 @@ int readConfig(char *filename)
  return rc;
 }
 
+/**
+  * DBG: write some syslog information is current debuglevel of the
+         bus is greater then the the debug level of the message. e.g.
+         if a debug message is deb_info and the bus is configured
+         to inform only about deb_error, no message will be generated.
+  * @param busnumber
+  	integer, busnumber
+  * @param dbglevel
+  	one of the constants DBG_FATAL, DBG_ERROR, DBG_WARN, DBG_INFO, DBG_DEBUG
+  * @param fmt
+  	const char *: standard c formatstring
+  * @param ...
+  	remaining parameters according to formatstring
+  */
 void DBG(int busnumber, int dbglevel, const char *fmt, ...)
 {
   va_list parm;
