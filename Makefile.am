@@ -35,3 +35,6 @@ install-data-local:
 uninstall-local:
 	-rm -f $(prefix)/etc/srcpd.conf
 
+AM_CXXFLAGS = 
+AM_FFLAGS = 
+SUBDIRS = 
