@@ -97,6 +97,17 @@ int main(int argc, char **argv)
   struct _THREADS cmds;
   install_signal_handler();
 
+  /* First: Init the device data used internally*/
+  startup_GL();
+  startup_GA();
+  startup_FB();
+  startup_INFO();
+  startup_LOCK();
+  startup_DESCRIPTION();
+  startup_TIME();
+  startup_SERVER();
+  startup_SESSION();
+
   sprintf(conffile, "%s/srcpd.conf", PREFIX);
 
   /* Parameter auswerten */
@@ -128,17 +139,12 @@ int main(int argc, char **argv)
     }
   }
 
-  openlog("srcpd", LOG_CONS, LOG_USER);
-  syslog(LOG_INFO, "%s", WELCOME_MSG);
   DBG(0, DBG_INFO, "conffile = \"%s\"\n", conffile);
   readConfig(conffile);
 
-  startup_GL();
-  startup_GA();
-  startup_FB();
 
   // check for resolv all needed malloc's
-  for(i=0;i<num_busses;i++)
+  for(i=0;i<=num_busses;i++)
   {
     if (busses[i].number > -1)
     {
@@ -151,6 +157,8 @@ int main(int argc, char **argv)
   }
   cmds.socket = ((SERVER_DATA *) busses[0].driverdata)->TCPPORT;
   cmds.func = thr_doClient;
+  openlog("srcpd", LOG_CONS, LOG_USER);
+  syslog(LOG_INFO, "%s", WELCOME_MSG);
 
   /* Now we have to initialize all busses */
   /* this function should open the device */
@@ -181,15 +189,8 @@ int main(int argc, char **argv)
     // ab hier keine Konsole mehr... Wir sind ein Dämon geworden!
     chdir("/");
   }
-
+ 
   CreatePIDFile(getpid());
-  /* First: Init the device data used internally*/
-  startup_INFO();
-  startup_LOCK();
-  startup_DESCRIPTION();
-  startup_TIME();
-  startup_SERVER();
-  startup_SESSION();
 
   /* Netzwerkverbindungen */
   error = pthread_create(&ttid_cmd, NULL, thr_handlePort, &cmds);
