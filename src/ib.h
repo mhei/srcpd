@@ -34,10 +34,10 @@ int term_bus_IB(int);
 
 void* thr_sendrec_IB(void *);
 
-void send_command_ga(int busnumber);
-void send_command_gl(int busnumber);
-void send_command_sm(int busnumber);
+void send_command_ga_ib(int busnumber);
+void send_command_gl_ib(int busnumber);
+void send_command_sm_ib(int busnumber);
 void check_status_ib(int busnumber);
-void check_status_pt(int busnumber);
+void check_status_pt_ib(int busnumber);
 
 #endif

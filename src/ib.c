@@ -49,7 +49,7 @@
 
 #define __ib ((IB_DATA*)busses[busnumber].driverdata)
 
-static struct _GASTATE tga[50];
+static struct _GASTATE tga[MAX_BUSSES][50];
 static int working_IB;
 
 static int last_type[MAX_BUSSES];
@@ -204,7 +204,10 @@ void* thr_sendrec_IB(void *v)
   busnumber = (int) v;
     DBG(busnumber, DBG_INFO, "thr_sendrec_IB is startet as bus %i", busnumber);
 
-  zaehler1 = 0;
+  // initialize tga-structure
+  for(zaehler1=0;zaehler1<50;zaehler1++)
+    tga[busnumber][zaehler1].id = 0;
+    
   fb_zaehler1 = 0;
   fb_zaehler2 = 1;
 
@@ -238,15 +241,15 @@ void* thr_sendrec_IB(void *v)
       continue;
     }
 
-    send_command_gl(busnumber);
-    send_command_ga(busnumber);
+    send_command_gl_ib(busnumber);
+    send_command_ga_ib(busnumber);
     check_status_ib(busnumber);
-    send_command_sm(busnumber);
+    send_command_sm_ib(busnumber);
     usleep(50000);
   }      // Ende WHILE(1)
 }
 
-void send_command_ga(int busnumber)
+void send_command_ga_ib(int busnumber)
 {
   int i, i1;
   int temp;
@@ -261,13 +264,13 @@ void send_command_ga(int busnumber)
   // zuerst eventuell Decoder abschalten
   for(i=0;i<50;i++)
   {
-    if(tga[i].id)
+    if(tga[busnumber][i].id)
     {
       DBG(busnumber, DBG_DEBUG, "Zeit %i,%i", (int)akt_time.tv_sec, (int)akt_time.tv_usec);
-      cmp_time = tga[i].t;
+      cmp_time = tga[busnumber][i].t;
       if(cmpTime(&cmp_time, &akt_time))      // Ausschaltzeitpunkt erreicht ?
       {
-        gatmp = tga[i];
+        gatmp = tga[busnumber][i];
         addr = gatmp.id;
         byte2send = 0x90;
         writeByte(busnumber, byte2send, 0);
@@ -282,11 +285,11 @@ void send_command_ga(int busnumber)
         {
           byte2send |= 0x80;
         }
-        writeByte(busnumber, byte2send, 5);
+        writeByte(busnumber, byte2send, 2);
         readByte(busnumber, 1, &rr);
         gatmp.action=0;
         setGA(busnumber, addr, gatmp);
-        tga[i].id=0;
+        tga[busnumber][i].id=0;
       }
     }
   }
@@ -313,14 +316,15 @@ void send_command_ga(int busnumber)
     {
       byte2send |= 0x80;
     }
-    writeByte(busnumber, byte2send, 0);
-    status = 1;
+    writeByte(busnumber, byte2send, 2);
+    status = 0;
     // reschedule event: turn off --tobedone--
     if(gatmp.action && (gatmp.activetime > 0))
     {
+      status = 1;
       for(i1=0;i1<50;i1++)
       {
-        if(tga[i1].id == 0)
+        if(tga[busnumber][i1].id == 0)
         {
           gatmp.t = akt_time;
           gatmp.t.tv_sec += gatmp.activetime / 1000;
@@ -330,8 +334,9 @@ void send_command_ga(int busnumber)
             gatmp.t.tv_sec++;
             gatmp.t.tv_usec -= 1000000;
           }
-          tga[i1] = gatmp;
-          DBG(busnumber, DBG_DEBUG, "GA %i für Abschaltung um %i,%i auf %i", tga[i].id, (int)tga[i].t.tv_sec, (int)tga[i].t.tv_usec, i);
+          tga[busnumber][i1] = gatmp;
+          DBG(busnumber, DBG_DEBUG, "GA %i für Abschaltung um %i,%i auf %i", tga[busnumber][i1].id,
+            (int)tga[busnumber][i1].t.tv_sec, (int)tga[busnumber][i1].t.tv_usec, i1);
           break;
         }
       }
@@ -344,7 +349,7 @@ void send_command_ga(int busnumber)
   }
 }
 
-void send_command_gl(int busnumber)
+void send_command_gl_ib(int busnumber)
 {
   int temp;
   int addr=0;
@@ -398,7 +403,7 @@ void send_command_gl(int busnumber)
       {
         byte2send |= 0x20;
       }
-      writeByte(busnumber, byte2send, 5);
+      writeByte(busnumber, byte2send, 2);
       readByte(busnumber, 1, &status);
       if((status == 0) || (status == 0x41) || (status == 0x42))
       {
@@ -418,7 +423,7 @@ int read_register(int busnumber, int reg)
   byte2send = reg;
   writeByte(busnumber, byte2send, 0);
   byte2send = 0;
-  writeByte(busnumber, byte2send, 5);
+  writeByte(busnumber, byte2send, 2);
 
   readByte(busnumber, 1, &status);
 
@@ -430,7 +435,7 @@ int read_cv(int busnumber, int cv)
   unsigned char byte2send;
   unsigned char status;
   int tmp;
-  
+
   byte2send = 0xF0;
   writeByte(busnumber, byte2send, 0);
   // low-byte of cv
@@ -440,7 +445,7 @@ int read_cv(int busnumber, int cv)
   // high-byte of cv
   tmp = cv >> 8;
   byte2send = tmp;
-  writeByte(busnumber, byte2send, 5);
+  writeByte(busnumber, byte2send, 2);
 
   readByte(busnumber, 1, &status);
 
@@ -462,7 +467,7 @@ int read_cvbit(int busnumber, int cv, int bit)
   // high-byte of cv
   tmp = cv >> 8;
   byte2send = tmp;
-  writeByte(busnumber, byte2send, 5);
+  writeByte(busnumber, byte2send, 2);
 
   readByte(busnumber, 1, &status);
 
@@ -481,7 +486,7 @@ int write_register(int busnumber, int reg, int value)
   byte2send = 0;
   writeByte(busnumber, byte2send, 0);
   byte2send = value;
-  writeByte(busnumber, byte2send, 5);
+  writeByte(busnumber, byte2send, 2);
 
   readByte(busnumber, 1, &status);
 
@@ -531,7 +536,7 @@ int write_cvbit(int busnumber, int cv, int bit, int value)
   byte2send = bit;
   writeByte(busnumber, byte2send, 0);
   byte2send = value;
-  writeByte(busnumber, byte2send, 5);
+  writeByte(busnumber, byte2send, 2);
 
   readByte(busnumber, 1, &status);
 
@@ -566,7 +571,7 @@ int send_pom(int busnumber, int addr, int cv, int value)
   byte2send = tmp;
   writeByte(busnumber, byte2send, 0);
   byte2send = value;
-  writeByte(busnumber, byte2send, 5);
+  writeByte(busnumber, byte2send, 2);
 
   readByte(busnumber, 1, &status);
 
@@ -576,7 +581,7 @@ int send_pom(int busnumber, int addr, int cv, int value)
   return ret_val;
 }
 
-void send_command_sm(int busnumber)
+void send_command_sm_ib(int busnumber)
 {
   //unsigned char byte2send;
   //unsigned char status;
@@ -593,7 +598,7 @@ void send_command_sm(int busnumber)
     last_typeaddr[busnumber] = smakt.typeaddr;
     last_bit[busnumber]      = smakt.bit;
 
-    DBG(busnumber, DBG_DEBUG, "in send_command_sm: last_type[%d] = %d", busnumber, last_type[busnumber]);    
+    DBG(busnumber, DBG_DEBUG, "in send_command_sm: last_type[%d] = %d", busnumber, last_type[busnumber]);
     switch (smakt.command)
     {
       case SET:
@@ -655,7 +660,7 @@ void check_status_ib(int busnumber)
 //#warning add loconet
 
   byte2send = 0xC8;
-  writeByte(busnumber, byte2send, 5);
+  writeByte(busnumber, byte2send, 2);
   xevnt2 = 0x00;
   xevnt3 = 0x00;
   readByte(busnumber, 1, &xevnt1);
@@ -669,7 +674,7 @@ void check_status_ib(int busnumber)
   if(xevnt1 & 0x01)        // mindestens eine Lok wurde von Hand gesteuert
   {
     byte2send = 0xC9;
-    writeByte(busnumber, byte2send, 5);
+    writeByte(busnumber, byte2send, 2);
     readByte(busnumber, 1, &rr);
     while(rr != 0x80)
     {
@@ -710,7 +715,7 @@ void check_status_ib(int busnumber)
   if(xevnt1 & 0x04)        // mindestens eine Rückmeldung hat sich geändert
   {
     byte2send = 0xCB;
-    writeByte(busnumber, byte2send, 5);
+    writeByte(busnumber, byte2send, 2);
     readByte(busnumber, 1, &rr);
     while(rr != 0x00)
     {
@@ -727,7 +732,7 @@ void check_status_ib(int busnumber)
   if(xevnt1 & 0x20)        // mindestens eine Weiche wurde von Hand geschaltet
   {
     byte2send = 0xCA;
-    writeByte(busnumber, byte2send, 5);
+    writeByte(busnumber, byte2send, 2);
     readByte(busnumber, 1, &rr);
     temp = rr;
     for(i=0;i<temp;i++)
@@ -770,11 +775,11 @@ void check_status_ib(int busnumber)
   if((xevnt1 & 0x08) || (xevnt2 & 0x40))
   {
     byte2send = 0xA2;
-    writeByte(busnumber, byte2send, 5);
+    writeByte(busnumber, byte2send, 2);
     readByte(busnumber, 1, &rr);
-    if(rr & 0x08)
+    if(!(rr & 0x08))
     {
-      DBG(busnumber, DBG_DEBUG, "on bus %i short detected; old-state is %i", busnumber, getPower(busnumber));
+      DBG(busnumber, DBG_DEBUG, "on bus %i no power detected; old-state is %i", busnumber, getPower(busnumber));
       if(getPower(busnumber))
       {
         char msg[500];
@@ -789,10 +794,10 @@ void check_status_ib(int busnumber)
 
 
   if(xevnt3 & 0x01)        // we should send an XPT_event-command
-    check_status_pt(busnumber);
+    check_status_pt_ib(busnumber);
 }
 
-void check_status_pt(int busnumber)
+void check_status_pt_ib(int busnumber)
 {
   int i;
   //int temp;
@@ -804,7 +809,7 @@ void check_status_pt(int busnumber)
   byte2send = 0xCE;
   while(i == -1)
   {
-    writeByte(busnumber, byte2send, 5);
+    writeByte(busnumber, byte2send, 2);
     i = readByte(busnumber, 1, &rr[0]);
     if (i == 0)
     {
@@ -907,17 +912,17 @@ static int init_line_IB(int busnumber)
   interface.c_cc[VMIN] = 0;
   interface.c_cc[VTIME] = 1;
   tcsetattr(fd, TCSANOW, &interface);
-  
+
   status = 0;
   sleep(1);
   printf("clearing input-buffer\n");
   while(status != -1)
-    status = readByte(busnumber, 1, &rr);    
+    status = readByte(busnumber, 1, &rr);
 
 #ifdef linux
   ioctl(fd, TIOCGSERIAL, &serial_line);
   close(fd);
-  
+
   sleep(1);
   LSR = serial_line.port + 3;
   printf("sending BREAK\n");
@@ -938,7 +943,7 @@ static int init_line_IB(int busnumber)
   sleep(1);
 #endif
 #ifdef __FreeBSD__
-/* 
+/*
  * Eigentlich will er ja nur ein BREAK senden, das machen wir mal
  * etwas einfacher...
  */
@@ -961,7 +966,7 @@ static int init_line_IB(int busnumber)
   }
   sleep(1);
   byte2send = 0xC4;
-  writeByte(busnumber, byte2send, 5);
+  writeByte(busnumber, byte2send, 2);
   status = readByte(busnumber, 1, &rr);
   if(status == -1)
     return(1);
@@ -982,7 +987,7 @@ static int init_line_IB(int busnumber)
   byte2send = '1';
   writeByte(busnumber, byte2send, 0);
   byte2send = 0x0d;
-  writeByte(busnumber, byte2send, 5);
+  writeByte(busnumber, byte2send, 2);
   status = readByte(busnumber, 1, &rr);
   if(status != 0)
     return 1;
@@ -1000,10 +1005,10 @@ static int init_line_IB(int busnumber)
   writeByte(busnumber, byte2send, 0);
   byte2send = 0x0d;
   writeByte(busnumber, byte2send, 0);
-  
+
   sleep(1);
   close_comport(fd);
-    
+
   sleep(1);
   fd = open_comport(busnumber, busses[busnumber].baudrate);
   DBG(busnumber, DBG_DEBUG, "fd nach open_comport = %d", fd);
@@ -1013,7 +1018,7 @@ static int init_line_IB(int busnumber)
     return(-1);
   }
   byte2send = 0xC4;
-  writeByte(busnumber, byte2send, 5);
+  writeByte(busnumber, byte2send, 2);
   status = readByte(busnumber, 1, &rr);
   if(status == -1)
     return(1);

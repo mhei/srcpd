@@ -175,7 +175,7 @@ int setGA(int busnumber, int addr, struct _GASTATE a)
     if(!isInitializedGA(busnumber, addr))
       initGA_default(busnumber, addr);
     ga[busnumber].gastate[addr].action = a.action;
-    ga[busnumber].gastate[addr].port    = a.port;
+    ga[busnumber].gastate[addr].port   = a.port;
     gettimeofday(&ga[busnumber].gastate[addr].tv[ga[busnumber].gastate[addr].port], NULL);
 
     infoGA(busnumber, addr, a.port, msg);

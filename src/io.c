@@ -44,12 +44,12 @@ int readByte(int bus, int wait, unsigned char *the_byte)
     {
       i = read(busses[bus].fd, the_byte, 1);
       if(i < 0) {
-            char emsg[200];
-            strerror_r(errno, emsg, sizeof(emsg));
-            DBG(bus, DBG_ERROR, "readbyte(): read status: %d with errno = %d: %s", i, errno, *emsg);
+        char emsg[200];
+        strerror_r(errno, emsg, sizeof(emsg));
+        DBG(bus, DBG_ERROR, "readbyte(): read status: %d with errno = %d: %s", i, errno, *emsg);
       }
       if (i > 0)
-          DBG(bus, DBG_DEBUG, "readbyte(): byte read: 0x%02x", *the_byte);
+        DBG(bus, DBG_DEBUG, "readbyte(): byte read: 0x%02x", *the_byte);
     }
   }
   return (i > 0 ? 0 : -1);
