@@ -34,7 +34,7 @@
 #define SERVER_LI100            4         // srcpd-bus works as Lenz-server
 #define SERVER_LOOPBACK         5         // srcpd-bus is dummy driver, no real hardware
 #define SERVER_S88              6         // srcpd-bus works as S88 at parallelport
-#define SERVER_HSI_88            7         // srcpd-bus works as HSI88-server
+#define SERVER_HSI_88           7         // srcpd-bus works as HSI88-server
 #define SERVER_I2C_DEV          8         // srcpd-bus works as I2C-DEV-server
 #define SERVER_ZIMO             9         // srcpd-bus works as Zimo MX1
 

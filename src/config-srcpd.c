@@ -4,7 +4,7 @@
 * Version 2, 1991. (c) Matthias Trute, 2000-2001.
 *
 * 04.07.2001 Frank Schmischke
-*            Einführung der Konfigurationsdatei
+*            Einfhrung der Konfigurationsdatei
 * 05.08.2001 Matthias Trute
 *        Umstellung auf XML Format
 *
@@ -22,6 +22,7 @@
 #include "hsi-88.h"
 #include "i2c-dev.h"
 #include "zimo.h"
+#include "li100.h"
 
 /* Willkommensmeldung */
 const char *WELCOME_MSG = "srcpd V2.0.6; SRCP 0.8.2\n";
@@ -36,7 +37,7 @@ int bus_has_devicegroup(int bus, int dg) {
     case DG_SESSION:
       return strstr(busses[bus].description, "SESSION") != NULL;
     case DG_POWER:
-      return strstr(busses[bus].description, "POWER") != NULL;    
+      return strstr(busses[bus].description, "POWER") != NULL;
     case DG_GA:
       return strstr(busses[bus].description, "GA") != NULL;
     case DG_GL:
@@ -141,7 +142,7 @@ static int register_bus(xmlDocPtr doc, xmlNodePtr node)
    if (strcmp(child->name, "intellibox") == 0)
    {
      check_bus(busnumber);
-     readconfig_intellibox(doc, child, busnumber);
+     readConfig_IB(doc, child, busnumber);
      found = 1;
    }
    if (strcmp(child->name, "loopback") == 0)
@@ -159,7 +160,13 @@ static int register_bus(xmlDocPtr doc, xmlNodePtr node)
    if (strcmp(child->name, "hsi-88") == 0)
    {
      check_bus(busnumber);
-     readconfig_HSI_88(doc, child, busnumber);
+     readConfig_HSI_88(doc, child, busnumber);
+     found = 1;
+   }
+   if (strcmp(child->name, "li100") == 0)
+   {
+     check_bus(busnumber);
+     readConfig_LI100(doc, child, busnumber);
      found = 1;
    }
    if (strcmp(child->name, "i2c-dev") == 0)
@@ -169,7 +176,7 @@ static int register_bus(xmlDocPtr doc, xmlNodePtr node)
      readconfig_I2C_DEV(doc, child, busnumber);
      found = 1;
 #else
-	printf("Sorry, I2C-DEV only available on Linux (yet)\n");
+  printf("Sorry, I2C-DEV only available on Linux (yet)\n");
 #endif
    }
    /* some attributes are common for all (real) busses */
@@ -287,13 +294,13 @@ int readConfig(char *filename)
          if a debug message is deb_info and the bus is configured
          to inform only about deb_error, no message will be generated.
   * @param busnumber
-  	integer, busnumber
+    integer, busnumber
   * @param dbglevel
-  	one of the constants DBG_FATAL, DBG_ERROR, DBG_WARN, DBG_INFO, DBG_DEBUG
+    one of the constants DBG_FATAL, DBG_ERROR, DBG_WARN, DBG_INFO, DBG_DEBUG
   * @param fmt
-  	const char *: standard c formatstring
+    const char *: standard c formatstring
   * @param ...
-  	remaining parameters according to formatstring
+    remaining parameters according to formatstring
   */
 void DBG(int busnumber, int dbglevel, const char *fmt, ...)
 {
@@ -302,15 +309,15 @@ void DBG(int busnumber, int dbglevel, const char *fmt, ...)
    if (dbglevel <= busses[busnumber].debuglevel) {
           char *msg;
           msg = (char *)malloc (sizeof(char) * (strlen(fmt) + 10));
-	    if (msg == NULL) return; // MAM: Wat solls? Ist eh am Ende
-	    sprintf (msg, "[bus %d] %s", busnumber, fmt);
+      if (msg == NULL) return; // MAM: Wat solls? Ist eh am Ende
+      sprintf (msg, "[bus %d] %s", busnumber, fmt);
           vsyslog(LOG_INFO, msg, parm);
           free (msg);
 
          if (busses[busnumber].debuglevel>DBG_WARN) {
-  	    fprintf(stderr,"[bus %d] ",busnumber);
-	    vfprintf(stderr,fmt,parm);
-	    if (strchr(fmt,'\n')==NULL) fprintf(stderr,"\n");
-	}
+        fprintf(stderr,"[bus %d] ",busnumber);
+      vfprintf(stderr,fmt,parm);
+      if (strchr(fmt,'\n')==NULL) fprintf(stderr,"\n");
+  }
     }
 }

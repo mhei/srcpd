@@ -17,11 +17,38 @@
 #ifndef _LI100_H
 #define _LI100_H
 
-int init_lineLI100(char*);
-void* thr_sendrecli100(void*);
-void send_command_ga_li(int fd);
-void send_command_gl_li(int fd);
-void check_status_li(int fd);
-int send_command(int fd, char *str);
+#include <libxml/tree.h>
+
+typedef struct _LI100_DATA
+{
+    int number_ga;
+    int number_gl;
+    int number_fb;
+    int last_bit;
+    int last_type;
+    int last_typeaddr;
+    int last_value;
+    struct _GASTATE tga[50];
+    int working_LI100;
+    int emergency_on_LI100;
+    int version_interface;
+    int code_interface;
+    int version_zentrale;
+    int code_zentrale;
+} LI100_DATA;
+
+void readConfig_LI100(xmlDocPtr doc, xmlNodePtr node,  int busnumber);
+
+int init_bus_LI100(int busnumber);
+int term_bus_LI100(int busnumber);
+
+int init_gl_LI100(struct _GLSTATE *gl);
+int init_ga_LI100(struct _GASTATE *ga);
+
+void* thr_sendrec_LI100(void*);
+void send_command_ga_LI100(int busnumber);
+void send_command_gl_LI100(int busnumber);
+void check_status_LI100(int busnumber);
+int send_command_LI100(int busnumber, unsigned char *str);
 
 #endif

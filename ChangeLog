@@ -1,3 +1,9 @@
+2004-05-28  Frank Schmischke  <frank.schmischke@t-online.de>
+
+	* ib.c: process return of power on IB
+	* ib.*, hsi-88.*, li100.*: make some function-names more standards-like
+	* li100.*, config-srcpd.*: initialisation of LI100
+
 2004-05-23 18:54  mborchers
 
 	* ib.c: function changes sent by the iB are now correctly set in
