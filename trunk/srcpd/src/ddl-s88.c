@@ -51,6 +51,7 @@
 /* last changes: Torsten Vogt, march 2000                      */
 /*               Martin Wolf, november 2000                    */
 /* modified for srcpd: Matthias Trute, may 2002 */
+/* modified for FreeBSD: Michael Meiszl, jan 2003              */
 /*                                                             */
 /***************************************************************/
 
@@ -89,6 +90,11 @@ void readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   __ddl_s88->port = 0x0378;
   __ddl_s88->clockscale = 35;
   __ddl_s88->refresh = 100;
+
+#ifdef __FreeBSD__
+  __ddl_s88->Fd = -1; // signalisiere gechlossenes Port
+#endif
+
   strcpy(busses[busnumber].description, "FB POWER");
   __ddl_s88->number_fb[0] = 1;
   __ddl_s88->number_fb[1] = 1;
@@ -393,11 +399,19 @@ int FBSD_ioperm(int Port,int KeineAhnung, int DesiredAccess,int busnumber)
 		}
 		else
 		{
-    	   	   DBG(busnumber, DBG_WARN,  "FBSD DDL-S88 closing NOT OPEN port %04X",Port);
-		}
+		   DBG(busnumber, DBG_WARN,  "FBSD DDL-S88 closing NOT OPEN port %04X",Port);
+			}
 		__ddl_s88->Fd=-1;
 		return 0;
 		}
+
+	// ist schon offen???
+	if (__ddl_s88->Fd != -1)
+	{
+		// DBG(busnumber, DBG_INFO,  "FBSD DDL-S88 trying to re-open port %04X (ignored)",Port);
+
+		return 0; // gnaedig ignorieren
+	}
 
 	// Also oeffnen, das ist schon trickreicher :-)
 	/* Erst einmal rausbekommen, welches Device denn gemeint war
@@ -439,11 +453,11 @@ unsigned char FBSD_inb(int Woher,int busnumber)
 	int	WelchesPort;
 	int	WelcherIoctl;
 
-  DBG(busnumber, DBG_INFO,  "FBSD DDL-S88 InB start on port %04X",Woher);
+  //DBG(busnumber, DBG_DEBUG,  "FBSD DDL-S88 InB start on port %04X",Woher);
 	if (__ddl_s88->Fd == -1)
 	{
     	   DBG(busnumber, DBG_ERROR,  "FBSD DDL-S88 Device not open for reading");
-		return -1;
+		exit (1) ;
 	}
 
 	WelchesPort=Woher - __ddl_s88->port;
@@ -458,7 +472,7 @@ unsigned char FBSD_inb(int Woher,int busnumber)
 			return 0;
 	}
 	ioctl(__ddl_s88->Fd,WelcherIoctl,&i);
-  DBG(busnumber, DBG_INFO,  "FBSD DDL-S88 InB finished Data %02X",i);
+  //DBG(busnumber, DBG_DEBUG,  "FBSD DDL-S88 InB finished Data %02X",i);
 	return i;
 }
 
@@ -469,10 +483,11 @@ unsigned char FBSD_outb(unsigned char Data, int Wohin,int busnumber)
 	int	WelchesPort;
 	int	WelcherIoctl;
 
-  DBG(busnumber, DBG_INFO,  "FBSD DDL-S88 OutB %d on Port %04X",Data,Wohin);
+  //DBG(busnumber, DBG_DEBUG,  "FBSD DDL-S88 OutB %d on Port %04X",Data,Wohin);
 		if (__ddl_s88->Fd == -1)
 	{
     	   DBG(busnumber, DBG_ERROR,  "FBSD DDL-S88 Device not open for writing Byte %d",Data);
+		exit (1) ;
 		return -1;
 	}
 	
@@ -488,7 +503,7 @@ unsigned char FBSD_outb(unsigned char Data, int Wohin,int busnumber)
 			return 0;
 	}
 	ioctl(__ddl_s88->Fd,WelcherIoctl,&Data);
-  DBG(busnumber, DBG_INFO,  "FBSD DDL-S88 OutB finished");
+  //DBG(busnumber, DBG_DEBUG,  "FBSD DDL-S88 OutB finished");
 	return Data;
 }
 
