@@ -18,6 +18,7 @@
 #define _CONFIG_SRCPD_H
 
 #include <termios.h>
+#include <sys/param.h>
 
 #define MAX_BUSSES        20        // Anzahl der im srcpd integrierten Busse
 
@@ -68,6 +69,7 @@ typedef struct _BUS {
 
 extern struct _BUS busses[];
 extern int num_busses;
+extern char PIDFILE[MAXPATHLEN];
 
 void readConfig(void);
 

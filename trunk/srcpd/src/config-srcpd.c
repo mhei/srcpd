@@ -37,6 +37,7 @@ int TIMER_RUNNING = 1;          /* Running timer module         */
 
 /* Willkommensmeldung */
 const char *WELCOME_MSG = "srcpd V2; SRCP 0.8.0; do not use\n";
+char PIDFILE[MAXPATHLEN];
 
 struct _BUS busses[MAX_BUSSES];
 int num_busses;
@@ -169,6 +170,9 @@ readConfig ()
 {
   xmlDocPtr doc;
   memset(busses, 0, sizeof(busses));
+
+  /* some defaults */
+  strcpy(PIDFILE, "/var/run/srcpd.pid");
 
   doc = load_config_xml ("/usr/local/etc/srcpd.xml");
   if (doc == 0)
