@@ -116,10 +116,10 @@ main(int argc, char **argv)
   pid_t pid;
   char c, conffile[MAXPATHLEN];
   pthread_t ttid_cmd, ttid_clock, ttid_pid;
-  struct _THREADS cmds = {((SERVER_DATA *) busses[0].driverdata)->TCPPORT, thr_doClient};
+  struct _THREADS cmds;
   install_signal_handler();
-  cmds.socket = ((SERVER_DATA *) busses[0].driverdata)->TCPPORT;
-  strcpy(conffile, "/etc/srcpd.cond");
+
+  strcpy(conffile, "/etc/srcpd.conf");
 
   /* Parameter auswerten */
   opterr=0;
@@ -148,7 +148,8 @@ main(int argc, char **argv)
   }
   // zuerst die Konfigurationsdatei lesen
   readConfig(conffile);
-
+  cmds.socket = ((SERVER_DATA *) busses[0].driverdata)->TCPPORT;
+  cmds.func = thr_doClient;
   /* forken */
   if((pid=fork())<0)
   {

@@ -9,6 +9,7 @@
 
 #include "srcp-srv.h"
 #include <libxml/tree.h>
+#include <syslog.h>
 #include "config-srcpd.h"
 
 int server_reset_state;
@@ -16,20 +17,27 @@ int server_shutdown_state;
 
 void readconfig_server(xmlDocPtr doc, xmlNodePtr node, int busnumber) {
     xmlNodePtr child = node->children;
+   syslog(LOG_INFO, "Bus %d starting Konfiguration Child %s", busnumber, node->name);
     busses[0].type = SERVER_SERVER;
     busses[0].init_func = &init_bus_server;
     busses[0].term_func = &term_bus_server;
     strcpy(busses[0].description, "SESSION SERVER TIME");
 
-    busses[busnumber].driverdata = malloc(sizeof(struct _SERVER_DATA));
-    strcpy(((SERVER_DATA *) busses[busnumber].driverdata)->PIDFILE, "/var/run/srcpd.pid");
+    busses[0].driverdata = malloc(sizeof(struct _SERVER_DATA));
+
+   strcpy(((SERVER_DATA *) busses[0].driverdata)->PIDFILE, "/var/run/srcpd.pid");
     while (child) {
-	    if (strcmp(child->name, "TCPport") == 0) {
+          if(strncmp(child->name, "text", 4)==0) {
+            child = child -> next;
+            continue;
+          }
+//          syslog(LOG_INFO, "bus %d child %s", busnumber, child->name);
+	    if (strcmp(child->name, "TCP-Port") == 0) {
             char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
 		((SERVER_DATA *) busses[busnumber].driverdata)->TCPPORT = atoi(txt);
             free(txt);
 	    }
-	    if (strcmp(child->name, "PIDfile") == 0) {
+	    if (strcmp(child->name, "PID-File") == 0) {
             char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
 		strcpy(((SERVER_DATA *) busses[busnumber].driverdata)->PIDFILE, txt);
             free(txt);
@@ -44,7 +52,7 @@ void readconfig_server(xmlDocPtr doc, xmlNodePtr node, int busnumber) {
 		}
 		strcpy(((SERVER_DATA *) busses[busnumber].driverdata)->username, txt);
             free(txt);
-	    }
+          }
 	    if (strcmp(child->name, "groupname") == 0) {
             char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
 		free(((SERVER_DATA *) busses[busnumber].driverdata)->groupname);
@@ -55,9 +63,9 @@ void readconfig_server(xmlDocPtr doc, xmlNodePtr node, int busnumber) {
 		}
 		strcpy(((SERVER_DATA *) busses[busnumber].driverdata)->groupname, txt);
             free(txt);
-        }
-	child = child->next;
-    }
+          }
+          child = child->next;
+    } /* while */
 }
 
 
