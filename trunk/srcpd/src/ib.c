@@ -71,8 +71,8 @@ static int init_line_IB(int);
 
 void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
-  syslog(LOG_INFO, "reading configuration for intellibox at bus %d", busnumber);
   xmlNodePtr child = node->children;
+  syslog(LOG_INFO, "reading configuration for intellibox at bus %d", busnumber);
 
   busses[busnumber].type = SERVER_IB;
   busses[busnumber].init_func = &init_bus_IB;

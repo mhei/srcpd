@@ -167,13 +167,14 @@ int queueInfoSM(int busnumber, int addr, int type, int typeaddr, int bit, int va
 {
   if (number_of_clients > 0)
   {
+    char buffer[1000];
+    char tmp[100];
+
     while (queueIsFullInfo())
     {
       usleep(1000);
     }
 
-    char buffer[1000];
-    char tmp[100];
     
     pthread_mutex_lock(&queue_mutex_info);
 
