@@ -254,7 +254,7 @@ void DBG(int busnumber, int dbglevel, const char *fmt, ...)
   va_start(parm, fmt);
    /* need some more checks, may segfault! */
    if (dbglevel <= busses[busnumber].debuglevel) {
-	if (busses[busnumber].debuglevel>DBG_WARN)
+	if (busses[busnumber].debuglevel>=DBG_DEBUG)
 	{
 	    fprintf(stderr,"[bus %d] ",busnumber);
 	    vfprintf(stderr,fmt,parm);
