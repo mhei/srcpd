@@ -10,5 +10,5 @@
 #define _SRCP_DESCR_H
 
 int startup_DESCRIPTION(void);
-
+int describeBus(int bus, char *reply);
 #endif

@@ -21,6 +21,7 @@
 #include "srcp-ga.h"
 #include "srcp-gl.h"
 #include "srcp-error.h"
+#include "srcp-info.h"
 
 int startup_SESSION(void)
 {
@@ -29,16 +30,31 @@ int startup_SESSION(void)
 
 int start_session(long int sessionid, int mode)
 {
+
+  char msg[1000];
+  struct timeval akt_time;
+  gettimeofday(&akt_time, NULL);
   DBG(0, DBG_INFO, "Session started; clientid %ld, mode %d", sessionid, mode);
+  sprintf(msg, "%lu.%lu 101 INIT 0 SESSION %lu %s\n", akt_time.tv_sec, akt_time.tv_usec/1000, sessionid,
+     (mode==1?"COMMAND":"INFO"));
+  queueMessage(msg);
+  return SRCP_OK;
+
   return SRCP_OK;
 }
 
 int stop_session(long int sessionid)
 {
+  char msg[1000];
+  struct timeval akt_time;
+  gettimeofday(&akt_time, NULL);
+
   DBG(0, DBG_INFO, "Session terminated clientid %ld", sessionid);
   // clean all locks
   unlock_ga_bysessionid(sessionid);
   unlock_gl_bysessionid(sessionid);
+  sprintf(msg, "%lu.%lu 102 TERM 0 SESSION %lu\n", akt_time.tv_sec, akt_time.tv_usec/1000, sessionid);
+  queueMessage(msg);  
   return SRCP_OK;
 }
 
