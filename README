@@ -36,7 +36,7 @@ Konfiguration
     nur Änderungen anegeben werden brauchen. Die Defaultwerte werden sich nicht
     "heimlich" ändern.
 
-    Grundsätliche Struktur
+    Grundsätzliche Struktur
     Ein Bus wird durch das <bus> Tag definiert.
     In ihm sind einige Attribute und weitere Tags enthalten.
     <bus number="lfd.nr">
@@ -93,7 +93,7 @@ Konfiguration
     Loopback
     ~~~~~~~
     Dieser Bus dient zum einen zur offline Entwicklung von Clientprogrammen
-    als auch als Skelett für neue Busse. Er nimmt verwaltet die Geräte ohne
+    als auch als Skelett für neue Busse. Er verwaltet die Geräte ohne
     jeglichen Hardwarebezug.
     
     xmltag: loopback

@@ -95,12 +95,13 @@ static void queue_reset_fb(int busnumber, int port, struct timeval *ctime)
 
 int getFB(int bus, int port, struct timeval *time, int *value)
 {
-  if ( get_number_fb(bus)<=0)
+  port--;
+  if ( get_number_fb(bus)<=0 || (port<0) || (port >= get_number_fb(bus)))
     return SRCP_NODATA;
 
-  *value = fb[bus].fbstate[port-1].state;
+  *value = fb[bus].fbstate[port].state;
   if(time!=NULL)
-  *time  = fb[bus].fbstate[port-1].timestamp;
+  *time  = fb[bus].fbstate[port].timestamp;
   return SRCP_OK;
 }
 
@@ -112,7 +113,7 @@ void updateFB(int bus, int port, int value)
   int port_t;
 
   // check range to disallow segmentation fault
-  if ((port > get_number_fb(bus)) || (port < 1))
+  if ((port > get_number_fb(bus)) || (port < 1)  )
     return;
 
   port_t = port - 1;

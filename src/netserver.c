@@ -215,7 +215,7 @@ static int handle_setverify(int sessionid, int bus, char *device, char *paramete
     }
     if (bus_has_devicegroup(bus, DG_LOCK) && strncasecmp(device, "LOCK", 4) == 0) {
 	long int addr, duration;
-	char devgrp[10];
+	char devgrp[1000];
 	int nelem = -1;
 	if (strlen(parameter) > 0) {
 	    nelem = sscanf(parameter, "%s %ld %ld", devgrp, &addr, &duration);
@@ -241,7 +241,7 @@ static int handle_setverify(int sessionid, int bus, char *device, char *paramete
 	int nelem;
 	char state[5], msg[256];
 	memset(msg, 0, sizeof(msg));
-	nelem = sscanf(parameter, "%s %100c", state, msg);
+	nelem = sscanf(parameter, "%3s %100c", state, msg);
 	if (nelem >= 1) {
 	    rc = SRCP_WRONGVALUE;
 	    if (strncasecmp(state, "OFF", 3) == 0) {
@@ -595,7 +595,7 @@ int handleRESET(int sessionid, int bus, char *device, char *parameter, char *rep
 int doCmdClient(int Socket, int sessionid)
 {
     char line[1024], reply[4095];
-    char command[1000], devicegroup[1000], parameter[1000];
+    char cbus[1000], command[1000], devicegroup[1000], parameter[1000];
     long int bus;
     long int rc, nelem;
     struct timeval akt_time;
@@ -612,7 +612,8 @@ int doCmdClient(int Socket, int sessionid)
 	memset(devicegroup, 0, sizeof(devicegroup));
 	memset(parameter, 0, sizeof(parameter));
 	memset(reply, 0, sizeof(reply));
-	nelem = sscanf(line, "%6s %ld %s %1000c", command, &bus, devicegroup, parameter);
+	nelem = sscanf(line, "%s %s %s %1000c", command, cbus, devicegroup, parameter);
+	bus = atoi(cbus);
 	reply[0] = 0x00;
 	if ((nelem >= 3) && (bus >= 0) && (bus <= num_busses)) {
 	    rc = SRCP_UNKNOWNCOMMAND;
@@ -640,14 +641,11 @@ int doCmdClient(int Socket, int sessionid)
 	    if (strncasecmp(command, "RESET", 5) == 0) {
 		rc = handleRESET(sessionid, bus, devicegroup, parameter, reply);
 	    }
-
 	} else {
-	    DBG(bus, DBG_DEBUG, "list too short in session %ld: %d", sessionid, nelem);
+	    DBG(0, DBG_DEBUG, "list too short in session %ld: %d", sessionid, nelem);
 	    rc = SRCP_LISTTOOSHORT;
 	    gettimeofday(&akt_time, NULL);
 	    srcp_fmt_msg(rc, reply, akt_time);
-	    if (nelem == 1)
-		DBG(bus, DBG_INFO, "Command: %s", command);
 	}
 
 	if (socket_writereply(Socket, reply) < 0) {

@@ -209,7 +209,7 @@ int infoGA(int busnumber, int addr, int port, char* msg)
 {
   int number_ga = get_number_ga(busnumber);
 
-  if((addr>0) && (addr <= number_ga) && (ga[busnumber].gastate[addr].tv[port].tv_sec>0) )
+  if((addr>0) && (addr <= number_ga) && (port>=0) && (port<MAXGAPORT) && (ga[busnumber].gastate[addr].tv[port].tv_sec>0) )
   {
     sprintf(msg, "%ld.%ld 100 INFO %d GA %d %d %d\n",
       ga[busnumber].gastate[addr].tv[port].tv_sec,
