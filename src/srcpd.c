@@ -128,6 +128,10 @@ int main(int argc, char **argv)
   // zuerst die Konfigurationsdatei lesen
   readConfig();
 
+  cmds.socket = CMDPORT;
+  fbs.socket  = FEEDBACKPORT;
+  infos.socket= INFOPORT;
+
   /* Parameter auswerten */
   opterr=0;
 #ifndef TESTMODE
