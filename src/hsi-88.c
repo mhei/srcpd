@@ -363,20 +363,20 @@ void* thr_sendrec_HSI_88(void *v)
         usleep(refresh_time);
         readByte(busnumber, 0, &rr);
       }
-      readByte(busnumber, 0, &rr);            // Anzahl zu meldender Module
+      readByte(busnumber, 1, &rr);            // Anzahl zu meldender Module
       anzahl = (int)rr;
       for(zaehler1=0;zaehler1<anzahl;zaehler1++)
       {
-        readByte(busnumber, 0, &rr);
+        readByte(busnumber, 1, &rr);
         i = rr;
-        readByte(busnumber, 0, &rr);
+        readByte(busnumber, 1, &rr);
         temp = rr;
         temp <<= 8;
-        readByte(busnumber, 0, &rr);
+        readByte(busnumber, 1, &rr);
         setFBmodul(busnumber, i, temp | rr);
-        DBG(busnumber, DBG_DEBUG, "Rückmeldung %i mit 0x%02x", i, temp|rr);
+        DBG(busnumber, DBG_DEBUG, "Rückmeldung %i mit 0x%04x", i, temp|rr);
       }
-      readByte(busnumber, 0, &rr);            // <CR>
+      readByte(busnumber, 1, &rr);            // <CR>
     }
     else
     {

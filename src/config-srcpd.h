@@ -31,13 +31,13 @@
 #define SERVER_LOOPBACK         5         // dummy driver, no real hardware
 #define SERVER_S88              6         // S88 am Parallelport
 #define SERVER_HSI_88	          7
-#define SERVER_I2C_DEV					8					// srcpd arbeitet als I2C-DEV-Server
-#define SERVER_ZIMO     9 // Zimo MX1
+#define SERVER_I2C_DEV          8         // srcpd arbeitet als I2C-DEV-Server
+#define SERVER_ZIMO             9         // Zimo MX1
 
 /* generic flags */
 #define USE_WATCHDOG          0x0001      // use watchdog
-#define AUTO_POWER_ON        0x0002      // start Power on startup
-#define RESTORE_COM_SETTINGS  0x004      // restore com-port settings after close
+#define AUTO_POWER_ON         0x0002      // start Power on startup
+#define RESTORE_COM_SETTINGS  0x0004      // restore com-port settings after close
 
 /* driver specific flags */
 #define M6020_MODE            0x0100      // Subtyp zum M605X

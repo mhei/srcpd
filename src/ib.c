@@ -282,7 +282,7 @@ void send_command_ga(int busnumber)
         {
           byte2send |= 0x80;
         }
-        writeByte(busnumber, byte2send, 2);
+        writeByte(busnumber, byte2send, 5);
         readByte(busnumber, 1, &rr);
         gatmp.action=0;
         setGA(busnumber, addr, gatmp);
@@ -398,7 +398,7 @@ void send_command_gl(int busnumber)
       {
         byte2send |= 0x20;
       }
-      writeByte(busnumber, byte2send, 2);
+      writeByte(busnumber, byte2send, 5);
       readByte(busnumber, 1, &status);
       if((status == 0) || (status == 0x41) || (status == 0x42))
       {
@@ -418,7 +418,7 @@ int read_register(int busnumber, int reg)
   byte2send = reg;
   writeByte(busnumber, byte2send, 0);
   byte2send = 0;
-  writeByte(busnumber, byte2send, 2);
+  writeByte(busnumber, byte2send, 5);
 
   readByte(busnumber, 1, &status);
 
@@ -440,7 +440,7 @@ int read_cv(int busnumber, int cv)
   // high-byte of cv
   tmp = cv >> 8;
   byte2send = tmp;
-  writeByte(busnumber, byte2send, 2);
+  writeByte(busnumber, byte2send, 5);
 
   readByte(busnumber, 1, &status);
 
@@ -462,7 +462,7 @@ int read_cvbit(int busnumber, int cv, int bit)
   // high-byte of cv
   tmp = cv >> 8;
   byte2send = tmp;
-  writeByte(busnumber, byte2send, 2);
+  writeByte(busnumber, byte2send, 5);
 
   readByte(busnumber, 1, &status);
 
@@ -481,7 +481,7 @@ int write_register(int busnumber, int reg, int value)
   byte2send = 0;
   writeByte(busnumber, byte2send, 0);
   byte2send = value;
-  writeByte(busnumber, byte2send, 2);
+  writeByte(busnumber, byte2send, 5);
 
   readByte(busnumber, 1, &status);
 
@@ -531,7 +531,7 @@ int write_cvbit(int busnumber, int cv, int bit, int value)
   byte2send = bit;
   writeByte(busnumber, byte2send, 0);
   byte2send = value;
-  writeByte(busnumber, byte2send, 2);
+  writeByte(busnumber, byte2send, 5);
 
   readByte(busnumber, 1, &status);
 
@@ -566,7 +566,7 @@ int send_pom(int busnumber, int addr, int cv, int value)
   byte2send = tmp;
   writeByte(busnumber, byte2send, 0);
   byte2send = value;
-  writeByte(busnumber, byte2send, 2);
+  writeByte(busnumber, byte2send, 5);
 
   readByte(busnumber, 1, &status);
 
@@ -655,7 +655,7 @@ void check_status_ib(int busnumber)
 //#warning add loconet
 
   byte2send = 0xC8;
-  writeByte(busnumber, byte2send, 2);
+  writeByte(busnumber, byte2send, 5);
   xevnt2 = 0x00;
   xevnt3 = 0x00;
   readByte(busnumber, 1, &xevnt1);
@@ -669,7 +669,7 @@ void check_status_ib(int busnumber)
   if(xevnt1 & 0x01)        // mindestens eine Lok wurde von Hand gesteuert
   {
     byte2send = 0xC9;
-    writeByte(busnumber, byte2send, 2);
+    writeByte(busnumber, byte2send, 5);
     readByte(busnumber, 1, &rr);
     while(rr != 0x80)
     {
@@ -709,34 +709,25 @@ void check_status_ib(int busnumber)
 
   if(xevnt1 & 0x04)        // mindestens eine Rückmeldung hat sich geändert
   {
-      byte2send = 0xCB;
-      writeByte(busnumber, byte2send, 2);
+    byte2send = 0xCB;
+    writeByte(busnumber, byte2send, 5);
+    readByte(busnumber, 1, &rr);
+    while(rr != 0x00)
+    {
+      int aktS88 = rr;
       readByte(busnumber, 1, &rr);
-      while(rr != 0x00)
-      {
-          int aktS88 = rr;
-          readByte(busnumber, 1, &rr);
-          temp = rr;
-          temp <<= 8;
-          readByte(busnumber, 1, &rr);
-          setFBmodul(busnumber, aktS88+1, temp|rr);
-          readByte(busnumber, 1, &rr);
-      }
-  }
-
-  if(xevnt1 & 0x08)       // power off
-  {
-    char msg[110];
-    busses[busnumber].power_changed = 0;
-    busses[busnumber].power_state   = 0;
-    infoPower(busnumber, msg);
-    queueInfoMessage(msg);
+      temp = rr;
+      temp <<= 8;
+      readByte(busnumber, 1, &rr);
+      setFBmodul(busnumber, aktS88+1, temp|rr);
+      readByte(busnumber, 1, &rr);
+    }
   }
 
   if(xevnt1 & 0x20)        // mindestens eine Weiche wurde von Hand geschaltet
   {
     byte2send = 0xCA;
-    writeByte(busnumber, byte2send, 0);
+    writeByte(busnumber, byte2send, 5);
     readByte(busnumber, 1, &rr);
     temp = rr;
     for(i=0;i<temp;i++)
@@ -753,21 +744,49 @@ void check_status_ib(int busnumber)
 
   if(xevnt2 & 0x3f)       // overheat, short on track etc.
   {
-    char msg[110];
-    busses[busnumber].power_changed = 0;
-    busses[busnumber].power_state   = 0;
-    infoPower(busnumber, msg);
-    queueInfoMessage(msg);
+    DBG(busnumber, DBG_DEBUG, "on bus %i short detected; old-state is %i", busnumber, getPower(busnumber));
+    if(getPower(busnumber))
+    {
+      char msg[500];
+      if(xevnt2 & 0x20)
+        setPower(busnumber, -1, "Overheating condition detected");
+      if(xevnt2 & 0x10)
+        setPower(busnumber, -1, "non-allowed electrical connection between programming track and rest of layout");
+      if(xevnt2 & 0x08)
+        setPower(busnumber, -1, "Overload on DCC-Booster or Loconet");
+      if(xevnt2 & 0x04)
+        setPower(busnumber, -1, "short on internal booster");
+      if(xevnt2 & 0x02)
+        setPower(busnumber, -1, "Overload on Lokmaus-bus");
+      if(xevnt2 & 0x01)
+        setPower(busnumber, -1, "short on external booster");
+      infoPower(busnumber, msg);
+      queueInfoMessage(msg);
+    }
   }
 
-  if(xevnt2 & 0x40)        // we should send an XStatus-command
+  // power off ?
+  // we should send an XStatus-command
+  if((xevnt1 & 0x08) || (xevnt2 & 0x40))
   {
     byte2send = 0xA2;
-    writeByte(busnumber, byte2send, 2);
+    writeByte(busnumber, byte2send, 5);
     readByte(busnumber, 1, &rr);
+    if(rr & 0x08)
+    {
+      DBG(busnumber, DBG_DEBUG, "on bus %i short detected; old-state is %i", busnumber, getPower(busnumber));
+      if(getPower(busnumber))
+      {
+        char msg[500];
+        setPower(busnumber, -1, "Emergency Stop");
+        infoPower(busnumber, msg);
+        queueInfoMessage(msg);
+      }
+    }
     if(rr & 0x80)
       readByte(busnumber, 1, &rr);
   }
+
 
   if(xevnt3 & 0x01)        // we should send an XPT_event-command
     check_status_pt(busnumber);
@@ -785,7 +804,7 @@ void check_status_pt(int busnumber)
   byte2send = 0xCE;
   while(i == -1)
   {
-    writeByte(busnumber, byte2send, 2);
+    writeByte(busnumber, byte2send, 5);
     i = readByte(busnumber, 1, &rr[0]);
     if (i == 0)
     {
@@ -893,7 +912,7 @@ static int init_line_IB(int busnumber)
   sleep(1);
   printf("clearing input-buffer\n");
   while(status != -1)
-    status = readByte(busnumber, 1, &rr);
+    status = readByte(busnumber, 1, &rr);    
 
 #ifdef linux
   ioctl(fd, TIOCGSERIAL, &serial_line);
@@ -942,7 +961,7 @@ static int init_line_IB(int busnumber)
   }
   sleep(1);
   byte2send = 0xC4;
-  writeByte(busnumber, byte2send, 2);
+  writeByte(busnumber, byte2send, 5);
   status = readByte(busnumber, 1, &rr);
   if(status == -1)
     return(1);
@@ -963,7 +982,7 @@ static int init_line_IB(int busnumber)
   byte2send = '1';
   writeByte(busnumber, byte2send, 0);
   byte2send = 0x0d;
-  writeByte(busnumber, byte2send, 2);
+  writeByte(busnumber, byte2send, 5);
   status = readByte(busnumber, 1, &rr);
   if(status != 0)
     return 1;
@@ -994,7 +1013,7 @@ static int init_line_IB(int busnumber)
     return(-1);
   }
   byte2send = 0xC4;
-  writeByte(busnumber, byte2send, 2);
+  writeByte(busnumber, byte2send, 5);
   status = readByte(busnumber, 1, &rr);
   if(status == -1)
     return(1);
