@@ -30,17 +30,20 @@
 #include "config-srcpd.h"
 #include "srcp-srv.h"
 
-void change_privileges(const char *uid, const char *grp)
+void change_privileges(int bus)
 {
   struct group *group;
   struct passwd *passwd;
+  char * grp =  ((SERVER_DATA *) busses[0].driverdata)->groupname;
+  char * uid =  ((SERVER_DATA *) busses[0].driverdata)->username;
+
 
   if (grp != NULL)
   {
     if ((group = getgrnam(grp)) != NULL ||
         (group = getgrgid((gid_t)atoi(grp))) != NULL)
     {
-      if (setgid(group->gr_gid) != 0)
+      if (setegid(group->gr_gid) != 0)
       {
         syslog(LOG_INFO, "could not change to group %s: %s",group->gr_name,strerror(errno));
       }
@@ -60,7 +63,7 @@ void change_privileges(const char *uid, const char *grp)
     if ((passwd = getpwnam(uid)) != NULL ||
       (passwd = getpwuid((uid_t)atoi(uid))) != NULL)
     {
-      if (setuid(passwd->pw_uid) != 0)
+      if (seteuid(passwd->pw_uid) != 0)
       {
         syslog(LOG_INFO,"could not change to user %s: %s",passwd->pw_name,strerror(errno));
       }
@@ -123,8 +126,7 @@ thr_handlePort(void *v)
 
   if(getuid() == 0)
   {
-    change_privileges(((SERVER_DATA *) busses[0].driverdata)->username,
-        ((SERVER_DATA *) busses[0].driverdata)->groupname);
+    change_privileges(0);
   }
 
   while (1)
@@ -141,7 +143,7 @@ thr_handlePort(void *v)
       if(busses[0].debuglevel)
         syslog(LOG_INFO, "New Client at Port %d from %s:%d", ti.socket,
      inet_ntoa(socketAddr.sin_addr), ntohs(socketAddr.sin_port));
-      error = pthread_create(&ttid, NULL, ti.func, (void*)sckt);
+     error = pthread_create(&ttid, NULL, ti.func, (void*)sckt);
       if(error)
       {
         perror("cannot create thread to handle client. Abort!");

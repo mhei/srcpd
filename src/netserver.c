@@ -102,6 +102,7 @@ void * thr_doClient(void *v)
   int mode = COMMAND;
   long int sessionid, rc;
 
+  change_privileges(0);
   if (write(Socket, WELCOME_MSG, strlen(WELCOME_MSG)) < 0)
   {
     shutdown(Socket, 2);

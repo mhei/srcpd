@@ -71,9 +71,7 @@ const unsigned long LPT_BASE[] = { 0x3BC, 0x378, 0x278 };
 // number of possible parallel ports
 const unsigned int LPT_NUM = 3;
 // values of the bits in a byte
-// const char BIT_VALUES[] = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
-const char BIT_VALUES[] =
-    { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
+const char BIT_VALUES[] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
 void readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
     int i;
@@ -98,25 +96,22 @@ void readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 	busses[busnumber + i].thr_func = &thr_sendrec_dummy;
 	busses[busnumber + i].driverdata = NULL;
     }
+
     while (child) {
 	if (strncmp(child->name, "text", 4) == 0) {
 	    child = child->next;
 	    continue;
 	}
 	if (strcmp(child->name, "ioport") == 0) {
-	    char *txt =
-		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+	    char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
 	    ((DDL_S88_DATA *) busses[busnumber].driverdata)->port = strtol(txt, (char **) NULL, 0);	// better than atoi(3)
 	    free(txt);
 	}
-
-
 	if (strcmp(child->name, "clockscale") == 0) {
 	    char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
 	    ((DDL_S88_DATA *) busses[busnumber].driverdata)->clockscale = atoi(txt);
 	    free(txt);
 	}
-
 	if (strcmp(child->name, "refresh") == 0) {
 	    char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
 	    ((DDL_S88_DATA *) busses[busnumber].driverdata)->refresh = atoi(txt);
@@ -144,6 +139,7 @@ void readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 	}
 	child = child->next;
     }
+    busnumber += 4;
 }
 
 /****************************************************************
@@ -159,6 +155,7 @@ void readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 *                        successfull, otherwise 0               *
 *                                                               *
 * remarks: tested MW, 20.11.2000                                *
+* bit ordering is changed from erddcd code! (MT)     *
 *                                                               *
 ****************************************************************/
 int init_bus_S88(int bus)
