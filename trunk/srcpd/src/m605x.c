@@ -211,9 +211,17 @@ int term_bus_M6051(int bus)
 int init_gl_M6051(struct _GLSTATE *gl) {
   if( gl -> protocol != 'M' ) 
     return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
-  gl -> direction = 1;
-  gl -> n_fs = 14;
-  return SRCP_OK;
+  switch(gl->protocolversion) {
+	    case 1: 
+		return ( gl -> n_fs == 14) ? SRCP_OK : SRCP_WRONGVALUE;
+		break;
+	    case 2:
+		return ( (gl -> n_fs == 14) || 
+		         (gl -> n_fs == 27) || 
+			 (gl -> n_fs == 28) ) ? SRCP_OK : SRCP_WRONGVALUE;
+		break;
+  }
+  return SRCP_WRONGVALUE;
 }
 
 /**

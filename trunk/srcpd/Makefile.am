@@ -23,11 +23,12 @@ EXTRA_DIST = AUTHORS COPYING ChangeLog INSTALL README TODO srcpd.lsm srcpd.conf 
 
 # set the include path found by configure
 INCLUDES = $(all_includes)
-AM_CFLAGS = -D_REENTRANT -DPREFIX=\"$(sysconfdir)\"
+AM_CFLAGS = -D_REENTRANT -DSYSCONFDIR=\"$(sysconfdir)\"
 
 # the library search path.
 srcpd_LDFLAGS = $(all_libraries) `./systemtest`
-                                                                                
+sysconf_DATA = srcpd.conf
+                                            
 install-data-local:
 	$(mkinstalldirs) $(prefix)/
 	$(INSTALL_DATA) $(srcdir)/srcpd.conf $(sysconfdir)

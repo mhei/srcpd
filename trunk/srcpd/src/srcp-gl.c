@@ -231,7 +231,7 @@ int initGL(int busnumber, int addr, const char protocol, int protoversion, int n
     tgl.protocolversion=protoversion;
     tgl.protocol=protocol;
     tgl.id = addr;
-    if(busses[busnumber].init_gl_func && gl[busnumber].glstate[addr].state == 0)
+    if(busses[busnumber].init_gl_func)
 	    rc = (*busses[busnumber].init_gl_func)(&tgl);
     if(rc == SRCP_OK) {
 	gl[busnumber].glstate[addr] = tgl;

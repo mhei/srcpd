@@ -103,7 +103,39 @@ int term_bus_Loopback(int bus)
  
  */
 int init_gl_Loopback(struct _GLSTATE *gl) {
-	return SRCP_OK;
+    switch(gl->protocol) {
+	case 'L':
+	case 'P':
+	    return SRCP_OK;
+	    break;
+	case 'M':
+	  switch(gl->protocolversion) {
+	    case 1: 
+		return ( gl -> n_fs == 14) ? SRCP_OK : SRCP_WRONGVALUE;
+		break;
+	    case 2:
+		return ( (gl -> n_fs == 14) || 
+		         (gl -> n_fs == 27) || 
+			 (gl -> n_fs == 28) ) ? SRCP_OK : SRCP_WRONGVALUE;
+		break;
+    	  }
+	  return SRCP_WRONGVALUE;
+          break;
+	case 'N':
+          switch(gl->protocolversion) {
+	    case 1: 
+		return ( (gl -> n_fs == 14) || 
+			 (gl -> n_fs == 128) ) ? SRCP_OK : SRCP_WRONGVALUE;
+		break;
+	    case 2:
+		return ( (gl -> n_fs == 14) || 
+			 (gl -> n_fs == 128) ) ? SRCP_OK : SRCP_WRONGVALUE;
+		break;
+    	  }
+	  return SRCP_WRONGVALUE;
+          break;
+       }
+  return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
 }
 
 /**
