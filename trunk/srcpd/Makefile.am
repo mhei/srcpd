@@ -21,7 +21,7 @@ EXTRA_DIST = AUTHORS COPYING ChangeLog INSTALL README TODO srcpd.lsm srcpd.conf 
 
 # set the include path found by configure
 INCLUDES = $(all_includes)
-AM_CFLAGS = -D_REENTRANT
+AM_CFLAGS = -D_REENTRANT -DPREFIX=\"$(prefix)\"
 
 # the library search path.
 srcpd_LDFLAGS = $(all_libraries) `./systemtest`
