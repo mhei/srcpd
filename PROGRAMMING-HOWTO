@@ -1,0 +1,125 @@
+-*- text -*-
+
+Programmierung von srcpd Modulen
+
+Stand: Herbst/Winter 2002
+
+0. Allgemeines
+
+Alle srcpd Module müssen reentrant programmiert werden. Sie müssen
+davon ausgehen, das sie mehrfach mit unterschiedlicher Parametrierung
+vorkommen.
+
+Die Initialisierung erfolgt ausschließlich über die Konfigurationsdatei
+(/etc/srcpd.conf). Das XML Format erfordert einige Disziplin, insbesondere
+bei der Wahl der Busbezeichner.
+
+1. Initialisierung
+
+Beim Parsen der Konfiguration wird je nach Bustyp (der in config-srcpd.*
+hinterlegt werden muß) eine Routine mit dem XML Teilbaum und der Busnummer
+aufgerufen. In dem globalen Array busses stehen für jeden Bus _seine_
+Datenbereiche. Insbesondere müssen dort Pointer auf folgende Funktionen
+hinterlegt werden:
+
+- init_bus: Pendant zum SRCP INIT <bus>
+- term_bus: Pendant zum SRCP TERM <bus>
+- send_rec: Wird als Thread aufgerufen, der nicht terminiert und die
+   gesamte Kommunikation mit der konkreten Hardware abwickelt.
+- Descriptionstring mit den unterstützten Gerätegruppen
+
+Hinzu kommen Hardwarespezifische Details, wie Gerätename, Anzahl der
+jeweils unterstützten Geräte etc.
+
+Die Funktion register_bus() in config-srcpd.c muß entsprechend den bereits
+enthaltenen Modulen ergänzt werden.
+
+2. Initialisierung
+
+Wird vor dem Start des Threads aufgerufen. 
+
+3. Terminierung
+
+Wird nach Beendigung des Threads aufgerufen, um aufzuräumen.
+
+4. Thread
+
+Endlosschleife, die die zuständigen Queues abfragt und die anstehenden
+Ausgaben zur Hardware auszuführen. Daneben auch verantwortlich für das
+Einlesen der Hardwareangaben, um sie dem Framework zurückzumelden.
+
+Kann vom Wachhund überwacht werden, um Hänger zu erkennen. Dann wird
+der Thread gecancelt und neu gestartet. Eine Ausführung der TERM/INIT
+Sequenz ist dabei _nicht_ vorgesehen.
+
+5. Watchdog
+
+Nicht jeder Thread braucht den. Wenn aktiviert, wird vom Masterthread
+laufend eine Variable watchdog im Array busses abgefragt. Steht diese
+auf 0, wird der Thread neu gestartet. Gleichfalls wird bei jeder Abfrage
+diese Variable auf 0 gesetzt. Es ist am Thread, diese ständig auf
+einen anderen Wert zu setzen.
+
+6. Debugging
+
+Debugging der bestehenden Threads erfolgt via syslog() anstelle von
+printf().
+
+7. Beispielcode
+
+Die Datei loopback.[ch] sind als Dummygeräte ohne wirklich Hardware
+und als Ausgangspunkt für eigene Entwicklungen geeignet.
+
+8. Queues
+
+Jede Gerätegruppe hat auf dem Bus eine eigene Queue, die von den
+SRCP Netzwerkroutinen gefüllt wird. 
+
+if(!queue_GA_isempty(bus)) {
+    unqueueNextGA(&ga);
+    process_single_ga(ga);
+}
+
+Die Routine unqueueNextGA() (sinngemäß für die restlichen Gerätegruppen)
+liest den als nächstes auszuführende GA-Befehl aus und entfernt ihn aus
+der Queue. Die Queue ist eine simple First-In-First-Out Queue.
+
+Mit der Funktion getNextGA läßt sich der nächste Befehl auslesen, _ohne_
+ihn aus der Queue selbst zu entfernen.
+
+9. Namenskonventionen
+
+9.1 Funktionsnamen
+
+Die Threads haben mit thr_ beginnende Funktionsnamen. Kommandos mit Bezug zum
+SRCP haben den betreffenden Bezug im Namen (GA, TERM). Funktionen, die nur im
+Modul selbst Sinn haben, werden static deklariert. Exportierte Funktionen haben
+grundsätzlich den Gerätenamen zu enthalten (z.B. readconfig_M6051 für das 6051 
+von Märklin)
+
+9.2 Busparameter
+
+Alle Funktionen werden vom Framework mit der wirksamen Busnummer aufgerufen.
+Damit lassen sich die busspezifischen Angaben auf dem busses[] Array auslesen.
+
+9.3 busses-Array
+
+Der Array busses ist zum einen generisch, enthält aber einen Bustypspezifischen
+Datenteil. Der allg. Teil umfaßt die Pointer auf die Funktionen, allg Parameter
+(Watchdog, Description) und eine Typspezifikation. Hinzu kommt ein Pointer auf
+driverspezifische Daten, der auch NULL sein kann.
+
+Es ist ein primitives OO Design (im Sinne von Klassenvererbung) damit verbunden.
+
+
+10. SRCP Hacking
+
+Nur entsprechend der SRCP Spezifikation. Keine eigenmächtigen Veränderungen.
+Nur Fehlerbehebung.
+
+11. Andere Betriebssysteme
+
+Sollten nicht ignoriert werden. Linux (aktuell zudem) ist aber Schwerpunkt.
+Portabel geht aber vor genial. Ein 386er kann, muß aber nicht ausreichen.
+
+OS, die wesentlich von Unix abweichen, kommen später; vielleicht.
