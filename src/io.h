@@ -17,10 +17,16 @@
 #ifndef _IO_H
 #define _IO_H
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 int  readByte(int FD, unsigned char *the_byte);
 void writeByte(int FD, unsigned char *the_byte, unsigned long msec);
 
+#ifdef REINIT_COMPORT
 void restore_comport(char*);
 void save_comport(char*);
+#endif
 
 #endif

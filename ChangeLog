@@ -1,5 +1,8 @@
 
 Version 0.1	
+11.07.2001 Frank Schmischke
+        - Option --enable-comport in autoconf aufgenommem
+	  (schaltet das sichern und wiederherstellen des Comports ein/aus)
 10.07.2001 Frank Schmischke	
 	- erste Version des srcpd für die Interfaces M6050, M6051 und Intellibox
  	- Befehlssatz entspricht SRCP 0.7.3

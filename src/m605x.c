@@ -131,7 +131,7 @@ thr_sendrec6051 (void *v)
   if (cmd32_pending)
     {
       SendByte = 32;
-      writeByte (fd, &SendByte, pause_between_cmd * 1000);
+      writeByte (fd, &SendByte, pause_between_cmd);
       cmd32_pending = 0;
     }
 
@@ -143,8 +143,8 @@ thr_sendrec6051 (void *v)
       if (power_changed)
 	{
 	  SendByte = (power_state) ? 96 : 97;
-	  writeByte (fd, &SendByte, pause_between_cmd * 1000);
-	  writeByte (fd, &SendByte, pause_between_cmd * 1000);	/* zweimal, wir sind paranoid */
+	  writeByte (fd, &SendByte, pause_between_cmd);
+	  writeByte (fd, &SendByte, pause_between_cmd);	/* zweimal, wir sind paranoid */
 	  power_changed = 0;
 	}
       io_thread_running = 3;
@@ -173,9 +173,9 @@ thr_sendrec6051 (void *v)
 		      if (gltmp.direction != gl[addr].direction)
 			{
 			  c = 15 + 16 * ((gltmp.flags & 0x10) ? 1 : 0);
-			  writeByte (fd, &c, pause_between_bytes * 1000);
+			  writeByte (fd, &c, pause_between_bytes);
 			  SendByte = gltmp.id;
-			  writeByte (fd, &SendByte, pause_between_cmd * 1000);
+			  writeByte (fd, &SendByte, pause_between_cmd);
 			}
 		      // Geschwindigkeit und Licht setzen, erst recht nach Richtungswechsel
 		      if ((gltmp.speed != gl[addr].speed) ||
@@ -188,17 +188,17 @@ thr_sendrec6051 (void *v)
 			    16 * ((gltmp.flags & 0x10) ? 1 : 0);
 			  /* jetzt aufpassen: n_fs erzwingt ggf. mehrfache Ansteuerungen des Dekoders */
 			  /* das Protokoll ist da wirklich eigenwillig, vorerst ignoriert!            */
-			  writeByte (fd, &c, pause_between_bytes * 1000);
+			  writeByte (fd, &c, pause_between_bytes);
 			  SendByte = gltmp.id;
-			  writeByte (fd, &SendByte, pause_between_cmd * 1000);
+			  writeByte (fd, &SendByte, pause_between_cmd);
 			}
 		      // Erweiterte Funktionen des 6021 senden, manchmal
 		      if ((M6020MODE == 0) && (gltmp.flags != gl[addr].flags))
 			{
 			  c = (gltmp.flags & 0x0f) + 64;
-			  writeByte (fd, &c, pause_between_bytes * 1000);
+			  writeByte (fd, &c, pause_between_bytes);
 			  SendByte = gltmp.id;
-			  writeByte (fd, &SendByte, pause_between_cmd * 1000);
+			  writeByte (fd, &SendByte, pause_between_cmd);
 			}
 		      gettimeofday (&gltmp.tv, NULL);
 		      gl[addr] = gltmp;
@@ -237,17 +237,17 @@ thr_sendrec6051 (void *v)
 			  gatmp.activetime = ga_min_active_time;	// egal wieviel, mind. 75m ein
 			}
 		      c = 33 + (gatmp.port ? 0 : 1);
-		      writeByte (fd, &c, pause_between_bytes * 1000);
+		      writeByte (fd, &c, pause_between_bytes);
 		      SendByte = gatmp.id;
 		      writeByte (fd, &SendByte,
-				 (unsigned long) gatmp.activetime * 1000);
+				 (unsigned long) gatmp.activetime);
 		      cmd32_pending = 1;
 		    }
 		  if ((gatmp.action == 0) && cmd32_pending)
 		    {
 		      // fprintf(stderr, "32 abzusetzen\n");
 		      SendByte = 32;
-		      writeByte (fd, &SendByte, pause_between_cmd * 1000);
+		      writeByte (fd, &SendByte, pause_between_cmd);
 		      cmd32_pending = 0;
 		    }
 		  gettimeofday (&gatmp.tv[gatmp.port], NULL);
@@ -265,7 +265,7 @@ thr_sendrec6051 (void *v)
       if (!cmd32_pending && NUMBER_FB)
 	{
 	  SendByte = 128 + NUMBER_FB;
-	  writeByte (fd, &SendByte, pause_between_bytes * 1000);
+	  writeByte (fd, &SendByte, pause_between_bytes);
 	  io_thread_running = 7;
 	  for (i = 0; i < NUMBER_FB; i++)
 	    {
@@ -276,7 +276,7 @@ thr_sendrec6051 (void *v)
 	      readByte (fd, &rr);
 	      fb[i] = temp | rr;
 	    }
-	  usleep (pause_between_cmd * 1000);
+	  usleep (pause_between_cmd);
 	}
       io_thread_running = 9;
       // fprintf(stderr, " ende\n");
