@@ -203,11 +203,11 @@ void send_command_ga(int bus)
     unqueueNextGA(bus, &gatmp);
     addr = gatmp.id;
     byte2send = 0x90;
-    writeByte(fd, &byte2send,0);
+    writeByte(bus, &byte2send,0);
     temp = gatmp.id;
     temp &= 0x00FF;
     byte2send = temp;
-    writeByte(fd, &byte2send,0);
+    writeByte(bus, &byte2send,0);
     temp = gatmp.id;
     temp >>= 8;
     byte2send = temp;
@@ -219,7 +219,7 @@ void send_command_ga(int bus)
     {
       byte2send |= 0x80;
     }
-    writeByte(fd, &byte2send, 0);
+    writeByte(bus, &byte2send, 0);
     status = 1;
     // reschedule event: turn off --tobedone--
     if(gatmp.action && (gatmp.activetime > 0))
@@ -243,7 +243,7 @@ void send_command_ga(int bus)
         }
       }
     }
-    readByte(fd, &rr);
+    readByte(bus, &rr);
     if(status)
     {
       setGA(bus, addr, gatmp);
@@ -274,17 +274,17 @@ void send_command_gl(int bus)
     {
       // Lokkommando soll gesendet werden
       byte2send = 0x80;
-      writeByte(fd, &byte2send,0);
+      writeByte(bus, &byte2send,0);
       // send lowbyte of adress
       temp = gltmp.id;
       temp &= 0x00FF;
       byte2send = temp;
-      writeByte(fd, &byte2send,0);
+      writeByte(bus, &byte2send,0);
       // send highbyte of adress
       temp = gltmp.id;
       temp >>= 8;
       byte2send = temp;
-      writeByte(fd, &byte2send,0);
+      writeByte(bus, &byte2send,0);
       if(gltmp.direction == 2)       // Nothalt ausgelöst ?
       {
         byte2send = 1;              // Nothalt setzen
@@ -297,7 +297,7 @@ void send_command_gl(int bus)
           byte2send++;
         }
       }
-      writeByte(fd, &byte2send,0);
+      writeByte(bus, &byte2send,0);
       // setting direction, light and function
       byte2send = gltmp.funcs;
       byte2send |= 0xc0;
@@ -305,8 +305,8 @@ void send_command_gl(int bus)
       {
         byte2send |= 0x20;
       }
-      writeByte(fd, &byte2send,2);
-      readByte(fd, &status);
+      writeByte(bus, &byte2send,2);
+      readByte(bus, &status);
       if((status == 0) || (status == 0x41) || (status == 0x42))
       {
         setGL(bus, addr, gltmp);
@@ -331,7 +331,7 @@ void check_status(int bus)
      2. manuelle Lokbefehle
      3. manuelle Weichenbefehle */
 
-#warning "add loconet"
+#warning add loconet
 
   byte2send = 0xC8;
   writeByte(fd, &byte2send, 2);

@@ -17,5 +17,6 @@ typedef struct _THREADS
 } THREADS;
 
 void* thr_handlePort(void *);
+void change_privileges(int bus);
 
 #endif

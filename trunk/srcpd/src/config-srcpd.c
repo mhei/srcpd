@@ -186,6 +186,7 @@ static int walk_config_xml(xmlDocPtr doc)
     register_bus(doc, child);
     child = child->next;
   }
+  return 0;
 }
 
 static xmlDocPtr load_config_xml(const char *filename)
@@ -217,4 +218,5 @@ int readConfig(const char *filename)
   {
     exit(1);
   }
+  return 0;
 }

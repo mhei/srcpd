@@ -53,8 +53,6 @@ int setFBmodul(int bus, int mod, int values)
   }
   return SRCP_OK;
 }
-  
-int infoFB(int bus, int port, char *msg)
 
 /* Kurzes Modul mit 8 Ports, u.a. DDL S88 */
 int setFBmodul8(int bus, int mod, int values)
@@ -82,12 +80,12 @@ int infoFB(int bus, int port, char *msg)
   }
 }
 
-int describeFB(int bus, int addr, char *reply) {
-    return SRCP_NOTSUPPORTED;
+int describeFB(int bus, int addr, char *reply)
+{
+  return SRCP_NOTSUPPORTED;
 }
 
-int
-startup_FB()
+int startup_FB()
 {
   return 0;
 }

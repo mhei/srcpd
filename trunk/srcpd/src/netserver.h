@@ -10,10 +10,10 @@
 #ifndef _NETSERVER_H
 #define _NETSERVER_H
 
-int   socket_readline(int socket, char *line, int len);
+int socket_readline(int Socket, char *line, int len);
+int socket_writereply(int Socket, int srcpcode, const char *line);
 
 void* thr_doClient(void* v);
-int doInfoClient(int, int);
 int doCmdClient(int, int);
 
 #endif

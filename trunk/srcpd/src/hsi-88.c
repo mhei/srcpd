@@ -124,18 +124,17 @@ static int init_lineHSI88(int busnumber, int modules_left, int modules_center, i
   int status;
   int anzahl;
   int anzahl_cur;
-  int i, fd;
+  int i;
   int ctr;
   unsigned char byte2send;
   unsigned char rr;
 
-  fd = busses[busnumber].fd;
   sleep(1);
   byte2send = 0x0d;
   for(i=0;i<10;i++)
-    writeByte(fd, &byte2send, 2);
+    writeByte(busses[busnumber].fd, &byte2send, 2);
 
-  while(readByte(fd, &rr) == 0)
+  while(readByte(busses[busnumber].fd, &rr) == 0)
   {
   }
 
@@ -145,35 +144,35 @@ static int init_lineHSI88(int busnumber, int modules_left, int modules_center, i
   while(i)
   {
     byte2send = 't';
-    writeByte(fd, &byte2send, 0);
+    writeByte(busses[busnumber].fd, &byte2send, 0);
     byte2send = 0x0d;
-    writeByte(fd, &byte2send, 2);
+    writeByte(busses[busnumber].fd, &byte2send, 2);
     rr = 0;
     ctr = 0;
-    status = readByte(fd, &rr);
+    status = readByte(busses[busnumber].fd, &rr);
     while(rr != 't')
     {
       usleep(100000);
-      status = readByte(fd, &rr);
+      status = readByte(busses[busnumber].fd, &rr);
       if(status == -1)
         ctr++;
       if(ctr > 20)
         return -1;
     }
-    readByte(fd, &rr);
+    readByte(busses[busnumber].fd, &rr);
     if(rr == '0')
       i = 0;
-    readByte(fd, &rr);
+    readByte(busses[busnumber].fd, &rr);
   }
   // looking for version of HSI
   byte2send = 'v';
-  writeByte(fd, &byte2send, 0);
+  writeByte(busses[busnumber].fd, &byte2send, 0);
   byte2send = 0x0d;
-  writeByte(fd, &byte2send, 2);
+  writeByte(busses[busnumber].fd, &byte2send, 2);
 
   for(i=0;i<49;i++)
   {
-    status = readByte(fd, &rr);
+    status = readByte(busses[busnumber].fd, &rr);
     if(status == -1)
       break;
     __hsi->v_text[i] = (char)rr;
@@ -187,30 +186,30 @@ static int init_lineHSI88(int busnumber, int modules_left, int modules_center, i
   {
     // Modulbelegung initialisieren
     byte2send = 's';
-    writeByte(fd, &byte2send, 0);
+    writeByte(busses[busnumber].fd, &byte2send, 0);
     byte2send = modules_left;
-    writeByte(fd, &byte2send, 0);
+    writeByte(busses[busnumber].fd, &byte2send, 0);
     byte2send = modules_center;
-    writeByte(fd, &byte2send, 0);
+    writeByte(busses[busnumber].fd, &byte2send, 0);
     byte2send = modules_right;
-    writeByte(fd, &byte2send, 0);
+    writeByte(busses[busnumber].fd, &byte2send, 0);
     byte2send = 0x0d;
-    writeByte(fd, &byte2send, 0);
+    writeByte(busses[busnumber].fd, &byte2send, 0);
     byte2send = 0x0d;
-    writeByte(fd, &byte2send, 0);
+    writeByte(busses[busnumber].fd, &byte2send, 0);
     byte2send = 0x0d;
-    writeByte(fd, &byte2send, 0);
+    writeByte(busses[busnumber].fd, &byte2send, 0);
     byte2send = 0x0d;
-    writeByte(fd, &byte2send, 5);
+    writeByte(busses[busnumber].fd, &byte2send, 5);
 
     rr = 0;
-    readByte(fd, &rr);            // read answer (three bytes)
+    readByte(busses[busnumber].fd, &rr);    // read answer (three bytes)
     while(rr != 's')
     {
       usleep(100000);
-      readByte(fd, &rr);
+      readByte(busses[busnumber].fd, &rr);
     }
-    readByte(fd, &rr);            // Anzahl angemeldeter Module
+    readByte(busses[busnumber].fd, &rr);    // Anzahl angemeldeter Module
     anzahl_cur = (int)rr;
     printf("number of modules: %i", anzahl_cur);
     if(anzahl == anzahl_cur)      // HSI initialisation correct ?
@@ -221,7 +220,7 @@ static int init_lineHSI88(int busnumber, int modules_left, int modules_center, i
     {
       printf("error while initialisation");
       sleep(1);
-      while(readByte(fd, &rr) == 0)
+      while(readByte(busses[busnumber].fd, &rr) == 0)
       {
       }
     }

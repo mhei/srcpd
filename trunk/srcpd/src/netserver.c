@@ -30,8 +30,10 @@
 #include "srcp-power.h"
 #include "srcp-srv.h"
 #include "srcp-session.h"
+#include "srcp-info.h"
 #include "netserver.h"
 #include "m605x.h"
+#include "threads.h"
 
 #define COMMAND 1
 #define INFO    2
@@ -95,7 +97,7 @@ int socket_writereply(int Socket, int srcpcode, const char *line)
 long int SessionID = 1;
 pthread_mutex_t SessionID_mut = PTHREAD_MUTEX_INITIALIZER;
 
-void * thr_doClient(void *v)
+void *thr_doClient(void *v)
 {
   int Socket = (int) v;
   char line[1000], cmd[1000], setcmd[1000], parameter[1000], reply[1000];
@@ -333,8 +335,7 @@ int handleRESET(int sessionid, int bus, char *device, char *parameter, char *rep
   return SRCP_NOTSUPPORTED;
 }
 
-int
-handleWAIT(int sessionid, int bus, char *device, char *parameter, char *reply)
+int handleWAIT(int sessionid, int bus, char *device, char *parameter, char *reply)
 {
   int rc=SRCP_OK;
   *reply = 0x00;
@@ -384,8 +385,7 @@ handleWAIT(int sessionid, int bus, char *device, char *parameter, char *reply)
 }
 
 /* negative return code will terminate current session! */
-int
-handleTERM(int sessionid, int bus, char *device, char *parameter, char *reply)
+int handleTERM(int sessionid, int bus, char *device, char *parameter, char *reply)
 {
   int rc = 421;
   *reply = 0x00;
@@ -437,14 +437,12 @@ int handleINIT(int sessionid, int bus, char *device, char *parameter, char *repl
   return rc;
 }
 
-int
-handleVERIFY(int sessionid, int bus, char *device, char *parameter, char *reply)
+int handleVERIFY(int sessionid, int bus, char *device, char *parameter, char *reply)
 {
   return SRCP_NOTSUPPORTED;
 }
 
-int
-handleCHECK(int sessionid, int bus, char *device, char *parameter, char *reply)
+int handleCHECK(int sessionid, int bus, char *device, char *parameter, char *reply)
 {
   return SRCP_NOTSUPPORTED;
 }
@@ -519,15 +517,4 @@ int doCmdClient(int Socket, int sessionid)
   shutdown(Socket, 2);
   close(Socket);
   return 0;
-}
-
-int doInfoClient(int Socket, int sessionidid)
-{
-  char reply[1000];
-  while (1)
-  {
-    strcpy(reply, "I'm alive");
-    socket_writereply(Socket, SRCP_INFO, reply);
-    sleep(1);
-  }
 }
