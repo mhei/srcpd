@@ -1,13 +1,8 @@
 
 /* 
  * Vorliegende Software unterliegt der General Public License, 
- * Version 2, 1991. (c) Matthias Trute, 2000-2001.
+ * Version 2, 1991. (c) Matthias Trute, 2000-2001, the srcpd team 2002-2003
  *
- * 2002-12-29 Manuel Borchers
- *            handleSET():
- *            - getlockGL changed to getlockGA in the GA-command-processing
- *            - if the device is locked, return code is now set to
- *              SRCP_DEVICELOCKED
  */
 
 #include "stdincludes.h"
@@ -544,31 +539,34 @@ int handleINIT(int sessionid, int bus, char *device, char *parameter, char *repl
 	long addr, protversion, n_fs, n_func, nelem;
 	char prot;
 	nelem = sscanf(parameter, "%ld %c %ld %ld %ld", &addr, &prot, &protversion, &n_fs, &n_func);
-	if (nelem >= 5)
+	if (nelem >= 5) {
 	    rc = initGL(bus, addr, prot, protversion, n_fs, n_func);
-	else
+	} else {
 	    rc = SRCP_LISTTOOSHORT;
+	}
     }
 
     if (bus_has_devicegroup(bus, DG_GA)
 	&& strncasecmp(device, "GA", 2) == 0) {
 	long addr, nelem;
-	char prot[5];
-	nelem = sscanf(parameter, "%ld %s", &addr, prot);
-	if (nelem >= 2)
-	    rc = initGA(bus, addr, prot[0]);
-	else
+	char prot;
+	nelem = sscanf(parameter, "%ld %c", &addr, &prot);
+	if (nelem >= 2) {
+	    rc = initGA(bus, addr, prot);
+	} else {
 	    rc = SRCP_LISTTOOSHORT;
+	}
     }
 
     if (bus_has_devicegroup(bus, DG_TIME)
 	&& strncasecmp(device, "TIME", 4) == 0) {
 	long rx, ry, nelem;
 	nelem = sscanf(parameter, "%ld %ld", &rx, &ry);
-	if (nelem >= 2)
+	if (nelem >= 2) {
 	    rc = initTIME(rx, ry);	/* prüft auch die Werte! */
-	else
+	} else {
 	    rc = SRCP_LISTTOOSHORT;
+	}
     }
     gettimeofday(&time, NULL);
     srcp_fmt_msg(rc, reply, time);
@@ -615,31 +613,37 @@ int doCmdClient(int Socket, int sessionid)
 	nelem = sscanf(line, "%s %s %s %1000c", command, cbus, devicegroup, parameter);
 	bus = atoi(cbus);
 	reply[0] = 0x00;
-	if ((nelem >= 3) && (bus >= 0) && (bus <= num_busses)) {
-	    rc = SRCP_UNKNOWNCOMMAND;
-	    if (strncasecmp(command, "SET", 3) == 0) {
-		rc = handleSET(sessionid, bus, devicegroup, parameter, reply);
-	    }
-	    if (strncasecmp(command, "GET", 3) == 0) {
-		rc = handleGET(sessionid, bus, devicegroup, parameter, reply);
-	    }
-	    if (strncasecmp(command, "WAIT", 4) == 0) {
-		rc = handleWAIT(sessionid, bus, devicegroup, parameter, reply);
-	    }
-	    if (strncasecmp(command, "INIT", 4) == 0) {
-		rc = handleINIT(sessionid, bus, devicegroup, parameter, reply);
-	    }
-	    if (strncasecmp(command, "TERM", 4) == 0) {
-		rc = handleTERM(sessionid, bus, devicegroup, parameter, reply);
-		if (rc < 0)
-		    break;
-		rc = abs(rc);
-	    }
-	    if (strncasecmp(command, "VERIFY", 6) == 0) {
-		rc = handleVERIFY(sessionid, bus, devicegroup, parameter, reply);
-	    }
-	    if (strncasecmp(command, "RESET", 5) == 0) {
-		rc = handleRESET(sessionid, bus, devicegroup, parameter, reply);
+	if (nelem >= 3)  {
+	    if ( (bus >= 0) && (bus <= num_busses)) {
+		rc = SRCP_UNKNOWNCOMMAND;
+		if (strncasecmp(command, "SET", 3) == 0) {
+		    rc = handleSET(sessionid, bus, devicegroup, parameter, reply);
+		}
+		if (strncasecmp(command, "GET", 3) == 0) {
+		    rc = handleGET(sessionid, bus, devicegroup, parameter, reply);
+		}
+		if (strncasecmp(command, "WAIT", 4) == 0) {
+		    rc = handleWAIT(sessionid, bus, devicegroup, parameter, reply);
+		}
+		if (strncasecmp(command, "INIT", 4) == 0) {
+		    rc = handleINIT(sessionid, bus, devicegroup, parameter, reply);
+		}
+		if (strncasecmp(command, "TERM", 4) == 0) {
+		    rc = handleTERM(sessionid, bus, devicegroup, parameter, reply);
+		    if (rc < 0)
+			break;
+		    rc = abs(rc);
+		}
+		if (strncasecmp(command, "VERIFY", 6) == 0) {
+	    	    rc = handleVERIFY(sessionid, bus, devicegroup, parameter, reply);
+		}
+		if (strncasecmp(command, "RESET", 5) == 0) {
+		    rc = handleRESET(sessionid, bus, devicegroup, parameter, reply);
+		}
+	    } else {
+		rc = SRCP_WRONGVALUE;
+		gettimeofday(&akt_time, NULL);
+		srcp_fmt_msg(rc, reply, akt_time);
 	    }
 	} else {
 	    DBG(0, DBG_DEBUG, "list too short in session %ld: %d", sessionid, nelem);
