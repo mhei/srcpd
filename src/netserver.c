@@ -68,26 +68,16 @@ int socket_readline(int Socket, char *line, int len)
  * noch ganz klar ein schoenwetter code!
  *
  */
-int socket_writereply(int Socket, int srcpcode, const char *line, struct timeval *timestamp)
+int socket_writereply(int Socket, const char *line)
 {
-  char *buf=NULL;
   int status;
-  if(srcpcode == SRCP_INFO)
-  {
-    buf=malloc(strlen(line));
-    strcpy(buf, line);
+  long int linelen = strlen(line);
+  DBG(0, DBG_DEBUG, "socket %d, write %s", Socket, line);
+  if (linelen>=1000) {
+    /* split line into chunks as specified in SRCP, not yet implemented */
   }
-  else
-  {
-    char buf2[511];
-    srcp_fmt_msg(srcpcode, buf2);
-    buf=malloc(strlen(buf2)+50+strlen(line));
-    sprintf(buf, "%ld.%ld %s %s\n", timestamp->tv_sec, timestamp->tv_usec / 1000, buf2, line);
-  }
-  DBG(0, DBG_DEBUG, "socket %d, write %s", Socket, buf);
-  status = write(Socket, buf, strlen(buf));
+  status = write(Socket, line, strlen(line));
   DBG(0, DBG_DEBUG, "status from write: %d", status);
-  free(buf);
   return status;
 }
 
@@ -101,16 +91,15 @@ pthread_mutex_t SessionID_mut = PTHREAD_MUTEX_INITIALIZER;
 
 void *thr_doClient(void *v)
 {
-  struct timeval akt_time;
-
   int Socket = (int) v;
   char line[1000], cmd[1000], setcmd[1000], parameter[1000], reply[1000];
   int mode = COMMAND;
   long int sessionid, rc;
+  struct timeval time;
   /* drop root permission for this thread */
   change_privileges(0);
   
-  if (write(Socket, WELCOME_MSG, strlen(WELCOME_MSG)) < 0)
+  if (socket_writereply(Socket, WELCOME_MSG) < 0)
   {
     shutdown(Socket, 2);
     close(Socket);
@@ -128,14 +117,13 @@ void *thr_doClient(void *v)
       return NULL;
     }
     rc = sscanf(line, "%s %1000c", cmd, parameter);
-    if (rc >0 && strncasecmp(cmd, "GO", 2) == 0)
+    if (rc>0 && strncasecmp(cmd, "GO", 2) == 0)
     {
       pthread_mutex_lock(&SessionID_mut);
       sessionid = SessionID++;
-      gettimeofday(&akt_time, NULL);
       pthread_mutex_unlock(&SessionID_mut);
-      sprintf(reply, "GO %ld", sessionid);
-      if (socket_writereply(Socket, SRCP_OK_GO, reply, &akt_time) < 0)
+      sprintf(reply, "%lu.%lu 200 OK GO %ld\n", 0L, 0L, sessionid);
+      if (socket_writereply(Socket, reply) < 0)
       {
         shutdown(Socket, 2);
         close(Socket);
@@ -158,20 +146,18 @@ void *thr_doClient(void *v)
     {
       char p[1000];
       sscanf(parameter, "%s %1000c", setcmd, p);
-      if (strncasecmp(setcmd, "CONNECTIONMODE", 3) == 0)
+      if (strncasecmp(setcmd, "CONNECTIONMODE", 14) == 0)
       {
         rc = SRCP_HS_WRONGCONNMODE;
         if (strncasecmp(p, "SRCP INFO", 9) == 0)
         {
           mode = INFO;
           rc = SRCP_OK_CONNMODE;
-          strcpy(reply, "CONNECTIONMODE");
         }
         if (strncasecmp(p, "SRCP COMMAND", 12) == 0)
         {
           mode = COMMAND;
           rc = SRCP_OK_CONNMODE;
-          strcpy(reply, "CONNECTIONMODE");
         }
       }
       if (strncasecmp(setcmd, "PROTOCOL", 3) == 0)
@@ -179,13 +165,12 @@ void *thr_doClient(void *v)
         rc = SRCP_HS_WRONGPROTOCOL;
         if (strncasecmp(p, "SRCP 0.8", 8) == 0)
         {
-          strcpy(reply, "PROTOCOL SRCP");
           rc = SRCP_OK_PROTOCOL;
         }
       }
     }
-    gettimeofday(&akt_time, NULL);
-    socket_writereply(Socket, rc, reply, &akt_time);
+    srcp_fmt_msg(rc, reply, time);
+    socket_writereply(Socket, reply);
   }
 }
 
@@ -199,6 +184,7 @@ void *thr_doClient(void *v)
  */
 int handleSET(int sessionid, int bus, char *device, char *parameter, char *reply)
 {
+  struct timeval time;
   int rc = SRCP_UNSUPPORTEDDEVICEGROUP;
   *reply = 0x00;
   if (strncasecmp(device, "GL", 2) == 0)
@@ -222,18 +208,21 @@ int handleSET(int sessionid, int bus, char *device, char *parameter, char *reply
   {
     long gaddr, port, aktion, delay;
     long int lockid;
-		
-    sscanf(parameter, "%ld %ld %ld %ld", &gaddr, &port, &aktion, &delay);
+    int anzparms;		
+    anzparms = sscanf(parameter, "%ld %ld %ld %ld", &gaddr, &port, &aktion, &delay);
+    if(anzparms==4) {
     /* Port 0,1; Aktion 0,1 */
     /* Only if not locked!! */
-    getlockGA(bus, gaddr, &lockid);
+           getlockGA(bus, gaddr, &lockid);
 		
 		if(lockid==0 || lockid==sessionid) {
 			rc = queueGA(bus, gaddr, port, aktion, delay);
 		} else {
 			rc = SRCP_DEVICELOCKED;
 		}
-		
+	} else {
+          rc = SRCP_LISTTOOSHORT;
+    }	
   }
   if (strncasecmp(device, "SM", 2) == 0)
   {
@@ -270,14 +259,14 @@ int handleSET(int sessionid, int bus, char *device, char *parameter, char *reply
     int nelem=-1;
     if(strlen(parameter)>0)
         nelem = sscanf(parameter, "%s %ld", devgrp, &addr);
-    if(nelem <= 0) {
-        rc = SRCP_LISTTOOSHORT;
-    } else {
+    if(nelem == 2) {
         rc = SRCP_UNSUPPORTEDDEVICEGROUP;
         if(strncmp(devgrp, "GL", 2)==0)
             rc = lockGL(bus, addr, sessionid);
         if(strncmp(devgrp, "GA", 2)==0)
             rc = lockGA(bus, addr, sessionid);
+    } else {
+        rc = SRCP_LISTTOOSHORT;
     }
   }
 
@@ -287,19 +276,21 @@ int handleSET(int sessionid, int bus, char *device, char *parameter, char *reply
     char state[5], msg[256];
     memset(msg, 0, sizeof(msg));
     nelem = sscanf(parameter, "%s %100c", state, msg);
-    if(nelem<1)
-      rc = SRCP_LISTTOOSHORT;
-    else {
+    if(nelem<1) {
       rc = SRCP_WRONGVALUE;
        if (strncasecmp(state, "OFF", 3) == 0) {
          rc = setPower(bus, 0, msg);
        } else {
           if (strncasecmp(state, "ON", 2) == 0) {
             rc = setPower(bus, 1, msg);
-          }
-      }
+         }
+       }
+    } else {
+        rc = SRCP_LISTTOOSHORT;
     }
   }
+  gettimeofday(&time, NULL);
+  srcp_fmt_msg(rc, reply, time);
   return rc;
 }
 
@@ -430,7 +421,12 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
 }
 
 int handleRESET(int sessionid, int bus, char *device, char *parameter, char *reply) {
-  return SRCP_UNSUPPORTEDOPERATION;
+  struct timeval time;
+  int rc = SRCP_UNSUPPORTEDOPERATION;
+  
+  gettimeofday(&time, NULL);
+  srcp_fmt_msg(rc, reply, time);
+  return rc;
 }
 
 int handleWAIT(int sessionid, int bus, char *device, char *parameter, char *reply)
@@ -488,6 +484,7 @@ int handleWAIT(int sessionid, int bus, char *device, char *parameter, char *repl
 /* negative return code will terminate current session! */
 int handleTERM(int sessionid, int bus, char *device, char *parameter, char *reply)
 {
+  struct timeval time;
   int rc = SRCP_UNSUPPORTEDDEVICE;
   *reply = 0x00;
   if (strncasecmp(device, "FB", 2) == 0)
@@ -522,36 +519,55 @@ int handleTERM(int sessionid, int bus, char *device, char *parameter, char *repl
       rc = SRCP_UNSUPPORTEDDEVICEGROUP;
     }
   }
+  gettimeofday(&time, NULL);
+  srcp_fmt_msg(rc, reply, time);
   return rc;
 }
 
 int handleINIT(int sessionid, int bus, char *device, char *parameter, char *reply) {
+  struct timeval time;
   int rc = SRCP_UNSUPPORTEDDEVICEGROUP;
   if (strncasecmp(device, "GL", 2) == 0)
   {
-    long addr, protversion, n_fs, n_func;
+    long addr, protversion, n_fs, n_func, nelem;
     char prot[10];
-    sscanf(parameter, "%ld %s %ld %ld %ld", &addr, prot, &protversion, &n_fs, &n_func);
-    initGL(bus, addr, prot, protversion, n_fs, n_func);
+    nelem = sscanf(parameter, "%ld %s %ld %ld %ld", &addr, prot, &protversion, &n_fs, &n_func);
+    if(nelem==5)
+      rc = initGL(bus, addr, prot, protversion, n_fs, n_func);
+    else
+      rc = SRCP_LISTTOOSHORT;
   }
 
   if (strncasecmp(device, "TIME", 4) == 0)
   {
-    long rx, ry;
-    sscanf(parameter, "%ld %ld", &rx, &ry);
-    rc = initTime(rx, ry);  /* prüft auch die Werte! */
+    long rx, ry, nelem;
+    nelem = sscanf(parameter, "%ld %ld", &rx, &ry);
+    if (nelem==2)
+       rc = initTime(rx, ry);  /* prüft auch die Werte! */
+    else
+       rc = SRCP_LISTTOOSHORT;
   }
+  gettimeofday(&time, NULL);
+  srcp_fmt_msg(rc, reply, time);
   return rc;
 }
 
 int handleVERIFY(int sessionid, int bus, char *device, char *parameter, char *reply)
 {
-  return SRCP_UNSUPPORTEDOPERATION;
+  int rc= SRCP_UNSUPPORTEDOPERATION;
+  struct timeval time;
+  gettimeofday(&time, NULL);
+  srcp_fmt_msg(rc, reply, time);
+  return rc;
 }
 
 int handleCHECK(int sessionid, int bus, char *device, char *parameter, char *reply)
 {
-  return SRCP_UNSUPPORTEDOPERATION;
+  int rc= SRCP_UNSUPPORTEDOPERATION;
+  struct timeval time;
+  gettimeofday(&time, NULL);
+  srcp_fmt_msg(rc, reply, time);
+  return rc;
 }
 
 /***************************************************************
@@ -625,7 +641,7 @@ int doCmdClient(int Socket, int sessionid)
       }
     }
     gettimeofday(&akt_time, NULL);
-    if (socket_writereply(Socket, rc, reply, &akt_time) < 0)
+    if (socket_writereply(Socket, reply) < 0)
     {
       break;
     }

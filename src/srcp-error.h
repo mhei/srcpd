@@ -9,6 +9,7 @@
 #ifndef _SRCP_ERROR_H
 #define _SRCP_ERROR_H
 
+#include "stdincludes.h"
 /* Handshake */
 #define SRCP_OK_GO                      200
 #define SRCP_OK_PROTOCOL                201
@@ -38,6 +39,6 @@
 #define SRCP_UNSUPPORTEDOPERATION       423
 #define SRCP_DEVICEREINITIALIZED        424
 
-int srcp_fmt_msg(int errorcode, char *msg);
+int srcp_fmt_msg(int errorcode, char *msg, struct timeval);
 
 #endif
