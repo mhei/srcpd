@@ -1,9 +1,12 @@
-Version 2.0 (Sommer 2002 oder später)
+Version 2.0 (Herbst 2002 oder spaeter)
 	- SRCP 0.8
 	- Konfiguration im XML Format
-	- ibox Kernelmodul als Source bei Binär-RPM (im doc-Bereich)
+	- FIFO's für Befehle
+	- Redesign: Framework mit Modulen
+	- Unterstützung der Gerätegruppe SM bei passender Hardware (IB)
 	- viel mehr neue Hardware, diesmal auch mehrere 
-	  gleichartige parallel (Tester gesucht!)
+	  gleichartige gleichzeitig: Intellibox, Märklin 605x, HSI S88,
+	  S88 am Parallelport.
 
 Version 1.2 (nie veröffentlicht)
         - FIFO's für die Befehle.

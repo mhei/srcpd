@@ -42,9 +42,9 @@ Konfiguration
     des DDL Dämonen (www.vogt-it.com/OpenSource/DDL) übernommen. Die Anschlußstränge
     entsprechend der Schaltung von Martin Wolf werden als separate Busse geführt.
     Auch wenn nur ein Bus angeschlossen ist, werden immer 4 Busse belegt. Der ioport
-    sollte im Hexadezimalformat angegeben werden.
+    sollte im Hexadezimalformat angegeben werden (mit führenden 0x).
     
-    Beispiel:
+    Beispiel: ein S88 Modul.
     <bus number="1">
       <ddl-s88>
 	<ioport>0x378</ioport>
@@ -58,6 +58,9 @@ Konfiguration
       <restore_device_settings>no</restore_device_settings>
       <verbosity>7</verbosity>
     </bus>
+    
+    Ohne die Schaltung von Martin Wolf werden trotzdem 4 Busse belegt,
+    auch wenn nur der erste Bus tatsächlich vorhanden ist.
     
     Märklin 6051
     Das Märklin Interface belegt einen Bus, der die Gerätegruppen
