@@ -11,25 +11,23 @@
 #define _SRCPGA_H_
 
 #include <sys/time.h>
-#include <unistd.h>
 
-#define MAXGAS 256
+#define MAXGAS 1024
 #define MAXGAPORT 2
 
 /* Schaltdekoder */
-struct _GA {
-    char prot[5];         /* Protokoll      */
-    int id;               /* Der Identifier */
-    int port;             /* Portnummer     */
-    int action;           /* 0,1,2,3...     */
-    long activetime;      /* Aktivierungszeit in msec bis das 32 Kommando kommen soll */
-    struct timeval tv[MAXGAPORT]; /* Zeitpunkt der letzten Aktivierungen, ein Wert pro Port   */
+struct _GA
+{
+  char prot[5];         /* Protokoll      */
+  int id;               /* Der Identifier */
+  int port;             /* Portnummer     */
+  int action;           /* 0,1,2,3...     */
+  long activetime;      /* Aktivierungszeit in msec bis das 32 Kommando kommen soll */
+  struct timeval tv[MAXGAPORT]; /* Zeitpunkt der letzten Aktivierungen, ein Wert pro Port   */
+  struct timeval t;     // Auschaltzeitpunkt
 };
 
-extern volatile struct _GA ga_mm[MAXGAS];
-extern volatile struct _GA nga_mm[MAXGAS];
-
-void initGA();
+void initGA(void);
 int setGA(char *prot, int addr, int port, int aktion, long activetime);
 int getGA(char *prot, int addr, struct _GA *a);
 int infoGA(struct _GA a, char *msg);

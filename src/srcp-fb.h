@@ -14,6 +14,6 @@ int getFBone(const char *proto, int port);
 void getFBall(const char *proto, char *reply);
 
 void infoFB(const char *proto, int port, char *msg);
-void initFB();
+void initFB(void);
 
 #endif

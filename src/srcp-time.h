@@ -7,26 +7,27 @@
  */
 
 
-#ifndef _SRCPTIME_H_
-#define _SRCPTIME_H_
+#ifndef _SRCPTIME_H
+#define _SRCPTIME_H
 
+#include <sys/time.h>
 
 /* Zeitgeber */
-struct _VTIME {
-    int day;
-    int hour;
-    int min;
-    int sec;
-    int ratio_x; /* ratio_x == 0 und die Uhr steht */
-    int ratio_y;
+struct _VTIME
+{
+  int day;
+  int hour;
+  int min;
+  int sec;
+  int ratio_x; /* ratio_x == 0 und die Uhr steht */
+  int ratio_y;
 };
 
 void setTime(int d, int h, int m, int s, int rx, int ry);
 void getTime(struct _VTIME *vt);
 void infoTime(struct _VTIME, char *msg);
+int cmpTime(struct timeval *t1, struct timeval *t2);
 
 void* thr_clock(void *);
-
-extern struct _VTIME vtime;
 
 #endif
