@@ -137,6 +137,8 @@ int init_lineI2C_DEV(int bus)
 }
 
 void reset_ga(int busnumber, int busfd) {
+
+	// resets all GA devices on all multiplexed busses
 	
 	int i, end_addr, number_ga, temp;
 	int first_ga_bus, last_ga_bus;
