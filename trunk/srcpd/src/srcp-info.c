@@ -23,6 +23,7 @@
 #include "srcp-power.h"
 #include "srcp-info.h"
 #include "srcp-error.h"
+#include "srcp-descr.h"
 #include "config-srcpd.h"
 #include "netserver.h"
 
