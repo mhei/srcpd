@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <syslog.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 #include "config-srcpd.h"
 #include "io.h"
@@ -115,33 +116,28 @@ main(int argc, char **argv)
 {
   int error, i;
   pid_t pid;
-  char c;
+  char c, conffile[MAXPATHLEN];
   pthread_t ttid_cmd, ttid_clock, ttid_pid;
   struct _THREADS cmds = {TCPPORT, thr_doClient};
 
   install_signal_handler();
-
-  // zuerst die Konfigurationsdatei lesen
-  readConfig();
-
   cmds.socket = TCPPORT;
+  strcpy(conffile, "/etc/srcpd.cond");
 
   /* Parameter auswerten */
   opterr=0;
-  while((c=getopt(argc, argv, "f:p:hv")) != EOF)
+  while((c=getopt(argc, argv, "f:hv")) != EOF)
   {
     switch(c)
     {
-      case 'p':
-        cmds.socket = atoi(optarg);
-        break;
+      case 'f':
+        strcpy(conffile, optarg);
       case 'v':
         printf("srcpd version 2.0, speaks SRCP between 0.7 and 0.8, do not use!\n");
         exit(1);
         break;
       case 'h':
-        printf("srcpd -p <Portnumber> -t -v\n");
-        printf("Portnumber  -  first Communicationport via TCP/IP (default: 12345)\n");
+        printf("srcpd -f <conffile> -v -h\n");
         printf("v           -  prints program version and exits\n");
         exit(1);
         break;
@@ -152,6 +148,8 @@ main(int argc, char **argv)
         break;
     }
   }
+  // zuerst die Konfigurationsdatei lesen
+  readConfig(conffile);
 
   /* forken */
   if((pid=fork())<0)
@@ -172,7 +170,7 @@ main(int argc, char **argv)
   syslog(LOG_INFO, "%s", WELCOME_MSG);
 
   CreatePIDFile(getpid());
-  /* First: Init the devices */
+  /* First: Init the device data used internally*/
   startup_GL();
   startup_GA();
   startup_FB();
@@ -183,11 +181,13 @@ main(int argc, char **argv)
   startup_SESSION();
 
   /* Now we have to initialize all busses */
+  /* this function should open the device */
   for(i=0; i<=num_busses; i++)
   {
-    (*busses[i].init_func)(i);
+    if(busses[i].init_func)
+        (*busses[i].init_func)(i);
   }
-  /* die Threads starten */
+  /* Netzwerkverbindungen */
   error = pthread_create(&ttid_cmd, NULL, thr_handlePort, &cmds);
   if(error)
   {
@@ -195,14 +195,15 @@ main(int argc, char **argv)
     exit(1);
   }
   pthread_detach(ttid_cmd);
-
+  /* Modellzeitgeber starten, der ist aber zunächst idle */
   error = pthread_create(&ttid_clock, NULL, thr_clock, NULL);
   if(error)
   {
     syslog(LOG_INFO, "cannot start Clock Thread!");
   }
   pthread_detach(ttid_clock);
-
+  /* und jetzt die Bustreiber selbst starten. Das Device ist offen, die Datenstrukturen
+     initialisiert */
   syslog(LOG_INFO, "Going to start %d Interface Threads for the busses", num_busses);
   /* Jetzt die Threads für die Busse */
   for (i=1; i<=num_busses; i++)
@@ -220,7 +221,7 @@ main(int argc, char **argv)
   }
   syslog(LOG_INFO, "All Threads started");
   server_shutdown_state = 0;
-
+  /* And now: Wait for _real_ tasks: shutdown, reset, watch for hanging processes */
   while(1)
   {
     if(server_shutdown_state == 1)
@@ -233,7 +234,7 @@ main(int argc, char **argv)
       {
         pthread_cancel(busses[i].pid);
       }
-      break;
+      break; /* leave the while() loop */
     }
     sleep(1);
     /* Jetzt Wachhund spielen, falls gewünscht */
@@ -243,7 +244,7 @@ main(int argc, char **argv)
       {
         syslog(LOG_INFO, "Oops: Interface Thread %d hangs, restarting it: (old pid: %ld, %d)", i, busses[i].pid, busses[i].watchdog);
         pthread_cancel(busses[i].pid);
-        sleep(1);
+        waitpid(busses[i].pid, NULL, 0);
         error = pthread_create(&ttid_pid, NULL, busses[i].thr_func, (void *)i);
         if(error)
         {
@@ -263,6 +264,7 @@ main(int argc, char **argv)
     (*busses[i].term_func)(i);
   }
   DeletePIDFile();
+  wait(0);
   syslog(LOG_INFO, "und tschüß.. ;=)");
   exit(0);
 }

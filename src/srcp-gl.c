@@ -24,6 +24,8 @@
 #include "srcp-gl.h"
 #include "srcp-error.h"
 
+#include "m605x.h"
+
 #define QUEUELEN 50
 
 /* aktueller Stand */
@@ -43,9 +45,14 @@ int
 queueGL(int bus, int addr, int dir, int speed, int maxspeed, int f,  int f1, int f2, int f3, int f4)
 {
   struct timeval akt_time;
-
+  int number_gl;
+  if(busses[bus].type == SERVER_M605X) {
+    number_gl =   ( (M6051_DATA *) busses[bus].driverdata)  -> number_gl;
+  } else {
+    return SRCP_UNSUPPORTEDDEVICEGROUP;
+  }
   syslog(LOG_INFO, "setGL für %i", addr);
-  if ((addr > 0) && (addr <= busses[bus].number_gl) )
+  if ((addr > 0) && (addr <= number_gl) )
   {
     while (queue_isfull(bus))
     {
@@ -123,7 +130,13 @@ unqueueNextGL(int bus, struct _GL *gl)
 int
 getGL(int bus, int addr, struct _GL *l)
 {
-  if((addr>0) && (addr <= busses[bus].number_gl))
+  int number_gl;
+  if(busses[bus].type == SERVER_M605X) {
+    number_gl =   ( (M6051_DATA *) busses[bus].driverdata)  -> number_gl;
+  } else {
+    return SRCP_UNSUPPORTEDDEVICEGROUP;
+  }
+  if((addr>0) && (addr <= number_gl))
   {
     *l = gl[bus][addr];
     return SRCP_OK;
@@ -140,7 +153,13 @@ getGL(int bus, int addr, struct _GL *l)
 int
 setGL(int bus, int addr, struct _GL l)
 {
-  if((addr>0) && (addr <= busses[bus].number_gl))
+  int number_gl;
+  if(busses[bus].type == SERVER_M605X) {
+    number_gl =   ( (M6051_DATA *) busses[bus].driverdata)  -> number_gl;
+  } else {
+    return SRCP_UNSUPPORTEDDEVICEGROUP;
+  }
+  if((addr>0) && (addr <= number_gl))
   {
     gl[bus][addr] = l;
     gettimeofday(&gl[bus][addr].tv, NULL);
@@ -165,7 +184,13 @@ initGL(int bus, int addr, const char *protocol, int protoversion, int n_fs, int 
 int
 infoGL(int bus, int addr, char* msg)
 {
-  if((addr>0) && (addr <= busses[bus].number_gl))
+  int number_gl;
+  if(busses[bus].type == SERVER_M605X) {
+    number_gl =   ( (M6051_DATA *) busses[bus].driverdata)  -> number_gl;
+  } else {
+    return SRCP_UNSUPPORTEDDEVICEGROUP;
+  }
+  if((addr>0) && (addr <= number_gl))
   {
     sprintf(msg, "%d GL %d %d %d %d %d %d %d %d %d",
       bus, addr, gl[bus][addr].direction, gl[bus][addr].speed, gl[bus][addr].maxspeed, 

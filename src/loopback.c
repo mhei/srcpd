@@ -42,8 +42,9 @@ term_bus_Loopback(int bus)
 }
 
 /* Initialisiere den Bus, signalisiere Fehler */
-int
-init_bus_Loopback(int i)
+/* Einmal aufgerufen mit busnummer als einzigem Parameter */
+/* return code wird ignoriert (vorerst) */
+int init_bus_Loopback(int i)
 {
   syslog(LOG_INFO,"loopback init: bus #%d, debug %d", i, busses[i].debuglevel);
   if(busses[i].debuglevel==0)

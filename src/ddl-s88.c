@@ -109,26 +109,26 @@ get_s88(int fd)
 void
 clear_s88(int bus)
 {
-  int i;
-
+  int i, number_fb;
+  number_fb = ( (DDL_S88_DATA *) busses[bus].driverdata)  -> number_fb[0];
   load_s88(bus);
-  for(i=0;i<busses[bus].number_fb;i++)
+  for(i=0;i<number_fb;i++)
     get_s88(bus);
 }
 
 void *
 thr_sendrec_S88(void *v)
 {
-  int i;
+  int i, number_fb;
   int fd;
   int bus = (int)v;
   fd = busses[bus].fd;
-
+  number_fb = ( (DDL_S88_DATA *) busses[bus].driverdata)  -> number_fb[0];
   while(1)
   {
     usleep(10000);
     load_s88(fd);
-    for(i=0;i<busses[bus].number_fb;i++)
+    for(i=0;i<number_fb;i++)
     {
 //      fb[i] = get_s88(fd);
     }

@@ -17,6 +17,11 @@
 #ifndef _DDL_S88_H
 #define _DDL_S88_H
 
+typedef struct _DDL_S88_DATA {
+    int number_fb[4];
+} DDL_S88_DATA;
+
+
 int init_bus_S88();
 int term_bus_S88();
 void * thr_sendrec_S88(void *);
