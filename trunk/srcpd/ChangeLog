@@ -1,4 +1,7 @@
-Version 1.0
+22.12.2001 Matthias Trute <mtrute@users.sourceforge.net>
+	- spec file, INstallation nach /usr/sbin
+	- rcstart script
+	
 05.08.2001 Matthias Trute <mtrute@users.sourceforge.net>
 	- Umstellung conf-Format auf XML, erfordert libxml
 	  resp. gnome-xml

@@ -47,13 +47,6 @@ else
   LIBTOOL_SHELL=$LIBTOOL
 fi
 
-dnl check for presence of dynamic-loading-library functions
-dnl KDE_CHECK_LIBDL
-
-dnl activate the following for some additional tests
-dnl   (compat, crypt, socket, nsl, ...)
-dnl KDE_MISC_TESTS
-
 dnl add --with-extra-includes and --with-extra-libs switch to ./configure
 dnl
 dnl AC_REQUIRE([KDE_CHECK_EXTRA_LIBS])
