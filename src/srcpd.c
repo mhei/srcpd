@@ -28,6 +28,7 @@
 
 #include "config-srcpd.h"
 #include "ib.h"
+#include "io.h"
 #include "m605x.h"
 #include "netserver.h"
 #include "srcp-fb.h"

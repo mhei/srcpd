@@ -56,9 +56,6 @@ extern int testmode;
 #endif
 
 speed_t baud;				// Baudrate der seriellen Schnittstelle
-struct termios interface_org;
-int org_status_saved  = 0;
-
 
 extern volatile int server_reset;
 extern volatile int power_state;
@@ -565,41 +562,4 @@ void close_comport(int fd)
 	cfsetospeed(&interface, B0);
 	tcsetattr(fd, TCSANOW, &interface);
 	close(fd);
-}
-
-void save_comport(char *name)
-{
-  int fd;
-
-	printf("Saveing attribute for serial line %s\n", name);
-	fd=open(name,O_RDWR);
-	if (fd == -1)
-	{
-		printf("dammit, couldn't open device.\n");
-	}
-	else
-  {
-		tcgetattr(fd, &interface_org);
-		org_status_saved = 1;
-		close(fd);
-	}
-}
-
-void restore_comport(char *name)
-{
-  int fd;
-
-	syslog(LOG_INFO, "Restoreing attributes for serial line %s", name);
-	fd=open(name,O_RDWR);
-	if (fd == -1)
-	{
-		syslog(LOG_INFO, "dammit, couldn't open device.");
-	}
-	else
-  {
-		syslog(LOG_INFO, "alte Werte werden wiederhergestellt");
-		tcsetattr(fd, TCSANOW, &interface_org);
-		close(fd);
-		syslog(LOG_INFO, "erfolgreich wiederhergestellt");
-	}
 }

@@ -20,4 +20,7 @@
 int  readByte(int FD, unsigned char *the_byte);
 void writeByte(int FD, unsigned char *the_byte, unsigned long msec);
 
+void restore_comport(char*);
+void save_comport(char*);
+
 #endif
