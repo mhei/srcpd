@@ -131,9 +131,9 @@ int main(int argc, char **argv)
   /* Parameter auswerten */
   opterr=0;
 #ifndef TESTMODE
-  while((c=getopt(argc, argv, "f:p:d:hoS:")) != EOF)
+  while((c=getopt(argc, argv, "f:p:d:hoS:v")) != EOF)
 #else
-  while((c=getopt(argc, argv, "f:p:d:hotS:")) != EOF)
+  while((c=getopt(argc, argv, "f:p:d:hotS:v")) != EOF)
 #endif
   {
     switch(c)
@@ -143,6 +143,9 @@ int main(int argc, char **argv)
         fbs.socket  = cmds.socket+1;
         infos.socket= cmds.socket+2;
         break;
+      case 'v':
+        printf("srcpd version 1.0, speaks SRCP 0.7.3\n");
+	exit(1);
       case 'd':
         free(DEV_COMPORT);
         DEV_COMPORT = malloc(sizeof(optarg));
@@ -169,9 +172,9 @@ int main(int argc, char **argv)
 #endif
       case 'h':
 #ifndef TESTMODE
-        printf("srcpd -f <nr> -p <Portnummer> -d <Devicepath> -S <I8255-dev> -o\n");
+        printf("srcpd -f <nr> -p <Portnummer> -d <Devicepath> -S <I8255-dev> -o -v\n");
 #else
-        printf("srcpd -f <nr> -p <Portnummer> -d <Devicepath>  -S <I8255-dev> -o -t\n");
+        printf("srcpd -f <nr> -p <Portnummer> -d <Devicepath>  -S <I8255-dev> -o -t -v\n");
 #endif
         printf("nr          -  Number of feedback-modules\n");
         printf("Portnumber  -  first Communicationport via TCP/IP (default: 12345)\n");
@@ -184,6 +187,7 @@ int main(int argc, char **argv)
 #ifdef TESTMODE
         printf("t           -  start server in testmode (without connection to real interface)\n");
 #endif
+	printf("v           -  prints program version and exits\n");
         exit(1);
         break;
       default:
