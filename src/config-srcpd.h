@@ -21,6 +21,8 @@
 #include <sys/param.h>
 #include <stdarg.h>
 
+#include "srcp-gl.h"
+
 #define MAX_BUSSES             20         // max number of integrated busses in srcpd
 
 #define SERVER_SERVER           0
@@ -66,6 +68,7 @@ typedef struct _BUS
   void *thr_func;  // addr of the thread function
   int (*init_func)(int); // addr of init function
   int (*term_func)(int); // addr of init function
+  int (*init_gl_func) ( struct _GLSTATE *); // called to modify default init
   int watchdog;    // used to monitor the thread
   int power_state;
   int power_changed;

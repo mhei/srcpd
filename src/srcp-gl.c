@@ -18,10 +18,6 @@
 #include "srcp-error.h"
 #include "srcp-info.h"
 
-#include "m605x.h"
-#include "ib.h"
-#include "loopback.h"
-
 #define QUEUELEN 50
 
 /* aktueller Stand */
@@ -42,6 +38,7 @@ int get_number_gl (int busnumber)
   return gl[busnumber].numberOfGl;
 }
 
+#if 0
 static int initGL_default(int busnumber, int addr)
 {
   DBG(busnumber, DBG_INFO, "GL default init for %d", addr);
@@ -60,7 +57,7 @@ static int initGL_default(int busnumber, int addr)
     }
     return SRCP_OK;
 }
-
+#endif
 // es gibt Decoder für 14, 27, 28 und 128 FS
 static int calcspeed(int vs, int vmax, int n_fs)
 {
@@ -96,7 +93,7 @@ int queueGL(int busnumber, int addr, int dir, int speed, int maxspeed, const int
   {
     if (!isInitializedGL(busnumber, addr))
     {
-      initGL_default(busnumber, addr);
+      initGL( busnumber, addr, 'P', 1, 14, 1);
     }
     while (queue_isfull(busnumber))
     {
@@ -184,7 +181,9 @@ int getGL(int busnumber, int addr, struct _GLSTATE *l)
 }
 
 /**
-  info: update from hardware, not from network; queue into info mode!
+ * setGL is called from the hardware drivers to keep the
+ * the data and the info mode informed 
+ * It respects the TERM function
 */
 int setGL(int busnumber, int addr, struct _GLSTATE l)
 {
@@ -200,10 +199,10 @@ int setGL(int busnumber, int addr, struct _GLSTATE l)
      gl[busnumber].glstate[addr].funcs = l.funcs;
      gettimeofday(&gl[busnumber].glstate[addr].tv, NULL);
      if (gl[busnumber].glstate[addr].state == 2) {
-	     bzero(&gl[busnumber].glstate[addr], sizeof(struct _GLSTATE));
 	     sprintf(msg, "%lu.%.3lu 102 INFO %d GL %d",
 	       gl[busnumber].glstate[addr].tv.tv_sec, gl[busnumber].glstate[addr].tv.tv_usec/1000,
 	       busnumber, addr);
+	     bzero(&gl[busnumber].glstate[addr], sizeof(struct _GLSTATE));
      } else {
 	     infoGL(busnumber, addr, msg);
      }
@@ -231,6 +230,9 @@ int initGL(int busnumber, int addr, const char protocol, int protoversion, int n
     gl[busnumber].glstate[addr].protocolversion=protoversion;
     gl[busnumber].glstate[addr].protocol=protocol;
     gl[busnumber].glstate[addr].state = 1;
+    if(busses[busnumber].init_gl_func)
+	    (*busses[busnumber].init_gl_func)(&gl[busnumber].glstate[addr]);
+    
     describeGL(busnumber, addr, msg);
     queueInfoMessage(msg);
     queueGL(busnumber, addr, 0, 0, 1, 0);
@@ -251,6 +253,19 @@ int termGL(busnumber, addr) {
 
 }
 
+/*
+ * RESET a GL to its defaults
+ */
+int resetGL(int busnumber, int addr) {
+	if(isInitializedGL(busnumber, addr)){
+		
+		queueGL(busnumber, addr, 0, 0, 1, 0);
+		return SRCP_OK;
+	} else {
+		return SRCP_NODATA;
+	}
+	
+}
 int describeGL(int busnumber, int addr, char *msg)
 {
   int number_gl = get_number_gl(busnumber);
@@ -310,8 +325,7 @@ int infoGL(int busnumber, int addr, char* msg)
 int lockGL(int busnumber, int addr, long int duration, long int sessionid)
 {
   char msg[256];
-  if(gl[busnumber].glstate[addr].locked_by==sessionid ||
-    gl[busnumber].glstate[addr].locked_by==0) {
+  if(gl[busnumber].glstate[addr].locked_by==sessionid || gl[busnumber].glstate[addr].locked_by==0) {
         gl[busnumber].glstate[addr].locked_by=sessionid;
         gl[busnumber].glstate[addr].lockduration = duration;
         gettimeofday(& gl[busnumber].glstate[addr].locktime, NULL);
@@ -356,6 +370,9 @@ int unlockGL(int busnumber, int addr, long int sessionid)
   }
 }
 
+/**
+ * called when a session is terminating
+ */
 void unlock_gl_bysessionid(long int sessionid)
 {
   int i,j;
@@ -375,6 +392,9 @@ void unlock_gl_bysessionid(long int sessionid)
   }
 }
 
+/**
+ * called once per second to unlock
+ */
 void unlock_gl_bytime(void)
 {
   int i,j;
@@ -394,6 +414,9 @@ void unlock_gl_bytime(void)
   }
 }
 
+/**
+ * First initialisation after program startup
+ */
 int startup_GL(void)
 {
   int i;
@@ -408,6 +431,10 @@ int startup_GL(void)
   return 0;
 }
 
+/**
+ * allocates memory to hold all the data
+ * called from the configuration routines
+ */
 int init_GL(int busnumber, int number)
 {
   int i;

@@ -32,6 +32,8 @@ void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node,  int busnumber);
 int init_bus_IB(int);
 int term_bus_IB(int);
 
+int init_gl_IB(struct _GLSTATE *gl);
+
 void* thr_sendrec_IB(void *);
 
 void send_command_ga_ib(int busnumber);
