@@ -75,7 +75,6 @@ static void unqueueNextFB(int busnumber)
 
 static void queue_reset_fb(int busnumber, int port, struct timeval *ctime)
 {
-//  syslog(LOG_INFO, "enter queueInfoFB: %d, %d", bus, port);
   while (queueIsFullFB(busnumber))
   {
     usleep(1000);
@@ -94,10 +93,12 @@ static void queue_reset_fb(int busnumber, int port, struct timeval *ctime)
 
 int getFB(int bus, int port, struct timeval *time, int *value)
 {
-  int result=SRCP_OK;
+  if ( get_number_fb(bus)<=0)
+    return SRCP_NODATA;
+
   *value = fb[bus].fbstate[port-1].state;
   *time  = fb[bus].fbstate[port-1].timestamp;
-  return result;
+  return SRCP_OK;
 }
 
 void updateFB(int bus, int port, int value)
@@ -117,7 +118,6 @@ void updateFB(int bus, int port, int value)
   //
   // if changed contact ist resetet, we will wait 2sec to
   // minimalize problems from contacts bitween track and train
-//  syslog(LOG_INFO, "updateFB: %d FB %d %d", bus, port, value);
   if(fb[bus].fbstate[port_t].state != value)
   {
     gettimeofday(&akt_time, &dummy);
@@ -128,7 +128,6 @@ void updateFB(int bus, int port, int value)
         fb[bus].fbstate[port_t].state = value;
         fb[bus].fbstate[port_t].timestamp = akt_time;
         fb[bus].fbstate[port_t].change = 0;
-        // queue changes for writing info-message
         queueInfoFB(bus, port, value, &akt_time);
       }
       else
@@ -147,10 +146,6 @@ void updateFB(int bus, int port, int value)
       }
       else
       {
-        // send_event()
-//        syslog(LOG_INFO, "changed: %d FB %d %d -> %d", bus, port,
-//          fb[bus].fbstate[port_t].state, value);
-
         pthread_mutex_lock(&queue_mutex_fb);
         fb[bus].fbstate[port_t].state = value;
         fb[bus].fbstate[port_t].timestamp = akt_time;
@@ -191,7 +186,6 @@ int setFBmodul(int bus, int modul, int values)
 
   for(i=0; i<ports; i++)
   {
-//    syslog(LOG_INFO, "%d ports, order %d, mask 0x%04x, value 0x%04x", ports, dir, mask, values);
     c = (values & mask) ? 1 : 0;
     updateFB(bus, fb_contact++, c);
     if (dir)
