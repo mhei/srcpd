@@ -45,7 +45,7 @@ extern char *WELCOME_MSG;
  *
  */
 
-long int SessionID = 1;
+long int SessionID = MAX_BUSSES + 1;
 pthread_mutex_t SessionID_mut = PTHREAD_MUTEX_INITIALIZER;
 
 void *thr_doClient(void *v)
