@@ -27,6 +27,8 @@
 #include "srcp-ga.h"
 #include "srcp-error.h"
 
+#include "m605x.h"
+
 #define QUEUELEN 500
 
 /* aktueller Stand */
@@ -46,9 +48,15 @@ int
 queueGA(int bus, int addr, int port, int action, long int activetime)
 {
   struct timeval akt_time;
+  int number_ga;
 
   syslog(LOG_INFO, "setga für %i", addr);
-  if ((addr > 0) && (addr <= busses[bus].number_ga) )
+  if(busses[bus].type == SERVER_M605X) {
+    number_ga =   ( (M6051_DATA *) busses[bus].driverdata)  -> number_ga;
+  } else {
+    return SRCP_UNSUPPORTEDDEVICEGROUP;
+  }
+  if ((addr > 0) && (addr <= number_ga) )
   {
     while (queue_isfull(bus))
     {
@@ -124,7 +132,14 @@ unqueueNextGA(int bus, struct _GA *ga)
 int
 getGA(int bus, int addr, struct _GA *l)
 {
-  if((addr>0) && (addr <= busses[bus].number_ga))
+  int number_ga;
+  if(busses[bus].type == SERVER_M605X) {
+    number_ga =   ( (M6051_DATA *) busses[bus].driverdata)  -> number_ga;
+  } else {
+    return SRCP_UNSUPPORTEDDEVICEGROUP;
+  }
+
+  if((addr>0) && (addr <= number_ga))
   {
     *l = ga[bus][addr];
     return SRCP_OK;
@@ -141,7 +156,14 @@ getGA(int bus, int addr, struct _GA *l)
 int
 setGA(int bus, int addr, struct _GA l)
 {
-  if((addr>0) && (addr <= busses[bus].number_ga))
+  int number_ga;
+  if(busses[bus].type == SERVER_M605X) {
+    number_ga =   ( (M6051_DATA *) busses[bus].driverdata)  -> number_ga;
+  } else {
+    return SRCP_UNSUPPORTEDDEVICEGROUP;
+  }
+
+  if((addr>0) && (addr <= number_ga))
   {
     ga[bus][addr] = l;
     gettimeofday(&ga[bus][addr].tv, NULL);
@@ -156,7 +178,14 @@ setGA(int bus, int addr, struct _GA l)
 int
 infoGA(int bus, int addr, char* msg)
 {
-  if((addr>0) && (addr <= busses[bus].number_ga))
+  int number_ga;
+  if(busses[bus].type == SERVER_M605X) {
+    number_ga =   ( (M6051_DATA *) busses[bus].driverdata)  -> number_ga;
+  } else {
+    return SRCP_UNSUPPORTEDDEVICEGROUP;
+  }
+
+  if((addr>0) && (addr <= number_ga))
   {
     sprintf(msg, "GA %d %d %d %ld\n", ga[bus][addr].id, ga[bus][addr].port,
       ga[bus][addr].action, ga[bus][addr].activetime);

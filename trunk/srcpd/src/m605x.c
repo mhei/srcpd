@@ -53,9 +53,7 @@ unsigned int pause_between_bytes = 2;
  *     SERIELLE SCHNITTSTELLE KONFIGURIEREN           
  *******************************************************
  */
-int
-init_line6051(int bus)
-{
+static int init_lineM6051(int bus) {
   int FD;
   struct termios interface;
 
@@ -84,9 +82,17 @@ init_line6051(int bus)
   return FD;
 }
 
-int
-init_bus_M6051(int bus)
-{
+int init_bus_M6051(int bus) {
+  syslog(LOG_INFO," M605x  init: bus #%d, debug %d", bus, busses[bus].debuglevel);
+  if(busses[bus].debuglevel==0)
+  {
+    busses[bus].fd = init_lineM6051(bus);
+  }
+  else
+  {
+    busses[bus].fd = -1;
+  }
+  syslog(LOG_INFO, "M605x bus init done");
   return 0;
 }
 
@@ -100,7 +106,7 @@ void*
 thr_sendrec_M6051(void *v)
 {
   unsigned char SendByte;
-  int fd, akt_S88, addr, temp, bus, cmd32_pending;
+  int fd, akt_S88, addr, temp, bus, number_fb;
   char c;
   unsigned char rr;
   struct _GL gltmp, glakt;
@@ -109,14 +115,15 @@ thr_sendrec_M6051(void *v)
   akt_S88 = 1;
 
   fd = busses[bus].fd;
-  cmd32_pending = busses[bus].cmd32_pending;
+//  cmd32_pending =  ( (M6051_DATA *) busses[bus].driverdata)  -> cmd32_pending;
   /* erst mal alle Schaltaktionen canceln?, lieber nicht pauschal.. */
   busses[bus].watchdog = 1;
-  if (cmd32_pending)
+  number_fb = ( (M6051_DATA *) busses[bus].driverdata)  -> number_fb;
+  if (( (M6051_DATA *) busses[bus].driverdata)  -> cmd32_pending)
   {
     SendByte = 32;
     writeByte(fd, &SendByte, pause_between_cmd);
-    cmd32_pending = 0;
+    ( (M6051_DATA *) busses[bus].driverdata)  -> cmd32_pending = 0;
   }
 
   while (1)
@@ -133,7 +140,7 @@ thr_sendrec_M6051(void *v)
     busses[bus].watchdog = 3;
     /* Lokdecoder */
     /* nur senden, wenn wirklich etwas vorliegt */
-    if (!cmd32_pending)
+    if (!( (M6051_DATA *) busses[bus].driverdata)  -> cmd32_pending)
     {
       if (!queue_GL_isempty(bus))
       {
@@ -205,14 +212,14 @@ thr_sendrec_M6051(void *v)
         writeByte(fd, &c, pause_between_bytes);
         writeByte(fd, &SendByte, pause_between_bytes);
         usleep(1000L * (unsigned long) gatmp.activetime);
-        cmd32_pending = 1;
+        ( (M6051_DATA *) busses[bus].driverdata)  -> cmd32_pending = 1;
       }
-      if ((gatmp.action == 0) && cmd32_pending)
+      if ((gatmp.action == 0) && ( (M6051_DATA *) busses[bus].driverdata)  -> cmd32_pending)
       {
         // fprintf(stderr, "32 abzusetzen\n");
         SendByte = 32;
         writeByte(fd, &SendByte, pause_between_cmd);
-        cmd32_pending = 0;
+        ( (M6051_DATA *) busses[bus].driverdata)  -> cmd32_pending = 0;
       }
       setGA(bus, addr, gatmp);
       busses[bus].watchdog = 6;
@@ -220,7 +227,7 @@ thr_sendrec_M6051(void *v)
     busses[bus].watchdog = 7;
     //fprintf(stderr, "Feedback ...");
     /* S88 Status einlesen, einen nach dem anderen */
-    if (!cmd32_pending && busses[bus].number_fb)
+    if (!( (M6051_DATA *) busses[bus].driverdata)  -> cmd32_pending && number_fb)
     {
       ioctl(fd, FIONREAD, &temp);
       while (temp > 0)
@@ -239,7 +246,7 @@ thr_sendrec_M6051(void *v)
       readByte(fd, &rr);
       setFBmodul(bus, akt_S88-1, temp | rr);  // 0 based array index..
       akt_S88++;
-      if (akt_S88 > busses[bus].number_fb)
+      if (akt_S88 > number_fb)
         akt_S88 = 1;
     }
     busses[bus].watchdog = 10;

@@ -33,8 +33,9 @@ ln -sf ../../etc/init.d/srcpd /usr/sbin/rcsrcpd
 #
 # Initialize runlevel links
 #
-usr/lib/lsb/install_initd /etc/init.d/srcpd
-
+if [ -x /usr/lib/lsb/install_initd ] ; then
+    /usr/lib/lsb/install_initd /etc/init.d/srcpd
+fi
 %files
 %defattr(-,root,root)
 /usr/sbin/srcpd
@@ -44,5 +45,7 @@ usr/lib/lsb/install_initd /etc/init.d/srcpd
 %doc COPYING AUTHORS README NEWS README.ibox ibox/mkibox.sh
 
 %preun
-etc/init.d/srcpd stop
-usr/lib/lsb/remove_initd /etc/init.d/srcpd
+/etc/init.d/srcpd stop
+if [ -x /usr/lib/lsb/install_initd ] ; then
+    /usr/lib/lsb/remove_initd /etc/init.d/srcpd
+fi

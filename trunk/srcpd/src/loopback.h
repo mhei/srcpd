@@ -9,6 +9,7 @@ typedef struct _LOOPBACK_DATA {
 int init_lineLoopback(char *);
 int init_bus_Loopback(int );
 int term_bus_Loopback(int );
+int getDescription_LOOPBACK(char *reply);
 void* thr_sendrec_Loopback(void *);
 
 #endif

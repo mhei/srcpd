@@ -23,6 +23,7 @@
 #define SRCP_WRONGVALUE 412
 #define SRCP_NODATA 416
 
+#define SRCP_UNSUPPORTEDDEVICEGROUP 422
 #define SRCP_UNSUPPORTED 423
 
 int srcp_fmt_msg(int errno, char *msg);

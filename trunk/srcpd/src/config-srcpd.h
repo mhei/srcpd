@@ -61,19 +61,23 @@ typedef struct _BUS
   int power_changed;
   char power_msg[100];
   /* driver specific */
+  void *driverdata;
+#if 0
   int cmd32_pending;
   int number_ga;        // number of assecoirs (0 for none)
   int number_gl;        // number of locomotivs (0 for none)
   int number_fb[3];     // number of feedbacks (0 for none)
                         // index 0 is normal feedback
                         // index 0,1,2 is HSI-88 (left, center, right)
-  int flags;            // M6020, Watchdog
+#endif
+  int flags;            // Watchdog
+
 } BUS;
 
 extern struct _BUS busses[];
 extern int num_busses;
 extern char PIDFILE[MAXPATHLEN];
 
-void readConfig(void);
+void readConfig(const char *filename);
 
 #endif

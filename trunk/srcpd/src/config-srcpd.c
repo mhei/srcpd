@@ -45,8 +45,7 @@ char PIDFILE[MAXPATHLEN];
 struct _BUS busses[MAX_BUSSES];
 int num_busses;
 
-static void
-register_bus(xmlDocPtr doc, xmlNodePtr node)
+static void register_bus(xmlDocPtr doc, xmlNodePtr node)
 {
   xmlNodePtr child;
   char *proptxt;
@@ -118,23 +117,6 @@ register_bus(xmlDocPtr doc, xmlNodePtr node)
         }
         strcpy(busses[busnumber].device, txt);
       }
-      if (strcmp(child->name, "maximum_address_for_feedback") == 0)
-      {
-        busses[busnumber].number_fb[0] = atoi(txt);
-      }
-      if (strcmp(child->name, "maximum_address_for_locomotiv") == 0)
-      {
-        busses[busnumber].number_gl = atoi(txt);
-      }
-      if (strcmp(child->name, "maximum_address_for_accessoire") == 0)
-      {
-        busses[busnumber].number_ga = atoi(txt);
-      }
-      if (strcmp(child->name, "use_watchdog") == 0)
-      {
-        if (strcmp(txt, "yes") == 0)
-          busses[busnumber].flags |= USE_WATCHDOG;
-      }
       if (strcmp(child->name, "type") == 0)
       {
         if (strcmp(txt, "M605X") == 0)
@@ -143,6 +125,7 @@ register_bus(xmlDocPtr doc, xmlNodePtr node)
           busses[busnumber].init_func = &init_bus_M6051;
           busses[busnumber].term_func = &term_bus_M6051;
           busses[busnumber].thr_func = &thr_sendrec_M6051;
+          busses[busnumber].driverdata = malloc(sizeof(struct _M6051_DATA));
         }
         if (strcmp(txt, "IB") == 0)
         {
@@ -150,6 +133,7 @@ register_bus(xmlDocPtr doc, xmlNodePtr node)
           busses[busnumber].init_func = &init_bus_IB;
           busses[busnumber].term_func = &term_bus_IB;
           busses[busnumber].thr_func = &thr_sendrec_IB;
+//          busses[busnumber].driverdata = malloc(sizeof(struct _IB_DATA));
         }
         if (strcmp(txt, "LOOPBACK") == 0)
         {
@@ -173,19 +157,44 @@ register_bus(xmlDocPtr doc, xmlNodePtr node)
           busses[busnumber].thr_func = &thr_sendrec_HSI_88;
         }
       }
-      if (strcmp(child->name, "MODE_M6020") == 0)
-      {
+
+      if (strcmp(child->name, "verbosity") == 0) {
+        busses[busnumber].debuglevel = atoi(txt);
+      }
+      if (strcmp(child->name, "use_watchdog") == 0)   {
         if (strcmp(txt, "yes") == 0)
-          busses[busnumber].flags |= M6020_MODE;
+          busses[busnumber].flags |= USE_WATCHDOG;
       }
       if (strcmp(child->name, "restore_device_settings") == 0)
       {
         if (strcmp(txt, "yes") == 0)
           busses[busnumber].deviceflags |= RESTORE_COM_SETTINGS;
       }
-      if (strcmp(child->name, "verbosity") == 0)
+
+      /* ab jetzt Busspezifisches */
+
+      if (strcmp(child->name, "maximum_address_for_feedback") == 0)
       {
-        busses[busnumber].debuglevel = atoi(txt);
+        switch (busses[busnumber].type) {
+            case SERVER_M605X:
+                ( (M6051_DATA *) busses[busnumber].driverdata)  -> number_fb = atoi(txt);
+                break;
+        }
+      }
+
+      if (strcmp(child->name, "maximum_address_for_locomotiv") == 0)
+      {
+        ( (M6051_DATA *) busses[busnumber].driverdata)  -> number_gl = atoi(txt);
+      }
+      if (strcmp(child->name, "maximum_address_for_accessoire") == 0)
+      {
+        ( (M6051_DATA *) busses[busnumber].driverdata)  -> number_ga = atoi(txt);
+      }
+
+      if (strcmp(child->name, "MODE_M6020") == 0)
+      {
+        if (strcmp(txt, "yes") == 0)
+          ( (M6051_DATA *) busses[busnumber].driverdata)  -> flags |= M6020_MODE;
       }
     }
     else
@@ -219,9 +228,7 @@ load_config_xml(const char *filename)
   return xmlParseFile(filename);
 }
 
-void
-readConfig()
-{
+void readConfig(const char *filename) {
   xmlDocPtr doc;
   memset(busses, 0, sizeof(busses));
   busses[0].type = SERVER_SERVER;
@@ -231,15 +238,8 @@ readConfig()
   /* some defaults */
   strcpy(PIDFILE, "/var/run/srcpd.pid");
 
-  doc = load_config_xml("/usr/local/etc/srcpd.conf");
-  if (doc == 0)
-    doc = load_config_xml("/usr/etc/srcpd.conf");
-  if (doc == 0)
-    doc = load_config_xml("/etc/srcpd.conf");
-  if (doc == 0)
-    doc = load_config_xml("srcpd.conf");
-  if (doc != 0)
-  {
+  doc = load_config_xml(filename);
+  if (doc != 0)  {
     walk_config_xml(doc);
     xmlFreeDoc(doc);
   }
