@@ -1,4 +1,3 @@
-/* $Id$ */
 
 /* 
  * Vorliegende Software unterliegt der General Public License, 
@@ -24,10 +23,11 @@
 static struct _FBSTATE _fbstate[MAX_BUSSES][MAXFBS];
 // 20 x 256 x 16 x 10 bytes = 819200 bytes.
 
-int getFB(int bus, int port)
+int getFB(int bus, int port, struct timeval *time)
 {
   int result;
   result = _fbstate[bus-1][port-1].state;
+  *time  = _fbstate[bus-1][port-1].timestamp;
   return result;
 }
 
@@ -94,11 +94,12 @@ int setFBmodul(int bus, int modul, int values)
 
 int infoFB(int bus, int port, char *msg)
 {
-  int state = getFB(bus, port);
+  struct timeval time;
+  int state = getFB(bus, port, &time);
   if(state>=0)
   {
     sprintf(msg, "%ld.%ld 100 INFO %d FB %d %d",
-        _fbstate[bus-1][port-1].timestamp.tv_sec, _fbstate[bus-1][port-1].timestamp.tv_usec/1000,  bus, port, state);
+     time.tv_sec, time.tv_usec/1000, bus, port, state);
     return SRCP_INFO;
   }
   else
@@ -112,15 +113,18 @@ int describeFB(int bus, int addr, char *reply)
   return SRCP_NOTSUPPORTED;
 }
 
-int startup_FB(){
-   struct timeval akt_time;
-   int i,j;
-    gettimeofday(&akt_time, NULL);
-    for(i=0; i<  MAX_BUSSES; i++) {
-      for(j=0; j<    MAXFBS; j++) {
-        _fbstate[i][j].state = -1;
-        _fbstate[i][j].timestamp = akt_time;
-      }
+int startup_FB()
+{
+  struct timeval akt_time;
+  int i, j;
+  gettimeofday(&akt_time, NULL);
+  for(i=0;i<MAX_BUSSES;i++)
+  {
+    for(j=0;j<MAXFBS;j++)
+    {
+      _fbstate[i][j].state = -1;
+      _fbstate[i][j].timestamp = akt_time;
     }
-    return 0;
+  }
+  return 0;
 }

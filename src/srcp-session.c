@@ -15,39 +15,43 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <syslog.h>
+
 #include "srcp-session.h"
 #include "srcp-ga.h"
 #include "srcp-gl.h"
-
 #include "srcp-error.h"
-#include <syslog.h>
 
-int
-startup_SESSION(void)
+int startup_SESSION(void)
 {
   return 0;
 }
 
-int start_session(long int sessionid, int mode) {
-   syslog(LOG_INFO, "Session started; clientid %ld, mode %d", sessionid, mode);
-   return SRCP_OK;
+int start_session(long int sessionid, int mode)
+{
+  syslog(LOG_INFO, "Session started; clientid %ld, mode %d", sessionid, mode);
+  return SRCP_OK;
 }
 
-int stop_session(long int sessionid) {
-   syslog(LOG_INFO, "Session terminated clientid %ld", sessionid);
-   // clean all locks
-   unlock_ga_bysessionid(sessionid);
-   unlock_gl_bysessionid(sessionid);
-   return SRCP_OK;
+int stop_session(long int sessionid)
+{
+  syslog(LOG_INFO, "Session terminated clientid %ld", sessionid);
+  // clean all locks
+  unlock_ga_bysessionid(sessionid);
+  unlock_gl_bysessionid(sessionid);
+  return SRCP_OK;
 }
 
-int describeSESSION(int bus, int sessionid, char *reply) {
-   return SRCP_NOTSUPPORTED;
+int describeSESSION(int bus, int sessionid, char *reply)
+{
+  return SRCP_NOTSUPPORTED;
 }
 
-int termSESSION(int bus, int sessionid, int termsessionid, char *reply) {
-   if(sessionid == termsessionid || termsessionid == 0) {
-         return - SRCP_OK;
-   }
-   return SRCP_NOTSUPPORTED;
+int termSESSION(int bus, int sessionid, int termsessionid, char *reply)
+{
+  if(sessionid == termsessionid || termsessionid == 0)
+  {
+    return - SRCP_OK;
+  }
+  return SRCP_NOTSUPPORTED;
 }

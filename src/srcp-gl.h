@@ -43,6 +43,7 @@ int infoGL(int bus, int addr, char* info);
 int describeGL(int bus, int addr, char *msg);
 int initGL(int bus, int addr, const char *protocol, int protoversion, int n_fs, int n_func);
 int termGL(int bus, int addr);
+int isInitializedGL(int bus, int addr);
 
 int lockGL(int bus, int addr, long int sessionid);
 int getlockGL(int bus, int addr, long int sessionid);

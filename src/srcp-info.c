@@ -39,17 +39,18 @@
 #include "netserver.h"
 
 #define QUEUELENGTH_INFO 1000
-#define MAX_CLIENTS      64
 
 /* Kommandoqueues pro Bus */
 static struct _INFO info_queue[QUEUELENGTH_INFO];            // info queue.
 static pthread_mutex_t queue_mutex_info;
 static pthread_mutex_t queue_mutex_client;
+static pthread_t ttid_info;
 static int out, in;
 
 static int number_of_clients;               // number of registerated clients
-static int socketOfClients[MAX_CLIENTS];
-static int sessionOfClients[MAX_CLIENTS];
+static int max_clients;                     // number of clients, that can hold in field
+static int *socketOfClients;
+static int *sessionOfClients;
 
 /* internal functions */
 static int queueLengthInfo(void)
@@ -65,6 +66,23 @@ static int queueIsFullInfo(void)
   return queueLengthInfo() >= QUEUELENGTH_INFO - 1;
 }
 
+static int compareTime(struct timeval t1, struct timeval t2)
+{
+  int result;
+
+  result = 0;
+  if (t1.tv_sec < t2.tv_sec)
+    result = 1;
+  else
+  {
+    if (t1.tv_sec == t2.tv_sec)
+    {
+      if (t1.tv_usec < t2.tv_usec)
+        result = 1;
+    }
+  }
+  return result;
+}
 
 // take changes from server
 // we need changes only, if there is a receiver for our info-messages
@@ -204,7 +222,83 @@ int startup_INFO(void)
   pthread_mutex_init(&queue_mutex_client, NULL);
 
   number_of_clients = 0;
+  max_clients = 0;
 
+  return SRCP_OK;
+}
+
+// add a new client to list of info-clients
+// if it is first client, start thread
+static int addNewClient(int Socket, int sessionid)
+{
+  pthread_mutex_lock(&queue_mutex_client);
+  if(number_of_clients == max_clients)
+  {
+    int max_new;
+    int i;
+    int *temp_sck;
+    int *temp_sid;
+    if(max_clients > 0)
+    {
+      max_new = max_clients + 5;
+      temp_sck = malloc(max_new * sizeof(int));
+      temp_sid = malloc(max_new * sizeof(int));
+      for(i=0;i<max_clients;i++)
+      {
+        temp_sck[i] = socketOfClients[i];
+        temp_sid[i] = sessionOfClients[i];
+      }
+      free(socketOfClients);
+      free(sessionOfClients);
+      socketOfClients = temp_sck;
+      sessionOfClients = temp_sid;
+      max_clients = max_new;
+    }
+    else
+    {
+      max_clients = 5;
+      socketOfClients = malloc(max_clients * sizeof(int));
+      sessionOfClients = malloc(max_clients * sizeof(int));
+      if(pthread_create(&ttid_info, NULL, thr_doInfoClient, NULL))
+        syslog(LOG_INFO, "cannot start Info Thread!");
+      pthread_detach(ttid_info);
+    }
+  }
+  socketOfClients[number_of_clients] = Socket;
+  sessionOfClients[number_of_clients] = sessionid;
+  number_of_clients++;
+  pthread_mutex_unlock(&queue_mutex_client);
+
+  return SRCP_OK;
+}
+
+// if a connection to a client is closed, remove this
+// client from the list
+// if it was last client, cancel thread
+static int removeClient(int client)
+{
+  pthread_mutex_lock(&queue_mutex_client);
+  if (number_of_clients == 1)
+  {
+    // remove thread
+    number_of_clients = 0;
+    max_clients = 0;
+    socketOfClients = NULL;
+    sessionOfClients = NULL;
+    pthread_cancel(ttid_info);
+  }
+  else
+  {
+    // remove client
+    int i;
+    for(i=client;i<number_of_clients-1;i++)
+    {
+      socketOfClients[i] = socketOfClients[i+1];
+      sessionOfClients[i] = sessionOfClients[i+1];
+    }
+    number_of_clients--;
+  }
+  pthread_mutex_unlock(&queue_mutex_client);
   return SRCP_OK;
 }
 
@@ -214,16 +308,16 @@ static int generate_info_msg(struct _INFO *info_t, char *reply)
   switch (info_t->infoType)
   {
     case INFO_GL:
-      sprintf(reply, "%d GL %d", info_t->bus, info_t->id);
+      sprintf(reply, "%ld.%ld 100 INFO %d GL %d", info_t->akt_time.tv_sec, info_t->akt_time.tv_usec/1000, info_t->bus, info_t->id);
       break;
     case INFO_GA:
-      sprintf(reply, "%d GA %d %d %d", info_t->bus, info_t->id, info_t->port, info_t->action);
+      sprintf(reply, "%ld.%ld 100 INFO %d GA %d %d %d", info_t->akt_time.tv_sec, info_t->akt_time.tv_usec/1000, info_t->bus, info_t->id, info_t->port, info_t->action);
       break;
     case INFO_FB:
-      sprintf(reply, "%d FB %d %d", info_t->bus, info_t->id, info_t->action);
+      sprintf(reply, "%ld.%ld 100 INFO %d FB %d %d", info_t->akt_time.tv_sec, info_t->akt_time.tv_usec/1000, info_t->bus, info_t->id, info_t->action);
       break;
     case INFO_SM:
-      sprintf(reply, "%d SM %d", info_t->bus, info_t->id);
+      sprintf(reply, "%ld.%ld 100 INFO %d SM %d", info_t->akt_time.tv_sec, info_t->akt_time.tv_usec/1000, info_t->bus, info_t->id);
       break;
     default:
       error_code = SRCP_NOTSUPPORTED;
@@ -232,12 +326,20 @@ static int generate_info_msg(struct _INFO *info_t, char *reply)
   return error_code;
 }
 
+static void sendInfoS(int socket, char *reply)
+{
+  socket_writereply(socketOfClients[socket], SRCP_INFO, reply, NULL);
+  reply[0] = '\0';
+}
+
 void sendInfos(int current)
 {
   int error_code;
   int ctr;
   int i;
+  int status;
   char reply[1000];
+  char temp[80];
   struct _INFO info_t;
 
   // if -1 then send the message to all registrated clients
@@ -248,7 +350,15 @@ void sendInfos(int current)
     {
       error_code = generate_info_msg(&info_t, reply);
       for (i = 0; i < number_of_clients; i++)
-        socket_writereply(socketOfClients[i], error_code, reply, &(info_t.akt_time));
+      {
+        status = socket_writereply(socketOfClients[i], error_code, reply, NULL);
+        if (status < 0)
+        {
+          removeClient(i);
+          i--;                  // disable "i++" for this time
+                                // so we will not skip next client
+        }
+      }
       ctr--;
       if (ctr <= 0)
         break;        // check for new clients
@@ -258,26 +368,63 @@ void sendInfos(int current)
   {
     // send startup-infos to a new client
     struct timeval start_time;        // for comparsation
+    struct timeval cmp_time;
     int busnumber;
+    int value;
+
+    reply[0] = '\0';
 
     gettimeofday(&start_time, NULL);
 
-    // send all needed generic locomotivs
-    for (i = 0; i < MAXGLS; i++)
+    for (busnumber = 1; busnumber < MAX_BUSSES; busnumber++)
     {
-    }
-
-    // send all needed generic assesoires
-    for (i = 0; i < MAXGAS; i++)
-    {
-    }
-
-    for (busnumber = 0; busnumber < MAX_BUSSES - 1; busnumber++)
-    {
-      // send all needed feedbacks
-      for (i = 0; i < MAXFBS; i++)
+      // only for busses with an interface
+      if (busses[busnumber].type > 0)
       {
+        // send all needed generic locomotivs
+        for (i = 1; i <= MAXGLS; i++)
+        {
+          if(!isInitializedGL(busnumber, i))
+          {
+            #warning complete me
+          }
+        }
+
+        // send all needed generic assesoires
+        for (i = 1; i <= MAXGAS; i++)
+        {
+          if(!isInitializedGA(busnumber, i))
+          {
+            #warning complete me
+          }
+        }
+
+        // send all needed feedbacks
+        for (i = 1; i <= MAXFBS; i++)
+        {
+          value = getFB(busnumber, i, &cmp_time);
+          if (value != -1)
+          {
+            // time is modified
+            if (compareTime(cmp_time, start_time))
+            {
+              // last change is before we startet
+              if (value)
+              {
+                // last change isn't a reset
+                sprintf(temp, "%ld.%ld 100 INFO %d FB %d %d\n", cmp_time.tv_sec, cmp_time.tv_usec/1000, busnumber, i, value);
+                strcat(reply, temp);
+                if (strlen(reply) > 900)
+                  sendInfoS(current, reply);
+              }
+            }
+          }
+        }
       }
+    }
+    if (strlen(reply) > 0)
+    {
+      sendInfoS(current, reply);
     }
   }
 }
@@ -291,13 +438,25 @@ void sendInfos(int current)
 //   startup-messages
 int doInfoClient(int Socket, int sessionid)
 {
-    pthread_mutex_lock(&queue_mutex_client);
-    socketOfClients[number_of_clients] = Socket;
-    sessionOfClients[number_of_clients] = sessionid;
-    number_of_clients++;
-    pthread_mutex_unlock(&queue_mutex_client);
-    sendInfos(number_of_clients - 1);
+  int ret_code;
 
+  if(!addNewClient(Socket, sessionid))
+  {
+    sendInfos(number_of_clients - 1);
+    ret_code = SRCP_OK;
+  }
+  else
+  {
+    ret_code = SRCP_TEMPORARILYPROHIBITED;
+  }
+  return ret_code;
+}
+
+// this thread is started on program-start
+// every client will registrated and a message will be send to all
+// registrated clients at once
+void *thr_doInfoClient(void *v)
+{
   while(1)
   {
     syslog(LOG_INFO, "I'm living with %d clients and %d entries in queue", number_of_clients, queueLengthInfo());
@@ -316,6 +475,7 @@ int doInfoClient(int Socket, int sessionid)
       }
       else
         usleep(10000);
+
     }
   }
 }
