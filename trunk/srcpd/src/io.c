@@ -36,9 +36,9 @@ int readByte(int bus, int wait, unsigned char *the_byte)
     if(status < 0) {
       char msg[200];
       strerror_r(errno, msg, sizeof(msg));
-      DBG(bus, DBG_ERROR, "IOCTL   status: %d with errno = %d: %s", status, errno, msg);
+      DBG(bus, DBG_ERROR, "readbyte(): IOCTL   status: %d with errno = %d: %s", status, errno, *msg);
     }
-    DBG(bus, DBG_DEBUG, "(fd = %d), there are %d bytes to read.", busses[bus].fd, i);
+    DBG(bus, DBG_DEBUG, "readbyte(): (fd = %d), there are %d bytes to read.", busses[bus].fd, i);
     // read only, if there is really an input
     if ((i > 0) || (wait == 1))
     {
@@ -46,13 +46,13 @@ int readByte(int bus, int wait, unsigned char *the_byte)
       if(i < 0) {
             char emsg[200];
             strerror_r(errno, emsg, sizeof(emsg));
-            DBG(bus, DBG_ERROR, "READ    status: %d with errno = %d: %s", i, errno, emsg);
+            DBG(bus, DBG_ERROR, "readbyte(): read status: %d with errno = %d: %s", i, errno, *emsg);
       }
-      if (i > 0)
-          DBG(bus, DBG_DEBUG, "byte read: 0x%02x", bus, *the_byte);
+      if (i >= 0)
+          DBG(bus, DBG_DEBUG, "readbyte(): byte read: 0x%02x", *the_byte);
     }
   }
-  return (i > 0 ? 0 : -1);
+  return (i >= 0 ? 0 : -1);
 }
 
 void writeByte(int bus, unsigned char b, unsigned long msecs)
@@ -64,7 +64,7 @@ void writeByte(int bus, unsigned char b, unsigned long msecs)
     i = write(busses[bus].fd, &byte, 1);
     tcdrain(busses[bus].fd);
   }
-  DBG(bus, DBG_DEBUG, "(FD: %d) %i byte sent: 0x%02x",  busses[bus].fd, i, b);
+  DBG(bus, DBG_DEBUG, "(FD: %d) %i byte sent: 0x%02x (%d)",  busses[bus].fd, i, b, b);
   usleep(msecs * 1000);
 }
 
