@@ -223,9 +223,9 @@ int handleSET(int sessionid, int bus, char *device, char *parameter, char *reply
   }
   if (strncasecmp(device, "TIME", 4) == 0)
   {
-    long d, h, m, s, rx, ry;
-    sscanf(parameter, "%ld %ld %ld %ld %ld %ld", &d, &h, &m, &s, &rx, &ry);
-    rc = setTime(d, h, m, s, rx, ry);
+    long d, h, m, s;
+    sscanf(parameter, "%ld %ld %ld %ld", &d, &h, &m, &s);
+    rc = setTime(d, h, m, s);
   }
   if(strncasecmp(device, "LOCK", 4) == 0) {
     long int addr;
@@ -418,11 +418,18 @@ int handleTERM(int sessionid, int bus, char *device, char *parameter, char *repl
   {
     if (bus == 0)
     {
-      rc = - SRCP_OK;
+      long int termsession = 0;
+      int nelem = 0;
+      if(strlen(parameter)>0)
+         nelem = sscanf(parameter, "%ld", &termsession);
+      if(nelem <= 0) {
+        termsession = 0;
+      }
+      rc = termSESSION(bus, sessionid, termsession, reply);
     }
     else
     {
-      rc = 422;
+      rc = SRCP_UNSUPPORTEDDEVICEGROUP;
     }
   }
   return rc;
@@ -440,9 +447,9 @@ int handleINIT(int sessionid, int bus, char *device, char *parameter, char *repl
 
   if (strncasecmp(device, "TIME", 4) == 0)
   {
-    long d, h, m, s, rx, ry;
-    sscanf(parameter, "%ld %ld %ld %ld %ld %ld", &d, &h, &m, &s, &rx, &ry);
-    rc = setTime(d, h, m, s, rx, ry);  /* prüft auch die Werte! */
+    long rx, ry;
+    sscanf(parameter, "%ld %ld", &rx, &ry);
+    rc = initTime(rx, ry);  /* prüft auch die Werte! */
   }
   return rc;
 }

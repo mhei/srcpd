@@ -36,7 +36,7 @@ int queue_GA_isempty(int bus);
 
 int getGA(int bus, int addr, struct _GA *a);
 int setGA(int bus, int addr, struct _GA a);
-void initGA(int bus, int addr, struct _GA a);
+int initGA(int bus, int addr, const char *protocol);
 int describeGA(int bus, int addr, char *msg);
 int infoGA(int bus, int addr, char* msg);
 int cmpGA(struct _GA a, struct _GA b);

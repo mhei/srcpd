@@ -25,7 +25,8 @@ struct _VTIME
 
 int startup_TIME(void);
 
-int setTime(int d, int h, int m, int s, int rx, int ry);
+int setTime(int d, int h, int m, int s);
+int initTime(int fx, int fy);
 int getTime(struct _VTIME *vt);
 int infoTime(struct _VTIME, char *msg);
 int cmpTime(struct timeval *t1, struct timeval *t2);

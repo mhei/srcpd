@@ -21,37 +21,38 @@ startup_TIME(void)
   return 0;
 }
 
-int
-setTime(int d, int h, int m, int s, int rx, int ry)
+int setTime(int d, int h, int m, int s)
 {
-  if(d<0 || h<0 || h>23 || m<0 || m>59 || s<0 || s>59 || rx<0 || ry<0)
+  if(d<0 || h<0 || h>23 || m<0 || m>59 || s<0 || s>59 )
     return SRCP_WRONGVALUE;
   vtime.day     = d;
   vtime.hour    = h;
   vtime.min     = m;
   vtime.sec     = s;
-  vtime.ratio_x = rx;
-  vtime.ratio_y = ry;
   return SRCP_OK;
 }
 
-int
-getTime(struct _VTIME *vt)
+int initTime(int fx, int fy) {
+  if(fx<0 || fy<=0  )
+    return SRCP_WRONGVALUE;
+  vtime.ratio_x    = fx;
+  vtime.ratio_y    = fy;
+  return SRCP_OK;
+
+}
+int getTime(struct _VTIME *vt)
 {
   *vt = vtime;
   return SRCP_OK;
 }
 
-int
-infoTime(struct _VTIME vt, char *msg)
+int infoTime(struct _VTIME vt, char *msg)
 {
-  sprintf(msg, "INFO TIME %d %d %d %d %d %d\n", vt.day, vt.hour,
-      vt.min, vt.sec, vt.ratio_x, vt.ratio_y);
+  sprintf(msg, "INFO 0 TIME %d %d %d %d", vt.day, vt.hour, vt.min, vt.sec);
   return SRCP_OK;
 }
 
-int
-cmpTime(struct timeval *t1, struct timeval *t2)
+int cmpTime(struct timeval *t1, struct timeval *t2)
 {
   int result;
 
@@ -75,7 +76,8 @@ cmpTime(struct timeval *t1, struct timeval *t2)
 
 
 int describeTIME(int bus, int addr, char *reply) {
-   return SRCP_NOTSUPPORTED;
+     sprintf(reply, "INFO 0 TIME %d %d",   vtime.ratio_x,   vtime.ratio_y);
+   return SRCP_INFO;
 }
 
 /***********************************************************************
@@ -105,6 +107,7 @@ thr_clock(void* v)
     {
       vt.sec = 0;
       vt.min ++;
+      // queueInfoTIME();
     }
     if(vt.min >= 60)
     {
