@@ -56,7 +56,7 @@ int queueMessage(char *msg) {
 int queueInfoGL(int busnumber, int addr, int dir, int speed, int maxspeed, int f,  int f1, int f2, int f3, int f4, struct timeval *akt_time)
 {
     pthread_mutex_lock(&queue_mutex_info);
-    sprintf(info_queue[in], "%ld.%ld 100 INFO %d GL %d %d %d %d %d %d %d %d %d\n",
+    sprintf(info_queue[in], "%lu.%.3lu 100 INFO %d GL %d %d %d %d %d %d %d %d %d\n",
       akt_time->tv_sec, akt_time->tv_usec/1000, busnumber, addr,
       dir, speed, maxspeed,
       f, f1, f2, f3, f4);
@@ -72,7 +72,7 @@ int queueInfoGA(int busnumber, int addr, int port, int action, struct timeval *a
 {
     pthread_mutex_lock(&queue_mutex_info);
 
-    sprintf(info_queue[in], "%ld.%ld 100 INFO %d GA %d %d %d\n",
+    sprintf(info_queue[in], "%lu.%.3lu 100 INFO %d GA %d %d %d\n",
       akt_time->tv_sec, akt_time->tv_usec/1000,
       busnumber, addr, port, action);
     DBG(busnumber, DBG_INFO, "data queued: %s", info_queue[in]);
@@ -88,7 +88,7 @@ int queueInfoFB(int busnumber, int port, int action, struct timeval *akt_time)
 {
     pthread_mutex_lock(&queue_mutex_info);
 
-    sprintf(info_queue[in], "%ld.%ld 100 INFO %d FB %d %d\n",
+    sprintf(info_queue[in], "%lu.%.3lu 100 INFO %d FB %d %d\n",
       akt_time->tv_sec, akt_time->tv_usec/1000,
       busnumber, port, action);
       DBG(busnumber, DBG_INFO, "data queued: %s", info_queue[in]);
@@ -109,7 +109,7 @@ int queueInfoSM(int busnumber, int addr, int type, int typeaddr, int bit, int va
 
     if (return_code == 0)
     {
-      sprintf(buffer, "%ld.%ld 100 INFO %d SM %d",
+      sprintf(buffer, "%lu.%.3lu 100 INFO %d SM %d",
         akt_time->tv_sec, akt_time->tv_usec/1000,
         busnumber, addr);
       switch (type)
@@ -127,7 +127,7 @@ int queueInfoSM(int busnumber, int addr, int type, int typeaddr, int bit, int va
     }
     else
     {
-      sprintf(buffer, "%ld.%ld 600 ERROR %d SM %d",
+      sprintf(buffer, "%lu.%.3lu 600 ERROR %d SM %d",
         akt_time->tv_sec, akt_time->tv_usec/1000,
         busnumber, addr);
       switch (return_code)
