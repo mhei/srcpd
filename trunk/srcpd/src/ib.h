@@ -20,6 +20,8 @@
 int init_comport(int);
 int open_comport(int);
 
-void* thr_sendrecintellibox(void*);
+void* thr_sendrec_IB(void*);
 int init_bus_IB(int);
+int term_bus_IB(int);
+
 #endif

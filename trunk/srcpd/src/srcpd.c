@@ -26,9 +26,12 @@
 #include <unistd.h>
 
 #include "config-srcpd.h"
-#include "ib.h"
 #include "io.h"
+
+#include "ib.h"
 #include "m605x.h"
+#include "loopback.h"
+
 #include "netserver.h"
 #include "srcp-fb.h"
 #include "srcp-fb-i8255.h"
@@ -42,9 +45,7 @@ void hup_handler(int);
 void term_handler(int);
 void install_signal_handler(void);
 
-extern int CMDPORT;
-extern int FEEDBACKPORT;
-extern int INFOPORT;
+extern int TCPPORT;
 
 extern int server_shutdown_state;
 extern int server_reset_state;
@@ -53,12 +54,12 @@ extern const char *WELCOME_MSG;
 void hup_handler(int s)
 {
   /* signal SIGHUP(1) caught */
+    server_reset_state=1;
+    syslog(LOG_INFO,"SIGHUP(1) received! Reset done. Working in initial state.");
 
-  syslog(LOG_INFO,"SIGHUP(1) received! Reset done. Working in initial state.");
-
-  signal(s, hup_handler);
-
-  return;
+    signal(s, hup_handler);
+    
+    return;
 }
 
 void term_handler(int s)
@@ -75,7 +76,7 @@ void install_signal_handler()
   signal(SIGINT, term_handler);
   signal(SIGHUP, hup_handler);
   signal(SIGPIPE, SIG_IGN);    /* important, because write() on sockets */
-                                        /* should return errors                */
+                               /* should return errors                */
 }
 
 int main(int argc, char **argv)
@@ -84,14 +85,14 @@ int main(int argc, char **argv)
   pid_t pid;
   char c;
   pthread_t ttid_cmd, ttid_clock, ttid_pid;
-  struct _THREADS cmds = {CMDPORT,      thr_doClient};
+  struct _THREADS cmds = {TCPPORT,      thr_doClient};
 
   install_signal_handler();
 
   // zuerst die Konfigurationsdatei lesen
   readConfig();
 
-  cmds.socket = CMDPORT;
+  cmds.socket = TCPPORT;
 
   /* Parameter auswerten */
   opterr=0;
@@ -103,15 +104,12 @@ int main(int argc, char **argv)
         cmds.socket = atoi(optarg);
         break;
       case 'v':
-        printf("srcpd version 1.1, speaks SRCP between 0.7 and 0.8, do not use!\n");
+        printf("srcpd version 2.0, speaks SRCP between 0.7 and 0.8, do not use!\n");
 	exit(1);
         break;
       case 'h':
         printf("srcpd -p <Portnumber> -t -v\n");
         printf("Portnumber  -  first Communicationport via TCP/IP (default: 12345)\n");
-        printf("               Portnumber + 0 = Commandport for SRCP-Commands\n");
-        printf("               Portnumber + 1 = Feedbackport for SRCP-Commands\n");
-        printf("               Portnumber + 2 = Infoport for SRCP\n");
         printf("t           -  start server in testmode (without connection to real interface)\n");
 	printf("v           -  prints program version and exits\n");
         exit(1);
@@ -143,15 +141,7 @@ int main(int argc, char **argv)
 
   /* Now we have to initialize all busses */
   for(i=1; i<=num_busses; i++) {
-    switch (busses[i].type)
-    {
-      case SERVER_M605X:
-        init_bus_M6051(i);
-        break;
-      case SERVER_IB:
-        init_bus_IB(i);
-        break;
-    }
+      (*busses[i].init_func)(i);
   }
   /* die Threads starten */
   error = pthread_create(&ttid_cmd, NULL, thr_handlePort, &cmds);
@@ -186,10 +176,8 @@ int main(int argc, char **argv)
   syslog(LOG_INFO, "All Threads started");
   server_shutdown_state = 0;
 
-  while(1)
-  {
-    if(server_shutdown_state == 1)
-    {
+  while(1)  {
+    if(server_shutdown_state == 1) {
       pthread_cancel(ttid_cmd);
       pthread_cancel(ttid_clock);
       /* und jetzt die ganzen Busse */
@@ -200,16 +188,18 @@ int main(int argc, char **argv)
     }
     /* Jetzt Wachhund spielen, falls gewünscht */
     for(i=1; i<=num_busses; i++) {
-      if(busses[i].watchdog == 0 && (busses[i].flags && USE_WATCHDOG))
-      {
-        error = pthread_create(&ttid_pid, NULL, busses[i].thr_func, (void *)i);
-        if(error)
-        {
-          perror("cannot start Interface Thread!");
-          exit(1);
-        }
-	busses[i].pid = ttid_pid;
-        pthread_detach(busses[i].pid);
+      if(busses[i].watchdog == 0 && (busses[i].flags && USE_WATCHDOG))  {
+	  syslog(LOG_INFO, "Oops: Thread nangs, restarting it: (old pid: %d, %d)", busses[i].pid, busses[i].watchdog);
+	  pthread_cancel(busses[i].pid);
+	  sleep(1);
+	  error = pthread_create(&ttid_pid, NULL, busses[i].thr_func, (void *)i);
+	  if(error)
+	      {
+		  perror("cannot start Interface Thread!");
+		  exit(1);
+	      }
+	  busses[i].pid = ttid_pid;
+	  pthread_detach(busses[i].pid);
       }
       busses[i].watchdog = 0;
     }
@@ -218,10 +208,7 @@ int main(int argc, char **argv)
   syslog(LOG_INFO, "Ending server...");
   /* hierher kommen wir nur nach einem break */
   for(i=1; i<=num_busses; i++) {
-    close_comport(i);
-    if(busses[i].deviceflags && RESTORE_COM_SETTINGS) {
-      restore_comport(i);
-    }
+      (*busses[i].term_func)(i);
   }
   syslog(LOG_INFO, "und tschüß..");
   exit(0);

@@ -76,7 +76,7 @@ int socket_writereply(int socket, char *line) {
     struct timeval akt_time;    
     gettimeofday(&akt_time, NULL);
 
-    sprintf(buf, "%ld.%ld %s\n", akt_time.tv_sec, akt_time.tv_usec, line);
+    sprintf(buf, "%ld.%ld %s\n", akt_time.tv_sec, akt_time.tv_usec / 1000, line);
     return write(socket, buf, strlen(buf));
 
 }
@@ -171,6 +171,7 @@ void handleSET(int clientid, int bus, char *device, char *parameter, char *reply
         if(anzparms>5)
         {
           setGL(bus, laddr, direction, speed, maxspeed, func, n_fkt, f1, f2, f3, f4);
+	  strcpy(reply, "200 OK");
         }
       }
       if(strncasecmp(device, "GA", 2) == 0)
@@ -179,12 +180,14 @@ void handleSET(int clientid, int bus, char *device, char *parameter, char *reply
         sscanf(parameter, "%ld %ld %ld %ld", &gaddr, &port, &aktion, &delay);
         /* Port 0,1; Aktion 0,1 */
         setGA(bus, gaddr, port, aktion, delay);
+	strcpy(reply, "200 OK");
       }
       if(strncasecmp(device, "TIME", 4) == 0)
       {
         long d, h, m, s, rx, ry;
         sscanf(parameter, "%ld %ld %ld %ld %ld %ld", &d, &h, &m, &s, &rx, &ry);
         setTime(d, h, m, s, rx, ry);
+	strcpy(reply, "200 OK");
       }
       if(strncasecmp(device, "POWER", 5) == 0)
       {
@@ -193,12 +196,15 @@ void handleSET(int clientid, int bus, char *device, char *parameter, char *reply
         sscanf(parameter, "%s %100c", state, msg);
         if(strncasecmp(state, "OFF", 3) == 0)
         {
-          setPower(bus, 0, msg);
+	    setPower(bus, 0, msg);
+	    strcpy(reply, "200 OK");
         }
         else
         {
-          if(strncasecmp(state, "ON", 2) == 0)
-            setPower(bus, 1, msg);
+	    if(strncasecmp(state, "ON", 2) == 0) {
+		setPower(bus, 1, msg);
+		strcpy(reply, "200 OK");
+	    }
         }
       }
 
@@ -278,7 +284,7 @@ void handleWAIT(int clientid, int bus, char *device, char *parameter, char *repl
       {
         unsigned long d, h, m, s;
         sscanf(parameter, "%ld %ld %ld %ld", &d, &h, &m, &s);
-        /* es wird nicht gerechnet!, der Zeitfluﬂ nicht nicht gleichm‰ﬂig! */
+        /* es wird nicht gerechnet!, der Zeitfluﬂ nicht gleichm‰ﬂig! */
         while (d < vtime.day && h < vtime.hour && m < vtime.min && s < vtime.sec)
         {
           usleep(1000); /* wir warten 1ms realzeit.. */
@@ -336,7 +342,7 @@ void handleCHECK(int clientid, int bus, char *device, char *parameter, char *rep
 void* doCmdClient(int socket, int clientid)
 {
   char line[1024], reply[4095];
-  char command[20], device[20], parameter[900];
+  char command[20], devicegroup[20], parameter[900];
   long int bus;
 
   while(1)
@@ -350,30 +356,30 @@ void* doCmdClient(int socket, int clientid)
       return NULL;
     }
     memset(command, 0, sizeof(command));
-    memset(device, 0, sizeof(device));
+    memset(devicegroup, 0, sizeof(devicegroup));
     memset(parameter, 0, sizeof(parameter));
-    sscanf(line, "%s %ld %s %200c", command, &bus, device, parameter);
+    sscanf(line, "%s %ld %s %900c", command, &bus, devicegroup, parameter);
     if(strncasecmp(command, "SET", 3) == 0) {
-      handleSET(clientid, bus, device, parameter, reply);
+      handleSET(clientid, bus, devicegroup, parameter, reply);
     }
     if(strncasecmp(command, "GET", 3) == 0) {
-      handleGET(clientid, bus, device, parameter, reply);
+      handleGET(clientid, bus, devicegroup, parameter, reply);
     }
     if(strncasecmp(command, "WAIT", 4) == 0)    {
-      handleWAIT(clientid, bus, device, parameter, reply);
+      handleWAIT(clientid, bus, devicegroup, parameter, reply);
     }
     if(strncasecmp(command, "INIT", 4) == 0)    {
-      handleINIT(clientid, bus, device, parameter, reply);
+      handleINIT(clientid, bus, devicegroup, parameter, reply);
     }
     if(strncasecmp(command, "TERM", 4) == 0)    {
-      if(handleTERM(clientid, bus, device, parameter, reply))
+      if(handleTERM(clientid, bus, devicegroup, parameter, reply))
         break;
     }
     if(strncasecmp(command, "VERIFY", 6) == 0) {
-      handleVERIFY(clientid, bus, device, parameter, reply);
+      handleVERIFY(clientid, bus, devicegroup, parameter, reply);
     }
     if(strncasecmp(command, "RESET", 5) == 0) {
-      handleRESET(clientid, bus, device, parameter, reply);
+      handleRESET(clientid, bus, devicegroup, parameter, reply);
     }
     if(socket_writereply(socket, reply) < 0)  {
       break;

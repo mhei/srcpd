@@ -13,6 +13,7 @@
 #include <sys/time.h>
 
 #define MAXGLS 10240
+#define QUEUEGL_LEN 5
 
 /* Lokdekoder */
 struct _GL
@@ -28,8 +29,10 @@ struct _GL
 };
 
 extern volatile struct _GL gl[MAX_BUSSES][MAXGLS];   // aktueller Stand, mehr gibt es nicht
-extern volatile struct _GL ngl[MAX_BUSSES][50];      // max. 50 neue Werte puffern
-extern volatile struct _GL ogl[MAX_BUSSES][50];      // manuelle Änderungen
+extern volatile struct _GL ngl[MAX_BUSSES][QUEUEGL_LEN];      // max. 50 neue Werte puffern
+extern volatile struct _GL ogl[MAX_BUSSES][QUEUEGL_LEN];      // manuelle Änderungen
+extern volatile int writer_gl[MAX_BUSSES];
+extern volatile int reader_gl[MAX_BUSSES];
 
 void setGL(int bus, int addr, int dir, int speed, int maxspeed, int f, 
      int n_fkt, int f1, int f2, int f3, int f4);

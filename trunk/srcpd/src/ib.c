@@ -46,7 +46,6 @@
 #include "srcp-time.h"
 
 int init_bus_IB(int i) {
-      busses[i].thr_func = thr_sendrecintellibox;
       if(open_comport(i) != 0)
       {
         printf("Intellibox an %s nicht gefunden !!!\n", busses[i].device);
@@ -58,7 +57,11 @@ int init_bus_IB(int i) {
       return 1;
 }
 
-void* thr_sendrecintellibox(void *v)
+int term_bus_IB(int bus) {
+    return 0;
+}
+
+void* thr_sendrec_IB(void *v)
 {
   int i, i1;
   int temp;
