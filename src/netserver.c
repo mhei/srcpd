@@ -378,40 +378,53 @@ handleWAIT(int sessionid, int bus, char *device, char *parameter,
     struct timeval time;
     int rc = SRCP_UNSUPPORTEDDEVICEGROUP;
     *reply = 0x00;
+    gettimeofday(&time, NULL);
     /* check, if bus has FB's */
     if (bus_has_devicegroup(bus, DG_FB) && strncasecmp(device, "FB", 2) == 0) {
-	long int port, timeout;
-	int value, waitvalue, aktvalue;
-	sscanf(parameter, "%ld %d %ld", &port, &waitvalue, &timeout);
-
-	if (getFB(bus, port, &time, &value) == SRCP_OK
-	    && value == waitvalue) {
+	long int port, timeout, nelem;
+	int value, waitvalue;
+	nelem = sscanf(parameter, "%ld %d %ld", &port, &waitvalue, &timeout);
+      DBG(bus, DBG_INFO, "wait: %d %d %d", port, waitvalue, timeout);
+      if(nelem>=3) {
+        if (getFB(bus, port, &time, &value) == SRCP_OK && value == waitvalue) {
 	    rc = infoFB(bus, port, reply);
-	} else {
-	    /* wir warten 1/100 Sekunden genau */
-	    timeout *= 100;
+        } else {
+	    /* wir warten 1/20 Sekunden genau */
+	    timeout *= 20;
 	    do {
-		usleep(10000);
-		getFB(bus, port, &time, &aktvalue);
+		usleep(50000);
+		getFB(bus, port, &time, &value);
 		timeout--;
-	    }
-	    while (timeout >= 0 && aktvalue != waitvalue);
+	    } while ( (timeout >= 0) && (value != waitvalue) );
 	    if (timeout < 0) {
-		rc = SRCP_TIMEOUT;
+            gettimeofday(&time, NULL);
+		rc = srcp_fmt_msg(SRCP_TIMEOUT, reply, time);
 	    } else {
 		rc = infoFB(bus, port, reply);
 	    }
-	}
+        }
+        } else {
+            rc = srcp_fmt_msg(SRCP_LISTTOOSHORT, reply, time);
+        }
+
     }
     if (bus_has_devicegroup(bus, DG_TIME) && strncasecmp(device, "TIME", 4) == 0) {
 	unsigned long d, h, m, s;
-	sscanf(parameter, "%ld %ld %ld %ld", &d, &h, &m, &s);
-	/* es wird nicht gerechnet!, der Zeitfluß ist nicht gleichmäßig! */
-	while (d < vtime.day && h < vtime.hour && m < vtime.min
-	       && s < vtime.sec) {
-	    usleep(1000);	/* wir warten 1ms realzeit.. */
-	}
-	rc = infoTIME(reply);
+      int nelem;
+	nelem=sscanf(parameter, "%ld %ld %ld %ld", &d, &h, &m, &s);
+      if(vtime.ratio_x !=0 && vtime.ratio_y != 0) {
+        if(nelem >= 4) {
+        /* es wird nicht gerechnet!, der Zeitfluß ist nicht gleichmäßig! */
+        while ( (((d*24+h)*60+m)*60+s) >= (((vtime.day*24+vtime.hour)*60+ vtime.min)*60 + vtime.sec) ) {
+	    usleep(10000);	/* wir warten 10ms realzeit.. */
+        }
+        rc = infoTIME(reply);
+       }  else {
+          rc = srcp_fmt_msg(SRCP_LISTTOOSHORT, reply, time);
+       }
+      } else {
+        rc = srcp_fmt_msg(SRCP_NODATA, reply, time);
+      }
     }
     return rc;
 }
