@@ -13,8 +13,6 @@
 
 #include "srcp-fb.h"
 
-#include "srcp-fb-i8255.h"
-
 /* one array for all busses             */
 /* not visible outside of this module   */
 static struct _FB fb[MAX_BUSSES];
