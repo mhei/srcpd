@@ -59,8 +59,8 @@ void CreatePIDFile(int pid) {
     else {
        fprintf(f,"%d", pid);
        fflush(f);
+       fclose(f);
     }
-    fclose(f);
 }
 
 void DeletePIDFile() {
@@ -225,7 +225,7 @@ int main(int argc, char **argv)
     }
     sleep(1);
   }
-  syslog(LOG_INFO, "Ending server...");
+  syslog(LOG_INFO, "Shutdown server...");
   /* hierher kommen wir nur nach einem break */
   for(i=1; i<=num_busses; i++) {
       (*busses[i].term_func)(i);
