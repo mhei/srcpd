@@ -195,8 +195,6 @@ void *thr_sendrec_I2C_DEV(void *v)
     int i2c_addr, i2c_base_addr;
     char i2c_val, i2c_oldval;
 
-    int no_off = 0;
-
     DBG(bus, DBG_INFO, "i2c-dev started, bus #%d, %s", bus,
 	busses[bus].device);
 
@@ -271,7 +269,6 @@ void *thr_sendrec_I2C_DEV(void *v)
 		    gatmp.action = 0;
 		} else {
 		    gatmp.activetime = ga_min_active_time;	// always wait minimum time
-		    no_off = 1;
 		}
 
 		// calcutlate new value for the device
@@ -281,11 +278,6 @@ void *thr_sendrec_I2C_DEV(void *v)
 		writeByte(bus, &i2c_val, 0);
 		// wait
 		usleep(1000 * (unsigned long) gatmp.activetime);
-
-		// write old value back, if wait-time != -1
-		if (no_off == 0) {
-		    writeByte(bus, &i2c_oldval, 0);
-		}
 
 	    }
 
@@ -309,7 +301,6 @@ void *thr_sendrec_I2C_DEV(void *v)
 
 	    }
 
-	    setGA(bus, addr, gatmp);
 	    busses[bus].watchdog = 6;
 	}
 
