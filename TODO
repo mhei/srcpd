@@ -1,9 +1,5 @@
-Priority burning:
+No order
 
+- HUP einbauen für geordneten Restart
 
-Priority high:
 - implement a server for LI100
-
-
-Priority low:
-- change srcpd.conf to xml-format
