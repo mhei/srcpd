@@ -34,7 +34,6 @@ dnl libtool-libraries
 AC_ENABLE_STATIC(no)
 
 AC_ENABLE_TESTMODE(no)
-AC_ENABLE_COMPORT(yes)
 
 dnl create a working libtool-script
 if test -z "$LIBTOOL"; then

@@ -1,5 +1,9 @@
 
 Version 0.1	
+14.07.2001 Matthias Trute
+	- Option --enable-comport wieder entfernt,
+	  es ist die runtime Option restore_com_parms
+	  geworden.
 11.07.2001 Frank Schmischke
         - Option --enable-comport in autoconf aufgenommem
 	  (schaltet das sichern und wiederherstellen des Comports ein/aus)

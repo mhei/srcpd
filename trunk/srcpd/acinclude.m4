@@ -1694,24 +1694,6 @@ AC_DEFUN(AC_ENABLE_TESTMODE,
  fi
 ])
 
-AC_DEFUN(AC_ENABLE_COMPORT,
-[
- AC_ARG_ENABLE(comport,[  --enable-comport        build code for reinitializing comport[default=yes]],
- [
-  if test $enableval = "no"; dnl
-  then
-    srcpd_comport="no"
-  else
-    srcpd_comport="yes"
-   fi
- ], [srcpd_comport="yes"
- ])
- if test $srcpd_comport = "yes"; dnl
- then
-   AC_DEFINE_UNQUOTED(REINIT_COMPORT, 1, [Defines if your system should reinit comport])
- fi
-])
-
 AC_DEFUN(AC_CHECK_COMPILERS,
 [
   dnl this is somehow a fat lie, but prevents other macros from double checking
