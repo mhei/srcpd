@@ -165,14 +165,14 @@ int socket_writereply(int Socket, const char *line)
 
     if (linelen<=0) return 0;
     DBG(0, DBG_DEBUG, "socket %d, write %s", Socket, line);
-    while(i<=linelen-MAXSRCPLINELEN-1) {
+    while(i<=linelen-MAXSRCPLINELEN-1 && status>=0) {
         memset(tmp, 0, sizeof(tmp));
 	strncpy(tmp, line+i, MAXSRCPLINELEN-2);
 	sprintf(chunk, "%s\\\n", tmp);
 	status=write(Socket, chunk, strlen(chunk));
 	i+=MAXSRCPLINELEN-2;
     }
-    if(i<linelen){
+    if(i<linelen && status >= 0){
 	    status = write(Socket, line+i, linelen-i);
     }
     DBG(0, DBG_DEBUG, "status from write: %d", status);
