@@ -659,7 +659,7 @@ void check_status_ib(int busnumber)
   unsigned char byte2send;
   unsigned char rr;
   unsigned char xevnt1, xevnt2, xevnt3;
-  struct _GLSTATE gltmp;
+  struct _GLSTATE gltmp, glakt;
   struct _GASTATE gatmp;
 
   /* Abfrage auf Statusänderungen :
@@ -714,15 +714,25 @@ void check_status_ib(int busnumber)
         gltmp.funcs |= 0x010;    // Licht ist an
       rr &= 0x3F;
       gltmp.id |= rr << 8;
-	  gltmp.n_fs = 126;
-      setGL(busnumber, gltmp.id, gltmp);
 	  
 	  //printf("got GL data from IB: lok# = %d, speed = %d, dir = %d\n", 
 	  //	gltmp.id, gltmp.speed, gltmp.direction); 
 
-      // 5. byte real speed (is ignored)
-      readByte(busnumber, 1, &rr);
+      // initialize the GL if not done by user,
+	  // because IB can report uninited GLs...
+	  if (!isInitializedGL(busnumber, gltmp.id))
+	  {
+		  DBG(busnumber, DBG_INFO, "IB reported unintialized GL. performing default init for %d", gltmp.id);
+		  initGL(busnumber, gltmp.id, 'P', 1, 126, 5);
+	  }
+      // get old data, to know which FS the user wants to have...
+	  getGL(busnumber, gltmp.id, &glakt);
+	  // recalc speed
+	  gltmp.speed = (gltmp.speed * glakt.n_fs) / 126; 
+      setGL(busnumber, gltmp.id, gltmp);
 	  
+	  // 5. byte real speed (is ignored)
+      readByte(busnumber, 1, &rr);
 	  //printf("speed reported in 5th byte: speed = %d\n", rr);
 	  
       // next 1. byte
