@@ -16,6 +16,9 @@ typedef struct _M6051_DATA {
     int number_gl;
     int cmd32_pending;
     int flags;
+    unsigned int ga_min_active_time;
+    unsigned int pause_between_cmd;
+    unsigned int pause_between_bytes;
 } M6051_DATA;
 
 int init_line6051(int bus);
