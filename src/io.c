@@ -43,7 +43,7 @@ int readByte(int bus, int wait, unsigned char *the_byte)
       i = read(busses[bus].fd, the_byte, 1);
       if(i < 0)
         DBG(bus, DBG_ERROR, "READ    status: %d with errno = %d", i, errno);
-        if (i > 0)
+      if (i > 0)
           DBG(bus, DBG_DEBUG, "bus %d byte read: 0x%02x", bus, *the_byte);
       }
   }

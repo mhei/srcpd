@@ -179,8 +179,8 @@ void* thr_sendrec_M6051(void *v)
   struct _GLSTATE gltmp, glakt;
   struct _GASTATE gatmp;
   int bus = (int) v;
-  unsigned int ga_min_active_time = ( (M6051_DATA *) busses[bus].driverdata)  ->ga_min_active_time;
-  unsigned int pause_between_cmd = ( (M6051_DATA *) busses[bus].driverdata)  ->  pause_between_cmd;
+  unsigned int ga_min_active_time  = ( (M6051_DATA *) busses[bus].driverdata)  ->ga_min_active_time;
+  unsigned int pause_between_cmd   = ( (M6051_DATA *) busses[bus].driverdata)  ->  pause_between_cmd;
   unsigned int pause_between_bytes = ( (M6051_DATA *) busses[bus].driverdata)  ->      pause_between_bytes;
   number_fb = ( (M6051_DATA *) busses[bus].driverdata)  -> number_fb;
 
