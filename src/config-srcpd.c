@@ -163,6 +163,11 @@ static int register_bus(xmlDocPtr doc, xmlNodePtr node)
       if (strcmp(txt, "yes") == 0)
         busses[busnumber].flags |= RESTORE_COM_SETTINGS;
     }
+    if (strcmp(child->name, "p_time") == 0)
+    {
+      found = 1;
+        set_min_time(busnumber, atoi(txt));
+    }
     if (!found)
     {
       printf("WARNING, \"%s\" (bus %d) is an unknown tag!\n", child->name, busnumber);

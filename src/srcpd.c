@@ -107,6 +107,7 @@ void install_signal_handler()
 int main(int argc, char **argv)
 {
   int error, i;
+  int sleep_ctr;
   pid_t pid;
   char c, conffile[MAXPATHLEN];
   pthread_t ttid_cmd, ttid_clock, ttid_pid;
@@ -240,6 +241,7 @@ int main(int argc, char **argv)
   }
   syslog(LOG_INFO, "All Threads started");
   server_shutdown_state = 0;
+  sleep_ctr = 100;
   /* And now: Wait for _real_ tasks: shutdown, reset, watch for hanging processes */
   while(1)
   {
@@ -249,29 +251,34 @@ int main(int argc, char **argv)
       break; /* leave the while() loop */
     }
     /* Wachhund einmal pro Sekunde */
-    sleep(1);
+    usleep(10);
     
     // test for feedbacks changed back to "0"
     check_reset_fb();
 
-    /* Jetzt Wachhund spielen, falls gewünscht */
-    for(i=1; i<=num_busses; i++)
+    sleep_ctr--;
+    if (sleep_ctr == 0)
     {
-      if(busses[i].watchdog == 0 && (busses[i].flags & USE_WATCHDOG))
+      /* Jetzt Wachhund spielen, falls gewünscht */
+      for(i=1; i<=num_busses; i++)
       {
-        syslog(LOG_INFO, "Oops: Interface Thread %d hangs, restarting it: (old pid: %ld, %d)", i, busses[i].pid, busses[i].watchdog);
-        pthread_cancel(busses[i].pid);
-        waitpid(busses[i].pid, NULL, 0);
-        error = pthread_create(&ttid_pid, NULL, busses[i].thr_func, (void *)i);
-        if(error)
+        if(busses[i].watchdog == 0 && (busses[i].flags & USE_WATCHDOG))
         {
-          perror("cannot restart Interface Thread!");
-          break; /* ermöglicht aufräumen am Ende */
+          syslog(LOG_INFO, "Oops: Interface Thread %d hangs, restarting it: (old pid: %ld, %d)", i, busses[i].pid, busses[i].watchdog);
+          pthread_cancel(busses[i].pid);
+          waitpid(busses[i].pid, NULL, 0);
+          error = pthread_create(&ttid_pid, NULL, busses[i].thr_func, (void *)i);
+          if(error)
+          {
+            perror("cannot restart Interface Thread!");
+            break; /* ermöglicht aufräumen am Ende */
+          }
+          busses[i].pid = ttid_pid;
+          pthread_detach(busses[i].pid);
         }
-        busses[i].pid = ttid_pid;
-        pthread_detach(busses[i].pid);
+        busses[i].watchdog = 0;
       }
-      busses[i].watchdog = 0;
+      sleep_ctr = 100;
     }
   }
   syslog(LOG_INFO, "Shutting down server...");

@@ -24,74 +24,73 @@
 /* one array for all busses             */
 /* not visible outside of this module   */
 static struct _FB fb[MAX_BUSSES];
+static int min_time[MAX_BUSSES];
 
 #define QUEUELENGTH_FB 1000
 
-static struct _RESET_FB reset_queue[QUEUELENGTH_FB];   // reset fb queue.
-static pthread_mutex_t queue_mutex_fb, queue_mutex_reset;
-static int out, in;
+static struct _RESET_FB reset_queue[MAX_BUSSES][QUEUELENGTH_FB];   // reset fb queue.
+static pthread_mutex_t queue_mutex_fb, queue_mutex_reset[MAX_BUSSES];
+static int out[MAX_BUSSES], in[MAX_BUSSES];
 
 
 /* internal functions */
-static int queueLengthFB(void)
+static int queueLengthFB(int busnumber)
   {
-  if (in >= out)
-    return in - out;
+  if (in[busnumber] >= out[busnumber])
+    return in[busnumber] - out[busnumber];
   else
-    return QUEUELENGTH_FB + in - out;
+    return QUEUELENGTH_FB + in[busnumber] - out[busnumber];
 }
 
-static int queueIsFullFB(void)
+static int queueIsFullFB(int busnumber)
 {
-  return queueLengthFB() >= QUEUELENGTH_FB - 1;
+  return queueLengthFB(busnumber) >= QUEUELENGTH_FB - 1;
 }
 
-int queueIsEmptyFB(void)
+int queueIsEmptyFB(busnumber)
 {
-  return (in == out);
+  return (in[busnumber] == out[busnumber]);
 }
 
 /** liefert nächsten Eintrag und >=0, oder -1 */
-static int getNextFB(struct _RESET_FB *info)
+static int getNextFB(int busnumber, struct _RESET_FB *info)
 {
-  if (in == out)
+  if (in[busnumber] == out[busnumber])
     return -1;
-  pthread_mutex_lock(&queue_mutex_reset);
-  info->busnumber = reset_queue[out].busnumber;
-  info->port = reset_queue[out].port;
-  info->timestamp = reset_queue[out].timestamp;
-  pthread_mutex_unlock(&queue_mutex_reset);
-  return out;
+  pthread_mutex_lock(&queue_mutex_reset[busnumber]);
+  info->port = reset_queue[busnumber][out[busnumber]].port;
+  info->timestamp = reset_queue[busnumber][out[busnumber]].timestamp;
+  pthread_mutex_unlock(&queue_mutex_reset[busnumber]);
+  return out[busnumber];
 }
 
 /** liefert nächsten Eintrag oder -1, setzt fifo pointer neu! */
-static void unqueueNextFB(void)
+static void unqueueNextFB(int busnumber)
 {
-  pthread_mutex_lock(&queue_mutex_reset);
-  out++;
-  if (out == QUEUELENGTH_FB)
-    out = 0;
-  pthread_mutex_unlock(&queue_mutex_reset);
+  pthread_mutex_lock(&queue_mutex_reset[busnumber]);
+  out[busnumber]++;
+  if (out[busnumber] == QUEUELENGTH_FB)
+    out[busnumber] = 0;
+  pthread_mutex_unlock(&queue_mutex_reset[busnumber]);
 }
 
-static void queue_reset_fb(int bus, int port, struct timeval *ctime)
+static void queue_reset_fb(int busnumber, int port, struct timeval *ctime)
 {
 //  syslog(LOG_INFO, "enter queueInfoFB: %d, %d", bus, port);
-  while (queueIsFullFB())
+  while (queueIsFullFB(busnumber))
   {
     usleep(1000);
   }
 
-  pthread_mutex_lock(&queue_mutex_reset);
+  pthread_mutex_lock(&queue_mutex_reset[busnumber]);
 
-  reset_queue[in].busnumber = bus;
-  reset_queue[in].port = port;
-  reset_queue[in].timestamp = *ctime;
-  in++;
-  if (in == QUEUELENGTH_FB)
-    in = 0;
+  reset_queue[busnumber][in[busnumber]].port = port;
+  reset_queue[busnumber][in[busnumber]].timestamp = *ctime;
+  in[busnumber]++;
+  if (in[busnumber] == QUEUELENGTH_FB)
+    in[busnumber] = 0;
 
-  pthread_mutex_unlock(&queue_mutex_reset);
+  pthread_mutex_unlock(&queue_mutex_reset[busnumber]);
 }
 
 int getFB(int bus, int port, struct timeval *time)
@@ -125,7 +124,7 @@ void updateFB(int bus, int port, int value)
     gettimeofday(&akt_time, &dummy);
     if (value == 0)
     {
-      if (fb[bus].fbstate[port_t].state == -1)
+      if ((fb[bus].fbstate[port_t].state == -1) || (min_time[bus] == 0))      
       {
         fb[bus].fbstate[port_t].state = value;
         fb[bus].fbstate[port_t].timestamp = akt_time;
@@ -232,10 +231,17 @@ int startup_FB()
   {
     fb[i].numberOfFb = 0;
     fb[i].fbstate = NULL;
+    out[i] = 0;
+    in[i] = 0;
+    min_time[i] = 0;
   }
-  out = 0;
-  in = 0;
   return 0;
+}
+
+void set_min_time(int busnumber, int mt)
+{
+  if ((busnumber >= 0) && (busnumber < MAX_BUSSES))
+    min_time[busnumber] = mt;
 }
 
 int init_FB(int bus, int number)
@@ -273,41 +279,41 @@ void check_reset_fb(void)
 {
   struct _RESET_FB reset_fb;
   struct timeval cmp_time, diff_time;
-  
+  int i;
+    
 //  syslog(LOG_INFO, "start with checking for resetet feedbacks");
-  
-  while (getNextFB(&reset_fb) != -1)
-  {
-//    syslog(LOG_INFO, "status of change = %d", fb[reset_fb.busnumber].fbstate[reset_fb.port].change);
-    if (fb[reset_fb.busnumber].fbstate[reset_fb.port].change == 0)
+  for (i=0;i<MAX_BUSSES;i++)
+  {  
+    while (getNextFB(i, &reset_fb) != -1)
     {
-      // drop this reset of feedback, because we've got an new impulse
-      unqueueNextFB();
-    }
-    else
-    {
-      gettimeofday(&cmp_time, NULL);
-      diff_time.tv_sec  = cmp_time.tv_sec  - reset_fb.timestamp.tv_sec;
-      diff_time.tv_usec = cmp_time.tv_usec - reset_fb.timestamp.tv_usec;
-      if (diff_time.tv_usec < 0)
-        diff_time.tv_sec--;
-//      syslog(LOG_INFO, "diff of time is %ld - %ld = %ld",
-//        cmp_time.tv_sec, reset_fb.timestamp.tv_sec, diff_time.tv_sec);
-      if (diff_time.tv_sec < 3)
+  //    syslog(LOG_INFO, "status of change = %d", fb[reset_fb.busnumber].fbstate[reset_fb.port].change);
+      if (fb[i].fbstate[reset_fb.port].change == 0)
       {
-        break;
+        // drop this reset of feedback, because we've got an new impulse
+        unqueueNextFB(i);
       }
       else
       {
-//        syslog(LOG_INFO, "set %d feedback to 0", reset_fb.port);
-        unqueueNextFB();
-        pthread_mutex_lock(&queue_mutex_fb);
-        fb[reset_fb.busnumber].fbstate[reset_fb.port].state = 0;
-        fb[reset_fb.busnumber].fbstate[reset_fb.port].timestamp = fb[reset_fb.busnumber].fbstate[reset_fb.port].timestamp;
-        fb[reset_fb.busnumber].fbstate[reset_fb.port].change = 0;
-        pthread_mutex_unlock(&queue_mutex_fb);
-        queueInfoFB(reset_fb.busnumber, reset_fb.port + 1, 0, &reset_fb.timestamp);
+        gettimeofday(&cmp_time, NULL);
+        diff_time.tv_sec  = cmp_time.tv_sec  - reset_fb.timestamp.tv_sec;
+        diff_time.tv_usec = cmp_time.tv_usec - reset_fb.timestamp.tv_usec;
+        diff_time.tv_usec += (diff_time.tv_sec * 1000);
+        if (diff_time.tv_sec < min_time[i])
+        {
+          break;
+        }
+        else
+        {
+  //        syslog(LOG_INFO, "set %d feedback to 0", reset_fb.port);
+          unqueueNextFB(i);
+          pthread_mutex_lock(&queue_mutex_fb);
+          fb[i].fbstate[reset_fb.port].state = 0;
+          fb[i].fbstate[reset_fb.port].timestamp = fb[i].fbstate[reset_fb.port].timestamp;
+          fb[i].fbstate[reset_fb.port].change = 0;
+          pthread_mutex_unlock(&queue_mutex_fb);
+          queueInfoFB(i, reset_fb.port + 1, 0, &reset_fb.timestamp);
+        }
       }
-    }
-  }  
+    }  
+  }
 }

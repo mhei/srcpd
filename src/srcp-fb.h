@@ -27,7 +27,6 @@ typedef struct _FB
 
 typedef struct _RESET_FB
 {
-  int busnumber;
   int port;
   struct timeval timestamp;
 } reset_FB;
@@ -45,4 +44,5 @@ int setFBmodul(int bus, int mod, int values);
 int infoFB(int bus, int port, char *msg);
 int describeFB(int bus, int addr, char *reply);
 void check_reset_fb(void);
+void set_min_time(int busnumber, int mt);
 #endif
