@@ -269,7 +269,7 @@ int handleSET(int sessionid, int bus, char *device, char *parameter, char *reply
         if(strncmp(devgrp, "GL", 2)==0)
             rc = lockGL(bus, addr, sessionid);
         if(strncmp(devgrp, "GA", 2)==0)
-            rc = getlockGA(bus, addr, sessionid);
+            rc = lockGA(bus, addr, sessionid);
     }
   }
 
@@ -392,8 +392,12 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
             if (rc==SRCP_OK)
                 sprintf(reply, "%d GL %ld %ld", bus, addr, session_id);
         }
-        if(strncmp(devgrp, "GA", 2)==0)
-            rc = getlockGA(bus, addr, 0 /* change to session-id */);
+        if(strncmp(devgrp, "GA", 2)==0) {
+            long int session_id;
+            rc = getlockGA(bus, addr, &session_id);
+            if (rc==SRCP_OK)
+                sprintf(reply, "%d GA %ld %ld", bus, addr, session_id);
+        }
     }
   }
   return rc;

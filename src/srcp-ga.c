@@ -186,7 +186,7 @@ int describeGA(int busnumber, int addr, char *msg)
 {
   int number_ga = get_number_ga(busnumber);
 
-  if(number_ga<0)
+  if(number_ga<=0)
     return SRCP_UNSUPPORTEDDEVICEGROUP;
 
   if((addr>0) && (addr <= number_ga) && (ga[busnumber].gastate[addr].protocol) )
@@ -237,12 +237,28 @@ int initGA(int busnumber, int addr, const char *protocol)
 
 int lockGA(int busnumber, int addr, long int sessionid)
 {
+  if(ga[busnumber].gastate[addr].locked_by==sessionid)
+  {
+    return SRCP_OK;
+  }
+  else
+  {
+    if(ga[busnumber].gastate[addr].locked_by==0) {
+        ga[busnumber].gastate[addr].locked_by=sessionid;
+        return SRCP_OK;
+    } else {
+        return SRCP_DEVICELOCKED;
+    }
+  }
+  /* unreached */
   return SRCP_NOTSUPPORTED;
 }
 
-int getlockGA(int busnumber, int addr, long int sessionid)
+int getlockGA(int busnumber, int addr, long int *sessionid)
 {
-  return SRCP_NOTSUPPORTED;
+  *sessionid = ga[busnumber].gastate[addr].locked_by;
+  return SRCP_OK;
+
 }
 
 

@@ -114,12 +114,12 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   if(init_GL(busnumber, __m6051->number_gl))
   {
     __m6051->number_gl = 0;
-        DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
+    DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
   }
   if(init_FB(busnumber, __m6051->number_fb*16))
   {
     __m6051->number_fb = 0;
-        DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
+    DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
   }
   return 0;
 }
@@ -139,7 +139,7 @@ static int init_lineM6051(int bus) {
   }
   if ((FD = open(busses[bus].device, O_RDWR | O_NONBLOCK)) == -1)
   {
-    DBG(bus, DBG_FATAL, "couldn't open device.", busses[bus].device);
+    DBG(bus, DBG_FATAL, "couldn't open device %s.", busses[bus].device);
     return -1;
   }
   tcgetattr(FD, &interface);
@@ -216,7 +216,6 @@ void* thr_sendrec_M6051(void *v)
     }
     busses[bus].watchdog = 3;
     /* Lokdecoder */
-    /* nur senden, wenn wirklich etwas vorliegt */
     if (!( (M6051_DATA *) busses[bus].driverdata)  -> cmd32_pending)
     {
       if (!queue_GL_isempty(bus))
@@ -230,7 +229,7 @@ void* thr_sendrec_M6051(void *v)
           gltmp.speed = 0;
           gltmp.direction = !glakt.direction;
         }
-        // Vorwärts/Rückwärts
+        /* Vorwärts/Rückwärts */
         if (gltmp.direction != glakt.direction)
         {
           c = 15 + 16 * ((gltmp.funcs & 0x10) ? 1 : 0);
@@ -238,7 +237,7 @@ void* thr_sendrec_M6051(void *v)
           SendByte = addr;
           writeByte(bus, &SendByte, pause_between_cmd);
         }
-        // Geschwindigkeit und Licht setzen, erst recht nach Richtungswechsel
+        /* Geschwindigkeit und Licht setzen, erst recht nach Richtungswechsel */
         if ((gltmp.speed != glakt.speed) ||
            ((gltmp.funcs & 0x10) != (glakt.funcs & 0x10)) ||
             (gltmp.direction != glakt.direction))
@@ -250,7 +249,7 @@ void* thr_sendrec_M6051(void *v)
           SendByte = addr;
           writeByte(bus, &SendByte, pause_between_cmd);
         }
-        // Erweiterte Funktionen des 6021 senden, manchmal
+        /* Erweiterte Funktionen des 6021 senden, manchmal */
         if (( (busses[bus].flags & M6020_MODE) == 0) && (gltmp.funcs != glakt.funcs))
         {
           c = (gltmp.funcs & 0x0f) + 64;
@@ -264,7 +263,6 @@ void* thr_sendrec_M6051(void *v)
     }
     busses[bus].watchdog = 5;
     /* Magnetantriebe, die muessen irgendwann sehr bald abgeschaltet werden */
-    //fprintf(stderr, "und die Antriebe");
     if (!queue_GA_isempty(bus))
     {
       unqueueNextGA(bus, &gatmp);
@@ -301,9 +299,8 @@ void* thr_sendrec_M6051(void *v)
       busses[bus].watchdog = 6;
     }
     busses[bus].watchdog = 7;
-    //fprintf(stderr, "Feedback ...");
     /* S88 Status einlesen, einen nach dem anderen */
-    if (!( (M6051_DATA *) busses[bus].driverdata)  -> cmd32_pending && number_fb) {
+    if ( (number_fb>0) && !( (M6051_DATA *) busses[bus].driverdata)  -> cmd32_pending) {
       ioctl(busses[bus].fd, FIONREAD, &temp);
       while (temp > 0)
       {

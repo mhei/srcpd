@@ -30,11 +30,12 @@
 #define QUEUELEN 50
 
 /* aktueller Stand */
-static struct _GL gl[MAX_BUSSES];   // aktueller Stand, mehr gibt es nicht
+static struct _GL gl[MAX_BUSSES]; 
 
 /* Kommandoqueues pro Bus */
-static struct _GLSTATE queue[MAX_BUSSES][QUEUELEN];  // Kommandoqueue.
+static struct _GLSTATE queue[MAX_BUSSES][QUEUELEN]; 
 static pthread_mutex_t queue_mutex[MAX_BUSSES];
+/* Schreibposition für die Writer der Queue */
 static int out[MAX_BUSSES], in[MAX_BUSSES];
 
 /* internal functions */
@@ -67,7 +68,6 @@ static int initGL_default(int busnumber, int addr)
 }
 
 // es gibt Decoder für 14, 27, 28 und 128 FS
-// Achtung bei IB alles auf 126 FS bezogen (wenn Ergebnis > 0, dann noch eins aufaddieren)
 static int calcspeed(int vs, int vmax, int n_fs)
 {
   int rs;
@@ -91,6 +91,7 @@ int isInitializedGL(int busnumber, int addr)
 }
 
 /* Übernehme die neuen Angaben für die Lok, einige wenige Prüfungen. Lock wird ignoriert!
+   Lock wird in den SRCP Routinen beachtet, hier ist das nicht angebracht (Notstop)
 */
 int queueGL(int busnumber, int addr, int dir, int speed, int maxspeed, int f,  int f1, int f2, int f3, int f4)
 {
@@ -173,7 +174,7 @@ int unqueueNextGL(int busnumber, struct _GLSTATE *l)
 int getGL(int busnumber, int addr, struct _GLSTATE *l)
 {
   int number_gl = get_number_gl(busnumber);
-  if(number_gl < 0)
+  if(number_gl <= 0)
     return SRCP_UNSUPPORTEDDEVICEGROUP;
 
   if((addr > 0) && (addr <= number_gl))
@@ -193,7 +194,7 @@ int getGL(int busnumber, int addr, struct _GLSTATE *l)
 int setGL(int busnumber, int addr, struct _GLSTATE l, int info)
 {
   int number_gl = get_number_gl(busnumber);
-  if(number_gl == 0)
+  if(number_gl <= 0)
     return SRCP_UNSUPPORTEDDEVICEGROUP;
 
   if((addr>0) && (addr <= number_gl))
@@ -217,7 +218,7 @@ int setGL(int busnumber, int addr, struct _GLSTATE l, int info)
 int initGL(int busnumber, int addr, const char *protocol, int protoversion, int n_fs, int n_func)
 {
   int number_gl = get_number_gl(busnumber);
-  if(number_gl == 0)
+  if(number_gl <= 0)
     return SRCP_UNSUPPORTEDDEVICEGROUP;
   if((addr>0) && (addr <= number_gl))
   {
@@ -233,7 +234,7 @@ int initGL(int busnumber, int addr, const char *protocol, int protoversion, int 
 int describeGL(int busnumber, int addr, char *msg)
 {
   int number_gl = get_number_gl(busnumber);
-  if(number_gl == 0)
+  if(number_gl <= 0)
     return SRCP_UNSUPPORTEDDEVICEGROUP;
   if((addr>0) && (addr <= number_gl) && (gl[busnumber].glstate[addr].protocolversion>0) ) {
     sprintf(msg, "%d GL %d %s %d %d %d ",
@@ -251,7 +252,7 @@ int describeGL(int busnumber, int addr, char *msg)
 int infoGL(int busnumber, int addr, char* msg)
 {
   int number_gl = get_number_gl(busnumber);
-  if(number_gl == 0)
+  if(number_gl <= 0)
     return SRCP_UNSUPPORTEDDEVICEGROUP;
   if((addr>0) && (addr <= number_gl))
   {
