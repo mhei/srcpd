@@ -26,6 +26,7 @@ struct _GLSTATE
   struct timeval tv; /* Last time of change                 */
   struct timeval inittime;
   struct timeval locktime;
+  long int lockduration;
   long int locked_by;
 };
 
@@ -52,10 +53,11 @@ int initGL(int busnumber, int addr, const char *protocol, int protoversion, int 
 int termGL(int busnumber, int addr);
 int isInitializedGL(int busnumber, int addr);
 
-int lockGL(int busnumber, int addr, long int sessionid);
+int lockGL(int busnumber, int addr, long int duration, long int sessionid);
 int getlockGL(int busnumber, int addr, long int *sessionid);
 int unlockGL(int busnumber, int addr, long int sessionid);
 void unlock_gl_bysessionid(long int sessionid);
+void unlock_gl_bytime(void);
 int describeLOCKGL(int bus, int addr, char *reply);
 
 #endif

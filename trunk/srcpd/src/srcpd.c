@@ -247,15 +247,17 @@ int main(int argc, char **argv)
       sleep(2); /* Protokollforderung */
       break; /* leave the while() loop */
     }
-    /* Wachhund einmal pro Sekunde */
     usleep(100000);
-    
-    // test for feedbacks changed back to "0"
+  
+    /* test for feedbacks changed back to "0" */
     check_reset_fb();
 
     sleep_ctr--;
     if (sleep_ctr == 0)
     {
+       /* LOCKs aufraeumen */
+       unlock_gl_bytime();
+       unlock_ga_bytime();
       /* Jetzt Wachhund spielen, falls gewünscht */
       for(i=1; i<=num_busses; i++)
       {

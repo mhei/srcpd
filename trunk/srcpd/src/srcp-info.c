@@ -93,10 +93,11 @@ int doInfoClient(int Socket, int sessionid)
 {
   int status, i, current, number, value;
   char reply[1000], description[1000];
-  
+
     // send startup-infos to a new client
     struct timeval cmp_time;
     int busnumber;
+  current = in;
     DBG(0, DBG_DEBUG, "new Info-client requested %ld", sessionid);
     for (busnumber = 0; busnumber <= num_busses; busnumber++)
     {
@@ -216,12 +217,15 @@ int doInfoClient(int Socket, int sessionid)
       /* this is a racing condition: we should stop
          queing new messages until we reach this this point, it
          is possible to miss some data changed since we started this thread */
+      if(in != current) {
+        DBG(0, DBG_WARN, "INFO queue dropped some information (%d elements). Sorry", abs(in - current));
+      }
       current = in;
       while (1==1)   {
         while(queueIsEmptyInfo(current)) usleep(2000); // busy waiting, anyone with better code out there?
         current = unqueueNextInfo(current, reply);
         DBG(0, DBG_DEBUG, "reply-length = %d", strlen(reply));
-        status = write(Socket, reply, strlen(reply));
+        status = socket_writereply(Socket, reply);
         if (status < 0) {
           break;
         }

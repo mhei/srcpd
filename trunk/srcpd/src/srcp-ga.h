@@ -27,6 +27,7 @@ struct _GASTATE
   struct timeval t;     /* Auschaltzeitpunkt */
   struct timeval locktime;
   long int locked_by;     /* wer hält den Lock? */
+  long int lockduration;
 };
 
 typedef struct _GA
@@ -51,9 +52,10 @@ int infoGA(int busnumber, int addr, int port, char* msg);
 int cmpGA(struct _GASTATE a, struct _GASTATE b);
 int isInitializedGA(int busnumber, int addr);
 
-int lockGA(int busnumber, int addr, long int sessionid);
+int lockGA(int busnumber, int addr, long int duration, long int sessionid);
 int getlockGA(int busnumber, int addr, long int *sessionid);
 int unlockGA(int busnumber, int addr, long int sessionid);
 void unlock_ga_bysessionid(long int);
+void unlock_ga_bytime(void);
 int describeLOCKGA(int bus, int addr, char *reply);
 #endif
