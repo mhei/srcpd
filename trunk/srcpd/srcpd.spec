@@ -5,7 +5,13 @@ Release: 1
 Source0: %{name}-%{version}.tar.gz
 License: GPL
 Group: Games/Daemon
+Packager: Matthias Trute <mtrute@user.sf.net>
+Vendor: the srcpd team
+URL: http://srcpd.sourceforge.net
+Requires: libxml2
+
 %description
+
 The srcpd is a server daemon that enables you to control and play with 
 a digital model railroad using any SRCP Client. Actually it requires an 
 Intellibox (tm) or a Marklin Interface 6050 or 6051 (tm?). More 
@@ -15,7 +21,7 @@ http://srcpd.sourceforge.net and http://www.der-moba.de/Digital
 %prep
 %setup -q
 %build
-./configure --prefix=/usr --mandir=/usr/share/man
+./configure --prefix=/usr --mandir=/usr/share/man --sysconfdir=/etc
 make
 
 %install
@@ -35,9 +41,10 @@ sbin/insserv etc/init.d/srcpd
 /usr/sbin/srcpd
 /etc/init.d/srcpd
 /usr/sbin/rcsrcpd
-%config /usr/etc/srcpd.xml
+%config(noreplace) /etc/srcpd.xml
 /usr/share/man/man8/srcpd.8
 %doc COPYING AUTHORS README NEWS
 
 %preun
+etc/init.d/srcpd stop
 sbin/insserv -r etc/init.d/srcpd

@@ -4,7 +4,8 @@ srcpd_SOURCES = config-srcpd.c srcpd.c srcp-fb-s88.c ib.c io.c \
 		threads.c srcp-time.c srcp-srv.c srcp-power.c \
 		srcp-gl.c srcp-ga.c srcp-fb.c srcp-fb-i8255.c \
 		netserver.c m605x.c srcp-error.c srcp-descr.c \
-		srcp-lock.c
+		srcp-lock.c loopback.c
+
 srcpd_LDADD   = -lpthread -lxml2
 
 
@@ -16,7 +17,7 @@ EXTRA_DIST = AUTHORS COPYING ChangeLog INSTALL README TODO srcpd.lsm \
 	    threads.c threads.h io.h io.c ib.c ib.h srcp-fb-s88.h \
 	    srcp-fb-s88.c srcpd.c config-srcpd.c config-srcpd.h \
 	    srcp-error.h srcp-error.h srcp-descr.c srcp-descr.h \
-	    srcp-lock.c srcp-lock.h
+	    srcp-lock.c srcp-lock.h loopback.c loopback.h
 
 ####### kdevelop will overwrite this part!!! (end)############
 
@@ -28,7 +29,7 @@ srcpd_LDFLAGS = $(all_libraries)
                                                                                 
 install-data-local:
 	$(mkinstalldirs) $(prefix)/
-	$(INSTALL_DATA) $(srcdir)/srcpd.xml $(prefix)/etc
+	$(INSTALL_DATA) $(srcdir)/srcpd.xml $(sysconfdir)/
 	$(INSTALL_DATA) $(srcdir)/srcpd.8 $(mandir)/man8
 
 uninstall-local:
