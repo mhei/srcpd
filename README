@@ -1,6 +1,6 @@
 Autor: Matthias Trute, mailto:mtrute@web.de
-Datum: Sommer 2001
-Version: 1 \beta ($Id$)
+Datum: Winter 2002
+Version: 2 ($Id$)
 Lizenz: GPL v2 für das gesamte Packet
 
 Zweck des Programms: 
@@ -12,11 +12,10 @@ Zweck des Programms:
 
 SRCP?
     Simple Railroad Command Protocol
-    eine Entwicklung aus dem usenet
-    (news:de.rec.modelle.bahn) um Modellbahnen
-    mit dem Computer zu steuern. Die Betonung
-    liegt auf dem S ;=)
-    Aktuell ist Version 0.7.3
+    eine Entwicklung aus dem usenet (news:de.rec.modelle.bahn) um Modellbahnen
+    mit dem Computer zu steuern. Die Betonung liegt auf dem S ;=)
+    Aktuell ist Version 0.7.3, die Version 0.8 ist in den
+    Startlöchern.
 
 
 SRCP Parameter (für die Insider, alle anderen bitte ignorieren):
@@ -32,10 +31,23 @@ SRCP Parameter (für die Insider, alle anderen bitte ignorieren):
 
 
 Installieren und Benutzen:
-    das Interface ist entsprechend den Hinweisen des jeweiligen
+
+    Installation der rpm Packete ist wie immer bei solchen mit
+    "rpm -i <dateiname.rpm>". Dabei werden die erforderlichen
+    Links zum Starten des Daemons in /etc/init.d angelegt (aber
+    nicht aktiviert). Manuell kann der Daemon dann mit den
+    Standardverfahren gestartet und gestoppt werden. Da sich die
+    Distributoren leider noch  nicht geeinigt haben, funktioniert
+    das nur unter aktuellen (7.x) SuSE Versionen. 
+    
+    Das Deinstallieren stoppt einen laufenden Daemon zuerst, bevor
+    die Dateien entfernt werden.
+
+    
+    Das Interface ist entsprechend den Hinweisen des jeweiligen
     Herstellers an /dev/ttySx anzuschließen und mit der Modellbahnanlage
-    zu verbinden.
-    In der Datei /usr/local/etc/srcpd.conf können verschiedene
+    zu verbinden (vorher beide ausschalten).
+    In der Datei /etc/srcpd.conf können verschiedene
     Parameter gesetzt werden.
 
     Der Quelltext ist auch Quell für alles noch nicht
@@ -43,12 +55,16 @@ Installieren und Benutzen:
     bei der Interpretation des SRCP, die allerdings aus
     einer gewissen Großzügigkeit entspringen soll(t)en.
     
+    Auch ist ein Einsatz von Autoconf Version 2.52 
+    nicht möglich (wird von SuSE 7.3 standardmäßig installiert). 
+    Version 2.13 tut aber (von SuSE 7.2).
+    
     Probleme können eigentlich nur beim 6051 und
     bei den pthread's auftreten. Die libpthread muß
     installiert sein 
     
     Beim Selbstbau der glibc darf glibc-linuxthreads-... nicht
-    vergessen werden.
+    vergessen werden. 
     
     Mit srcpd -h erhält man eine Übersicht über die möglichen
     Parameter (sollte aber wegen der srcpd.conf nicht nötig sein).
@@ -58,10 +74,10 @@ Installieren und Benutzen:
     angeschlossenen Interfaces statt, und es wird nicht wirklich auf
     das Interface zugegriffen.
 
-    Dann einfach starten (für die IB muß dies als root wegen 
-    verschiedener Portzugriffe geschehen, beim 6051 ist dies nicht
-    erforderlich) und laufen lassen.
-    Dann die Steuerprogramme aufrufen und mit dem Server
+    Dann einfach das Programm mit "/usr/sbin/rcsrcpd start" starten 
+    (für die IB muß dies als root wegen verschiedener Portzugriffe 
+    geschehen, beim 6051 ist dies nicht erforderlich) und laufen lassen.
+    Dann die Clientprogramme aufrufen und mit dem Server
     verbinden: tcp Port's 12345/12346/12347, telnet reicht ;=)
 
     Das 6051 ist mitunter recht widerspenstig, der Thread
@@ -88,12 +104,12 @@ Programmstruktur
     Kommandozeile aus. Wenn dann die Initialisierung des
     Interfaces erfolgreich verlaufen ist, wird das Programm ein
     Dämon und startet für jeden Netzwerkport einen eigenen Thread.
-    Daneben wird für jedes angeschlossene Gerät (interface, I8255, S88)
+    Daneben wird für jedes angeschlossene Gerät (Interface, I8255, S88)
     ein eigener Thread gestartet. D.h. im Grundzustand
     laufen 1 master, 1 pthread-interner, 3 für die Netzwerk-
     Ports, je einer für das Interface, 8255 und S88 und einer
     für das TIME Feature. Macht 9 Threads. Aber keine Angst: wir
-    haben den Überblick
+    haben den Überblick.
     
     In diesem Zustand werden bereits alle FB Module ausgelesen, 
     sofern initialisiert.
@@ -125,7 +141,9 @@ Ausrüstung beim Autor (Matthias Trute):
     4 Loks mit Digitaldekoder (delta, 6090x)
     
     2Pentium's, zusammen 366MHz und 10MBit dazwischen.
-    jeweils SuSE 7.1, 2.4.0 (Server) und 2.2.18 (Client)
+    jeweils SuSE 7.x, 2.2.x und 2.4.x; Achtung: mit dem
+    Kernel 2.4.16 habe ich den Server noch nicht zu laufen
+    gebracht. Im Zweifel bitte die Standardkernel verwenden.
 
 Ausrüstung beim Autor (Frank Schmischke):
     (im Aufbau befindliche Vereinsanlage der
@@ -142,22 +160,15 @@ Ausrüstung beim Autor (Frank Schmischke):
 Verwandte Programme:
     siehe http://www.der-moba.de/Digital
 
-Rechtliches: Für die vorliegende Software
-    wird keine Haftung übernommen. Aus der
-    Tatsache, das es bei den Autoren zu deren 
-    Zufriedenheit funktioniert kann niemals 
-    geschlußfolgert werden, das es auch bei 
-    anderen funktioniert und keinen 
-    Schaden anrichtet. Wer dieses Programm
-    benutzt, tut es auf eigene Gefahr. Es gab
-    schon irreparable Hardwareschäden (dies
-    aber wirklich nur für die Advokaten)!
+Rechtliches: Für die vorliegende Software wird keine Haftung übernommen. Aus der
+    Tatsache, das es bei den Autoren zu deren Zufriedenheit funktioniert kann niemals 
+    geschlußfolgert werden, das es auch bei anderen funktioniert und keinen 
+    Schaden anrichtet. Wer dieses Programm benutzt, tut es auf eigene Gefahr. Es gab
+    schon irreparable Hardwareschäden (dies aber wirklich nur für die Advokaten)!
     
 Sonst noch was?
-    Jede Änderung und jeder Erfahrungsbericht
-    ist a) willkommen und b) sollte irgendwie
-    auch bei den Autoren ankommen. Hilfreich sind
-    dann Angaben zur Version (steht im Welcome des
+    Jede Änderung und jeder Erfahrungsbericht ist a) willkommen und b) sollte irgendwie
+    auch bei den Autoren ankommen. Hilfreich sind dann Angaben zur Version (steht im Welcome des
     laufenden Servers).
 
 Last But Not Least:
