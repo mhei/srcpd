@@ -4,19 +4,12 @@ Version: 1 \beta ($Id$)
 Lizenz: GPL v2 für das gesamte Packet
 
 Zweck des Programms: 
-    SRCP Kommandos werden über das Netzwerk
-    entgegengenommen und mit einem am Server
-    angeschlossenen Märklin Interface 6051
-    an die Modellbahn übermittelt und die
-    Rückmeldemodule eingelesen.
+    SRCP Kommandos werden über das Netzwerk entgegengenommen und mit
+    einem am Server angeschlossenen Interface (zur Zeit Märklin
+    Interface 6050/6051 und Intellibox) an die Modellbahn übermittelt
+    und die Rückmeldemodule eingelesen.
 
-    6050 und die Intellibox funktionieren auch.
 
-    Für die Intellibox ist von Frank Schmischke
-    das Programm intelliboxd entstanden. Es basiert
-    auf einer früheren Fassung des m6051d, reizt dafür
-    die IB aber aus.
-    
 SRCP?
     Simple Railroad Command Protocol
     eine Entwicklung aus dem usenet
@@ -32,18 +25,18 @@ SRCP Parameter:
      ist noch nicht allzu ausführlich getestet).
     Für GA wird das Protokoll (M, N) ignoriert, die minimale
      Einschaltzeit wird auf 75 msec gesetzt, egal was im Befehl steht.
-    FB's sind vom Typ M6051 und brauchen nicht initialisiert zu werden,
+    FB's sind vom Typ S88 und brauchen nicht initialisiert zu werden,
      das erfolgt hardcoded im Quelltext.
     INFO Ausgaben spiegeln den zuletzt erfolgreich an die Anlage übermittelten 
      Status wider.
 
 
 Installation und Benutzen:
-    das Interface 6051 entsprechend den Hinweisen von Märklin 
-    an /dev/ttyS0 und einem S88 Modul anschließen.
-    Steckt das Interface nicht an diesem Port oder 
-    fehlt das S88, ist der Quelltext entsprechend 
-    anzupassen.
+    das Interface ist entsprechend den Hinweisen des jeweiligen
+    Herstellers an /dev/ttySx anzuschließen und mit der Modellbahnanlage
+    zu verbinden.
+    In der Datei /usr/local/etc/srcpd.conf können verschiedene
+    Parameter gesetzt werden.
 
     Der Quelltext ist auch Quell für alles noch nicht
     erledigte sowie kleinere und größere Ungenauigkeiten
@@ -53,9 +46,19 @@ Installation und Benutzen:
     Probleme können eigentlich nur beim 6051 und
     bei den pthread's auftreten. Die libpthread muß
     installiert sein (SuSE 7.0 benutzt der Autor).
-    dann einfach starten (normale Benutzerrechte reichen aus, es gibt
-    keine Kommandozeilenparameter) und laufen lassen,
-    die Steuerprogramme aufrufen und mit dem Server
+    Beim selbstbau der glibc darf glibc-linuxthreads-... nicht
+    vergessen werden.
+    Mit srcpd -h erhält man eine Übersicht über die möglichen
+    Parameter (sollte aber wegen der srcpd.conf nicht nötig sein).
+    Wenn das Packet mit --enable-testmode konfiguriert wurde, kann
+    mit der Option -t der Testmodus eingeschaltet werden. Der Server
+    verhält sich ganz normal, jedoch findet keine Überprüfung des
+    angeschlossenen Interfaces statt, und es wird nicht wirklich auf
+    das Interface zugegriffen.
+
+    Dann einfach starten (als root wegen verschiedener Portzugriffe)
+    und laufen lassen.
+    Dann die Steuerprogramme aufrufen und mit dem Server
     verbinden: tcp Port's 12345/12346/12347, telnet reicht ;=)
 
     Der 6051 ist mitunter recht widerspenstig, der Thread
@@ -70,19 +73,22 @@ Installation und Benutzen:
     in /var/log/messages ein hilfreicher Hinweis (insb.
     Oopse des M6051D sind zu beachten). Dabei steht auch
     immer eine Zahl, die gibt den Abbruchort an. Diese
-    Zahl zusammen mit dem Welcome-String an mich senden,
-    falls es meiner Hilfe bedarf.
+    Zahl zusammen mit dem Welcome-String an Matthias Trute senden,
+    falls es einer Hilfe bedarf.
     
     Beendet wird der Server durch den Befehl shutdown auf
     dem Kommandoport (siehe SRCP Spezifikation)
 
 Programmstruktur
-    Das Programm wird beim Start ein Dämon und startet
-    für jeden Netzwerkport einen eigenen Thread. Daneben
-    wird für jedes angeschlossene Gerät (6051, I8255, S88)
+    Das Programm liest zuerst eine eventuell vorhandene
+    Konfigurationsdatei und wertet anschließend die Parameter der
+    Kommandozeile aus. Wenn dann die Initialisierung des
+    Interfaces erfolgreich verlaufen ist, wird das Programm ein
+    Dämon und startet für jeden Netzwerkport einen eigenen Thread.
+    Daneben wird für jedes angeschlossene Gerät (interface, I8255, S88)
     ein eigener Thread gestartet. D.h. im Grundzustand
     laufen 1 master, 1 pthread-interner, 3 für die Netzwerk-
-    Ports, je einer für das 6051, 8255 und S88 und einer
+    Ports, je einer für das Interface, 8255 und S88 und einer
     für das TIME Feature. Macht 9 Threads. In diesem Zustand
     werden bereits alle FB Module ausgelesen, sofern initialisiert.
      
@@ -90,24 +96,36 @@ Programmstruktur
     einem eigenen Thread bedient.
     
 Bekannte Unzulänglichkeiten
-    C-Kenntnisse des Autors? keine!!
-    Alle Parameter sind hardcoded, Ports und Gerät können via
-      Kommandozeile verändert werden.
     Das Timing der Datenübermittlung ist kritisch und "handverlesen"
-    Andere Protokolle außer dem M2 (6090x) sind nicht vollständig getestet,
-     die Absicherungen sind eher unterentwickelt.
-    Die Totzeit bis zum Wirksamwerden eines Befehls kann schon mal länger dauern..
-     vor allem, wenn viele Befehle für ein Gerät anstehen.
-    Beim Hängenbleiben der 6051-Kommunikation wird dieser nach 2 Sekunden neu 
-     gestartet, dabei wird der aktuelle Befehl zwar verworfen, aber danach
-     fast immer neu gesendet. Das "fast" ist aber wirklich Pech. 
 
-Ausrüstung beim Autor:
+    Andere Protokolle außer dem M2 (6090x) sind beim M605X nicht
+    vollständig getestet, die Absicherungen sind eher unterentwickelt.
+
+    Die Totzeit bis zum Wirksamwerden eines Befehls kann schon mal
+    länger dauern, vor allem wenn viele Befehle für ein Gerät anstehen.
+
+    Beim Hängenbleiben der 6051-Kommunikation wird dieser nach 2 Sekunden neu
+    gestartet, dabei wird der aktuelle Befehl zwar verworfen, aber danach
+    fast immer neu gesendet. Das "fast" ist aber wirklich Pech.
+
+Ausrüstung beim Autor (Matthias Trute):
     6021 mit 6051, daran ein Vissmann 5217 (S88 komp.)
     8 Weichenantriebe, 3 Entkupplungsgleise über k83
     4 Loks mit Digitaldekoder (delta, 6090x)
     
     Pentium 133/32MB mit X11, SuSE Linux 6.2
+
+Ausrüstung beim Autor (Frank Schmischke):
+    (im Aufbau befindliche Vereinsanlage der
+      Puhlheim-Frechener-Eisenbahnfreunde)
+    2 Intelliboxen, 50 Weichen, 3 S88-Module von Vissmann mit
+    Belegtmeldern von Uhlenbrock, 2 RM-GB-8 (S88-kompatible
+    8-fach Rückmelder mit intergrierten Belegtmeldern),
+    Loks zur Zeit zwischen 2 und 10 mit Decodern von Lenz und Kühne.
+
+    Celeron mit 366MHz/160MB mit glibc 2.2.2, kernel 2.4.5
+
+    Homepage:   http://srcpd.sourcforge.net
 
 Verwandte Programme:
     siehe http://www.der-moba.de/Digital
@@ -127,32 +145,6 @@ Sonst noch was?
     auch beim Autor ankommen. Hilfreich ist dann
     Angaben zur Version (steht im Welcome des
     laufenden Servers).
-
-Änderungen gegenüber früher
-    11.4.2000: Timing bei der Kommunikation mit dem 6051 sowie
-               Logik bei der Ansteuerung der Fahrrichtungswechsel.
-
-    16.4.2000: FB sendet beim Login alle belegten Besetztmelder, 
-               S88 ist ein Alias zum M6051 (gehen jetzt die 
-               Kompatabilitätsprobleme los??). Der tcl/tk Client
-	       Lok16 hat Anschluß am Info-Port.
-	       
-    29.4.2000: Neuer Standard, neues Glück, 6051er Kommunikation
-	       optimiert.
-	       
-    3.5.2000:  ein wahrer Dämon läuft nun mal im Hintergrund und 
-               schreibt in den syslog.
-
-    21.5.2000: Beim Starten wird der Strom erst mal abgeschaltet.
-               Das M6051 liefert da nichts, also muß es gesetzt werden,
-               damit Server und Anlage einer Meinung sind.
-	       
-    18.6.2000: SRCP 0.7 brachte Veränderungen bei der Programmierung
-               der Dekoder (wird aber erst mal nicht unterstützt) und
-               mehr Fahrstufen bei den "besseren" Märklin-Lokdekodern.
-               (das wird noch nicht umgesetzt).
-	       
-    3.1.2001:  Datei aufgeteilt und experimentellen 8255 Code hinzugefügt.
 
 Last But Not Least:
     Dank geht an die Truppe von www.der_moba.de.

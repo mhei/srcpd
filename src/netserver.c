@@ -20,6 +20,7 @@
 #include <signal.h>
 #include <syslog.h>
 
+#include "config-srcpd.h"
 #include "iochannel.h"
 #include "srcp-fb.h"
 #include "srcp-fb-i8255.h"
@@ -35,6 +36,9 @@
 extern struct _VTIME vtime;
 extern char* WELCOME_MSG;
 extern int debuglevel;
+extern int working_server;
+extern int NUMBER_FB;
+extern volatile int fb[MAXFBS];
 extern volatile struct _GL gl[MAXGLS];  /* aktueller Stand, mehr gibt es nicht */
 extern volatile struct _GA ga[MAXGAS];  /* soviele Generic Accessoires gibts             */
 
@@ -311,31 +315,42 @@ void* thr_doFBClient(void* v)
 {
   int socket = (int) v;
   char infoline[2048];
-  int i;
-  short *oldstate;
+  int fbl[MAXFBS];
+  int i,j;
+  char Np[256];
 
-  oldstate = calloc(getPortCount_S88(), sizeof(short));
+  for(i=0; i < NUMBER_FB; i++)
+    fbl[i] = 0;
+  syslog(LOG_INFO, "Start thr_doFBClient");
   while(1)
   {
-	  /* prüfe laufend die Änderungen und    */
-	  /* puste die dann raus!                */
-	  bzero(infoline, sizeof(infoline));
-	  for(i=0; i<getPortCount_S88(); i++)
-	  {
-	    int newstate = getFB_S88(i);
-	    if(newstate != oldstate[i])
-	    {
-		    char Np[256];
-		    infoFB("M6051", i, Np);
-		    strcat(infoline, Np);
-		    oldstate[i] = newstate;
+    // prüfe laufend die Änderungen und
+    // puste die dann raus!
+    bzero(infoline, sizeof(infoline));
+    // create some info..
+    for(i=0; i<NUMBER_FB; i++)
+    {
+      if(fbl[i] != fb[i])
+      {
+        // bei diesem Modul hat sich was geändert
+        for(j=0; j<16;j++)
+				{
+		    	if(_getS88Modulport(fbl[i], j) != _getS88Modulport(fb[i], j))
+		    	{
+						if(working_server == SERVER_M605X)
+  						infoFB("M6051", i*16+j, Np);
+  				  else
+  						infoFB("IB", i*16+j, Np);
+		        strcat(infoline, Np);
+		    	}
+				}
+				fbl[i] = fb[i];
 	    }
-	  }
+		}
 	  if(infoline[0])
 	  {
-	    if(write(socket, infoline, strlen(infoline))<0 )
+	    if(write(socket, infoline, strlen(infoline)) < 0)
 	    {
-		    free(oldstate);
 		    shutdown(socket, 2);
 		    close(socket);
 		    return NULL;
@@ -441,6 +456,7 @@ void* thr_doInfoClient(void *v)
       return NULL;
     }
   }
+  syslog(LOG_INFO, "Start thr_doInfoClient");
   /* Und die Endlosschleife für die    */
   /* Veränderungen legt los            */
   while(1)

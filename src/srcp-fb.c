@@ -9,6 +9,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <syslog.h>
 
 #include "srcp-fb.h"
 #include "srcp-fb-s88.h"
@@ -51,36 +52,38 @@ int getFBone(const char *proto, int port)
 {
   int result;
 
-  if(strncmp(proto, "M6051", 5)==0)
+  result = -1;
+  if(strcmp(proto, "M6051") == 0)
   {
-	  result = getFB_S88(port-1);
+	  result = getFB_S88(port);
   }
-  else
-    if(strncmp(proto, "I8255", 5)==0)
-    {
-	    result = getFB_I8255(port);
-    }
-    else
-    {
-	    result = -1;
-    }
+  if(strcmp(proto, "IB") == 0)
+  {
+	  result = getFB_S88(port);
+  }
+  if(strcmp(proto, "I8255") == 0)
+  {
+    result = getFB_I8255(port);
+  }
   return result;
 }
 
 void infoFB(const char *proto, int port, char *msg)
 {
   int state = getFBone(proto, port);
+//  syslog(LOG_INFO, "infoFBone result: %i", state);
   if(state>=0)
   {
-	  sprintf(msg, "INFO FB %s %d %d\n", proto, port, state);
+	  sprintf(msg, "INFO FB %s %d %d\n", proto, port + 1, state);
   }
   else
   {
 	  sprintf(msg, "INFO -2\n");
   }
+  syslog(LOG_INFO, "%s", msg);
 }
 
 void initFB()
 {
-
+  initFB_S88();
 }

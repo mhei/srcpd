@@ -52,7 +52,7 @@ extern int	INFOPORT;
 extern int	NUMBER_FB;
 
 #ifdef TESTMODE
-int testmode		= 0;
+extern int testmode;
 #endif
 
 speed_t baud;				// Baudrate der seriellen Schnittstelle
@@ -343,6 +343,7 @@ void* thr_sendrecintellibox(void *v)
 				readByte(fd, &rr);
 				fb[i] = temp | rr;
 				readByte(fd, &rr);
+        syslog(LOG_INFO, "Rückmeldung %i mit 0x%02x", i, fb[i]);
 			}
 		}
 	
@@ -370,7 +371,7 @@ void* thr_sendrecintellibox(void *v)
 		if(testmode)
 		{
 			zaehler1++;
-			if(zaehler1 > 100)
+			if(zaehler1 > 10000)
 			{
 				zaehler1 = 0;
 				fb[fb_zaehler1] = fb_zaehler2;
