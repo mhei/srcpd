@@ -38,26 +38,6 @@ int get_number_gl (int busnumber)
   return gl[busnumber].numberOfGl;
 }
 
-#if 0
-static int initGL_default(int busnumber, int addr)
-{
-  DBG(busnumber, DBG_INFO, "GL default init for %d", addr);
-  switch (busses[busnumber].type)
-  {
-    case SERVER_M605X:
-        initGL(busnumber, addr, 'M', 1, 14, 1);
-        gl[busnumber].glstate[addr].direction = 1; /* undocumented feature: enter 9193 on the 6021 */
-        break;
-    case SERVER_IB:
-        initGL(busnumber, addr, 'P', 1, 126, 5);
-        break;
-    case SERVER_LOOPBACK:
-        initGL(busnumber, addr, 'P', 1, 100, 5);
-        break;
-    }
-    return SRCP_OK;
-}
-#endif
 // es gibt Decoder für 14, 27, 28 und 128 FS
 static int calcspeed(int vs, int vmax, int n_fs)
 {

@@ -26,6 +26,9 @@ void readconfig_loopback(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   busses[busnumber].init_func = &init_bus_Loopback;
   busses[busnumber].term_func = &term_bus_Loopback;
   busses[busnumber].thr_func = &thr_sendrec_Loopback;
+  busses[busnumber].init_gl_func = &init_gl_Loopback;
+  busses[busnumber].init_ga_func = &init_ga_Loopback;  
+
   busses[busnumber].driverdata = malloc(sizeof(struct _LOOPBACK_DATA));
   strcpy(busses[busnumber].description, "GA GL FB POWER LOCK DESCRIPTION");
 
@@ -92,6 +95,22 @@ int term_bus_Loopback(int bus)
 {
   DBG(bus, DBG_INFO, "loopback bus %d terminating", bus);
   return 0;
+}
+
+/**
+ * initGL: modifies the gl data used to initialize the device
+ 
+ */
+int init_gl_Loopback(struct _GLSTATE *gl) {
+	return 0;
+}
+
+/**
+ * initGA: modifies the ga data used to initialize the device
+
+ */
+int init_ga_Loopback(struct _GASTATE *ga) {
+	return 0;
 }
 
 /* Initialisiere den Bus, signalisiere Fehler */

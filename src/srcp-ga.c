@@ -27,10 +27,6 @@
 #include "srcp-error.h"
 #include "srcp-info.h"
 
-#include "m605x.h"
-#include "ib.h"
-#include "loopback.h"
-
 #define QUEUELEN 500
 
 /* aktueller Stand */
@@ -139,7 +135,7 @@ int getGA(int busnumber, int addr, struct _GASTATE *a)
     return SRCP_NODATA;
   }
 }
-
+#if 0
 static int initGA_default(int busnumber, int addr)
 {
     int rc;
@@ -156,7 +152,7 @@ static int initGA_default(int busnumber, int addr)
     }
     return rc;
 }
-
+#endif
 int isInitializedGA(int busnumber, int addr)
 {
   return ga[busnumber].gastate[addr].protocol != 0x00;
@@ -173,7 +169,7 @@ int setGA(int busnumber, int addr, struct _GASTATE a)
   {
     char msg[1000];
     if(!isInitializedGA(busnumber, addr))
-      initGA_default(busnumber, addr);
+      initGA(busnumber, addr, 'P');
     ga[busnumber].gastate[addr].action = a.action;
     ga[busnumber].gastate[addr].port   = a.port;
     gettimeofday(&ga[busnumber].gastate[addr].tv[ga[busnumber].gastate[addr].port], NULL);
@@ -242,7 +238,10 @@ int initGA(int busnumber, int addr, const char protocol)
     ga[busnumber].gastate[addr].activetime = 0;
     ga[busnumber].gastate[addr].action = 0;
     ga[busnumber].gastate[addr].tv[0].tv_sec=0;
-    ga[busnumber].gastate[addr].tv[1].tv_sec=0;    
+    ga[busnumber].gastate[addr].tv[1].tv_sec=0;
+    if(busses[busnumber].init_ga_func && ga[busnumber].gastate[addr].state == 0)
+	    (*busses[busnumber].init_ga_func)(&ga[busnumber].gastate[addr]);
+    ga[busnumber].gastate[addr].state = 1;
     describeGA(busnumber, addr, msg);
     queueInfoMessage(msg);
     return SRCP_OK;

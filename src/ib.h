@@ -33,6 +33,7 @@ int init_bus_IB(int);
 int term_bus_IB(int);
 
 int init_gl_IB(struct _GLSTATE *gl);
+int init_ga_IB(struct _GASTATE *ga);
 
 void* thr_sendrec_IB(void *);
 

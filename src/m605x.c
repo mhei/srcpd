@@ -43,6 +43,7 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   busses[busnumber].term_func = &term_bus_M6051;
   busses[busnumber].thr_func = &thr_sendrec_M6051;
   busses[busnumber].init_gl_func = &init_gl_M6051;
+  busses[busnumber].init_ga_func = &init_ga_M6051;  
   busses[busnumber].driverdata = malloc(sizeof(struct _M6051_DATA));
   busses[busnumber].flags |= FB_16_PORTS;
   __m6051->number_fb = 0;  /* max 31 */
@@ -90,6 +91,27 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, int busnumber)
       }
       free(txt);
     }
+    if (strcmp(child->name, "ga_min_activetime") == 0)
+    {
+      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      __m6051->ga_min_active_time =  atoi(txt);
+      free(txt);
+    }
+
+    if (strcmp(child->name, "pause_between_commands") == 0)
+    {
+      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      __m6051->pause_between_cmd = atoi(txt);
+      free(txt);
+    }
+
+    if (strcmp(child->name, "pause_between_bytes") == 0)
+    {
+      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      __m6051->pause_between_bytes = atoi(txt);
+      free(txt);
+    }
+
     child = child->next;
   }
 
@@ -183,6 +205,15 @@ int init_gl_M6051(struct _GLSTATE *gl) {
 	gl -> direction = 1; /* undocumented feature of the 6021: 9193 is a hard reset */
 	gl -> n_fs = 14;
 	gl -> protocol = 'M';
+	return 0;
+}
+
+/**
+ * initGA: modifies the ga data used to initialize the device
+
+ */
+int init_ga_M6051(struct _GASTATE *ga) {
+	ga -> protocol = 'M';
 	return 0;
 }
 

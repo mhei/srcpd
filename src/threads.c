@@ -74,16 +74,7 @@ int ipv6_supported()
   return 0;
 }
 
-/*******************************************************************
- * Die Metathread, die an den tcp/ip Ports lauschen und
- * die dann einen eigen Thread für jeden Request starten
- *******************************************************************
- *
- * Ein Thread hat einen Port und eine zugehörige Funktion, die
- * bei Aktivieren startet.
- */
-void*
-thr_handlePort(void *v)
+void* thr_handlePort(void *v)
 {
   pthread_t ttid;
   struct _THREADS ti = *((THREADS *)v);
@@ -144,10 +135,6 @@ thr_handlePort(void *v)
   {
     change_privileges(0);
   }
-
-  /* Now that we created a socket. Now we have the protocol independent 
-   * functions
-   * Firstly tell the system to allow local addresses to be reused */
 
   sock_opt = 1;
   if (setsockopt (lsock, SOL_SOCKET, SO_REUSEADDR, &sock_opt, sizeof(sock_opt)) == -1) {

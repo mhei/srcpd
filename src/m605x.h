@@ -29,6 +29,7 @@ int init_line6051(int bus);
 int init_bus_M6051(int bus);
 int term_bus_M6051(int bus);
 int init_gl_M6051(struct _GLSTATE *gl);
+int init_ga_M6051(struct _GASTATE *ga);
 int getDescription_M6051(char *reply);
 void* thr_sendrec_M6051(void *);
 

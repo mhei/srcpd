@@ -1,5 +1,5 @@
 Autor: Matthias Trute, et al
-Datum: Winter 2002/2003
+Datum: Winter 2002/2004
 Version: 2 ($Id$)
 Lizenz: GPL v2 für das gesamte Packet
 
@@ -36,7 +36,38 @@ Konfiguration
     nur Änderungen anegeben werden brauchen. Die Defaultwerte werden sich nicht
     "heimlich" ändern.
 
-    Verbosity
+    Grundsätliche Struktur
+    Ein Bus wird durch das <bus> Tag definiert.
+    In ihm sind einige Attribute und weitere Tags enthalten.
+    <bus number="lfd.nr">
+        <device>/dev/ttyS1</device>
+        <use_watchdog>yes</use_watchdog>
+        <restore_device_settings>no</restore_device_settings>
+        <verbosity>1</verbosity>
+	<!-- es folgt die Definition des Treibermoduls -->
+	<driver>
+	  <driverdata1>value</driverdata1>
+	</driver>
+    <bus>
+    
+    Device
+    
+    Das Device ist der Pfadname, der das betreffende Gerät im Unixverzeichnissystem
+    bezeichnet. Er muß vollständig und ohne umrahmende Leerzeichen oder Zeilenvorschübe
+    angegeben werden.
+    
+    use_watchdog
+    
+    Einige Treiber unterstützen einen Watchdog, der den betreffenden Programmteil bei
+    Störungen der Kommunikation neu startet. Defaultwert: no.
+    
+    restore_device_settings
+    
+    Beim Programmende sollen die Geräteeinstellungen auf den ursprünglichen Zustand
+    zurückgesetzt werden. Dies ist nur für serielle Geräte sinnvoll und wird nicht
+    von allen Treibern unterstützt. Defaultwert no.
+    
+    verbosity
     
     Die Verbosity stellt den Umfang der syslog Meldungen ein.
     
@@ -48,47 +79,117 @@ Konfiguration
     5 zusätzlich Debugmeldungen
     >5 Hardware nicht immer tatsächlich angesprochen
     
+    Busspezifikation (driver)
+    In jedem Bus muß eine Busspezifikation enthalten sein. Diese
+    wird durch das nachfolgend angeführt xml-tag ausgewählt. Innerhalb
+    dieser kann es (und wird es i.d.R.) weitere Angaben geben.
+    
+    Anstelle von driver ist der nachfolgend bezeichnete xmltag
+    einzusetzen. Anstelle von driverdata1 die angegebenen 
+    Parameter. Als Drivervalue wird alles inkl. Leerzeichen
+    zwischen dem beginnenden und dem abschließendem Tag
+    übernommen. Groß/Kleinschreibung ist signifikant.
+    
+    Loopback
+    ~~~~~~~
+    Dieser Bus dient zum einen zur offline Entwicklung von Clientprogrammen
+    als auch als Skelett für neue Busse. Er nimmt verwaltet die Geräte ohne
+    jeglichen Hardwarebezug.
+    
+    xmltag: loopback
+    
+    Parameter
+    
+    	number_ga: Größte GA Adresse (256)
+	number_gl: Größte GL Adresse (80)
+	number_fb: Anzahl S88 Module (0)
+	
+    Die FB werden zwar angebenen, werden jedoch nie
+    Daten generieren. Die GA und GL werden eingehende
+    Befehle als ausgeführt markieren.
+    
     DDL S88
+    ~~~~~~~
+    Dieser Treiber unterstützt 1 oder 4 S88 Stränge am Parallelport. Dies wird entsprechend 
+    dem Anschlußschema des DDL Dämonen (www.vogt-it.com/OpenSource/DDL) übernommen. Die 
+    Anschlußstränge entsprechend der Schaltung von Martin Wolf werden als separate Busse 
+    geführt. Auch wenn nur ein Bus angeschlossen ist, werden immer 4 Busse belegt. Der 
+    ioport sollte im Hexadezimalformat angegeben werden (mit führenden 0x).
     
-    Dieser Treiber benutzt 4 Busse. Dies wird entsprechend dem Anschlußschema
-    des DDL Dämonen (www.vogt-it.com/OpenSource/DDL) übernommen. Die Anschlußstränge
-    entsprechend der Schaltung von Martin Wolf werden als separate Busse geführt.
-    Auch wenn nur ein Bus angeschlossen ist, werden immer 4 Busse belegt. Der ioport
-    sollte im Hexadezimalformat angegeben werden (mit führenden 0x).
+    xmltag: ddl-s88
     
-    Beispiel: ein S88 Modul.
-    <bus number="1">
-      <ddl-s88>
-	<ioport>0x378</ioport>
-	<number_fb_1>1</number_fb_1>
-	<number_fb_2>0</number_fb_2>
-	<number_fb_3>0</number_fb_3>
-	<number_fb_4>0</number_fb_4>
-      </ddl-s88>
-      <device>/dev/lp0</device>
-      <use_watchdog>no</use_watchdog>
-      <restore_device_settings>no</restore_device_settings>
-      <verbosity>7</verbosity>
-    </bus>
+    ioport: Portadresse des Parallelports (0x378)
+    number_fb_1: Anzahl S88 Module am Strang 1
+    number_fb_2: Anzahl S88 Module am Strang 2 (0)
+    number_fb_3: Anzahl S88 Module am Strang 3 (0)
+    number_fb_4: Anzahl S88 Module am Strang 4 (0)
     
-    Ohne die Schaltung von Martin Wolf werden trotzdem 4 Busse belegt,
-    auch wenn nur der erste Bus tatsächlich vorhanden ist.
+    Auch ohne die Schaltung von Martin Wolf werden 4 Busse belegt,
+    dann ist allerdings nur der erste wirksam.
     
     Märklin 6051
+    ~~~~~~~~~~~~
+    xmltag: m605x
+    
     Das Märklin Interface belegt einen Bus, der die Gerätegruppen
     GA, GL, FB, LOCK und POWER unterstützt. Ebenso wird ein Watchdog 
-    unterstützt.
+    unterstützt. Die Kombination mit dem 6050 und 6020 (und baugleiche)
+    wird ebenso unterstützt.
     
-     <bus number="5">
-        <m605x>
-	  <number_fb>2</number_fb>
-        </m605x>
-        <device>/dev/ttyS1</device>
-        <use_watchdog>yes</use_watchdog>
-        <restore_device_settings>no</restore_device_settings>
-        <verbosity>1</verbosity>
-      </bus>
+	number_ga: Größte GA Adresse (256)
+	number_gl: Größte GL Adresse (80)
+	number_fb: Anzahl S88 Module (0)
+	
+	mode_m6020: Features des 6021 abschalten (erweitertes
+	            MM Protokoll abschalten)
+	
+    Folgende Parameter dienen dem Finetuning, sie sollten nicht
+    geändert werden:
+	
+	ga_min_activetime: Minimale Einschaltdauer für GA in Millisekunden (75 ms)
+	
+	pause_between_commands: Pause zwischen 2 Befehlen in Millisekunden (200 ms)
+	pause_between_bytes: Pause zwischen 2 Bytes bei Mehrbytebefehlen (2 ms)
+
+    Das Timing der Datenübermittlung ist kritisch und "handverlesen", die Defaultwerte
+    haben sich aber für einen betriebsstabilen Zustand als zweckmäßig erwiesen.
+
+    Die Totzeit bis zum Wirksamwerden eines Befehls kann schon mal
+    länger dauern, vor allem wenn viele Befehle für ein Gerät anstehen.
+
+    Beim 6021, das einige Befehle vom 6051 erst beim normalen Refresh 
+    einarbeitet, kann es systembedingt einige Sekunden dauern... Ohne, das
+    man was daran ändern könnte.
+	
+    Intellibox
+    ~~~~~~~~~~
+    xmltag: intellibox
     
+    i2c dev
+    ~~~~~~~
+    xmltag: i2c-dev
+    
+    Das I2C Modul ist eine Eigenentwicklung. Für Details der Hardware bitte 
+    http://www.matronix.de konsultieren.
+    
+    Zimo MX1
+    ~~~~~~~~
+    xmltag: zimo
+    
+    Derzeit wird nur das kurze Lokformat und die Stromversorgung geschaltet.
+    Der Code für die GA ist ungetestet.
+    
+    HSI S88
+    ~~~~~~~
+    Das Hiperformance S88 Interface von Littfinski.
+    
+    xmltag: hsi-88
+    
+    refresh: 
+    number_fb_left:
+    number_fb_center:
+    number_fb_right:
+
     
 Installieren und Benutzen:
 
@@ -120,16 +221,6 @@ Installieren und Benutzen:
     Wird die <verbosity> auf null gesetzt, werden nur gravierende Meldungen
     geschrieben, höherer Werte können, je nach Treiber, zu einem bitgenauem
     Tätigkeitsprotokoll führen.
-
-Bekannte Unzulänglichkeiten
-    Das Timing der Datenübermittlung ist kritisch und "handverlesen"
-
-    Die Totzeit bis zum Wirksamwerden eines Befehls kann schon mal
-    länger dauern, vor allem wenn viele Befehle für ein Gerät anstehen.
-
-    Beim 6021, das einige Befehle vom 6051 erst beim normalen Refresh 
-    einarbeitet, kann es systembedingt einige Sekunden dauern... Ohne, das
-    man was daran ändern könnte.
 
 Verwandte Programme:
     siehe http://www.der-moba.de/Digital
