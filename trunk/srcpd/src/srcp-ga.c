@@ -60,6 +60,7 @@ int queueGA(int busnumber, int addr, int port, int action, long int activetime)
   {
     while (queue_isfull(busnumber))
     {
+      DBG(busnumber, DBG_WARN, "GA Command Queue full");
       usleep(1000);
     }
 
@@ -141,7 +142,19 @@ int getGA(int busnumber, int addr, struct _GASTATE *a)
 
 static int initGA_default(int busnumber, int addr)
 {
-  return initGA(busnumber, addr, "P");
+    int rc;
+    switch (busses[busnumber].type)
+    {
+    case SERVER_M605X:
+        rc = initGA(busnumber, addr, "M");
+        break;
+    case SERVER_IB:
+        rc = initGA(busnumber, addr, "M");
+        break;
+    default:
+      rc = initGA(busnumber, addr, "P");
+    }
+    return rc;
 }
 
 int isInitializedGA(int busnumber, int addr)
@@ -182,7 +195,7 @@ int describeGA(int busnumber, int addr, char *msg)
 
   if((addr>0) && (addr <= number_ga) && (ga[busnumber].gastate[addr].protocol) )
   {
-    sprintf(msg, "%ld.%.3ld 101 INIT %d GA %d %s\n",  ga[busnumber].gastate[addr].inittime.tv_sec,
+    sprintf(msg, "%ld.%.3ld 101 INFO %d GA %d %s\n",  ga[busnumber].gastate[addr].inittime.tv_sec,
       ga[busnumber].gastate[addr].inittime.tv_usec/1000, busnumber,
       addr, ga[busnumber].gastate[addr].protocol);
   }

@@ -98,7 +98,7 @@ static int register_bus(xmlDocPtr doc, xmlNodePtr node)
  while (child)
  {
    char *txt;
-   if (strcmp(child->name, "text") == 0)
+   if ( (strcmp(child->name, "text") == 0) || (strcmp(child->name, "comment") == 0))
    {
      child = child->next;
      continue;
