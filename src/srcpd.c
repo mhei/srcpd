@@ -143,6 +143,9 @@ int main(int argc, char **argv)
   }
   // zuerst die Konfigurationsdatei lesen
   printf("conffile = \"%s\"\n", conffile);
+  openlog("srcpd", LOG_CONS, LOG_USER);
+  syslog(LOG_INFO, "%s", WELCOME_MSG);
+
   readConfig(conffile);
   // check for resolv all needed malloc's
   for(i=0;i<MAX_BUSSES;i++)
@@ -189,8 +192,6 @@ int main(int argc, char **argv)
     // ab hier keine Konsole mehr... Wir sind ein Dämon geworden!
     chdir("/");
   }
-  openlog("srcpd", LOG_CONS, LOG_USER);
-  syslog(LOG_INFO, "%s", WELCOME_MSG);
 
   CreatePIDFile(getpid());
   /* First: Init the device data used internally*/
@@ -219,13 +220,6 @@ int main(int argc, char **argv)
     syslog(LOG_INFO, "cannot start Clock Thread!");
   }
   pthread_detach(ttid_clock);
-  /* start info-thread (first time it does nothing) */
-  error = pthread_create(&ttid_info, NULL, thr_doInfoClient, NULL);
-  if(error)
-  {
-    syslog(LOG_INFO, "cannot start Info Thread!");
-  }
-  pthread_detach(ttid_info);
   /* und jetzt die Bustreiber selbst starten. Das Device ist offen, die Datenstrukturen
      initialisiert */
   syslog(LOG_INFO, "Going to start %d Interface Threads for the busses", num_busses);
