@@ -27,7 +27,6 @@
 #include "srcp-time.h"
 #include "srcp-info.h"
 #include "netserver.h"
-#include "m605x.h"
 #include "threads.h"
 
 #define COMMAND 1

@@ -76,7 +76,8 @@ void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   busses[busnumber].init_func = &init_bus_IB;
   busses[busnumber].term_func = &term_bus_IB;
   busses[busnumber].thr_func = &thr_sendrec_IB;
-  busses[busnumber].init_gl_func = &init_gl_IB;  
+  busses[busnumber].init_gl_func = &init_gl_IB;
+  busses[busnumber].init_ga_func = &init_ga_IB;    
   busses[busnumber].driverdata = malloc(sizeof(struct _IB_DATA));
   busses[busnumber].flags |= FB_16_PORTS;
   busses[busnumber].baudrate = B38400;
@@ -158,6 +159,14 @@ int init_gl_IB(struct _GLSTATE *gl) {
 	gl -> n_fs = 126;
 	gl -> n_func = 5;
 	gl -> protocol = 'P';
+	return 0;
+}
+/**
+ * initGA: modifies the ga data used to initialize the device
+
+ */
+int init_ga_IB(struct _GASTATE *ga) {
+	ga -> protocol = 'M';
 	return 0;
 }
 
@@ -973,19 +982,19 @@ static int init_line_IB(int busnumber)
 	
 	printf("Sending BREAK... ");
 
-//#ifdef linux
+// do we still need the difference between Linux and BSD here?
+// on Linux we no send the break without the kernel-module, too!
+#ifdef linux
   
   status = sendBreak(fd);
   close(fd);
   
-//#endif
-//#ifdef __FreeBSD__
+#endif
+#ifdef __FreeBSD__
 /*
  * Eigentlich will er ja nur ein BREAK senden, das machen wir mal
  * etwas einfacher...
  */
- 
-/*
  DBG(busnumber,DBG_INFO,"FBSD BREAK an Ibox senden");
  ioctl(fd,TIOCSBRK,0);
   usleep(1000000);
@@ -993,7 +1002,6 @@ static int init_line_IB(int busnumber)
   usleep(6000000);
   close(fd);
 #endif
-*/
 
 	if (status == 0)
 	{
@@ -1073,8 +1081,6 @@ static int sendBreak(const int fd)
 // old code preserved just in case, the new BREAK-style does not work as expected...
 static int sendBreakViaIboxDevice(const int port)
 {
-	
-#ifdef linux
       unsigned int LSR;
       int fd;
 
@@ -1094,9 +1100,7 @@ static int sendBreakViaIboxDevice(const int port)
            return(-1);
       usleep(600000);
       close(fd);
-      sleep(1);			
-#endif
-
+      sleep(1);
     return 0;
 }
 

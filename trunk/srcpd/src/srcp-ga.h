@@ -17,6 +17,7 @@
 /* Schaltdekoder */
 struct _GASTATE
 {
+  int state ; /* 0==dead, 1==living, 2==terminating */
   char protocol;  /* Protocolid */
   int id;               /* Der Identifier */
   int port;             /* Portnummer     */

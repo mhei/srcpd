@@ -1,3 +1,52 @@
+2003-09-21 18:45  mtrute
+
+	* srcp-gl.c: nicht immer den Modulinit aufrufen, nur bei wirklichen
+	neu-inits
+
+2003-09-21 18:08  mborchers
+
+	* ib.c: changes to get ib.c to compile on FBSD.
+
+2003-09-21 17:20  mtrute
+
+	* config-srcpd.h, ib.c, ib.h, m605x.c, m605x.h, srcp-gl.c: Nur das
+	Hardwaremodul selbst hat die Kenntnis ueber die (technischen)
+	Defaultwerte der Geraete; insb. das Maerklin 6051 ist da anders als
+	das SRCP ;=)
+
+2003-09-21 12:37  mborchers
+
+	* ib.c: changes to get ib.c to compile on FBSD again
+
+2003-09-21 10:15  mtrute
+
+	* netserver.c, srcp-gl.c, srcp-gl.h: API CHange: queueGL with
+	bitmap for function, no more variable parameter list; TERM GL
+	introduced, real live state for a GL device
+
+2003-09-20 10:03  mtrute
+
+	* srcpd.c: remaining 8255 deleted..
+
+2003-09-20 09:31  mtrute
+
+	* Makefile.am: remaining 8255 deleted..
+
+2003-09-19 21:30  mtrute
+
+	* srcp-fb-i8255.c, srcp-fb-i8255.h: removed 8255 supprt, nobody
+	uses it :=(
+
+2003-09-19 21:24  mtrute
+
+	* ChangeLog, io.c, netserver.c, srcp-fb.c, srcp-info.c,
+	srcp-time.c, srcpd.kdevprj: major network code clean up; CHECK
+	Command activated
+
+2003-09-19 21:20  mtrute
+
+	* m605x.c: Nur 4 Funktionen an das  Märklin 605x senden
+
 2003-09-19 13:26  mtrute
 
 	* srcp-ga.c, srcp-info.c: GA Ports ohne Aktivierung werden nicht
