@@ -100,11 +100,11 @@ static int register_bus(xmlDocPtr doc, xmlNodePtr node)
    if (strcmp(child->name, "intellibox") == 0)
    {
      check_bus(busnumber);
-#ifdef linux
+#if defined linux || defined __FreeBSD__
      readconfig_intellibox(doc, child, busnumber);
      found = 1;
 #else
-	printf("Sorry, Intellibox support only available on Linux (yet)\n");
+	printf("Sorry, Intellibox support only available on Linux and __FreeBSD__ (yet)\n");
 #endif
    }
    if (strcmp(child->name, "loopback") == 0)
