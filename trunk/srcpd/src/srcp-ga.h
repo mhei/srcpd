@@ -12,12 +12,13 @@
 
 #include <sys/time.h>
 
-#define MAXGAS 1024
+#define MAXGAS 2049
 #define MAXGAPORT 2
 
 /* Schaltdekoder */
 struct _GA
 {
+  char prot[5];         /* Protokoll      */
   int id;               /* Der Identifier */
   int port;             /* Portnummer     */
   int action;           /* 0,1,2,3...     */
@@ -26,18 +27,12 @@ struct _GA
   struct timeval t;     // Auschaltzeitpunkt
 };
 
+void initGA(void);
+int queueGA(char *prot, int addr, int port, int aktion, long activetime);
+int unqueueNextGA(struct _GA *);
 
-extern volatile struct _GA ga[MAX_BUSSES][MAXGAS];   // soviele Generic Accessoires gibts
-extern volatile struct _GA nga[MAX_BUSSES][50];      // max. 50 Änderungen puffern, neue Werte noch nicht gesendet
-extern volatile struct _GA oga[MAX_BUSSES][50];      // manuelle Änderungen
-extern volatile struct _GA tga[MAX_BUSSES][50];      // max. 50 Änderungen puffern, neue Werte sind aktiv, warten auf inaktiv
-
-int initGA(void);
-int setGA(int bus, int addr, int port, int aktion, long activetime);
-int getGA(int bus, int addr, struct _GA *a);
-int infoGA(int bus, int addr, char *msg);
+int getGA(char *prot, int addr, struct _GA *a);
+int infoGA(struct _GA a, char *msg);
 int cmpGA(struct _GA a, struct _GA b);
 
-/* used internally */
-int updateGA(int bus, int addr, int port, int state);
 #endif
