@@ -18,21 +18,7 @@
 /* Die Konfiguration des seriellen Ports von M6050emu (D. Schaefer)   */
 /* wenngleich etwas verändert, mea culpa..                            */
 
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <unistd.h>
-#include <termios.h>
-#include <fcntl.h>
-#include <signal.h>
-
-#include <libxml/tree.h>
-
+#include "stdincludes.h"
 #include "config-srcpd.h"
 #include "io.h"
 #include "m605x.h"

@@ -6,10 +6,9 @@
  *
  */
 
+#include "stdincludes.h"
 
 #include "srcp-srv.h"
-#include <libxml/tree.h>
-
 #include "config-srcpd.h"
 #include "srcp-error.h"
 

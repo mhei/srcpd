@@ -18,19 +18,11 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include "stdincludes.h"
 
-#include <fcntl.h>
+#ifdef linux
 #include <linux/lp.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <sys/ioctl.h>
 #include <sys/io.h>
-#include <unistd.h>
 
 #include "config-srcpd.h"
 #include "srcp-fb.h"
@@ -361,3 +353,14 @@ void *thr_sendrec_dummy(void *v)
   while(1)
     sleep(1);
 }
+/*---------------------------------------------------------------------------
+ * End of Linux Code
+ *---------------------------------------------------------------------------*/
+#else
+/*
+ * MAM 01/05/03 nur Dummyroutinen einbauen, wenn kein Linux vorhanden ist
+ */
+
+#warning Dieser Treiber ist nur auf LINUX Systemen einsetzbar
+
+#endif

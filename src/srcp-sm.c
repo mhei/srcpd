@@ -15,10 +15,7 @@
  *                                                                         *
  ***************************************************************************/
 
-#include <pthread.h>
-#include <stdio.h>
-#include <syslog.h>
-#include <unistd.h>
+#include "stdincludes.h"
 
 #include "config-srcpd.h"
 #include "srcp-error.h"

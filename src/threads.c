@@ -6,24 +6,7 @@
  *
  */
 
-
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <unistd.h>
-#include <termios.h>
-#include <fcntl.h>
-#include <signal.h>
-
-#include <grp.h>
-#include <pwd.h>
-#include <sys/types.h>
-#include <errno.h>
+#include "stdincludes.h"
 
 #include "threads.h"
 #include "config-srcpd.h"

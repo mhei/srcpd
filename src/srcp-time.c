@@ -4,10 +4,7 @@
  * Version 2, 1991. (c) Matthias Trute, 2000-2001.
  *
  */
-
-
-#include <unistd.h>
-#include <stdio.h>
+#include "stdincludes.h"
 
 #include "srcp-time.h"
 #include "srcp-error.h"
