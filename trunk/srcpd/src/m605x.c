@@ -146,11 +146,13 @@ static int init_lineM6051(int bus) {
   cfmakeraw(&interface);
 #endif
   tcsetattr(FD, TCSAFLUSH|TCSANOW, &interface);
+   DBG(bus, DBG_INFO, "Opening 605x succeeded FD=%d", FD);
   return FD;
 }
 
 int init_bus_M6051(int bus) {
-  DBG(bus, DBG_INFO," M605x  init: debug %d", bus, busses[bus].debuglevel);
+
+  DBG(bus, DBG_INFO," M605x  init: debug %d", busses[bus].debuglevel);
   if(busses[bus].debuglevel<=DBG_DEBUG)
   {
     busses[bus].fd = init_lineM6051(bus);
@@ -187,6 +189,7 @@ void* thr_sendrec_M6051(void *v)
   akt_S88 = 1;
   busses[bus].watchdog = 1;
 
+  DBG(bus, DBG_INFO, "M605x on bus %d thread started, fd=%d",  bus, busses[bus].fd);
   if (( (M6051_DATA *) busses[bus].driverdata)  -> cmd32_pending)
   {
     SendByte = 32;
