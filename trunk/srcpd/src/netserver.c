@@ -589,8 +589,10 @@ int doCmdClient(int Socket, int sessionid)
     rc = SRCP_UNKNOWNCOMMAND;
     reply[0] = 0x00;
 
-    if((bus >= 0) && (bus < MAX_BUSSES))
+    if((bus >= 0) && (bus <= num_busses))
     {
+      rc = SRCP_WRONGVALUE;
+
       if (strncasecmp(command, "SET", 3) == 0)
       {
         rc = handleSET(sessionid, bus, devicegroup, parameter, reply);
