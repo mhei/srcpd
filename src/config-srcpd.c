@@ -19,6 +19,7 @@
 #include "loopback.h"
 #include "ddl-s88.h"
 #include "hsi-88.h"
+#include "i2c-dev.h"
 
 /* Willkommensmeldung */
 const char *WELCOME_MSG = "srcpd V2 BETA; SRCP 0.8\n";
@@ -127,6 +128,16 @@ static int register_bus(xmlDocPtr doc, xmlNodePtr node)
      check_bus(busnumber);
      readconfig_HSI_88(doc, child, busnumber);
      found = 1;
+   }
+   if (strcmp(child->name, "i2c-dev") == 0)
+   {
+     check_bus(busnumber);
+#ifdef linux
+     readconfig_I2C_DEV(doc, child, busnumber);
+     found = 1;
+#else
+	printf("Sorry, I2C-DEV only available on Linux (yet)\n");
+#endif
    }
    /* some attributes are common for all (real) busses */
    if (strcmp(child->name, "device") == 0)
