@@ -48,11 +48,11 @@ int readByte(int bus, int wait, unsigned char *the_byte)
             strerror_r(errno, emsg, sizeof(emsg));
             DBG(bus, DBG_ERROR, "readbyte(): read status: %d with errno = %d: %s", i, errno, *emsg);
       }
-      if (i >= 0)
+      if (i > 0)
           DBG(bus, DBG_DEBUG, "readbyte(): byte read: 0x%02x", *the_byte);
     }
   }
-  return (i >= 0 ? 0 : -1);
+  return (i > 0 ? 0 : -1);
 }
 
 void writeByte(int bus, unsigned char b, unsigned long msecs)

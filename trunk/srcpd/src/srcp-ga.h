@@ -40,7 +40,7 @@ int startup_GA(void);
 int init_GA(int busnumber, int number);
 int get_number_ga(int busnumber);
 
-int queueGA(int busnumber, int addr, int port, int aktion, long activetime);
+int queueGA(int busnumber, int addr, int port, int action, long int activetime);
 int unqueueNextGA(int busnumber, struct _GASTATE *);
 int queue_GA_isempty(int busnumber);
 

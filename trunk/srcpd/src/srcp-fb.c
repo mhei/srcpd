@@ -293,13 +293,14 @@ void check_reset_fb(void)
       else
       {
         gettimeofday(&cmp_time, NULL);
-        DBG(i, DBG_DEBUG, "time: %ld.%ld      compare: %ld.%ld", 
-	cmp_time.tv_sec, cmp_time.tv_usec, 
-	reset_fb.timestamp.tv_sec, reset_fb.timestamp.tv_usec);
+        DBG(i, DBG_DEBUG, "FB %02i/%03i  time: %ld.%ld      compare: %ld.%ld",
+          i, reset_fb.port, cmp_time.tv_sec, cmp_time.tv_usec, 
+          reset_fb.timestamp.tv_sec, reset_fb.timestamp.tv_usec);
         diff_time.tv_sec  = cmp_time.tv_sec  - reset_fb.timestamp.tv_sec;
         diff_time.tv_usec = cmp_time.tv_usec - reset_fb.timestamp.tv_usec;
         diff_time.tv_usec += (diff_time.tv_sec * 1000000);
-        DBG(i, DBG_DEBUG, "time-diff = %ld us (need %d us)", diff_time.tv_usec, min_time[i]);
+        DBG(i, DBG_DEBUG, "FB %02i/%03i  time-diff = %ld us (need %d us)",
+          i, reset_fb.port, diff_time.tv_usec, min_time[i]);
         if (diff_time.tv_usec < min_time[i])
         {
           break;
@@ -310,7 +311,7 @@ void check_reset_fb(void)
           unqueueNextFB(i);
           pthread_mutex_lock(&queue_mutex_fb);
           fb[i].fbstate[reset_fb.port].state = 0;
-          fb[i].fbstate[reset_fb.port].timestamp = fb[i].fbstate[reset_fb.port].timestamp;
+//          fb[i].fbstate[reset_fb.port].timestamp = fb[i].fbstate[reset_fb.port].timestamp;
           fb[i].fbstate[reset_fb.port].change = 0;
           pthread_mutex_unlock(&queue_mutex_fb);
           queueInfoFB(i, reset_fb.port + 1);
