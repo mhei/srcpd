@@ -54,8 +54,8 @@ typedef struct _BUS {
     struct termios devicesettings; // Device Settings, if used
     pthread_t pid;   // PID of the thread
     void *thr_func;  // addr of the thread function
-    void (*init_func)(int); // addr of init function
-    void (*term_func)(int); // addr of init function
+    int (*init_func)(int); // addr of init function
+    int (*term_func)(int); // addr of init function
     int watchdog;    // used to monitor the thread
     int power_state;
     int power_changed;

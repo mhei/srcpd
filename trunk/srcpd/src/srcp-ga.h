@@ -32,10 +32,10 @@ extern volatile struct _GA nga[MAX_BUSSES][50];      // max. 50 Änderungen puffe
 extern volatile struct _GA oga[MAX_BUSSES][50];      // manuelle Änderungen
 extern volatile struct _GA tga[MAX_BUSSES][50];      // max. 50 Änderungen puffern, neue Werte sind aktiv, warten auf inaktiv
 
-void initGA(void);
+int initGA(void);
 int setGA(int bus, int addr, int port, int aktion, long activetime);
 int getGA(int bus, int addr, struct _GA *a);
-int infoGA(struct _GA a, char *msg);
+int infoGA(int bus, int addr, char *msg);
 int cmpGA(struct _GA a, struct _GA b);
 
 /* used internally */

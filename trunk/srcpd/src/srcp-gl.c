@@ -24,6 +24,7 @@
 #include <pthread.h>
 
 #include "config-srcpd.h"
+#include "srcp-error.h"
 #include "srcp-gl.h"
 
 /* aktueller Stand */
@@ -38,8 +39,8 @@ pthread_mutex_t writer_gl_mut[MAX_BUSSES]; // = PTHREAD_MUTEX_INITIALIZER;
 volatile struct _GL ogl[MAX_BUSSES][QUEUEGL_LEN];      // manuelle Änderungen
 
 /* Übernehme die neuen Angaben für die Lok, einige wenige Prüfungen */
-void setGL(int bus, int addr, int dir, int speed, int maxspeed, int f, 
-     int n_fkt, int f1, int f2, int f3, int f4)
+int setGL(int bus, int addr, int dir, int speed, int maxspeed, int f, 
+     int f1, int f2, int f3, int f4)
 {
   int i;
   struct timeval akt_time;
@@ -59,6 +60,7 @@ void setGL(int bus, int addr, int dir, int speed, int maxspeed, int f,
   writer_gl[bus]++;    /* der nächste bekommt die hier */
   if(writer_gl[bus]>=QUEUEGL_LEN) writer_gl[bus]=0;
   pthread_mutex_unlock(&writer_gl_mut[bus]);
+  return SRCP_OK;
 }
 
 int getGL(int bus, int addr, struct _GL *l)
@@ -66,24 +68,31 @@ int getGL(int bus, int addr, struct _GL *l)
   if((addr>0) && (addr <= busses[bus].number_gl))
   {
     *l = gl[bus][addr];
-    return 1;
+    return SRCP_OK;
   }
   else
   {
-    return 0;
+    return SRCP_NODATA;
   }
 }
 
-void infoGL(struct _GL gl, char* msg)
+int infoGL(int bus, int addr, char* msg)
 {
-  sprintf(msg, "GL %d %d %d %d %d %d %d %d %d %d\n",
-      gl.id, gl.direction, gl.speed, gl.maxspeed, 
-      (gl.flags & 0x10)?1:0, 
-      4, 
-      (gl.flags & 0x01)?1:0,
-      (gl.flags & 0x02)?1:0,
-      (gl.flags & 0x04)?1:0,
-      (gl.flags & 0x08)?1:0);
+  if((addr>0) && (addr <= busses[bus].number_gl))
+  {
+  sprintf(msg, "%d GL %d %d %d %d %d %d %d %d %d",
+      bus, addr, gl[bus][addr].direction, gl[bus][addr].speed, gl[bus][addr].maxspeed, 
+      (gl[bus][addr].flags & 0x10)?1:0, 
+      (gl[bus][addr].flags & 0x01)?1:0,
+      (gl[bus][addr].flags & 0x02)?1:0,
+      (gl[bus][addr].flags & 0x04)?1:0,
+      (gl[bus][addr].flags & 0x08)?1:0);
+  }
+  else
+  {
+    return SRCP_NODATA;
+  }
+  return SRCP_INFO;
 }
 
 int cmpGL(struct _GL a, struct _GL b)
@@ -96,7 +105,7 @@ int cmpGL(struct _GL a, struct _GL b)
       (a.flags     == b.flags));
 }
 
-void initGL()
+int initGL()
 {
   int bus, i;
   for(bus=0; bus<MAX_BUSSES; bus++) {
@@ -115,6 +124,7 @@ void initGL()
       ogl[bus][i].id = 0;
     }
   }
+  return SRCP_OK;
 }
 
 // es gibt Decoder für 14, 27, 28 und 128 FS

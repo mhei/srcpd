@@ -12,6 +12,7 @@
 #include <syslog.h>
 
 #include "config-srcpd.h"
+#include "srcp-error.h"
 
 #include "srcp-fb.h"
 #include "srcp-fb-s88.h"
@@ -46,16 +47,17 @@ void setFBmodule(int bus, int mod, int values) {
   }
 }
   
-void infoFB(int bus, int port, char *msg)
+int infoFB(int bus, int port, char *msg)
 {
   int state = getFB(bus, port);
   if(state>=0)
   {
-    sprintf(msg, "INFO FB %d %d %d\n", bus, port, state);
+    sprintf(msg, "%d FB %d %d", bus, port, state);
+    return SRCP_INFO;
   }
   else
   {
-    sprintf(msg, "INFO -2\n");
+    return SRCP_NODATA;
   }
 }
 

@@ -10,14 +10,17 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "srcp-power.h"
 #include "config-srcpd.h"
+#include "srcp-error.h"
 
-void setPower(int bus, int state, char *msg)
+#include "srcp-power.h"
+
+int setPower(int bus, int state, char *msg)
 {
   busses[bus].power_state = state;
   strcpy(busses[bus].power_msg, msg);
   busses[bus].power_changed = 1;
+  return SRCP_OK;
 }
 
 int getPower(int bus)
@@ -25,11 +28,13 @@ int getPower(int bus)
   return busses[bus].power_state;
 }
 
-void infoPower(int bus, char *msg)
+int infoPower(int bus, char *msg)
 {
-  sprintf(msg, "INFO POWER %s %s\n", busses[bus].power_state?"ON":"OFF", busses[bus].power_msg);
+  sprintf(msg, "%d POWER %s %s", bus, busses[bus].power_state?"ON":"OFF", busses[bus].power_msg);
+  return SRCP_INFO;
 }
 
-void initPower(int bus)
+int initPower(int bus)
 {
+    return SRCP_OK;
 }
