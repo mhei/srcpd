@@ -24,7 +24,7 @@
 #include "zimo.h"
 
 /* Willkommensmeldung */
-const char *WELCOME_MSG = "srcpd V2; SRCP 0.8.2\n";
+const char *WELCOME_MSG = "srcpd V2.0.6; SRCP 0.8.2\n";
 
 struct _BUS busses[MAX_BUSSES];
 int num_busses;

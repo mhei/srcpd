@@ -1,4 +1,4 @@
-Version 2.0 (Winter 2004 oder spaeter)
+Version 2.0 
 	- SRCP 0.8
 	- Konfiguration im XML Format
 	- Redesign: Framework mit Modulen
@@ -25,13 +25,3 @@ Version 1.0
         - hmm. vergessen....
 	
 Version 0.1	
-14.07.2001 Matthias Trute
-	- Option --enable-comport wieder entfernt,
-	  es ist die runtime Option restore_com_parms
-	  geworden.
-11.07.2001 Frank Schmischke
-        - Option --enable-comport in autoconf aufgenommem
-	  (schaltet das sichern und wiederherstellen des Comports ein/aus)
-10.07.2001 Frank Schmischke	
-	- erste Version des srcpd für die Interfaces M6050, M6051 und Intellibox
- 	- Befehlssatz entspricht SRCP 0.7.3
