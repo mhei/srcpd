@@ -163,7 +163,8 @@ int main(int argc, char **argv)
 
   /* Now we have to initialize all busses */
   for(i=1; i<=num_busses; i++) {
-      (*busses[i].init_func)(i);
+      if(busses[i].init_func)
+          (*busses[i].init_func)(i);
   }
   /* die Threads starten */
   error = pthread_create(&ttid_cmd, NULL, thr_handlePort, &cmds);
@@ -207,6 +208,7 @@ int main(int argc, char **argv)
       for(i=1; i<=num_busses;i++) {
         pthread_cancel(busses[i].pid);
       }
+      wait(0);
       break;
     }
     sleep(1);
@@ -215,7 +217,7 @@ int main(int argc, char **argv)
       if(busses[i].watchdog == 0 && (busses[i].flags && USE_WATCHDOG))  {
 	  syslog(LOG_INFO, "Oops: Interface Thread %d hangs, restarting it: (old pid: %d, %d)", i, busses[i].pid, busses[i].watchdog);
 	  pthread_cancel(busses[i].pid);
-	  sleep(1);
+	  waitpid(busses[i].pid, NULL, 0);
 	  error = pthread_create(&ttid_pid, NULL, busses[i].thr_func, (void *)i);
 	  if(error)
 	      {
