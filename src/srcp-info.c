@@ -14,6 +14,21 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
+ 
+/* 
+   Manages the INFO SESSIONs. Every Hardwaredriver must call (directly or
+   via set<devicegroup> functions the queueInfoMessage. This function will
+   copy the preformatted string into internal buffer (allocated) and sets
+   the current writer position (variable in). To avoid confusion, a semaphore
+   protects this process.
+   
+   On the other end of the pipe are numerous threads running waiting for
+   new data. Each and every of these threads maintains its own readerposition
+   (parameter current) to unqueue the recently added messages.
+   
+   When a new INFO sessions starts, it will send all status data and after that
+   will enter the reader cycle.
+ */
 #include "stdincludes.h"
 
 #include "srcp-gl.h"
@@ -30,7 +45,6 @@
 
 #define QUEUELENGTH_INFO 1000
 
-/* Kommandoqueues pro Bus */
 static char *info_queue[QUEUELENGTH_INFO];
 static pthread_mutex_t queue_mutex_info;
 
@@ -40,15 +54,15 @@ static int  in=0;
 int queueInfoMessage(char *msg) {
     int index;
     pthread_mutex_lock(&queue_mutex_info);
-    index = in;
+    /* Queue macht Kopien der Werte */
+    free(info_queue[in]);
+    info_queue[in]=calloc(strlen(msg)+1, 1);
+    strcpy(info_queue[in], msg);
+    /* now increase the in value, the readers may see new data! */
     in++;
     if (in == QUEUELENGTH_INFO)
       in = 0;
     pthread_mutex_unlock(&queue_mutex_info);
-    /* Queue macht Kopien der Werte */
-    free(info_queue[index]);
-    info_queue[index]=calloc(strlen(msg)+1, 1);
-    strcpy(info_queue[index], msg);
   return SRCP_OK;
 }
 
