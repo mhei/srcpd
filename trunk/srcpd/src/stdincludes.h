@@ -84,6 +84,10 @@
 #warning Your system does not have password support
 #endif
 
+#ifdef HAVE_ERRNO_H
+#include <errno.h>
+#endif
+
 #include <sys/time.h>
 #include <sys/wait.h>
 
