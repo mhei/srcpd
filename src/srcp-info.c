@@ -257,6 +257,12 @@ int doInfoClient(int Socket, int sessionid)
       {
         if(isInitializedGL(busnumber, i))
         {
+            describeGL(busnumber, i, reply);
+            if (strlen(reply) > 0) {
+              write(Socket, reply, strlen(reply));
+            }
+            reply[0] = '\0';
+
             infoGL(busnumber, i, reply);
             if (strlen(reply) > 0) {
               write(Socket, reply, strlen(reply));
@@ -273,6 +279,12 @@ int doInfoClient(int Socket, int sessionid)
       {
         if(isInitializedGA(busnumber, i))
         {
+            describeGA(busnumber, i, reply);
+            if (strlen(reply) > 0) {
+              write(Socket, reply, strlen(reply));
+            }
+            reply[0] = '\0';
+
           infoGA(busnumber, i, 0, reply);
           if (strlen(reply) > 0)
             write(Socket, reply, strlen(reply));

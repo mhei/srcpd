@@ -219,6 +219,7 @@ int initGL(int busnumber, int addr, const char *protocol, int protoversion, int 
     return SRCP_UNSUPPORTEDDEVICEGROUP;
   if((addr>0) && (addr <= number_gl))
   {
+    gettimeofday(&gl[busnumber].glstate[addr].inittime, NULL);
     gl[busnumber].glstate[addr].n_fs=n_fs;
     gl[busnumber].glstate[addr].n_func=n_func;
     gl[busnumber].glstate[addr].protocolversion=protoversion;
@@ -234,7 +235,8 @@ int describeGL(int busnumber, int addr, char *msg)
   if(number_gl <= 0)
     return SRCP_UNSUPPORTEDDEVICEGROUP;
   if((addr>0) && (addr <= number_gl) && (gl[busnumber].glstate[addr].protocolversion>0) ) {
-    sprintf(msg, "%d GL %d %s %d %d %d ",
+    sprintf(msg, "%lu.%lu 101 INIT %d GL %d %s %d %d %d\n",
+      gl[busnumber].glstate[addr].inittime.tv_sec, gl[busnumber].glstate[addr].inittime.tv_usec/1000,
       busnumber, addr, gl[busnumber].glstate[addr].protocol, gl[busnumber].glstate[addr].protocolversion,
       gl[busnumber].glstate[addr].n_func,gl[busnumber].glstate[addr].n_fs);
   }
