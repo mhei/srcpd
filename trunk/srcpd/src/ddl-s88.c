@@ -68,7 +68,7 @@
 #define S88_WRITE(x) for (i=0;i<S88CLOCK_SCALE;i++) outb(x,S88PORT)
 
 // possible io-addresses for the parallel port
-const unsigned long LPT_BASE[] = { 0x3BC, 0x378, 0x278 };
+const unsigned long LPT_BASE[] = { 0x378, 0x278, 0x3BC };
 // number of possible parallel ports
 const unsigned int LPT_NUM = 3;
 // values of the bits in a byte
@@ -199,7 +199,13 @@ int init_bus_S88(int busnumber)
   int isin = 0;    // reminder for checking
   int S88PORT = __ddl_s88->port;
   int S88CLOCK_SCALE = __ddl_s88->clockscale;
+#ifdef linux
   DBG(busnumber, DBG_INFO, "init_bus DDL(Linux) S88%d", busnumber);
+#else
+#ifdef __FreeBSD__
+  DBG(busnumber, DBG_INFO, "init_bus DDL(FreeBSD) S88%d", busnumber);
+#endif
+#endif
   // is the port disabled from user, everything is fine
   if (!S88PORT)
   {
@@ -426,29 +432,63 @@ int FBSD_ioperm(int Port,int KeineAhnung, int DesiredAccess,int busnumber)
 
 unsigned char FBSD_inb(int Woher,int busnumber)
 {
-	// Da "Woher" immer die gleiche Adresse ist, koennen wir es uns
-	// einfach machen. Ansonsten muesste man die Ioctls anpassen
-	unsigned char i=0;
+	// Aufpassen! Manchmal wird das Datenport, manchmal die Steuer
+	// leitungen angesprochen !
 
+	unsigned char i=0;
+	int	WelchesPort;
+	int	WelcherIoctl;
+
+  DBG(busnumber, DBG_INFO,  "FBSD DDL-S88 InB start on port %04X",Woher);
 	if (__ddl_s88->Fd == -1)
 	{
     	   DBG(busnumber, DBG_ERROR,  "FBSD DDL-S88 Device not open for reading");
 		return -1;
 	}
-	ioctl(__ddl_s88->Fd,PPIGDATA,&i);
+
+	WelchesPort=Woher - __ddl_s88->port;
+
+	switch (WelchesPort) 
+	{
+		case 0:	WelcherIoctl=PPIGDATA; break;
+		case 1:	WelcherIoctl=PPIGSTATUS; break;
+		case 2: WelcherIoctl=PPIGCTRL; break;
+		default:
+			DBG(busnumber,DBG_FATAL,"FBSD DDL-S88 Lesezugriff auf Port %04X angefordert, nicht umsetzbar!",Woher);
+			return 0;
+	}
+	ioctl(__ddl_s88->Fd,WelcherIoctl,&i);
+  DBG(busnumber, DBG_INFO,  "FBSD DDL-S88 InB finished Data %02X",i);
 	return i;
 }
 
 unsigned char FBSD_outb(unsigned char Data, int Wohin,int busnumber)
 {
-	// ebenfalls simpel, denn Wohin ist auch konstant (Finger kreuz!) :-)
-	if (__ddl_s88->Fd == -1)
+	// suchen wir uns den richtigen ioctl zur richtigen Adresse...
+
+	int	WelchesPort;
+	int	WelcherIoctl;
+
+  DBG(busnumber, DBG_INFO,  "FBSD DDL-S88 OutB %d on Port %04X",Data,Wohin);
+		if (__ddl_s88->Fd == -1)
 	{
     	   DBG(busnumber, DBG_ERROR,  "FBSD DDL-S88 Device not open for writing Byte %d",Data);
 		return -1;
 	}
 	
-	ioctl(__ddl_s88->Fd,PPISDATA,&Data);
+	WelchesPort= Wohin - __ddl_s88->port;
+
+	switch (WelchesPort) 
+	{
+		case 0:	WelcherIoctl=PPISDATA; break;
+		case 1:	WelcherIoctl=PPISSTATUS; break;
+		case 2: WelcherIoctl=PPISCTRL; break;
+		default:
+			DBG(busnumber,DBG_FATAL,"FBSD DDL-S88 Schreibzugriff auf Port %04X angefordert, nicht umsetzbar!",Wohin);
+			return 0;
+	}
+	ioctl(__ddl_s88->Fd,WelcherIoctl,&Data);
+  DBG(busnumber, DBG_INFO,  "FBSD DDL-S88 OutB finished");
 	return Data;
 }
 
