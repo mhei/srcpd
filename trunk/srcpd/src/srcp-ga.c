@@ -260,7 +260,7 @@ void unlock_ga_bysessionid(long int sessionid)
 {
   int i,j;
   int number;
-  syslog(LOG_INFO, "unlock GA by session-ID %d", sessionid);
+  syslog(LOG_INFO, "unlock GA by session-ID %ld", sessionid);
   for(i=0; i<MAX_BUSSES; i++)
   {
     number = get_number_ga(i);
@@ -305,5 +305,5 @@ int init_GA(int bus, int number)
     for(i=0;i<number;i++)
       ga[bus].gastate[i].protocol = NULL;
   }
-  return SRCP_OK;
+  return 0;
 }

@@ -290,7 +290,7 @@ void unlock_gl_bysessionid(long int sessionid)
 {
   int i,j;
   int number;
-  syslog(LOG_INFO, "unlock GL by session-ID %d", sessionid);
+  syslog(LOG_INFO, "unlock GL by session-ID %ld", sessionid);
   for(i=0; i<MAX_BUSSES; i++)
   {
     number = get_number_gl(i);
@@ -337,5 +337,5 @@ int init_GL(int bus, int number)
       bzero(&gl[bus].glstate[i], sizeof(struct _GLSTATE));
     }
   }
-  return SRCP_OK;
+  return 0;
 }

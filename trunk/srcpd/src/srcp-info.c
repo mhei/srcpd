@@ -514,8 +514,7 @@ void *thr_doInfoClient(void *v)
         pthread_mutex_unlock(&queue_mutex_client);
       }
       else
-        usleep(100);
-
+        usleep(100000);
     }
   }
 }

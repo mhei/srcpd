@@ -66,6 +66,7 @@ static int init_line_IB(int);
 
 void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
+  syslog(LOG_INFO, "reading configuration for intellibox at bus %d", busnumber);
   xmlNodePtr child = node->children;
 
   busses[busnumber].type = SERVER_IB;
@@ -181,8 +182,8 @@ void* thr_sendrec_IB(void *v)
   int bus;
   int zaehler1, fb_zaehler1, fb_zaehler2;
 
-  syslog(LOG_INFO, "thr_sendrecintellibox is startet");
   bus = (int) v;
+  syslog(LOG_INFO, "thr_sendrecintellibox is startet as bus %i", bus);
 
   zaehler1 = 0;
   fb_zaehler1 = 0;
@@ -210,6 +211,7 @@ void* thr_sendrec_IB(void *v)
     send_command_gl(bus);
     send_command_ga(bus);
     check_status(bus);
+    usleep(50000);
   }      // Ende WHILE(1)
 }
 
@@ -484,16 +486,16 @@ void check_status(int bus)
   }
 }
 
-static int init_comport(int busnumber)
+static int init_comport(int busnumber, speed_t baud)
 {
   int status;
   int fd;
-  int baud=busses[busnumber].baud;
+//  int baud = busses[busnumber].baud;
   char *name = busses[busnumber].device;
   unsigned char rr;
   struct termios interface;
 
-  printf("try opening serial line %s for %i baud\n", name, (2400 * (1 << (baud-11))));
+  printf("try opening serial line %s for %i baud\n", name, (2400 * (1 << (baud - 11))));
   fd = open(name, O_RDWR);
   if (fd == -1)
   {
@@ -521,8 +523,9 @@ static int init_comport(int busnumber)
 
 static int init_line_IB(int busnumber)
 {
-  int fd, baud;
+  int fd;
   int status;
+  speed_t baud;
   unsigned int LSR;
   unsigned char rr;
   unsigned char byte2send;
@@ -580,15 +583,16 @@ static int init_line_IB(int busnumber)
   printf("BREAK sucessfully send\n");
 
   baud = B2400;
-  fd = init_comport(busnumber);
+  fd = init_comport(busnumber, baud);
   if(fd < 0)
   {
     printf("init comport fehlgeschlagen\n");
     return(-1);
   }
   busses[busnumber].fd = fd;
+  sleep(1);
   byte2send = 0xC4;
-  writeByte(busnumber, &byte2send,2);
+  writeByte(busnumber, &byte2send, 2000);
   status = readByte(busnumber, &rr);
   if(status == -1)
     return(1);
@@ -632,7 +636,7 @@ static int init_line_IB(int busnumber)
   close_comport(fd);
     
   baud = B38400;
-  fd = init_comport(busnumber);
+  fd = init_comport(busnumber, baud);
   if(fd < 0)
   {
     printf("init comport fehlgeschlagen\n");
@@ -640,7 +644,7 @@ static int init_line_IB(int busnumber)
   }
   busses[busnumber].fd = fd;
   byte2send = 0xC4;
-  writeByte(busnumber, &byte2send,2);
+  writeByte(busnumber, &byte2send,2000);
   status = readByte(busnumber, &rr);
   if(status == -1)
     return(1);
