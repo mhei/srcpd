@@ -31,6 +31,7 @@
 #define SERVER_LOOPBACK         5         // dummy driver, no real hardware
 #define SERVER_S88              6         // S88 am Parallelport
 #define SERVER_HSI_88	          7
+#define SERVER_I2C_DEV					8					// srcpd arbeitet als I2C-DEV-Server
 
 /* flags */
 #define USE_WATCHDOG          0x0001      // use watchdog
