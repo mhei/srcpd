@@ -130,7 +130,7 @@ static int init_lineHSI88(int busnumber, int modules_left, int modules_center, i
   sleep(1);
   byte2send = 0x0d;
   for(i=0;i<10;i++)
-    writeByte(busnumber, &byte2send, 500);
+    writeByte(busnumber, byte2send, 500);
 
   while(readByte(busnumber, 0, &rr) == 0)
   {
@@ -142,9 +142,9 @@ static int init_lineHSI88(int busnumber, int modules_left, int modules_center, i
   while(i)
   {
     byte2send = 't';
-    writeByte(busnumber, &byte2send, 0);
+    writeByte(busnumber, byte2send, 0);
     byte2send = 0x0d;
-    writeByte(busnumber, &byte2send, 200);
+    writeByte(busnumber, byte2send, 200);
     rr = 0;
     ctr = 0;
     status = readByte(busnumber, 0, &rr);
@@ -164,9 +164,9 @@ static int init_lineHSI88(int busnumber, int modules_left, int modules_center, i
   }
   // looking for version of HSI
   byte2send = 'v';
-  writeByte(busnumber, &byte2send, 0);
+  writeByte(busnumber, byte2send, 0);
   byte2send = 0x0d;
-  writeByte(busnumber, &byte2send, 500);
+  writeByte(busnumber, byte2send, 500);
 
   for(i=0;i<49;i++)
   {
@@ -184,19 +184,19 @@ static int init_lineHSI88(int busnumber, int modules_left, int modules_center, i
     // Modulbelegung initialisieren
     // up to "GO", non feedback-module
     byte2send = 's';
-    writeByte(busnumber, &byte2send, 0);
+    writeByte(busnumber, byte2send, 0);
     byte2send = 0;
-    writeByte(busnumber, &byte2send, 0);
-    writeByte(busnumber, &byte2send, 0);
-    writeByte(busnumber, &byte2send, 0);
+    writeByte(busnumber, byte2send, 0);
+    writeByte(busnumber, byte2send, 0);
+    writeByte(busnumber, byte2send, 0);
     byte2send = 0x0d;
-    writeByte(busnumber, &byte2send, 0);
+    writeByte(busnumber, byte2send, 0);
     byte2send = 0x0d;
-    writeByte(busnumber, &byte2send, 0);
+    writeByte(busnumber, byte2send, 0);
     byte2send = 0x0d;
-    writeByte(busnumber, &byte2send, 0);
+    writeByte(busnumber, byte2send, 0);
     byte2send = 0x0d;
-    writeByte(busnumber, &byte2send, 5);
+    writeByte(busnumber, byte2send, 5);
 
     rr = 0;
     readByte(busnumber, 0, &rr);    // read answer (three bytes)
@@ -299,7 +299,8 @@ void* thr_sendrec_HSI_88(void *v)
   zaehler1 = 0;
   fb_zaehler1 = 0;
   fb_zaehler2 = 1;
-
+  i = 0;
+  temp = 1;
   if (busses[busnumber].debuglevel <= DBG_DEBUG)
   {
     status = 1;
@@ -307,21 +308,21 @@ void* thr_sendrec_HSI_88(void *v)
     {
       // Modulbelegung initialisieren
       byte2send = 's';
-      writeByte(busnumber, &byte2send, 0);
+      writeByte(busnumber, byte2send, 0);
       byte2send = __hsi->number_fb[0];
-      writeByte(busnumber, &byte2send, 0);
+      writeByte(busnumber, byte2send, 0);
       byte2send = __hsi->number_fb[1];
-      writeByte(busnumber, &byte2send, 0);
+      writeByte(busnumber, byte2send, 0);
       byte2send = __hsi->number_fb[2];
-      writeByte(busnumber, &byte2send, 0);
+      writeByte(busnumber, byte2send, 0);
       byte2send = 0x0d;
-      writeByte(busnumber, &byte2send, 0);
+      writeByte(busnumber, byte2send, 0);
       byte2send = 0x0d;
-      writeByte(busnumber, &byte2send, 0);
+      writeByte(busnumber, byte2send, 0);
       byte2send = 0x0d;
-      writeByte(busnumber, &byte2send, 0);
+      writeByte(busnumber, byte2send, 0);
       byte2send = 0x0d;
-      writeByte(busnumber, &byte2send, 200);
+      writeByte(busnumber, byte2send, 200);
 
       rr = 0;
       readByte(busnumber, 0, &rr);           // read answer (three bytes)

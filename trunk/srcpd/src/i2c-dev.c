@@ -275,7 +275,7 @@ void *thr_sendrec_I2C_DEV(void *v)
 		i2c_val = (i2c_oldval & (255 - i2c_val));
 
 		// write it
-		writeByte(bus, &i2c_val, 0);
+		writeByte(bus, i2c_val, 0);
 		// wait
 		usleep(1000 * (unsigned long) gatmp.activetime);
 
@@ -296,7 +296,7 @@ void *thr_sendrec_I2C_DEV(void *v)
 
 		i2c_val = (i2c_oldval | i2c_val);
 
-		writeByte(bus, &i2c_val, 0);
+		writeByte(bus, i2c_val, 0);
 		usleep(1000 * (unsigned long) gatmp.activetime);
 
 	    }

@@ -20,6 +20,7 @@
 #include "ddl-s88.h"
 #include "hsi-88.h"
 #include "i2c-dev.h"
+#include "zimo.h"
 
 /* Willkommensmeldung */
 const char *WELCOME_MSG = "srcpd V2; SRCP 0.8.2\n";
@@ -118,6 +119,13 @@ static int register_bus(xmlDocPtr doc, xmlNodePtr node)
      }
    }
    /* but the most important are not ;=)  */
+   if (strcmp(child->name, "zimo") == 0)
+   {
+     check_bus(busnumber);
+     readconfig_zimo(doc, child, busnumber);
+     found = 1;
+   }
+
    if (strcmp(child->name, "m605x") == 0)
    {
      check_bus(busnumber);
@@ -170,8 +178,7 @@ static int register_bus(xmlDocPtr doc, xmlNodePtr node)
    if (strcmp(child->name, "device") == 0)
    {
      found = 1;
-     if (busses[busnumber].device != NULL)
-       free(busses[busnumber].device);
+     free(busses[busnumber].device);
      busses[busnumber].device = malloc(strlen(txt) + 1);
      if (busses[busnumber].device == NULL)
      {
@@ -285,22 +292,18 @@ void DBG(int busnumber, int dbglevel, const char *fmt, ...)
 {
   va_list parm;
   va_start(parm, fmt);
-   /* need some more checks, may segfault! */
    if (dbglevel <= busses[busnumber].debuglevel) {
-	if (busses[busnumber].debuglevel>DBG_WARN)
-	{
-	    fprintf(stderr,"[bus %d] ",busnumber);
-	    vfprintf(stderr,fmt,parm);
-	    if (strchr(fmt,'\n')==NULL) fprintf(stderr,"\n");
-	}
-	else
-	{
-            char *msg;
-            msg = (char *)malloc (sizeof(char) * (strlen(fmt) + 10));
+          char *msg;
+          msg = (char *)malloc (sizeof(char) * (strlen(fmt) + 10));
 	    if (msg == NULL) return; // MAM: Wat solls? Ist eh am Ende
 	    sprintf (msg, "[bus %d] %s", busnumber, fmt);
-            vsyslog(LOG_INFO, msg, parm);
-            free (msg);
+          vsyslog(LOG_INFO, msg, parm);
+          free (msg);
+
+         if (busses[busnumber].debuglevel>DBG_WARN) {
+  	    fprintf(stderr,"[bus %d] ",busnumber);
+	    vfprintf(stderr,fmt,parm);
+	    if (strchr(fmt,'\n')==NULL) fprintf(stderr,"\n");
 	}
     }
 }

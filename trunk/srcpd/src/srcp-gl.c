@@ -48,13 +48,13 @@ static int initGL_default(int busnumber, int addr)
   switch (busses[busnumber].type)
   {
     case SERVER_M605X:
-        initGL(busnumber, addr, "M", 1, 14, 1);
+        initGL(busnumber, addr, 'M', 1, 14, 1);
         break;
     case SERVER_IB:
-        initGL(busnumber, addr, "P", 1, 126, 5);
+        initGL(busnumber, addr, 'P', 1, 126, 5);
         break;
     case SERVER_LOOPBACK:
-        initGL(busnumber, addr, "P", 1, 100, 5);
+        initGL(busnumber, addr, 'P', 1, 100, 5);
         break;
     }
     return SRCP_OK;
@@ -103,7 +103,7 @@ int queueGL(int busnumber, int addr, int dir, int speed, int maxspeed, int f,  i
     }
 
     pthread_mutex_lock(&queue_mutex[busnumber]);
-
+    // Protokollbezeichner und sonstige INIT Werte in die Queue kopieren!
     queue[busnumber][in[busnumber]].speed     = calcspeed(speed, maxspeed, gl[busnumber].glstate[addr].n_fs);
     queue[busnumber][in[busnumber]].direction = dir;
     queue[busnumber][in[busnumber]].funcs     = f1 + (f2 << 1) + (f3 << 2) + (f4 << 3) + (f << 4);
@@ -207,7 +207,7 @@ int setGL(int busnumber, int addr, struct _GLSTATE l)
   }
 }
 
-int initGL(int busnumber, int addr, const char *protocol, int protoversion, int n_fs, int n_func)
+int initGL(int busnumber, int addr, const char protocol, int protoversion, int n_fs, int n_func)
 {
   int number_gl = get_number_gl(busnumber);
   if(number_gl <= 0)
@@ -220,7 +220,7 @@ int initGL(int busnumber, int addr, const char *protocol, int protoversion, int 
     gl[busnumber].glstate[addr].n_fs=n_fs;
     gl[busnumber].glstate[addr].n_func=n_func;
     gl[busnumber].glstate[addr].protocolversion=protoversion;
-    strncpy(gl[busnumber].glstate[addr].protocol, protocol, sizeof(gl[busnumber].glstate[addr].protocol));
+    gl[busnumber].glstate[addr].protocol=protocol;
     describeGL(busnumber, addr, msg);
     queueInfoMessage(msg);
     return SRCP_OK;
@@ -234,7 +234,7 @@ int describeGL(int busnumber, int addr, char *msg)
   if(number_gl <= 0)
     return SRCP_UNSUPPORTEDDEVICEGROUP;
   if((addr>0) && (addr <= number_gl) && (gl[busnumber].glstate[addr].protocolversion>0) ) {
-    sprintf(msg, "%lu.%.3lu 101 INFO %d GL %d %s %d %d %d\n",
+    sprintf(msg, "%lu.%.3lu 101 INFO %d GL %d %c %d %d %d\n",
       gl[busnumber].glstate[addr].inittime.tv_sec, gl[busnumber].glstate[addr].inittime.tv_usec/1000,
       busnumber, addr, gl[busnumber].glstate[addr].protocol, gl[busnumber].glstate[addr].protocolversion,
       gl[busnumber].glstate[addr].n_func,gl[busnumber].glstate[addr].n_fs);
@@ -351,7 +351,7 @@ void unlock_gl_bytime(void)
   for(i=0; i<=num_busses; i++)
   {
     number = get_number_gl(i);
-    DBG(i, DBG_DEBUG, "number of gl for busnumber %d is %d", i, number);
+    DBG(0, DBG_DEBUG, "number of gl for busnumber %d is %d", i, number);
     for(j=1;j<number; j++)
     {
       if(gl[i].glstate[j].lockduration>0 && gl[i].glstate[j].lockduration -- == 1)

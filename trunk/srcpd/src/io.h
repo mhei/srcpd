@@ -21,8 +21,9 @@
 #include <config.h>
 #endif
 
-int  readByte(int FD, int wait, unsigned char *the_byte);
-void writeByte(int FD, unsigned char *the_byte, unsigned long msec);
+int  readByte(int bus, int wait, unsigned char *the_byte);
+void writeByte(int bus, unsigned char the_byte, unsigned long msec);
+void writeString(int bus, unsigned char *the_string, unsigned long msecs);
 
 void restore_comport(int bus);
 void save_comport(int bus);

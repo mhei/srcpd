@@ -413,7 +413,7 @@ handleWAIT(int sessionid, int bus, char *device, char *parameter,
 
     }
     if (bus_has_devicegroup(bus, DG_TIME) && strncasecmp(device, "TIME", 4) == 0) {
-	unsigned long d, h, m, s;
+      long d, h, m, s;
       int nelem;
 	nelem=sscanf(parameter, "%ld %ld %ld %ld", &d, &h, &m, &s);
       if(vtime.ratio_x !=0 && vtime.ratio_y != 0) {
@@ -487,8 +487,8 @@ handleINIT(int sessionid, int bus, char *device, char *parameter,
     int rc = SRCP_UNSUPPORTEDDEVICEGROUP;
     if (bus_has_devicegroup(bus, DG_GL) && strncasecmp(device, "GL", 2) == 0) {
 	long addr, protversion, n_fs, n_func, nelem;
-	char prot[10];
-	nelem = sscanf(parameter, "%ld %s %ld %ld %ld", &addr, prot,
+	char prot;
+	nelem = sscanf(parameter, "%ld %c %ld %ld %ld", &addr, &prot,
 		   &protversion, &n_fs, &n_func);
 	if (nelem >= 5)
 	    rc = initGL(bus, addr, prot, protversion, n_fs, n_func);
@@ -498,10 +498,10 @@ handleINIT(int sessionid, int bus, char *device, char *parameter,
 
     if (bus_has_devicegroup(bus, DG_GA) && strncasecmp(device, "GA", 2) == 0) {
 	long addr, nelem;
-	char prot[10];
+	char prot[5];
 	nelem = sscanf(parameter, "%ld %s", &addr, prot);
 	if (nelem >= 2)
-	    rc = initGA(bus, addr, prot);
+	    rc = initGA(bus, addr, prot[0]);
 	else
 	    rc = SRCP_LISTTOOSHORT;
     }
@@ -578,32 +578,26 @@ int doCmdClient(int Socket, int sessionid)
 	if (nelem < 3)
 	    rc = SRCP_LISTTOOSHORT;
 	if ((nelem >= 3) && (bus >= 0) && (bus <= num_busses)) {
-	    int found=0;
 	    rc = SRCP_WRONGVALUE;
 	    if (strncasecmp(command, "SET", 3) == 0) {
 		rc = handleSET(sessionid, bus, devicegroup, parameter,
 			       reply);
-		found++;
 	    }
 	    if (strncasecmp(command, "GET", 3) == 0) {
 		rc = handleGET(sessionid, bus, devicegroup, parameter,
 			       reply);
-		found++;
 	    }
 	    if (strncasecmp(command, "WAIT", 4) == 0) {
 		rc = handleWAIT(sessionid, bus, devicegroup, parameter,
 				reply);
-		found++;
 	    }
 	    if (strncasecmp(command, "INIT", 4) == 0) {
 		rc = handleINIT(sessionid, bus, devicegroup, parameter,
 				reply);
-		found++;
 	    }
 	    if (strncasecmp(command, "TERM", 4) == 0) {
 		rc = handleTERM(sessionid, bus, devicegroup, parameter,
 				reply);
-		found++;
 		if (rc < 0)
 		    break;
 		rc = abs(rc);
@@ -611,16 +605,10 @@ int doCmdClient(int Socket, int sessionid)
 	    if (strncasecmp(command, "VERIFY", 6) == 0) {
 		rc = handleVERIFY(sessionid, bus, devicegroup, parameter,
 				  reply);
-		found++;
 	    }
 	    if (strncasecmp(command, "RESET", 5) == 0) {
 		rc = handleRESET(sessionid, bus, devicegroup, parameter,
 				 reply);
-		found++;
-	    }
-	    if (found==0) { /* MAM 02/26/03 */
-		    gettimeofday(&akt_time, NULL);
-		    srcp_fmt_msg(SRCP_UNKNOWNCOMMAND, reply, akt_time);
 	    }
 	} else {
 	    gettimeofday(&akt_time, NULL);

@@ -33,64 +33,48 @@ int readByte(int bus, int wait, unsigned char *the_byte)
   else
   {
     status = ioctl(busses[bus].fd, FIONREAD, &i);
-    if(status < 0)
-      DBG(bus, DBG_ERROR, "IOCTL   status: %d with errno = %d", status, errno);
-
+    if(status < 0) {
+      char msg[200];
+      strerror_r(errno, msg, sizeof(msg));
+      DBG(bus, DBG_ERROR, "IOCTL   status: %d with errno = %d: %s", status, errno, msg);
+    }
+    DBG(bus, DBG_DEBUG, "(fd = %d), there are %d bytes to read.", busses[bus].fd, i);
     // read only, if there is really an input
     if ((i > 0) || (wait == 1))
     {
-      DBG(bus, DBG_DEBUG, "on bus %d (fd = %d), there are %d bytes to read.", bus, busses[bus].fd, i);
       i = read(busses[bus].fd, the_byte, 1);
-      if(i < 0)
-        DBG(bus, DBG_ERROR, "READ    status: %d with errno = %d", i, errno);
-      if (i > 0)
-          DBG(bus, DBG_DEBUG, "bus %d byte read: 0x%02x", bus, *the_byte);
+      if(i < 0) {
+            char emsg[200];
+            strerror_r(errno, emsg, sizeof(emsg));
+            DBG(bus, DBG_ERROR, "READ    status: %d with errno = %d: %s", i, errno, emsg);
       }
+      if (i > 0)
+          DBG(bus, DBG_DEBUG, "byte read: 0x%02x", bus, *the_byte);
+    }
   }
   return (i > 0 ? 0 : -1);
 }
 
-void writeByte(int bus, unsigned char *b, unsigned long msecs)
+void writeByte(int bus, unsigned char b, unsigned long msecs)
 {
+  int i=0;
+  char byte=b;
   if(busses[bus].debuglevel <= DBG_DEBUG)
   {
-#ifdef __FreeBSD__
-	if (busses[bus].type == SERVER_M605X && busses[bus].flags & USE_WATCHDOG)
-	{
-		// gucken, ob RTS&CTS an sind, wenn nicht, schlafen legen
-		int State;
-		int ok=0;
-		int SleepTime=0;
-
-		do
-		{
-			ioctl(busses[bus].fd,TIOCMGET,&State);
-			if ( (State & TIOCM_RTS)== 0 || (State & TIOCM_CTS) == 0)
-			{
-				if (SleepTime==5) DBG(bus,DBG_ERROR,"bus %d output staled for more than five seconds. Assuming interface went down.",bus);
-				busses[bus].watchdog++; // calm down watchdog
-				SleepTime++;
-				sleep(1);
-			}
-			else ok=1;
-		} while (ok == 0);
-		//
-		// wenn wir laenger als 10s warten mussten, dann stimmt was
-		// nicht mit der Anlage. Lassen wir den watchdog unseren
-		// Thread neu starten und kommen so wieder in einen
-		// sauberen Status
-		if (SleepTime > 10 )
-		{
-			DBG(bus,DBG_INFO,"bus %d write was blocked for %d seconds. Thread will terminate and restart soon",bus,SleepTime);
-			while(1) { sleep(10); }
-		}
-	}
-#endif
-    write(busses[bus].fd, b, 1);
+    i = write(busses[bus].fd, &byte, 1);
     tcdrain(busses[bus].fd);
   }
-  DBG(bus, DBG_DEBUG, "bus %d (FD: %d) byte sent: 0x%02x", bus, busses[bus].fd, *b);
+  DBG(bus, DBG_DEBUG, "(FD: %d) %i byte sent: 0x%02x",  busses[bus].fd, i, b);
   usleep(msecs * 1000);
+}
+
+void writeString(int bus, unsigned char *s, unsigned long msecs)
+{
+  int l = strlen(s);
+  int i;
+  for(i=0; i<l;i++) {
+    writeByte(bus, s[i], msecs);
+  }
 }
 
 void save_comport(int businfo)
