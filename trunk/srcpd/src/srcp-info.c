@@ -31,20 +31,13 @@
 #define QUEUELENGTH_INFO 1000
 
 /* Kommandoqueues pro Bus */
-static char info_queue[QUEUELENGTH_INFO][200];   // info queue.
+static char info_queue[QUEUELENGTH_INFO][256];   // info queue.
 static pthread_mutex_t queue_mutex_info;
-static pthread_mutex_t queue_mutex_client;
+
 static int  in=0;
 
-static int number_of_clients = 0;               // number of registerated clients
-static int max_clients = 0;                     // number of clients, that can hold in field
-
-
-// take changes from server
-// we need changes only, if there is a receiver for our info-messages
-
 /* queue a pre-formatted message */
-int queueMessage(char *msg) {
+int queueInfoMessage(char *msg) {
     pthread_mutex_lock(&queue_mutex_info);
     sprintf(info_queue[in], "%s", msg);
     in++;
@@ -54,122 +47,6 @@ int queueMessage(char *msg) {
   return SRCP_OK;
 }
 
-int queueInfoGL(int busnumber, int addr)
-{
-    pthread_mutex_lock(&queue_mutex_info);
-    infoGL(busnumber, addr, info_queue[in]);
-    in++;
-    if (in == QUEUELENGTH_INFO)
-      in = 0;
-    pthread_mutex_unlock(&queue_mutex_info);
-  return SRCP_OK;
-}
-
-int queueInfoGA(int busnumber, int addr, int port)
-{
-    pthread_mutex_lock(&queue_mutex_info);
-    infoGA(busnumber, addr, port, info_queue[in]);
-    in++;
-    if (in == QUEUELENGTH_INFO)
-      in = 0;
-
-    pthread_mutex_unlock(&queue_mutex_info);
-  return SRCP_OK;
-}
-
-int queueInfoFB(int busnumber, int port)
-{
-    pthread_mutex_lock(&queue_mutex_info);
-    infoFB(busnumber, port, info_queue[in]);
-    in++;
-    if (in == QUEUELENGTH_INFO)
-      in = 0;
-
-    pthread_mutex_unlock(&queue_mutex_info);
-  return SRCP_OK;
-}
-
-int queueInfoSM(int busnumber, int addr, int type, int typeaddr, int bit, int value, int return_code, struct timeval *akt_time)
-{
-    char buffer[1000];
-    char tmp[100];
-
-    pthread_mutex_lock(&queue_mutex_info);
-
-    if (return_code == 0)
-    {
-      sprintf(buffer, "%ld.%ld 100 INFO %d SM %d",
-        akt_time->tv_sec, akt_time->tv_usec/1000,
-        busnumber, addr);
-      switch (type)
-      {
-        case REGISTER:
-          sprintf(tmp, "REG %d %d", typeaddr, value);
-          break;
-        case CV:
-          sprintf(tmp, "CV %d %d", typeaddr, value);
-          break;
-        case CV_BIT:
-          sprintf(tmp, "CVBIT %d %d %d", typeaddr, bit, value);
-          break;
-      }
-    }
-    else
-    {
-      sprintf(buffer, "%ld.%ld 600 ERROR %d SM %d",
-        akt_time->tv_sec, akt_time->tv_usec/1000,
-        busnumber, addr);
-      switch (return_code)
-      {
-        case 0xF2:
-          sprintf(tmp, "Cannot terminate task ");
-          break;
-        case 0xF3:
-          sprintf(tmp, "No task to terminate");
-          break;
-        case 0xF4:
-          sprintf(tmp, "Task terminated");
-          break;
-        case 0xF6:
-          sprintf(tmp, "XPT_DCCQD: Not Ok (direkt bit read mode is (probably) not supported)");
-          break;
-        case 0xF7:
-          sprintf(tmp, "XPT_DCCQD: Ok (direkt bit read mode is (probably) supported)");
-          break;
-        case 0xF8:
-          sprintf(tmp, "Error during Selectrix read");
-          break;
-        case 0xF9:
-          sprintf(tmp, "No acknowledge to paged operation (paged r/w not supported?)");
-          break;
-        case 0xFA:
-          sprintf(tmp, "Error during DCC direct bit mode operation");
-          break;
-        case 0xFB:
-          sprintf(tmp, "Generic Error");
-          break;
-        case 0xFC:
-          sprintf(tmp, "No decoder detected");
-          break;
-        case 0xFD:
-          sprintf(tmp, "Short! (on the PT)");
-          break;
-        case 0xFE:
-          sprintf(tmp, "No acknowledge from decoder (but a write maybe was successful)");
-          break;
-        case 0xFF:
-          sprintf(tmp, "Timeout");
-          break;
-      }
-    }
-    sprintf(info_queue[in], "%s %s\n", buffer, tmp);
-    in++;
-    if (in == QUEUELENGTH_INFO)
-      in = 0;
-
-    pthread_mutex_unlock(&queue_mutex_info);
-  return SRCP_OK;
-}
 
 int queueIsEmptyInfo(int current)
 {
@@ -193,12 +70,7 @@ int unqueueNextInfo(int current, char *info)
 int startup_INFO(void)
 {
   pthread_mutex_init(&queue_mutex_info, NULL);
-  pthread_mutex_init(&queue_mutex_client, NULL);
-
-  number_of_clients = 0;
-  max_clients = 0;
   in = 0;
-
   return SRCP_OK;
 }
 
@@ -315,9 +187,12 @@ int doInfoClient(int Socket, int sessionid)
         }
       }
       DBG(0, DBG_DEBUG,  "all data to new Info-Client (%ld) sent", sessionid);
+      /* this is a racing condition: we should stop
+         queing new messages until we reach this this point, it
+         is possible to miss some data changed since we started this thread */
       current = in;
       while (1==1)   {
-        while(queueIsEmptyInfo(current)) usleep(1000);
+        while(queueIsEmptyInfo(current)) usleep(2000); // busy waiting, anyone with better code out there?
         current = unqueueNextInfo(current, reply);
         DBG(0, DBG_DEBUG, "reply-length = %d", strlen(reply));
         status = write(Socket, reply, strlen(reply));

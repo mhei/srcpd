@@ -37,7 +37,7 @@ int start_session(long int sessionid, int mode)
   DBG(0, DBG_INFO, "Session started; clientid %ld, mode %d", sessionid, mode);
   sprintf(msg, "%lu.%.3lu 101 INFO 0 SESSION %lu %s\n", akt_time.tv_sec, akt_time.tv_usec/1000, sessionid,
      (mode==1?"COMMAND":"INFO"));
-  queueMessage(msg);
+  queueInfoMessage(msg);
   return SRCP_OK;
 
   return SRCP_OK;
@@ -54,7 +54,7 @@ int stop_session(long int sessionid)
   unlock_ga_bysessionid(sessionid);
   unlock_gl_bysessionid(sessionid);
   sprintf(msg, "%lu.%.3lu 102 INFO 0 SESSION %lu\n", akt_time.tv_sec, akt_time.tv_usec/1000, sessionid);
-  queueMessage(msg);  
+  queueInfoMessage(msg);  
   return SRCP_OK;
 }
 

@@ -122,5 +122,5 @@ void server_shutdown()
   gettimeofday(&akt_time, NULL);  
   sprintf(msg, "%lu.%.3lu 100 INFO 0 SERVER TERMINATING\n", akt_time.tv_sec, akt_time.tv_usec/1000);
   server_shutdown_state = 1;
-  queueMessage(msg);
+  queueInfoMessage(msg);
 }

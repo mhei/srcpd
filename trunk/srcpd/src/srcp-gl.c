@@ -198,8 +198,11 @@ int setGL(int busnumber, int addr, struct _GLSTATE l, int info)
      gl[busnumber].glstate[addr].speed = l.speed;
      gl[busnumber].glstate[addr].funcs = l.funcs;
      gettimeofday(&gl[busnumber].glstate[addr].tv, NULL);
-     if (info == 1)
-      queueInfoGL(busnumber, addr);
+     if (info == 1) {
+       char msg[1000];
+       infoGL(busnumber, addr, msg);
+       queueInfoMessage(msg);
+     }
     return SRCP_OK;
   }
   else

@@ -28,6 +28,15 @@ static int out[MAX_BUSSES], in[MAX_BUSSES];
 
 
 /* internal functions */
+
+static int queueInfoFB(int busnumber, int port)
+{
+  char msg[1000];
+  infoFB(busnumber, port, msg);
+  queueInfoMessage(msg);
+  return SRCP_OK;
+}
+
 static int queueLengthFB(int busnumber)
   {
   if (in[busnumber] >= out[busnumber])

@@ -50,6 +50,82 @@ static int out[MAX_BUSSES], in[MAX_BUSSES];
 static int queue_len(int busnumber);
 static int queue_isfull(int busnumber);
 
+int queueInfoSM(int busnumber, int addr, int type, int typeaddr, int bit, int value, int return_code, struct timeval *akt_time)
+{
+    char buffer[1000], msg[1000];
+    char tmp[100];
+
+    if (return_code == 0)
+    {
+      sprintf(buffer, "%ld.%ld 100 INFO %d SM %d",
+        akt_time->tv_sec, akt_time->tv_usec/1000,
+        busnumber, addr);
+      switch (type)
+      {
+        case REGISTER:
+          sprintf(tmp, "REG %d %d", typeaddr, value);
+          break;
+        case CV:
+          sprintf(tmp, "CV %d %d", typeaddr, value);
+          break;
+        case CV_BIT:
+          sprintf(tmp, "CVBIT %d %d %d", typeaddr, bit, value);
+          break;
+      }
+    }
+    else
+    {
+      sprintf(buffer, "%ld.%ld 600 ERROR %d SM %d %d",
+        akt_time->tv_sec, akt_time->tv_usec/1000,
+        busnumber, addr, return_code);
+      switch (return_code)
+      {
+        case 0xF2:
+          sprintf(tmp, "Cannot terminate task ");
+          break;
+        case 0xF3:
+          sprintf(tmp, "No task to terminate");
+          break;
+        case 0xF4:
+          sprintf(tmp, "Task terminated");
+          break;
+        case 0xF6:
+          sprintf(tmp, "XPT_DCCQD: Not Ok (direkt bit read mode is (probably) not supported)");
+          break;
+        case 0xF7:
+          sprintf(tmp, "XPT_DCCQD: Ok (direkt bit read mode is (probably) supported)");
+          break;
+        case 0xF8:
+          sprintf(tmp, "Error during Selectrix read");
+          break;
+        case 0xF9:
+          sprintf(tmp, "No acknowledge to paged operation (paged r/w not supported?)");
+          break;
+        case 0xFA:
+          sprintf(tmp, "Error during DCC direct bit mode operation");
+          break;
+        case 0xFB:
+          sprintf(tmp, "Generic Error");
+          break;
+        case 0xFC:
+          sprintf(tmp, "No decoder detected");
+          break;
+        case 0xFD:
+          sprintf(tmp, "Short! (on the PT)");
+          break;
+        case 0xFE:
+          sprintf(tmp, "No acknowledge from decoder (but a write maybe was successful)");
+          break;
+        case 0xFF:
+          sprintf(tmp, "Timeout");
+          break;
+      }
+   }
+   sprintf(msg, "%s %s\n", buffer, tmp);
+   queueInfoMessage(msg);
+   return SRCP_OK;
+}
+
 
 int get_number_sm (int busnumber)
 {
