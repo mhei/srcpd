@@ -12,7 +12,7 @@
 
 #include <sys/time.h>
 
-#define MAXFBS 32
+#define MAXFBS 256
 
 typedef struct _FBSTATE
 {

@@ -19,16 +19,17 @@
 
 #include <libxml/tree.h>
 
-typedef struct _HSI_S88_DATA {
-    int number_fb[3];
-} HSI_S88_DATA;
+typedef struct _HSI_88_DATA
+{
+  int number_fb[3];
+  int refresh;
+  char v_text[50];
+} HSI_88_DATA;
 
-void readconfig_HSI_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber);
+void readconfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber);
 
-int init_bus_HSI_88(int);
-int term_bus_HSI_88(int );
-
-int init_lineHSI88(char*);
+int init_bus_HSI_88(int busnumber);
+int term_bus_HSI_88(int busnumber);
 void* thr_sendrec_HSI_88(void*);
 
 #endif

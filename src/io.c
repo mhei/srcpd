@@ -29,14 +29,15 @@
 #include "io.h"
 #include "config-srcpd.h"
 
-int
-readByte(int bus, unsigned char *the_byte)
+int readByte(int bus, unsigned char *the_byte)
 {
   int i;
 
   ioctl(busses[bus].fd, FIONREAD, &i);
-  syslog(LOG_INFO, "Bytes zu lesen: %d", i);
-  if(busses[bus].debuglevel > 0)
+  if(busses[bus].debuglevel > 5)
+    syslog(LOG_INFO, "on bus %d bytes to read: %d", bus, i);
+  // with debuglevel 7, we will not really work on hardware
+  if(busses[bus].debuglevel > 6)
   {  
     i = 1;
     *the_byte = 0;
@@ -46,32 +47,32 @@ readByte(int bus, unsigned char *the_byte)
     i = read(busses[bus].fd, the_byte, 1);
     if(i == 1)
     {
-      syslog(LOG_INFO, "Byte gelesen : 0x%02x", *the_byte);
+      if(busses[bus].debuglevel > 5)
+        syslog(LOG_INFO, "bus %d byte read: 0x%02x", bus, *the_byte);
     }
     else
     {
-      syslog(LOG_INFO, "kein Byte empfangen");
+      if(busses[bus].debuglevel > 5)
+        syslog(LOG_INFO, "no byte read");
     }
   }
   return (i == 1 ? 0 : -1);
 }
 
-void
-writeByte(int bus, unsigned char *b, unsigned long msecs)
+void writeByte(int bus, unsigned char *b, unsigned long msecs)
 {
   if(busses[bus].debuglevel == 0)
   {
     write(busses[bus].fd, b, 1);
     tcflush(busses[bus].fd, TCOFLUSH);
   } else {
-    if(busses[bus].debuglevel > 1)
-      syslog(LOG_INFO, "Byte geschrieben : 0x%02x", *b);
+    if(busses[bus].debuglevel > 5)
+      syslog(LOG_INFO, "bus %d bytes written : 0x%02x", bus, *b);
   }
   usleep(msecs * 1000);
 }
 
-void
-save_comport(int businfo)
+void save_comport(int businfo)
 {
   int fd;
 
@@ -87,8 +88,7 @@ save_comport(int businfo)
   }
 }
 
-void
-restore_comport(int bus)
+void restore_comport(int bus)
 {
   int fd;
 
@@ -107,8 +107,7 @@ restore_comport(int bus)
   }
 }
 
-void
-close_comport(int bus)
+void close_comport(int bus)
 {
   struct termios interface;
   syslog(LOG_INFO, "Closing serial line");

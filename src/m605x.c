@@ -68,28 +68,28 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, int busnumber)
             continue;
           }
 
-	if (strcmp(child->name, "maximum_address_for_feedback") == 0) {
+	if (strcmp(child->name, "number_fb") == 0) {
 	    char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
 	    ((M6051_DATA *) busses[busnumber].driverdata)->number_fb =
 		atoi(txt);
 	    free(txt);
 	}
 
-	if (strcmp(child->name, "maximum_address_for_locomotiv") == 0) {
+	if (strcmp(child->name, "number_gl") == 0) {
 	    char *txt =
 		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
 	    ((M6051_DATA *) busses[busnumber].driverdata)->number_gl =
 		atoi(txt);
 	    free(txt);
 	}
-	if (strcmp(child->name, "maximum_address_for_accessoire") == 0) {
+	if (strcmp(child->name, "number_ga") == 0) {
 	    char *txt =
 		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
 	    ((M6051_DATA *) busses[busnumber].driverdata)->number_ga =
 		atoi(txt);
 	    free(txt);
 	}
-	if (strcmp(child->name, "MODE_M6020") == 0) {
+	if (strcmp(child->name, "mode_m6020") == 0) {
 	    char *txt =
 		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
 	    if (strcmp(txt, "yes") == 0) {

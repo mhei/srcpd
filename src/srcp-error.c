@@ -10,8 +10,7 @@
 
 #include "srcp-error.h"
 
-int
-srcp_fmt_msg(int errorcode, char *msg)
+int srcp_fmt_msg(int errorcode, char *msg)
 {
   switch (errorcode)
   {

@@ -43,8 +43,7 @@ static int queue_len(int bus);
 static int queue_isfull(int bus);
 
 /* Übernehme die neuen Angaben für die Lok, einige wenige Prüfungen */
-int
-queueGL(int bus, int addr, int dir, int speed, int maxspeed, int f,  int f1, int f2, int f3, int f4)
+int queueGL(int bus, int addr, int dir, int speed, int maxspeed, int f,  int f1, int f2, int f3, int f4)
 {
   struct timeval akt_time;
   int number_gl;
@@ -108,8 +107,7 @@ int getNextGL(int bus, struct _GL *gl) {
 }
 
 /** liefert nächsten Eintrag oder -1, setzt fifo pointer neu! */
-int
-unqueueNextGL(int bus, struct _GL *gl)
+int unqueueNextGL(int bus, struct _GL *gl)
 {
   if (in[bus] == out[bus])
     return -1;
@@ -156,8 +154,7 @@ int getGL(int bus, int addr, struct _GL *l) {
 /**
 
 */
-int
-setGL(int bus, int addr, struct _GL l)
+int setGL(int bus, int addr, struct _GL l)
 {
   int number_gl = get_number_gl(bus);
   if(number_gl<0) return SRCP_UNSUPPORTEDDEVICEGROUP;

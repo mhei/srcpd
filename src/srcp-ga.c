@@ -183,7 +183,7 @@ setGA(int bus, int addr, struct _GA l)
   if((addr>0) && (addr <= number_ga))
   {
     ga[bus][addr] = l;
-    gettimeofday(&ga[bus][addr].tv, NULL);
+    gettimeofday((struct timeval*)&ga[bus][addr].tv, NULL);
     return SRCP_OK;
   }
   else

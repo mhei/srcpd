@@ -21,18 +21,16 @@
 /* one huge array of all possible feedbacks */
 /* not visible outside of this module       */
 static struct _FBSTATE _fbstate[MAX_BUSSES][MAXFBS];
-// 20 x 32 x 16 x 2 bytes = 20480 bytes.
+// 20 x 256 x 16 x 10 bytes = 819200 bytes.
 
-int
-getFB(int bus, int port)
+int getFB(int bus, int port)
 {
   int result;
   result = _fbstate[bus-1][port-1].state;
   return result;
 }
 
-void
-updateFB(int bus, int port, int value)
+void updateFB(int bus, int port, int value)
 {
   struct timezone dummy;
   if(_fbstate[bus-1][port-1].state != value)
@@ -43,8 +41,7 @@ updateFB(int bus, int port, int value)
   gettimeofday(& _fbstate[bus-1][port-1].timestamp, &dummy);
 }
 
-int
-setFBmodul(int bus, int mod, int values)
+int setFBmodul(int bus, int mod, int values)
 {
   int i;
   for(i=0; i<16;i++)
@@ -55,8 +52,7 @@ setFBmodul(int bus, int mod, int values)
   return SRCP_OK;
 }
   
-int
-infoFB(int bus, int port, char *msg)
+int infoFB(int bus, int port, char *msg)
 {
   int state = getFB(bus, port);
   if(state>=0)
@@ -73,6 +69,7 @@ infoFB(int bus, int port, char *msg)
 int describeFB(int bus, int addr, char *reply) {
     return SRCP_NOTSUPPORTED;
 }
+
 int
 startup_FB()
 {

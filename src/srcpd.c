@@ -55,8 +55,7 @@ extern int server_shutdown_state;
 extern int server_reset_state;
 extern const char *WELCOME_MSG;
 
-void
-CreatePIDFile(int pid)
+void CreatePIDFile(int pid)
 {
   FILE *f;
   f=fopen(((SERVER_DATA *) busses[0].driverdata)->PIDFILE,"wb");
@@ -70,14 +69,12 @@ CreatePIDFile(int pid)
   }
 }
 
-void
-DeletePIDFile()
+void DeletePIDFile()
 {
   unlink(((SERVER_DATA *) busses[0].driverdata)->PIDFILE);
 }
 
-void
-hup_handler(int s)
+void hup_handler(int s)
 {
   /* signal SIGHUP(1) caught */
   server_reset_state=1;
@@ -88,8 +85,7 @@ hup_handler(int s)
   return;
 }
 
-void
-term_handler(int s)
+void term_handler(int s)
 {
   // signal SIGTERM(15) caught
   syslog(LOG_INFO,"SIGTERM(15) received! Terminating ...");
@@ -97,8 +93,7 @@ term_handler(int s)
   DeletePIDFile();
 }
 
-void
-install_signal_handler()
+void install_signal_handler()
 {
   signal(SIGTERM, term_handler);
   signal(SIGABRT, term_handler);
@@ -109,8 +104,7 @@ install_signal_handler()
 }
 
 
-int
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
   int error, i;
   pid_t pid;
@@ -119,7 +113,9 @@ main(int argc, char **argv)
   struct _THREADS cmds;
   install_signal_handler();
 
-  strcpy(conffile, "/etc/srcpd.conf");
+  printf("MAXPATHLEN = %i\n", MAXPATHLEN);
+  strcpy(conffile, "/usr/local/etc/srcpd.conf");
+  printf("conffile = \"%s\"\n", conffile);
 
   /* Parameter auswerten */
   opterr=0;
@@ -148,6 +144,18 @@ main(int argc, char **argv)
   }
   // zuerst die Konfigurationsdatei lesen
   readConfig(conffile);
+  // check for resolv all needed malloc's
+  for(i=0;i<MAX_BUSSES;i++)
+  {
+    if (busses[i].number > -1)
+    {
+      if (busses[i].driverdata == NULL)
+      {
+        printf("Sorry, there is an error in your srcpd.conf for bus %i !\n", i);
+        exit(1);
+      }
+    }
+  }
   cmds.socket = ((SERVER_DATA *) busses[0].driverdata)->TCPPORT;
   cmds.func = thr_doClient;
   /* forken */
