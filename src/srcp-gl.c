@@ -275,17 +275,13 @@ int infoGL(int busnumber, int addr, char* msg)
 }
 
 /* has to use a semaphore, must be atomare! */
-int lockGL(int busnumber, int addr, long int sessionid)
+int lockGL(int busnumber, int addr, long int duration, long int sessionid)
 {
-  if(gl[busnumber].glstate[addr].locked_by==sessionid)
-  {
-    return SRCP_OK;
-  }
-  else
-  {
-    if(gl[busnumber].glstate[addr].locked_by==0) {
-        char msg[256];
+  char msg[256];
+  if(gl[busnumber].glstate[addr].locked_by==sessionid ||
+    gl[busnumber].glstate[addr].locked_by==0) {
         gl[busnumber].glstate[addr].locked_by=sessionid;
+        gl[busnumber].glstate[addr].lockduration = duration;
         gettimeofday(& gl[busnumber].glstate[addr].locktime, NULL);
         describeLOCKGL(busnumber, addr, msg);
         queueInfoMessage(msg);
@@ -293,8 +289,6 @@ int lockGL(int busnumber, int addr, long int sessionid)
     } else {
         return SRCP_DEVICELOCKED;
     }
-  }
-  /* unreached */
 }
 
 int getlockGL(int busnumber, int addr, long int *session_id)
@@ -304,10 +298,10 @@ int getlockGL(int busnumber, int addr, long int *session_id)
 }
 
 int describeLOCKGL(int bus, int addr, char *reply) {
-    sprintf(reply, "%lu.%.3lu 100 INFO %d LOCK GL %d %ld\n",
+    sprintf(reply, "%lu.%.3lu 100 INFO %d LOCK GL %d %ld %ld\n",
           gl[bus].glstate[addr].locktime.tv_sec,
           gl[bus].glstate[addr].locktime.tv_usec/1000,
-          bus, addr, gl[bus].glstate[addr].locked_by);
+          bus, addr, gl[bus].glstate[addr].lockduration, gl[bus].glstate[addr].locked_by);
     return SRCP_OK;
 }
 
@@ -344,6 +338,25 @@ void unlock_gl_bysessionid(long int sessionid)
       if(gl[i].glstate[j].locked_by == sessionid)
       {
         unlockGL(i, j, sessionid);
+      }
+    }
+  }
+}
+
+void unlock_gl_bytime(void)
+{
+  int i,j;
+  int number;
+  DBG(0, DBG_INFO, "unlock GL by time");
+  for(i=0; i<=num_busses; i++)
+  {
+    number = get_number_gl(i);
+    DBG(i, DBG_DEBUG, "number of gl for busnumber %d is %d", i, number);
+    for(j=1;j<number; j++)
+    {
+      if(gl[i].glstate[j].lockduration>0 && gl[i].glstate[j].lockduration -- == 1)
+      {
+        unlockGL(i, j, gl[i].glstate[j].locked_by);
       }
     }
   }

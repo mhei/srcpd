@@ -252,19 +252,13 @@ int initGA(int busnumber, int addr, const char *protocol)
   }
 }
 
-int lockGA(int busnumber, int addr, long int sessionid)
+int lockGA(int busnumber, int addr, long int duration, long int sessionid)
 {
-  if(ga[busnumber].gastate[addr].locked_by==sessionid)
-  {
-    return SRCP_OK;
-  }
-  else
-  {
-    if(ga[busnumber].gastate[addr].locked_by==0) {
-        char msg[256];
+  char msg[256];
+  if(ga[busnumber].gastate[addr].locked_by==sessionid ||
+     ga[busnumber].gastate[addr].locked_by==0) {
         ga[busnumber].gastate[addr].locked_by=sessionid;
-
-        ga[busnumber].gastate[addr].locked_by=sessionid;
+        ga[busnumber].gastate[addr].lockduration=duration;
         gettimeofday(& ga[busnumber].gastate[addr].locktime, NULL);
         describeLOCKGA(busnumber, addr, msg);
         queueInfoMessage(msg);
@@ -272,7 +266,6 @@ int lockGA(int busnumber, int addr, long int sessionid)
     } else {
         return SRCP_DEVICELOCKED;
     }
-  }
   /* unreached */
   return SRCP_UNSUPPORTEDOPERATION;
 }
@@ -285,10 +278,10 @@ int getlockGA(int busnumber, int addr, long int *sessionid)
 }
 
 int describeLOCKGA(int bus, int addr, char *reply) {
-    sprintf(reply, "%lu.%.3lu 100 INFO %d LOCK GA %d %ld\n",
+    sprintf(reply, "%lu.%.3lu 100 INFO %d LOCK GA %d %ld %ld\n",
           ga[bus].gastate[addr].locktime.tv_sec,
           ga[bus].gastate[addr].locktime.tv_usec/1000,
-          bus, addr, ga[bus].gastate[addr].locked_by);
+          bus, addr, ga[bus].gastate[addr].lockduration, ga[bus].gastate[addr].locked_by);
     return SRCP_OK;
 }
 
@@ -331,6 +324,26 @@ void unlock_ga_bysessionid(long int sessionid)
   }
 }
 
+/* must be called exactly once per second */
+void unlock_ga_bytime(void) {
+  int i,j;
+  int number;
+  DBG(0, DBG_DEBUG, "unlock GA by time");
+  for(i=0; i<MAX_BUSSES; i++)
+  {
+    number = get_number_ga(i);
+    DBG(i, DBG_DEBUG, "number of GA for busnumber %d is %d", i, number);
+    for(j=1;j<=number; j++)
+    {
+      if(ga[i].gastate[j].lockduration-- == 1)
+      {
+        unlockGA(i, j, ga[i].gastate[j].locked_by);
+      }
+    }
+  }
+
+  
+}
 int startup_GA(void)
 {
   int i;

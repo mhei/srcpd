@@ -244,19 +244,19 @@ handleSET(int sessionid, int bus, char *device, char *parameter,
 	    rc = SRCP_LISTTOOSHORT;
     }
     if (bus_has_devicegroup(bus, DG_LOCK) && strncasecmp(device, "LOCK", 4) == 0) {
-	long int addr;
+	long int addr, duration;
 	char devgrp[10];
 	int nelem = -1;
 	if (strlen(parameter) > 0) {
-	    nelem = sscanf(parameter, "%s %ld", devgrp, &addr);
+	    nelem = sscanf(parameter, "%s %ld %ld", devgrp, &addr, &duration);
           DBG(bus, DBG_INFO, "LOCK: %s", parameter);
       }
-	if (nelem >= 2) {
+	if (nelem >= 3) {
 	    rc = SRCP_UNSUPPORTEDDEVICEGROUP;
 	    if (strncmp(devgrp, "GL", 2) == 0)
-		rc = lockGL(bus, addr, sessionid);
+		rc = lockGL(bus, addr, duration, sessionid);
 	    if (strncmp(devgrp, "GA", 2) == 0)
-		rc = lockGA(bus, addr, sessionid);
+		rc = lockGA(bus, addr, duration, sessionid);
 	} else {
 	    rc = SRCP_LISTTOOSHORT;
 	}
