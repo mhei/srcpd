@@ -177,13 +177,18 @@ int setGA(int busnumber, int addr, struct _GASTATE a, int info)
 int describeGA(int busnumber, int addr, char *msg)
 {
   int number_ga = get_number_ga(busnumber);
+	struct timeval tv;
+	
+	gettimeofday(&tv, NULL);
 
   if(number_ga<=0)
     return SRCP_UNSUPPORTEDDEVICEGROUP;
 
   if((addr>0) && (addr <= number_ga) && (ga[busnumber].gastate[addr].protocol) )
   {
-    sprintf(msg, "%d GA %d %s", busnumber, addr, ga[busnumber].gastate[addr].protocol);
+		sprintf(msg, "%ld.%ld 100 INFO %d GA %d %s\n",
+			tv.tv_sec, tv.tv_usec/1000,
+			busnumber, addr, ga[busnumber].gastate[addr].protocol);
   }
   else
   {

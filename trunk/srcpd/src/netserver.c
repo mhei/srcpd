@@ -373,11 +373,18 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
     long int addr;
     char devgrp[10];
     int nelem=-1;
+		
+		struct timeval tv;
+		
+		gettimeofday(&tv, NULL);
+		
     if(strlen(parameter)>0)
         nelem = sscanf(parameter, "%s %ld", devgrp, &addr);
     if(nelem <= 0) 
     {
-      sprintf(reply, "%d DESCRIPTION %s", bus, busses[bus].description);
+      sprintf(reply, "%ld.%ld 100 INFO %d DESCRIPTION %s\n",
+				tv.tv_sec, tv.tv_usec/1000,
+				bus, busses[bus].description);
       rc = SRCP_INFO;
     } 
     else 
