@@ -15,20 +15,10 @@
  *					Copyright:		(c) 2002 by Manuel Borchers <webmaster@matronix.de>
  *
  */
- 
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <unistd.h>
-#include <termios.h>
-#include <fcntl.h>
-#include <signal.h>
-// #include <syslog.h>
-#include <sys/ioctl.h>
+
+#include "stdincludes"
+
+#ifdef linux 
 #include <linux/i2c-dev.h>
 // we have to use kernel-headers directly, sorry!
 #include <math.h>
@@ -344,3 +334,4 @@ void* thr_sendrec_I2C_DEV (void *v)
       usleep(1000);
   }
 }
+#endif
