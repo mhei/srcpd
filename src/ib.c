@@ -278,7 +278,7 @@ void send_command_ga(int busnumber)
         }
         writeByte(busnumber, &byte2send, 2);
         readByte(busnumber, 1, &rr);
-        setGA(busnumber, addr, gatmp, 1);
+        setGA(busnumber, addr, gatmp);
         tga[i].id=0;
       }
     }
@@ -333,7 +333,7 @@ void send_command_ga(int busnumber)
     readByte(busnumber, 1, &rr);
     if(status)
     {
-      setGA(busnumber, addr, gatmp, 1);
+      setGA(busnumber, addr, gatmp);
     }
   }
 }
@@ -396,7 +396,7 @@ void send_command_gl(int busnumber)
       readByte(busnumber, 1, &status);
       if((status == 0) || (status == 0x41) || (status == 0x42))
       {
-        setGL(busnumber, addr, gltmp, 1);
+        setGL(busnumber, addr, gltmp);
       }
     }
   }
@@ -690,7 +690,7 @@ void check_status(int busnumber)
         gltmp.funcs |= 0x010;    // Licht ist an
       rr &= 0x3F;
       gltmp.id |= rr << 8;
-      setGL(busnumber, gltmp.id, gltmp, 1);
+      setGL(busnumber, gltmp.id, gltmp);
       readByte(busnumber, 1, &rr);
       readByte(busnumber, 1, &rr);
     }
@@ -727,7 +727,7 @@ void check_status(int busnumber)
       gatmp.id    |= (rr & 0x07) << 8;
       gatmp.port   = (rr & 0x80) ? 1 : 0;
       gatmp.action = (rr & 0x40) ? 1 : 0;
-      setGA(busnumber, gatmp.id, gatmp, 1);
+      setGA(busnumber, gatmp.id, gatmp);
     }
   }
 

@@ -44,7 +44,7 @@ int unqueueNextGA(int busnumber, struct _GASTATE *);
 int queue_GA_isempty(int busnumber);
 
 int getGA(int busnumber, int addr, struct _GASTATE *a);
-int setGA(int busnumber, int addr, struct _GASTATE a, int info);
+int setGA(int busnumber, int addr, struct _GASTATE a);
 int initGA(int busnumber, int addr, const char *protocol);
 int describeGA(int busnumber, int addr, char *msg);
 int infoGA(int busnumber, int addr, int port, char* msg);

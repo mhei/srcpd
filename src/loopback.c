@@ -138,7 +138,7 @@ void* thr_sendrec_Loopback (void *v)
           gltmp.speed = 0;
           gltmp.direction = !glakt.direction;
         }
-        setGL(bus, addr, gltmp, 1);
+        setGL(bus, addr, gltmp);
     }
     busses[bus].watchdog = 4;
     if (!queue_GA_isempty(bus)) {
@@ -147,7 +147,7 @@ void* thr_sendrec_Loopback (void *v)
           if(gatmp.action == 1) {
             gettimeofday(&gatmp.tv[gatmp.port], NULL);
           }
-          setGA(bus, addr, gatmp, 1);
+          setGA(bus, addr, gatmp);
           busses[bus].watchdog = 6;
     }
     usleep(1000);

@@ -261,7 +261,7 @@ void* thr_sendrec_I2C_DEV (void *v)
 					
           if(gatmp.action == 1) {
             gettimeofday(&gatmp.tv[gatmp.port], NULL);
-            setGA(bus, addr, gatmp, 0);
+            setGA(bus, addr, gatmp);
 						
 						if (gatmp.activetime >= 0) {
 							gatmp.activetime = (gatmp.activetime > ga_min_active_time) ?
@@ -289,7 +289,7 @@ void* thr_sendrec_I2C_DEV (void *v)
 					
 					if ( (gatmp.action == 0) ) {
 						gettimeofday(&gatmp.tv[gatmp.port], NULL);
-            setGA(bus, addr, gatmp, 0);
+            setGA(bus, addr, gatmp);
 						
 						if (gatmp.activetime >= 0) {
 							gatmp.activetime = (gatmp.activetime > ga_min_active_time) ?
@@ -305,7 +305,7 @@ void* thr_sendrec_I2C_DEV (void *v)
 						
 					}
 					
-          setGA(bus, addr, gatmp, 0);
+          setGA(bus, addr, gatmp);
           busses[bus].watchdog = 6;
       }
 			
