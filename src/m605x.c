@@ -210,7 +210,7 @@ void* thr_sendrec_M6051(void *v)
       writeByte(bus, &SendByte, pause_between_cmd);  /* zweimal, wir sind paranoid */
       busses[bus].power_changed = 0;
       infoPower(bus, msg);
-      queueMessage(msg);
+      queueInfoMessage(msg);
     }
     /* do nothing, if power off */
     if(busses[bus].power_state==0) {

@@ -176,8 +176,11 @@ int setGA(int busnumber, int addr, struct _GASTATE a, int info)
     ga[busnumber].gastate[addr].action = a.action;
     ga[busnumber].gastate[addr].port    = a.port;
     gettimeofday(&ga[busnumber].gastate[addr].tv[ga[busnumber].gastate[addr].port], NULL);
-    if (info == 1)
-      queueInfoGA(busnumber, addr, ga[busnumber].gastate[addr].port);
+    if (info == 1) {
+      char msg[1000];
+      infoGA(busnumber, addr, a.port, msg);
+      queueInfoMessage(msg);      
+    }
     return SRCP_OK;
   }
   else

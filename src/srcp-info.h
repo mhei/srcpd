@@ -25,10 +25,6 @@ int startup_INFO(void);
 int queueIsEmptyInfo();
 int unqueueInfoNext(char *info);
 
-int queueMessage(char *);
-int queueInfoGL(int busnumber, int addr);
-int queueInfoGA(int busnumber, int addr, int port);
-int queueInfoFB(int busnumber, int port);
-int queueInfoSM(int busnumber, int addr, int type, int typeaddr, int bit, int value, int return_value, struct timeval *akt_time);
+int queueInfoMessage(char *);
 
 #endif

@@ -224,7 +224,7 @@ void* thr_sendrec_IB(void *v)
       if(rr == 0x00)                  // war alles OK ?
         busses[busnumber].power_changed = 0;
       infoPower(busnumber, msg);
-      queueMessage(msg);
+      queueInfoMessage(msg);
     }
 
     if(busses[busnumber].power_state==0) {
