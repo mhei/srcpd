@@ -8,6 +8,7 @@
 
 #include "srcp-time.h"
 #include "srcp-error.h"
+#include "srcp-info.h"
 
 struct _VTIME vtime;
 
@@ -30,11 +31,14 @@ int setTIME(int d, int h, int m, int s)
 
 int initTIME(int fx, int fy)
 {
+  char msg[100];
   if(fx<0 || fy<=0)
     return SRCP_WRONGVALUE;
   vtime.ratio_x = fx;
   vtime.ratio_y = fy;
   gettimeofday(&vtime.inittime, NULL);
+  describeTIME(msg);
+  queueInfoMessage(msg);
   return SRCP_OK;
 }
 
@@ -67,7 +71,7 @@ int describeTIME(char *reply) {
 void* thr_clock(void* v)
 {
   struct _VTIME vt;
-
+  int sendinfo = 0;
   vtime.ratio_x=0;
   vtime.ratio_y=0;
   while(1)
@@ -87,7 +91,7 @@ void* thr_clock(void* v)
     {
       vt.sec = 0;
       vt.min ++;
-      // queueInfoTIME();
+      sendinfo = 1;
     }
     if(vt.min >= 60)
     {
@@ -100,6 +104,12 @@ void* thr_clock(void* v)
       vt.hour = 0;
     }
     vtime = vt;
+    if (sendinfo==1) {
+      char msg[100];
+      sendinfo = 0;
+      infoTIME(msg);
+      queueInfoMessage(msg);
+    }
     // syslog(LOG_INFO, "time: %d %d %d %d %d %d", vtime.day, vtime.hour, vtime.min, vtime.sec,  vtime.ratio_x, vtime.ratio_y);
   }
 }
