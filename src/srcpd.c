@@ -172,7 +172,7 @@ int main(int argc, char **argv)
   }
 
   // a little help for debugging the threads
-  if (busses[0].debuglevel > DBG_WARN)
+  if (busses[0].debuglevel < DBG_DEBUG)
   {
     /* forken */
     if((pid=fork())<0)
