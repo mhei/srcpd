@@ -22,6 +22,7 @@ struct _GASTATE
   int port;             /* Portnummer     */
   int action;           /* 0,1,2,3...     */
   long activetime;      /* Aktivierungszeit in msec bis das automatische AUS kommen soll */
+  struct timeval inittime;
   struct timeval tv[MAXGAPORT]; /* Zeitpunkt der letzten Aktivierungen, ein Wert pro Port   */
   struct timeval t;     /* Auschaltzeitpunkt */
   long int locked_by;     /* wer hält den Lock? */

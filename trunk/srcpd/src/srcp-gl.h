@@ -24,6 +24,7 @@ struct _GLSTATE
   int direction;/* 0/1/2                                    */
   char funcs;   /* F1..F4, F                                */
   struct timeval tv; /* Last time of change                 */
+  struct timeval inittime;
   long int locked_by;
 };
 
