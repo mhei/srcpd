@@ -48,7 +48,7 @@ static int initGL_default(int busnumber, int addr)
   switch (busses[busnumber].type)
   {
     case SERVER_M605X:
-        initGL(busnumber, addr, "M", 1, 14, 1);
+        initGL(busnumber, addr, "M", 1, 14, 5);
         break;
     case SERVER_IB:
         gl[busnumber].glstate[addr].n_fs =  126;
@@ -198,12 +198,7 @@ int setGL(int busnumber, int addr, struct _GLSTATE l, int info)
      gl[busnumber].glstate[addr].funcs = l.funcs;
      gettimeofday(&gl[busnumber].glstate[addr].tv, NULL);
      if (info == 1)
-      queueInfoGL(busnumber, addr, gl[busnumber].glstate[addr].direction, gl[busnumber].glstate[addr].speed,
-        gl[busnumber].glstate[addr].n_fs,
-        (gl[busnumber].glstate[addr].funcs & 0x10) ? 1 : 0,
-        (gl[busnumber].glstate[addr].funcs & 0x01) ? 1 : 0, (gl[busnumber].glstate[addr].funcs & 0x02) ? 1 : 0,
-        (gl[busnumber].glstate[addr].funcs & 0x04) ? 1 : 0, (gl[busnumber].glstate[addr].funcs & 0x08) ? 1 : 0,
-        &gl[busnumber].glstate[addr].tv);
+      queueInfoGL(busnumber, addr);
     return SRCP_OK;
   }
   else

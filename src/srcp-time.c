@@ -13,10 +13,11 @@ struct _VTIME vtime;
 
 int startup_TIME(void)
 {
+  gettimeofday(&vtime.inittime, NULL);
   return 0;
 }
 
-int setTime(int d, int h, int m, int s)
+int setTIME(int d, int h, int m, int s)
 {
   if(d<0 || h<0 || h>23 || m<0 || m>59 || s<0 || s>59)
     return SRCP_WRONGVALUE;
@@ -27,64 +28,37 @@ int setTime(int d, int h, int m, int s)
   return SRCP_OK;
 }
 
-int initTime(int fx, int fy)
+int initTIME(int fx, int fy)
 {
   if(fx<0 || fy<=0)
     return SRCP_WRONGVALUE;
   vtime.ratio_x = fx;
   vtime.ratio_y = fy;
+  gettimeofday(&vtime.inittime, NULL);
   return SRCP_OK;
 }
 
-int getTime(struct _VTIME *vt)
+int getTIME(struct _VTIME *vt)
 {
   *vt = vtime;
   return SRCP_OK;
 }
 
-int infoTime(struct _VTIME vt, char *msg)
+int infoTIME(char *msg)
 {
   struct timeval akt_time;
   gettimeofday(&akt_time, NULL);
-  sprintf(msg, "%lu..3%lu 100 INFO 0 TIME %d %d %d %d", akt_time.tv_sec, akt_time.tv_usec/1000, vt.day, vt.hour, vt.min, vt.sec);
+  msg[0]=0x00;
+  if(vtime.ratio_x == 0 && vtime.ratio_y == 0)
+    return SRCP_NODATA;
+  sprintf(msg, "%lu.%.3lu 100 INFO 0 TIME %d %d %d %d\n", akt_time.tv_sec, akt_time.tv_usec/1000,
+    vtime.day, vtime.hour, vtime.min, vtime.sec);
   return SRCP_OK;
 }
 
-int cmpTime(struct timeval *t1, struct timeval *t2)
-{
-  int result;
-
-  result = 0;
-  if(t2->tv_sec > t1->tv_sec)
-  {
-    result = 1;
-  }
-  else
-  {
-    if(t2->tv_sec == t1->tv_sec)
-    {
-      if(t2->tv_usec > t1->tv_usec)
-      {
-        result = 1;
-      }
-    }
-  }
-  return result;
-}
-
-
-int describeTIME(int bus, int addr, char *reply) {
-	
-	struct timeval tv;
-	
-	gettimeofday(&tv, NULL);
-	
-  //sprintf(reply, "INFO 0 TIME %d %d", vtime.ratio_x, vtime.ratio_y);
-	sprintf(reply, "%lu.%.3lu 100 INFO 0 TIME %d %d\n",
-		tv.tv_sec, tv.tv_usec/1000,
-		vtime.ratio_x, vtime.ratio_y);
-  
-	return SRCP_OK;
+int describeTIME(char *reply) {
+  sprintf(reply, "%lu.%.3lu 101 INIT 0 TIME %d %d\n", vtime.inittime.tv_sec, vtime.inittime.tv_usec/1000, vtime.ratio_x, vtime.ratio_y);
+  return SRCP_OK;
 }
 
 /***********************************************************************

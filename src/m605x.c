@@ -198,12 +198,6 @@ void* thr_sendrec_M6051(void *v)
     writeByte(bus, &SendByte, pause_between_cmd);
     ( (M6051_DATA *) busses[bus].driverdata)  -> cmd32_pending = 0;
   }
-  /* maybe, this little if() has to be elsewhere... */
-  if (( (busses[bus].flags & AUTO_POWER_ON) == AUTO_POWER_ON) ) {
-    setPower(bus, 1, "AUTO POWER ON");
-  } else {
-    setPower(bus, 0, "AUTO POWER OFF");
-  }
   while (1)
   {
     busses[bus].watchdog = 2;
@@ -254,7 +248,7 @@ void* thr_sendrec_M6051(void *v)
         SendByte = addr;
         writeByte(bus, &SendByte, pause_between_cmd);
         /* Erweiterte Funktionen des 6021 senden, manchmal */
-        if (( (busses[bus].flags & M6020_MODE) == M6020_MODE) && (gltmp.funcs != glakt.funcs))
+        if ( ((busses[bus].flags & M6020_MODE) == M6020_MODE) && (gltmp.funcs != glakt.funcs))
         {
           c = (gltmp.funcs & 0x0f) + 64;
           writeByte(bus, &c, pause_between_bytes);

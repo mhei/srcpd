@@ -230,6 +230,11 @@ int main(int argc, char **argv)
     pthread_detach(ttid_pid);
     busses[i].pid = ttid_pid;
     syslog(LOG_INFO, "Interface Thread %d started successfully type(%d): pid %ld", i, busses[i].type, (long)(busses[i].pid));
+    if (( (busses[i].flags & AUTO_POWER_ON) == AUTO_POWER_ON) ) {
+      setPower(i, 1, "AUTO POWER ON");
+    } else {
+      setPower(i, 0, "AUTO POWER OFF");
+    }
   }
   syslog(LOG_INFO, "All Threads started");
   server_shutdown_state = 0;

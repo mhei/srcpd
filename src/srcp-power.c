@@ -15,7 +15,7 @@
 int
 setPower(int bus, int state, char *msg)
 {
-  gettimeofday(&  busses[bus].power_change_time, NULL);
+  gettimeofday(& busses[bus].power_change_time, NULL);
   busses[bus].power_state = state;
   strcpy(busses[bus].power_msg, msg);
   busses[bus].power_changed = 1;

@@ -14,6 +14,7 @@
 #include "srcp-gl.h"
 #include "srcp-power.h"
 #include "srcp-srv.h"
+#include "srcp-info.h"
 
 #define __loopback ((LOOPBACK_DATA*)busses[busnumber].driverdata)
 
@@ -117,7 +118,18 @@ void* thr_sendrec_Loopback (void *v)
   busses[bus].watchdog = 1;
 
   while (1) {
-      if (!queue_GL_isempty(bus))  {
+    if(busses[bus].power_changed==1) {
+      char msg[110];
+      busses[bus].power_changed = 0;
+      infoPower(bus, msg);
+      queueMessage(msg);
+    }
+    if(busses[bus].power_state==0) {
+          usleep(1000);
+          continue;
+    }
+
+    if (!queue_GL_isempty(bus))  {
         unqueueNextGL(bus, &gltmp);
         addr = gltmp.id;
         getGL(bus, addr, &glakt);
@@ -127,9 +139,9 @@ void* thr_sendrec_Loopback (void *v)
           gltmp.direction = !glakt.direction;
         }
         setGL(bus, addr, gltmp, 1);
-      }
-      busses[bus].watchdog = 4;
-      if (!queue_GA_isempty(bus)) {
+    }
+    busses[bus].watchdog = 4;
+    if (!queue_GA_isempty(bus)) {
           unqueueNextGA(bus, &gatmp);
           addr = gatmp.id;
           if(gatmp.action == 1) {
@@ -137,7 +149,7 @@ void* thr_sendrec_Loopback (void *v)
           }
           setGA(bus, addr, gatmp, 1);
           busses[bus].watchdog = 6;
-      }
-      usleep(1000);
+    }
+    usleep(1000);
   }
 }

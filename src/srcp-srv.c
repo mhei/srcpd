@@ -99,6 +99,7 @@ int describeSERVER(int bus, int addr, char *reply)
 
 int init_bus_server(int bus)
 {
+  gettimeofday(& busses[0].power_change_time, NULL);
   DBG(bus, DBG_INFO, "init_bus %d", bus);
   return 0;
 }
