@@ -118,6 +118,9 @@ static void register_bus(xmlDocPtr doc, xmlNodePtr node)
           ( (M6051_DATA *) busses[busnumber].driverdata)  -> number_fb = 0; /* max 31 */
           ( (M6051_DATA *) busses[busnumber].driverdata)  -> number_ga = 256;
           ( (M6051_DATA *) busses[busnumber].driverdata)  -> number_gl = 80;
+          ( (M6051_DATA *) busses[busnumber].driverdata)  -> ga_min_active_time = 75;
+          ( (M6051_DATA *) busses[busnumber].driverdata)  -> pause_between_cmd = 200;
+          ( (M6051_DATA *) busses[busnumber].driverdata)  -> pause_between_bytes = 2;
           strcpy(busses[busnumber].description, "GA GL FB POWER");
         }
         if (strcmp(txt, "IB") == 0)
@@ -145,6 +148,9 @@ static void register_bus(xmlDocPtr doc, xmlNodePtr node)
           busses[busnumber].term_func = &term_bus_S88;
           busses[busnumber].thr_func = &thr_sendrec_S88;
           busses[busnumber].driverdata = malloc(sizeof(struct _DDL_S88_DATA));
+          ( (DDL_S88_DATA *) busses[busnumber].driverdata) -> port = 0x0378;
+          ( (DDL_S88_DATA *) busses[busnumber].driverdata) -> clockscale = 35;
+          ( (DDL_S88_DATA *) busses[busnumber].driverdata) -> refresh = 100;
           strcpy(busses[busnumber].description, "FB POWER");
         }
         if (strcmp(txt, "HSI-88") == 0)

@@ -17,8 +17,21 @@
 #ifndef _DDL_S88_H
 #define _DDL_S88_H
 
+//maximal number of bytes read from one s88-bus
+#define S88_MAXPORTSB 62 
+//maximal number of s88-busses
+#define S88_MAXBUSSES 4
+//maximal number of ports
+#define S88_MAXPORTS S88_MAXPORTSB*8*S88_MAXBUSSES
+
 typedef struct _DDL_S88_DATA {
     int number_fb[4];
+    int port;
+    int refresh;
+    int clockscale;
+    //timestamp, until when the s88data are valid
+    struct timeval s88valid;
+
 } DDL_S88_DATA;
 
 
@@ -26,10 +39,5 @@ int init_bus_S88();
 int term_bus_S88();
 void * thr_sendrec_S88(void *);
 
-int init_s88(char*);
-int get_s88(int);
-
-void load_s88(int);
-void clear_s88(int);
 
 #endif

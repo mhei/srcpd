@@ -26,111 +26,195 @@
 #include <stdio.h>
 #include <syslog.h>
 #include <sys/ioctl.h>
+#include <sys/io.h>
 #include <unistd.h>
 
 #include "config-srcpd.h"
+#include "srcp-fb.h"
 #include "ddl-s88.h"
 
-int
-init_bus_S88(int bus)
-{
+/***************************************************************/
+/* erddcd - Electric Railroad Direct Digital Command Daemon    */
+/*    generates without any other hardware digital commands    */
+/*    to control electric model railroads                      */
+/*                                                             */
+/* file: maerklin_s88.c                                        */
+/* job : some routines to read s88 data from the printer-port  */
+/*                                                             */
+/* Torsten Vogt, Dieter Schaefer, october 1999                 */
+/* Martin Wolf, november 2000                                  */
+/*                                                             */
+/* last changes: Torsten Vogt, march 2000                      */
+/*               Martin Wolf, november 2000                    */
+/* modified for Matthias Trute, srcpd may 2002 */
+/*                                                             */
+/***************************************************************/
+
+
+
+// signals on the S88-Bus
+#define S88_QUIET 0x00 // all signals low
+#define S88_RESET 0x04 // reset signal high
+#define S88_LOAD  0x02 // load signal high
+#define S88_CLOCK 0x01 // clock signal high
+#define S88_DATA1 0x40 // mask for data form S88 bus 1 (ACK)
+#define S88_DATA2 0x80 // mask for data from S88 bus 2 (BUSY) !inverted
+#define S88_DATA3 0x20 // mask for data from S88 bus 3 (PEND) 
+#define S88_DATA4 0x10 // mask for data from S88 bus 4 (SEL)
+
+// Output a Signal to the Bus
+#define S88_WRITE(x) for (i=0;i<S88CLOCK_SCALE;i++) outb(x,S88PORT)
+
+// possible io-addresses for the parallel port
+const unsigned long LPT_BASE[] = {0x3BC, 0x378, 0x278};
+// number of possible parallel ports
+const unsigned int LPT_NUM = 3;  
+// values of the bits in a byte
+const char BIT_VALUES[] = {0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80}; 
+
+/****************************************************************
+* function s88init                                              *
+*                                                               *
+* purpose: test the parralel port for the s88bus and initializes*
+*          the bus. The portadress must be one of LPT_BASE, the *
+*          port must be accessable through ioperm and there must*
+*          be an real device at the adress.                     *
+*                                                               *
+* in:      ---                                                  *
+* out:     return value: 1 if testing and initializing was      *
+*                        successfull, otherwise 0               *
+*                                                               *
+* remarks: tested MW, 20.11.2000                                *
+*                                                               *
+****************************************************************/
+int init_bus_S88(int bus) {
+	unsigned int i; // loop counter
+	int isin = 0; // reminder for checking
+	int S88PORT = ((DDL_S88_DATA *) busses[bus].driverdata)  -> port;
+ 	int S88CLOCK_SCALE = ((DDL_S88_DATA *) busses[bus].driverdata)  -> clockscale;
+	// is the port disabled from user, everything is fine
+	if (!S88PORT)  {
+            syslog(LOG_INFO,"   s88 port is disabled.");
+            return 1;
+        }
+    // test, whether S88DEV is a valid io-address for a parallel device 
+	for (i=0;i<LPT_NUM;i++) isin = isin || (S88PORT == LPT_BASE[i]);
+    if (isin) {
+        // test, whether we can access the port
+		if (ioperm(S88PORT,3,1)==0) {
+            // test, whether there is a real device on the S88DEV-port by writing and 
+			// reading data to the port. If the written data is returned, a real port
+			// is there
+			outb(0x00, S88PORT);
+			isin = (inb(S88PORT)==0);
+			outb(0xFF, S88PORT);
+			isin = (inb(S88PORT)==0xFF) && isin;
+			if (isin) {
+				// initialize the S88 by doing a reset
+				// for ELEKTOR-Modul the reset must be on the load line
+                        S88_WRITE(S88_QUIET);
+				S88_WRITE(S88_RESET & S88_LOAD);
+				S88_WRITE(S88_QUIET);
+			}
+			else {
+				syslog(LOG_INFO, "   warning: There is no port for s88 at 0x%X.",S88PORT);
+				ioperm(S88PORT,3,0); // stopping access to port address
+				return 0;
+            }
+		}
+		else {
+			syslog(LOG_INFO, "   warning: Access to port 0x%X denied.",S88PORT);
+			return 0;
+		}
+	}
+	else {
+        syslog(LOG_INFO,"   warning: 0x%X is not valid port adress for s88 device.",S88PORT);
+		return 0;
+	}
+        syslog(LOG_INFO,"   s88 port sucsessfully initialized at 0x%X.",S88PORT);
+	return 1;
+}
+
+/****************************************************************
+* function s88load                                              *
+*                                                               *
+* purpose: Loads the data from the bus in s88data if the valid- *
+*          timespace S88REFRESH is over. Then also the new      *
+*          validity-timeout is set to s88valid.                 *
+*          If port is disabled or data is valid does nothing.      *
+*                                                               *
+* in:      ---                                                  *
+* out:     ---                                                  *
+*                                                               *
+* remarks: tested MW, 20.11.2000                                *
+*                                                               *
+****************************************************************/
+void s88load(int bus) {
+	int i,j,k, inbyte;
+	struct timeval nowtime;
+      char s88data[S88_MAXPORTSB*S88_MAXBUSSES]; //valid bus-data
+	int S88PORT = ((DDL_S88_DATA *) busses[bus].driverdata)  -> port;
+	int S88CLOCK_SCALE = ((DDL_S88_DATA *) busses[bus].driverdata)  -> clockscale;
+	int S88REFRESH = ((DDL_S88_DATA *) busses[bus].driverdata)  -> refresh;
+
+      gettimeofday(&nowtime,NULL);
+	if ((nowtime.tv_sec> ((DDL_S88_DATA *) busses[bus].driverdata)  -> s88valid.tv_sec)||
+		( (nowtime.tv_sec== ((DDL_S88_DATA *) busses[bus].driverdata)  -> s88valid.tv_sec)&&
+              (nowtime.tv_usec> ((DDL_S88_DATA *) busses[bus].driverdata)  -> s88valid.tv_usec))
+      ) {// data is out of date - get new data from the bus
+		// initialize the s88data array
+		for (i=0;i<S88_MAXPORTSB*S88_MAXBUSSES;i++) s88data[i]=0;
+		if (S88PORT) { // if port is disabled do nothing
+			// load the bus
+                  ioperm(S88PORT,3,1);
+			S88_WRITE(S88_LOAD);
+			S88_WRITE(S88_LOAD|S88_CLOCK);
+			S88_WRITE(S88_QUIET);
+			S88_WRITE(S88_RESET);
+			S88_WRITE(S88_QUIET);
+			// reading the data 
+			for (j=0;j<S88_MAXPORTSB;j++) {
+				for (k=0;k<8;k++) {
+					// reading from port
+					inbyte = inb(S88PORT+1);
+					// interpreting the four busses
+					if (inbyte&S88_DATA1) s88data[j]+=BIT_VALUES[k];
+					if (!(inbyte&S88_DATA2)) s88data[j+S88_MAXPORTSB]+=BIT_VALUES[k];
+					if (inbyte&S88_DATA3) s88data[j+2*S88_MAXPORTSB]+=BIT_VALUES[k];
+					if (inbyte&S88_DATA4) s88data[j+3*S88_MAXPORTSB]+=BIT_VALUES[k];
+					// getting the next data
+					S88_WRITE(S88_CLOCK);
+					S88_WRITE(S88_QUIET);
+				}
+                        setFBmodul(bus,    j, s88data[j]);
+                        setFBmodul(bus+1, j, s88data[j+S88_MAXPORTSB]);
+                        setFBmodul(bus+2, j, s88data[j+2*S88_MAXPORTSB]);
+                        setFBmodul(bus+3, j, s88data[j+3*S88_MAXPORTSB]);
+			}
+			nowtime.tv_usec += S88REFRESH*1000;
+                  ((DDL_S88_DATA *) busses[bus].driverdata)  -> s88valid.tv_usec = nowtime.tv_usec % 1000000;
+                  ((DDL_S88_DATA *) busses[bus].driverdata)  -> s88valid.tv_sec  = nowtime.tv_sec  + nowtime.tv_usec / 1000000;
+		}
+	}
+}
+
+
+int term_bus_S88(int bus) {
   return 0;
 }
 
-int
-term_bus_S88(int bus)
-{
-  return 0;
-}
 
-//Initializing S88-modules (or compatible) on i.e. printerport
-int
-init_s88(char *name)
-{
-  unsigned char byte2send;
-  int fd;
+void * thr_sendrec_S88(void *v) {
+    int bus = (int)v;
+    unsigned long sleepusec = 100000;
+    int S88PORT = ((DDL_S88_DATA *) busses[bus].driverdata)  -> port;
+    int S88CLOCK_SCALE = ((DDL_S88_DATA *) busses[bus].driverdata)  -> clockscale;
+    int S88REFRESH = ((DDL_S88_DATA *) busses[bus].driverdata)  -> refresh;
 
-  fd = open(name, O_RDWR, 0);
-  if(fd < 0)
-  {
-    printf ("couldn't open device.\n");
-    return fd;
-  }
-  byte2send = 0x00;
-  write(fd, &byte2send, 1);
-  byte2send = 0x02;
-  write(fd, &byte2send, 1);
-  byte2send = 0x04;
-  write(fd, &byte2send, 1);
-  byte2send = 0x00;
-  write(fd, &byte2send, 1);
-  return fd;
-}
-
-void
-load_s88(int fd)
-{
-  unsigned char byte2send;
-
-  byte2send = 0x02;
-  write(fd, &byte2send, 1);
-  byte2send = 0x03;
-  write(fd, &byte2send, 1);
-  byte2send = 0x00;
-  write(fd, &byte2send, 1);
-  byte2send = 0x04;
-  write(fd, &byte2send, 1);
-  byte2send = 0x00;
-  write(fd, &byte2send, 1);
-}
-
-int
-get_s88(int fd)
-{
-  int ret, i, tmp;
-  unsigned int byte2send;
-
-  ret = 0;
-
-  for(i=0;i<16;i++)
-  {
-    ret <<= 1;
-    ioctl(fd, LPGETSTATUS, &tmp);           // oder lieber LPGETFLAGS ??
-    if(tmp & 0x40)
-      ret++;
-    byte2send = 0x01;
-    write(fd, &byte2send, 1);
-    byte2send = 0x00;
-    write(fd, &byte2send, 1);
-  }
-  return ret;
-}
-
-void
-clear_s88(int bus)
-{
-  int i, number_fb;
-  number_fb = ( (DDL_S88_DATA *) busses[bus].driverdata)  -> number_fb[0];
-  load_s88(bus);
-  for(i=0;i<number_fb;i++)
-    get_s88(bus);
-}
-
-void *
-thr_sendrec_S88(void *v)
-{
-  int i, number_fb;
-  int fd;
-  int bus = (int)v;
-  fd = busses[bus].fd;
-  number_fb = ( (DDL_S88_DATA *) busses[bus].driverdata)  -> number_fb[0];
-  while(1)
-  {
-    usleep(10000);
-    load_s88(fd);
-    for(i=0;i<number_fb;i++)
-    {
-//      fb[i] = get_s88(fd);
+    // set refresh-cycle
+    if (sleepusec < S88REFRESH*1000) sleepusec = S88REFRESH*1000;
+    while(1) {
+        usleep(sleepusec);
+        s88load(bus);
     }
-  }
 }

@@ -45,9 +45,7 @@
 /* unveränderliche sind mit const markiert                                     */
 
 /* einige Zeitkonstanten, alles Millisekunden */
-unsigned int ga_min_active_time = 75;
-unsigned int pause_between_cmd = 200;
-unsigned int pause_between_bytes = 2;
+
 
 /*******************************************************
  *     SERIELLE SCHNITTSTELLE KONFIGURIEREN           
@@ -111,14 +109,15 @@ thr_sendrec_M6051(void *v)
   unsigned char rr;
   struct _GL gltmp, glakt;
   struct _GA gatmp;
+  unsigned int ga_min_active_time = ( (M6051_DATA *) busses[bus].driverdata)  ->ga_min_active_time;
+  unsigned int pause_between_cmd = ( (M6051_DATA *) busses[bus].driverdata)  ->  pause_between_cmd;
+  unsigned int pause_between_bytes = ( (M6051_DATA *) busses[bus].driverdata)  ->      pause_between_bytes;
   bus = (int) v;
   akt_S88 = 1;
-
   fd = busses[bus].fd;
-//  cmd32_pending =  ( (M6051_DATA *) busses[bus].driverdata)  -> cmd32_pending;
-  /* erst mal alle Schaltaktionen canceln?, lieber nicht pauschal.. */
   busses[bus].watchdog = 1;
   number_fb = ( (M6051_DATA *) busses[bus].driverdata)  -> number_fb;
+
   if (( (M6051_DATA *) busses[bus].driverdata)  -> cmd32_pending)
   {
     SendByte = 32;
