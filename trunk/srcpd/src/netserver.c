@@ -306,7 +306,7 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
     if(nelem == 1)
       rc = infoFB(bus, port, reply);
     else {
-      rc = 418;
+      rc = SRCP_LISTTOOLONG;
     }
       
   }
@@ -317,7 +317,7 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
     if(nelem == 1)
       rc = infoGL(bus, addr, reply);
     else
-      rc = 418;
+      rc = SRCP_LISTTOOLONG;
   }
   if (strncasecmp(device, "GA", 2) == 0)
   {
@@ -326,13 +326,13 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
     switch (nelem) {
       case 0:
       case 1:
-        rc = 419;
+        rc = SRCP_LISTTOOSHORT;
         break;
       case 2:
         rc = infoGA(bus, addr, port, reply);
         break;
       default:
-        rc = 418;
+        rc = SRCP_LISTTOOLONG;
       }
   }
   if (strncasecmp(device, "SM", 2) == 0)
