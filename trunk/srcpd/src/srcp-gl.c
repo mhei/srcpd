@@ -229,10 +229,9 @@ int initGL(int busnumber, int addr, const char protocol, int protoversion, int n
     gl[busnumber].glstate[addr].n_func=n_func;
     gl[busnumber].glstate[addr].protocolversion=protoversion;
     gl[busnumber].glstate[addr].protocol=protocol;
-    gl[busnumber].glstate[addr].state = 1;
-    if(busses[busnumber].init_gl_func)
+    if(busses[busnumber].init_gl_func && gl[busnumber].glstate[addr].state == 0)
 	    (*busses[busnumber].init_gl_func)(&gl[busnumber].glstate[addr]);
-    
+    gl[busnumber].glstate[addr].state = 1;
     describeGL(busnumber, addr, msg);
     queueInfoMessage(msg);
     queueGL(busnumber, addr, 0, 0, 1, 0);
