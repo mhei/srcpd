@@ -33,7 +33,8 @@ void readconfig_server(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   strcpy(__srv->PIDFILE, "/var/run/srcpd.pid");
   __srv->groupname = NULL;
   __srv->username = NULL;
-
+  __srv->listenip = NULL;
+  
   while (child)
   {
     if (strncmp(child->name, "text", 4) == 0)
@@ -48,6 +49,18 @@ void readconfig_server(xmlDocPtr doc, xmlNodePtr node, int busnumber)
       __srv->TCPPORT = atoi(txt);
       free(txt);
     }
+    if (strcmp(child->name, "listen-ip") == 0)
+    {
+      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      DBG(DBG_INFO, "listenip: %s", txt);
+      if (__srv->listenip != NULL)
+        free(__srv->listenip);
+      __srv->listenip = malloc(strlen(txt) + 1);
+      strcpy(__srv->listenip, txt);
+      DBG(DBG_INFO, "listenip: %s", txt);
+      free(txt);
+    }
+
     if (strcmp(child->name, "pid-file") == 0)
     {
       char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
