@@ -131,14 +131,14 @@ static int init_lineM6051(int bus) {
   }
   tcgetattr(FD, &interface);
 #ifdef linux
-  interface.c_cflag = CS8 | CRTSCTS;
-  interface.c_cflag &= ~(CSTOPB | PARENB);
+  interface.c_cflag = CS8 | CRTSCTS | CREAD | CSTOPB;
   interface.c_oflag = ONOCR | ONLRET;
   interface.c_oflag &= ~(OLCUC | ONLCR | OCRNL);
   interface.c_iflag = IGNBRK | IGNPAR;
   interface.c_iflag &= ~(ISTRIP | IXON | IXOFF | IXANY);
   interface.c_lflag = NOFLSH | IEXTEN;
   interface.c_lflag &= ~(ISIG | ICANON | ECHO | ECHOE | TOSTOP | PENDIN);
+
   cfsetospeed(&interface, B2400);
   cfsetispeed(&interface, B2400);
 #else
@@ -146,7 +146,7 @@ static int init_lineM6051(int bus) {
   interface.c_ispeed = interface.c_ospeed = B2400;
   interface.c_cflag = CREAD  | HUPCL | CS8 | CSTOPB | CRTSCTS;
 #endif
-  tcsetattr(FD, TCSAFLUSH|TCSANOW, &interface);
+  tcsetattr(FD, TCSANOW, &interface);
    DBG(bus, DBG_INFO, "Opening 605x succeeded FD=%d", FD);
   return FD;
 }
@@ -162,7 +162,7 @@ int init_bus_M6051(int bus) {
   {
     busses[bus].fd = -1;
   }
-  DBG(bus, DBG_INFO, "M605x init done, fd=%d",  bus, busses[bus].fd);
+  DBG(bus, DBG_INFO, "M605x init done, fd=%d",  busses[bus].fd);
   DBG(bus, DBG_INFO, "M605x: %s",busses[bus].description);
   DBG(bus, DBG_INFO, "M605x flags: %d", busses[bus].flags & AUTO_POWER_ON);
   return 0;
@@ -170,7 +170,7 @@ int init_bus_M6051(int bus) {
 
 int term_bus_M6051(int bus)
 {
-  DBG(bus, DBG_INFO, "M605x bus %d term done, fd=%d",  bus, busses[bus].fd);
+  DBG(bus, DBG_INFO, "M605x bus term done, fd=%d",  busses[bus].fd);
   return 0;
 }
 
@@ -193,16 +193,16 @@ void* thr_sendrec_M6051(void *v)
 
   DBG(bus, DBG_INFO, "M605x on bus %d thread started, fd=%d",  bus, busses[bus].fd);
   ioctl(busses[bus].fd, FIONREAD, &temp);
-  while (temp > 0)  {
-        readByte(bus, 0, &rr);
-        ioctl(busses[bus].fd, FIONREAD, &temp);
-        DBG(bus, DBG_INFO, "ignoring unread byte: %d ", rr);
-  }
   if (( (M6051_DATA *) busses[bus].driverdata)  -> cmd32_pending)
   {
     SendByte = 32;
     writeByte(bus, SendByte, pause_between_cmd);
     ( (M6051_DATA *) busses[bus].driverdata)  -> cmd32_pending = 0;
+  }
+  while (temp > 0)  {
+        readByte(bus, 0, &rr);
+        ioctl(busses[bus].fd, FIONREAD, &temp);
+        DBG(bus, DBG_INFO, "ignoring unread byte: %d ", rr);
   }
   while (1)
   {
