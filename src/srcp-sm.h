@@ -24,12 +24,14 @@ enum COMMAND
 {
   SET = 0,
   GET,
-  VERIFY
+  VERIFY,
+  TERM
 };
 
 enum TYPE
 {
   REGISTER = 0,
+  PAGE,
   CV,
   CV_BIT
 };
