@@ -86,9 +86,14 @@ int isInitializedGL(int busnumber, int addr)
 /* Übernehme die neuen Angaben für die Lok, einige wenige Prüfungen. Lock wird ignoriert!
    Lock wird in den SRCP Routinen beachtet, hier ist das nicht angebracht (Notstop)
 */
-int queueGL(int busnumber, int addr, int dir, int speed, int maxspeed, int f,  int f1, int f2, int f3, int f4)
+
+int queueGL(int busnumber, int addr, int dir, int speed, int maxspeed, int f,  ...)
 {
   struct timeval akt_time;
+  int i=0;
+  va_list funcs;
+
+
   int number_gl = get_number_gl(busnumber);
   if ((addr > 0) && (addr <= number_gl) )
   {
@@ -106,7 +111,13 @@ int queueGL(int busnumber, int addr, int dir, int speed, int maxspeed, int f,  i
     // Protokollbezeichner und sonstige INIT Werte in die Queue kopieren!
     queue[busnumber][in[busnumber]].speed     = calcspeed(speed, maxspeed, gl[busnumber].glstate[addr].n_fs);
     queue[busnumber][in[busnumber]].direction = dir;
-    queue[busnumber][in[busnumber]].funcs     = f1 + (f2 << 1) + (f3 << 2) + (f4 << 3) + (f << 4);
+    queue[busnumber][in[busnumber]].funcs     = f;
+    va_start(funcs, f);
+    for(i=1;i<gl[busnumber].glstate[addr].n_func; i++) {
+      int fi = va_arg(funcs, int);
+      queue[busnumber][in[busnumber]].funcs += ( (fi?1:0) << i);
+    }
+    va_end(funcs);
     gettimeofday(&akt_time, NULL);
     queue[busnumber][in[busnumber]].tv        = akt_time;
     queue[busnumber][in[busnumber]].id        = addr;
@@ -250,22 +261,31 @@ int describeGL(int busnumber, int addr, char *msg)
 int infoGL(int busnumber, int addr, char* msg)
 {
   int number_gl = get_number_gl(busnumber);
+  int i;
+  char *tmp;
   if(number_gl <= 0)
     return SRCP_UNSUPPORTEDDEVICEGROUP;
   if((addr>0) && (addr <= number_gl))
   {
-    sprintf(msg, "%lu.%.3lu 100 INFO %d GL %d %d %d %d %d %d %d %d %d\n",
+    sprintf(msg, "%lu.%.3lu 100 INFO %d GL %d %d %d %d %d",
       gl[busnumber].glstate[addr].tv.tv_sec,
       gl[busnumber].glstate[addr].tv.tv_usec/1000,
           
       busnumber, addr, gl[busnumber].glstate[addr].direction,
       gl[busnumber].glstate[addr].speed,
-      gl[busnumber].glstate[addr].n_fs, 
-      (gl[busnumber].glstate[addr].funcs & 0x10)?1:0,
-      (gl[busnumber].glstate[addr].funcs & 0x01)?1:0,
-      (gl[busnumber].glstate[addr].funcs & 0x02)?1:0,
-      (gl[busnumber].glstate[addr].funcs & 0x04)?1:0,
-      (gl[busnumber].glstate[addr].funcs & 0x08)?1:0);
+      gl[busnumber].glstate[addr].n_fs, (gl[busnumber].glstate[addr].funcs & 0x01)?1:0);
+
+      for(i=1;i<gl[busnumber].glstate[addr].n_func; i++) {
+        tmp = malloc(strlen(msg)+100);
+        sprintf(tmp, "%s %d", msg, ( (gl[busnumber].glstate[addr].funcs>>i) & 0x01)?1:0);
+        strcpy(msg, tmp);
+        free(tmp);
+      }
+      tmp = malloc(strlen(msg)+2);
+      sprintf(tmp, "%s\n", msg);
+      strcpy(msg, tmp);
+      free(tmp);
+
   }
   else
   {

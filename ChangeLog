@@ -1,3 +1,8 @@
+2003-08-12 13:25  mtrute
+
+	* ChangeLog, i2c-dev.c, ib.c, loopback.c, m605x.c, netserver.c,
+	zimo.c: DESCRIPTION fixed
+
 2003-08-07 11:25  mborchers
 
 	* i2c-dev.c: [no log message]
