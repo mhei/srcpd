@@ -22,7 +22,7 @@ typedef struct _FBSTATE
 
 int startup_FB(void);
 
-int getFB(int bus, int port);
+int getFB(int bus, int port, struct timeval *time);
 void updateFB(int bus, int port, int value);
 /* setzt alle Binärports auf einmal */
 int setFBmodul(int bus, int mod, int values);

@@ -372,7 +372,6 @@ void* thr_sendrec_HSI_88(void *v)
       for(zaehler1=0;zaehler1<anzahl;zaehler1++)
       {
         readByte(busnumber, &rr);
-        rr--;
         i = rr;
         readByte(busnumber, &rr);
         temp = rr;
