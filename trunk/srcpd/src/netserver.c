@@ -6,6 +6,14 @@
  *
  */
 
+/*
+  changes:
+    22.05.2002 Frank Schmischke
+      - socket_writereply(..)
+          timeval as argument from caller
+
+
+ */
 
 #include <stdio.h>
 #include <errno.h>
@@ -75,15 +83,13 @@ int socket_readline(int Socket, char *line, int len)
  * noch ganz klar ein schoenwetter code!
  *
  */
-int socket_writereply(int Socket, int srcpcode, const char *line)
+int socket_writereply(int Socket, int srcpcode, const char *line, struct timeval *akt_time)
 {
   char buf[1024];
   char buf2[511];
-  struct timeval akt_time;
 
   srcp_fmt_msg(srcpcode, buf2);
-  gettimeofday(&akt_time, NULL);
-  sprintf(buf, "%ld.%ld %s %s\n", akt_time.tv_sec, akt_time.tv_usec / 1000,
+  sprintf(buf, "%ld.%ld %s %s\n", akt_time->tv_sec, akt_time->tv_usec / 1000,
     buf2, line);
   return(write(Socket, buf, strlen(buf)));
 }
@@ -99,6 +105,8 @@ pthread_mutex_t SessionID_mut = PTHREAD_MUTEX_INITIALIZER;
 
 void *thr_doClient(void *v)
 {
+  struct timeval akt_time;
+
   int Socket = (int) v;
   char line[1000], cmd[1000], setcmd[1000], parameter[1000], reply[1000];
   int mode = COMMAND;
@@ -130,7 +138,8 @@ void *thr_doClient(void *v)
       pthread_mutex_unlock(&SessionID_mut);
 
       sprintf(reply, "GO %ld", sessionid);
-      if (socket_writereply(Socket, SRCP_OK_GO, reply) < 0)
+      gettimeofday(&akt_time, NULL);
+      if (socket_writereply(Socket, SRCP_OK_GO, reply, &akt_time) < 0)
       {
         shutdown(Socket, 2);
         close(Socket);
@@ -183,7 +192,8 @@ void *thr_doClient(void *v)
         }
       }
     }
-    socket_writereply(Socket, rc, reply);
+    gettimeofday(&akt_time, NULL);
+    socket_writereply(Socket, rc, reply, &akt_time);
   }
 }
 
@@ -460,6 +470,7 @@ int doCmdClient(int Socket, int sessionid)
   char command[20], devicegroup[20], parameter[900];
   long int bus;
   long int rc;
+  struct timeval akt_time;
 
   syslog(LOG_INFO, "thread >>doCmdClient<< is startet for socket %i", Socket);
   while (1)
@@ -509,7 +520,8 @@ int doCmdClient(int Socket, int sessionid)
     {
       rc = handleRESET(sessionid, bus, devicegroup, parameter, reply);
     }
-    if (socket_writereply(Socket, rc, reply) < 0)
+    gettimeofday(&akt_time, NULL);
+    if (socket_writereply(Socket, rc, reply, &akt_time) < 0)
     {
       break;
     }

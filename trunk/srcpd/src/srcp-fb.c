@@ -34,18 +34,27 @@ int getFB(int bus, int port)
 void updateFB(int bus, int port, int value)
 {
   struct timezone dummy;
+  struct timeval akt_time;
+
+  // we read 8 or 16 ports at once, but we will only change those ports,
+  // which are really changed
   if(_fbstate[bus-1][port-1].state != value)
   {
     // send_event()
-    syslog(LOG_INFO, "changed: %d FB %d %d -> %d", bus, port,  _fbstate[bus-1][port-1].state, value);
+    syslog(LOG_INFO, "changed: %d FB %d %d -> %d", bus, port,
+      _fbstate[bus-1][port-1].state, value);
+
+    gettimeofday(&akt_time, &dummy);
+    _fbstate[bus-1][port-1].state = value;
+    _fbstate[bus-1][port-1].timestamp = akt_time;
 
     // queue changes for writing info-message
-    queueInfoFB(bus, port, value);
+    queueInfoFB(bus, port, value, &akt_time);
   }
-  _fbstate[bus-1][port-1].state = value;
-  gettimeofday(& _fbstate[bus-1][port-1].timestamp, &dummy);
 }
 
+#warning make one funktion from the 2 above \
+ and make it more common
 /* Normales Modul mit 16 Ports */
 int setFBmodul(int bus, int modul, int values)
 {
