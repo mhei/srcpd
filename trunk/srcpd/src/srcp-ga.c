@@ -56,8 +56,6 @@ int queueGA(int busnumber, int addr, int port, int action, long int activetime)
   struct timeval akt_time;
   int number_ga = get_number_ga(busnumber);
   
-  DBG(busnumber, DBG_DEBUG, "queueGA(): number_ga = %d", number_ga);
-
   if ((addr > 0) && (addr <= number_ga) )
   {
     while (queue_isfull(busnumber))
