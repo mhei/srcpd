@@ -183,7 +183,7 @@ int describeGA(int busnumber, int addr, char *msg)
 
   if((addr>0) && (addr <= number_ga) && (ga[busnumber].gastate[addr].protocol) )
   {
-    sprintf(msg, "%ld.%.3ld 101 INIT %d GA %d %s\n",  ga[busnumber].gastate[addr].inittime.tv_sec,
+    sprintf(msg, "%lu.%.3lu 101 INIT %d GA %d %s\n",  ga[busnumber].gastate[addr].inittime.tv_sec,
       ga[busnumber].gastate[addr].inittime.tv_usec/1000, busnumber,
       addr, ga[busnumber].gastate[addr].protocol);
   }
@@ -201,7 +201,7 @@ int infoGA(int busnumber, int addr, int port, char* msg)
 
   if((addr>0) && (addr <= number_ga))
   {
-    sprintf(msg, "%ld.%ld 100 INFO %d GA %d %d %d\n",
+    sprintf(msg, "%lu.%.3lu 100 INFO %d GA %d %d %d\n",
       ga[busnumber].gastate[addr].tv[port].tv_sec,
       ga[busnumber].gastate[addr].tv[port].tv_usec/1000, busnumber,
       addr, port, ga[busnumber].gastate[addr].action);

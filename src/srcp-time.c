@@ -46,7 +46,7 @@ int infoTime(struct _VTIME vt, char *msg)
 {
   struct timeval akt_time;
   gettimeofday(&akt_time, NULL);
-  sprintf(msg, "%ld.%ld 100 INFO 0 TIME %d %d %d %d", akt_time.tv_sec, akt_time.tv_usec/1000, vt.day, vt.hour, vt.min, vt.sec);
+  sprintf(msg, "%lu..3%lu 100 INFO 0 TIME %d %d %d %d", akt_time.tv_sec, akt_time.tv_usec/1000, vt.day, vt.hour, vt.min, vt.sec);
   return SRCP_OK;
 }
 
@@ -80,7 +80,7 @@ int describeTIME(int bus, int addr, char *reply) {
 	gettimeofday(&tv, NULL);
 	
   //sprintf(reply, "INFO 0 TIME %d %d", vtime.ratio_x, vtime.ratio_y);
-	sprintf(reply, "%ld.%ld 100 INFO 0 TIME %d %d\n",
+	sprintf(reply, "%lu.%.3lu 100 INFO 0 TIME %d %d\n",
 		tv.tv_sec, tv.tv_usec/1000,
 		vtime.ratio_x, vtime.ratio_y);
   
