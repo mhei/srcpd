@@ -1,3 +1,9 @@
+2005-03-14  Manuel Borchers <manuel@matronix.de>
+
+ * i2c-dev: major modifications of writting to i2c-devices
+            by Ulrich Eckhardt <uli.e@gmx.de>;
+            better initialisation and better power handling
+
 2005-01-09  Matthias Trute <mtrute@users.sourceforge.net>
 
  * corrected some misplaced config.h occurancies.
