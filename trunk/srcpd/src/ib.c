@@ -386,7 +386,7 @@ void send_command_gl(int busnumber)
       }
       writeByte(busnumber, byte2send, 0);
       // setting direction, light and function
-      byte2send = gltmp.funcs;
+      byte2send = (gltmp.funcs >> 1) + (gltmp.funcs & 0x01?0x10:0);
       byte2send |= 0xc0;
       if(gltmp.direction)
       {

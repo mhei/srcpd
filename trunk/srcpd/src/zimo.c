@@ -167,14 +167,14 @@ void* thr_sendrec_zimo (void *v)
         addr = gltmp.id;
         getGL(bus, addr, &glakt);
         databyte1 = (gltmp.direction?0:32);
-        databyte1 |= (gltmp.funcs & 0x10) ? 16 : 0;
+        databyte1 |= (gltmp.funcs & 0x01) ? 16 : 0;
         if(glakt.n_fs == 128)
           databyte1 |= 12;
         if(glakt.n_fs == 28)
           databyte1 |= 8;
         if(glakt.n_fs == 14)
           databyte1 |= 4;
-        databyte2 = gltmp.funcs & 0x0f;
+        databyte2 = gltmp.funcs >> 1;
         databyte3 = 0x00;
         
         sprintf(msg, "F%c%02X%02X%02X%02X%02X%c", glakt.protocol, addr, gltmp.speed, databyte1, databyte2, databyte3, 13);
