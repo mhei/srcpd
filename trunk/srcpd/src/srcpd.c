@@ -117,7 +117,7 @@ int main(int argc, char **argv)
 
   install_signal_handler();
 
-  DEV_COMPORT = malloc(sizeof(dev_com_default));
+  DEV_COMPORT = malloc(strlen(dev_com_default) + 1);
   if(DEV_COMPORT == NULL)
   {
     printf("cannot allocate memory\n");
