@@ -41,8 +41,8 @@
 void readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
     xmlNodePtr child = node->children;
-
-    busses[busnumber].type = SERVER_I2C_DEV;
+	
+	busses[busnumber].type = SERVER_I2C_DEV;
     busses[busnumber].init_func = &init_bus_I2C_DEV;
     busses[busnumber].term_func = &term_bus_I2C_DEV;
     busses[busnumber].thr_func = &thr_sendrec_I2C_DEV;
@@ -119,7 +119,8 @@ void readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 		__i2cdev->last_ga_bus = 0;
 		__i2cdev->number_ga = 0;
 	} else {
-		__i2cdev->number_ga = 64 * (1 + __i2cdev->last_ga_bus - __i2cdev->last_ga_bus);
+		__i2cdev->number_ga = 64 * (1 + __i2cdev->last_ga_bus - __i2cdev->first_ga_bus);
+		
 	}
 	
 	// check if config for FB is valid
@@ -351,62 +352,74 @@ void *thr_sendrec_I2C_DEV(void *v)
 	    if ((addr % 65) >= 33)
 			i2c_base_addr = 112;
 		
-		DBG(bus, DBG_DEBUG, "i2c-dev: i2c_base_addr = %d", i2c_base_addr);
-
-	    i2c_addr = i2c_base_addr + 2 * ((int) ((addr - 1) / 4));
+	    //i2c_addr = i2c_base_addr + 2 * ((int) ((addr % ((32 * mult_busnum) + 1)) / 4));
+		//i2c_addr = i2c_base_addr + 2 * (addr - ((int)(addr / 5) * 5) - (addr % 5));
+		
+		// first project all higher multiplexed busses to the first bus
+		i2c_addr = addr - (64 * (mult_busnum-1));
+		// now project all PCF-8574 AP addresses to PCF-8574 P addresses
+		i2c_addr = i2c_addr - ( (int)(i2c_addr/33) * 32 );
+		// now calc the address offset
+		i2c_addr = 2 * ( (int)((i2c_addr-1)/4) );
+		// last step: add the base-address
+		i2c_addr = i2c_base_addr + i2c_addr;
+		
+		DBG(bus, DBG_DEBUG, "i2c_base_addr = %d, i2c_addr = %d on multiplexed bus #%d", 
+			i2c_base_addr, i2c_addr, mult_busnum);
 
 	    // calculate bit-value from command
-	    i2c_val = (char) pow(2, (((addr - 1) % 4) * 2 + port));
+		// FIXME, does not work for addresses > 32
+		//i2c_val = (char) pow(2, (((addr - 1) % 4) * 2 + port));
+	    //i2c_val = (char) pow(2, (((addr % ((32 * mult_busnum) +1) - 1) % 4) * 2 + port));
+		//i2c_val = (char) pow(2, (((addr % ((32 * mult_busnum) +1) - 1) % 4) * 2 + port));
+		
+		i2c_val = (char) pow(2, ((((addr - ((char)(addr/32)) * 32) - 1) % 4) * 2 + port));
 
 	    // select the device
 	    ioctl(busses[bus].fd, I2C_SLAVE, (i2c_addr >> 1));
 	    // read old value
 	    readByte(bus, 1, &i2c_oldval);
-		
-		DBG(bus, DBG_DEBUG, "i2c-dev: i2c_oldval = %d", i2c_oldval);
-
+		//read(busses[bus].fd, &i2c_oldval, 1);
 
 	    if (gatmp.action == 1) {
-		gettimeofday(&gatmp.tv[gatmp.port], NULL);
-		setGA(bus, addr, gatmp);
+			gettimeofday(&gatmp.tv[gatmp.port], NULL);
+			setGA(bus, addr, gatmp);
 
-		if (gatmp.activetime >= 0) {
-		    gatmp.activetime =
-			(gatmp.activetime >
-			 ga_min_active_time) ? gatmp.
-			activetime : ga_min_active_time;
-		    gatmp.action = 0;
-		} else {
-		    gatmp.activetime = ga_min_active_time;	// always wait minimum time
-		}
+			if (gatmp.activetime >= 0) {
+				gatmp.activetime =
+					(gatmp.activetime >
+					ga_min_active_time) ? gatmp.activetime : ga_min_active_time;
+				gatmp.action = 0;
+			} else {
+				gatmp.activetime = ga_min_active_time;	// always wait minimum time
+			}
 
-		// calcutlate new value for the device
-		i2c_val = (i2c_oldval & (255 - i2c_val));
+			// calcutlate new value for the device
+			i2c_val = (i2c_oldval & (255 - i2c_val));
 
-		// write it
-		writeByte(bus, i2c_val, 0);
-		// wait
-		usleep(1000 * (unsigned long) gatmp.activetime);
+			// write it
+			writeByte(bus, i2c_val, 0);
+			// wait
+			usleep(1000 * (unsigned long) gatmp.activetime);
 
 	    }
 
 	    if ((gatmp.action == 0)) {
-		gettimeofday(&gatmp.tv[gatmp.port], NULL);
-		setGA(bus, addr, gatmp);
+			gettimeofday(&gatmp.tv[gatmp.port], NULL);
+			setGA(bus, addr, gatmp);
 
-		if (gatmp.activetime >= 0) {
-		    gatmp.activetime =
-			(gatmp.activetime >
-			 ga_min_active_time) ? gatmp.
-			activetime : ga_min_active_time;
-		} else {
-		    gatmp.activetime = ga_min_active_time;	// always wait minimum time
-		}
+			if (gatmp.activetime >= 0) {
+				gatmp.activetime =
+					(gatmp.activetime >
+					ga_min_active_time) ? gatmp.activetime : ga_min_active_time;
+			} else {
+				gatmp.activetime = ga_min_active_time;	// always wait minimum time
+			}
 
-		i2c_val = (i2c_oldval | i2c_val);
+			i2c_val = (i2c_oldval | i2c_val);
 
-		writeByte(bus, i2c_val, 0);
-		usleep(1000 * (unsigned long) gatmp.activetime);
+			writeByte(bus, i2c_val, 0);
+			usleep(1000 * (unsigned long) gatmp.activetime);
 
 	    }
 
