@@ -165,22 +165,21 @@ int isInitializedGA(int busnumber, int addr)
 /* ********************
      SRCP Kommandos
 */
-int setGA(int busnumber, int addr, struct _GASTATE a, int info)
+int setGA(int busnumber, int addr, struct _GASTATE a)
 {
   int number_ga = get_number_ga(busnumber);
 
   if((addr>0) && (addr <= number_ga))
   {
+    char msg[1000];
     if(!isInitializedGA(busnumber, addr))
       initGA_default(busnumber, addr);
     ga[busnumber].gastate[addr].action = a.action;
     ga[busnumber].gastate[addr].port    = a.port;
     gettimeofday(&ga[busnumber].gastate[addr].tv[ga[busnumber].gastate[addr].port], NULL);
-    if (info == 1) {
-      char msg[1000];
-      infoGA(busnumber, addr, a.port, msg);
-      queueInfoMessage(msg);      
-    }
+
+    infoGA(busnumber, addr, a.port, msg);
+    queueInfoMessage(msg);      
     return SRCP_OK;
   }
   else
@@ -290,7 +289,7 @@ int describeLOCKGA(int bus, int addr, char *reply) {
 
 int unlockGA(int busnumber, int addr, long int sessionid)
 {
-  if(ga[busnumber].gastate[addr].locked_by==sessionid)
+  if(ga[busnumber].gastate[addr].locked_by==sessionid || ga[busnumber].gastate[addr].locked_by==0)
   {
     char msg[256];
     ga[busnumber].gastate[addr].locked_by = 0;

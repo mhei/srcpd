@@ -45,7 +45,7 @@ int queue_GL_isempty(int busnumber);
 int unqueueNextGL(int busnumber, struct _GLSTATE *l);
 
 int getGL(int busnumber, int addr, struct _GLSTATE *l);
-int setGL(int busnumber, int addr, struct _GLSTATE l, int info);
+int setGL(int busnumber, int addr, struct _GLSTATE l);
 int infoGL(int busnumber, int addr, char* info);
 int describeGL(int busnumber, int addr, char *msg);
 int initGL(int busnumber, int addr, const char *protocol, int protoversion, int n_fs, int n_func);

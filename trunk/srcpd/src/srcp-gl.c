@@ -186,7 +186,7 @@ int getGL(int busnumber, int addr, struct _GLSTATE *l)
 /**
   info: update from hardware, not from network; queue into info mode!
 */
-int setGL(int busnumber, int addr, struct _GLSTATE l, int info)
+int setGL(int busnumber, int addr, struct _GLSTATE l)
 {
   int number_gl = get_number_gl(busnumber);
   if(number_gl <= 0)
@@ -194,15 +194,13 @@ int setGL(int busnumber, int addr, struct _GLSTATE l, int info)
 
   if((addr>0) && (addr <= number_gl))
   {
+     char msg[1000];
      gl[busnumber].glstate[addr].direction = l.direction;
      gl[busnumber].glstate[addr].speed = l.speed;
      gl[busnumber].glstate[addr].funcs = l.funcs;
      gettimeofday(&gl[busnumber].glstate[addr].tv, NULL);
-     if (info == 1) {
-       char msg[1000];
-       infoGL(busnumber, addr, msg);
-       queueInfoMessage(msg);
-     }
+     infoGL(busnumber, addr, msg);
+     queueInfoMessage(msg);
     return SRCP_OK;
   }
   else
