@@ -55,8 +55,7 @@ static int initGL_default(int busnumber, int addr)
         gl[busnumber].glstate[addr].n_func = 1;
         break;
     case SERVER_LOOPBACK:
-        gl[busnumber].glstate[addr].n_fs =  100;
-        gl[busnumber].glstate[addr].n_func = 4;
+        initGL(busnumber, addr, "P", 1, 100, 5);
         break;
     }
     return SRCP_OK;
