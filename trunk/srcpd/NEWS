@@ -1,1 +1,37 @@
-siehe Changelog
+Version 2.0 (Winter 2003 oder spaeter)
+	- SRCP 0.8
+	- Konfiguration im XML Format
+	- Redesign: Framework mit Modulen
+	- Unterstützung der Gerätegruppe SM bei passender Hardware (IB)
+	- viel mehr und neue Hardware, auch mehrere gleichartige 
+	  gleichzeitig: Intellibox, Märklin 605x, HSI S88,  S88 am Parallelport, 
+	  I2C
+	- Portierung auf FreeBSD
+	- Loopbackbus für Modellbahner ohne Anlage(nanschluß), auch als
+	  Ausgangspunkt für eigene Entwicklungen geeignet (kann alles, was
+	  ein "richtiger" Bus kann!)
+	- Warteschlangen für Befehle und Rückmeldungen, nichts geht mehr verloren
+	
+Version 1.2 (nie veröffentlicht)
+        - FIFO's für die Befehle.
+	
+Version 1.1 (SRCP 0.7.3 fork) Maerz 2002
+        - RPM's (und deb)
+	- Bugfixes
+	- Neue Hardware: HSI-S88 von Littfinski, 
+	- Kernelmodul für die Intellibox
+
+Version 1.0
+        - hmm. vergessen....
+	
+Version 0.1	
+14.07.2001 Matthias Trute
+	- Option --enable-comport wieder entfernt,
+	  es ist die runtime Option restore_com_parms
+	  geworden.
+11.07.2001 Frank Schmischke
+        - Option --enable-comport in autoconf aufgenommem
+	  (schaltet das sichern und wiederherstellen des Comports ein/aus)
+10.07.2001 Frank Schmischke	
+	- erste Version des srcpd für die Interfaces M6050, M6051 und Intellibox
+ 	- Befehlssatz entspricht SRCP 0.7.3
