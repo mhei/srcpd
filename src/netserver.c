@@ -520,6 +520,16 @@ handleINIT(int sessionid, int bus, char *device, char *parameter,
 	    rc = SRCP_LISTTOOSHORT;
     }
 
+    if (bus_has_devicegroup(bus, DG_GA) && strncasecmp(device, "GA", 2) == 0) {
+	long addr, nelem;
+	char prot[10];
+	nelem = sscanf(parameter, "%ld %s", &addr, prot);
+	if (nelem >= 2)
+	    rc = initGA(bus, addr, prot);
+	else
+	    rc = SRCP_LISTTOOSHORT;
+    }
+    
     if (bus_has_devicegroup(bus, DG_TIME) && strncasecmp(device, "TIME", 4) == 0) {
 	long rx, ry, nelem;
 	nelem = sscanf(parameter, "%ld %ld", &rx, &ry);
