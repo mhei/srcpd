@@ -26,6 +26,8 @@ int getFB(int bus, int port);
 void updateFB(int bus, int port, int value);
 /* setzt 16 Binärports auf einmal, für alle S88 Routinen */
 int setFBmodul(int bus, int mod, int values);
+/* setzt 8 Binärports auf einmal, für alle S88 Routinen */
+int setFBmodul8(int bus, int mod, int values);
 int infoFB(int bus, int port, char *msg);
 int describeFB(int bus, int addr, char *reply);
 #endif
