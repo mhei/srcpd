@@ -43,7 +43,7 @@ void getFBall(const char *proto, char *reply)
     }
     else
     {
-	    sprintf(reply, "INFO -1");
+      sprintf(reply, "INFO -1");
     }
     strcat(reply, "\n");
 }
@@ -55,11 +55,11 @@ int getFBone(const char *proto, int port)
   result = -1;
   if(strcmp(proto, "M6051") == 0)
   {
-	  result = getFB_S88(port);
+    result = getFB_S88(port);
   }
   if(strcmp(proto, "IB") == 0)
   {
-	  result = getFB_S88(port);
+    result = getFB_S88(port);
   }
   if(strcmp(proto, "I8255") == 0)
   {
@@ -74,11 +74,11 @@ void infoFB(const char *proto, int port, char *msg)
 //  syslog(LOG_INFO, "infoFBone result: %i", state);
   if(state>=0)
   {
-	  sprintf(msg, "INFO FB %s %d %d\n", proto, port + 1, state);
+    sprintf(msg, "INFO FB %s %d %d\n", proto, port + 1, state);
   }
   else
   {
-	  sprintf(msg, "INFO -2\n");
+    sprintf(msg, "INFO -2\n");
   }
   syslog(LOG_INFO, "%s", msg);
 }
