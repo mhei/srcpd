@@ -111,67 +111,45 @@ int doInfoClient(int Socket, int sessionid)
     // send startup-infos to a new client
     struct timeval cmp_time;
     int busnumber;
-  current = in;
+    current = in;
     DBG(0, DBG_DEBUG, "new Info-client requested %ld", sessionid);
     for (busnumber = 0; busnumber <= num_busses; busnumber++)
     {
       DBG(busnumber, DBG_DEBUG, "send all data for busnumber %d to new client", busnumber);
       // first some global bus data
-      reply[0] = '\0';
       // send Descriptions for busses
       describeBus(busnumber, reply);
-      if (strlen(reply) > 0) {
-              write(Socket, reply, strlen(reply));
-      }
+      socket_writereply(Socket, reply); 
       strcpy(description, reply);
-      reply[0] = '\0';
+      *reply = 0x00;
       if(strstr(description, "POWER")) {
         infoPower(busnumber, reply);
-        if (strlen(reply) > 0) {
-              write(Socket, reply, strlen(reply));
-        }
+        socket_writereply(Socket, reply);*reply = 0x00;
       }
       if(strstr(description, "TIME")) {
-        DBG(busnumber, DBG_DEBUG, "send model time to new client");
         describeTIME(reply);
-        if (strlen(reply) > 0) {
-              write(Socket, reply, strlen(reply));
-        }
-        reply[0] = '\0';
+        socket_writereply(Socket, reply);*reply = 0x00;
         infoTIME(reply);
-        if (strlen(reply) > 0) {
-              write(Socket, reply, strlen(reply));
-        }
-        reply[0] = '\0';
+        socket_writereply(Socket, reply);*reply = 0x00;
       }
 
       // send all needed generic locomotivs
 
       if(strstr(description, "GL")) {
         number = get_number_gl(busnumber);
-        DBG(busnumber, DBG_DEBUG, "send all (max. %d) locomotivs from busnumber %d to new client", number, busnumber);
         for (i = 1; i <= number; i++)
         {
           if(isInitializedGL(busnumber, i))
           {
             long int lockid;
             describeGL(busnumber, i, reply);
-            if (strlen(reply) > 0) {
-              write(Socket, reply, strlen(reply));
-            }
-            reply[0] = '\0';
-
+            socket_writereply(Socket, reply);*reply = 0x00;
             infoGL(busnumber, i, reply);
-            if (strlen(reply) > 0) {
-              write(Socket, reply, strlen(reply));
-            }
-            reply[0] = '\0';
+            socket_writereply(Socket, reply);*reply = 0x00;
             getlockGL(busnumber, i, &lockid);
             if(lockid != 0) {
               describeLOCKGL(busnumber,  i, reply);
-              if (strlen(reply) > 0) {
-                 write(Socket, reply, strlen(reply));
-              }
+              socket_writereply(Socket, reply);*reply = 0x00;              
             }
           }
         }
@@ -179,7 +157,6 @@ int doInfoClient(int Socket, int sessionid)
       // send all needed generic assesoires
       if(strstr(description, "GA")) {
         number = get_number_ga(busnumber);
-        DBG(busnumber, DBG_DEBUG,  "send all (max. %d) assesoirs from busnumber %d to new client", number, busnumber);
         for (i = 1; i <= number; i++)
         {
           if(isInitializedGA(busnumber, i))
@@ -187,23 +164,18 @@ int doInfoClient(int Socket, int sessionid)
             long int lockid;
             int rc, port;
             describeGA(busnumber, i, reply);
-            if (strlen(reply) > 0) {
-              write(Socket, reply, strlen(reply));
-            }
-            reply[0] = '\0';
+            socket_writereply(Socket, reply);*reply = 0x00;
             for (port = 0; port <=1; port++) {
               rc = infoGA(busnumber, i, port, reply);
-              if ( (rc == SRCP_INFO) && (strlen(reply) > 0))
-                write(Socket, reply, strlen(reply));
-          }
-          reply[0] = '\0';
-          getlockGA(busnumber, i, &lockid);
-            if(lockid != 0) {
-              describeLOCKGA(busnumber,  i, reply);
-              if (strlen(reply) > 0) {
-                 write(Socket, reply, strlen(reply));
+              if ( (rc == SRCP_INFO) ) {
+		      socket_writereply(Socket, reply);*reply = 0x00;		      
               }
-            }
+          }
+          getlockGA(busnumber, i, &lockid);
+          if(lockid != 0) {
+              describeLOCKGA(busnumber,  i, reply);
+              socket_writereply(Socket, reply);*reply = 0x00;            
+          }
 
          }
        }
@@ -211,16 +183,12 @@ int doInfoClient(int Socket, int sessionid)
       if(strstr(description, "FB")) {
         // send all needed feedbacks
         number = get_number_fb(busnumber);
-        DBG(busnumber, DBG_DEBUG,  "send all feedbacks from busnumber %d to new client", busnumber);
          for (i = 1; i <= number; i++)
          {
            int rc = getFB(busnumber, i, &cmp_time, &value);
            if (rc == SRCP_OK && value!=0) {
               infoFB(busnumber, i, reply);
-              if(strlen(reply)>0) {
-                write(Socket, reply, strlen(reply));
-              }
-              reply[0] = '\0';
+              socket_writereply(Socket, reply);*reply = 0x00;
             }
           }
         }
@@ -233,7 +201,7 @@ int doInfoClient(int Socket, int sessionid)
         DBG(0, DBG_WARN, "INFO queue dropped some information (%d elements). Sorry", abs(in - current));
       }
       current = in;
-      while (1==1)   {
+      while (1)   {
         while(queueIsEmptyInfo(current)) usleep(2000); // busy waiting, anyone with better code out there?
         current = unqueueNextInfo(current, reply);
         DBG(0, DBG_DEBUG, "reply-length = %d", strlen(reply));

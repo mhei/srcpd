@@ -126,27 +126,29 @@ void close_comport(int bus)
 
 /* Zeilenweises Lesen vom Socket      */
 /* nicht eben trivial!                */
+
+int isvalidchar(c) {
+  if( (c>=0x20 && c<=127) || c==0x09 || c=='\n')
+    return 1;
+  return 0;
+}
 int socket_readline(int Socket, char *line, int len)
 {
     char c;
     int i = 0;
     int bytes_read = read(Socket, &c, 1);
     if (bytes_read <= 0) {
-	return -1;
+      return -1;
     } else {
-	line[0] = c;
-	/* die reihenfolge beachten! */
-	while (c != '\n' && c != 0x00 && read(Socket, &c, 1) > 0) {
+      if ( isvalidchar(c) ) line[i++] = c;
+      /* die reihenfolge beachten! */
+      while (read(Socket, &c, 1) > 0) {
 	    /* Ende beim Zeilenende */
-	    if (c == '\n')
-		break;
-	    /* Folgende Zeichen ignorieren wir */
-	    if (c == '\r' || c == (char) 0x00 || i >= len)
-		continue;
-	    line[++i] = c;
-	}
+	    if (c == '\n') break;
+	    if ( isvalidchar(c) && (i < len-1) ) line[i++] = c;
+      }
     }
-    line[++i] = 0x00;
+    line[i++] = 0x00;
     return 0;
 }
 
@@ -158,6 +160,7 @@ int socket_writereply(int Socket, const char *line)
 {
     int status;
     long int linelen = strlen(line);
+    if (linelen<=0) return 0;
     DBG(0, DBG_DEBUG, "socket %d, write %s", Socket, line);
     if (linelen >= 1000) {
 	/* split line into chunks as specified in SRCP, not yet implemented */

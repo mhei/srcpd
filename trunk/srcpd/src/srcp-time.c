@@ -57,12 +57,12 @@ int infoTIME(char *msg)
     return SRCP_NODATA;
   sprintf(msg, "%lu.%.3lu 100 INFO 0 TIME %d %d %d %d\n", akt_time.tv_sec, akt_time.tv_usec/1000,
     vtime.day, vtime.hour, vtime.min, vtime.sec);
-  return SRCP_OK;
+  return SRCP_INFO;
 }
 
 int describeTIME(char *reply) {
   sprintf(reply, "%lu.%.3lu 101 INFO 0 TIME %d %d\n", vtime.inittime.tv_sec, vtime.inittime.tv_usec/1000, vtime.ratio_x, vtime.ratio_y);
-  return SRCP_OK;
+  return SRCP_INFO;
 }
 
 /***********************************************************************

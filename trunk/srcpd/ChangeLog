@@ -1,3 +1,22 @@
+2003-09-19 13:26  mtrute
+
+	* srcp-ga.c, srcp-info.c: GA Ports ohne Aktivierung werden nicht
+	mehr gemeldet
+
+2003-09-16 21:25  mborchers
+
+	* ib.c: Nearly completet rework of the IB init.  Many thanks go to
+	Franz Sieloff for his improvements!
+	
+	The changes:  - BREAK is now sent without the ibox kernel-module  -
+	Baudrate is now auto-detected, to match what has been	 chosen in
+	the IB
+
+2003-09-13 16:22  mtrute
+
+	* ChangeLog, Makefile.in, config.h.in, configure.in, threads.c:
+	IPv6 Support, listen-ip feature disabled for now...
+
 2003-09-13 00:40  mborchers
 
 	* ib.c: improved speed-handling for GL
