@@ -1,14 +1,8 @@
 
 /* 
  * Vorliegende Software unterliegt der General Public License, 
- * Version 2, 1991. (c) Matthias Trute, 2000-2001.
+ * Version 2, 1991. (c) Matthias Trute & the srcpd team, 2000-2003.
  *
- * 04.07.2001 Frank Schmischke
- *            - Feld für Vormerkungen wurde auf 50 reduziert
- *            - Position in Vormerkung ist jetzt unabhängig von der
- *              Decoderadresse
- *            - Prüfungen auf Protokoll fü|r Motorola wurden entfernt, da IB
- *              auch NMRA verarbeitet
  */
 
 #include "stdincludes.h"
@@ -33,9 +27,36 @@ static int out[MAX_BUSSES], in[MAX_BUSSES];
 static int queue_len(int busnumber);
 static int queue_isfull(int busnumber);
 
-int get_number_gl (int busnumber)
+/**
+ * isValidGL: checks if a given address could be a valid GL.
+ * returns true or false. false, if not all requierements are met.
+ */
+int isValidGL(busnumber, addr) {
+    if (busnumber > 0 &&  		/* in bus 0 GL are not allowed */
+	busnumber <= num_busses &&       /* only num_busses are configured */
+	gl[busnumber].numberOfGl > 0 && /* number of GL is set */
+	addr > 0 &&                     /* address must be greater 0 */
+	addr <= gl[busnumber].numberOfGl ) { /* but not more than the maximum address on that bus */
+	return 1==1;
+    } else {
+	return 1==0;
+	DBG(busnumber, DBG_DEBUG, "isValidGL: %d %d", busnumber, addr);
+    }
+}
+
+/**
+ * getMaxAddrGL: returns the maximum Address for GL on the given bus 
+ * returns: <0: invalid busnumber
+            =0: no GL on that bus
+	    >0: maximum address
+ */
+int getMaxAddrGL (int busnumber)
 {
-  return gl[busnumber].numberOfGl;
+  if(busnumber > 0 && busnumber <= num_busses) {
+      return gl[busnumber].numberOfGl;
+  } else {
+      return -1;
+  }
 }
 
 // es gibt Decoder für 14, 27, 28 und 128 FS
@@ -56,9 +77,16 @@ static int calcspeed(int vs, int vmax, int n_fs)
   return rs;
 }
 
+/* checks whether a GL is already initialized or not
+ * returns false even, if it is an invalid address!
+ */
 int isInitializedGL(int busnumber, int addr)
 {
-   return (gl[busnumber].glstate[addr].state == 1);
+    if(isValidGL(busnumber,addr) ) {
+       return (gl[busnumber].glstate[addr].state == 1);
+    } else {
+       return 1==0;
+    }
 }
 
 /* Übernehme die neuen Angaben für die Lok, einige wenige Prüfungen. Lock wird ignoriert!
@@ -68,38 +96,36 @@ int isInitializedGL(int busnumber, int addr)
 int queueGL(int busnumber, int addr, int dir, int speed, int maxspeed, const int f)
 {
   struct timeval akt_time;
-  int number_gl = get_number_gl(busnumber);
-  if ((addr > 0) && (addr <= number_gl) )
-  {
-    if (!isInitializedGL(busnumber, addr))
-    {
-      initGL( busnumber, addr, 'P', 1, 14, 1);
-    }
-    while (queue_isfull(busnumber))
-    {
-      DBG(busnumber, DBG_WARN, "GL Command Queue full");
-      sleep(1);
-    }
 
-    pthread_mutex_lock(&queue_mutex[busnumber]);
-    // Protokollbezeichner und sonstige INIT Werte in die Queue kopieren!
-    queue[busnumber][in[busnumber]].speed     = calcspeed(speed, maxspeed, gl[busnumber].glstate[addr].n_fs);
-    queue[busnumber][in[busnumber]].direction = dir;
-    queue[busnumber][in[busnumber]].funcs     = f;
-    gettimeofday(&akt_time, NULL);
-    queue[busnumber][in[busnumber]].tv        = akt_time;
-    queue[busnumber][in[busnumber]].id        = addr;
-    in[busnumber]++;
-    if (in[busnumber] == QUEUELEN)
-      in[busnumber] = 0;
+  if( isValidGL(busnumber, addr) ) {
+	if (!isInitializedGL(busnumber, addr))
+	{
+    	    initGL( busnumber, addr, 'P', 1, 14, 1);
+	    DBG(busnumber, DBG_WARN, "GL default init for %d-%d", busnumber, addr);
+	}
+	while (queue_isfull(busnumber))
+	{
+    	    DBG(busnumber, DBG_WARN, "GL Command Queue full");
+    	    sleep(1);
+	}
 
-    pthread_mutex_unlock(&queue_mutex[busnumber]);
-  }
-  else
-  {
+	pthread_mutex_lock(&queue_mutex[busnumber]);
+	// Protokollbezeichner und sonstige INIT Werte in die Queue kopieren!
+	queue[busnumber][in[busnumber]].speed     = calcspeed(speed, maxspeed, gl[busnumber].glstate[addr].n_fs);
+	queue[busnumber][in[busnumber]].direction = dir;
+	queue[busnumber][in[busnumber]].funcs     = f;
+	gettimeofday(&akt_time, NULL);
+	queue[busnumber][in[busnumber]].tv        = akt_time;
+	queue[busnumber][in[busnumber]].id        = addr;
+	in[busnumber]++;
+	if (in[busnumber] == QUEUELEN)
+        in[busnumber] = 0;
+
+	pthread_mutex_unlock(&queue_mutex[busnumber]);
+	return SRCP_OK;
+  } else {
     return SRCP_WRONGVALUE;
   }
-  return SRCP_OK;
 }
 
 int queue_GL_isempty(int busnumber)
@@ -145,11 +171,7 @@ int unqueueNextGL(int busnumber, struct _GLSTATE *l)
 
 int getGL(int busnumber, int addr, struct _GLSTATE *l)
 {
-  int number_gl = get_number_gl(busnumber);
-  if(number_gl <= 0)
-    return SRCP_UNSUPPORTEDDEVICEGROUP;
-
-  if((addr > 0) && (addr <= number_gl))
+  if( isValidGL(busnumber, addr) && isInitializedGL(busnumber, addr) )
   {
     *l = gl[busnumber].glstate[addr];
     return SRCP_OK;
@@ -162,16 +184,13 @@ int getGL(int busnumber, int addr, struct _GLSTATE *l)
 
 /**
  * setGL is called from the hardware drivers to keep the
- * the data and the info mode informed 
- * It respects the TERM function
+ * the data and the info mode informed. It is called from
+ * within the SRCP SET Command code.
+ * It respects the TERM function.
 */
 int setGL(int busnumber, int addr, struct _GLSTATE l)
 {
-  int number_gl = get_number_gl(busnumber);
-  if(number_gl <= 0)
-    return SRCP_UNSUPPORTEDDEVICEGROUP;
-
-  if((addr>0) && (addr <= number_gl))
+  if( isValidGL(busnumber, addr) )
   {
      char msg[1000];
      gl[busnumber].glstate[addr].direction = l.direction;
@@ -191,16 +210,13 @@ int setGL(int busnumber, int addr, struct _GLSTATE l)
   }
   else
   {
-    return SRCP_NODATA;
+    return SRCP_WRONGVALUE;
   }
 }
 
 int initGL(int busnumber, int addr, const char protocol, int protoversion, int n_fs, int n_func)
 {
-  int number_gl = get_number_gl(busnumber);
-  if(number_gl <= 0)
-    return SRCP_UNSUPPORTEDDEVICEGROUP;
-  if((addr>0) && (addr <= number_gl))
+  if( isValidGL(busnumber, addr) )
   {
     char msg[1000];
     gettimeofday(&gl[busnumber].glstate[addr].inittime, NULL);
@@ -236,21 +252,16 @@ int termGL(busnumber, addr) {
  * RESET a GL to its defaults
  */
 int resetGL(int busnumber, int addr) {
-	if(isInitializedGL(busnumber, addr)){
-		
-		queueGL(busnumber, addr, 0, 0, 1, 0);
-		return SRCP_OK;
-	} else {
-		return SRCP_NODATA;
-	}
-	
+    if(isValidGL(busnumber, addr) && isInitializedGL(busnumber, addr)){
+	queueGL(busnumber, addr, 0, 0, 1, 0);
+	return SRCP_OK;
+    } else {
+	return SRCP_NODATA;
+    }	
 }
 int describeGL(int busnumber, int addr, char *msg)
 {
-  int number_gl = get_number_gl(busnumber);
-  if(number_gl <= 0)
-    return SRCP_UNSUPPORTEDDEVICEGROUP;
-  if((addr>0) && (addr <= number_gl) && (gl[busnumber].glstate[addr].protocolversion>0) ) {
+  if( isValidGL(busnumber, addr) && isInitializedGL(busnumber, addr) ) {
     sprintf(msg, "%lu.%.3lu 101 INFO %d GL %d %c %d %d %d\n",
       gl[busnumber].glstate[addr].inittime.tv_sec, gl[busnumber].glstate[addr].inittime.tv_usec/1000,
       busnumber, addr, gl[busnumber].glstate[addr].protocol, gl[busnumber].glstate[addr].protocolversion,
@@ -266,12 +277,9 @@ int describeGL(int busnumber, int addr, char *msg)
 
 int infoGL(int busnumber, int addr, char* msg)
 {
-  int number_gl = get_number_gl(busnumber);
   int i;
   char *tmp;
-  if(number_gl <= 0)
-    return SRCP_UNSUPPORTEDDEVICEGROUP;
-  if((addr>0) && (addr <= number_gl))
+  if( isValidGL(busnumber, addr) && isInitializedGL(busnumber, addr) )
   {
     sprintf(msg, "%lu.%.3lu 100 INFO %d GL %d %d %d %d %d",
       gl[busnumber].glstate[addr].tv.tv_sec,
@@ -304,7 +312,8 @@ int infoGL(int busnumber, int addr, char* msg)
 int lockGL(int busnumber, int addr, long int duration, long int sessionid)
 {
   char msg[256];
-  if(gl[busnumber].glstate[addr].locked_by==sessionid || gl[busnumber].glstate[addr].locked_by==0) {
+  if (isValidGL(busnumber, addr) && isInitializedGL(busnumber, addr) ) {
+    if( gl[busnumber].glstate[addr].locked_by==sessionid || gl[busnumber].glstate[addr].locked_by==0) {
         gl[busnumber].glstate[addr].locked_by=sessionid;
         gl[busnumber].glstate[addr].lockduration = duration;
         gettimeofday(& gl[busnumber].glstate[addr].locktime, NULL);
@@ -314,26 +323,41 @@ int lockGL(int busnumber, int addr, long int duration, long int sessionid)
     } else {
         return SRCP_DEVICELOCKED;
     }
+  } else {
+    return SRCP_WRONGVALUE;
+  }
 }
 
 int getlockGL(int busnumber, int addr, long int *session_id)
 {
-  *session_id = gl[busnumber].glstate[addr].locked_by;
-  return SRCP_OK;
+  if (isValidGL(busnumber, addr) && isInitializedGL(busnumber, addr) ) {
+
+    *session_id = gl[busnumber].glstate[addr].locked_by;
+    return SRCP_OK;
+  } else {
+    return SRCP_WRONGVALUE;
+  }
 }
 
 int describeLOCKGL(int bus, int addr, char *reply) {
+  if (isValidGL(bus, addr) && isInitializedGL(bus, addr) ) {
+
     sprintf(reply, "%lu.%.3lu 100 INFO %d LOCK GL %d %ld %ld\n",
           gl[bus].glstate[addr].locktime.tv_sec,
           gl[bus].glstate[addr].locktime.tv_usec/1000,
           bus, addr, gl[bus].glstate[addr].lockduration, gl[bus].glstate[addr].locked_by);
     return SRCP_OK;
+  } else {
+    return SRCP_WRONGVALUE;
+  }
 }
 
 int unlockGL(int busnumber, int addr, long int sessionid)
 {
-  if(gl[busnumber].glstate[addr].locked_by==sessionid || gl[busnumber].glstate[addr].locked_by==0)
-  { char msg[256];
+  if (isValidGL(busnumber, addr) && isInitializedGL(busnumber, addr) ) {
+
+      if(gl[busnumber].glstate[addr].locked_by==sessionid || gl[busnumber].glstate[addr].locked_by==0)
+    { char msg[256];
     gl[busnumber].glstate[addr].locked_by = 0;
     gettimeofday(& gl[busnumber].glstate[addr].locktime, NULL);
     sprintf(msg, "%lu.%.3lu 102 INFO %d LOCK GL %d %ld\n",
@@ -347,6 +371,9 @@ int unlockGL(int busnumber, int addr, long int sessionid)
   {
     return SRCP_DEVICELOCKED;
   }
+  } else {
+    return SRCP_WRONGVALUE;
+  }
 }
 
 /**
@@ -359,9 +386,9 @@ void unlock_gl_bysessionid(long int sessionid)
   DBG(0, DBG_INFO, "unlock GL by session-ID %ld", sessionid);
   for(i=0; i<=num_busses; i++)
   {
-    number = get_number_gl(i);
+    number = getMaxAddrGL(i);
     DBG(i, DBG_DEBUG, "number of gl for busnumber %d is %d", i, number);
-    for(j=1;j<number; j++)
+    for(j=1;j<=number; j++)
     {
       if(gl[i].glstate[j].locked_by == sessionid)
       {
@@ -378,12 +405,10 @@ void unlock_gl_bytime(void)
 {
   int i,j;
   int number;
-  DBG(0, DBG_INFO, "unlock GL by time");
   for(i=0; i<=num_busses; i++)
   {
-    number = get_number_gl(i);
-    DBG(0, DBG_DEBUG, "number of gl for busnumber %d is %d", i, number);
-    for(j=1;j<number; j++)
+    number = getMaxAddrGL(i);
+    for(j=1;j<=number; j++)
     {
       if(gl[i].glstate[j].lockduration>0 && gl[i].glstate[j].lockduration -- == 1)
       {

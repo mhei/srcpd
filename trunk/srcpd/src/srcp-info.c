@@ -136,7 +136,7 @@ int doInfoClient(int Socket, int sessionid)
       // send all needed generic locomotivs
 
       if(strstr(description, "GL")) {
-        number = get_number_gl(busnumber);
+        number = getMaxAddrGL(busnumber);
         for (i = 1; i <= number; i++)
         {
           if(isInitializedGL(busnumber, i))
