@@ -51,6 +51,23 @@ extern int server_shutdown_state;
 extern int server_reset_state;
 extern const char *WELCOME_MSG;
 
+void CreatePIDFile(int pid) {
+    FILE *f;
+    f=fopen(PIDFILE,"wb");
+    if (!f)  
+       syslog(LOG_INFO,"   cannot open %s. Ignoring.", PIDFILE); 
+    else {
+       fprintf(f,"%d", pid);
+       fflush(f);
+    }
+    fclose(f);
+}
+
+void DeletePIDFile() {
+    FILE *f;
+    unlink(PIDFILE);
+}
+
 void hup_handler(int s)
 {
   /* signal SIGHUP(1) caught */
@@ -67,6 +84,7 @@ void term_handler(int s)
   // signal SIGTERM(15) caught
   syslog(LOG_INFO,"SIGTERM(15) received! Terminating ...");
   server_shutdown_state = 1;
+  DeletePIDFile();
 }
 
 void install_signal_handler()
@@ -78,6 +96,7 @@ void install_signal_handler()
   signal(SIGPIPE, SIG_IGN);    /* important, because write() on sockets */
                                /* should return errors                */
 }
+
 
 int main(int argc, char **argv)
 {
@@ -139,6 +158,7 @@ int main(int argc, char **argv)
   // ab hier keine Konsole mehr... Wir sind ein Dämon geworden!
   chdir("/");
 
+  CreatePIDFile(getpid());
   /* Now we have to initialize all busses */
   for(i=1; i<=num_busses; i++) {
       (*busses[i].init_func)(i);
@@ -210,6 +230,7 @@ int main(int argc, char **argv)
   for(i=1; i<=num_busses; i++) {
       (*busses[i].term_func)(i);
   }
+  DeletePIDFile();
   syslog(LOG_INFO, "und tschüß..");
   exit(0);
 }
