@@ -92,24 +92,13 @@ int setFBmodul(int bus, int modul, int values)
   return SRCP_OK;
 }
 
-///* Kurzes Modul mit 8 Ports, u.a. DDL S88 */
-//int setFBmodul8(int bus, int mod, int values)
-//{
-//  int i;
-//  for(i=0; i<8;i++)
-//  {
-//    int c = (values & (1 << (7-i))) ? 1 : 0;
-//    updateFB(bus, (mod-1)*8 + i + 1, c);
-//  }
-//  return SRCP_OK;
-//}
-
 int infoFB(int bus, int port, char *msg)
 {
   int state = getFB(bus, port);
   if(state>=0)
   {
-    sprintf(msg, "%d FB %d %d", bus, port, state);
+    sprintf(msg, "%ld.%ld 100 INFO %d FB %d %d",
+        _fbstate[bus-1][port-1].timestamp.tv_sec, _fbstate[bus-1][port-1].timestamp.tv_usec/1000,  bus, port, state);
     return SRCP_INFO;
   }
   else
@@ -123,7 +112,15 @@ int describeFB(int bus, int addr, char *reply)
   return SRCP_NOTSUPPORTED;
 }
 
-int startup_FB()
-{
-  return 0;
+int startup_FB(){
+   struct timeval akt_time;
+   int i,j;
+    gettimeofday(&akt_time, NULL);
+    for(i=0; i<  MAX_BUSSES; i++) {
+      for(j=0; j<    MAXFBS; j++) {
+        _fbstate[i][j].state = -1;
+        _fbstate[i][j].timestamp = akt_time;
+      }
+    }
+    return 0;
 }

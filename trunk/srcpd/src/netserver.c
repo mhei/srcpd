@@ -87,10 +87,12 @@ int socket_writereply(int Socket, int srcpcode, const char *line, struct timeval
 {
   char buf[1024];
   char buf2[511];
-
-  srcp_fmt_msg(srcpcode, buf2);
-  sprintf(buf, "%ld.%ld %s %s\n", akt_time->tv_sec, akt_time->tv_usec / 1000,
-    buf2, line);
+  if(srcpcode==SRCP_INFO) {
+     sprintf(buf, "%s\n", line);
+  } else {
+    srcp_fmt_msg(srcpcode, buf2);
+    sprintf(buf, "%ld.%ld %s %s\n", akt_time->tv_sec, akt_time->tv_usec / 1000, buf2, line);
+  }
   return(write(Socket, buf, strlen(buf)));
 }
 
@@ -205,10 +207,8 @@ int handleSET(int sessionid, int bus, char *device, char *parameter, char *reply
   {
     long laddr, direction, speed, maxspeed, func, f1, f2, f3, f4;
     int anzparms;
-    anzparms =
-    sscanf(parameter, "%ld %ld %ld %ld %ld %ld %ld %ld %ld",
-       &laddr, &direction, &speed, &maxspeed, &func,
-       &f1, &f2, &f3, &f4);
+    anzparms = sscanf(parameter, "%ld %ld %ld %ld %ld %ld %ld %ld %ld",
+       &laddr, &direction, &speed, &maxspeed, &func, &f1, &f2, &f3, &f4);
     if (anzparms > 5)
     {
       rc = queueGL(bus, laddr, direction, speed, maxspeed, func, f1, f2, f3, f4);
@@ -282,9 +282,9 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
   }
   if (strncasecmp(device, "GA", 2) == 0)
   {
-    long addr;
-    sscanf(parameter, "%ld", &addr);
-    rc = infoGA(bus, addr, reply);
+    long addr, port;
+    sscanf(parameter, "%ld", &addr, &port);
+    rc = infoGA(bus, addr, port, reply);
   }
   if (strncasecmp(device, "POWER", 5) == 0)
   {
@@ -295,6 +295,8 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
     if (vtime.ratio_x && vtime.ratio_y)
     {
       rc = infoTime(vtime, reply);
+    } else {
+      rc = SRCP_NODATA;
     }
   }
   if(strncasecmp(device, "DESCRIPTION", 11) == 0) {

@@ -42,28 +42,79 @@ static int out[MAX_BUSSES], in[MAX_BUSSES];
 static int queue_len(int bus);
 static int queue_isfull(int bus);
 
+static int get_number_gl (int bus) {
+  int number_gl = -1;
+  switch (busses[bus].type) {
+    case SERVER_M605X:
+        number_gl =   ( (M6051_DATA *) busses[bus].driverdata)  -> number_gl;
+        break;
+    case SERVER_IB:
+        number_gl =   ( (IB_DATA *) busses[bus].driverdata)  -> number_gl;
+        break;
+    case SERVER_LOOPBACK:
+        number_gl =   ( (LOOPBACK_DATA *) busses[bus].driverdata)  -> number_gl;
+        break;
+ }
+ return number_gl;
+}
+
+static int initGL_default(int bus, int addr) {
+  switch (busses[bus].type) {
+    case SERVER_M605X:
+        gl[bus][addr].n_fs = 14;
+        gl[bus][addr].n_func = 1;
+        break;
+    case SERVER_IB:
+        gl[bus][addr].n_fs =  126;
+        gl[bus][addr].n_func = 1;
+        break;
+    case SERVER_LOOPBACK:
+        gl[bus][addr].n_fs =  100;
+        gl[bus][addr].n_func = 4;
+        break;
+    }
+    return SRCP_OK;
+}
+// es gibt Decoder für 14, 27, 28 und 128 FS
+// Achtung bei IB alles auf 126 FS bezogen (wenn Ergebnis > 0, dann noch eins aufaddieren)
+static int calcspeed(int vs, int vmax, int n_fs)
+{
+  int rs;
+  if(0==vmax)
+    return vs;
+  if(vs<0)
+    vs = 0;
+  if(vs>vmax)
+    vs = vmax;
+  rs = (vs * n_fs) / vmax;
+  if((rs==0) && (vs!=0))
+    rs = 1;
+  return rs;
+}
+
+static int isInitializedGL(int bus, int addr) {
+   return gl[bus][addr].n_fs==0;
+}
+
+
 /* Übernehme die neuen Angaben für die Lok, einige wenige Prüfungen */
 int queueGL(int bus, int addr, int dir, int speed, int maxspeed, int f,  int f1, int f2, int f3, int f4)
 {
   struct timeval akt_time;
-  int number_gl;
-  if(busses[bus].type == SERVER_M605X) {
-    number_gl =   ( (M6051_DATA *) busses[bus].driverdata)  -> number_gl;
-  } else {
-    return SRCP_UNSUPPORTEDDEVICEGROUP;
-  }
+  int number_gl = get_number_gl(bus);
   syslog(LOG_INFO, "setGL für %i", addr);
   if ((addr > 0) && (addr <= number_gl) )
   {
+    if(! isInitializedGL(bus, addr) ){
+       initGL_default(bus, addr);
+    }
     while (queue_isfull(bus))
     {
       usleep(1000);
     }
 
     pthread_mutex_lock(&queue_mutex[bus]);
-
-    queue[bus][in[bus]].speed     = speed;
-    queue[bus][in[bus]].maxspeed  = maxspeed;
+    queue[bus][in[bus]].speed     = calcspeed(speed, maxspeed, gl[bus][addr].n_fs);
     queue[bus][in[bus]].direction = dir;
     queue[bus][in[bus]].funcs     = f1 + (f2 << 1) + (f3 << 2) + (f4 << 3) + (f << 4);
     gettimeofday(&akt_time, NULL);
@@ -72,11 +123,8 @@ int queueGL(int bus, int addr, int dir, int speed, int maxspeed, int f,  int f1,
     in[bus]++;
     if (in[bus] == QUEUELEN)
       in[bus] = 0;
-      
     pthread_mutex_unlock(&queue_mutex[bus]);
-  }
-  else
-  {
+  }  else  {
     return -1;
   }
   return SRCP_OK;
@@ -119,22 +167,6 @@ int unqueueNextGL(int bus, struct _GL *gl)
   return out[bus];
 }
 
-static int get_number_gl (int bus) {
-  int number_gl = -1;
-  switch (busses[bus].type) {
-    case SERVER_M605X:
-        number_gl =   ( (M6051_DATA *) busses[bus].driverdata)  -> number_gl;
-        break;
-    case SERVER_IB:
-        number_gl =   ( (IB_DATA *) busses[bus].driverdata)  -> number_gl;
-        break;
-    case SERVER_LOOPBACK:
-        number_gl =   ( (LOOPBACK_DATA *) busses[bus].driverdata)  -> number_gl;
-        break;
-
- }
- return number_gl;
-}
 
 
 int getGL(int bus, int addr, struct _GL *l) {
@@ -260,19 +292,3 @@ int startup_GL(void) {
   return SRCP_OK;
 }
 
-// es gibt Decoder für 14, 27, 28 und 128 FS
-// Achtung bei IB alles auf 126 FS bezogen (wenn Ergebnis > 0, dann noch eins aufaddieren)
-static int calcspeed(int vs, int vmax, int n_fs)
-{
-  int rs;
-  if(0==vmax)
-    return vs;
-  if(vs<0)
-    vs = 0;
-  if(vs>vmax)
-    vs = vmax;
-  rs = (vs * n_fs) / vmax;
-  if((rs==0) && (vs!=0))
-    rs = 1;
-  return rs;
-}
