@@ -58,6 +58,15 @@ static int last_bit[MAX_BUSSES];
 
 static int init_line_IB(int);
 
+// IB helper functions
+static int sendBreak(const int fd);
+static int sendBreakViaIboxDevice(const int port);
+static int switchOffP50Command(const int busnumber);
+static int readAnswer_ib(const int busnumber, const int generatePrintf);
+//static int readByte_ib(int bus, int wait, unsigned char *the_byte);
+static speed_t checkBaudrate(const int fd, const int busnumber);
+static int resetBaudrate(const speed_t speed, const int busnumber);
+
 void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
   xmlNodePtr child = node->children;
@@ -146,7 +155,7 @@ int init_bus_IB(int busnumber)
   int status;
 
   status = 0;
-  printf("Bus %d mit Debuglevel %d\n", busnumber, busses[busnumber].debuglevel);
+  printf("Bus %d with debuglevel %d\n", busnumber, busses[busnumber].debuglevel);
   if(busses[busnumber].type != SERVER_IB)
   {
     status = -2;
@@ -718,7 +727,7 @@ void check_status_ib(int busnumber)
 	  //printf("got GL data from IB: lok# = %d, speed = %d, dir = %d\n", 
 	  //	gltmp.id, gltmp.speed, gltmp.direction); 
 
-      // initialize the GL if not done by user,
+		// initialize the GL if not done by user,
 	  // because IB can report uninited GLs...
 	  if (!isInitializedGL(busnumber, gltmp.id))
 	  {
@@ -729,10 +738,10 @@ void check_status_ib(int busnumber)
 	  getGL(busnumber, gltmp.id, &glakt);
 	  // recalc speed
 	  gltmp.speed = (gltmp.speed * glakt.n_fs) / 126; 
-      setGL(busnumber, gltmp.id, gltmp);
+		setGL(busnumber, gltmp.id, gltmp);
 	  
 	  // 5. byte real speed (is ignored)
-      readByte(busnumber, 1, &rr);
+		readByte(busnumber, 1, &rr);
 	  //printf("speed reported in 5th byte: speed = %d\n", rr);
 	  
       // next 1. byte
@@ -914,10 +923,12 @@ static int init_line_IB(int busnumber)
   unsigned char rr;
   unsigned char byte2send;
   struct termios interface;
+/*
 #ifdef linux
   struct serial_struct serial_line;
   unsigned int LSR;
 #endif
+*/
   char *name = busses[busnumber].device;
   printf("Begining to detect IB on serial line: %s\n", name);
 
@@ -947,28 +958,17 @@ static int init_line_IB(int busnumber)
   while(status != -1)
     status = readByte(busnumber, 1, &rr);
 
-#ifdef linux
-  ioctl(fd, TIOCGSERIAL, &serial_line);
-  close(fd);
+	status = 0;
+	
+	printf("Sending BREAK... ");
 
-  sleep(1);
-  LSR = serial_line.port + 3;
-  printf("Sending BREAK\n");
-  fd = open("/dev/ibox", O_RDWR);
-  DBG(busnumber, DBG_INFO, "fd for ibox-dev = %d", fd);
-  if(fd < 0)
-    return(-1);
-  if(ioctl(fd, IB_IOCTINIT, LSR) < 0)
-    return(-1);
-  usleep(200000);
-  if(ioctl(fd, IB_IOCTBREAK, 1) < 0)
-    return(-1);
-  usleep(1000000);
-  if(ioctl(fd, IB_IOCTBREAK, 0) < 0)
-    return(-1);
-  usleep(600000);
+// do we still need the difference between Linux and BSD here?
+// on Linux we no send the break without the kernel-module, too!
+#ifdef linux
+  
+  status = sendBreak(fd);
   close(fd);
-  sleep(1);
+  
 #endif
 #ifdef __FreeBSD__
 /*
@@ -983,66 +983,45 @@ static int init_line_IB(int busnumber)
   close(fd);
 #endif
 
-  printf("BREAK sucessfully sent\n");
+	if (status == 0)
+	{
+		printf("successful.\n");
+	} else {
+		printf("unsuccessful!\n");
+	}
 
+	// open the comport in 2400, to get buadrate from IB und turn off P50 commands
   baud = B2400;
   fd = open_comport(busnumber, baud);
   if(fd < 0)
   {
-    printf("Init comport faild\n");
+    printf("open_comport() faild\n");
     return(-1);
   }
-  sleep(1);
-  byte2send = 0xC4;
-  writeByte(busnumber, byte2send, 2);
-  status = readByte(busnumber, 1, &rr);
-  if(status == -1)
-    return(1);
-  if(rr=='D')
-  {
-    printf("Intellibox in download mode.\nDO NOT PROCEED !!!\n");
-    return(2);
-  }
-  printf("Switching off P50-commands\n");
-  byte2send = 'x';
-  writeByte(busnumber, byte2send, 0);
-  byte2send = 'Z';
-  writeByte(busnumber, byte2send, 0);
-  byte2send = 'z';
-  writeByte(busnumber, byte2send, 0);
-  byte2send = 'A';
-  writeByte(busnumber, byte2send, 0);
-  byte2send = '1';
-  writeByte(busnumber, byte2send, 0);
-  byte2send = 0x0d;
-  writeByte(busnumber, byte2send, 2);
-  status = readByte(busnumber, 1, &rr);
-  if(status != 0)
-    return 1;
-  printf("Changing baudrate to 38400 bps\n");
-  byte2send = 'B';
-  writeByte(busnumber, byte2send, 0);
-  byte2send = '3';
-  writeByte(busnumber, byte2send, 0);
-  byte2send = '8';
-  writeByte(busnumber, byte2send, 0);
-  byte2send = '4';
-  writeByte(busnumber, byte2send, 0);
-  byte2send = '0';
-  writeByte(busnumber, byte2send, 0);
-  writeByte(busnumber, byte2send, 0);
-  byte2send = 0x0d;
-  writeByte(busnumber, byte2send, 0);
+	//printf("open_comport() successful; fd = %d\n", fd );
 
-  sleep(1);
+  baud = checkBaudrate(fd, busnumber);
+  if ((baud == B0) || (baud > B38400))
+  {
+      printf("checkBaudrate() failed\n");
+      return -1;
+  }
+
+	busses[busnumber].baudrate = baud;
+	
+	status = switchOffP50Command(busnumber);	
+	status = resetBaudrate(busses[busnumber].baudrate, busnumber);
   close_comport(fd);
 
   sleep(1);
+	
+	// now open the comport for the communication
+	
   fd = open_comport(busnumber, busses[busnumber].baudrate);
   DBG(busnumber, DBG_DEBUG, "fd after open_comport = %d", fd);
   if(fd < 0)
   {
-    printf("Init comport failed\n");
+    printf("open_comport() failed\n");
     return(-1);
   }
   byte2send = 0xC4;
@@ -1058,3 +1037,312 @@ static int init_line_IB(int busnumber)
   
   return 0;
 }
+
+static int sendBreak(const int fd)
+{
+    if (tcflush(fd, TCIOFLUSH) != 0)
+    {
+			printf("sendBreak(): Error in tcflush before break\n");
+			return -1;
+     }
+		 tcflow(fd, TCOOFF);
+		 usleep(300000); // 300 ms
+		 if (tcsendbreak(fd, 100) != 0)
+		 {
+			 printf("sendBreak(): Error in tcsendbreak \n");
+			 return -1;
+		 }
+		 sleep(3);
+		 usleep(600000); // 600 ms
+		 tcflow(fd, TCOON);
+		 return 0;
+}
+
+// old code preserved just in case, the new BREAK-style does not work as expected...
+static int sendBreakViaIboxDevice(const int port)
+{
+      unsigned int LSR;
+      int fd;
+
+      LSR = port + 3;
+      printf("sending BREAK\n");
+      fd = open("/dev/ibox", O_RDWR);
+      syslog(LOG_INFO, "fd for ibox-dev = %d", fd);
+      if(fd < 0)
+           return(-1);
+      if(ioctl(fd, IB_IOCTINIT, LSR) < 0)
+           return(-1);
+      usleep(200000);
+      if(ioctl(fd, IB_IOCTBREAK, 1) < 0)
+           return(-1);
+      usleep(1000000);
+      if(ioctl(fd, IB_IOCTBREAK, 0) < 0)
+           return(-1);
+      usleep(600000);
+      close(fd);
+      sleep(1);
+    return 0;
+}
+
+/**
+ * checks the baudrate of the intellibox ; see interface description of intellibox
+ *
+ * @param file descriptor of the port
+ * @param  busnumber inside srcp
+ * @return the correct baudrate or -1 if nor recognized
+**/
+static speed_t checkBaudrate(const int fd, const int busnumber)
+{
+  int found = 0;
+  short error = 0;
+  int baudrate = 2400;
+  struct termios interface;
+  unsigned char input[10];
+  unsigned char out;
+  short len = 0;
+  int i;
+  speed_t internalBaudrate = B0;
+	char msg[200];
+	
+  printf("Checking baudrate inside IB, see special option S1 in IB-Handbook\n");
+  for (i = 0; i < 10; i++)
+    input[i]=0;
+  while ((found == 0) && (baudrate <= 38400))
+  {
+    //printf("baudrate = %d ?????\n", baudrate);
+    DBG(busnumber, DBG_INFO, "baudrate = %i\n" , baudrate);
+    error = tcgetattr(fd, &interface);
+    if ( error < 0)
+    {
+      strcpy(msg, strerror(errno));
+      DBG(busnumber, DBG_INFO, "checkBaudrate: Error in tcgettattr, error #%d: %s\n", error, msg);
+      return B0;
+    }
+    switch (baudrate)
+    {
+      case 2400:
+        internalBaudrate=B2400;
+        break;
+      case 4800:
+        internalBaudrate=B4800;
+        break;
+      case 9600:
+        internalBaudrate=B9600;
+        break;
+      case 19200:
+        internalBaudrate=B19200;
+        break;
+      case 38400:
+        internalBaudrate=B38400;
+        break;
+      default:
+        internalBaudrate=B19200;
+        break;
+    }
+    if (cfsetispeed(&interface, internalBaudrate) != 0)
+    {
+      strcpy(msg, strerror(errno));
+      DBG(busnumber, DBG_INFO,"CheckBaudate: Error in cfsetispeed, error #%d: %s\n", error, msg);
+    }
+    tcflush(fd, TCOFLUSH);
+ 	  error = tcsetattr(fd, TCSANOW, &interface);
+    if (error != 0)
+    {
+			strcpy(msg, strerror(errno));
+      DBG(busnumber, DBG_INFO, "CheckBaudate: Error in tcsetattr, error #%d: %s\n", error, msg);
+      return B0;
+    }
+
+    out = 0xC4;
+    writeByte(busnumber, out, 0);
+    usleep(200000); /* 200 ms */
+
+    for (i = 0; i< 2; i++)
+    {
+        int erg = readByte(busnumber, 1, &input[i]);
+				//printf("baudrate = %d, readyByte_ib() returned %d\n", baudrate, erg);
+        if (erg == 0)
+          len++;
+    }
+		 
+		 //printf("Answer from IB: »%s«\n", input);
+		
+    switch (len)
+    {
+      case 1:
+				// IBox has P50 commands disabled
+        found = 1;
+        if(input[0]=='D')
+        {
+          printf("Intellibox in download mode.\nDO NOT PROCEED !!!\n");
+          return(2);
+        }
+				printf("IBox found; P50-commands are disabled.\n");
+        break;
+      case 2:
+				// IBox has P50 commands enabled
+        found = 1;
+				// don't know if this also works, when P50 is enabled...
+				// check disabled for now...
+				/*
+				if(input[0]=='D')
+        {
+          printf("Intellibox in download mode.\nDO NOT PROCEED !!!\n");
+          return(2);
+        }
+				*/
+				printf("IBox found; P50-commands are enabled.\n");
+ 		    break;
+      default:
+ 		    found = 0;
+ 		    break;
+    }
+    if (found == 0)
+    {
+        baudrate *= 2;
+        internalBaudrate=B0;
+    }
+    usleep (200000);  // 200 ms
+  }
+  //printf("Baudrate in IB is: %d\n", baudrate);
+  return internalBaudrate;
+}
+
+/**
+ * reset the baudrate inside ib depending on par 1
+ * @param requested baudrate
+ * @return: 0 if successfull
+**/
+static int resetBaudrate(const speed_t speed, const int busnumber)
+{
+  unsigned char byte2send;
+  int status;
+  unsigned char* sendString = "";
+  switch (speed)
+  {
+    case B2400:
+      printf("Changing baudrate to 2400 bps\n");
+      sendString = "B2400";
+      writeString(busnumber, sendString, 0);
+      break;
+    case B4800:
+      printf("Changing baudrate to 4800 bps\n");
+      sendString = "B4800";
+      writeString(busnumber, sendString, 0);
+      break;
+    case B9600:
+      printf("Changing baudrate to 9600 bps\n");
+      sendString = "B9600";
+      writeString(busnumber, sendString, 0);
+      break;
+    case B19200:
+      printf("Changing baudrate to 19200 bps\n");
+      sendString = "B19200";
+      writeString(busnumber, sendString, 0);
+      break;
+    case B38400:
+      printf("Changing baudrate to 38400 bps\n");
+      sendString = "B38400";
+      writeString(busnumber, sendString, 0);
+      break;
+    default:
+      return -1;
+	}
+  byte2send = 0x0d;
+  writeByte(busnumber, byte2send, 0);
+	usleep(200000);          // 200 ms
+	// use following line to see some debugging
+  //status = readAnswer_ib(busnumber, 1);
+	status = readAnswer_ib(busnumber, 0);
+  if(status != 0)
+    return 1;
+  return 0;
+}
+
+/**
+ * sends the command to switch of P50 commands off, see interface description of intellibox
+ *
+ * the answer of the intellibox is shwon with printf
+ *
+ * @param  busnumber inside srcpd
+ * @return 0 if ok
+**/
+static int switchOffP50Command(const int busnumber)
+{
+  unsigned char byte2send;
+	unsigned char *sendString = "xZzA1";
+  int status;
+
+  printf("Switching off P50-commands\n");
+  
+  writeString(busnumber, sendString, 0);
+  byte2send = 0x0d;
+  writeByte(busnumber, byte2send, 0);
+
+	// use following line, to see some debugging
+	//status = readAnswer_ib(busnumber, 1);
+  status = readAnswer_ib(busnumber, 0);
+  if(status != 0)
+    return 1;
+  return 0;
+}
+
+/**
+ * reads an answer of the intellibox after a command in P50 mode.
+ *
+ * If required, the answer of the intellibox is shown with printf. Usually the method
+ * reads until '[' is received, which is defined as the end of the string. This last char is
+ * not printed.
+ *
+ * @param  busnumber inside srcp
+ * @param if > 0 the answer is printed
+ * @return 0 if ok
+**/
+static int readAnswer_ib(const int busnumber, const int generatePrintf)
+{
+     unsigned char input[80];
+     int counter = 0;
+     int found = 0;
+     int i;
+     for (i = 0; i < 80; i++)
+        input[i]=0;
+     while ((found == 0) && (counter < 80))
+     {
+          if (readByte(busnumber, 1, &input[counter]) == 0)
+          {
+              if (input[counter] == 0)
+                     input[counter] = 0x20;
+              if (input[counter] == ']')
+              {
+                  input[counter] = 0;
+                   found = 1;
+              }
+          }
+          counter++;
+    }
+    if (found == 0)
+        return -1;
+    if (generatePrintf > 0)
+    {
+         printf("IBox returned: %s\n", input);
+    }
+    return 0;
+}
+
+/*
+static int readByte_ib(int bus, int wait, unsigned char *the_byte)
+{
+  int i;
+  int status;
+  
+  for (i = 0; i < 10; i++)
+  {
+	  status = readByte(bus, wait, the_byte);
+	  if (status == 0)
+	  	return 0;
+	  //printf("readByte() unsuccesfull; status = %d\n", status);
+	  usleep(10000);
+  }
+  return -1;
+}
+*/
