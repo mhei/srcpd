@@ -3,6 +3,11 @@
  * Vorliegende Software unterliegt der General Public License, 
  * Version 2, 1991. (c) Matthias Trute, 2000-2001.
  *
+ * 2002-12-29 Manuel Borchers
+ *            handleSET():
+ *            - getlockGL changed to getlockGA in the GA-command-processing
+ *            - if the device is locked, return code is now set to
+ *              SRCP_DEVICELOCKED
  */
 
 #include <stdio.h>
@@ -222,17 +227,23 @@ int handleSET(int sessionid, int bus, char *device, char *parameter, char *reply
       }
     }
   }
+	
   if (strncasecmp(device, "GA", 2) == 0)
   {
     long gaddr, port, aktion, delay;
     long int lockid;
+		
     sscanf(parameter, "%ld %ld %ld %ld", &gaddr, &port, &aktion, &delay);
     /* Port 0,1; Aktion 0,1 */
     /* Only if not locked!! */
-    getlockGL(bus, gaddr, &lockid);
-    if(lockid==0 || lockid==sessionid) {
-          rc = queueGA(bus, gaddr, port, aktion, delay);
-     }
+    getlockGA(bus, gaddr, &lockid);
+		
+		if(lockid==0 || lockid==sessionid) {
+			rc = queueGA(bus, gaddr, port, aktion, delay);
+		} else {
+			rc = SRCP_DEVICELOCKED;
+		}
+		
   }
   if (strncasecmp(device, "SM", 2) == 0)
   {
