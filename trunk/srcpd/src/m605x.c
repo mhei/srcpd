@@ -63,9 +63,13 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     strcpy(busses[busnumber].description, "GA GL FB POWER");
 
     while (child) {
+          if(strncmp(child->name, "text", 4)==0) {
+            child = child -> next;
+            continue;
+          }
+
 	if (strcmp(child->name, "maximum_address_for_feedback") == 0) {
-	    char *txt =
-		xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+	    char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
 	    ((M6051_DATA *) busses[busnumber].driverdata)->number_fb =
 		atoi(txt);
 	    free(txt);
@@ -157,15 +161,16 @@ void*
 thr_sendrec_M6051(void *v)
 {
   unsigned char SendByte;
-  int fd, akt_S88, addr, temp, bus, number_fb;
+  int fd, akt_S88, addr, temp, number_fb;
   char c;
   unsigned char rr;
   struct _GL gltmp, glakt;
   struct _GA gatmp;
+  int bus = (int) v;
   unsigned int ga_min_active_time = ( (M6051_DATA *) busses[bus].driverdata)  ->ga_min_active_time;
   unsigned int pause_between_cmd = ( (M6051_DATA *) busses[bus].driverdata)  ->  pause_between_cmd;
   unsigned int pause_between_bytes = ( (M6051_DATA *) busses[bus].driverdata)  ->      pause_between_bytes;
-  bus = (int) v;
+
   akt_S88 = 1;
   fd = busses[bus].fd;
   busses[bus].watchdog = 1;

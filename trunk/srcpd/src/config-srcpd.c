@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <syslog.h>
 
 
 #include <libxml/xmlmemory.h>
@@ -47,25 +48,30 @@ static void register_bus(xmlDocPtr doc, xmlNodePtr node)
     int busnumber;
 
     if (strcmp(node->name, "bus"))
-	return;			// only bus definitions
+	return;	// only bus definitions
 
     proptxt = xmlGetProp(node, "number");
-
     busnumber = atoi(proptxt);
     free(proptxt);
     if (busnumber > MAX_BUSSES || busnumber < 0) {
 	// you need to recompile
 	return;
     }
+
     busses[busnumber].number = busnumber;
     num_busses = busnumber;
     child = node->children;
     while (child) {
-	char *txt;
-	txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-
+        char *txt;
+        if(strcmp(child->name, "text")==0) {
+            child = child->next;
+            syslog(LOG_INFO, "ignoring");
+            continue;
+      }
+ 	txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
 	if (busnumber == 0) {
-          readconfig_server(doc, child, busnumber);
+          if(strncmp(child->name, "Server", 6)==0)
+            readconfig_server(doc, child, busnumber);
 	}
 	if (busnumber < MAX_BUSSES) {
           /* some attributes are common for all (real) busses */
@@ -91,19 +97,19 @@ static void register_bus(xmlDocPtr doc, xmlNodePtr node)
 	    }
          /* but the most important are not ;=)  */
 	    if (strcmp(child->name, "M605X") == 0) {
-		readconfig_m605x(doc, child->children, busnumber);
+		readconfig_m605x(doc, child, busnumber);
 	    }
 	    if (strcmp(child->name, "Intellibox") == 0) {
-		readconfig_intellibox(doc, child->children, busnumber);
+		readconfig_intellibox(doc, child, busnumber);
 	    }
 	    if (strcmp(child->name, "Loopback") == 0) {
-		readconfig_loopback(doc, child->children, busnumber);
+		readconfig_loopback(doc, child, busnumber);
 	    }
 	    if (strcmp(child->name, "DDL-S88") == 0) {
-		readconfig_DDL_S88(doc, child->children, busnumber);
+		readconfig_DDL_S88(doc, child, busnumber);
 	    }
 	    if (strcmp(child->name, "HSI-S88") == 0) {
-		readconfig_HSI_S88(doc, child->children, busnumber);
+		readconfig_HSI_S88(doc, child, busnumber);
 	    }
 	} else {
 	    // to many busses, needs recompilation
@@ -140,7 +146,9 @@ void readConfig(const char *filename)
     /* some defaults */
     doc = load_config_xml(filename);
     if (doc != 0) {
+      syslog(LOG_INFO, "parsing %s", filename);
 	walk_config_xml(doc);
+       syslog(LOG_INFO, " %s done", filename);
 	xmlFreeDoc(doc);
     }
 }
