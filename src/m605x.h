@@ -10,6 +10,8 @@
 #ifndef _M605X_H
 #define _M605X_H
 
+#include <libxml/tree.h>
+
 typedef struct _M6051_DATA {
     int number_fb;
     int number_ga;
@@ -20,6 +22,8 @@ typedef struct _M6051_DATA {
     unsigned int pause_between_cmd;
     unsigned int pause_between_bytes;
 } M6051_DATA;
+
+int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, int busnumber);
 
 int init_line6051(int bus);
 int init_bus_M6051(int bus);
