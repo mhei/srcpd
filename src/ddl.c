@@ -1096,17 +1096,17 @@ void* thr_sendrec_DDL (void *v)
 		    case 1: comp_maerklin_1(bus, addr, gltmp.direction, speed, gltmp.funcs & 0x01); 
 			    break;
 		    case 2: comp_maerklin_2(bus, addr, gltmp.direction, speed, gltmp.funcs & 0x01,
-			( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>1) & 0x02), ( (gltmp.funcs>>1) & 0x04),
-			( (gltmp.funcs>>1) & 0x08));  break;
+			    ( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>2) & 0x01), ( (gltmp.funcs>>3) & 0x01),
+			    ( (gltmp.funcs>>4) & 0x01));break;
 		    case 3: comp_maerklin_3(bus, addr, gltmp.direction, speed, gltmp.funcs & 0x01,
-			( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>1) & 0x02), ( (gltmp.funcs>>1) & 0x04),
-			( (gltmp.funcs>>1) & 0x08)); break;
+			    ( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>2) & 0x01), ( (gltmp.funcs>>3) & 0x01),
+			    ( (gltmp.funcs>>4) & 0x01));break;
 		    case 4: comp_maerklin_4(bus, addr, gltmp.direction, speed, gltmp.funcs & 0x01,
-			( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>1) & 0x02), ( (gltmp.funcs>>1) & 0x04),
-			( (gltmp.funcs>>1) & 0x08)); break;
+			    ( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>2) & 0x01), ( (gltmp.funcs>>3) & 0x01),
+			    ( (gltmp.funcs>>4) & 0x01));break;
 		    case 5: comp_maerklin_5(bus, addr, gltmp.direction, speed, gltmp.funcs & 0x01,
-			( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>1) & 0x02), ( (gltmp.funcs>>1) & 0x04),
-			( (gltmp.funcs>>1) & 0x08)); break;
+			    ( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>2) & 0x01), ( (gltmp.funcs>>3) & 0x01),
+			    ( (gltmp.funcs>>4) & 0x01));break;
 		}
 	    case 'N': /* NMRA / DCC Codes */
 		if(speed==1)speed++;
@@ -1121,43 +1121,47 @@ void* thr_sendrec_DDL (void *v)
     		  case 2:
 	               if (direction != 2) 
     		          comp_nmra_f4b7s28(bus, addr,direction,speed, gltmp.funcs & 0x01,
-			( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>1) & 0x02), ( (gltmp.funcs>>1) & 0x04),
-			( (gltmp.funcs>>1) & 0x08));
+			  ( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>2) & 0x01), ( (gltmp.funcs>>3) & 0x01),
+    			  ( (gltmp.funcs>>4) & 0x01));
             		else  // emergency halt: FS 1
                 	    comp_nmra_f4b7s28(bus, addr,0,1,gltmp.funcs & 0x01,
-			( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>1) & 0x02), ( (gltmp.funcs>>1) & 0x04),
-			( (gltmp.funcs>>1) & 0x08));
+			    ( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>2) & 0x01), ( (gltmp.funcs>>3) & 0x01),
+			    ( (gltmp.funcs>>4) & 0x01));
 	               break;
  
     		  case 3:
 	               if (direction != 2)
     		          comp_nmra_f4b7s128(bus, addr,direction,speed,gltmp.funcs & 0x01,
-			( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>1) & 0x02), ( (gltmp.funcs>>1) & 0x04),
-			( (gltmp.funcs>>1) & 0x08));
+			    ( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>2) & 0x01), ( (gltmp.funcs>>3) & 0x01),
+			    ( (gltmp.funcs>>4) & 0x01));
             		else  // emergency halt: FS 1
                 	  comp_nmra_f4b7s128(bus, addr,0,1, gltmp.funcs & 0x01,
-			( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>1) & 0x02), ( (gltmp.funcs>>1) & 0x04),
-			( (gltmp.funcs>>1) & 0x08));
+			    ( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>2) & 0x01), ( (gltmp.funcs>>3) & 0x01),
+			    ( (gltmp.funcs>>4) & 0x01));
+
 	               break;
     		  case 4:
 	               if (direction != 2)
     		          comp_nmra_f4b14s28(bus, addr,direction,speed,gltmp.funcs & 0x01,
-			( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>1) & 0x02), ( (gltmp.funcs>>1) & 0x04),
-			( (gltmp.funcs>>1) & 0x08));
+			    ( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>2) & 0x01), ( (gltmp.funcs>>3) & 0x01),
+			    ( (gltmp.funcs>>4) & 0x01));
+
             		else  // emergency halt: FS 1
                 	  comp_nmra_f4b14s28(bus, addr,0,1,gltmp.funcs & 0x01,
-			( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>1) & 0x02), ( (gltmp.funcs>>1) & 0x04),
-			( (gltmp.funcs>>1) & 0x08));
+			    ( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>2) & 0x01), ( (gltmp.funcs>>3) & 0x01),
+			    ( (gltmp.funcs>>4) & 0x01));
 	               break;
     		  case 5:
 	               if (direction != 2)
     		          comp_nmra_f4b14s128(bus, addr,direction,speed,gltmp.funcs & 0x01,
-			( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>1) & 0x02), ( (gltmp.funcs>>1) & 0x04),
-			( (gltmp.funcs>>1) & 0x08));
+			    ( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>2) & 0x01), ( (gltmp.funcs>>3) & 0x01),
+			    ( (gltmp.funcs>>4) & 0x01));
+			 
             		else  // emergency halt: FS 1
                 	  comp_nmra_f4b14s128(bus, addr,0,1,gltmp.funcs & 0x01,
-			( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>1) & 0x02), ( (gltmp.funcs>>1) & 0x04),
-			( (gltmp.funcs>>1) & 0x08));
+			    ( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>2) & 0x01), ( (gltmp.funcs>>3) & 0x01),
+			    ( (gltmp.funcs>>4) & 0x01));
+
 	               break;
 		}
 	    }
