@@ -28,25 +28,25 @@
 #define MAXSRCPLINELEN       1001         //! max number of bytes per line plus 0x00
 
 #define SERVER_SERVER           0
-#define SERVER_DDL              1         //! srcpd arbeitet als DDL-Server
-#define SERVER_M605X            2         //! srcpd arbeitet als M605X-Server
-#define SERVER_IB               3         //! srcpd arbeitet als IB-Server
-#define SERVER_LI100            4         //! srcpd arbeitet als Lenz-Server
-#define SERVER_LOOPBACK         5         //! dummy driver, no real hardware
-#define SERVER_S88              6         //! S88 am Parallelport
-#define SERVER_HSI_88	          7       //! srcpd arbeitet als HSI 88 Server
-#define SERVER_I2C_DEV          8         //! srcpd arbeitet als I2C-DEV-Server
-#define SERVER_ZIMO             9         //! Zimo MX1
+#define SERVER_DDL              1         // srcpd-bus works as DDL-server
+#define SERVER_M605X            2         // srcpd-bus works as M605X-server
+#define SERVER_IB               3         // srcpd-bus works as IB-server
+#define SERVER_LI100            4         // srcpd-bus works as Lenz-server
+#define SERVER_LOOPBACK         5         // srcpd-bus is dummy driver, no real hardware
+#define SERVER_S88              6         // srcpd-bus works as S88 at parallelport
+#define SERVER_HSI_88	          7         // srcpd-bus works as HSI88-server
+#define SERVER_I2C_DEV          8         // srcpd-bus works as I2C-DEV-server
+#define SERVER_ZIMO             9         // srcpd-bus works as Zimo MX1
 
-/** generic flags */
-#define USE_WATCHDOG          0x0001      //! use watchdog
-#define AUTO_POWER_ON         0x0002      //! start Power on startup
-#define RESTORE_COM_SETTINGS  0x0004      //! restore com-port settings after close
+/* generic flags */
+#define USE_WATCHDOG          0x0001      // use watchdog
+#define AUTO_POWER_ON         0x0002      // start Power on startup
+#define RESTORE_COM_SETTINGS  0x0004      // restore com-port settings after close
 
-/** driver specific flags */
-// #define M6020_MODE            0x0100      //! Subtyp zum M605X
-#define FB_ORDER_0            0x0200      //! feedback port 0 is bit 0
-#define FB_16_PORTS           0x0400      //! feedback-modul has 16 ports
+/* driver specific flags */
+#define M6020_MODE            0x0100      // Subtyp zum M605X
+#define FB_ORDER_0            0x0200      // feedback port 0 is bit 0
+#define FB_16_PORTS           0x0400      // feedback-modul has 16 ports
 
 
 /* Busstruktur */
