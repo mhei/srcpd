@@ -71,6 +71,9 @@ int queueInfoSM(int busnumber, int addr, int type, int typeaddr, int bit, int va
         case CV_BIT:
           sprintf(tmp, "CVBIT %d %d %d", typeaddr, bit, value);
           break;
+        case PAGE:
+          sprintf(tmp, "PAGE %d %d", typeaddr, value);
+          break;
       }
     }
     else
@@ -137,7 +140,7 @@ int queueSM(int busnumber, int command, int type, int addr, int typeaddr, int bi
 {
   struct timeval akt_time;
   int number_sm = get_number_sm(busnumber);
-  syslog(LOG_INFO, "queueSM für %i", addr);
+  DBG(busnumber, DBG_DEBUG, "queueSM für %i", addr);
   // addr == -1 means using separate progrm-track
   // addr != -1 means programming on the main (only availible with CV)
   if ( (addr == -1) || ((addr > 0) && (addr <= number_sm) && (type == CV)) )
@@ -218,9 +221,12 @@ int setSM(int busnumber, int type, int addr, int typeaddr, int bit, int value, i
   if(number_sm == 0)
     return SRCP_UNSUPPORTEDDEVICEGROUP;
 
+  DBG(busnumber, DBG_DEBUG, "CV: %d         BIT: %d         VALUE: 0x%02x", typeaddr, bit ,value);
   if ( (addr == -1) || ((addr > 0) && (addr <= number_sm) && (type == CV)) )
   {
     gettimeofday(&tv, NULL);
+    if (type == CV_BIT)
+      value = (value & (1 << bit)) ? 1: 0;
     queueInfoSM(busnumber, addr, type, typeaddr, bit, value, return_code, &tv);
     return SRCP_OK;
   }
@@ -233,11 +239,10 @@ int setSM(int busnumber, int type, int addr, int typeaddr, int bit, int value, i
 int infoSM(int busnumber, int command, int type, int addr, int typeaddr, int bit, int value, char* info)
 {
   int status;
-  if (busses[busnumber].debuglevel > 4)
-    syslog(LOG_INFO, "CV: %d         BIT: %d         VALUE: 0x%02x", typeaddr, bit ,value);
+  DBG(busnumber, DBG_DEBUG, "CV: %d         BIT: %d         VALUE: 0x%02x", typeaddr, bit ,value);
   status = queueSM(busnumber, command, type, addr, typeaddr, bit, value);
 
-  sprintf(info, "       >> currently under construction <<");
+  sprintf(info, "       >> currently under construction <<\n");
 
   return status;
 }
