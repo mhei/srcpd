@@ -43,6 +43,9 @@
 #include "srcp-power.h"
 #include "srcp-srv.h"
 
+
+#define __m6051 ((M6051_DATA*)busses[busnumber].driverdata)
+
 /** readconfig_m605x: liest den Teilbaum der xml Configuration und parametriert
      den busspezifischen Datenteil, wird von register_bus() aufgerufen */
 
