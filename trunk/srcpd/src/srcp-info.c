@@ -185,18 +185,16 @@ int doInfoClient(int Socket, int sessionid)
           if(isInitializedGA(busnumber, i))
           {
             long int lockid;
+            int rc, port;
             describeGA(busnumber, i, reply);
             if (strlen(reply) > 0) {
               write(Socket, reply, strlen(reply));
             }
             reply[0] = '\0';
-
-          infoGA(busnumber, i, 0, reply);
-          if (strlen(reply) > 0)
-            write(Socket, reply, strlen(reply));
-          infoGA(busnumber, i, 1, reply);
-          if (strlen(reply) > 0) {
-            write(Socket, reply, strlen(reply));
+            for (port = 0; port <=1; port++) {
+              rc = infoGA(busnumber, i, port, reply);
+              if ( (rc == SRCP_INFO) && (strlen(reply) > 0))
+                write(Socket, reply, strlen(reply));
           }
           reply[0] = '\0';
           getlockGA(busnumber, i, &lockid);
