@@ -14,7 +14,7 @@ Berücksichtigung von LOCKS
 LOCKS zu beachten, ist Sache des Netzwerkcodes. Grund: Möglichst
 geringe Wechselwirkungen zwischen zwei Gerätegruppen. Außerdem
 entfällt die Notwendigkeit der Sonderbehandlung bei Notstops der
-GL. queueGL führt den Befehl einfach nur aus.
+GL. queueGL führt den Befehl einfach nur aus, egal woher und warum.
 
 
 DESCRIPTIONS

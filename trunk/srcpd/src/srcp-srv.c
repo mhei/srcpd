@@ -94,7 +94,7 @@ int startup_SERVER(void)
 
 int describeSERVER(int bus, int addr, char *reply)
 {
-  return SRCP_NOTSUPPORTED;
+  return SRCP_UNSUPPORTEDOPERATION;
 }
 
 int init_bus_server(int bus)

@@ -215,7 +215,7 @@ int infoFB(int bus, int port, char *msg)
 
 int describeFB(int bus, int addr, char *reply)
 {
-  return SRCP_NOTSUPPORTED;
+  return SRCP_UNSUPPORTEDOPERATION;
 }
 
 int startup_FB()

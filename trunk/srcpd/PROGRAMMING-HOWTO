@@ -10,9 +10,12 @@ Alle srcpd Module müssen reentrant programmiert werden. Sie müssen
 davon ausgehen, das sie mehrfach mit unterschiedlicher Parametrierung
 vorkommen.
 
+Sie werden grundsätzlich statisch eingebunden. Eine configure-option
+gibt es (derzeit) nicht.
+
 Die Initialisierung erfolgt ausschließlich über die Konfigurationsdatei
 (/etc/srcpd.conf). Das XML Format erfordert einige Disziplin, insbesondere
-bei der Wahl der Busbezeichner.
+bei der Wahl der Busbezeichner; und bei Leerzeichen/Leerzeilen.
 
 1. Initialisierung
 
@@ -83,8 +86,11 @@ und als Ausgangspunkt für eigene Entwicklungen geeignet.
 
 8. Queues
 
-Jede Gerätegruppe hat auf dem Bus eine eigene Queue, die von den
+Jede Gerätegruppe hat auf jedem Bus eine eigene Queue, die von den
 SRCP Netzwerkroutinen gefüllt wird. 
+
+Sinnvoll ist die eigentlich nur bei GA und GL (m.E. FB). 
+Andere Gerätegruppen brauchen die nicht.
 
 if(!queue_GA_isempty(bus)) {
     unqueueNextGA(&ga);
@@ -134,6 +140,8 @@ Portabel geht aber vor genial. Ein 386er kann, muß aber nicht ausreichen.
 OS, die wesentlich von Unix abweichen, kommen später; vielleicht.
 
 12. CVS Benutzung.
+
+Lesen darf jeder.
 
 Das erste, was nach einem CVS Checkout ansteht, ist ein
 

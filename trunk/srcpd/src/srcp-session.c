@@ -42,7 +42,7 @@ int stop_session(long int sessionid)
 
 int describeSESSION(int bus, int sessionid, char *reply)
 {
-  return SRCP_NOTSUPPORTED;
+  return SRCP_UNSUPPORTEDOPERATION;
 }
 
 int termSESSION(int bus, int sessionid, int termsessionid, char *reply)
@@ -51,5 +51,5 @@ int termSESSION(int bus, int sessionid, int termsessionid, char *reply)
   {
     return - SRCP_OK;
   }
-  return SRCP_NOTSUPPORTED;
+  return SRCP_FORBIDDEN;
 }

@@ -33,7 +33,7 @@
 #define QUEUELEN 500
 
 /* aktueller Stand */
-volatile struct _GA ga[MAX_BUSSES];   // aktueller Stand, mehr gibt es nicht
+static volatile struct _GA ga[MAX_BUSSES];   // aktueller Stand, mehr gibt es nicht
 
 /* Kommandoqueues pro Bus */
 static struct _GASTATE queue[MAX_BUSSES][QUEUELEN];  // Kommandoqueue.
@@ -251,7 +251,7 @@ int lockGA(int busnumber, int addr, long int sessionid)
     }
   }
   /* unreached */
-  return SRCP_NOTSUPPORTED;
+  return SRCP_UNSUPPORTEDOPERATION;
 }
 
 int getlockGA(int busnumber, int addr, long int *sessionid)
