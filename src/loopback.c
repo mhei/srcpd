@@ -74,7 +74,7 @@ void readconfig_loopback(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 
 int init_lineLoopback (char *name) {
   int FD;
-  syslog(LOG_INFO,"loopback open device %s", name);
+  syslog(LOG_INFO,"loopback open device %s (not really!)", name);
   FD = -1;
   return FD;
 }
@@ -128,18 +128,16 @@ thr_sendrec_Loopback (void *v)
         setGL(bus, addr, gltmp);
       }
       busses[bus].watchdog = 4;
-    }
-    busses[bus].watchdog = 5;
-    if (!queue_GA_isempty(bus))
-    {
-      unqueueNextGA(bus, &gatmp);
-      addr = gatmp.id;
-      if (gatmp.action == 1)
-      {
-        gettimeofday(&gatmp.tv[gatmp.port], NULL);
-        setGA(bus, addr, gatmp);
+      if (!queue_GA_isempty(bus)) {
+          unqueueNextGA(bus, &gatmp);
+          addr = gatmp.id;
+          if(gatmp.action == 1) {
+            gettimeofday(&gatmp.tv[gatmp.port], NULL);
+            setGA(bus, addr, gatmp);
+          }
+          setGA(bus, addr, gatmp);
+          busses[bus].watchdog = 6;
       }
-      setGA(bus, addr, gatmp);
-      busses[bus].watchdog = 6;
+      usleep(1000);
   }
 }

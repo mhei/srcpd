@@ -1,7 +1,14 @@
-Version 1.2
+Version 2.0 (Sommer 2002 oder später)
+	- SRCP 0.8
+	- Konfiguration im XML Format
+	- ibox Kernelmodul als Source bei Binär-RPM (im doc-Bereich)
+	- viel mehr neue Hardware, diesmal auch mehrere 
+	  gleichartige parallel (Tester gesucht!)
+
+Version 1.2 (nie veröffentlicht)
         - FIFO's für die Befehle.
 	
-Version 1.1 (SRCP 0.7.3 fork)
+Version 1.1 (SRCP 0.7.3 fork) Maerz 2002
         - RPM's (und deb)
 	- Bugfixes
 	- Neue Hardware: HSI-S88 von Littfinski, 

@@ -28,6 +28,7 @@ make install
 cp rcsrcpd /etc/init.d/srcpd
 chmod 744 /etc/init.d/srcpd
 ln -sf ../../etc/init.d/srcpd /usr/sbin/rcsrcpd
+install -m 644 ibox/README  $RPM_BUILD_ROOT%{_defaultdocdir}/%{name}/ibox/
 
 %post
 #
@@ -42,7 +43,8 @@ fi
 /etc/init.d/srcpd
 /usr/sbin/rcsrcpd
 %config(noreplace) /etc/srcpd.conf
-%doc COPYING AUTHORS README NEWS README.ibox ibox/mkibox.sh
+%doc COPYING AUTHORS README NEWS 
+%doc ibox/
 
 %preun
 /etc/init.d/srcpd stop
