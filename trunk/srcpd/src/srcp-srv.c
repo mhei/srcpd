@@ -119,7 +119,7 @@ void server_shutdown()
   char msg[100];
   struct timeval akt_time;
   gettimeofday(&akt_time, NULL);  
-  sprintf(msg, "%lu.%lu 100 INFO 0 SERVER TERMINATING\n", akt_time.tv_sec, akt_time.tv_usec/1000);
+  sprintf(msg, "%lu.%.3lu 100 INFO 0 SERVER TERMINATING\n", akt_time.tv_sec, akt_time.tv_usec/1000);
   server_shutdown_state = 1;
   queueMessage(msg);
 }

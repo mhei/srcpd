@@ -16,7 +16,7 @@ int startup_DESCRIPTION(void)
 }
 
 int describeBus(int bus, char *reply) {
-      sprintf(reply, "%lu.%lu 100 INFO %d DESCRIPTION %s\n",
+      sprintf(reply, "%lu.%.3lu 100 INFO %d DESCRIPTION %s\n",
         busses[bus].power_change_time.tv_sec,  busses[bus].power_change_time.tv_usec/1000,
         bus, busses[bus].description);
       return SRCP_INFO;
