@@ -3,7 +3,7 @@ sbin_PROGRAMS = srcpd
 srcpd_SOURCES = config-srcpd.c srcpd.c ib.c io.c threads.c srcp-time.c \
 		srcp-srv.c srcp-power.c srcp-gl.c srcp-ga.c srcp-fb.c srcp-fb-i8255.c \
 		netserver.c m605x.c ddl-s88.c hsi-88.c li100.c loopback.c srcp-error.c \
-		srcp-lock.c srcp-session.c srcp-descr.c srcp-info.c srcp-sm.c
+		srcp-lock.c srcp-session.c srcp-descr.c srcp-info.c srcp-sm.c i2c-dev.c
 
 srcpd_LDADD   = -lpthread
 
