@@ -1,14 +1,17 @@
 Version 2.0 (Winter 2003 oder spaeter)
 	- SRCP 0.8
 	- Konfiguration im XML Format
-	- FIFO's für Befehle und Rückmeldungen
 	- Redesign: Framework mit Modulen
 	- Unterstützung der Gerätegruppe SM bei passender Hardware (IB)
-	- viel mehr neue Hardware, diesmal auch mehrere 
-	  gleichartige gleichzeitig: Intellibox, Märklin 605x, HSI S88,
-	  S88 am Parallelport, I2C
+	- viel mehr und neue Hardware, auch mehrere gleichartige 
+	  gleichzeitig: Intellibox, Märklin 605x, HSI S88,  S88 am Parallelport, 
+	  I2C
 	- Portierung auf FreeBSD
-
+	- Loopbackbus für Modellbahner ohne Anlage(nanschluß), auch als
+	  Ausgangspunkt für eigene Entwicklungen geeignet (kann alles, was
+	  ein "richtiger" Bus kann!)
+	- Warteschlangen für Befehle und Rückmeldungen, nichts geht mehr verloren
+	
 Version 1.2 (nie veröffentlicht)
         - FIFO's für die Befehle.
 	
