@@ -237,13 +237,13 @@ int init_bus_S88(int busnumber)
   }
   // test, whether S88DEV is a valid io-address for a parallel device
   for (i = 0; i < LPT_NUM; i++)
-	    isin = isin || (S88PORT == LPT_BASE[i]);
+      isin = isin || (S88PORT == LPT_BASE[i]);
   if (isin)
   {
     // test, whether we can access the port
     if (ioperm(S88PORT, 3, 1) == 0)
     {
-      // test, whether there is a real device on the S88DEV-port by writing and 
+      // test, whether there is a real device on the S88DEV-port by writing and
       // reading data to the port. If the written data is returned, a real port
       // is there
       outb(0x00, S88PORT);
@@ -326,7 +326,7 @@ void s88load(int busnumber)
       S88_WRITE(S88_QUIET);
       S88_WRITE(S88_RESET);
       S88_WRITE(S88_QUIET);
-      // reading the data 
+      // reading the data
       for (j = 0; j < S88_MAXPORTSB; j++)
       {
         for (k = 0; k < 8; k++)
@@ -373,7 +373,6 @@ void *thr_sendrec_S88(void *v)
   unsigned long sleepusec = 100000;
 
   int S88REFRESH = __ddl_s88->refresh;
-  check_reset_fb(busnumber);
   // set refresh-cycle
   if (sleepusec < S88REFRESH * 1000)
     sleepusec = S88REFRESH * 1000;
@@ -389,6 +388,7 @@ void *thr_sendrec_S88(void *v)
           usleep(1000);
           continue;
     }
+    check_reset_fb(busnumber);
     usleep(sleepusec);
     s88load(busnumber);
   }
@@ -410,128 +410,128 @@ void *thr_sendrec_dummy(void *v)
 
 int FBSD_ioperm(int Port,int KeineAhnung, int DesiredAccess,int busnumber)
 {
-	int i;
-	int found=0;
-	char DevName[256];
-	int Fd;
-	
+  int i;
+  int found=0;
+  char DevName[256];
+  int Fd;
 
-	// Simpel: soll geschlossen werden?
-	if (DesiredAccess == 0)
-		{
-		if (__ddl_s88->Fd != -1) 
-		{
-		   close(__ddl_s88->Fd);
-    	   	   DBG(busnumber, DBG_DEBUG,  "FBSD DDL-S88 closing port %04X",Port);
-		}
-		else
-		{
-		   DBG(busnumber, DBG_WARN,  "FBSD DDL-S88 closing NOT OPEN port %04X",Port);
-			}
-		__ddl_s88->Fd=-1;
-		return 0;
-		}
 
-	// ist schon offen???
-	if (__ddl_s88->Fd != -1)
-	{
-		// DBG(busnumber, DBG_INFO,  "FBSD DDL-S88 trying to re-open port %04X (ignored)",Port);
+  // Simpel: soll geschlossen werden?
+  if (DesiredAccess == 0)
+    {
+    if (__ddl_s88->Fd != -1)
+    {
+       close(__ddl_s88->Fd);
+              DBG(busnumber, DBG_DEBUG,  "FBSD DDL-S88 closing port %04X",Port);
+    }
+    else
+    {
+       DBG(busnumber, DBG_WARN,  "FBSD DDL-S88 closing NOT OPEN port %04X",Port);
+      }
+    __ddl_s88->Fd=-1;
+    return 0;
+    }
 
-		return 0; // gnaedig ignorieren
-	}
+  // ist schon offen???
+  if (__ddl_s88->Fd != -1)
+  {
+    // DBG(busnumber, DBG_INFO,  "FBSD DDL-S88 trying to re-open port %04X (ignored)",Port);
 
-	// Also oeffnen, das ist schon trickreicher :-)
-	/* Erst einmal rausbekommen, welches Device denn gemeint war
-	 * Dazu muessen wir einfach die Portposition aus dem Array
-	 * ermitteln
-	 */
+    return 0; // gnaedig ignorieren
+  }
 
-	__ddl_s88->Fd=-1;	// traue keinem :-)
+  // Also oeffnen, das ist schon trickreicher :-)
+  /* Erst einmal rausbekommen, welches Device denn gemeint war
+   * Dazu muessen wir einfach die Portposition aus dem Array
+   * ermitteln
+   */
 
-	for (i=0;i<LPT_NUM;i++)
-	{
-	    if (Port == LPT_BASE[i]) { found=1;break; }
-	}
-	if (found == 0) return -1;
+  __ddl_s88->Fd=-1;  // traue keinem :-)
 
-	sprintf(DevName,"/dev/ppi%d",i);
+  for (i=0;i<LPT_NUM;i++)
+  {
+      if (Port == LPT_BASE[i]) { found=1;break; }
+  }
+  if (found == 0) return -1;
 
-	Fd = open(DevName,O_RDWR);
+  sprintf(DevName,"/dev/ppi%d",i);
 
-	if (Fd < 0) 
-	{
+  Fd = open(DevName,O_RDWR);
 
-    	   DBG(busnumber, DBG_ERROR,  "FBSD DDL-S88 cannot open port %04X on %s",Port,DevName);
-	   return Fd;
-	}
+  if (Fd < 0)
+  {
+
+         DBG(busnumber, DBG_ERROR,  "FBSD DDL-S88 cannot open port %04X on %s",Port,DevName);
+     return Fd;
+  }
        DBG(busnumber, DBG_INFO,  "FBSD DDL-S88 success opening port %04X on %s",Port,DevName);
 
-	__ddl_s88->Fd = Fd;
-	return 0;
+  __ddl_s88->Fd = Fd;
+  return 0;
 }
 
 
 unsigned char FBSD_inb(int Woher,int busnumber)
 {
-	// Aufpassen! Manchmal wird das Datenport, manchmal die Steuer
-	// leitungen angesprochen !
+  // Aufpassen! Manchmal wird das Datenport, manchmal die Steuer
+  // leitungen angesprochen !
 
-	unsigned char i=0;
-	int	WelchesPort;
-	int	WelcherIoctl;
+  unsigned char i=0;
+  int  WelchesPort;
+  int  WelcherIoctl;
 
   //DBG(busnumber, DBG_DEBUG,  "FBSD DDL-S88 InB start on port %04X",Woher);
-	if (__ddl_s88->Fd == -1)
-	{
-    	   DBG(busnumber, DBG_ERROR,  "FBSD DDL-S88 Device not open for reading");
-		exit (1) ;
-	}
+  if (__ddl_s88->Fd == -1)
+  {
+         DBG(busnumber, DBG_ERROR,  "FBSD DDL-S88 Device not open for reading");
+    exit (1) ;
+  }
 
-	WelchesPort=Woher - __ddl_s88->port;
+  WelchesPort=Woher - __ddl_s88->port;
 
-	switch (WelchesPort) 
-	{
-		case 0:	WelcherIoctl=PPIGDATA; break;
-		case 1:	WelcherIoctl=PPIGSTATUS; break;
-		case 2: WelcherIoctl=PPIGCTRL; break;
-		default:
-			DBG(busnumber,DBG_FATAL,"FBSD DDL-S88 Lesezugriff auf Port %04X angefordert, nicht umsetzbar!",Woher);
-			return 0;
-	}
-	ioctl(__ddl_s88->Fd,WelcherIoctl,&i);
+  switch (WelchesPort)
+  {
+    case 0:  WelcherIoctl=PPIGDATA; break;
+    case 1:  WelcherIoctl=PPIGSTATUS; break;
+    case 2: WelcherIoctl=PPIGCTRL; break;
+    default:
+      DBG(busnumber,DBG_FATAL,"FBSD DDL-S88 Lesezugriff auf Port %04X angefordert, nicht umsetzbar!",Woher);
+      return 0;
+  }
+  ioctl(__ddl_s88->Fd,WelcherIoctl,&i);
   //DBG(busnumber, DBG_DEBUG,  "FBSD DDL-S88 InB finished Data %02X",i);
-	return i;
+  return i;
 }
 
 unsigned char FBSD_outb(unsigned char Data, int Wohin,int busnumber)
 {
-	// suchen wir uns den richtigen ioctl zur richtigen Adresse...
+  // suchen wir uns den richtigen ioctl zur richtigen Adresse...
 
-	int	WelchesPort;
-	int	WelcherIoctl;
+  int  WelchesPort;
+  int  WelcherIoctl;
 
   //DBG(busnumber, DBG_DEBUG,  "FBSD DDL-S88 OutB %d on Port %04X",Data,Wohin);
-		if (__ddl_s88->Fd == -1)
-	{
-    	   DBG(busnumber, DBG_ERROR,  "FBSD DDL-S88 Device not open for writing Byte %d",Data);
-		exit (1) ;
-		return -1;
-	}
-	
-	WelchesPort= Wohin - __ddl_s88->port;
+    if (__ddl_s88->Fd == -1)
+  {
+         DBG(busnumber, DBG_ERROR,  "FBSD DDL-S88 Device not open for writing Byte %d",Data);
+    exit (1) ;
+    return -1;
+  }
 
-	switch (WelchesPort) 
-	{
-		case 0:	WelcherIoctl=PPISDATA; break;
-		case 1:	WelcherIoctl=PPISSTATUS; break;
-		case 2: WelcherIoctl=PPISCTRL; break;
-		default:
-			DBG(busnumber,DBG_FATAL,"FBSD DDL-S88 Schreibzugriff auf Port %04X angefordert, nicht umsetzbar!",Wohin);
-			return 0;
-	}
-	ioctl(__ddl_s88->Fd,WelcherIoctl,&Data);
+  WelchesPort= Wohin - __ddl_s88->port;
+
+  switch (WelchesPort)
+  {
+    case 0:  WelcherIoctl=PPISDATA; break;
+    case 1:  WelcherIoctl=PPISSTATUS; break;
+    case 2: WelcherIoctl=PPISCTRL; break;
+    default:
+      DBG(busnumber,DBG_FATAL,"FBSD DDL-S88 Schreibzugriff auf Port %04X angefordert, nicht umsetzbar!",Wohin);
+      return 0;
+  }
+  ioctl(__ddl_s88->Fd,WelcherIoctl,&Data);
   //DBG(busnumber, DBG_DEBUG,  "FBSD DDL-S88 OutB finished");
-	return Data;
+  return Data;
 }
 
 #endif
