@@ -39,7 +39,7 @@ int INFOPORT     = 12347;          /* default info port            */
 const char *WELCOME_MSG = "srcpd V0.1; SRCP 0.7.3; Juli 2001; WILLKOMMEN\n";
 
 /* Anschluﬂport */
-char *DEV_COMPORT="/dev/ttyS0";
+char *DEV_COMPORT;
 
 int working_server  = SERVER_M605X; // Einstellung in welchem Modus srcpd arbeitet
 int NUMBER_FB       = 2;            /* Anzahl der Feebackmodule     */
@@ -89,6 +89,13 @@ void readConfig()
         if(strncmp(buffer, "comport=", 8) == 0)
         {
           offset = &buffer[8];
+          free(DEV_COMPORT);
+          DEV_COMPORT = malloc(sizeof(offset));
+          if(DEV_COMPORT == NULL)
+          {
+            printf("cannot allocate memory\n");
+            exit(1);
+          }
           strcpy(DEV_COMPORT, offset);
         }
         if(strncmp(buffer, "FB-modules=", 11) == 0)
