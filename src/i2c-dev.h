@@ -12,9 +12,11 @@
 
 typedef struct _I2CDEV_DATA {
     int number_ga;
+	int first_ga_bus;
+	int last_ga_bus;
     int number_gl;
     int number_fb;
-		int ga_min_active_time;
+	int ga_min_active_time;
 } I2CDEV_DATA;
 
 void readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, int busnumber);
@@ -23,5 +25,6 @@ int init_bus_I2C_DEV(int );
 int term_bus_I2C_DEV(int );
 int getDescription_I2C_DEV(char *reply);
 void* thr_sendrec_I2C_DEV(void *);
+void reset_ga(int busnumber, int busfd);
 
 #endif
