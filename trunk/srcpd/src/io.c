@@ -40,7 +40,7 @@ int readByte(int FD, unsigned char *the_byte)
 
 #ifdef TESTMODE
   if(testmode)
-  {	
+  {  
     i = 1;
     *the_byte = 0;
   }
@@ -72,7 +72,7 @@ void writeByte(int FD, unsigned char *b, unsigned long msecs)
     tcflush(FD, TCOFLUSH);
     usleep(msecs * 1000);
   }
-#else	
+#else  
   write(FD, b, 1);
   tcflush(FD, TCOFLUSH);
   usleep(msecs * 1000);

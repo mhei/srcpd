@@ -92,8 +92,8 @@ void install_signal_handler()
     signal(SIGINT, term_handler);
     signal(SIGHUP, hup_handler);
   }
-  signal(SIGPIPE, SIG_IGN);		/* important, because write() on sockets */
-                                        /* should return errors								*/
+  signal(SIGPIPE, SIG_IGN);    /* important, because write() on sockets */
+                                        /* should return errors                */
 }
 
 int main(int argc, char **argv)
@@ -171,10 +171,10 @@ int main(int argc, char **argv)
         exit(1);
         break;
       default:
-	printf("unknown Parameter\n");
-	printf("use: \"srcpd -h\" for help\n");
-	exit(1);
-	break;
+  printf("unknown Parameter\n");
+  printf("use: \"srcpd -h\" for help\n");
+  exit(1);
+  break;
     }
   }
 
@@ -193,19 +193,19 @@ int main(int argc, char **argv)
       if(file_descriptor[SERVER_M605X] < 0)
       {
         printf("Interface 6051 %s nicht vorhanden?!\n", DEV_COMPORT);
-	if(restore_com_parms) {
-    	    restore_comport(DEV_COMPORT);
-	}
-	exit(1);
+  if(restore_com_parms) {
+          restore_comport(DEV_COMPORT);
+  }
+  exit(1);
       }
       break;
     case SERVER_IB:
       if(open_comport(&file_descriptor[SERVER_IB], DEV_COMPORT) != 0)
       {
-    	printf("Intellibox nicht gefunden !!!\n");
-	if(restore_com_parms) {
+      printf("Intellibox nicht gefunden !!!\n");
+  if(restore_com_parms) {
             restore_comport(DEV_COMPORT);
-	}
+  }
         exit(1);
       }
   }
@@ -301,7 +301,7 @@ int main(int argc, char **argv)
     }
     io_thread_running = use_watchdog - 1;
     sleep(2); /* einmal in 2 Sekunden, ist eng?! */
-	
+  
     if(io_thread_running==0 || server_reset_state)
     {
       if(!server_reset_state)
@@ -329,10 +329,10 @@ int main(int argc, char **argv)
         {
           perror("cannot start i8255'er Thread!");
           exit(1);
-  	}
+    }
       }
       pthread_detach(ttid_i8255);
-	
+  
       server_reset_state = 0;
     }
     else

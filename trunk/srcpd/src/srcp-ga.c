@@ -27,8 +27,8 @@ volatile struct _GA nga[50];      // max. 50 Änderungen puffern, neue Werte noch
 volatile struct _GA oga[50];      // manuelle Änderungen
 volatile struct _GA tga[50];      // max. 50 Änderungen puffern, neue Werte sind aktiv, warten auf inaktiv
 
-volatile int commands_ga	= 0;
-volatile int sending_ga		= 0;
+volatile int commands_ga  = 0;
+volatile int sending_ga    = 0;
 
 extern int working_server;
 extern int NUMBER_GA;
@@ -42,18 +42,18 @@ int setGA(char *prot, int addr, int port, int aktion, long activetime)
 
   status = 0;
   syslog(LOG_INFO, "in setGA für %i", addr);
-  if((addr > 0) && (addr < NUMBER_GA))
+  if((addr > 0) && (addr <= NUMBER_GA))
   {
-    for(i=0;i<1000;i++)					// warte auf Freigabe
+    for(i=0;i<1000;i++)          // warte auf Freigabe
     {
-      if(sending_ga == 0)				// es wird nichts gesendet
-    	  break;
+      if(sending_ga == 0)        // es wird nichts gesendet
+        break;
       usleep(100);
     }
 
     for(i=0;i<50;i++)
     {
-      if(nga[i].id == addr)	  // alten Auftrag wieder löschen
+      if(nga[i].id == addr)    // alten Auftrag wieder löschen
       {
         nga[i].id = 0;
         break;
@@ -61,7 +61,7 @@ int setGA(char *prot, int addr, int port, int aktion, long activetime)
     }
     if(i == 50)
     {
-      for(i=0;i<50;i++)					// suche freien Platz in Liste
+      for(i=0;i<50;i++)          // suche freien Platz in Liste
       {
         if(nga[i].id == 0)
           break;
@@ -87,14 +87,14 @@ int setGA(char *prot, int addr, int port, int aktion, long activetime)
 
 int getGA(char *prot, int addr, struct _GA *a)
 {
-  if((addr > 0) && (addr < NUMBER_GA))
+  if((addr > 0) && (addr <= NUMBER_GA))
   {
-  	*a = ga[addr];
-	  return 0;
+    *a = ga[addr];
+    return 0;
   }
   else
   {
-	  return 1;
+    return 1;
   }
 }
 
@@ -107,7 +107,7 @@ int infoGA(struct _GA a, char *msg)
 int cmpGA(struct _GA a, struct _GA b)
 {
   return ((a.action == b.action) &&
-	    (a.port   == b.port));
+      (a.port   == b.port));
 }
 
 void initGA()
