@@ -235,7 +235,7 @@ int describeGL(int busnumber, int addr, char *msg)
   if(number_gl <= 0)
     return SRCP_UNSUPPORTEDDEVICEGROUP;
   if((addr>0) && (addr <= number_gl) && (gl[busnumber].glstate[addr].protocolversion>0) ) {
-    sprintf(msg, "%lu.%lu 101 INIT %d GL %d %s %d %d %d\n",
+    sprintf(msg, "%lu.%.3lu 101 INIT %d GL %d %s %d %d %d\n",
       gl[busnumber].glstate[addr].inittime.tv_sec, gl[busnumber].glstate[addr].inittime.tv_usec/1000,
       busnumber, addr, gl[busnumber].glstate[addr].protocol, gl[busnumber].glstate[addr].protocolversion,
       gl[busnumber].glstate[addr].n_func,gl[busnumber].glstate[addr].n_fs);
@@ -255,7 +255,7 @@ int infoGL(int busnumber, int addr, char* msg)
     return SRCP_UNSUPPORTEDDEVICEGROUP;
   if((addr>0) && (addr <= number_gl))
   {
-    sprintf(msg, "%lu.%lu 100 INFO %d GL %d %d %d %d %d %d %d %d %d\n",
+    sprintf(msg, "%lu.%.3lu 100 INFO %d GL %d %d %d %d %d %d %d %d %d\n",
       gl[busnumber].glstate[addr].tv.tv_sec,
       gl[busnumber].glstate[addr].tv.tv_usec/1000,
           

@@ -199,7 +199,7 @@ int infoFB(int bus, int port, char *msg)
   int rc = getFB(bus, port, &time, &state);
   if(rc>=SRCP_OK)
   {
-    sprintf(msg, "%lu.%lu 100 INFO %d FB %d %d\n",
+    sprintf(msg, "%lu.%.3lu 100 INFO %d FB %d %d\n",
      time.tv_sec, time.tv_usec/1000, bus, port, state);
     return SRCP_INFO;
   }

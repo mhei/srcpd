@@ -122,7 +122,8 @@ void *thr_doClient(void *v)
       pthread_mutex_lock(&SessionID_mut);
       sessionid = SessionID++;
       pthread_mutex_unlock(&SessionID_mut);
-      sprintf(reply, "%lu.%lu 200 OK GO %ld\n", 0L, 0L, sessionid);
+      gettimeofday(&time, NULL);
+      sprintf(reply, "%lu.%.3lu 200 OK GO %ld\n", time.tv_sec, time.tv_usec/1000, sessionid);
       if (socket_writereply(Socket, reply) < 0)
       {
         shutdown(Socket, 2);
@@ -169,6 +170,7 @@ void *thr_doClient(void *v)
         }
       }
     }
+    gettimeofday(&time, NULL);
     srcp_fmt_msg(rc, reply, time);
     socket_writereply(Socket, reply);
   }
@@ -303,10 +305,8 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
     nelem = sscanf(parameter, "%ld", &port);
     if(nelem >= 1)
       rc = infoFB(bus, port, reply);
-    else {
+    else
       rc = SRCP_LISTTOOSHORT;
-    }
-      
   }
   if (strncasecmp(device, "GL", 2) == 0)
   {
