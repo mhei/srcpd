@@ -39,8 +39,10 @@
 #include "srcp-time.h"
 #include "threads.h"
 
+#ifdef REINIT_COMPORT
 void hup_handler(int);
 void term_handler(int);
+#endif
 void install_signal_handler(void);
 
 int file_descriptor[NUMBER_SERVERS];
@@ -65,6 +67,7 @@ extern char *DEV_COMPORT;
 extern char *DEV_I8255;
 extern const char *WELCOME_MSG;
 
+#ifdef REINIT_COMPORT
 void hup_handler(int s)
 {
   /* signal SIGHUP(1) caught */
@@ -82,13 +85,16 @@ void term_handler(int s)
   syslog(LOG_INFO,"SIGTERM(15) received! Terminating ...");
   server_shutdown_state = 1;
 }
+#endif
 
 void install_signal_handler()
 {
+#ifdef REINIT_COMPORT
   signal(SIGTERM, term_handler);
   signal(SIGABRT, term_handler);
   signal(SIGINT, term_handler);
   signal(SIGHUP, hup_handler);
+#endif
   signal(SIGPIPE, SIG_IGN);		/* important, because write() on sockets */
                                         /* should return errors								*/
 }
@@ -339,8 +345,8 @@ int main(int argc, char **argv)
     }
   }
 
-  close_comport(file_descriptor[working_server]);
 #ifdef REINIT_COMPORT
+  close_comport(file_descriptor[working_server]);
   restore_comport(DEV_COMPORT);
 #endif
   syslog(LOG_INFO, "und tschüß..");
