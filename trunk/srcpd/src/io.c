@@ -35,8 +35,8 @@ int readByte(int bus, int wait, unsigned char *the_byte)
     status = ioctl(busses[bus].fd, FIONREAD, &i);
     if(status < 0) {
       char msg[200];
-      strerror_r(errno, msg, sizeof(msg));
-      DBG(bus, DBG_ERROR, "readbyte(): IOCTL   status: %d with errno = %d: %s", status, errno, *msg);
+      strcpy(msg, strerror(errno));
+      DBG(bus, DBG_ERROR, "readbyte(): IOCTL   status: %d with errno = %d: %s", status, errno, msg);
     }
     DBG(bus, DBG_DEBUG, "readbyte(): (fd = %d), there are %d bytes to read.", busses[bus].fd, i);
     // read only, if there is really an input
@@ -45,8 +45,8 @@ int readByte(int bus, int wait, unsigned char *the_byte)
       i = read(busses[bus].fd, the_byte, 1);
       if(i < 0) {
         char emsg[200];
-        strerror_r(errno, emsg, sizeof(emsg));
-        DBG(bus, DBG_ERROR, "readbyte(): read status: %d with errno = %d: %s", i, errno, *emsg);
+        strcpy(emsg, strerror(errno));
+		DBG(bus, DBG_ERROR, "readbyte(): read status: %d with errno = %d: %s", i, errno, emsg);
       }
       if (i > 0)
         DBG(bus, DBG_DEBUG, "readbyte(): byte read: 0x%02x", *the_byte);
