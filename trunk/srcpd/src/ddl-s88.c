@@ -23,6 +23,13 @@
 #ifdef linux
 #include <linux/lp.h>
 #include <sys/io.h>
+#endif
+#ifdef __FreeBSD__
+#include <dev/ppbus/ppi.h>
+#include <dev/ppbus/ppbconf.h>
+#else
+#error Dieser Treiber ist fuer Ihr Betriebssystem nicht geeignet
+#endif
 
 #include "config-srcpd.h"
 #include "srcp-fb.h"
@@ -192,7 +199,7 @@ int init_bus_S88(int busnumber)
   int isin = 0;    // reminder for checking
   int S88PORT = __ddl_s88->port;
   int S88CLOCK_SCALE = __ddl_s88->clockscale;
-  DBG(busnumber, DBG_INFO, "init_bus DDL S88%d", busnumber);
+  DBG(busnumber, DBG_INFO, "init_bus DDL(Linux) S88%d", busnumber);
   // is the port disabled from user, everything is fine
   if (!S88PORT)
   {
@@ -201,7 +208,7 @@ int init_bus_S88(int busnumber)
   }
   // test, whether S88DEV is a valid io-address for a parallel device
   for (i = 0; i < LPT_NUM; i++)
-    isin = isin || (S88PORT == LPT_BASE[i]);
+	    isin = isin || (S88PORT == LPT_BASE[i]);
   if (isin)
   {
     // test, whether we can access the port
@@ -356,11 +363,94 @@ void *thr_sendrec_dummy(void *v)
 /*---------------------------------------------------------------------------
  * End of Linux Code
  *---------------------------------------------------------------------------*/
-#else
-/*
- * MAM 01/05/03 nur Dummyroutinen einbauen, wenn kein Linux vorhanden ist
- */
+#ifdef __FreeBSD__
+/*---------------------------------------------------------------------------
+ * Start of FreeBSD Emulation of ioperm, inb and outb
+ * MAM 01/06/03
+ *---------------------------------------------------------------------------*/
 
-#warning Dieser Treiber ist nur auf LINUX Systemen einsetzbar
+int FBSD_ioperm(int Port,int KeineAhnung, int DesiredAccess,int busnumber)
+{
+	int i;
+	int found=0;
+	char DevName[256];
+	int Fd;
+	
+
+	// Simpel: soll geschlossen werden?
+	if (DesiredAccess == 0)
+		{
+		if (__ddl_s88->Fd != -1) 
+		{
+		   close(__ddl_s88->Fd);
+    	   	   DBG(busnumber, DBG_DEBUG,  "FBSD DDL-S88 closing port %04X",Port);
+		}
+		else
+		{
+    	   	   DBG(busnumber, DBG_WARN,  "FBSD DDL-S88 closing NOT OPEN port %04X",Port);
+		}
+		__ddl_s88->Fd=-1;
+		return 0;
+		}
+
+	// Also oeffnen, das ist schon trickreicher :-)
+	/* Erst einmal rausbekommen, welches Device denn gemeint war
+	 * Dazu muessen wir einfach die Portposition aus dem Array
+	 * ermitteln
+	 */
+
+	__ddl_s88->Fd=-1;	// traue keinem :-)
+
+	for (i=0;i<LPT_NUM;i++)
+	{
+	    if (Port == LPT_BASE[i]) { found=1;break; }
+	}
+	if (found == 0) return -1;
+
+	sprintf(DevName,"/dev/ppi%d",i);
+
+	Fd = open(DevName,O_RDWR);
+
+	if (Fd < 0) 
+	{
+
+    	   DBG(busnumber, DBG_ERROR,  "FBSD DDL-S88 cannot open port %04X on %s",Port,DevName);
+	   return Fd;
+	}
+       DBG(busnumber, DBG_INFO,  "FBSD DDL-S88 success opening port %04X on %s",Port,DevName);
+
+	__ddl_s88->Fd = Fd;
+	return 0;
+}
+
+
+unsigned char FBSD_inb(int Woher,int busnumber)
+{
+	// Da "Woher" immer die gleiche Adresse ist, koennen wir es uns
+	// einfach machen. Ansonsten muesste man die Ioctls anpassen
+	unsigned char i=0;
+
+	if (__ddl_s88->Fd == -1)
+	{
+    	   DBG(busnumber, DBG_ERROR,  "FBSD DDL-S88 Device not open for reading");
+		return -1;
+	}
+	ioctl(__ddl_s88->Fd,PPIGDATA,&i);
+	return i;
+}
+
+unsigned char FBSD_outb(unsigned char Data, int Wohin,int busnumber)
+{
+	// ebenfalls simpel, denn Wohin ist auch konstant (Finger kreuz!) :-)
+	if (__ddl_s88->Fd == -1)
+	{
+    	   DBG(busnumber, DBG_ERROR,  "FBSD DDL-S88 Device not open for writing Byte %d",Data);
+		return -1;
+	}
+	
+	ioctl(__ddl_s88->Fd,PPISDATA,&Data);
+	return Data;
+}
 
 #endif
+
