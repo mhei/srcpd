@@ -86,7 +86,6 @@ typedef struct _BUS
 
 extern struct _BUS busses[];
 extern int num_busses;
-extern char PIDFILE[MAXPATHLEN];
 
 int readConfig(char *filename);
 
@@ -108,7 +107,6 @@ int bus_has_devicegroup(int bus, int dg);
 #define DBG_WARN 3
 #define DBG_INFO 4
 #define DBG_DEBUG 5
-
 
 void DBG(int busnumber, int dbglevel, const char *fmt, ...);
 #endif
