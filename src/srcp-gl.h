@@ -39,7 +39,9 @@ typedef struct _GL
 
 int startup_GL(void);
 int init_GL(int busnumber, int number);
-int get_number_gl(int busnumber);
+int getMaxAddrGL(int busnumber);
+int isInitializedGL(int busnumber, int addr);
+int isValidGL(int busnumber, int addr);
 
 int queueGL(int busnumber, int addr, int dir, int speed, int maxspeed, int f);
 int queue_GL_isempty(int busnumber);
@@ -51,7 +53,7 @@ int infoGL(int busnumber, int addr, char* info);
 int describeGL(int busnumber, int addr, char *msg);
 int initGL(int busnumber, int addr, const char protocol, int protoversion, int n_fs, int n_func);
 int termGL(int busnumber, int addr);
-int isInitializedGL(int busnumber, int addr);
+
 
 int lockGL(int busnumber, int addr, long int duration, long int sessionid);
 int getlockGL(int busnumber, int addr, long int *sessionid);
