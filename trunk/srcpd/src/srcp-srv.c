@@ -11,6 +11,7 @@
 #include "srcp-srv.h"
 #include "config-srcpd.h"
 #include "srcp-error.h"
+#include "srcp-info.h"
 
 int server_reset_state;
 int server_shutdown_state;
@@ -115,5 +116,10 @@ void server_reset()
 
 void server_shutdown()
 {
+  char msg[100];
+  struct timeval akt_time;
+  gettimeofday(&akt_time, NULL);  
+  sprintf(msg, "%lu.%lu 100 INFO 0 SERVER TERMINATING\n", akt_time.tv_sec, akt_time.tv_usec/1000);
   server_shutdown_state = 1;
+  queueMessage(msg);
 }

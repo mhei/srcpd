@@ -22,6 +22,7 @@
 #include "srcp-sm.h"
 #include "srcp-srv.h"
 #include "srcp-session.h"
+#include "srcp-descr.h"
 #include "srcp-info.h"
 #include "netserver.h"
 #include "m605x.h"
@@ -152,6 +153,7 @@ void *thr_doClient(void *v)
       stop_session(sessionid);
       return NULL;
     }
+    rc = SRCP_UNKNOWNCOMMAND;
     if (strncasecmp(cmd, "SET", 3) == 0)
     {
       char p[1000];
@@ -255,9 +257,12 @@ int handleSET(int sessionid, int bus, char *device, char *parameter, char *reply
   }
   if (strncasecmp(device, "TIME", 4) == 0)
   {
-    long d, h, m, s;
-    sscanf(parameter, "%ld %ld %ld %ld", &d, &h, &m, &s);
-    rc = setTime(d, h, m, s);
+    long d, h, m, s, nelem;
+    nelem=sscanf(parameter, "%ld %ld %ld %ld", &d, &h, &m, &s);
+    if(nelem >= 4)
+       rc = setTime(d, h, m, s);
+    else
+       rc = SRCP_LISTTOOSHORT;
   }
   if(strncasecmp(device, "LOCK", 4) == 0) {
     long int addr;
@@ -278,18 +283,20 @@ int handleSET(int sessionid, int bus, char *device, char *parameter, char *reply
 
   if (strncasecmp(device, "POWER", 5) == 0)
   {
+    int nelem;
     char state[5], msg[256];
     memset(msg, 0, sizeof(msg));
-    sscanf(parameter, "%s %100c", state, msg);
-    if (strncasecmp(state, "OFF", 3) == 0)
-    {
-      rc = setPower(bus, 0, msg);
-    }
-    else
-    {
-      if (strncasecmp(state, "ON", 2) == 0)
-      {
-        rc = setPower(bus, 1, msg);
+    nelem = sscanf(parameter, "%s %100c", state, msg);
+    if(nelem<1)
+      rc = SRCP_LISTTOOSHORT;
+    else {
+      rc = SRCP_WRONGVALUE;
+       if (strncasecmp(state, "OFF", 3) == 0) {
+         rc = setPower(bus, 0, msg);
+       } else {
+          if (strncasecmp(state, "ON", 2) == 0) {
+            rc = setPower(bus, 1, msg);
+          }
       }
     }
   }
@@ -303,10 +310,10 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
   {
     long int nelem, port;
     nelem = sscanf(parameter, "%ld", &port);
-    if(nelem == 1)
+    if(nelem >= 1)
       rc = infoFB(bus, port, reply);
     else {
-      rc = SRCP_LISTTOOLONG;
+      rc = SRCP_LISTTOOSHORT;
     }
       
   }
@@ -314,10 +321,10 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
   {
     long nelem, addr;
     nelem = sscanf(parameter, "%ld", &addr);
-    if(nelem == 1)
+    if(nelem >= 1)
       rc = infoGL(bus, addr, reply);
     else
-      rc = SRCP_LISTTOOLONG;
+      rc = SRCP_LISTTOOSHORT;
   }
   if (strncasecmp(device, "GA", 2) == 0)
   {
@@ -372,20 +379,12 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
     /* Beschreibungen gibt es deren 2 */
     long int addr;
     char devgrp[10];
-    int nelem=-1;
-		
-		struct timeval tv;
-		
-		gettimeofday(&tv, NULL);
-		
+    int nelem=0;
     if(strlen(parameter)>0)
-        nelem = sscanf(parameter, "%s %ld", devgrp, &addr);
+        nelem = sscanf(parameter, "%10c %ld", devgrp, &addr);
     if(nelem <= 0) 
     {
-      sprintf(reply, "%ld.%ld 100 INFO %d DESCRIPTION %s\n",
-				tv.tv_sec, tv.tv_usec/1000,
-				bus, busses[bus].description);
-      rc = SRCP_INFO;
+      rc = describeBus(bus, reply);
     } 
     else 
     {
@@ -567,7 +566,7 @@ int doCmdClient(int Socket, int sessionid)
   char line[1024], reply[4095];
   char command[20], devicegroup[20], parameter[900];
   long int bus;
-  long int rc;
+  long int rc, nelem;
   struct timeval akt_time;
 
   DBG(0, DBG_INFO, "thread >>doCmdClient<< is startet for socket %i", Socket);
@@ -584,15 +583,15 @@ int doCmdClient(int Socket, int sessionid)
     memset(devicegroup, 0, sizeof(devicegroup));
     memset(parameter, 0, sizeof(parameter));
     memset(reply, 0, sizeof(reply));
-    sscanf(line, "%s %ld %s %900c", command, &bus, devicegroup, parameter);
+    nelem = sscanf(line, "%s %ld %s %900c", command, &bus, devicegroup, parameter);
     DBG(bus, DBG_INFO, "getting command from session %ld: %s %s %s", sessionid, command,  devicegroup, parameter);
     rc = SRCP_UNKNOWNCOMMAND;
     reply[0] = 0x00;
-
-    if((bus >= 0) && (bus <= num_busses))
+    if (nelem <3)
+      rc=SRCP_LISTTOOSHORT;
+    if( (nelem >=3) && (bus >= 0) && (bus <= num_busses))
     {
       rc = SRCP_WRONGVALUE;
-
       if (strncasecmp(command, "SET", 3) == 0)
       {
         rc = handleSET(sessionid, bus, devicegroup, parameter, reply);
