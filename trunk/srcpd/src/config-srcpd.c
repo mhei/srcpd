@@ -64,15 +64,14 @@ register_bus (xmlDocPtr doc, xmlNodePtr node)
   char *proptxt;
   int busnumber;
   if (strcmp (node->name, "bus"))
-    return; // only bus definitions
+      return; // only bus definitions
   proptxt = xmlGetProp (node, "number");
   busnumber = atoi (proptxt);
   free (proptxt);
-  if (busnumber > 1)
-    {
-      // not yet  
-      return;
-    }
+  if (busnumber > 1){
+	  // not yet  
+	  return;
+      }
   child = node->childs;
   while (child)
     {
@@ -86,8 +85,6 @@ register_bus (xmlDocPtr doc, xmlNodePtr node)
 	      CMDPORT = atoi (txt);
 	      FEEDBACKPORT = CMDPORT + 1;
 	      INFOPORT = CMDPORT + 2;
-	  printf ("\t\t0 => %s\n", txt);
-
 	    }
 
 	}
@@ -177,5 +174,6 @@ readConfig ()
   if (doc != 0)
     {
       walk_config_xml (doc);
+      xmlFreeDoc(doc);
     }
 }
