@@ -6,6 +6,11 @@
  * This software is published under the restrictions of the 
  * GNU License Version2
  *
+ * 2002-12-29 Manuel Borchers
+ *            - added ga[busnumber].gastate[addr].locked_by = 0 to the init-
+ *              function, because lockid = 0 should mean no lock; without
+ *              this init it returned -1
+ *
  * Ostern 2002, Matthias Trute
  *            - echte Kommandoqueue anstelle der Vormerkungen.
  *
@@ -313,8 +318,10 @@ int init_GA(int busnumber, int number)
     if (ga[busnumber].gastate == NULL)
       return 1;
     ga[busnumber].numberOfGa = number;
-    for(i=0;i<number;i++)
+    for(i=0;i<number;i++) {
       ga[busnumber].gastate[i].protocol = NULL;
+			ga[busnumber].gastate[i].locked_by = 0;
+		}
   }
   return 0;
 }
