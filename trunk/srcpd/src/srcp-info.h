@@ -18,7 +18,6 @@
 #ifndef _SRCP_INFO_H
 #define _SRCP_INFO_H
 
-void *thr_doInfoClient(void *v);
 int doInfoClient(int Socket, int sessionid);
 int startup_INFO(void);
 

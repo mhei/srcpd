@@ -32,13 +32,12 @@ void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node,  int busnumber);
 int init_bus_IB(int);
 int term_bus_IB(int);
 
-void * thr_sendrec_IB(void *);
+void* thr_sendrec_IB(void *);
 
-void* thr_sendrecintellibox(void*);
 void send_command_ga(int busnumber);
 void send_command_gl(int busnumber);
 void send_command_sm(int busnumber);
-void check_status(int busnumber);
+void check_status_ib(int busnumber);
 void check_status_pt(int busnumber);
 
 #endif

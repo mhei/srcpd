@@ -202,7 +202,7 @@ void* thr_sendrec_IB(void *v)
   int zaehler1, fb_zaehler1, fb_zaehler2;
 
   busnumber = (int) v;
-    DBG(busnumber, DBG_INFO, "thr_sendrecintellibox is startet as bus %i", busnumber);
+    DBG(busnumber, DBG_INFO, "thr_sendrec_IB is startet as bus %i", busnumber);
 
   zaehler1 = 0;
   fb_zaehler1 = 0;
@@ -223,18 +223,24 @@ void* thr_sendrec_IB(void *v)
       }
       if(rr == 0x00)                  // war alles OK ?
         busses[busnumber].power_changed = 0;
+      if(rr == 0x06)                  // power on not possible - overheating
+      {
+        busses[busnumber].power_changed = 0;
+        busses[busnumber].power_state   = 0;
+      }
       infoPower(busnumber, msg);
       queueInfoMessage(msg);
     }
 
-    if(busses[busnumber].power_state==0) {
-          usleep(1000);
-          continue;
+    if(busses[busnumber].power_state==0)
+    {
+      usleep(1000);
+      continue;
     }
 
     send_command_gl(busnumber);
     send_command_ga(busnumber);
-    check_status(busnumber);
+    check_status_ib(busnumber);
     send_command_sm(busnumber);
     usleep(50000);
   }      // Ende WHILE(1)
@@ -257,7 +263,7 @@ void send_command_ga(int busnumber)
   {
     if(tga[i].id)
     {
-    DBG(busnumber, DBG_DEBUG, "Zeit %i,%i", (int)akt_time.tv_sec, (int)akt_time.tv_usec);
+      DBG(busnumber, DBG_DEBUG, "Zeit %i,%i", (int)akt_time.tv_sec, (int)akt_time.tv_usec);
       cmp_time = tga[i].t;
       if(cmpTime(&cmp_time, &akt_time))      // Ausschaltzeitpunkt erreicht ?
       {
@@ -631,7 +637,7 @@ void send_command_sm(int busnumber)
   }
 }
 
-void check_status(int busnumber)
+void check_status_ib(int busnumber)
 {
   int i;
   int temp;
@@ -679,10 +685,13 @@ void check_status(int busnumber)
         if(gltmp.speed > 0)
           gltmp.speed--;
       }
+      // 2. byte functions
       readByte(busnumber, 1, &rr);
-      gltmp.funcs = rr & 0xf0;;
+      gltmp.funcs = rr & 0xf0;
+      // 3. byte adress (low-part A7..A0)
       readByte(busnumber, 1, &rr);
       gltmp.id = rr;
+      // 4. byte adress (high-part A13..A8), direction, light
       readByte(busnumber, 1, &rr);
       if((rr & 0x80) && (gltmp.direction == 0))
         gltmp.direction = 1;    // Richtung ist vorwärts
@@ -691,7 +700,9 @@ void check_status(int busnumber)
       rr &= 0x3F;
       gltmp.id |= rr << 8;
       setGL(busnumber, gltmp.id, gltmp);
+      // 5. byte real speed (is ignored)
       readByte(busnumber, 1, &rr);
+      // next 1. byte
       readByte(busnumber, 1, &rr);
     }
   }
@@ -713,6 +724,15 @@ void check_status(int busnumber)
       }
   }
 
+  if(xevnt1 & 0x08)       // power off
+  {
+    char msg[110];
+    busses[busnumber].power_changed = 0;
+    busses[busnumber].power_state   = 0;
+    infoPower(busnumber, msg);
+    queueInfoMessage(msg);
+  }
+
   if(xevnt1 & 0x20)        // mindestens eine Weiche wurde von Hand geschaltet
   {
     byte2send = 0xCA;
@@ -729,6 +749,15 @@ void check_status(int busnumber)
       gatmp.action = (rr & 0x40) ? 1 : 0;
       setGA(busnumber, gatmp.id, gatmp);
     }
+  }
+
+  if(xevnt2 & 0x3f)       // overheat, short on track etc.
+  {
+    char msg[110];
+    busses[busnumber].power_changed = 0;
+    busses[busnumber].power_state   = 0;
+    infoPower(busnumber, msg);
+    queueInfoMessage(msg);
   }
 
   if(xevnt2 & 0x40)        // we should send an XStatus-command
