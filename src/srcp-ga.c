@@ -30,12 +30,8 @@ volatile struct _GA tga[50];      // max. 50 Änderungen puffern, neue Werte sind
 volatile int commands_ga	= 0;
 volatile int sending_ga		= 0;
 
-int MAXGAS_SERVER[NUMBER_SERVERS] =
-{
-  1024, 256, 1024, 1024
-};
-
 extern int working_server;
+extern int NUMBER_GA;
 
 /* setze den Schaltdekoder, einige wenige Prüfungen, max. 2/3 Sekunde warten */
 int setGA(char *prot, int addr, int port, int aktion, long activetime)
@@ -46,7 +42,7 @@ int setGA(char *prot, int addr, int port, int aktion, long activetime)
 
   status = 0;
   syslog(LOG_INFO, "in setGA für %i", addr);
-  if((addr > 0) && (addr < MAXGAS_SERVER[working_server]))
+  if((addr > 0) && (addr < NUMBER_GA))
   {
     for(i=0;i<1000;i++)					// warte auf Freigabe
     {
@@ -91,7 +87,7 @@ int setGA(char *prot, int addr, int port, int aktion, long activetime)
 
 int getGA(char *prot, int addr, struct _GA *a)
 {
-  if((addr > 0) && (addr < MAXGAS_SERVER[working_server]))
+  if((addr > 0) && (addr < NUMBER_GA))
   {
   	*a = ga[addr];
 	  return 0;
