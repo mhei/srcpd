@@ -47,6 +47,13 @@ void readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, int busnumber)
       __zimo->number_fb = atoi(txt);
       free(txt);
     }
+    if (strcmp(child->name, "p_time") == 0)
+    {
+      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+     set_min_time(busnumber, atoi(txt));
+      free(txt);
+    }
+    
     if (strcmp(child->name, "number_gl") == 0)
     {
       char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
@@ -135,7 +142,7 @@ void* thr_sendrec_zimo (void *v)
   DBG(bus, DBG_INFO, "zimo started, bus #%d, %s", bus, busses[bus].device);
 
   busses[bus].watchdog = 1;
-
+  check_reset_fb(bus);  
   while (1) {
     if(busses[bus].power_changed==1) {
       sprintf(msg, "S%c%c", (busses[bus].power_state) ? 'E' : 'A', 13);

@@ -135,12 +135,8 @@ static int register_bus(xmlDocPtr doc, xmlNodePtr node)
    if (strcmp(child->name, "intellibox") == 0)
    {
      check_bus(busnumber);
-#if defined linux || defined __FreeBSD__
      readconfig_intellibox(doc, child, busnumber);
      found = 1;
-#else
-	printf("Sorry, Intellibox support only available on Linux and __FreeBSD__ (yet)\n");
-#endif
    }
    if (strcmp(child->name, "loopback") == 0)
    {
@@ -151,12 +147,8 @@ static int register_bus(xmlDocPtr doc, xmlNodePtr node)
    if (strcmp(child->name, "ddl-s88") == 0)
    {
      check_bus(busnumber);
-#if defined linux || defined __FreeBSD__
      readconfig_DDL_S88(doc, child, busnumber);
      found = 1;
-#else
-	printf("Sorry, DDL_S88 only available on Linux and FreeBSD (yet)\n");
-#endif
    }
    if (strcmp(child->name, "hsi-88") == 0)
    {
@@ -209,11 +201,6 @@ static int register_bus(xmlDocPtr doc, xmlNodePtr node)
      found = 1;
      if (strcmp(txt, "yes") == 0)
           busses[busnumber].flags |= AUTO_POWER_ON ;
-   }
-   if (strcmp(child->name, "p_time") == 0)
-   {
-     found = 1;
-     set_min_time(busnumber, atoi(txt));
    }
    if (strcmp(child->name, "speed") == 0)
    {

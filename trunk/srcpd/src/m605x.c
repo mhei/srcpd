@@ -91,6 +91,13 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, int busnumber)
       }
       free(txt);
     }
+    if (strcmp(child->name, "p_time") == 0)
+    {
+      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+     set_min_time(busnumber, atoi(txt));
+      free(txt);
+    }
+    
     if (strcmp(child->name, "ga_min_activetime") == 0)
     {
       char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
@@ -247,6 +254,7 @@ void* thr_sendrec_M6051(void *v)
         ioctl(busses[bus].fd, FIONREAD, &temp);
         DBG(bus, DBG_INFO, "ignoring unread byte: %d ", rr);
   }
+  check_reset_fb(bus);  
   while (1)
   {
     busses[bus].watchdog = 2;

@@ -58,6 +58,13 @@ void readconfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
       __hsi->refresh = atoi(txt);
       free(txt);
     }
+    if (strcmp(child->name, "p_time") == 0)
+    {
+      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+     set_min_time(busnumber, atoi(txt));
+      free(txt);
+    }
+    
     if (strcmp(child->name, "number_fb_left") == 0)
     {
       char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
@@ -301,7 +308,7 @@ void* thr_sendrec_HSI_88(void *v)
   fb_zaehler2 = 1;
   i = 0;
   temp = 1;
-
+  check_reset_fb(busnumber);
   if (busses[busnumber].debuglevel <= DBG_DEBUG)
   {
     status = 1;

@@ -190,10 +190,11 @@ Konfiguration
     
     xmltag: hsi-88
     
-    refresh: 
-    number_fb_left:
-    number_fb_center:
-    number_fb_right:
+    refresh: Wartezeit zwischen zwei Abfragezyklen in Mikrosekunden (!),
+             default 10 000  (= 10 millisekunden)
+    number_fb_left:  Anzahl der S88 Module am "linken" Kanel
+    number_fb_center:Anzahl der S88 Module am "mittleren" Kanel
+    number_fb_right: Anzahl der S88 Module am "rechten" Kanel
 
     
 Installieren und Benutzen:

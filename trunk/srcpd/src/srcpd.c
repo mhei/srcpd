@@ -131,12 +131,11 @@ int main(int argc, char **argv)
   openlog("srcpd", LOG_CONS, LOG_USER);
   syslog(LOG_INFO, "%s", WELCOME_MSG);
   DBG(0, DBG_INFO, "conffile = \"%s\"\n", conffile);
+  readConfig(conffile);
 
   startup_GL();
   startup_GA();
   startup_FB();
-
-  readConfig(conffile);
 
   // check for resolv all needed malloc's
   for(i=0;i<num_busses;i++)
@@ -200,7 +199,7 @@ int main(int argc, char **argv)
     exit(1);
   }
   pthread_detach(ttid_cmd);
-
+  
   /* Modellzeitgeber starten, der ist aber zunächst idle */
   error = pthread_create(&ttid_clock, NULL, thr_clock, NULL);
   if(error)
@@ -242,10 +241,7 @@ int main(int argc, char **argv)
       break; /* leave the while() loop */
     }
     usleep(100000);
-
-    /* test for feedbacks changed back to "0" */
-    check_reset_fb();
-
+  
     sleep_ctr--;
     if (sleep_ctr == 0)
     {
