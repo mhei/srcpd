@@ -33,7 +33,8 @@ int readByte(int bus, int wait, unsigned char *the_byte)
   else
   {
     status = ioctl(busses[bus].fd, FIONREAD, &i);
-    if(status < 0) {
+    if(status < 0)
+    {
       char msg[200];
       strcpy(msg, strerror(errno));
       DBG(bus, DBG_ERROR, "readbyte(): IOCTL   status: %d with errno = %d: %s", status, errno, msg);
@@ -43,10 +44,11 @@ int readByte(int bus, int wait, unsigned char *the_byte)
     if ((i > 0) || (wait == 1))
     {
       i = read(busses[bus].fd, the_byte, 1);
-      if(i < 0) {
+      if(i < 0)
+      {
         char emsg[200];
-        strcpy(emsg, strerror(errno));
-		DBG(bus, DBG_ERROR, "readbyte(): read status: %d with errno = %d: %s", i, errno, emsg);
+        strerror_r(errno, emsg, sizeof(emsg));
+        DBG(bus, DBG_ERROR, "readbyte(): read status: %d with errno = %d: %s", i, errno, *emsg);
       }
       if (i > 0)
         DBG(bus, DBG_DEBUG, "readbyte(): byte read: 0x%02x", *the_byte);
@@ -132,6 +134,7 @@ int isvalidchar(c) {
     return 1;
   return 0;
 }
+
 int socket_readline(int Socket, char *line, int len)
 {
     char c;
