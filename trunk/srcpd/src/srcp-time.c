@@ -1,4 +1,3 @@
-/* $Id$ */
 
 /* 
  * Vorliegende Software unterliegt der General Public License, 
@@ -15,15 +14,14 @@
 
 struct _VTIME vtime;
 
-int
-startup_TIME(void)
+int startup_TIME(void)
 {
   return 0;
 }
 
 int setTime(int d, int h, int m, int s)
 {
-  if(d<0 || h<0 || h>23 || m<0 || m>59 || s<0 || s>59 )
+  if(d<0 || h<0 || h>23 || m<0 || m>59 || s<0 || s>59)
     return SRCP_WRONGVALUE;
   vtime.day     = d;
   vtime.hour    = h;
@@ -32,14 +30,15 @@ int setTime(int d, int h, int m, int s)
   return SRCP_OK;
 }
 
-int initTime(int fx, int fy) {
-  if(fx<0 || fy<=0  )
+int initTime(int fx, int fy)
+{
+  if(fx<0 || fy<=0)
     return SRCP_WRONGVALUE;
-  vtime.ratio_x    = fx;
-  vtime.ratio_y    = fy;
+  vtime.ratio_x = fx;
+  vtime.ratio_y = fy;
   return SRCP_OK;
-
 }
+
 int getTime(struct _VTIME *vt)
 {
   *vt = vtime;
@@ -50,8 +49,8 @@ int infoTime(struct _VTIME vt, char *msg)
 {
   struct timeval akt_time;
   gettimeofday(&akt_time, NULL);
-  sprintf(msg, "%ld.%ld 100 INFO 0 TIME %d %d %d %d", akt_time.tv_sec, akt_time.tv_usec / 1000, vt.day, vt.hour, vt.min, vt.sec);
-  return SRCP_INFO;
+  sprintf(msg, "%ld.%ld 100 INFO 0 TIME %d %d %d %d", akt_time.tv_sec, akt_time.tv_usec/1000, vt.day, vt.hour, vt.min, vt.sec);
+  return SRCP_OK;
 }
 
 int cmpTime(struct timeval *t1, struct timeval *t2)
@@ -78,15 +77,14 @@ int cmpTime(struct timeval *t1, struct timeval *t2)
 
 
 int describeTIME(int bus, int addr, char *reply) {
-     sprintf(reply, "INFO 0 TIME %d %d",   vtime.ratio_x,   vtime.ratio_y);
-   return SRCP_INFO;
+  sprintf(reply, "INFO 0 TIME %d %d", vtime.ratio_x, vtime.ratio_y);
+  return SRCP_OK;
 }
 
 /***********************************************************************
  * Zeitgeber, aktualisiert die Datenstrukturen im Modellsekundenraster *
  ***********************************************************************/
-void*
-thr_clock(void* v)
+void* thr_clock(void* v)
 {
   struct _VTIME vt;
 

@@ -1,4 +1,3 @@
-/* cvs: $Id$             */
 
 /* 
  * Vorliegende Software unterliegt der General Public License, 
@@ -87,9 +86,13 @@ int socket_writereply(int Socket, int srcpcode, const char *line, struct timeval
 {
   char buf[1024];
   char buf2[511];
-  if(srcpcode==SRCP_INFO) {
-     sprintf(buf, "%s\n", line);
-  } else {
+
+  if(srcpcode==SRCP_INFO)
+  {
+    sprintf(buf, "%s\n", line);
+  }
+  else
+  {
     srcp_fmt_msg(srcpcode, buf2);
     sprintf(buf, "%ld.%ld %s %s\n", akt_time->tv_sec, akt_time->tv_usec / 1000, buf2, line);
   }
@@ -283,7 +286,7 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
   if (strncasecmp(device, "GA", 2) == 0)
   {
     long addr, port;
-    sscanf(parameter, "%ld", &addr, &port);
+    sscanf(parameter, "%ld %ld", &addr, &port);
     rc = infoGA(bus, addr, port, reply);
   }
   if (strncasecmp(device, "POWER", 5) == 0)
@@ -295,21 +298,27 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
     if (vtime.ratio_x && vtime.ratio_y)
     {
       rc = infoTime(vtime, reply);
-    } else {
+    }
+    else
+    {
       rc = SRCP_NODATA;
     }
   }
-  if(strncasecmp(device, "DESCRIPTION", 11) == 0) {
+  if(strncasecmp(device, "DESCRIPTION", 11) == 0) 
+  {
     /* Beschreibungen gibt es deren 2 */
     long int addr;
     char devgrp[10];
     int nelem=-1;
     if(strlen(parameter)>0)
         nelem = sscanf(parameter, "%s %ld", devgrp, &addr);
-    if(nelem <= 0) {
-        sprintf(reply, "%d DESCRIPTION %s", bus, busses[bus].description);
-        rc = SRCP_INFO;
-    } else {
+    if(nelem <= 0) 
+    {
+      sprintf(reply, "%d DESCRIPTION %s", bus, busses[bus].description);
+      rc = SRCP_INFO;
+    } 
+    else 
+    {
         if(strncmp(devgrp, "GL", 2)==0)
             rc = describeGL(bus, addr, reply);
         if(strncmp(devgrp, "GA", 2)==0)
@@ -349,6 +358,7 @@ int handleRESET(int sessionid, int bus, char *device, char *parameter, char *rep
 
 int handleWAIT(int sessionid, int bus, char *device, char *parameter, char *reply)
 {
+  struct timeval time;
   int rc=SRCP_OK;
   *reply = 0x00;
   /* Wir warten.. */
@@ -356,7 +366,7 @@ int handleWAIT(int sessionid, int bus, char *device, char *parameter, char *repl
   {
     long int port, waitvalue, aktvalue, timeout;
     sscanf(parameter, "%ld %ld %ld", &port, &waitvalue, &timeout);
-    if (getFB(bus, port) == waitvalue)
+    if (getFB(bus, port, &time) == waitvalue)
     {
       rc = infoFB(bus, port, reply);
     }
@@ -368,7 +378,7 @@ int handleWAIT(int sessionid, int bus, char *device, char *parameter, char *repl
       {
         /* fprintf(stderr, "waiting %d (noch %d sekunden)\n", port, timeout); */
         usleep(10000);
-        aktvalue = getFB(bus, port);
+        aktvalue = getFB(bus, port, &time);
         timeout--;
       }
       while (timeout >= 0 && aktvalue != waitvalue);
@@ -422,12 +432,11 @@ int handleTERM(int sessionid, int bus, char *device, char *parameter, char *repl
     {
       long int termsession = 0;
       int nelem = 0;
-      if(strlen(parameter)>0)
-         nelem = sscanf(parameter, "%ld", &termsession);
-      if(nelem <= 0) {
+      if(strlen(parameter) > 0)
+        nelem = sscanf(parameter, "%ld", &termsession);
+      if(nelem <= 0)
         termsession = 0;
-      }
-      rc = termSESSION(bus, sessionid, termsession, reply);
+      rc = termSESSION(bus, sessionid, termsession, reply);	
     }
     else
     {

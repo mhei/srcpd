@@ -85,8 +85,6 @@ static int register_bus(xmlDocPtr doc, xmlNodePtr node)
     if (strcmp(child->name, "text") == 0)
     {
       child = child->next;
-      // es könnte auch einfach nur ein Linefeed sein. Kein syslog
-      // syslog(LOG_INFO, "ignoring");
       continue;
     }
     txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
@@ -128,7 +126,7 @@ static int register_bus(xmlDocPtr doc, xmlNodePtr node)
       readconfig_DDL_S88(doc, child, busnumber);
       found = 1;
     }
-    if (strcmp(child->name, "hsi-s88") == 0)
+    if (strcmp(child->name, "hsi-88") == 0)
     {
       check_bus(busnumber);
       readconfig_HSI_88(doc, child, busnumber);
@@ -200,6 +198,7 @@ int readConfig(const char *filename)
 {
   xmlDocPtr doc;
   int i, rc;
+
   // something to initialize
   memset(busses, 0, sizeof(busses));
   for(i=0;i<MAX_BUSSES;i++)

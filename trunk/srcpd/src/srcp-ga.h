@@ -40,6 +40,7 @@ int initGA(int bus, int addr, const char *protocol);
 int describeGA(int bus, int addr, char *msg);
 int infoGA(int bus, int addr, int port, char* msg);
 int cmpGA(struct _GA a, struct _GA b);
+int isInitializedGA(int bus, int addr);
 
 int lockGA(int bus, int addr, long int sessionid);
 int getlockGA(int bus, int addr, long int sessionid);

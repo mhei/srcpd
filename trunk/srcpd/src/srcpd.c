@@ -3,7 +3,6 @@
                              -------------------
     begin                : Wed Jul 4 2001
     copyright            : (C) 2001,2002 by the srcpd team
-    $Id$
  ***************************************************************************/
 
 /***************************************************************************
@@ -110,7 +109,7 @@ int main(int argc, char **argv)
   int error, i;
   pid_t pid;
   char c, conffile[MAXPATHLEN];
-  pthread_t ttid_cmd, ttid_clock, ttid_pid, ttid_info;
+  pthread_t ttid_cmd, ttid_clock, ttid_pid;
   struct _THREADS cmds;
   install_signal_handler();
 
@@ -168,7 +167,7 @@ int main(int argc, char **argv)
   {
     if(busses[i].init_func)
     {
-#warning complete me
+#warning complete me ?
       if ((*busses[i].init_func)(i) != 0)
         exit(1);           // error while initialize
     }

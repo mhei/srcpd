@@ -1,4 +1,3 @@
-/* $Id$ */
 
 /* 
  * Vorliegende Software unterliegt der General Public License, 
@@ -41,10 +40,12 @@ static int out[MAX_BUSSES], in[MAX_BUSSES];
 /* internal functions */
 static int queue_len(int bus);
 static int queue_isfull(int bus);
-
-static int get_number_gl (int bus) {
+ 
+static int get_number_gl (int bus) 
+{
   int number_gl = -1;
-  switch (busses[bus].type) {
+  switch (busses[bus].type) 
+  {
     case SERVER_M605X:
         number_gl =   ( (M6051_DATA *) busses[bus].driverdata)  -> number_gl;
         break;
@@ -54,10 +55,10 @@ static int get_number_gl (int bus) {
     case SERVER_LOOPBACK:
         number_gl =   ( (LOOPBACK_DATA *) busses[bus].driverdata)  -> number_gl;
         break;
- }
- return number_gl;
+  }
+  return number_gl;
 }
-
+ 
 static int initGL_default(int bus, int addr) {
   switch (busses[bus].type) {
     case SERVER_M605X:
@@ -75,6 +76,7 @@ static int initGL_default(int bus, int addr) {
     }
     return SRCP_OK;
 }
+
 // es gibt Decoder für 14, 27, 28 und 128 FS
 // Achtung bei IB alles auf 126 FS bezogen (wenn Ergebnis > 0, dann noch eins aufaddieren)
 static int calcspeed(int vs, int vmax, int n_fs)
@@ -92,10 +94,10 @@ static int calcspeed(int vs, int vmax, int n_fs)
   return rs;
 }
 
-static int isInitializedGL(int bus, int addr) {
+int isInitializedGL(int bus, int addr)
+{
    return gl[bus][addr].n_fs==0;
 }
-
 
 /* Übernehme die neuen Angaben für die Lok, einige wenige Prüfungen */
 int queueGL(int bus, int addr, int dir, int speed, int maxspeed, int f,  int f1, int f2, int f3, int f4)
@@ -105,8 +107,9 @@ int queueGL(int bus, int addr, int dir, int speed, int maxspeed, int f,  int f1,
   syslog(LOG_INFO, "setGL für %i", addr);
   if ((addr > 0) && (addr <= number_gl) )
   {
-    if(! isInitializedGL(bus, addr) ){
-       initGL_default(bus, addr);
+    if (!isInitializedGL(bus, addr))
+    {
+      initGL_default(bus, addr);
     }
     while (queue_isfull(bus))
     {
@@ -114,6 +117,7 @@ int queueGL(int bus, int addr, int dir, int speed, int maxspeed, int f,  int f1,
     }
 
     pthread_mutex_lock(&queue_mutex[bus]);
+
     queue[bus][in[bus]].speed     = calcspeed(speed, maxspeed, gl[bus][addr].n_fs);
     queue[bus][in[bus]].direction = dir;
     queue[bus][in[bus]].funcs     = f1 + (f2 << 1) + (f3 << 2) + (f4 << 3) + (f << 4);
@@ -123,8 +127,11 @@ int queueGL(int bus, int addr, int dir, int speed, int maxspeed, int f,  int f1,
     in[bus]++;
     if (in[bus] == QUEUELEN)
       in[bus] = 0;
+      
     pthread_mutex_unlock(&queue_mutex[bus]);
-  }  else  {
+  }
+  else
+  {
     return -1;
   }
   return SRCP_OK;
@@ -166,8 +173,6 @@ int unqueueNextGL(int bus, struct _GL *gl)
     out[bus] = 0;
   return out[bus];
 }
-
-
 
 int getGL(int bus, int addr, struct _GL *l) {
   int number_gl = get_number_gl(bus);
@@ -291,4 +296,3 @@ int startup_GL(void) {
   }
   return SRCP_OK;
 }
-
