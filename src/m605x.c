@@ -1,7 +1,7 @@
 /* cvs: $Id$             */
 
-/* 
- * Vorliegende Software unterliegt der General Public License, 
+/*
+ * Vorliegende Software unterliegt der General Public License,
  * Version 2, 1991. (c) Matthias Trute, 2000-2001.
  *
  * 30.01.2002 Matthias Trute
@@ -43,7 +43,7 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   busses[busnumber].term_func = &term_bus_M6051;
   busses[busnumber].thr_func = &thr_sendrec_M6051;
   busses[busnumber].init_gl_func = &init_gl_M6051;
-  busses[busnumber].init_ga_func = &init_ga_M6051;  
+  busses[busnumber].init_ga_func = &init_ga_M6051;
   busses[busnumber].driverdata = malloc(sizeof(struct _M6051_DATA));
   busses[busnumber].flags |= FB_16_PORTS;
   __m6051->number_fb = 0;  /* max 31 */
@@ -97,7 +97,7 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, int busnumber)
      set_min_time(busnumber, atoi(txt));
       free(txt);
     }
-    
+
     if (strcmp(child->name, "ga_min_activetime") == 0)
     {
       char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
@@ -143,7 +143,7 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 
 
 /*******************************************************
- *     SERIELLE SCHNITTSTELLE KONFIGURIEREN           
+ *     SERIELLE SCHNITTSTELLE KONFIGURIEREN
  *******************************************************
  */
 static int init_lineM6051(int bus) {
@@ -209,10 +209,10 @@ int term_bus_M6051(int bus)
  *
  */
 int init_gl_M6051(struct _GLSTATE *gl) {
-	gl -> direction = 1; /* undocumented feature of the 6021: 9193 is a hard reset */
-	gl -> n_fs = 14;
-	gl -> protocol = 'M';
-	return SRCP_OK;
+  gl -> direction = 1; /* undocumented feature of the 6021: 9193 is a hard reset */
+  gl -> n_fs = 14;
+  gl -> protocol = 'M';
+  return SRCP_OK;
 }
 
 /**
@@ -220,8 +220,8 @@ int init_gl_M6051(struct _GLSTATE *gl) {
 
  */
 int init_ga_M6051(struct _GASTATE *ga) {
-	ga -> protocol = 'M';
-	return SRCP_OK;
+  ga -> protocol = 'M';
+  return SRCP_OK;
 }
 
 void* thr_sendrec_M6051(void *v)
@@ -254,7 +254,6 @@ void* thr_sendrec_M6051(void *v)
         ioctl(busses[bus].fd, FIONREAD, &temp);
         DBG(bus, DBG_INFO, "ignoring unread byte: %d ", rr);
   }
-  check_reset_fb(bus);  
   while (1)
   {
     busses[bus].watchdog = 2;
@@ -377,6 +376,7 @@ void* thr_sendrec_M6051(void *v)
         akt_S88 = 1;
     }
     busses[bus].watchdog = 10;
+    check_reset_fb(bus);
     // fprintf(stderr, " ende\n");
   }
 }

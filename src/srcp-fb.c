@@ -1,6 +1,6 @@
 
-/* 
- * Vorliegende Software unterliegt der General Public License, 
+/*
+ * Vorliegende Software unterliegt der General Public License,
  * Version 2, 1991. (c) Matthias Trute, 2000-2001.
  *
  */
@@ -120,14 +120,17 @@ void updateFB(int bus, int port, int value)
   // we read 8 or 16 ports at once, but we will only change those ports,
   // which are really changed
   //
-  // if changed contact ist resetet, we will wait 2sec to
+  // if changed contact ist resetet, we will wait 'min_time[bus]' seconds to
   // minimalize problems from contacts bitween track and train
   if(fb[bus].fbstate[port_t].state != value)
   {
+    DBG(bus, DBG_DEBUG, "FB %02i/%03i  was gone to \"%i\"", bus, port, value);
+
     gettimeofday(&akt_time, &dummy);
     if (value == 0)
     {
-      if ((fb[bus].fbstate[port_t].state == -1) || (min_time[bus] == 0))      
+      DBG(bus, DBG_DEBUG, "FB %02i/%03i  was gone to 0", bus, port);
+      if (min_time[bus] == 0)
       {
         fb[bus].fbstate[port_t].state = value;
         fb[bus].fbstate[port_t].timestamp = akt_time;
@@ -278,40 +281,40 @@ void check_reset_fb(int busnumber)
 {
   struct _RESET_FB reset_fb;
   struct timeval cmp_time, diff_time;
-    
-    while (getNextFB(busnumber, &reset_fb) != -1)
+
+  while (getNextFB(busnumber, &reset_fb) != -1)
+  {
+    if (fb[busnumber].fbstate[reset_fb.port].change == 0)
     {
-      if (fb[busnumber].fbstate[reset_fb.port].change == 0)
+      // drop this reset of feedback, because we've got an new impulse
+      unqueueNextFB(busnumber);
+    }
+    else
+    {
+      gettimeofday(&cmp_time, NULL);
+      DBG(busnumber, DBG_DEBUG, "FB %02i/%03i  time: %ld.%ld      compare: %ld.%ld",
+        busnumber, reset_fb.port, cmp_time.tv_sec, cmp_time.tv_usec,
+        reset_fb.timestamp.tv_sec, reset_fb.timestamp.tv_usec);
+      diff_time.tv_sec  = cmp_time.tv_sec  - reset_fb.timestamp.tv_sec;
+      diff_time.tv_usec = cmp_time.tv_usec - reset_fb.timestamp.tv_usec;
+      diff_time.tv_usec += (diff_time.tv_sec * 1000000);
+      DBG(busnumber, DBG_DEBUG, "FB %02i/%03i  time-diff = %ld us (need %d us)",
+        busnumber, reset_fb.port, diff_time.tv_usec, min_time[busnumber]);
+      if (diff_time.tv_usec < min_time[busnumber])
       {
-        // drop this reset of feedback, because we've got an new impulse
-        unqueueNextFB(busnumber);
+        break;
       }
       else
       {
-        gettimeofday(&cmp_time, NULL);
-        DBG(busnumber, DBG_DEBUG, "FB %02i/%03i  time: %ld.%ld      compare: %ld.%ld",
-          busnumber, reset_fb.port, cmp_time.tv_sec, cmp_time.tv_usec, 
-          reset_fb.timestamp.tv_sec, reset_fb.timestamp.tv_usec);
-        diff_time.tv_sec  = cmp_time.tv_sec  - reset_fb.timestamp.tv_sec;
-        diff_time.tv_usec = cmp_time.tv_usec - reset_fb.timestamp.tv_usec;
-        diff_time.tv_usec += (diff_time.tv_sec * 1000000);
-        DBG(busnumber, DBG_DEBUG, "FB %02i/%03i  time-diff = %ld us (need %d us)",
-          busnumber, reset_fb.port, diff_time.tv_usec, min_time[busnumber]);
-        if (diff_time.tv_usec < min_time[busnumber])
-        {
-          break;
-        }
-        else
-        {
-          DBG(busnumber, DBG_DEBUG, "set %d feedback to 0", reset_fb.port);
-          unqueueNextFB(busnumber);
-          pthread_mutex_lock(&queue_mutex_fb);
-          fb[i].fbstate[reset_fb.port].state = 0;
-          fb[i].fbstate[reset_fb.port].timestamp = reset_fb.timestamp;
-          fb[i].fbstate[reset_fb.port].change = 0;
-          pthread_mutex_unlock(&queue_mutex_fb);
-          queueInfoFB(busnumber, reset_fb.port + 1);
-        }
+        DBG(busnumber, DBG_DEBUG, "set %d feedback to 0", reset_fb.port);
+        unqueueNextFB(busnumber);
+        pthread_mutex_lock(&queue_mutex_fb);
+        fb[busnumber].fbstate[reset_fb.port].state = 0;
+        fb[busnumber].fbstate[reset_fb.port].timestamp = reset_fb.timestamp;
+        fb[busnumber].fbstate[reset_fb.port].change = 0;
+        pthread_mutex_unlock(&queue_mutex_fb);
+        queueInfoFB(busnumber, reset_fb.port + 1);
       }
-    }  
+    }
+  }
 }

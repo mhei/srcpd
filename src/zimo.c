@@ -3,7 +3,7 @@
 /* zimo: Zimo MX1 Treiber
  *
  */
- 
+
 #include "stdincludes.h"
 
 #include "config-srcpd.h"
@@ -53,7 +53,7 @@ void readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, int busnumber)
      set_min_time(busnumber, atoi(txt));
       free(txt);
     }
-    
+
     if (strcmp(child->name, "number_gl") == 0)
     {
       char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
@@ -74,7 +74,7 @@ void readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     __zimo->number_gl = 0;
     DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
   }
-  
+
   if(init_GA(busnumber, __zimo->number_ga))
   {
     __zimo->number_ga = 0;
@@ -138,11 +138,10 @@ void* thr_sendrec_zimo (void *v)
   struct _GASTATE gatmp, gaakt;
   int addr, temp, i;
   int bus = (int) v;
-  char msg[20];  
+  char msg[20];
   DBG(bus, DBG_INFO, "zimo started, bus #%d, %s", bus, busses[bus].device);
 
   busses[bus].watchdog = 1;
-  check_reset_fb(bus);  
   while (1) {
     if(busses[bus].power_changed==1) {
       sprintf(msg, "S%c%c", (busses[bus].power_state) ? 'E' : 'A', 13);
@@ -155,10 +154,10 @@ void* thr_sendrec_zimo (void *v)
     writeString(bus, msg, 0);
     ioctl(busses[bus].fd, FIONREAD, &temp);
     for(i=0; i<temp; i++) {
-	char rr;
-	readByte(bus, 0, &rr);
-	msg[i]=rr;
-	msg[i+1]=0x00;
+  char rr;
+  readByte(bus, 0, &rr);
+  msg[i]=rr;
+  msg[i+1]=0x00;
     }
     DBG(bus, DBG_DEBUG, "status response: %s ", msg);
 
@@ -183,16 +182,16 @@ void* thr_sendrec_zimo (void *v)
           databyte1 |= 4;
         databyte2 = gltmp.funcs >> 1;
         databyte3 = 0x00;
-        
+
         sprintf(msg, "F%c%02X%02X%02X%02X%02X%c", glakt.protocol, addr, gltmp.speed, databyte1, databyte2, databyte3, 13);
         DBG(bus, DBG_DEBUG, "%s", msg);
         writeString(bus, msg, 0);
         ioctl(busses[bus].fd, FIONREAD, &temp);
         while (temp > 0)  {
             char rr;
-    	    readByte(bus, 0, &rr);
-    	    ioctl(busses[bus].fd, FIONREAD, &temp);
-    	    DBG(bus, DBG_INFO, "ignoring unread byte: %d (%c)", rr, rr);
+          readByte(bus, 0, &rr);
+          ioctl(busses[bus].fd, FIONREAD, &temp);
+          DBG(bus, DBG_INFO, "ignoring unread byte: %d (%c)", rr, rr);
        }
        setGL(bus, addr, gltmp);
     }
@@ -213,14 +212,15 @@ void* thr_sendrec_zimo (void *v)
         ioctl(busses[bus].fd, FIONREAD, &temp);
         while (temp > 0)  {
             char rr;
-    	    readByte(bus, 0, &rr);
-    	    ioctl(busses[bus].fd, FIONREAD, &temp);
-    	    DBG(bus, DBG_INFO, "ignoring unread byte: %d (%c)", rr, rr);
+          readByte(bus, 0, &rr);
+          ioctl(busses[bus].fd, FIONREAD, &temp);
+          DBG(bus, DBG_INFO, "ignoring unread byte: %d (%c)", rr, rr);
        }
           setGA(bus, addr, gatmp);
           busses[bus].watchdog = 6;
+      check_reset_fb(bus);
     }
-    
+
     usleep(1000);
   }
 }
