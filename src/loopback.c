@@ -67,6 +67,13 @@ void readconfig_loopback(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     __loopback->number_gl = 0;
     DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
   }
+  
+  if(init_GA(busnumber, __loopback->number_ga))
+  {
+    __loopback->number_ga = 0;
+    DBG(busnumber, DBG_ERROR, "Can't create array for accessoires");
+  }
+
   if(init_FB(busnumber, __loopback->number_fb))
   {
     __loopback->number_fb = 0;
