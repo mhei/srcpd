@@ -92,7 +92,7 @@ void readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   // da wir ueber eine viel langsamere Schnittstelle gehen, ist es
   // unnoetig, soviel Zeit zu verblasen. Wahrscheinlich reicht sogar
   // ein einziger Schreibversuch. MAM
-  __ddl_s88->clockscale = 3;
+  __ddl_s88->clockscale = 2;
 #else
   __ddl_s88->clockscale = 35;
 #endif

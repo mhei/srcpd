@@ -11,17 +11,24 @@ Modulen erwaehnt.
 -------------------------------------------------------------------------
 Hauptprogramm:
 
-	Keine Codeaenderung
 	Einige Headerdateien heissen anders, bzw. wurden hinzugefuegt.
 	Im Makefile wird -lpthread automatisch ersetzt durch -pthread
+
+
+	in io.c wird bei writeByte vor dem Schreiben ueberprueft, ob
+	CTS anliegt. Wenn nicht, wir der Thread in den Schlafzustand
+	versetzt, und nach einer Sekunde ein neuer Versuch unternommen.
+	Ohne die Aenderung blockierten ALLE Threads.
 
 
 -------------------------------------------------------------------------
 Intellibox
 
-	NICHT FUNKTIONSFAEHIG!
-	Das Modul ist derzeit deaktiviert, die Arbeit hat noch
-	gar nicht begonnen
+ 	Der Linux Device Treiber wird nicht benoetigt	
+	Das BREAK fuer die Baudratenumschaltung wird ueber den
+	normalen Treiber gemacht.
+
+	Ungetestet mangels Hardware
 -------------------------------------------------------------------------
 M605x
 
@@ -38,7 +45,7 @@ DDL-S88
 	Da das Schreiben/Lesen ueber ioctl Aufrufe simuliert wird, ist
 	es gegenueber dem Original deutlich langsamer.
 	Der Konfigurationsparameter "clockscale" wurde deshalb von
-	35 auf 3 Wiederholungen reduziert. Wenn das zu schnell fuer
+	35 auf 2 Wiederholungen reduziert. Wenn das zu schnell fuer
 	die Hardware sein sollte, bitte experimentell hochsetzen
 	und mir Bescheid geben.
 	Bei meinem 2*400Mhz Referenzrechner komme ich damit auf
