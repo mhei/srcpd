@@ -48,14 +48,11 @@ int readByte(int bus, unsigned char *the_byte)
     {
       // read only, if there is really an input
       i = read(busses[bus].fd, the_byte, 1);
-      if(i == 1)
+      if(busses[bus].debuglevel > 5)
       {
-        if(busses[bus].debuglevel > 5)
-          syslog(LOG_INFO, "bus %d byte read: 0x%02x", bus, *the_byte);
-      }
-      else
-      {
-        if(busses[bus].debuglevel > 5)
+        if(i == 1)
+           syslog(LOG_INFO, "bus %d byte read: 0x%02x", bus, *the_byte);
+        else
           syslog(LOG_INFO, "no byte read");
       }
     }
@@ -65,7 +62,7 @@ int readByte(int bus, unsigned char *the_byte)
 
 void writeByte(int bus, unsigned char *b, unsigned long msecs)
 {
-  if(busses[bus].debuglevel <= 3)
+  if(busses[bus].debuglevel < 7)
   {
     write(busses[bus].fd, b, 1);
     tcflush(busses[bus].fd, TCOFLUSH);

@@ -13,6 +13,7 @@
 
 #include "config-srcpd.h"
 #include "srcp-error.h"
+#include "srcp-info.h"
 
 #include "srcp-fb.h"
 
@@ -37,19 +38,34 @@ void updateFB(int bus, int port, int value)
   {
     // send_event()
     syslog(LOG_INFO, "changed: %d FB %d %d -> %d", bus, port,  _fbstate[bus-1][port-1].state, value);
+
+    // queue changes for writing info-message
+    queueInfoFB(bus, port, value);
   }
   _fbstate[bus-1][port-1].state = value;
   gettimeofday(& _fbstate[bus-1][port-1].timestamp, &dummy);
 }
 
 /* Normales Modul mit 16 Ports */
-int setFBmodul(int bus, int mod, int values)
+int setFBmodul(int bus, int modul, int values)
 {
   int i;
+  int c;
+  int fb_contact;
+
+  // compute startcontact ( (modul - 1) * 16 + 1 )
+  fb_contact = modul - 1;
+  fb_contact <<= 4;
+  fb_contact++;
+
   for(i=0; i<16;i++)
   {
-    int c = (values & (1 << (15-i))) ? 1 : 0;
-    updateFB(bus, (mod-1)*16 + i + 1, c);
+    // pay attention for different order on HSI-88
+    if (busses[bus].type == SERVER_HSI_88)
+      c = (values & (1 << i)) ? 1 : 0;
+    else
+      c = (values & (1 << (15-i))) ? 1 : 0;
+    updateFB(bus, fb_contact++, c);
   }
   return SRCP_OK;
 }
