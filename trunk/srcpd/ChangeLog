@@ -1,3 +1,25 @@
+2003-09-13 00:40  mborchers
+
+	* ib.c: improved speed-handling for GL
+
+2003-09-10 13:30  mborchers
+
+	* ib.c: some changes to correctly send speeds to the IB,
+	independent of speed-levels chosen by the user (with INIT x GL). 
+	changed some debugging messages
+
+2003-09-08 02:17  mborchers
+
+	* i2c-dev.c: removed some old unused stuff
+
+2003-09-08 02:15  mborchers
+
+	* netserver.c: added right return code for missing gl parameters
+
+2003-08-27 16:40  mtrute
+
+	* ChangeLog, srcpd.spec: Beta4 vorbereitet
+
 2003-08-27 16:37  mtrute
 
 	* ib.c: mea culpa
