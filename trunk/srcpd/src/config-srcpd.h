@@ -34,7 +34,7 @@
 #define SERVER_LI100            4         // srcpd-bus works as Lenz-server
 #define SERVER_LOOPBACK         5         // srcpd-bus is dummy driver, no real hardware
 #define SERVER_S88              6         // srcpd-bus works as S88 at parallelport
-#define SERVER_HSI_88	          7         // srcpd-bus works as HSI88-server
+#define SERVER_HSI_88            7         // srcpd-bus works as HSI88-server
 #define SERVER_I2C_DEV          8         // srcpd-bus works as I2C-DEV-server
 #define SERVER_ZIMO             9         // srcpd-bus works as Zimo MX1
 
@@ -54,9 +54,9 @@ typedef struct _BUS
 {
   int number;      //! busnumber
   int debuglevel;  //! verbosity level of syslog
-  int type;        //! which bustype 
+  int type;        //! which bustype
   char description[100]; //! bus description
-  
+
   char *device;    //! Path to device, if not null
   /** statistics */
   unsigned int bytes_recevied;
@@ -64,27 +64,28 @@ typedef struct _BUS
   unsigned int commands_processed;
 
   /* serial device parameters */
-  speed_t baudrate; //! 
+  speed_t baudrate; //!
   struct termios devicesettings; //! save Device Settings, if used
-      
-  /** Now internally used data */
-  int fd;          //! file descriptor of device
 
-  pthread_t pid;   //! PID of the thread
-  void *thr_func;  //! addr of the thread function
-  int (*init_func)(int); //! addr of init function
-  int (*term_func)(int); //! addr of init function
-  int (*init_gl_func) ( struct _GLSTATE *); //! called to modify default init
-  int (*init_ga_func) ( struct _GASTATE *); //! called to modify default init
-  int watchdog;    //! used to monitor the thread
+  /** Now internally used data */
+  int fd;                                    //! file descriptor of device
+
+  pthread_t pid;                             //! PID of the thread
+  void *thr_func;                            //! addr of the thread function
+  int (*init_func)(int);                     //! addr of init function
+  int (*term_func)(int);                     //! addr of init function
+  int (*init_gl_func) ( struct _GLSTATE *);  //! called to modify default init
+  int (*init_ga_func) ( struct _GASTATE *);  //! called to modify default init
+  int watchdog;                              //! used to monitor the thread
   int power_state;
   int power_changed;
   struct timeval power_change_time;
   char power_msg[100];
 
   /* driver specific */
-  void *driverdata; //! pointer to driverspecific data
-  int flags;            //! Watchdog fla
+  void *driverdata;       //! pointer to driverspecific data
+  int flags;              //! Watchdog flag
+  int numberOfSM;         // maximumnumber for programing
 } BUS;
 
 extern struct _BUS busses[];

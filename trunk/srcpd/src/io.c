@@ -26,7 +26,7 @@ int readByte(int bus, int wait, unsigned char *the_byte)
 
   // with debuglevel beyond DBG_DEBUG, we will not really work on hardware
   if (busses[bus].debuglevel > DBG_DEBUG)
-  {  
+  {
     i = 1;
     *the_byte = 0;
   }
@@ -129,7 +129,8 @@ void close_comport(int bus)
 /* Zeilenweises Lesen vom Socket      */
 /* nicht eben trivial!                */
 
-int isvalidchar(c) {
+int isvalidchar(c)
+{
   if( (c>=0x20 && c<=127) || c==0x09 || c=='\n')
     return 1;
   return 0;
@@ -137,22 +138,28 @@ int isvalidchar(c) {
 
 int socket_readline(int Socket, char *line, int len)
 {
-    char c;
-    int i = 0;
-    int bytes_read = read(Socket, &c, 1);
-    if (bytes_read <= 0) {
-      return -1;
-    } else {
-      if ( isvalidchar(c) ) line[i++] = c;
-      /* die reihenfolge beachten! */
-      while (read(Socket, &c, 1) > 0) {
-	    /* Ende beim Zeilenende */
-	    if (c == '\n') break;
-	    if ( isvalidchar(c) && (i < len-1) ) line[i++] = c;
-      }
+  char c;
+  int i = 0;
+  int bytes_read = read(Socket, &c, 1);
+  if (bytes_read <= 0)
+  {
+    return -1;
+  }
+  else
+  {
+    if ( isvalidchar(c) ) line[i++] = c;
+    /* die reihenfolge beachten! */
+    while (read(Socket, &c, 1) > 0)
+    {
+      /* Ende beim Zeilenende */
+      if (c == '\n')
+        break;
+      if ( isvalidchar(c) && (i < len-1) )
+        line[i++] = c;
     }
-    line[i++] = 0x00;
-    return 0;
+  }
+  line[i++] = 0x00;
+  return 0;
 }
 
 /******************
@@ -161,23 +168,27 @@ int socket_readline(int Socket, char *line, int len)
  */
 int socket_writereply(int Socket, const char *line)
 {
-    int status=0;
-    long int linelen = strlen(line);
-    char chunk[MAXSRCPLINELEN], tmp[MAXSRCPLINELEN];
-    int i=0;
+  int status=0;
+  long int linelen = strlen(line);
+  char chunk[MAXSRCPLINELEN], tmp[MAXSRCPLINELEN];
+  int i=0;
 
-    if (linelen<=0) return 0;
-    DBG(0, DBG_DEBUG, "socket %d, write %s", Socket, line);
-    while(i<=linelen-MAXSRCPLINELEN-1 && status>=0) {
-        memset(tmp, 0, sizeof(tmp));
-	strncpy(tmp, line+i, MAXSRCPLINELEN-2);
-	sprintf(chunk, "%s\\\n", tmp);
-	status=write(Socket, chunk, strlen(chunk));
-	i+=MAXSRCPLINELEN-2;
-    }
-    if(i<linelen && status >= 0){
-	    status = write(Socket, line+i, linelen-i);
-    }
-    DBG(0, DBG_DEBUG, "status from write: %d", status);
-    return status;
+  if (linelen<=0)
+    return 0;
+
+  DBG(0, DBG_DEBUG, "socket %d, write %s", Socket, line);
+  while(i<=linelen-MAXSRCPLINELEN-1 && status>=0)
+  {
+    memset(tmp, 0, sizeof(tmp));
+    strncpy(tmp, line+i, MAXSRCPLINELEN-2);
+    sprintf(chunk, "%s\\\n", tmp);
+    status=write(Socket, chunk, strlen(chunk));
+    i+=MAXSRCPLINELEN-2;
+  }
+  if(i<linelen && status >= 0)
+  {
+    status = write(Socket, line+i, linelen-i);
+  }
+  DBG(0, DBG_DEBUG, "status from write: %d", status);
+  return status;
 }

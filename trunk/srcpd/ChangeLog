@@ -1,3 +1,9 @@
+2004-03-12 12:20  schmischi
+
+	* ddl-s88.c, hsi-88.c, ib.c, m605x.c, zimo.c:  correct reset of 
+	feedbacks when delay is set
+	* ib.c: improve usage of SM for DCC
+	
 2004-01-13 20:03  mtrute
 
 	* Makefile.am, Makefile.in, README, config-srcpd.c, ddl.c, ddl.h,
