@@ -28,7 +28,7 @@ volatile struct _GA oga[MAX_BUSSES][50];      // manuelle Änderungen
 volatile struct _GA tga[MAX_BUSSES][50];      // max. 50 Änderungen puffern, neue Werte sind aktiv, warten auf inaktiv
 
 /* setze den Schaltdekoder, einige wenige Prüfungen, max. 2/3 Sekunde warten */
-int setGA(int bus, int addr, int port, int aktion, long activetime)
+int setGA(int sessionid, int bus, int addr, int port, int aktion, long activetime)
 {
   int i;
   int status;
@@ -103,7 +103,7 @@ int cmpGA(struct _GA a, struct _GA b)
       (a.port   == b.port));
 }
 
-void initGA()
+int initGA(int sessionid)
 {
   int bus, i;
   for(bus=0; bus<MAX_BUSSES; bus++) {
