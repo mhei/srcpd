@@ -87,7 +87,7 @@ int socket_writereply(int Socket, int srcpcode, const char *line, struct timeval
 {
   char buf[1024];
   char buf2[511];
-
+  int status;
   if(srcpcode == SRCP_INFO)
   {
     strcpy(buf, line);
@@ -98,7 +98,7 @@ int socket_writereply(int Socket, int srcpcode, const char *line, struct timeval
     sprintf(buf, "%ld.%ld %s %s\n", akt_time->tv_sec, akt_time->tv_usec / 1000, buf2, line);
   }
   syslog(LOG_INFO, "socket %d, write %s", Socket, buf);
-  int status = write(Socket, buf, strlen(buf));
+  status = write(Socket, buf, strlen(buf));
   syslog(LOG_INFO, "status from write %d", status);
   return status;
 }
