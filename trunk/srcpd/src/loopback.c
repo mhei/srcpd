@@ -103,7 +103,7 @@ int init_bus_Loopback(int i)
     busses[i].fd = -1;
   }
   syslog(LOG_INFO, "loopback init done");
-  return 1;
+  return 0;
 }
 
 void* thr_sendrec_Loopback (void *v)

@@ -113,7 +113,6 @@ int term_bus_IB(int bus)
 
 void* thr_sendrec_IB(void *v)
 {
-  int fd;
   unsigned char byte2send;
   int status;
   unsigned char rr;
@@ -123,7 +122,6 @@ void* thr_sendrec_IB(void *v)
   syslog(LOG_INFO, "thr_sendrecintellibox is startet");
   bus = (int) v;
 
-  fd = busses[bus].fd;
   zaehler1 = 0;
   fb_zaehler1 = 0;
   fb_zaehler2 = 1;
@@ -319,7 +317,6 @@ void check_status(int bus)
 {
   int i;
   int temp;
-  int fd = busses[bus].fd;
   unsigned char byte2send;
   unsigned char rr;
   unsigned char xevnt1, xevnt2, xevnt3;
@@ -334,22 +331,22 @@ void check_status(int bus)
 #warning add loconet
 
   byte2send = 0xC8;
-  writeByte(fd, &byte2send, 2);
+  writeByte(bus, &byte2send, 2);
   xevnt2 = 0x00;
   xevnt3 = 0x00;
-  readByte(fd, &xevnt1);
+  readByte(bus, &xevnt1);
   if(xevnt1 & 0x80)
   {
-    readByte(fd, &xevnt2);
+    readByte(bus, &xevnt2);
     if(xevnt2 & 0x80)
-      readByte(fd, &xevnt3);
+      readByte(bus, &xevnt3);
   }
 
   if(xevnt1 & 0x01)        // mindestens eine Lok wurde von Hand gesteuert
   {
     byte2send = 0xC9;
-    writeByte(fd, &byte2send,2);
-    readByte(fd, &rr);
+    writeByte(bus, &byte2send,2);
+    readByte(bus, &rr);
     while(rr != 0x80)
     {
       if(rr == 1)
@@ -364,38 +361,38 @@ void check_status(int bus)
         if(gltmp.speed > 0)
           gltmp.speed--;
       }
-      readByte(fd, &rr);
+      readByte(bus, &rr);
       gltmp.funcs = rr & 0xf0;;
-      readByte(fd, &rr);
+      readByte(bus, &rr);
       gltmp.id = rr;
-      readByte(fd, &rr);
+      readByte(bus, &rr);
       if((rr & 0x80) && (gltmp.direction == 0))
         gltmp.direction = 1;    // Richtung ist vorwärts
       if(rr & 0x40)
         gltmp.funcs |= 0x010;    // Licht ist an
       rr &= 0x3F;
       gltmp.id |= rr << 8;
-      readByte(fd, &rr);
-      readByte(fd, &rr);
+      readByte(bus, &rr);
+      readByte(bus, &rr);
     }
   }
 
   if(xevnt1 & 0x04)        // mindestens eine Rückmeldung hat sich geändert
   {
     byte2send = 0xCB;
-    writeByte(fd, &byte2send,2);
-    readByte(fd, &rr);
+    writeByte(bus, &byte2send,2);
+    readByte(bus, &rr);
     while(rr != 0x00)
     {
       rr--;
       i = rr;
-      readByte(fd, &rr);
+      readByte(bus, &rr);
       temp = rr;
       temp <<= 8;
-      readByte(fd, &rr);
+      readByte(bus, &rr);
 //      fb[i] = temp | rr;
       setFBmodul(bus, i, temp|rr);
-      readByte(fd, &rr);
+      readByte(bus, &rr);
 //      syslog(LOG_INFO, "Rückmeldung %i mit 0x%02x", i, fb[i]);
     }
   }
@@ -403,14 +400,14 @@ void check_status(int bus)
   if(xevnt1 & 0x20)        // mindestens eine Weiche wurde von Hand geschaltet
   {
     byte2send = 0xCA;
-    writeByte(fd, &byte2send,0);
-    readByte(fd, &rr);
+    writeByte(bus, &byte2send,0);
+    readByte(bus, &rr);
     temp = rr;
     for(i=0;i<temp;i++)
     {
-      readByte(fd, &rr);
+      readByte(bus, &rr);
       gatmp.id = rr;
-      readByte(fd, &rr);
+      readByte(bus, &rr);
       gatmp.id |= (rr & 0x07) << 8;
     }
   }
@@ -418,10 +415,10 @@ void check_status(int bus)
   if(xevnt2 & 0x40)        // we should send an XStatus-command
   {
     byte2send = 0xA2;
-    writeByte(fd, &byte2send,2);
-    readByte(fd, &rr);
+    writeByte(bus, &byte2send,2);
+    readByte(bus, &rr);
     if(rr & 0x80)
-      readByte(fd, &rr);
+      readByte(bus, &rr);
   }
 }
 
@@ -480,6 +477,7 @@ int open_comport(int busnumber)
     printf("dammit, couldn't open device.\n");
     return 1;
   }
+  busses[busnumber].fd = fd;
   tcgetattr(fd, &interface);
   interface.c_oflag = ONOCR;
   interface.c_cflag = CS8 | CRTSCTS | CSTOPB | CLOCAL | CREAD | HUPCL;
@@ -495,7 +493,7 @@ int open_comport(int busnumber)
   sleep(1);
   printf("clearing input-buffer\n");
   while(status != -1)
-    status = readByte(fd, &rr);
+    status = readByte(busnumber, &rr);
 
   ioctl(fd, TIOCGSERIAL, &serial_line);
   close(fd);
@@ -526,9 +524,10 @@ int open_comport(int busnumber)
     printf("init comport fehlgeschlagen\n");
     return(-1);
   }
+  busses[busnumber].fd = fd;
   byte2send = 0xC4;
-  writeByte(fd, &byte2send,2);
-  status = readByte(fd, &rr);
+  writeByte(busnumber, &byte2send,2);
+  status = readByte(busnumber, &rr);
   if(status == -1)
     return(1);
   if(rr=='D')
@@ -538,34 +537,34 @@ int open_comport(int busnumber)
   }
   printf("switch of P50-commands\n");
   byte2send = 'x';
-  writeByte(fd, &byte2send, 0);
+  writeByte(busnumber, &byte2send, 0);
   byte2send = 'Z';
-  writeByte(fd, &byte2send, 0);
+  writeByte(busnumber, &byte2send, 0);
   byte2send = 'z';
-  writeByte(fd, &byte2send, 0);
+  writeByte(busnumber, &byte2send, 0);
   byte2send = 'A';
-  writeByte(fd, &byte2send, 0);
+  writeByte(busnumber, &byte2send, 0);
   byte2send = '1';
-  writeByte(fd, &byte2send, 0);
+  writeByte(busnumber, &byte2send, 0);
   byte2send = 0x0d;
-  writeByte(fd, &byte2send, 2);
-  status = readByte(fd, &rr);
+  writeByte(busnumber, &byte2send, 2);
+  status = readByte(busnumber, &rr);
   if(status != 0)
     return 1;
   printf("change baudrate to 38400 bps\n");
   byte2send = 'B';
-  writeByte(fd, &byte2send, 0);  
+  writeByte(busnumber, &byte2send, 0);
   byte2send = '3';
-  writeByte(fd, &byte2send, 0);  
+  writeByte(busnumber, &byte2send, 0);
   byte2send = '8';
-  writeByte(fd, &byte2send, 0);  
+  writeByte(busnumber, &byte2send, 0);
   byte2send = '4';
-  writeByte(fd, &byte2send, 0);  
+  writeByte(busnumber, &byte2send, 0);
   byte2send = '0';
-  writeByte(fd, &byte2send, 0);  
-  writeByte(fd, &byte2send, 0);
+  writeByte(busnumber, &byte2send, 0);
+  writeByte(busnumber, &byte2send, 0);
   byte2send = 0x0d;
-  writeByte(fd, &byte2send, 0);  
+  writeByte(busnumber, &byte2send, 0);
   
   sleep(1);
   close_comport(fd);
@@ -577,9 +576,10 @@ int open_comport(int busnumber)
     printf("init comport fehlgeschlagen\n");
     return(-1);
   }
+  busses[busnumber].fd = fd;
   byte2send = 0xC4;
-  writeByte(fd, &byte2send,2);
-  status = readByte(fd, &rr);
+  writeByte(busnumber, &byte2send,2);
+  status = readByte(busnumber, &rr);
   if(status == -1)
     return(1);
   if(rr=='D')
@@ -588,7 +588,5 @@ int open_comport(int busnumber)
     return(2);
   }
   
-  busses[busnumber].fd = fd;
   return 0;
 }
-

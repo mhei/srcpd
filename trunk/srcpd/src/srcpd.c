@@ -45,6 +45,7 @@
 #include "srcp-session.h"
 #include "srcp-srv.h"
 #include "srcp-time.h"
+#include "srcp-info.h"
 #include "threads.h"
 
 void hup_handler(int);
@@ -163,7 +164,11 @@ int main(int argc, char **argv)
   for(i=0; i<=num_busses; i++)
   {
     if(busses[i].init_func)
-        (*busses[i].init_func)(i);
+    {
+#warning complete me
+      if ((*busses[i].init_func)(i) != 0)
+        exit(1);           // error while initialize
+    }
   }
 
   // a little help for debugging the threads
@@ -192,6 +197,7 @@ int main(int argc, char **argv)
   startup_GL();
   startup_GA();
   startup_FB();
+  startup_INFO();
   startup_LOCK();
   startup_DESCRIPTION();
   startup_TIME();
@@ -267,8 +273,9 @@ int main(int argc, char **argv)
   pthread_cancel(ttid_cmd);
   pthread_cancel(ttid_clock);
   /* und jetzt die ganzen Busse */
-  for(i=1; i<=num_busses;i++) {
-        pthread_cancel(busses[i].pid);
+  for(i=1; i<=num_busses;i++)
+  {
+    pthread_cancel(busses[i].pid);
   }
   DeletePIDFile();
   for(i=num_busses; i>=0; i--) // der Server als letzter
