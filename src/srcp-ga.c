@@ -213,7 +213,7 @@ int infoGA(int busnumber, int addr, int port, char* msg)
 {
   int number_ga = get_number_ga(busnumber);
 
-  if((addr>0) && (addr <= number_ga))
+  if((addr>0) && (addr <= number_ga) && (ga[busnumber].gastate[addr].tv[port].tv_sec>0) )
   {
     sprintf(msg, "%ld.%ld 100 INFO %d GA %d %d %d\n",
       ga[busnumber].gastate[addr].tv[port].tv_sec,
@@ -222,6 +222,9 @@ int infoGA(int busnumber, int addr, int port, char* msg)
   }
   else
   {
+    struct timeval t;
+    gettimeofday(&t, NULL);
+    srcp_fmt_msg(SRCP_NODATA, msg, t);
     return SRCP_NODATA;
   }
   return SRCP_INFO;
@@ -238,8 +241,8 @@ int initGA(int busnumber, int addr, const char protocol)
     ga[busnumber].gastate[addr].protocol = protocol;
     ga[busnumber].gastate[addr].activetime = 0;
     ga[busnumber].gastate[addr].action = 0;
-    gettimeofday(&ga[busnumber].gastate[addr].tv[0], NULL);
-    gettimeofday(&ga[busnumber].gastate[addr].tv[1], NULL);    
+    ga[busnumber].gastate[addr].tv[0].tv_sec=0;
+    ga[busnumber].gastate[addr].tv[1].tv_sec=0;    
     describeGA(busnumber, addr, msg);
     queueInfoMessage(msg);
     return SRCP_OK;
