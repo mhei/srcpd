@@ -214,6 +214,7 @@ int main(int argc, char **argv)
     exit(1);
   }
   pthread_detach(ttid_cmd);
+  
   /* Modellzeitgeber starten, der ist aber zunächst idle */
   error = pthread_create(&ttid_clock, NULL, thr_clock, NULL);
   if(error)
