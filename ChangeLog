@@ -1,37 +1,1325 @@
-Version 2.0 (Winter 2003 oder spaeter)
-	- SRCP 0.8
-	- Konfiguration im XML Format
-	- Redesign: Framework mit Modulen
-	- Unterstützung der Gerätegruppe SM bei passender Hardware (IB)
-	- viel mehr und neue Hardware, auch mehrere gleichartige 
-	  gleichzeitig: Intellibox, Märklin 605x, HSI S88,  S88 am Parallelport, 
-	  I2C
-	- Portierung auf FreeBSD
-	- Loopbackbus für Modellbahner ohne Anlage(nanschluß), auch als
-	  Ausgangspunkt für eigene Entwicklungen geeignet (kann alles, was
-	  ein "richtiger" Bus kann!)
-	- Warteschlangen für Befehle und Rückmeldungen, nichts geht mehr verloren
-	
-Version 1.2 (nie veröffentlicht)
-        - FIFO's für die Befehle.
-	
-Version 1.1 (SRCP 0.7.3 fork) Maerz 2002
-        - RPM's (und deb)
-	- Bugfixes
-	- Neue Hardware: HSI-S88 von Littfinski, 
-	- Kernelmodul für die Intellibox
+2003-02-15 21:02  mtrute
 
-Version 1.0
-        - hmm. vergessen....
+	* netserver.c: WAIT TIME und FB repariert (haben z.T. noch nie
+	funktioniert..
+
+2003-02-15 14:02  mtrute
+
+	* NEWS: News and Changelog should be used properly
+
+2003-02-15 14:01  mtrute
+
+	* io.c, io.h, netserver.c, netserver.h, srcp-info.c: moved code for
+	socket communication
+
+2003-02-15 14:00  mtrute
+
+	* srcpd.c: help prints really used default config file from
+	autoconf
+
+2003-02-08 18:03  mtrute
+
+	* srcp-info.c: added doku, fixed race condition
+
+2003-02-07 19:42  mtrute
+
+	* netserver.c, srcp-ga.c, srcp-ga.h, srcp-gl.c, srcp-gl.h,
+	srcp-info.c, srcpd.c: Locks mit Zeitsperre
+
+2003-02-06 20:02  mtrute
+
+	* ChangeLog, config-srcpd.c: minor fixes for release
+
+2003-02-06 20:01  mtrute
+
+	* srcp-info.c: dynmische Strings anstelle fixer Buffer
+
+2003-02-05 20:52  mtrute
+
+	* srcp-time.c: IIME Modul aktiviert
+
+2003-02-04 18:40  mtrute
+
+	* srcp-ga.c, srcp-gl.c: Defaultinitialisierung bei GA und GL
+	verbessert
+
+2003-02-04 18:39  mtrute
+
+	* m605x.c: Erweiterte Funktionen versehentlich (wieder)
+	abgeschaltet
+
+2003-02-03 20:34  mtrute
+
+	* netserver.c, srcp-ga.c: INIT GA eingebaut, war teilweise auch
+	noch buggy
+
+2003-02-02 19:40  mtrute
+
+	* loopback.c: Korrektur der Korrektur
+
+2003-02-01 22:06  mborchers
+
+	* i2c-dev.c: some small code-optimizations
+
+2003-01-29 21:36  mtrute
+
+	* srcp-gl.c: Init GL macht mehr als nur zwei Zahlen setzen..
+
+2003-01-28 22:29  sieloff
+
+	* ib.c: In case of automatic switch off the port, ib does not send
+	correct action = 0.  Now action is set to 0 before sending the info
+	message and only if write to IB was without error. Additionaly
+	status is set to 1 in case if action == 1 to provide info message
+	in all cases.. Additionaly status is set to 1 in case if action ==
+	1 to provide info message in all cases.
+
+2003-01-27 21:26  mtrute
+
+	* i2c-dev.c: Unterstützung für POWER, zumindest formal
+
+2003-01-27 21:13  mtrute
+
+	* i2c-dev.c, ib.c, loopback.c, m605x.c, srcp-ga.c, srcp-ga.h,
+	srcp-gl.c, srcp-gl.h: Tod eines Parameters: setGA/setGL senden
+	immer eine INFO Message
+
+2003-01-27 20:12  sieloff
+
+	* ib.c: Inside of ib.c now info messages are created after a
+	command to the intellibox is send without error by calling
+	setGA/setGL with last parameter = 1.  setFb is now called with
+	correct FB-Number (1 added).
+
+2003-01-26 21:19  mtrute
+
+	* srcp-gl.c: LOCKS auf nicht initialiserte Loks sind auch
+	default-init
+
+2003-01-26 18:46  mtrute
+
+	* config-srcpd.h, srcp-fb.c, srcp-info.c: LOCKS bei Start des INFO
+	Modus, FB Ports waren durcheinander
+
+2003-01-26 10:41  mtrute
+
+	* PROGRAMMING-HOWTO, README, TODO, netserver.c: Hat der Bus das
+	Gerät überhaupt?
+
+2003-01-25 17:45  mtrute
+
+	* ib.c, loopback.c, m605x.c, netserver.c, srcp-ga.c, srcp-ga.h,
+	srcp-gl.c, srcp-gl.h: LOCKS fuer GA und GL
+
+2003-01-25 10:07  mtrute
+
+	* ddl-s88.c, ib.c, loopback.c, m605x.c, srcp-fb.c, srcp-ga.c,
+	srcp-gl.c, srcp-info.c, srcp-info.h, srcp-session.c, srcp-sm.c,
+	srcp-srv.c: Code verschoben und vereinfach (hoffentlich)
+
+2003-01-24 18:06  mtrute
+
+	* config-srcpd.c, srcp-error.c, srcp-ga.c, srcp-gl.c,
+	srcp-session.c, srcp-time.c: SRCP Korrekturen
+
+2003-01-21 20:13  sieloff
+
+	* loopback.c: initialisation of ga's inserted
+
+2003-01-19 14:33  sieloff
+
+	* stdincludes.h: $id$ inserted, // comment at last line, to avoid
+	compiler warnings, #define  _SRCP_MASTER_INCLUDE_H to avoid
+	multiple includes
+
+2003-01-18 22:23  mtrute
+
+	* srcp-error.c: Leeerzeilen entfernt
+
+2003-01-18 22:05  mtrute
+
+	* config-srcpd.c, config-srcpd.h, netserver.c, srcp-error.c: Erste
+	Fehlermeldungen bei nicht unterstützten Geräten/Bussen im GET
+
+2003-01-18 18:49  mtrute
+
+	* srcp-fb-s88.c, srcp-fb-s88.h: srcp-fb-s88 entfernt,
+	Funktionalitär ist in ddl-s88.*
+
+2003-01-18 18:48  mtrute
+
+	* aclocal.m4, ddl-s88.c, ib.c, loopback.c, m605x.c, netserver.c,
+	srcp-error.c, srcp-fb.c, srcp-ga.c, srcp-gl.c, srcp-info.c,
+	srcp-info.h, srcp-power.c, srcp-srv.c, srcp-time.c, srcp-time.h,
+	srcpd.c: Bufixes: POWER Verwaltung, INFO Meldungen auf
+	Gerätefunktionen bezogen, TIME Modul begonnen, diverse sonstige
+	Bugfixes
+
+2003-01-17 20:04  mtrute
+
+	* srcp-ga.c, srcp-info.c, srcp-time.c: Millisekunden mit 3
+	Nachkommastellen, inkl. führender Nullen
+
+2003-01-17 19:56  mtrute
+
+	* netserver.c, srcp-descr.c, srcp-error.c, srcp-fb.c, srcp-ga.c,
+	srcp-gl.c, srcp-power.c, srcp-session.c, srcp-srv.c, srcpd.spec:
+	Millisekunden mit 3 Nachkommastellen, inkl. führender Nullen
+
+2003-01-15 22:16  mamba123
+
+	* srcp-info.c: 
+	fehlte include von srcp-descr.h
+
+2003-01-15 20:04  mtrute
+
+	* srcp-ga.c, srcp-ga.h, srcp-gl.c, srcp-gl.h, srcp-info.c: INIT
+	Meldungen im INFO Modus
+
+2003-01-15 18:16  mtrute
+
+	* netserver.h: added missing checkin
+
+2003-01-14 19:38  mtrute
+
+	* m605x.c, srcp-gl.c, srcp-info.c: INFO Modus fuer Anfangswerte
+	ergänzt
+
+2003-01-14 18:01  mtrute
+
+	* netserver.c, srcp-error.c, srcp-error.h, srcpd.conf: Timestamps
+	und Formatierungen
+
+2003-01-13 06:59  mamba123
+
+	* Makefile.am, srcpd.c: 
 	
-Version 0.1	
-14.07.2001 Matthias Trute
-	- Option --enable-comport wieder entfernt,
-	  es ist die runtime Option restore_com_parms
-	  geworden.
-11.07.2001 Frank Schmischke
-        - Option --enable-comport in autoconf aufgenommem
-	  (schaltet das sichern und wiederherstellen des Comports ein/aus)
-10.07.2001 Frank Schmischke	
-	- erste Version des srcpd für die Interfaces M6050, M6051 und Intellibox
- 	- Befehlssatz entspricht SRCP 0.7.3
+	Nochmal, diesmal auch ohne /etc
+
+2003-01-13 06:52  mamba123
+
+	* Makefile.am, srcpd.c: 
+	
+	Pfad fuer Konfigurationsdatei nun aus Automake Makro generiert. 
+	Keine Unterscheidung nach OS mehr noetig.  MAM
+
+2003-01-12 21:45  mtrute
+
+	* config-srcpd.c, netserver.c, srcp-descr.c, srcp-descr.h,
+	srcp-session.c, srcp-srv.c: Mehr INFO's, Bugfixing
+
+2003-01-12 17:54  mtrute
+
+	* netserver.c: nur die vorhandenen Busse erlauben
+
+2003-01-12 17:37  mborchers
+
+	* i2c-dev.c: cleanup
+
+2003-01-12 17:23  mborchers
+
+	* i2c-dev.c: some cleanups
+
+2003-01-12 16:58  mtrute
+
+	* config-srcpd.h, ddl-s88.c, m605x.c, srcp-fb.c, srcp-info.c,
+	srcp-info.h, srcp-power.c: Powermanagement fuer 605x und ddl-s88
+	eingebaut, auch im Infomodus
+	
+	Rückmeldeinformationen im INFO Modus korrigiert
+
+2003-01-12 16:08  mtrute
+
+	* srcpd.conf: Default ist ein nicht schadenanrichtender srcpd...
+
+2003-01-12 12:56  mtrute
+
+	* config-srcpd.c, config-srcpd.h, m605x.c, srcp-power.c:
+	Powermanagement fuer 605x und neue conf-Option: auto_power_on fuer
+	automatisches Einschalten eines Busses bei Programmstart
+
+2003-01-09 23:49  mamba123
+
+	* srcpd.c, config-srcpd.c: 
+	
+	Wieder ein richtiger Daemon, solange kein DBG_DEBUG gesetzt ist. 
+	Und auch wieder Meldungen im Syslog statt auf stderr.
+	
+	Sorry :-)	MAM
+
+2003-01-08 22:56  mborchers
+
+	* netserver.c, srcp-ga.c, srcp-gl.c, srcp-time.c: fixed return
+	string for GET * DESCRIPTION for  - no device group  - GA  - GL  -
+	TIME
+
+2003-01-08 20:14  mborchers
+
+	* netserver.c: changed numeric return codes to their SRCP_* names
+
+2003-01-08 18:52  mtrute
+
+	* netserver.c, srcp-ga.c: Initialisierung GA, Bugfixing GET -
+	Command
+
+2003-01-07 20:25  mtrute
+
+	* srcpd.lsm, srcpd.spec: Anpassungen an die kommende neue Version
+
+2003-01-07 19:56  mtrute
+
+	* ddl-s88.c: S88 unter Linux mit falschem Fehler
+
+2003-01-07 08:05  mamba123
+
+	* srcpd.c: 
+	
+	nur ein paar casts umd Compiler Warnungen abzustellen
+	
+	Bei FBSD Konfigurationsdatei nun in /usr/local/etc
+
+2003-01-07 06:57  mamba123
+
+	* io.c: 
+	
+	io.c: (nur FBSD) wenn CTS fehlt, wird ein eigener Zeitzaehler
+	gefuehrt.  Der watchdog wird kuenstlich happy gehalten, so dass der
+	Thread nicht neu angeworfen wird.  Nach 5s wird eine Warnung ins
+	Logfile geschrieben.  Betraegt die Wartezeit laenger als 10s, so
+	wird der Thread anschliessend gekillt und vom Watchdog neu
+	initialisiert.
+	
+	Machte keinen Sinn, alle 3-5s einen neuen Thread anzuwerfen, der
+	dann auch nicht zu Potte kommen kann, weil die Anlage ausgeschaltet
+	ist. Fuellte nur syslog mit tausenden von Meldungen...
+	
+	MAM
+
+2003-01-07 06:27  mamba123
+
+	* README.freebsd, ddl-s88.c: 
+	
+	clockrate auf "2" vorbelegt fuer FBSD, so komme ich bei DDL auf
+	ca.45kHz.  (Komischerweise bricht die Abtastrate bei 3 auf 5kHz
+	ein?)
+
+2003-01-07 00:01  mamba123
+
+	* config-srcpd.c, ib.c: 
+	
+	Ibox Interface fuer FBSD
+	
+	Geringfuegige Code Aenderungen:
+	
+		* Den Linux Treiber braucht man nicht, er hat nur ein BREAK
+		  erzeugt
+		* open_comport() angepasst analog zu m650x
+		* unbenutze Variablen auskommentiert (ich mag keine
+	Warnings)
+	
+	das Verzeichnis ibox wird nicht benoetigt.
+	
+	MAM
+
+2003-01-06 21:50  mamba123
+
+	* io.c: 
+	
+	in writeByte() Aenderung (nur FreeBSD, aber vielleicht auch fuer
+	euch gut?):
+	
+		bei M605x wird der Zustand von CTS abgefragt.
+	
+		wenn nicht vorhanden, dann schlaeft der thread fuer eine
+	sekunde
+		und probierts dann wieder.
+	
+	Ohne diesen Teil blockieren bei mir ALLE Threads, solange die
+	Anlage nicht eingeschaltet ist.  MAM
+
+2003-01-06 21:16  mamba123
+
+	* m605x.c: 
+	
+	kleiner fehler in einer DBG Anweisung, statt dem debuglevel wurde
+	immer nur die Busnummer angezeigt (und ich such mir den Kipp@$"$
+	ab, warum ich jeden Mist in die Config schreiben kann und immer
+	kommt "1" raus :-)))) )
+
+2003-01-06 19:47  mamba123
+
+	* README.freebsd, ddl-s88.c: [no log message]
+
+2003-01-06 18:42  mamba123
+
+	* Makefile.am, systemtest: 
+	
+	Neues Skript (im Makefile aufgerufen) generiert je nach
+	Betriebsystem die Linkeroption -lpthread bzw. -pthread (auf BSD).
+	
+	Makefile.am enthaelt den Aufruf.
+	
+	Wie immer sollte keiner gestoert sein :-) MAM
+
+2003-01-06 13:08  mamba123
+
+	* ddl-s88.c: 
+	
+	der dritte Versuch :-) Wir kommen immer naeher...
+
+2003-01-06 12:51  mamba123
+
+	* ddl-s88.c: 
+	
+	2.ter Versuch, schon ein wenig naeher an der Wahrheit :-)
+
+2003-01-06 11:23  mamba123
+
+	* config-srcpd.c: 
+	
+	Zugang zu DDL-S88 auf FBSD freigegeben
+
+2003-01-06 10:46  mamba123
+
+	* ddl-s88.c, ddl-s88.h: 
+	
+	1ter Versuch :-))) Der Parallelportzugriff wird nun bei FreeBSD
+	ueber das Device /dev/ppi[0|1|2] "umgeleitet". Die Linuxfunktionen
+	ioperm, inb und outb werden umdefiniert auf endsprechende
+	Emulationsfunktionen FBSD_... .  Sollte bei Linux nicht stoeren
+	(wie immer BESCHEID sagen), obs ueberhaupt bei FreeBSD
+	funktioniert, kann ich nicht ausprobieren :-(
+	
+	MAM
+
+2003-01-06 09:30  mamba123
+
+	* aclocal.m4, configure, i2c-dev.c, stdincludes.h: [no log message]
+
+2003-01-05 21:38  mtrute
+
+	* AUTHORS, ChangeLog, io.c, loopback.c, m605x.c: Kleinigkeiten,
+	Typos, Ergänzungen
+
+2003-01-05 21:29  mborchers
+
+	* i2c-dev.c: removed unnecessary #includes moved #ifdef linux up
+
+2003-01-05 20:55  mborchers
+
+	* i2c-dev.c: nother update for the new stdincludes.h
+
+2003-01-05 20:50  mborchers
+
+	* config-srcpd.h: added support for i2c-dev module
+
+2003-01-05 20:43  mborchers
+
+	* i2c-dev.c: update to use new stdincludes.h
+
+2003-01-05 20:39  mborchers
+
+	* Makefile.am: added support for i2c-dev module
+
+2003-01-05 20:24  mborchers
+
+	* config-srcpd.c: added support for the i2c-dev module
+
+2003-01-05 20:14  mborchers
+
+	* i2c-dev.c, i2c-dev.h: initial checkin for i2c-dev-module
+
+2003-01-05 17:10  mamba123
+
+	* config-srcpd.c, ddl-s88.c, hsi-88.c, ib.c, io.c, li100.c,
+	loopback.c, m605x.c, netserver.c, srcp-descr.c, srcp-error.c,
+	srcp-fb-i8255.c, srcp-fb-s88.c, srcp-fb.c, srcp-ga.c, srcp-gl.c,
+	srcp-info.c, srcp-lock.c, srcp-power.c, srcp-session.c, srcp-sm.c,
+	srcp-srv.c, srcp-time.c, srcpd.c, stdincludes.h, threads.c: 
+	
+	in allen Files die Includes eingesammelt und durch die zentrale
+	(neue) Datei stdincludes.h ersetzt.
+	
+	In stdincludes.h werden die configure Defines ausgewertet und je
+	nach System header included (oder nicht, oder andere, oder ne boese
+	Meldung...)
+	
+	Den Debug Kram etwas "aufgeraeumt" :-)
+	
+	Bei Level > DBG_WARN bleibt der Server im Vordergrund (war Stufe 9,
+	das ist jedoch ein ziemlicher Schuss vor das Knie, da die Interface
+	>4 gar nicht mehr eingeschaltet wurden, was will man also sehen???)
+	
+	Ausserdem wird bei >DBG_WARN statt syslog auf stderr geschrieben
+	(knallte mir das syslog immer zu)
+	
+	Bei "NichtLinux" werden die Interface Intellibox und DS88 NICHT mit
+	eingebunden! Entsprechende Aufrufe sind ge-if-def-t
+	
+	Bei Linux "sollte" (hoffentlich) alles weiter so gehen, wie vorher.
+	 Bitte Testen und Pruegel in meine Richtung
+	
+		MAM
+
+2003-01-05 16:28  mborchers
+
+	* srcp-ga.c: corrected locking problems for device group GA in
+	init_GA()
+
+2003-01-05 16:16  mborchers
+
+	* netserver.c: corrected locking problems for device group GA in
+	handleSET()
+
+2003-01-05 13:12  mtrute
+
+	* srcp-info.c, srcpd.c: Infomode arbeitet mit queues; viele
+	Leser/viele Schreiber
+
+2003-01-04 17:08  mtrute
+
+	* io.c, li100.c, m605x.c, netserver.c, srcp-fb.c, srcp-ga.c,
+	srcp-gl.c, srcp-gl.h, srcp-info.c, srcpd.c: Working GA/GL,
+	Cleanups, Bugfixing
+
+2003-01-03 19:13  mtrute
+
+	* DESIGN, PROGRAMMING-HOWTO, README, netserver.c, srcp-error.c,
+	srcp-error.h, srcp-fb.c, srcp-ga.c, srcp-session.c, srcp-srv.c,
+	srcpd.spec: Fehlercodes bereinigt
+
+2002-12-26 19:38  mtrute
+
+	* PROGRAMMING-HOWTO: Using CVS sources for the first time...
+
+2002-12-16 19:30  mtrute
+
+	* srcp-fb.c, srcp-fb.h: nicht alle Busse haben FB..
+
+2002-12-15 21:10  mtrute
+
+	* netserver.c, srcp-error.c, srcp-error.h, srcp-fb.c, srcp-fb.h,
+	srcp-info.c: Feinheiten
+
+2002-12-10 20:04  mtrute
+
+	* netserver.c: LOCK GA/GL
+
+2002-12-08 20:38  mtrute
+
+	* m605x.c, netserver.c, srcp-ga.c, srcp-ga.h, srcp-gl.c,
+	srcpd.spec: LOCK fuer GA, Bugfixing
+
+2002-12-08 14:25  mtrute
+
+	* hsi-88.c, ib.c, li100.c: Zentrale Meldungen eingefuehrt; Cleanups
+
+2002-12-08 14:12  mtrute
+
+	* PROGRAMMING-HOWTO, README, config-srcpd.c, config-srcpd.h,
+	ddl-s88.c, io.c, loopback.c, m605x.c, netserver.c, srcp-fb-i8255.c,
+	srcp-fb-s88.c, srcp-fb.c, srcp-ga.c, srcp-gl.c, srcp-info.c,
+	srcp-session.c, srcp-srv.c, threads.c: Zentrale Meldungen
+	eingefuehrt; Cleanups
+
+2002-11-28 20:26  mtrute
+
+	* DESIGN, netserver.c, srcp-gl.c: LOCK GL
+
+2002-11-28 19:11  mtrute
+
+	* netserver.c, srcp-gl.c, srcp-gl.h: Locksupport, unfinished
+
+2002-11-26 20:43  mtrute
+
+	* PROGRAMMING-HOWTO: Kurzbeschreibung..
+
+2002-09-27 19:55  mtrute
+
+	* AUTHORS, ChangeLog, README, config-srcpd.c: Betafassung
+
+2002-09-16 19:34  mtrute
+
+	* ib.c, netserver.c, srcp-info.c: fixed typos
+
+2002-08-16 13:50  schmischi
+
+	* ib.c, srcp-gl.c, srcp-info.c, srcp-info.h, srcp-sm.c, srcp-sm.h:
+	working SM
+
+2002-08-16 12:07  schmischi
+
+	* srcp-sm.c, srcp-sm.h: working SM
+
+2002-08-16 12:06  schmischi
+
+	* Makefile.am, Makefile.dist, aclocal.m4, config-srcpd.c,
+	config-srcpd.h, configure, ib.c, ib.h, io.c, loopback.c, m605x.c,
+	netserver.c, srcp-ga.c, srcp-ga.h, srcp-gl.c, srcp-gl.h,
+	srcp-info.c, srcp-info.h, srcpd.kdevprj: working SM for IB
+
+2002-07-20 11:06  schmischi
+
+	* config-srcpd.c, config-srcpd.h, hsi-88.c, ib.c, io.c, io.h,
+	m605x.c, srcp-gl.c: working IB
+
+2002-07-14 00:41  schmischi
+
+	* ib.c, io.c, srcp-fb.c, srcp-ga.c, srcp-gl.c, srcp-info.c,
+	srcpd.c: variable Entprellzeit je Bus OK
+
+2002-07-10 21:22  schmischi
+
+	* config-srcpd.c, srcp-fb.c, srcp-fb.h, srcpd.c: variable
+	Entprellzeit je Bus
+
+2002-07-09 01:27  schmischi
+
+	* ib.c, ib.h, srcp-fb.c, srcp-fb.h, srcp-info.c, srcpd.c,
+	srcpd.kdevprj: Bugfixes + Unterdrückung von Kontaktproblemen
+
+2002-07-09 01:26  schmischi
+
+	* Makefile.dist: Makefile zum Erzeugen von configure
+
+2002-07-05 18:46  schmischi
+
+	* config-srcpd.c, ddl-s88.c, hsi-88.c, ib.c, m605x.c, netserver.c,
+	srcp-ga.c, srcp-gl.c, srcp-info.c, srcp-info.h, srcpd.c: diverse
+	kleinere Bugs beseitigt
+
+2002-07-03 18:58  schmischi
+
+	* ddl-s88.c, hsi-88.c, ib.c, loopback.c, m605x.c, netserver.c,
+	srcp-error.h, srcp-fb.c, srcp-fb.h, srcp-ga.c, srcp-ga.h,
+	srcp-gl.c, srcp-gl.h, srcp-info.c, srcp-info.h: dynamische Felder
+	für FB, GA, GL
+
+2002-06-27 21:07  schmischi
+
+	* config-srcpd.c, netserver.c, srcp-fb.c, srcp-ga.c, srcp-ga.h,
+	srcp-gl.c, srcp-gl.h, srcp-info.c, srcp-session.c, srcp-time.c,
+	srcpd.c: ein Info-Thread
+
+2002-06-26 00:28  schmischi
+
+	* ibox/Makefile: ein Info-Thread
+
+2002-06-26 00:24  schmischi
+
+	* hsi-88.c, srcpd.kdevprj, srcp-fb.h: ein Info-Thread
+
+2002-06-26 00:19  schmischi
+
+	* ibox/Makefile: [no log message]
+
+2002-06-26 00:16  schmischi
+
+	* Makefile.in, Makefile: [no log message]
+
+2002-05-25 13:43  mtrute
+
+	* netserver.c, srcp-fb.c, srcp-ga.c, srcp-ga.h, srcp-gl.c,
+	srcp-time.c: Defaultinitialisierungen
+
+2002-05-25 12:29  mtrute
+
+	* netserver.c, srcp-ga.c, srcp-ga.h, srcp-gl.c, srcp-session.c,
+	srcp-session.h, srcp-time.c, srcp-time.h: GA und TIME
+
+2002-05-24 20:06  mtrute
+
+	* Makefile, config-srcpd.c, config-srcpd.h, ddl-s88.c, srcp-info.c,
+	srcp-srv.c, srcpd.c: Cleanups...
+
+2002-05-23 20:37  schmischi
+
+	* Makefile, hsi-88.c, srcp-fb.c, srcp-info.c, srcpd.c: laufende
+	Meldungen am Infoport
+
+2002-05-22 23:06  schmischi
+
+	* Makefile, config-srcpd.c, config-srcpd.h, ddl-s88.c, hsi-88.c,
+	ib.c, m605x.c, srcp-fb.c, srcp-fb.h, srcp-info.h, srcpd.c:
+	setFBmodul allgemeingültig
+
+2002-05-22 17:02  schmischi
+
+	* Makefile, hsi-88.h, netserver.c, netserver.h, srcp-fb.c,
+	srcp-info.c, srcp-info.h: Info-Modus um rudimentären Start
+	erweitert
+
+2002-05-21 16:42  schmischi
+
+	* Makefile, hsi-88.c, ib.c, io.c, loopback.c, srcp-fb-s88.c,
+	srcp-fb.c, srcp-info.c, srcp-info.h, srcpd.c: erste Version des
+	Infoports
+
+2002-05-21 16:36  schmischi
+
+	* .cvsignore: ignorieren von Makefile.in ...
+
+2002-05-20 23:53  schmischi
+
+	* Makefile, Makefile.am, Makefile.in, config-srcpd.c, hsi-88.c,
+	ib.c, io.c, m605x.c, netserver.c, netserver.h, srcp-fb.c, srcpd.c,
+	srcpd.conf, srcpd.kdevprj, threads.h, srcp-info.c, srcp-info.h:
+	Infothread nach srcp-info.c/h ausgelagert
+
+2002-05-19 22:23  schmischi
+
+	* Makefile, Makefile.in, aclocal.m4, config.h.in, configure,
+	srcpd.kdevprj: Vereinheitlichungen bei srcpd.conf
+
+2002-05-19 22:17  schmischi
+
+	* srcpd.conf: ?
+
+2002-05-19 22:10  schmischi
+
+	* config-srcpd.c: neue Prüfungen
+
+2002-05-19 22:09  schmischi
+
+	* ddl-s88.c: ?
+
+2002-05-19 22:07  schmischi
+
+	* hsi-88.c: Anpassungen für HSI-88
+
+2002-05-19 22:06  schmischi
+
+	* ib.c: Modifiktaion /w srcpd.conf
+
+2002-05-19 22:04  schmischi
+
+	* io.c: readByte ergänzt
+
+2002-05-19 22:03  schmischi
+
+	* srcpd.c: Anpassungen für HSI-88
+
+2002-05-19 22:02  schmischi
+
+	* srcp-fb.c: Korrektur der Berechnung von _fb_state
+
+2002-05-19 21:47  mtrute
+
+	* README, ddl-s88.c, netserver.c, srcpd.conf, threads.c: Doku
+	updates, bugfixes
+
+2002-05-19 20:12  mtrute
+
+	* hsi-88.c, ib.c, io.c, m605x.c, srcpd.conf: 6051 reads FBs, minor
+	API Changes
+
+2002-05-19 18:45  mtrute
+
+	* ddl-s88.c, srcp-fb.c, srcp-fb.h, srcpd.c, srcpd.conf: Working DDL
+	s88 module. Minor typos
+
+2002-05-18 17:43  mtrute
+
+	* Makefile, Makefile.in, aclocal.m4, config-srcpd.c,
+	config-srcpd.h, config.h.in, configure, ddl-s88.c, ddl-s88.h,
+	m605x.c, srcpd.c, srcpd.conf, srcpd.kdevprj: fixing typos
+
+2002-05-16 00:58  schmischi
+
+	* README.ibox: /w Kernel 2.2.x
+
+2002-05-16 00:48  schmischi
+
+	* ibox/Makefile: /w Kernel 2.2.x
+
+2002-05-16 00:37  schmischi
+
+	* Makefile.in, aclocal.m4, config-srcpd.c, config.h.in, configure,
+	ddl-s88.c, hsi-88.c, hsi-88.h, ib.c, io.c, io.h, li100.c,
+	loopback.c, m605x.c, netserver.c, srcp-descr.c, srcp-error.c,
+	srcp-error.h, srcp-fb.c, srcp-fb.h, srcp-ga.c, srcp-gl.c,
+	srcp-session.c, srcp-srv.c, srcpd.c, srcpd.conf, srcpd.kdevprj:
+	Anpassungen an neue srcpd.conf
+
+2002-05-09 20:32  mtrute
+
+	* .cvsignore, ddl-s88.c, ddl-s88.h, ib.c, m605x.c, netserver.c,
+	netserver.h, srcp-fb-s88.h, srcp-fb.c, srcp-fb.h, srcp-ga.c,
+	srcp-ga.h, srcp-gl.c, srcp-gl.h, srcp-lock.c, srcp-session.c,
+	srcp-session.h, srcp-srv.c, srcp-srv.h, srcp-time.c, srcp-time.h,
+	srcpd.kdevprj: mehr Geräte, cleanups
+
+2002-05-09 17:37  mtrute
+
+	* ChangeLog, Makefile, Makefile.am, Makefile.in, NEWS, ddl-s88.c,
+	loopback.c, srcpd.spec, README.ibox: Randthemen
+
+2002-05-09 15:29  mtrute
+
+	* config-srcpd.c, loopback.c, m605x.c, srcp-srv.c, srcpd.c:
+	Bugfixing bei XMLauswertung, incomplete
+
+2002-05-08 16:56  mtrute
+
+	* config-srcpd.c, ddl-s88.c, ddl-s88.h, hsi-88.c, hsi-88.h, ib.c,
+	ib.h, loopback.c, loopback.h, srcp-srv.c, srcp-srv.h, srcpd.c,
+	threads.c: XML Umbauten, unvollständig
+
+2002-05-08 15:43  mtrute
+
+	* config-srcpd.c, m605x.c, m605x.h, srcpd.conf: XML Umbauten,
+	unvollständig
+
+2002-05-08 08:17  mtrute
+
+	* config-srcpd.c, ddl-s88.c, ddl-s88.h, m605x.c, m605x.h,
+	srcp-error.c: neuer DDL S88 Code, cleanups
+
+2002-05-07 21:22  mtrute
+
+	* config-srcpd.c, config-srcpd.h, ib.c, ib.h, loopback.c,
+	loopback.h, m605x.c, netserver.c, srcp-error.c, srcp-error.h,
+	srcp-gl.c, srcp-gl.h, srcpd.c, srcpd.kdevprj: driver lokale und
+	spezifische Daten, DESCRIPTION
+
+2002-05-04 21:33  mtrute
+
+	* hsi-88.c, hsi-88.h, loopback.c: data structures
+
+2002-05-04 21:22  mtrute
+
+	* README, aclocal.m4, config-srcpd.c, config-srcpd.h, config.h.in,
+	configure, ddl-s88.c, ddl-s88.h, loopback.c, loopback.h, m605x.c,
+	m605x.h, mkinstalldirs, netserver.c, netserver.h, srcp-descr.c,
+	srcp-descr.h, srcp-error.c, srcp-error.h, srcp-fb.c, srcp-fb.h,
+	srcp-ga.c, srcp-ga.h, srcp-gl.c, srcp-gl.h, srcp-lock.c,
+	srcp-lock.h, srcp-power.c, srcp-power.h, srcp-srv.c, srcp-srv.h,
+	srcp-time.c, srcp-time.h, srcpd.c, srcpd.spec, threads.c,
+	threads.h: Datenstrukturen fuer Busse
+
+2002-05-04 11:26  schmischi
+
+	* COPYING, LICENSE.txt: nach gnu COPYING statt LICENSE
+
+2002-05-04 11:25  schmischi
+
+	* srcpd.kdevprj: Projektdatei für kdevelop
+
+2002-05-04 11:15  schmischi
+
+	* acinclude.m4, aclocal.m4, config-srcpd.c, config-srcpd.h,
+	config.h.in, configure, configure.in, ddl-s88.c, ddl-s88.h,
+	hsi-88.c, hsi-88.h, ib.c, ib.h, io.c, li100.c, li100.h, loopback.c,
+	m605x.c, netserver.c, srcp-descr.c, srcp-descr.h, srcp-error.c,
+	srcp-error.h, srcp-fb-i8255.c, srcp-fb-i8255.h, srcp-fb-s88.c,
+	srcp-fb-s88.h, srcp-fb.c, srcp-fb.h, srcp-ga.c, srcp-ga.h,
+	srcp-gl.c, srcp-gl.h, srcp-lock.c, srcp-lock.h, srcp-power.c,
+	srcp-power.h, srcp-session.c, srcp-session.h, srcp-srv.c,
+	srcp-srv.h, srcp-time.c, srcp-time.h, srcpd.c, srcpd.conf,
+	threads.c, threads.h: Sourcecode nach GNU-Standard
+
+2002-05-03 17:45  schmischi
+
+	* ibox/ibox.c: Sourcecode nach GNU-Standard
+
+2002-04-25 18:07  mtrute
+
+	* ChangeLog, Makefile, Makefile.am, Makefile.in, NEWS, README,
+	TODO, acinclude.m4, aclocal.m4, config-srcpd.c, config-srcpd.h,
+	config.h.in, configure, configure.in, ddl-s88.c, ddl-s88.h,
+	hsi-88.c, ib.c, ib.h, io.c, io.h, loopback.c, loopback.h, m605x.c,
+	m605x.h, missing, mkinstalldirs, netserver.c, netserver.h, rcsrcpd,
+	srcp-descr.c, srcp-descr.h, srcp-error.c, srcp-error.h,
+	srcp-fb-i8255.c, srcp-fb.c, srcp-fb.h, srcp-ga.c, srcp-ga.h,
+	srcp-gl.c, srcp-gl.h, srcp-lock.c, srcp-lock.h, srcp-power.c,
+	srcp-power.h, srcp-srv.c, srcp-srv.h, srcp-time.c, srcp-time.h,
+	srcpd.c, srcpd.lsm, srcpd.xml, threads.c, threads.h, ibox/Makefile,
+	.cvsignore, li100.c, li100.h, libtool, srcp-session.c,
+	srcp-session.h, srcpd.conf, srcpd.xml, depcomp: Grobes Framework
+
+2002-04-08 20:59  mtrute
+
+	* ChangeLog, README, config-srcpd.c, ib.c, io.c, li100.c, m605x.c,
+	m605x.h, mkinstalldirs, netserver.c, netserver.h, srcp-fb-s88.c,
+	srcp-fb-s88.h, srcp-fb.c, srcp-fb.h, srcp-ga.c, srcp-ga.h,
+	srcp-gl.c, srcp-gl.h, srcp-power.c, srcp-power.h, srcp-srv.c,
+	srcp-srv.h, srcp-time.c, srcp-time.h, srcpd.c, srcpd.spec,
+	threads.c, threads.h: queues und mehr...
+
+2002-03-22 20:29  mtrute
+
+	* ChangeLog, README, ibox/Makefile: Polieren
+
+2002-03-21 20:13  mtrute
+
+	* ChangeLog, Makefile.am, README, README.ibox, ddl-s88.c,
+	ddl-s88.h, hsi-88.c, hsi-88.h, m605x.c, srcp-ga.c, srcp-ga.h,
+	srcp-gl.c, srcp-gl.h, srcpd.spec, threads.c, threads.h,
+	ibox/Makefile, ibox/ibox.c, ibox/ibox.h, ibox/mkibox.sh: resync mit
+	Release1 Branch, richtige Command Queue
+
+2002-03-21 20:11  mtrute
+
+	* AUTHORS: resync mit Relese1 Branch, richtige Command Queue
+
+2002-03-20 19:56  mtrute
+
+	* ChangeLog, Makefile.in, NEWS, README, README.ibox,
+	config-srcpd.c, config.h.in, m605x.c, srcpd.c, srcpd.conf,
+	srcpd.spec, threads.c: Kleinere Ergänzungen für 1.1
+
+2002-03-20 19:56  mtrute
+
+	* README.ibox: file README.ibox was initially added on branch
+	RELEASE_1_MAINTENANCE.
+
+2002-03-18 23:52  schmischi
+
+	* Makefile: [no log message]
+
+2002-03-18 23:50  schmischi
+
+	* .cvsignore, Makefile.am, Makefile.in, TODO, aclocal.m4,
+	config.h.in, ib.c, li100.c, m605x.c, netserver.c, srcp-ga.c,
+	srcp-gl.c, srcpd.c, srcpd.kdevprj: wieder ohne Semaphore
+
+2002-03-17 21:21  schmischi
+
+	* .cvsignore: [no log message]
+
+2002-03-17 16:13  schmischi
+
+	* Makefile: ohne pv.h
+
+2002-03-17 15:49  schmischi
+
+	* pv.c, pv.h: ohne Semaphore
+
+2002-02-14 21:48  schmischi
+
+	* pv.h: Fehler in pv.h korrigiert
+
+2002-02-13 21:03  schmischi
+
+	* Makefile.in, ib.c, li100.c, m605x.c, netserver.c, pv.c, pv.h,
+	srcp-ga.c, srcp-gl.c, srcpd.c, srcpd.kdevprj, srcpd.kdevses:
+	Semaphore korrigiert
+
+2002-02-10 18:24  schmischi
+
+	* ibox/.cvsignore: .cvsignore korrigert
+
+2002-02-10 18:23  schmischi
+
+	* srcpd.kdevses: file srcpd.kdevses was initially added on branch
+	RELEASE_1_MAINTENANCE.
+
+2002-02-10 18:23  schmischi
+
+	* .cvsignore: file .cvsignore was initially added on branch
+	RELEASE_1_MAINTENANCE.
+
+2002-02-10 18:23  schmischi
+
+	* .cvsignore, srcpd.kdevprj, srcpd.kdevses: mit KDevelop
+
+2002-02-10 18:23  schmischi
+
+	* srcpd.kdevprj: file srcpd.kdevprj was initially added on branch
+	RELEASE_1_MAINTENANCE.
+
+2002-02-10 18:12  schmischi
+
+	* ddl-s88.h: file ddl-s88.h was initially added on branch
+	RELEASE_1_MAINTENANCE.
+
+2002-02-10 18:12  schmischi
+
+	* ddl-s88.c, ddl-s88.h, hsi-88.c, hsi-88.h, li100.c, li100.h, pv.c,
+	pv.h, ibox/.cvsignore, ibox/Makefile, ibox/README, ibox/ibox.c,
+	ibox/ibox.h, ibox/mkibox.sh: mit Kernelmodul
+
+2002-02-10 18:12  schmischi
+
+	* hsi-88.h: file hsi-88.h was initially added on branch
+	RELEASE_1_MAINTENANCE.
+
+2002-02-10 18:12  schmischi
+
+	* ibox/README: file README was initially added on branch
+	RELEASE_1_MAINTENANCE.
+
+2002-02-10 18:12  schmischi
+
+	* pv.c: file pv.c was initially added on branch
+	RELEASE_1_MAINTENANCE.
+
+2002-02-10 18:12  schmischi
+
+	* li100.c: file li100.c was initially added on branch
+	RELEASE_1_MAINTENANCE.
+
+2002-02-10 18:12  schmischi
+
+	* ibox/.cvsignore: file .cvsignore was initially added on branch
+	RELEASE_1_MAINTENANCE.
+
+2002-02-10 18:12  schmischi
+
+	* ibox/Makefile: file Makefile was initially added on branch
+	RELEASE_1_MAINTENANCE.
+
+2002-02-10 18:12  schmischi
+
+	* ibox/ibox.c: file ibox.c was initially added on branch
+	RELEASE_1_MAINTENANCE.
+
+2002-02-10 18:12  schmischi
+
+	* pv.h: file pv.h was initially added on branch
+	RELEASE_1_MAINTENANCE.
+
+2002-02-10 18:12  schmischi
+
+	* ibox/mkibox.sh: file mkibox.sh was initially added on branch
+	RELEASE_1_MAINTENANCE.
+
+2002-02-10 18:12  schmischi
+
+	* li100.h: file li100.h was initially added on branch
+	RELEASE_1_MAINTENANCE.
+
+2002-02-10 18:12  schmischi
+
+	* ibox/ibox.h: file ibox.h was initially added on branch
+	RELEASE_1_MAINTENANCE.
+
+2002-02-10 18:12  schmischi
+
+	* ddl-s88.c: file ddl-s88.c was initially added on branch
+	RELEASE_1_MAINTENANCE.
+
+2002-02-10 18:12  schmischi
+
+	* hsi-88.c: file hsi-88.c was initially added on branch
+	RELEASE_1_MAINTENANCE.
+
+2002-02-10 10:31  mtrute
+
+	* m605x.c, srcpd.spec: minor timing calculation error, typos
+
+2002-02-10 10:11  schmischi
+
+	* AUTHORS, Makefile.am, Makefile.in, NEWS, README, TODO,
+	config-srcpd.c, config-srcpd.h, ib.c, ib.h, io.c, netserver.c,
+	srcp-fb-s88.c, srcp-ga.c, srcp-ga.h, srcp-gl.c, srcpd.c,
+	srcpd.conf: mit Semaphoren
+
+2002-02-02 18:36  mtrute
+
+	* NEWS, aclocal.m4, netserver.c, srcp-fb.c: off by 1 error bei den
+	Rückmeldern im Kommandomodus
+
+2002-01-30 20:43  mtrute
+
+	* m605x.c: Optimierungen
+
+2002-01-22 21:08  mtrute
+
+	* config-srcpd.c, config-srcpd.h, srcpd.c: PID File added
+
+2002-01-19 22:46  mtrute
+
+	* README: Neues Readme...
+
+2002-01-19 22:46  mtrute
+
+	* srcpd.c: Prozesse.... warten
+
+2002-01-19 22:25  mtrute
+
+	* Makefile.am, Makefile.in: removed unsused files
+
+2002-01-19 22:24  mtrute
+
+	* rcsrcpd: Typos
+
+2002-01-19 22:24  mtrute
+
+	* srcpd.c, threads.c: Threads und Feinheiten...
+
+2002-01-19 22:21  mtrute
+
+	* iochannel.c, iochannel.h, netserver.c: removed unsused files
+
+2002-01-19 15:24  mtrute
+
+	* iochannel.c, iochannel.h: Deleted unused files
+
+2002-01-18 18:01  mtrute
+
+	* ChangeLog, NEWS, config-srcpd.h, netserver.c, netserver.h,
+	srcp-error.c, srcp-error.h, srcp-fb-i8255.c, srcp-fb.c, srcp-fb.h,
+	srcp-ga.c, srcp-ga.h, srcp-gl.c, srcp-gl.h, srcp-power.c,
+	srcp-power.h, srcp-time.c, srcp-time.h, srcpd.c, threads.c: API
+	Changes, cleanups
+
+2002-01-17 19:52  mtrute
+
+	* srcpd.c: running non-root
+
+2002-01-16 22:07  mtrute
+
+	* mutex: housekeeping
+
+2002-01-16 22:06  mtrute
+
+	* COPYING: COPYING removed, LICENSE.txt is ok
+
+2002-01-16 22:04  mtrute
+
+	* Makefile, config-srcpd.c, config-srcpd.h, rcsrcpd, srcpd.c: added
+	PID File in /var/run; fixed typos
+
+2002-01-15 20:32  mtrute
+
+	* ChangeLog, Makefile.in, README, config-srcpd.c, config-srcpd.h,
+	configure, configure.in, configure.scan, ib.c, ib.h, loopback.c,
+	loopback.h, m605x.c, m605x.h, mkinstalldirs, mutex, netserver.c,
+	netserver.h, srcp-descr.c, srcp-descr.h, srcp-error.c,
+	srcp-error.h, srcp-fb-s88.c, srcp-fb-s88.h, srcp-fb.c, srcp-fb.h,
+	srcp-ga.c, srcp-ga.h, srcp-gl.c, srcp-gl.h, srcp-lock.c,
+	srcp-lock.h, srcp-power.c, srcp-power.h, srcp-srv.c, srcp-srv.h,
+	srcp-time.c, srcp-time.h, srcpd.c, srcpd.lsm, srcpd.xml, threads.h:
+	Loopback Dummy Bus Driver
+
+2002-01-14 20:50  mtrute
+
+	* srcpd.lsm: minor typos
+
+2002-01-14 20:50  mtrute
+
+	* threads.c: TCP Keepalives aktiviert
+
+2002-01-14 20:49  mtrute
+
+	* srcpd.spec, srcpd.spec: LSB compliant install
+
+2002-01-14 20:48  mtrute
+
+	* threads.c: Keepalives bei TCP Verbindungen
+
+2002-01-11 20:17  mtrute
+
+	* Makefile.am, Makefile.in, NEWS, README, TODO, config-srcpd.c:
+	Maintenance Release, do not use autoconf 2.52
+
+2002-01-11 20:16  mtrute
+
+	* threads.c: Socketverwaltung verbessert
+
+2002-01-11 20:15  mtrute
+
+	* rcsrcpd, srcpd.spec: RPM Files
+
+2002-01-09 20:46  mtrute
+
+	* rcsrcpd: NFS is not essential...
+
+2001-12-23 20:46  mtrute
+
+	* srcpd.spec, Makefile.am: /etc ist doch besser, Feinheiten
+
+2001-12-22 20:12  mtrute
+
+	* ChangeLog, Makefile.am, Makefile.in, README, TODO,
+	config-srcpd.c, configure, configure.in, m605x.c, m605x.h,
+	mkinstalldirs, netserver.c, netserver.h, srcp-descr.c,
+	srcp-descr.h, srcp-error.c, srcp-error.h, srcp-fb-s88.c,
+	srcp-fb-s88.h, srcp-fb.c, srcp-fb.h, srcp-ga.c, srcp-ga.h,
+	srcp-gl.c, srcp-gl.h, srcp-lock.c, srcp-lock.h, srcp-power.c,
+	srcp-power.h, srcp-srv.c, srcp-srv.h, srcp-time.c, srcp-time.h,
+	srcpd.spec, threads.c, threads.h, rcsrcpd: einige Updates, rpm
+	vorbereitet (fuer SuSE)
+
+2001-10-08 21:16  mtrute
+
+	* netserver.c, srcp-error.c, srcp-error.h, srcp-fb-s88.c,
+	srcp-fb-s88.h, srcp-fb.c, srcp-fb.h, srcp-ga.c, srcp-ga.h,
+	srcp-gl.c, srcp-gl.h, srcp-lock.c, srcp-lock.h, srcp-power.c,
+	srcp-power.h, srcp-srv.c, srcp-srv.h, srcp-time.c, srcp-time.h,
+	threads.c: API für die Hardwaremodule und Gerätegruppen geändert,
+	cleanup
+
+2001-09-21 20:10  mtrute
+
+	* Makefile, Makefile.am, Makefile.in, netserver.c, srcp-descr.c,
+	srcp-descr.h, srcp-error.c, srcp-error.h, srcp-ga.c, srcp-ga.h,
+	srcp-gl.c, srcp-gl.h, srcp-lock.c, srcp-lock.h: Locks,
+	Fehlerverwaltung angelegt
+
+2001-09-16 14:38  mtrute
+
+	* Makefile, Makefile.am, Makefile.in, README, acinclude.m4,
+	aclocal.m4, config-srcpd.c, config-srcpd.h, config.h.in, configure,
+	configure.in, ib.c, ib.h, io.c, io.h, m605x.c, m605x.h,
+	mkinstalldirs, netserver.c, netserver.h, srcp-fb-s88.c,
+	srcp-fb-s88.h, srcp-fb.c, srcp-fb.h, srcp-ga.c, srcp-ga.h,
+	srcp-gl.c, srcp-gl.h, srcp-power.c, srcp-power.h, srcp-srv.c,
+	srcp-srv.h, srcp-time.c, srcp-time.h, srcpd.8, srcpd.c, srcpd.xml,
+	threads.c, threads.h: rework on the way to SRCP 0.8, do not use it
+
+2001-08-21 19:53  mtrute
+
+	* threads.c: sofortiger Neustart des Netzwerksockets ermöglicht,
+	Patch von Marin Rimmele, Syslogausgaben ergänzt
+
+2001-08-15 13:20  mtrute
+
+	* Makefile.am, Makefile.in, config-srcpd.c, config.h.in, configure,
+	configure.in, srcp-time.c, srcpd.8: libxml2 anstelle der libxml,
+	kleinere doc-fixes
+
+2001-08-07 19:34  mtrute
+
+	* config-srcpd.c: aufräumen
+
+2001-08-05 20:18  mtrute
+
+	* srcpd.8: added really simple man page
+
+2001-08-05 15:36  mtrute
+
+	* ChangeLog, Makefile, Makefile.am, Makefile.in, config-srcpd.c,
+	config.h.in, configure, configure.in, srcpd.lsm, srcpd.xml,
+	srcpd.conf: Umstellung Konfigurationsdatei auf XML-Format
+
+2001-08-05 14:19  mtrute
+
+	* srcpd.c: Sockets aus CONF Datei übernehmen, vor den
+	CLI-Parametern\!
+
+2001-07-27 19:43  mtrute
+
+	* Makefile, configure: Vorbereitungen zum Release
+
+2001-07-27 19:37  mtrute
+
+	* config-srcpd.c, srcpd.c, configure.in: Vorbereitungen zum Release
+
+2001-07-24 18:01  schmischi
+
+	* ib.c: IB mit allen ttyS*
+
+2001-07-24 18:00  schmischi
+
+	* config-srcpd.c, srcpd.c: DEV_COMPORT bereinigt
+
+2001-07-23 23:04  schmischi
+
+	* config-srcpd.c, srcpd.c: DEV_COMPORT bereinigt
+
+2001-07-22 19:41  mtrute
+
+	* srcp-fb-s88.c: undo all changes...
+
+2001-07-22 12:36  schmischi
+
+	* srcp-fb-s88.c: Ports bei S88
+
+2001-07-22 12:23  schmischi
+
+	* Makefile.in, config-srcpd.c, ib.c, io.c, m605x.c, netserver.c,
+	srcp-fb-i8255.c, srcp-fb-s88.c, srcp-fb.c, srcp-ga.c, srcp-gl.c,
+	srcp-gl.h, srcp-time.c, srcpd.c, srcpd.lsm, threads.c: Korrektur /w
+	NUMBER_
+
+2001-07-21 16:01  mtrute
+
+	* srcp-fb-s88.c: Port 16 der S88 Module unerreichbar gewesen
+
+2001-07-21 15:52  mtrute
+
+	* netserver.c, srcp-ga.c, srcp-gl.c: Nur die via srcpd.conf
+	angegebenen Geräte und nicht alle adressierbaren GA/GL beachten
+
+2001-07-14 17:58  mtrute
+
+	* ChangeLog, Makefile.in, acinclude.m4, aclocal.m4, config-srcpd.c,
+	config.h.in, configure, configure.in, io.c, io.h, m605x.c, srcpd.c,
+	srcpd.conf: COM Port Einstellungen als Runtime Option
+
+2001-07-12 20:55  schmischi
+
+	* m605x.c, srcpd.c: neuer Versuch zum Comport
+
+2001-07-12 20:37  schmischi
+
+	* ib.c, srcp-ga.c, srcp-gl.c, srcp-time.c: mehrere Befehle in einer
+	Zeile
+
+2001-07-11 23:17  schmischi
+
+	* ChangeLog, acinclude.m4, aclocal.m4, config.h.in, configure,
+	configure.in, io.c, io.h, m605x.c, srcpd.c: neue autoconf-Option
+
+2001-07-11 21:49  mtrute
+
+	* AUTHORS, README, srcpd.lsm: Redaktionelle Anpassungen
+
+2001-07-11 20:43  mtrute
+
+	* m605x.c: milli und microsekunden, schönheit
+
+2001-07-11 20:39  schmischi
+
+	* Makefile.in: [no log message]
+
+2001-07-11 20:33  schmischi
+
+	* Makefile.in, config-srcpd.c, ib.c, ib.h, io.c, io.h, m605x.c,
+	netserver.c, srcp-fb-s88.c, srcp-fb.c, srcp-ga.c, srcp-gl.c,
+	srcp-time.c, srcpd.c, threads.c: save(open)_comport() nach
+	io.c/io.h
+
+2001-07-11 01:51  schmischi
+
+	* config.c, config.h, fb.c, fb.h, ga.c, ga.h, gl.c, gl.h,
+	intelliboxd.c, intelliboxd.h, m6051d.h, srcp-fb-m6051.c,
+	srcp-fb-m6051.h, m6051d.c, m6051d.o: alte Teile entfernt
+
+2001-07-11 01:47  schmischi
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL, Makefile.am, Makefile.in,
+	NEWS, README, TODO, acinclude.m4, aclocal.m4, config-srcpd.c,
+	config.guess, config.h.in, config.sub, configure, configure.in,
+	ib.c, install-sh, io.c, ltconfig, ltmain.sh, missing,
+	mkinstalldirs, netserver.c, srcp-fb-s88.c, srcp-fb.c, srcpd.c,
+	srcpd.conf, srcpd.lsm, stamp-h.in: mit autoconf
+
+2001-07-06 00:06  schmischi
+
+	* srcp-fb-i8255.c, srcp-fb-i8255.h, srcp-fb.c, srcp-fb.h,
+	srcp-ga.c, srcp-ga.h, srcp-gl.c, srcp-gl.h, srcp-power.c,
+	srcp-power.h, srcp-srv.c, srcp-srv.h, srcp-time.c, srcp-time.h,
+	srcpd.c, threads.c, threads.h: erste Version von M6051 und IB in
+	einem Server
+
+2001-07-06 00:02  schmischi
+
+	* Makefile, config-srcpd.c, config-srcpd.h, ib.c, ib.h, io.c, io.h,
+	iochannel.c, iochannel.h, m605x.c, m605x.h, netserver.c,
+	netserver.h, srcp-fb-s88.c, srcp-fb-s88.h: erste Version von M6051
+	und IB in einem Server
+
+2001-06-28 18:55  mtrute
+
+	* LICENSE.txt, Makefile, README, config.c, config.h, fb.c, fb.h,
+	ga.c, ga.h, gl.c, gl.h, intelliboxd.c, intelliboxd.h, iochannel.c,
+	iochannel.h, m6051d.c, m6051d.h, m6051d.o, m605x.c, m605x.h,
+	netserver.c, netserver.h, srcp-fb-i8255.c, srcp-fb-i8255.h,
+	srcp-fb-m6051.c, srcp-fb-m6051.h, srcp-fb.c, srcp-fb.h, srcp-ga.c,
+	srcp-ga.h, srcp-gl.c, srcp-gl.h, srcp-power.c, srcp-power.h,
+	srcp-srv.c, srcp-srv.h, srcp-time.c, srcp-time.h, threads.c,
+	threads.h: initial import of m6051d and intelliboxd
+
