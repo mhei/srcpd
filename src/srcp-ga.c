@@ -216,7 +216,7 @@ int initGA(int busnumber, int addr, const char protocol)
     ga[busnumber].gastate[addr].tv[0].tv_sec=0;
     ga[busnumber].gastate[addr].tv[1].tv_sec=0;
 
-    if(busses[busnumber].init_ga_func && ga[busnumber].gastate[addr].state == 0)
+    if(busses[busnumber].init_ga_func)
 	    rc = (*busses[busnumber].init_ga_func)(&ga[busnumber].gastate[addr]);
     if (rc ==SRCP_OK) {
 	ga[busnumber].gastate[addr].state = 1;

@@ -108,7 +108,7 @@ int main(int argc, char **argv)
   startup_SERVER();
   startup_SESSION();
 
-  sprintf(conffile, "%s/srcpd.conf", PREFIX);
+  sprintf(conffile, "%s/srcpd.conf", SYSCONFDIR);
 
   /* Parameter auswerten */
   opterr=0;

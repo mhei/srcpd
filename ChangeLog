@@ -1,4 +1,12 @@
+2004-11-04	Matthias Trute	<mtrute@users.sourceforge.net>
+
+	* varios files : reinit made possible, loopback and 605x
+	   with stricter value check on allowed init parameters.
+	   
+	* Makefile.am, srcpd.c: SYSCONFDIR as suggested by Guido Scholz
+
 2004-11-03	Matthias Trute	<mtrute@users.sourceforge.net>
+
 	* varios files : made some regression tests. Improved error handling.
 
 2004-07-20  Frank Schmischke  <frank.schmischke@t-online.de>
