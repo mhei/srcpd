@@ -1,3 +1,41 @@
+2003-08-27 16:37  mtrute
+
+	* ib.c: mea culpa
+
+2003-08-16 13:24  sieloff
+
+	* srcp-srv.c: Wrong parameterlist inside DBG call provides compiler
+	warning, fixed.
+
+2003-08-14 18:11  mborchers
+
+	* io.c: fixed error-message handling in readByte() (crashed the
+	server before, if error occured)
+
+2003-08-14 13:52  mborchers
+
+	* i2c-dev.c: fixed i2c-address and value calculations
+
+2003-08-12 20:03  mborchers
+
+	* srcp-ga.c: forgot to remove a debugging statement
+
+2003-08-12 19:12  mborchers
+
+	* srcp-ga.c: corrected init of GA devices: now allocates enough
+	space for GA's (addresses start with 1, not with 0!)
+
+2003-08-12 15:50  mborchers
+
+	* i2c-dev.c, i2c-dev.h: changes for new hardware components
+
+2003-08-12 15:19  mtrute
+
+	* ChangeLog, ib.c, m605x.c, srcp-gl.c, srcp-gl.h, zimo.c: Changed
+	internal data structure and API to support variable number of loco
+	functions without strange bitlevel hacks; only m605x tested, others
+	may work or not.
+
 2003-08-12 13:25  mtrute
 
 	* ChangeLog, i2c-dev.c, ib.c, loopback.c, m605x.c, netserver.c,
