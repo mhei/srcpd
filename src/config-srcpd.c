@@ -19,7 +19,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <syslog.h>
-
+#include <stdarg.h>                                 
 
 #include <libxml/xmlmemory.h>
 #include <libxml/parser.h>
@@ -215,11 +215,6 @@ static int walk_config_xml(xmlDocPtr doc)
  return rc;
 }
 
-static xmlDocPtr load_config_xml(const char *filename)
-{
- return xmlParseFile(filename);
-}
-
 int readConfig(const char *filename)
 {
  xmlDocPtr doc;
@@ -232,12 +227,13 @@ int readConfig(const char *filename)
  num_busses = -1;
 
  /* some defaults */
- doc = load_config_xml(filename);
+ DBG(0, 0, "parsing %s", filename);
+ doc = xmlParseFile(filename);
  if (doc != 0)
- {
-   syslog(LOG_INFO, "parsing %s", filename);
+ { /* always put a message */
+   DBG(0, 0, "walking %s", filename);
    rc = walk_config_xml(doc);
-   syslog(LOG_INFO, " %s done", filename);
+   DBG(0, 0, " done %s", filename);
    xmlFreeDoc(doc);
  }
  else
@@ -245,4 +241,23 @@ int readConfig(const char *filename)
    exit(1);
  }
  return rc;
+}
+
+void DBG(int busnumber, int dbglevel, const char *fmt, ...)
+{
+  va_list parm;
+  va_start(parm, fmt);
+   /* need some more checks, may segfault! */
+   if (dbglevel <= busses[busnumber].debuglevel) {
+    char *msg;
+    msg = (char *)malloc (sizeof(char) * (strlen(fmt) + 10));
+    if (msg == NULL)    {
+	      syslog (LOG_DEBUG, "malloc() failed\n");
+	      vsyslog (LOG_DEBUG, fmt, parm);
+    }  else   {
+	      sprintf (msg, "[bus %d] %s", busnumber, fmt);
+            vsyslog(LOG_DEBUG, msg, parm);
+	      free (msg);
+    }
+  }
 }

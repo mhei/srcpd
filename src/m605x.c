@@ -30,7 +30,6 @@
 #include <termios.h>
 #include <fcntl.h>
 #include <signal.h>
-#include <syslog.h>
 
 #include <libxml/tree.h>
 
@@ -109,18 +108,18 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   if(init_GA(busnumber, __m6051->number_ga))
   {
     __m6051->number_ga = 0;
-    syslog(LOG_INFO, "Can't create array for assesoirs");
+    DBG(busnumber, DBG_ERROR, "Can't create array for assesoirs");
   }
 
   if(init_GL(busnumber, __m6051->number_gl))
   {
     __m6051->number_gl = 0;
-    syslog(LOG_INFO, "Can't create array for locomotivs");
+        DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
   }
   if(init_FB(busnumber, __m6051->number_fb*16))
   {
     __m6051->number_fb = 0;
-    syslog(LOG_INFO, "Can't create array for feedback");
+        DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
   }
   return 0;
 }
@@ -136,11 +135,11 @@ static int init_lineM6051(int bus) {
 
   if (busses[bus].debuglevel>0)
   {
-    printf("Opening 605x: %s\n", busses[bus].device);
+    DBG(bus, DBG_INFO, "Opening 605x: %s", busses[bus].device);
   }
   if ((FD = open(busses[bus].device, O_RDWR | O_NONBLOCK)) == -1)
   {
-    printf("couldn't open device.\n");
+    DBG(bus, DBG_FATAL, "couldn't open device.", busses[bus].device);
     return -1;
   }
   tcgetattr(FD, &interface);
@@ -160,8 +159,8 @@ static int init_lineM6051(int bus) {
 }
 
 int init_bus_M6051(int bus) {
-  syslog(LOG_INFO," M605x  init: bus #%d, debug %d", bus, busses[bus].debuglevel);
-  if(busses[bus].debuglevel<=3)
+  DBG(bus, DBG_INFO," M605x  init: debug %d", bus, busses[bus].debuglevel);
+  if(busses[bus].debuglevel<=DBG_DEBUG)
   {
     busses[bus].fd = init_lineM6051(bus);
   }
@@ -169,12 +168,14 @@ int init_bus_M6051(int bus) {
   {
     busses[bus].fd = -1;
   }
-  syslog(LOG_INFO, "M605x bus init done, fd=%d",     busses[bus].fd);
+  DBG(bus, DBG_INFO, "M605x init done, fd=%d",  bus, busses[bus].fd);
+  DBG(bus, DBG_INFO, "M605x: %s",busses[bus].description);
   return 0;
 }
 
 int term_bus_M6051(int bus)
 {
+  DBG(bus, DBG_INFO, "M605x bus %d term done, fd=%d",  bus, busses[bus].fd);
   return 0;
 }
 
@@ -308,7 +309,7 @@ void* thr_sendrec_M6051(void *v)
       {
         readByte(bus, 0, &rr);
         ioctl(busses[bus].fd, FIONREAD, &temp);
-        syslog(LOG_INFO, "FB M6051: oops; ignoring unread byte: %d ", rr);
+        DBG(bus, DBG_INFO, "FB M6051: oops; ignoring unread byte: %d ", rr);
       }
       SendByte = 192 + akt_S88;
       writeByte(bus, &SendByte, pause_between_cmd);

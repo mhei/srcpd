@@ -9,7 +9,7 @@
 
 #include "srcp-srv.h"
 #include <libxml/tree.h>
-#include <syslog.h>
+
 #include "config-srcpd.h"
 #include "srcp-error.h"
 
@@ -21,7 +21,7 @@ int server_shutdown_state;
 void readconfig_server(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
   xmlNodePtr child = node->children;
-  syslog(LOG_INFO, "bus %d starting configuration child %s", busnumber, node->name);
+  DBG(busnumber, DBG_INFO, "bus %d starting configuration child %s", busnumber, node->name);
   busses[0].type = SERVER_SERVER;
   busses[0].init_func = &init_bus_server;
   busses[0].term_func = &term_bus_server;
@@ -99,12 +99,13 @@ int describeSERVER(int bus, int addr, char *reply)
 
 int init_bus_server(int bus)
 {
-  syslog(LOG_INFO, "init_bus %d", bus);
+  DBG(bus, DBG_INFO, "init_bus %d", bus);
   return 0;
 }
 
 int term_bus_server(int bus)
 {
+  DBG(bus, DBG_INFO, "term_bus %d", bus);
   return 0;
 }
 

@@ -14,9 +14,7 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-
-#include <syslog.h>
-
+#include "config-srcpd.h"
 #include "srcp-session.h"
 #include "srcp-ga.h"
 #include "srcp-gl.h"
@@ -29,13 +27,13 @@ int startup_SESSION(void)
 
 int start_session(long int sessionid, int mode)
 {
-  syslog(LOG_INFO, "Session started; clientid %ld, mode %d", sessionid, mode);
+  DBG(0, DBG_INFO, "Session started; clientid %ld, mode %d", sessionid, mode);
   return SRCP_OK;
 }
 
 int stop_session(long int sessionid)
 {
-  syslog(LOG_INFO, "Session terminated clientid %ld", sessionid);
+  DBG(0, DBG_INFO, "Session terminated clientid %ld", sessionid);
   // clean all locks
   unlock_ga_bysessionid(sessionid);
   unlock_gl_bysessionid(sessionid);

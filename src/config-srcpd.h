@@ -19,6 +19,7 @@
 
 #include <termios.h>
 #include <sys/param.h>
+#include <stdarg.h>
 
 #define MAX_BUSSES             20         // max number of integrated busses in srcpd
 
@@ -72,4 +73,13 @@ extern char PIDFILE[MAXPATHLEN];
 
 int readConfig(const char *filename);
 
+
+#define DGB_NONE 0
+#define DBG_FATAL 1
+#define DBG_ERROR 2
+#define DBG_WARN 3
+#define DBG_INFO 4
+#define DBG_DEBUG 5
+
+void DBG(int busnumber, int dbglevel, const char *fmt, ...);
 #endif

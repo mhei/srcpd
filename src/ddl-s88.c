@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <syslog.h>
+
 #include <sys/ioctl.h>
 #include <sys/io.h>
 #include <unistd.h>
@@ -158,22 +158,22 @@ void readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   if(init_FB(busnumber, __ddl_s88->number_fb[0]*16))
   {
     __ddl_s88->number_fb[0] = 0;
-    syslog(LOG_INFO, "Can't create array for feedback");
+    DBG(busnumber, DBG_ERROR,  "Can't create array for feedback");
   }
   if(init_FB(busnumber, __ddl_s88->number_fb[1]*16))
   {
     __ddl_s88->number_fb[1] = 0;
-    syslog(LOG_INFO, "Can't create array for feedback");
+    DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
   }
   if(init_FB(busnumber, __ddl_s88->number_fb[2]*16))
   {
     __ddl_s88->number_fb[2] = 0;
-    syslog(LOG_INFO, "Can't create array for feedback");
+    DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
   }
   if(init_FB(busnumber, __ddl_s88->number_fb[3]*16))
   {
     __ddl_s88->number_fb[3] = 0;
-    syslog(LOG_INFO, "Can't create array for feedback");
+    DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
   }
   busnumber += 4;
 }
@@ -200,11 +200,11 @@ int init_bus_S88(int busnumber)
   int isin = 0;    // reminder for checking
   int S88PORT = __ddl_s88->port;
   int S88CLOCK_SCALE = __ddl_s88->clockscale;
-  syslog(LOG_INFO, "init_bus DDL S88%d", busnumber);
+  DBG(busnumber, DBG_INFO, "init_bus DDL S88%d", busnumber);
   // is the port disabled from user, everything is fine
   if (!S88PORT)
   {
-    syslog(LOG_INFO, "   s88 port is disabled.");
+        DBG(busnumber, DBG_INFO, "   s88 port is disabled.");
     return 1;
   }
   // test, whether S88DEV is a valid io-address for a parallel device
@@ -232,7 +232,7 @@ int init_bus_S88(int busnumber)
       }
       else
       {
-        syslog(LOG_INFO, "   warning: There is no port for s88 at 0x%X.",
+            DBG(busnumber, DBG_WARN, "   warning: There is no port for s88 at 0x%X.",
            S88PORT);
         ioperm(S88PORT, 3, 0);  // stopping access to port address
         return 1;
@@ -240,18 +240,18 @@ int init_bus_S88(int busnumber)
     }
     else
     {
-      syslog(LOG_INFO, "   warning: Access to port 0x%X denied.",
+          DBG(busnumber, DBG_ERROR, "   warning: Access to port 0x%X denied.",
        S88PORT);
       return 1;
     }
   }
   else
   {
-    syslog(LOG_INFO, "   warning: 0x%X is not valid port adress for s88 device.",
+        DBG(busnumber, DBG_WARN, "   warning: 0x%X is not valid port adress for s88 device.",
       S88PORT);
     return 1;
   }
-  syslog(LOG_INFO, "   s88 port sucsessfully initialized at 0x%X.",
+      DBG(busnumber, DBG_INFO, "   s88 port sucsessfully initialized at 0x%X.",
      S88PORT);
   return 0;
 }

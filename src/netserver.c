@@ -25,7 +25,7 @@
 #include <termios.h>
 #include <fcntl.h>
 #include <signal.h>
-#include <syslog.h>
+
 #include <sys/time.h>
 
 #include "config-srcpd.h"
@@ -97,9 +97,9 @@ int socket_writereply(int Socket, int srcpcode, const char *line, struct timeval
     srcp_fmt_msg(srcpcode, buf2);
     sprintf(buf, "%ld.%ld %s %s\n", akt_time->tv_sec, akt_time->tv_usec / 1000, buf2, line);
   }
-  syslog(LOG_INFO, "socket %d, write %s", Socket, buf);
+  DBG(0, DBG_DEBUG, "socket %d, write %s", Socket, buf);
   status = write(Socket, buf, strlen(buf));
-  syslog(LOG_INFO, "status from write %d", status);
+  DBG(0, DBG_DEBUG, "status from write %d", status);
   return status;
 }
 
@@ -537,7 +537,7 @@ int doCmdClient(int Socket, int sessionid)
   long int rc;
   struct timeval akt_time;
 
-  syslog(LOG_INFO, "thread >>doCmdClient<< is startet for socket %i", Socket);
+  DBG(0, DBG_INFO, "thread >>doCmdClient<< is startet for socket %i", Socket);
   while (1)
   {
     memset(line, 0, sizeof(line));
@@ -552,7 +552,7 @@ int doCmdClient(int Socket, int sessionid)
     memset(parameter, 0, sizeof(parameter));
     memset(reply, 0, sizeof(reply));
     sscanf(line, "%s %ld %s %900c", command, &bus, devicegroup, parameter);
-    syslog(LOG_INFO, "getting command: %s %ld %s %s", command, bus, devicegroup, parameter);
+    DBG(bus, DBG_INFO, "getting command: %s %ld %s %s", command, bus, devicegroup, parameter);
     rc = SRCP_WRONGVALUE;
     reply[0] = 0x00;
 
