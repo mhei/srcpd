@@ -92,7 +92,12 @@ thr_handlePort(void *v)
 
   bzero(&socketAddr,sizeof(socketAddr));
   socketAddr.sin_family = AF_INET;
-  socketAddr.sin_addr.s_addr = INADDR_ANY;
+  if(((SERVER_DATA *) busses[0].driverdata)->listenip == NULL){
+	socketAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+  }else	{
+	socketAddr.sin_addr.s_addr = inet_addr(((SERVER_DATA *) busses[0].driverdata)->listenip);
+  }
+
   socketAddr.sin_port = htons(ti.socket);
 
   if(bind(boundSocket, (struct sockaddr *) &socketAddr, sizeof(socketAddr)) < 0)

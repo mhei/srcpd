@@ -19,6 +19,7 @@
 
 typedef struct _SERVER_DATA {
     int TCPPORT;
+    char *listenip;
     char PIDFILE[MAXPATHLEN];
     char *username;
     char *groupname;
