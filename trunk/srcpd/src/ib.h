@@ -19,7 +19,7 @@
 
 #include <libxml/tree.h>
 
-typedef struct _IB_DATA 
+typedef struct _IB_DATA
 {
     int number_ga;
     int number_gl;
@@ -33,22 +33,22 @@ typedef struct _IB_DATA
     int emergency_on_ib;
 } IB_DATA;
 
-void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node,  int busnumber);
+void readConfig_IB(xmlDocPtr doc, xmlNodePtr node,  int busnumber);
 
 
-int init_bus_IB(int);
-int term_bus_IB(int);
+int init_bus_IB(int busnumber);
+int term_bus_IB(int busnumber);
 
 int init_gl_IB(struct _GLSTATE *gl);
 int init_ga_IB(struct _GASTATE *ga);
 
 void* thr_sendrec_IB(void *);
 
-void send_command_ga_ib(int busnumber);
-void send_command_gl_ib(int busnumber);
-void send_command_sm_ib(int busnumber);
-void check_status_ib(int busnumber);
-void check_status_pt_ib(int busnumber);
+void send_command_ga_IB(int busnumber);
+void send_command_gl_IB(int busnumber);
+void send_command_sm_IB(int busnumber);
+void check_status_IB(int busnumber);
+void check_status_pt_IB(int busnumber);
 
 
 #define XLok        0x80

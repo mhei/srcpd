@@ -26,7 +26,7 @@
 
 static int working_HSI88;
 
-void readconfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
+void readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
   int number;
 
@@ -380,7 +380,7 @@ void* thr_sendrec_HSI_88(void *v)
         temp <<= 8;
         readByte(busnumber, 1, &rr);
         setFBmodul(busnumber, i, temp | rr);
-        DBG(busnumber, DBG_DEBUG, "Rückmeldung %i mit 0x%04x", i, temp|rr);
+        DBG(busnumber, DBG_DEBUG, "Rckmeldung %i mit 0x%04x", i, temp|rr);
       }
       readByte(busnumber, 1, &rr);            // <CR>
     }

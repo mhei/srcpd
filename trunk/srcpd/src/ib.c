@@ -46,17 +46,17 @@
 
 #define __ib ((IB_DATA*)busses[busnumber].driverdata)
 
-static int init_line_IB(int);
+static int initLine_IB(int busnumber);
 
 // IB helper functions
 static int sendBreak(const int fd);
 static int switchOffP50Command(const int busnumber);
-static int readAnswer_ib(const int busnumber, const int generatePrintf);
-static int readByte_ib(int bus, int wait, unsigned char *the_byte);
+static int readAnswer_IB(const int busnumber, const int generatePrintf);
+static int readByte_IB(int bus, int wait, unsigned char *the_byte);
 static speed_t checkBaudrate(const int fd, const int busnumber);
 static int resetBaudrate(const speed_t speed, const int busnumber);
 
-void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node, int busnumber)
+void readConfig_IB(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
   xmlNodePtr child = node->children;
   DBG(busnumber, DBG_INFO, "reading configuration for intellibox at bus %d", busnumber);
@@ -192,7 +192,7 @@ int init_bus_IB(int busnumber)
   if (busses[busnumber].debuglevel < 7)
   {
     if (status == 0)
-      status = init_line_IB(busnumber);
+      status = initLine_IB(busnumber);
   }
   else
      busses[busnumber].fd = 9999;
@@ -232,7 +232,7 @@ void* thr_sendrec_IB(void *v)
   int zaehler1, fb_zaehler1, fb_zaehler2;
 
   busnumber = (int) v;
-    DBG(busnumber, DBG_INFO, "thr_sendrec_IB is startet as bus %i", busnumber);
+  DBG(busnumber, DBG_INFO, "thr_sendrec_IB is startet as bus %i", busnumber);
 
   // initialize tga-structure
   for(zaehler1=0;zaehler1<50;zaehler1++)
@@ -268,11 +268,11 @@ void* thr_sendrec_IB(void *v)
       char msg[110];
       byte2send = busses[busnumber].power_state ? 0xA7 : 0xA6;
       writeByte(busnumber, byte2send, 250);
-      status = readByte_ib(busnumber, 1, &rr);
+      status = readByte_IB(busnumber, 1, &rr);
       while(status == -1)
       {
         usleep(100000);
-        status = readByte_ib(busnumber, 1, &rr);
+        status = readByte_IB(busnumber, 1, &rr);
       }
       if(rr == 0x00)                  // war alles OK ?
         busses[busnumber].power_changed = 0;
@@ -292,16 +292,16 @@ void* thr_sendrec_IB(void *v)
       continue;
     }
 
-    send_command_gl_ib(busnumber);
-    send_command_ga_ib(busnumber);
-    check_status_ib(busnumber);
-    send_command_sm_ib(busnumber);
+    send_command_gl_IB(busnumber);
+    send_command_ga_IB(busnumber);
+    check_status_IB(busnumber);
+    send_command_sm_IB(busnumber);
     check_reset_fb(busnumber);
     usleep(50000);
   }      // Ende WHILE(1)
 }
 
-void send_command_ga_ib(int busnumber)
+void send_command_ga_IB(int busnumber)
 {
   int i, i1;
   int temp;
@@ -338,7 +338,7 @@ void send_command_ga_ib(int busnumber)
           byte2send |= 0x80;
         }
         writeByte(busnumber, byte2send, 0);
-        readByte_ib(busnumber, 1, &rr);
+        readByte_IB(busnumber, 1, &rr);
         gatmp.action=0;
         setGA(busnumber, addr, gatmp);
         __ib -> tga[i].id=0;
@@ -387,13 +387,13 @@ void send_command_ga_ib(int busnumber)
             gatmp.t.tv_usec -= 1000000;
           }
           __ib -> tga[i1] = gatmp;
-          DBG(busnumber, DBG_DEBUG, "GA %i für Abschaltung um %i,%i auf %i", __ib -> tga[i1].id,
+          DBG(busnumber, DBG_DEBUG, "GA %i fr Abschaltung um %i,%i auf %i", __ib -> tga[i1].id,
             (int)__ib -> tga[i1].t.tv_sec, (int)__ib -> tga[i1].t.tv_usec, i1);
           break;
         }
       }
     }
-    readByte_ib(busnumber, 1, &rr);
+    readByte_IB(busnumber, 1, &rr);
     if(status)
     {
       setGA(busnumber, addr, gatmp);
@@ -401,7 +401,7 @@ void send_command_ga_ib(int busnumber)
   }
 }
 
-void send_command_gl_ib(int busnumber)
+void send_command_gl_IB(int busnumber)
 {
   int temp;
   int addr=0;
@@ -436,7 +436,7 @@ void send_command_gl_ib(int busnumber)
       temp >>= 8;
       byte2send = temp;
       writeByte(busnumber, byte2send, 0);
-      if(gltmp.direction == 2)       // Nothalt ausgelöst ?
+      if(gltmp.direction == 2)       // Nothalt ausgelï¿½t ?
       {
         byte2send = 1;              // Nothalt setzen
       }
@@ -466,7 +466,7 @@ void send_command_gl_ib(int busnumber)
         byte2send |= 0x20;
       }
       writeByte(busnumber, byte2send, 0);
-      readByte_ib(busnumber, 1, &status);
+      readByte_IB(busnumber, 1, &status);
       if((status == 0) || (status == 0x41) || (status == 0x42))
       {
         setGL(busnumber, addr, gltmp);
@@ -506,7 +506,7 @@ int write_register(int busnumber, int reg, int value)
   byte2send = value;
   writeByte(busnumber, byte2send, 2);
 
-  readByte_ib(busnumber, 1, &status);
+  readByte_IB(busnumber, 1, &status);
 
   return status;
 }
@@ -528,7 +528,7 @@ int read_page(int busnumber, int cv)
   byte2send = tmp;
   writeByte(busnumber, byte2send, 0);
 
-  readByte_ib(busnumber, 1, &status);
+  readByte_IB(busnumber, 1, &status);
 
   return status;
 }
@@ -551,7 +551,7 @@ int write_page(int busnumber, int cv, int value)
   writeByte(busnumber, byte2send, 0);
   byte2send = value;
   writeByte(busnumber, byte2send, 0);
-  readByte_ib(busnumber, 1, &status);
+  readByte_IB(busnumber, 1, &status);
   return status;
 }
 
@@ -572,7 +572,7 @@ int read_cv(int busnumber, int cv)
   byte2send = tmp;
   writeByte(busnumber, byte2send, 2);
 
-  readByte_ib(busnumber, 1, &status);
+  readByte_IB(busnumber, 1, &status);
 
   return status;
 }
@@ -618,7 +618,7 @@ int read_cvbit(int busnumber, int cv, int bit)
   byte2send = tmp;
   writeByte(busnumber, byte2send, 2);
 
-  readByte_ib(busnumber, 1, &status);
+  readByte_IB(busnumber, 1, &status);
 
   return status;
 }
@@ -644,7 +644,7 @@ int write_cvbit(int busnumber, int cv, int bit, int value)
   byte2send = value;
   writeByte(busnumber, byte2send, 0);
 
-  readByte_ib(busnumber, 1, &status);
+  readByte_IB(busnumber, 1, &status);
 
   return status;
 }
@@ -679,7 +679,7 @@ int send_pom(int busnumber, int addr, int cv, int value)
   byte2send = value;
   writeByte(busnumber, byte2send, 0);
 
-  readByte_ib(busnumber, 1, &status);
+  readByte_IB(busnumber, 1, &status);
 
   ret_val = 0;
   if (status != 0)
@@ -705,7 +705,7 @@ int term_pgm(int busnumber)
   return ret_val;
 }
 
-void send_command_sm_ib(int busnumber)
+void send_command_sm_IB(int busnumber)
 {
   //unsigned char byte2send;
   //unsigned char status;
@@ -774,7 +774,7 @@ void send_command_sm_ib(int busnumber)
   }
 }
 
-void check_status_ib(int busnumber)
+void check_status_IB(int busnumber)
 {
   int i;
   int temp;
@@ -784,8 +784,8 @@ void check_status_ib(int busnumber)
   struct _GLSTATE gltmp, glakt;
   struct _GASTATE gatmp;
 
-  /* Abfrage auf Statusänderungen :
-     1. Änderungen an S88-Modulen
+  /* Abfrage auf Statusï¿½derungen :
+     1. ï¿½derungen an S88-Modulen
      2. manuelle Lokbefehle
      3. manuelle Weichenbefehle */
 
@@ -795,13 +795,13 @@ void check_status_ib(int busnumber)
   writeByte(busnumber, byte2send, 0);
   xevnt2 = 0x00;
   xevnt3 = 0x00;
-  readByte_ib(busnumber, 1, &xevnt1);
+  readByte_IB(busnumber, 1, &xevnt1);
   if(xevnt1 & 0x80)
   {
-    readByte_ib(busnumber, 1, &xevnt2);
+    readByte_IB(busnumber, 1, &xevnt2);
     if(xevnt2 & 0x80)
     {
-      readByte_ib(busnumber, 1, &xevnt3);
+      readByte_IB(busnumber, 1, &xevnt3);
     }
   }
 
@@ -809,7 +809,7 @@ void check_status_ib(int busnumber)
   {
     byte2send = 0xC9;
     writeByte(busnumber, byte2send, 0);
-    readByte_ib(busnumber, 1, &rr);
+    readByte_IB(busnumber, 1, &rr);
     while(rr != 0x80)
     {
       if(rr == 1)
@@ -819,66 +819,66 @@ void check_status_ib(int busnumber)
       }
       else
       {
-        gltmp.speed = rr;        // Lok fährt mit dieser Geschwindigkeit
+        gltmp.speed = rr;        // Lok fï¿½rt mit dieser Geschwindigkeit
         gltmp.direction = 0;
         if(gltmp.speed > 0)
           gltmp.speed--;
       }
       // 2. byte functions
-      readByte_ib(busnumber, 1, &rr);
+      readByte_IB(busnumber, 1, &rr);
       //gltmp.funcs = rr & 0xf0;
-			gltmp.funcs = ( rr << 1 );
+      gltmp.funcs = ( rr << 1 );
       // 3. byte adress (low-part A7..A0)
-      readByte_ib(busnumber, 1, &rr);
+      readByte_IB(busnumber, 1, &rr);
       gltmp.id = rr;
       // 4. byte adress (high-part A13..A8), direction, light
-      readByte_ib(busnumber, 1, &rr);
+      readByte_IB(busnumber, 1, &rr);
       if((rr & 0x80) && (gltmp.direction == 0))
-        gltmp.direction = 1;    // Richtung ist vorwärts
+        gltmp.direction = 1;    // Richtung ist vorwï¿½ts
       if(rr & 0x40)
         gltmp.funcs |= 0x01;    // Licht ist an
       rr &= 0x3F;
       gltmp.id |= rr << 8;
-			
-			// 5. byte real speed (is ignored)
-			readByte_ib(busnumber, 1, &rr);
-			//printf("speed reported in 5th byte: speed = %d\n", rr);
 
-    //printf("got GL data from IB: lok# = %d, speed = %d, dir = %d\n",
-    //  gltmp.id, gltmp.speed, gltmp.direction);
+      // 5. byte real speed (is ignored)
+      readByte_IB(busnumber, 1, &rr);
+      //printf("speed reported in 5th byte: speed = %d\n", rr);
 
-    // initialize the GL if not done by user,
-    // because IB can report uninited GLs...
-    if (!isInitializedGL(busnumber, gltmp.id))
-    {
-      DBG(busnumber, DBG_INFO, "IB reported unintialized GL. performing default init for %d", gltmp.id);
-      initGL(busnumber, gltmp.id, 'P', 1, 126, 5);
-    }
-      // get old data, to know which FS the user wants to have...
-    getGL(busnumber, gltmp.id, &glakt);
-    // recalc speed
-    gltmp.speed = (gltmp.speed * glakt.n_fs) / 126;
-    setGL(busnumber, gltmp.id, gltmp);
+      //printf("got GL data from IB: lok# = %d, speed = %d, dir = %d\n",
+      //  gltmp.id, gltmp.speed, gltmp.direction);
+
+      // initialize the GL if not done by user,
+      // because IB can report uninited GLs...
+      if (!isInitializedGL(busnumber, gltmp.id))
+      {
+        DBG(busnumber, DBG_INFO, "IB reported unintialized GL. performing default init for %d", gltmp.id);
+        initGL(busnumber, gltmp.id, 'P', 1, 126, 5);
+      }
+        // get old data, to know which FS the user wants to have...
+      getGL(busnumber, gltmp.id, &glakt);
+      // recalc speed
+      gltmp.speed = (gltmp.speed * glakt.n_fs) / 126;
+      setGL(busnumber, gltmp.id, gltmp);
 
       // next 1. byte
-      readByte_ib(busnumber, 1, &rr);
+      readByte_IB(busnumber, 1, &rr);
     }
   }
 
-  if(xevnt1 & 0x04)        // mindestens eine Rückmeldung hat sich geändert
+  if(xevnt1 & 0x04)        // mindestens eine RÃ¼ckmeldung hat sich geÃ¤ndert
   {
     byte2send = 0xCB;
     writeByte(busnumber, byte2send, 0);
-    readByte_ib(busnumber, 1, &rr);
+    readByte_IB(busnumber, 1, &rr);
     while(rr != 0x00)
     {
       int aktS88 = rr;
-      readByte_ib(busnumber, 1, &rr);
+      readByte_IB(busnumber, 1, &rr);
       temp = rr;
       temp <<= 8;
-      readByte_ib(busnumber, 1, &rr);
+      readByte_IB(busnumber, 1, &rr);
       setFBmodul(busnumber, aktS88, temp|rr);
-      readByte_ib(busnumber, 1, &rr);
+      readByte_IB(busnumber, 1, &rr);
     }
   }
 
@@ -886,13 +886,13 @@ void check_status_ib(int busnumber)
   {
     byte2send = 0xCA;
     writeByte(busnumber, byte2send, 0);
-    readByte_ib(busnumber, 1, &rr);
+    readByte_IB(busnumber, 1, &rr);
     temp = rr;
     for(i=0;i<temp;i++)
     {
-      readByte_ib(busnumber, 1, &rr);
+      readByte_IB(busnumber, 1, &rr);
       gatmp.id = rr;
-      readByte_ib(busnumber, 1, &rr);
+      readByte_IB(busnumber, 1, &rr);
       gatmp.id    |= (rr & 0x07) << 8;
       gatmp.port   = (rr & 0x80) ? 1 : 0;
       gatmp.action = (rr & 0x40) ? 1 : 0;
@@ -930,7 +930,7 @@ void check_status_ib(int busnumber)
   {
     byte2send = 0xA2;
     writeByte(busnumber, byte2send, 0);
-    readByte_ib(busnumber, 1, &rr);
+    readByte_IB(busnumber, 1, &rr);
     if(!(rr & 0x08))
     {
       DBG(busnumber, DBG_DEBUG, "on bus %i no power detected; old-state is %i", busnumber, getPower(busnumber));
@@ -943,16 +943,28 @@ void check_status_ib(int busnumber)
         __ib->emergency_on_ib = 1;
       }
     }
+    else
+    {
+      DBG(busnumber, DBG_DEBUG, "on bus %i power detected; old-state is %i", busnumber, getPower(busnumber));
+      if ((__ib->emergency_on_ib == 1) || (!getPower(busnumber)))
+      {
+        char msg[500];
+        setPower(busnumber, 1, "No Emergency Stop");
+        infoPower(busnumber, msg);
+        queueInfoMessage(msg);
+        __ib->emergency_on_ib = 0;
+      }
+    }
     if(rr & 0x80)
-      readByte_ib(busnumber, 1, &rr);
+      readByte_IB(busnumber, 1, &rr);
   }
 
 
   if(xevnt3 & 0x01)        // we should send an XPT_event-command
-    check_status_pt_ib(busnumber);
+    check_status_pt_IB(busnumber);
 }
 
-void check_status_pt_ib(int busnumber)
+void check_status_pt_IB(int busnumber)
 {
   int i;
   //int temp;
@@ -973,7 +985,7 @@ void check_status_pt_ib(int busnumber)
   while(i == -1)
   {
     writeByte(busnumber, byte2send, 0);
-    i = readByte_ib(busnumber, 1, &rr[0]);
+    i = readByte_IB(busnumber, 1, &rr[0]);
     if (i == 0)
     {
       // wait for an answer of our programming
@@ -986,7 +998,7 @@ void check_status_pt_ib(int busnumber)
     }
   }
   for (i=0;i<(int)rr[0];i++)
-    readByte_ib(busnumber, 1, &rr[i+1]);
+    readByte_IB(busnumber, 1, &rr[i+1]);
 
   if ((int)rr[0] < 2)
 
@@ -1035,7 +1047,7 @@ static int open_comport(int busnumber, speed_t baud)
     status = 0;
     sleep(1);
     while(status != -1)
-      status = readByte_ib(busnumber, 1, &rr);
+      status = readByte_IB(busnumber, 1, &rr);
 #else
   interface.c_ispeed = interface.c_ospeed = baud;
   interface.c_cflag = CREAD  | HUPCL | CS8 | CSTOPB | CRTSCTS;
@@ -1047,7 +1059,7 @@ static int open_comport(int busnumber, speed_t baud)
   return fd;
 }
 
-static int init_line_IB(int busnumber)
+static int initLine_IB(int busnumber)
 {
   int fd;
   int status;
@@ -1083,7 +1095,7 @@ static int init_line_IB(int busnumber)
   sleep(1);
   printf("Clearing input-buffer\n");
   while(status != -1)
-    status = readByte_ib(busnumber, 1, &rr);
+    status = readByte_IB(busnumber, 1, &rr);
 
   status = 0;
 
@@ -1137,7 +1149,7 @@ static int init_line_IB(int busnumber)
   }
   byte2send = 0xC4;
   writeByte(busnumber, byte2send, 0);
-  status = readByte_ib(busnumber, 1, &rr);
+  status = readByte_IB(busnumber, 1, &rr);
   if(status == -1)
     return(1);
   if(rr=='D')
@@ -1245,13 +1257,13 @@ speed_t checkBaudrate(const int fd, const int busnumber)
 
     for (i = 0; i< 2; i++)
     {
-        int erg = readByte_ib(busnumber, 1, &input[i]);
+        int erg = readByte_IB(busnumber, 1, &input[i]);
         //printf("baudrate = %d, readyByte_ib() returned %d\n", baudrate, erg);
         if (erg == 0)
           len++;
     }
 
-     //printf("Answer from IB: »%s«\n", input);
+     //printf("Answer from IB: %s\n", input);
 
     switch (len)
     {
@@ -1330,7 +1342,7 @@ static int resetBaudrate(const speed_t speed, const int busnumber)
   usleep(200000);          // 200 ms
   // use following line to see some debugging
   //status = readAnswer_ib(busnumber, 1);
-  status = readAnswer_ib(busnumber, 0);
+  status = readAnswer_IB(busnumber, 0);
   if(status != 0)
     return 1;
   return 0;
@@ -1358,7 +1370,7 @@ static int switchOffP50Command(const int busnumber)
 
   // use following line, to see some debugging
   //status = readAnswer_ib(busnumber, 1);
-  status = readAnswer_ib(busnumber, 0);
+  status = readAnswer_IB(busnumber, 0);
   if(status != 0)
     return 1;
   return 0;
@@ -1375,7 +1387,7 @@ static int switchOffP50Command(const int busnumber)
  * @param if > 0 the answer is printed
  * @return 0 if ok
 **/
-static int readAnswer_ib(const int busnumber, const int generatePrintf)
+static int readAnswer_IB(const int busnumber, const int generatePrintf)
 {
      unsigned char input[80];
      int counter = 0;
@@ -1385,7 +1397,7 @@ static int readAnswer_ib(const int busnumber, const int generatePrintf)
         input[i]=0;
      while ((found == 0) && (counter < 80))
      {
-          if (readByte_ib(busnumber, 1, &input[counter]) == 0)
+          if (readByte_IB(busnumber, 1, &input[counter]) == 0)
           {
               if (input[counter] == 0)
                      input[counter] = 0x20;
@@ -1416,7 +1428,7 @@ static int readAnswer_ib(const int busnumber, const int generatePrintf)
  * @param:wait time during read
  * @param:adress of the byte to be received.
  **/
-static int readByte_ib(int bus, int wait, unsigned char *the_byte)
+static int readByte_IB(int bus, int wait, unsigned char *the_byte)
 {
   int i;
   int status;
