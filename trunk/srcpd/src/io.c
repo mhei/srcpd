@@ -33,9 +33,6 @@ int readByte(int bus, unsigned char *the_byte)
 {
   int i;
 
-  ioctl(busses[bus].fd, FIONREAD, &i);
-  if(busses[bus].debuglevel > 5)
-    syslog(LOG_INFO, "bus %d bytes to read: %d", bus, i);
   // with debuglevel 7, we will not really work on hardware
   if(busses[bus].debuglevel > 6)
   {  
@@ -44,14 +41,23 @@ int readByte(int bus, unsigned char *the_byte)
   }
   else
   {
-    i = read(busses[bus].fd, the_byte, 1);
-    if(i == 1)
+    ioctl(busses[bus].fd, FIONREAD, &i);
+    if(busses[bus].debuglevel > 5)
+      syslog(LOG_INFO, "on bus %d bytes to read: %d", bus, i);
+    if (i > 0)
     {
-      if(busses[bus].debuglevel > 5)
-        syslog(LOG_INFO, "bus %d byte read: 0x%02x", bus, *the_byte);
-    }
-  if(busses[bus].debuglevel >= 2) {
-        syslog(LOG_INFO, "no byte read");
+      // read only, if there is really an input
+      i = read(busses[bus].fd, the_byte, 1);
+      if(i == 1)
+      {
+        if(busses[bus].debuglevel > 5)
+          syslog(LOG_INFO, "bus %d byte read: 0x%02x", bus, *the_byte);
+      }
+      else
+      {
+        if(busses[bus].debuglevel > 5)
+          syslog(LOG_INFO, "no byte read");
+      }
     }
   }
   return (i == 1 ? 0 : -1);
