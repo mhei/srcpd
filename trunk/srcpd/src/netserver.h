@@ -10,8 +10,6 @@
 #ifndef _NETSERVER_H
 #define _NETSERVER_H
 
-int socket_readline(int Socket, char *line, int len);
-int socket_writereply(int Socket, const char *line);
 
 void* thr_doClient(void* v);
 int doCmdClient(int, int);

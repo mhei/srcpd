@@ -22,7 +22,7 @@
    the current writer position (variable in). To avoid confusion, a semaphore
    protects this process.
    
-   On the other end of the pipe are numerous threads running waiting for
+   On the other end of the pipe are numerous threads waiting for
    new data. Each and every of these threads maintains its own readerposition
    (parameter current) to unqueue the recently added messages.
    
@@ -42,6 +42,7 @@
 #include "srcp-time.h"
 #include "config-srcpd.h"
 #include "netserver.h"
+#include "io.h"
 
 #define QUEUELENGTH_INFO 1000
 
