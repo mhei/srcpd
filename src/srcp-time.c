@@ -9,13 +9,15 @@
 
 #include <unistd.h>
 #include <stdio.h>
-#include <syslog.h>
-
-#include "config-srcpd.h"
-#include "srcp-error.h"
 
 #include "srcp-time.h"
+#include "srcp-error.h"
+
 struct _VTIME vtime;
+
+int startup_TIME(void) {
+    return 0;
+}
 
 int setTime(int d, int h, int m, int s, int rx, int ry)
 {
@@ -38,9 +40,9 @@ int getTime(struct _VTIME *vt)
 
 int infoTime(struct _VTIME vt, char *msg)
 {
-  sprintf(msg, "0 TIME %d %d %d %d %d %d", vt.day, vt.hour,
+  sprintf(msg, "INFO TIME %d %d %d %d %d %d\n", vt.day, vt.hour,
       vt.min, vt.sec, vt.ratio_x, vt.ratio_y);
-  return SRCP_INFO;
+  return SRCP_OK;
 }
 
 int cmpTime(struct timeval *t1, struct timeval *t2)
@@ -73,23 +75,18 @@ int cmpTime(struct timeval *t1, struct timeval *t2)
 void* thr_clock(void* v)
 {
   struct _VTIME vt;
-  int bus = (int) v;
-  
+
   vtime.ratio_x=0;
   vtime.ratio_y=0;
-
   while(1)
   {
     unsigned long sleeptime;
-    if(busses[bus].debuglevel) {
-      syslog(LOG_INFO, "time: %d %d %d %d %d %d", vtime.day, vtime.hour, vtime.min, vtime.sec,  vtime.ratio_x, vtime.ratio_y);
-     }
     if(vtime.ratio_x==0 || vtime.ratio_y==0)
     {
       sleep(1);
       continue;
     }
-    /* delta Modellzeit = delta realzeit * ratio_y/ratio_x */
+    /* delta Modellzeit = delta realzeit * ratio_x/ratio_y */
     sleeptime = (1000000 * vtime.ratio_y) / vtime.ratio_x;
     usleep(sleeptime);
     vt = vtime; // fürs Rechnen eine temporäre Kopie. Damit ist vtime immer gültig
@@ -110,5 +107,6 @@ void* thr_clock(void* v)
       vt.hour = 0;
     }
     vtime = vt;
+    // syslog(LOG_INFO, "time: %d %d %d %d %d %d", vtime.day, vtime.hour, vtime.min, vtime.sec,  vtime.ratio_x, vtime.ratio_y);
   }
 }

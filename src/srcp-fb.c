@@ -15,7 +15,7 @@
 #include "srcp-error.h"
 
 #include "srcp-fb.h"
-#include "srcp-fb-s88.h"
+
 #include "srcp-fb-i8255.h"
 
 /* one huge array of all possible feedbacks */
@@ -39,12 +39,13 @@ void updateFB(int bus, int port, int value) {
   gettimeofday(& _fbstate[bus-1][port-1].timestamp, &dummy);
 }
 
-void setFBmodule(int bus, int mod, int values) {
+int setFBmodul(int bus, int mod, int values) {
   int i;
   for(i=0; i<16;i++) {
     int c = (values & (1 << (15-i))) ? 1 : 0;
     updateFB(bus, (mod-1)*16 + i + 1, c);
   }
+  return SRCP_OK;
 }
   
 int infoFB(int bus, int port, char *msg)
@@ -61,3 +62,6 @@ int infoFB(int bus, int port, char *msg)
   }
 }
 
+int startup_FB() {
+    return 0;
+}

@@ -68,16 +68,17 @@ int socket_readline(int socket, char *line, int len)
  * noch ganz klar ein schoenwetter code!
  *
  */
-int socket_writereply(int socket, int rc, const char *line)
-{
-    char buf[1024], buf2[511];
-    struct timeval akt_time;
-    srcp_fmt_msg(rc, buf2);
-    gettimeofday(&akt_time, NULL);
-    sprintf(buf, "%ld.%ld %s %s\n", akt_time.tv_sec, akt_time.tv_usec / 1000,
-	    buf2, line);
-    return(write(socket, buf, strlen(buf)));
-}
+int socket_writereply(int socket, int srcpcode, const char *line)
+ {
+     char buf[1024];
+     char buf2[511];
+     struct timeval akt_time;
+     srcp_fmt_msg(srcpcode, buf2);
+     gettimeofday(&akt_time, NULL);
+     sprintf(buf, "%ld.%ld %s %s\n", akt_time.tv_sec, akt_time.tv_usec / 1000,
+ 	    buf2, line);
+     return(write(socket, buf, strlen(buf)));
+ }
 
 /******************
  * handles shakehand phase
@@ -85,7 +86,7 @@ int socket_writereply(int socket, int rc, const char *line)
  *********************
  */
 
-int ClientID = 1;
+long int ClientID = 1;
 pthread_mutex_t ClientID_mut = PTHREAD_MUTEX_INITIALIZER;
 
 void *thr_doClient(void *v)
@@ -93,7 +94,7 @@ void *thr_doClient(void *v)
     int socket = (int) v;
     char line[1000], cmd[1000], setcmd[1000], parameter[1000], reply[1000];
     int mode = COMMAND;
-    int clientid, rc;
+    long int clientid, rc;
 
     pthread_mutex_lock(&ClientID_mut);
     clientid = ClientID++;
@@ -160,9 +161,7 @@ void *thr_doClient(void *v)
     }
 }
 
-int
-handleSET(int clientid, int bus, char *device, char *parameter,
-	  char *reply)
+int handleSET(int clientid, int bus, char *device, char *parameter, char *reply)
 {
     int rc = 422;
     *reply = 0x00;
@@ -176,8 +175,7 @@ handleSET(int clientid, int bus, char *device, char *parameter,
 		   &laddr, &direction, &speed, &maxspeed, &func,
 		   &f1, &f2, &f3, &f4);
 	if (anzparms > 5) {
-	    rc = setGL(bus, laddr, direction, speed, maxspeed, func, f1,
-		  f2, f3, f4);
+	    rc = queueGL(bus, laddr, direction, speed, maxspeed, func, f1, f2, f3, f4);
 	}
     }
     if (strncasecmp(device, "GA", 2) == 0) {
@@ -185,7 +183,7 @@ handleSET(int clientid, int bus, char *device, char *parameter,
 	sscanf(parameter, "%ld %ld %ld %ld", &gaddr, &port, &aktion,
 	       &delay);
 	/* Port 0,1; Aktion 0,1 */
-	rc = setGA(bus, gaddr, port, aktion, delay);
+	rc = queueGA(bus, gaddr, port, aktion, delay);
     }
     if (strncasecmp(device, "TIME", 4) == 0) {
 	long d, h, m, s, rx, ry;
@@ -208,16 +206,14 @@ handleSET(int clientid, int bus, char *device, char *parameter,
     return rc;
 }
 
-int
-handleGET(int clientid, int bus, char *device, char *parameter,
-	  char *reply)
+int handleGET(int clientid, int bus, char *device, char *parameter, char *reply)
 {
     int rc = 423;
     *reply = 0x00;
     /* es wird etwas abgefragt */
     if (strncasecmp(device, "FB", 2) == 0) {
 	long int nelem, port;
-	nelem = sscanf(parameter, "%ld", port);
+	nelem = sscanf(parameter, "%ld", &port);
 	rc = infoFB(bus, port, reply);
     }
     if (strncasecmp(device, "GL", 2) == 0) {
@@ -241,18 +237,14 @@ handleGET(int clientid, int bus, char *device, char *parameter,
     return rc;
 }
 
-int
-handleRESET(int clientid, int bus, char *device, char *parameter,
-	    char *reply)
+int handleRESET(int clientid, int bus, char *device, char *parameter, char *reply)
 {
     return SRCP_UNSUPPORTED;
 }
 
-int
-handleWAIT(int clientid, int bus, char *device, char *parameter,
-	   char *reply)
+int handleWAIT(int clientid, int bus, char *device, char *parameter, char *reply)
 {
-    int rc;
+    int rc=SRCP_OK;
     *reply = 0x00;
     /* Wir warten.. */
     if (strncasecmp(device, "FB", 2) == 0) {
@@ -291,9 +283,7 @@ handleWAIT(int clientid, int bus, char *device, char *parameter,
 }
 
 /* negative return code will terminate current session! */
-int
-handleTERM(int clientid, int bus, char *device, char *parameter,
-	   char *reply)
+int handleTERM(int clientid, int bus, char *device, char *parameter, char *reply)
 {
     int rc = 421;
     *reply = 0x00;
@@ -302,7 +292,7 @@ handleTERM(int clientid, int bus, char *device, char *parameter,
     if (strncasecmp(device, "SERVER", 6) == 0) {
 	if (bus == 0) {
 	    rc = SRCP_OK;
-	    server_shutdown(bus);
+	    server_shutdown();
 	} else {
 	    rc = 422;
 	}
@@ -317,11 +307,16 @@ handleTERM(int clientid, int bus, char *device, char *parameter,
     return rc;
 }
 
-int
-handleINIT(int clientid, int bus, char *device, char *parameter,
-	   char *reply)
+int handleINIT(int clientid, int bus, char *device, char *parameter, char *reply)
 {
     int rc = SRCP_UNSUPPORTED;
+    if (strncasecmp(device, "GL", 4) == 0) {
+      long addr, protversion, n_fs, n_func;
+      char prot[10];
+      sscanf(parameter, "%ld %s %ld %ld %ld", &addr, prot, &protversion, &n_fs, &n_func);
+      initGL(bus, addr, prot, protversion, n_fs, n_func);
+    }
+
     if (strncasecmp(device, "TIME", 4) == 0) {
 	long d, h, m, s, rx, ry;
 	sscanf(parameter, "%ld %ld %ld %ld %ld %ld", &d, &h, &m, &s, &rx,
@@ -331,16 +326,13 @@ handleINIT(int clientid, int bus, char *device, char *parameter,
     return rc;
 }
 
-int
-handleVERIFY(int clientid, int bus, char *device, char *parameter,
-	     char *reply)
+int handleVERIFY(int clientid, int bus, char *device, char *parameter, char *reply)
 {
     return SRCP_UNSUPPORTED;
 }
 
 int
-handleCHECK(int clientid, int bus, char *device, char *parameter,
-	    char *reply)
+handleCHECK(int clientid, int bus, char *device, char *parameter, char *reply)
 {
     return SRCP_UNSUPPORTED;
 }

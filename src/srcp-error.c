@@ -2,9 +2,11 @@
 
 /* 
  * Vorliegende Software unterliegt der General Public License, 
- * Version 2, 1991. (c) Matthias Trute, 2000-2001.
+ * Version 2, 1991. (c) Matthias Trute, 2000-2002.
  *
  */
+
+#include <stdio.h>
 
 #include "srcp-error.h"
 
@@ -56,7 +58,7 @@ int srcp_fmt_msg(int errno, char *msg) {
 	sprintf(msg, "%d ERROR device reinitialized", errno); break;
     case 425:
 	sprintf(msg, "%d ERROR not supported", errno); break;
-    default: sprintf(msg, "600 ERROR internal error %d, please report to srcpd@srcpd.sf.net", errno); return 1;
+    default: sprintf(msg, "600 ERROR internal error %d, please report to srcpd-devel@srcpd.sorceforge.net", errno); return 1;
     }
     return 0;
 }

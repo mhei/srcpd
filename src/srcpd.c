@@ -115,7 +115,7 @@ int main(int argc, char **argv)
 
   /* Parameter auswerten */
   opterr=0;
-  while((c=getopt(argc, argv, "p:htv")) != EOF)
+  while((c=getopt(argc, argv, "f:p:hv")) != EOF)
   {
     switch(c)
     {
@@ -129,7 +129,6 @@ int main(int argc, char **argv)
       case 'h':
         printf("srcpd -p <Portnumber> -t -v\n");
         printf("Portnumber  -  first Communicationport via TCP/IP (default: 12345)\n");
-        printf("t           -  start server in testmode (without connection to real interface)\n");
 	printf("v           -  prints program version and exits\n");
         exit(1);
         break;
@@ -160,11 +159,19 @@ int main(int argc, char **argv)
   syslog(LOG_INFO, "%s", WELCOME_MSG);
 
   CreatePIDFile(getpid());
+  /* First: Init the devices */
+  startup_GL();
+  startup_GA();
+  startup_FB();
+  startup_LOCK();
+  startup_DESCRIPTION();
+  startup_TIME();
+  startup_SERVER();
+  startup_SESSION();
 
   /* Now we have to initialize all busses */
-  for(i=1; i<=num_busses; i++) {
-      if(busses[i].init_func)
-          (*busses[i].init_func)(i);
+  for(i=0; i<=num_busses; i++) {
+      (*busses[i].init_func)(i);
   }
   /* die Threads starten */
   error = pthread_create(&ttid_cmd, NULL, thr_handlePort, &cmds);
@@ -194,7 +201,7 @@ int main(int argc, char **argv)
       }
       pthread_detach(ttid_pid);
       busses[i].pid = ttid_pid;
-      syslog(LOG_INFO, "Interface Thread %d started successfully type(%d): pid %d", i, busses[i].type, busses[i].pid);
+      syslog(LOG_INFO, "Interface Thread %d started successfully type(%d): pid %ld", i, busses[i].type, busses[i].pid);
   }
   syslog(LOG_INFO, "All Threads started");
   server_shutdown_state = 0;
@@ -208,16 +215,15 @@ int main(int argc, char **argv)
       for(i=1; i<=num_busses;i++) {
         pthread_cancel(busses[i].pid);
       }
-      wait(0);
       break;
     }
     sleep(1);
     /* Jetzt Wachhund spielen, falls gewünscht */
     for(i=1; i<=num_busses; i++) {
       if(busses[i].watchdog == 0 && (busses[i].flags && USE_WATCHDOG))  {
-	  syslog(LOG_INFO, "Oops: Interface Thread %d hangs, restarting it: (old pid: %d, %d)", i, busses[i].pid, busses[i].watchdog);
+	  syslog(LOG_INFO, "Oops: Interface Thread %d hangs, restarting it: (old pid: %ld, %d)", i, busses[i].pid, busses[i].watchdog);
 	  pthread_cancel(busses[i].pid);
-	  waitpid(busses[i].pid, NULL, 0);
+	  sleep(1);
 	  error = pthread_create(&ttid_pid, NULL, busses[i].thr_func, (void *)i);
 	  if(error)
 	      {

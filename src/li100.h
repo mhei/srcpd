@@ -1,8 +1,8 @@
 /***************************************************************************
-                            ib.h  -  description
+                           li100.h  -  description
                              -------------------
-    begin                : Thu Apr 19 2001
-    copyright            : (C) 2001 by Dipl.-Ing. Frank Schmischke
+    begin                : Thu Jan 22 2002
+    copyright            : (C) 2002 by Dipl.-Ing. Frank Schmischke
     email                : frank.schmischke@t-online.de
  ***************************************************************************/
 
@@ -14,20 +14,14 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-#ifndef IB_H
-#define IB_H
+#ifndef LI100_H
+#define LI100_H
 
-int init_bus_IB(int);
-int term_bus_IB(int );
-
-void * thr_sendrec_IB(void *);
-
-void close_comport(int fd);
-int init_comport(int bus);
-int open_comport(int bus);
-void* thr_sendrecintellibox(void*);
-void send_command_ga(int fd);
-void send_command_gl(int fd);
-void check_status(int fd);
+int init_lineLI100(char*);
+void* thr_sendrecli100(void*);
+void send_command_ga_li(int fd);
+void send_command_gl_li(int fd);
+void check_status_li(int fd);
+int send_command(int fd, char *str);
 
 #endif

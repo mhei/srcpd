@@ -29,7 +29,6 @@
 int init_lineLoopback (char *name)
 {
   int FD;
-  struct termios interface;
   syslog(LOG_INFO,"loopback open device %s", name);
   FD = -1;
   return FD;
@@ -71,12 +70,6 @@ void* thr_sendrec_Loopback (void *v)
 
   while (1)
   {
-      if(writer_gl[bus]!=reader_gl[bus]) {
-	  syslog(LOG_INFO, "Ha, GL gefunden! Writer=%d reader=%d (addr=%d)", 
-		 writer_gl[bus], reader_gl[bus], ngl[bus][reader_gl[bus]].id);
-	  gl[bus][ngl[bus][reader_gl[bus]].id] = ngl[bus][reader_gl[bus]];
-	  reader_gl[bus] = writer_gl[bus];
-      }
     usleep(1000);
     busses[bus].watchdog = 1;
   }

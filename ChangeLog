@@ -1,37 +1,16 @@
-21.3.2002  Matthias Trute <mtrute@users.sourceforge.net>
-        - Resync mit 1.1
-	- Command Queues
-
-Code fork für 1.1 (mehr Hardware, Bugfixes auf 0.7.3 SRCP Niveau)
-  Branch: -- RELEASE_1_MAINANTENANCE --
-
-18.1.2002  Matthias Trute <mtrute@users.sourceforge.net>
-	- Ausbau für SRCP 0.8
-	    - Errorcodes
-	    - API Cleanups (unvollständig)
-	    
-15.1.2002  Matthias Trute <mtrute@users.sourceforge.net>
-	- loopback Dummy device
+Version 1.2
+        - FIFO's für die Befehle.
 	
-22.12.2001 Matthias Trute <mtrute@users.sourceforge.net>
-	- spec file, Installation nach /usr/sbin
-	- rcscrpd script
+Version 1.1 (SRCP 0.7.3 fork)
+        - RPM's (und deb)
+	- Bugfixes
+	- Neue Hardware: HSI-S88 von Littfinski, 
+	- Kernelmodul für die Intellibox
+
+Version 1.0
+        - hmm. vergessen....
 	
-05.08.2001 Matthias Trute <mtrute@users.sourceforge.net>
-	- Umstellung conf-Format auf XML, erfordert libxml
-	  resp. gnome-xml
-
-30.7.2001
-Version 1.0 -- RELEASE_1_0 --
-
-29.7.2001 Matthias Trute <mtrute@users.sourceforge.net>
-	  Frank Schmischke <schmisch@users.sourceforge.net>
-	  
-	- Option -v gibt Programmversion und SRCP Version aus,
-	  und beendet das Programm.
-	- Bugfixes und Workarounds.
-
-Version 0.1	-- released internally --
+Version 0.1	
 14.07.2001 Matthias Trute
 	- Option --enable-comport wieder entfernt,
 	  es ist die runtime Option restore_com_parms

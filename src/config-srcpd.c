@@ -26,90 +26,107 @@
 #include <libxml/tree.h>
 
 #include "config-srcpd.h"
+#include "srcp-srv.h"
 #include "m605x.h"
 #include "ib.h"
 #include "loopback.h"
+#include "ddl-s88.h"
 
 /* Einstellungen für Bus 0 */
 int TCPPORT = 12345;		/* default command port         */
-
-int TIMER_RUNNING = 1;          /* Running timer module         */
+char *username;
+char *groupname;
 
 /* Willkommensmeldung */
-const char *WELCOME_MSG = "srcpd V2; SRCP 0.8.0; do not use\n";
+const char *WELCOME_MSG = "srcpd V2; SRCP 0.8; do not use\n";
 char PIDFILE[MAXPATHLEN];
 
 struct _BUS busses[MAX_BUSSES];
 int num_busses;
 
-static void
-register_bus (xmlDocPtr doc, xmlNodePtr node)
+static void register_bus(xmlDocPtr doc, xmlNodePtr node)
 {
-  xmlNodePtr child;
-  char *proptxt;
-  int busnumber;
-  if (strcmp (node->name, "bus"))
-      return; // only bus definitions
-  proptxt = xmlGetProp (node, "number");
-  busnumber = atoi (proptxt);
-  free (proptxt);
-  if (busnumber > MAX_BUSSES){
-	  // you need to recompile
-	  return;
-  }
-  busses[busnumber].number = busnumber;
-  child = node->children;
-  while (child)
-    {
-      char *txt;
-      txt = xmlNodeListGetString (doc, child->xmlChildrenNode, 1);
+    xmlNodePtr child;
+    char *proptxt;
+    int busnumber;
+    if (strcmp(node->name, "bus"))
+	return;			// only bus definitions
+    proptxt = xmlGetProp(node, "number");
 
-      if (busnumber == 0)
-	{
-	  if (strcmp (child->name, "baseport") == 0)
-	    {
-	      TCPPORT = atoi (txt);
+    busnumber = atoi(proptxt);
+    free(proptxt);
+    if (busnumber > MAX_BUSSES || busnumber < 0) {
+	// you need to recompile
+	return;
+    }
+    busses[busnumber].number = busnumber;
+    num_busses = busnumber;
+    child = node->children;
+    while (child) {
+	char *txt;
+	txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+
+	if (busnumber == 0) {
+
+	    if (strcmp(child->name, "TCPport") == 0) {
+		TCPPORT = atoi(txt);
 	    }
-
+	    if (strcmp(child->name, "PIDfile") == 0) {
+		strcpy(PIDFILE, txt);
+	    }
+        if(strcmp(child->name, "username") == 0) {
+          free(username);
+          username = malloc(strlen(txt)+1);
+          if(username == NULL)
+          {
+            printf("cannot allocate memory\n");
+            exit(1);
+          }
+          strcpy(username, txt);
+        }
+        if(strcmp(child->name, "groupname") == 0)
+        {
+          free(groupname);
+          groupname = malloc(strlen(txt)+1);
+          if(username == NULL)
+          {
+            printf("cannot allocate memory\n");
+            exit(1);
+          }
+          strcpy(groupname, txt);
+        }
 	}
-      if(busnumber < MAX_BUSSES) {
-	  if (strcmp (child->name, "device") == 0)
-	    {
-	      free (busses[busnumber].device);
-	      busses[busnumber].device = malloc (strlen (txt) + 1);
-	      if (busses[busnumber].device == NULL)
-		{
-		  printf ("cannot allocate memory\n");
-		  exit (1);
+	if (busnumber < MAX_BUSSES) {
+	    if (strcmp(child->name, "device") == 0) {
+		free(busses[busnumber].device);
+		busses[busnumber].device = malloc(strlen(txt) + 1);
+		if (busses[busnumber].device == NULL) {
+		    printf("cannot allocate memory\n");
+		    exit(1);
 		}
-	      strcpy (busses[busnumber].device, txt);
+		strcpy(busses[busnumber].device, txt);
 	    }
-	  if (strcmp (child->name, "FB-modules") == 0)
-	    {
-	      busses[busnumber].number_fb = atoi (txt);
+	    if (strcmp(child->name, "maximum_address_for_feedback") == 0) {
+		busses[busnumber].number_fb = atoi(txt);
 	    }
-	  if (strcmp (child->name, "maximum_adress_for_locomotiv") == 0)
-	    {
-	      busses[busnumber].number_gl = atoi (txt);
+	    if (strcmp(child->name, "maximum_address_for_locomotiv") == 0) {
+		busses[busnumber].number_gl = atoi(txt);
 	    }
-	  if (strcmp (child->name, "maximum_adress_for_accessoires") == 0)
-	    {
-	       busses[busnumber].number_ga = atoi (txt);
+	    if (strcmp(child->name, "maximum_address_for_accessoire") == 0) {
+		busses[busnumber].number_ga = atoi(txt);
 	    }
-	  if (strcmp (child->name, "use_watchdog") == 0)
-	    {
-	      if (strcmp (txt, "yes") == 0)
-		 busses[busnumber].flags |= USE_WATCHDOG;
+	    if (strcmp(child->name, "use_watchdog") == 0) {
+		if (strcmp(txt, "yes") == 0)
+		    busses[busnumber].flags |= USE_WATCHDOG;
 	    }
-	  if (strcmp (child->name, "type") == 0)
-	    {
-		if (strcmp (txt, "M605X") == 0) {
+	    if (strcmp(child->name, "type") == 0) {
+		if (strcmp(txt, "M605X") == 0) {
 		    busses[busnumber].type = SERVER_M605X;
 		    busses[busnumber].init_func = &init_bus_M6051;
 		    busses[busnumber].term_func = &term_bus_M6051;
 		    busses[busnumber].thr_func = &thr_sendrec_M6051;
 		}
-		if (strcmp (txt, "IB") == 0) {
+		if (strcmp(txt, "IB") == 0) {
 		    busses[busnumber].type = SERVER_IB;
 		    busses[busnumber].init_func = &init_bus_IB;
 		    busses[busnumber].term_func = &term_bus_IB;
@@ -121,69 +138,71 @@ register_bus (xmlDocPtr doc, xmlNodePtr node)
 		    busses[busnumber].term_func = &term_bus_Loopback;
 		    busses[busnumber].thr_func = &thr_sendrec_Loopback;
 		}
+		if (strcmp(txt, "S88") == 0) {
+		    busses[busnumber].type = SERVER_S88;
+		    busses[busnumber].init_func = &init_bus_S88;
+		    busses[busnumber].term_func = &term_bus_S88;
+		    busses[busnumber].thr_func = &thr_sendrec_S88;
+		}
 
 	    }
-	  if (strcmp (child->name, "use_M6020") == 0)
-	    {
-	      if (strcmp (txt, "yes") == 0)
-		 busses[busnumber].flags |= M6020_MODE;
+	    if (strcmp(child->name, "MODE_M6020") == 0) {
+		if (strcmp(txt, "yes") == 0)
+		    busses[busnumber].flags |= M6020_MODE;
 	    }
-	  if (strcmp (child->name, "restore_com_parms") == 0)
-	    {
-	      if (strcmp (txt, "yes") == 0)
-		 busses[busnumber].deviceflags |= RESTORE_COM_SETTINGS;
+	    if (strcmp(child->name, "restore_device_settings") == 0) {
+		if (strcmp(txt, "yes") == 0)
+		    busses[busnumber].deviceflags |= RESTORE_COM_SETTINGS;
 	    }
-	  if (strcmp (child->name, "debuglevel") == 0)
-	    {
-	      busses[busnumber].debuglevel = atoi(txt);
+	    if (strcmp(child->name, "verbosity") == 0) {
+		busses[busnumber].debuglevel = atoi(txt);
 	    }
 	} else {
 	    // to many busses, needs recompilation
 	}
-      free (txt);
-      child = child->next;
-    }
-    num_busses = busnumber;
-}
-
-static void
-walk_config_xml (xmlDocPtr doc)
-{
-  xmlNodePtr root, child;
-  root = xmlDocGetRootElement(doc);
-  child = root->children;
-  while (child)
-    {
-      register_bus (doc, child);
-      child = child->next;
+	free(txt);
+	child = child->next;
     }
 }
 
-static xmlDocPtr
-load_config_xml (const char *filename)
+static void walk_config_xml(xmlDocPtr doc)
 {
-  return xmlParseFile (filename);
+    xmlNodePtr root, child;
+    root = xmlDocGetRootElement(doc);
+    child = root->children;
+    num_busses = 0;
+    while (child) {
+	register_bus(doc, child);
+
+	child = child->next;
+    }
 }
 
-void
-readConfig ()
+static xmlDocPtr load_config_xml(const char *filename)
 {
-  xmlDocPtr doc;
-  memset(busses, 0, sizeof(busses));
+    return xmlParseFile(filename);
+}
 
-  /* some defaults */
-  strcpy(PIDFILE, "/var/run/srcpd.pid");
+void readConfig()
+{
+    xmlDocPtr doc;
+    memset(busses, 0, sizeof(busses));
+    busses[0].type = SERVER_SERVER;
+    busses[0].init_func = &init_bus_server;
+    busses[0].term_func = &term_bus_server;
 
-  doc = load_config_xml ("/usr/local/etc/srcpd.xml");
-  if (doc == 0)
-    doc = load_config_xml ("/usr/etc/srcpd.xml");
-  if (doc == 0)
-    doc = load_config_xml ("/etc/srcpd.xml");
-  if (doc == 0)
-    doc = load_config_xml ("srcpd.xml");
-  if (doc != 0)
-    {
-      walk_config_xml (doc);
-      xmlFreeDoc(doc);
+    /* some defaults */
+    strcpy(PIDFILE, "/var/run/srcpd.pid");
+
+    doc = load_config_xml("/usr/local/etc/srcpd.conf");
+    if (doc == 0)
+	doc = load_config_xml("/usr/etc/srcpd.conf");
+    if (doc == 0)
+	doc = load_config_xml("/etc/srcpd.conf");
+    if (doc == 0)
+	doc = load_config_xml("srcpd.conf");
+    if (doc != 0) {
+	walk_config_xml(doc);
+	xmlFreeDoc(doc);
     }
 }
