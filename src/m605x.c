@@ -147,16 +147,10 @@ void* thr_sendrec_M6051 (void *v)
     /* nur senden, wenn wirklich etwas vorliegt */
     if (!busses[bus].cmd32_pending)
     {
-      if (busses[bus].command_gl)
+      if(! queue_gl_empty())
       {
-        commands_ok = 1;
-        busses[bus].sending_gl = 1;
-        for (i = 0; i < 50; i++)
-        {
-          if (ngl[bus][i].id)
-          {
-            gltmp = ngl[bus][i];
-            ngl[bus][i].id = 0;
+
+	  unqueueNextGL(&gltmp);
             addr = gltmp.id;
             if (gltmp.direction == 2)
             {

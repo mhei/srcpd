@@ -24,6 +24,8 @@ EXTRA_DIST = AUTHORS COPYING ChangeLog INSTALL README TODO srcpd.lsm \
 # set the include path found by configure
 INCLUDES= $(all_includes)
 
+AM_CFLAGS = -D_REENTRANT
+
 # the library search path.
 srcpd_LDFLAGS = $(all_libraries) 
                                                                                 

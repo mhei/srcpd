@@ -7,9 +7,12 @@
  * This software is published under the restrictions of the 
  * GNU License Version2
  *
+ * Ostern 2002, Matthias Trute
+ *            - echte Kommandoqueue anstelle der Vormerkungen.
+ *
  * 04.07.2001 Frank Schmischke
- *            - Feld f|r Vormerkungen wurde auf 50 reduziert
- *            - Position im Feld f|r Vormerkung ist jetzt unabhngig von der
+ *            - Feld für Vormerkungen wurde auf 50 reduziert
+ *            - Position im Feld für Vormerkung ist jetzt unabhängig von der
  *              Decoderadresse
  */
 
@@ -18,112 +21,120 @@
 #include <string.h>
 #include <syslog.h>
 #include <sys/time.h>
+#include <pthread.h>
 
 #include "config-srcpd.h"
-#include "srcp-error.h"
 #include "srcp-ga.h"
 
-volatile struct _GA ga[MAX_BUSSES][MAXGAS];   // soviele Generic Accessoires gibts
-volatile struct _GA nga[MAX_BUSSES][50];      // max. 50 Änderungen puffern, neue Werte noch nicht gesendet
-volatile struct _GA oga[MAX_BUSSES][50];      // manuelle Änderungen
-volatile struct _GA tga[MAX_BUSSES][50];      // max. 50 Änderungen puffern, neue Werte sind aktiv, warten auf inaktiv
+#define QUEUELEN 500
 
-/* setze den Schaltdekoder, einige wenige Prüfungen, max. 2/3 Sekunde warten */
-int setGA(int bus, int addr, int port, int aktion, long activetime)
+volatile struct _GA ga[MAXGAS];	// soviele Generic Accessoires gibts
+static struct _GA queue[QUEUELEN];	// Kommandoqueue.
+static pthread_mutex_t queue_mutex = PTHREAD_MUTEX_INITIALIZER;	/* mutex to synchronize queue inserts */
+static int out = 0, in = 0;
+
+extern int NUMBER_GA;
+
+static int queue_len();
+static int queue_isfull();
+
+int queueGA(char *prot, int addr, int port, int aktion, long activetime)
 {
-  int i;
-  int status;
-  struct timeval akt_time;
+    struct timeval akt_time;
+    
+    if ((addr > 0) && (addr <= NUMBER_GA)) {
+	while (queue_isfull()) {
+	    usleep(1000);
+	}
 
-  status = 0;
-  syslog(LOG_INFO, "in setGA für %i", addr);
-  if((addr > 0) && (addr <= busses[bus].number_ga))
-  {
-    for(i=0;i<1000;i++)          // warte auf Freigabe
-    {
-      if(busses[bus].sending_ga == 0)        // es wird nichts gesendet
-        break;
-      usleep(100);
+	pthread_mutex_lock(&queue_mutex);
+	strcpy((void *) queue[in].prot, prot);
+	queue[in].action = aktion;
+	queue[in].port = port;
+	queue[in].activetime = activetime;
+	gettimeofday(&akt_time, NULL);
+	queue[in].tv[port] = akt_time;
+	queue[in].id = addr;
+	in++;
+	if (in == QUEUELEN)
+	    in = 0;
+	pthread_mutex_unlock(&queue_mutex);
+    } else {
+	return -1;
     }
-
-    for(i=0;i<50;i++)
-    {
-      if(nga[bus][i].id == addr)    // alten Auftrag wieder löschen
-      {
-        nga[bus][i].id = 0;
-        break;
-      }
-    }
-    if(i == 50)
-    {
-      for(i=0;i<50;i++)          // suche freien Platz in Liste
-      {
-        if(nga[bus][i].id == 0)
-          break;
-      }
-    }
-  
-    if(i < 50)
-    {
-      nga[bus][i].action     = aktion;
-      nga[bus][i].port       = port;
-      nga[bus][i].activetime = activetime;
-      gettimeofday(&akt_time, NULL);
-      nga[bus][i].tv[port]   = akt_time;
-      nga[bus][i].id         = addr;
-      busses[bus].command_ga = 1;
-      status = 1;
-      syslog(LOG_INFO, "GA %i Port %i Action %i Zeit %ld auf Position %i", addr, port, aktion, activetime, i);
-    }
-  }
-  return status;
+    return 0;
 }
 
-int getGA(int bus, int addr, struct _GA *a)
+int queue_ga_empty()
 {
-  if((addr > 0) && (addr <= busses[bus].number_ga))
-  {
-    *a = ga[bus][addr];
-    return SRCP_OK;
-  }
-  else
-  {
-    return SRCP_NODATA;
-  }
+    return (in == out);
 }
 
-int infoGA(int bus, int addr, char *msg)
+static int queue_len()
 {
-  if((addr > 0) && (addr <= busses[bus].number_ga))
-  {
-    sprintf(msg, "INFO %d GA %d %d %d %ld", bus, addr, ga[bus][addr].port, ga[bus][addr].action, ga[bus][addr].activetime);
-    return SRCP_OK;
-  } else {
-    return SRCP_NODATA;
-  }
-  return 0;
-}    
+    if (in >= out)
+	return in - out;
+    else
+	return QUEUELEN + in - out;
+}
+
+/* maybe, 1 element in the queue cannot be used.. */
+static int queue_isfull()
+{
+    return queue_len() >= QUEUELEN - 1;
+}
+
+/** liefert nächsten Eintrag und >=0, oder -1 */
+int getNextGA(struct _GA *ga)
+{
+    if (in == out)
+	return -1;
+    *ga = queue[out];
+    return out;
+}
+
+/** liefert nächsten Eintrag oder -1, setzt fifo pointer neu! */
+int unqueueNextGA(struct _GA *ga)
+{
+    if (in == out)
+	return -1;
+
+    *ga = queue[out];
+    out++;
+    if (out == QUEUELEN)
+	out = 0;
+    return out;
+}
+
+int getGA(char *prot, int addr, struct _GA *a)
+{
+    if ((addr > 0) && (addr <= NUMBER_GA)) {
+	*a = ga[addr];
+	return 0;
+    } else {
+	return 1;
+    }
+}
+
+int infoGA(struct _GA a, char *msg)
+{
+    sprintf(msg, "INFO GA %s %d %d %d %ld\n", a.prot, a.id, a.port,
+	    a.action, a.activetime);
+    return 0;
+}
 
 int cmpGA(struct _GA a, struct _GA b)
 {
-  return ((a.action == b.action) &&
-      (a.port   == b.port));
+    return ((a.action == b.action) && (a.port == b.port));
 }
 
-int initGA()
+void initGA()
 {
-  int bus, i;
-  for(bus=0; bus<MAX_BUSSES; bus++) {
-    for(i=0; i<MAXGAS;i++)
-    {
-      ga[bus][i].id = i;
+    int i, error;
+    for (i = 0; i < MAXGAS; i++) {
+	strcpy((void *) ga[i].prot, "PS");
+	ga[i].id = i;
     }
-    for(i=0; i<50;i++)
-    {
-      nga[bus][i].id = 0;
-      oga[bus][i].id = 0;
-      tga[bus][i].id = 0;
-    }
-  }
-  return SRCP_OK;
+    in = 0;
+    out = 0;
 }

@@ -5,10 +5,9 @@ Release: 1
 Source0: %{name}-%{version}.tar.gz
 License: GPL
 Group: Games/Daemon
-Packager: Matthias Trute <mtrute@user.sf.net>
+Packager: Matthias Trute <mtrute@users.sf.net>
 Vendor: the srcpd team
 URL: http://srcpd.sourceforge.net
-Requires: libxml2
 
 %description
 
@@ -41,9 +40,8 @@ usr/lib/lsb/install_initd /etc/init.d/srcpd
 /usr/sbin/srcpd
 /etc/init.d/srcpd
 /usr/sbin/rcsrcpd
-%config(noreplace) /etc/srcpd.xml
-/usr/share/man/man8/srcpd.8
-%doc COPYING AUTHORS README NEWS
+%config(noreplace) /etc/srcpd.conf
+%doc COPYING AUTHORS README NEWS README.ibox ibox/mkibox.sh
 
 %preun
 etc/init.d/srcpd stop
