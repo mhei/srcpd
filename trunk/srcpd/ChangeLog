@@ -1,3 +1,9 @@
+2003-10-04 19:58  mtrute
+
+	* ChangeLog, README, config-srcpd.h, ib.c, ib.h, loopback.c,
+	loopback.h, m605x.c, m605x.h, netserver.c, srcp-ga.c, srcp-ga.h,
+	srcp-gl.c, threads.c: GA States, Dokuupdates und 605x Erweiterungen
+
 2003-09-21 18:45  mtrute
 
 	* srcp-gl.c: nicht immer den Modulinit aufrufen, nur bei wirklichen
