@@ -75,10 +75,10 @@ void* thr_clock(void* v)
     unsigned long sleeptime;
     if(vtime.ratio_x==0 || vtime.ratio_y==0)
     {
-      sleep(1);
+      usleep(10000);
       continue;
     }
-    /* delta Modellzeit = delta realzeit * ratio_x/ratio_y */
+    /* delta Modellzeit = delta realzeit * ratio_y/ratio_x */
     sleeptime = (1000000 * vtime.ratio_y) / vtime.ratio_x;
     usleep(sleeptime);
     vt = vtime; // fürs Rechnen eine temporäre Kopie. Damit ist vtime immer gültig
