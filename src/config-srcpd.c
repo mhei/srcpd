@@ -260,7 +260,7 @@ static int walk_config_xml(xmlDocPtr doc)
  return rc;
 }
 
-int readConfig(const char *filename)
+int readConfig(char *filename)
 {
  xmlDocPtr doc;
  int i, rc;
