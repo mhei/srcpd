@@ -25,6 +25,7 @@
 #include "srcp-ga.h"
 
 #define MAX_BUSSES             20         // max number of integrated busses in srcpd
+#define MAXSRCPLINELEN       1001         // max number of bytes per line plus 0x00
 
 #define SERVER_SERVER           0
 #define SERVER_DDL              1         // srcpd arbeitet als DDL-Server
@@ -87,7 +88,7 @@ extern struct _BUS busses[];
 extern int num_busses;
 extern char PIDFILE[MAXPATHLEN];
 
-int readConfig(const char *filename);
+int readConfig(char *filename);
 
 #define DG_SESSION 1
 #define DG_TIME 2

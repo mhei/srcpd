@@ -1,3 +1,8 @@
+2003-10-09 18:26  mtrute
+
+	* ChangeLog, README, netserver.c, srcp-fb.c, srcp-ga.c: Security
+	fixes part1, some exploits were discovered...
+
 2003-10-04 19:58  mtrute
 
 	* ChangeLog, README, config-srcpd.h, ib.c, ib.h, loopback.c,
