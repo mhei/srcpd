@@ -231,19 +231,12 @@ int initGL(int busnumber, int addr, const char *protocol, int protoversion, int 
 int describeGL(int busnumber, int addr, char *msg)
 {
   int number_gl = get_number_gl(busnumber);
-	struct timeval tv;
-	
-	gettimeofday(&tv, NULL);
-	
   if(number_gl <= 0)
     return SRCP_UNSUPPORTEDDEVICEGROUP;
   if((addr>0) && (addr <= number_gl) && (gl[busnumber].glstate[addr].protocolversion>0) ) {
-
-		sprintf(msg, "%ld.%ld 100 INFO %d GL %d %s %d %d %d\n",
-			tv.tv_sec, tv.tv_usec/1000,
+    sprintf(msg, "%d GL %d %s %d %d %d ",
       busnumber, addr, gl[busnumber].glstate[addr].protocol, gl[busnumber].glstate[addr].protocolversion,
       gl[busnumber].glstate[addr].n_func,gl[busnumber].glstate[addr].n_fs);
-			
   }
   else
   {
@@ -260,7 +253,10 @@ int infoGL(int busnumber, int addr, char* msg)
     return SRCP_UNSUPPORTEDDEVICEGROUP;
   if((addr>0) && (addr <= number_gl))
   {
-    sprintf(msg, "%d GL %d %d %d %d %d %d %d %d %d",
+    sprintf(msg, "%lu.%lu 100 INFO %d GL %d %d %d %d %d %d %d %d %d\n",
+      gl[busnumber].glstate[addr].tv.tv_sec,
+      gl[busnumber].glstate[addr].tv.tv_usec/1000,
+          
       busnumber, addr, gl[busnumber].glstate[addr].direction,
       gl[busnumber].glstate[addr].speed,
       gl[busnumber].glstate[addr].n_fs, 
