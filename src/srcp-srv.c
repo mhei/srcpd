@@ -124,3 +124,18 @@ void server_shutdown()
   server_shutdown_state = 1;
   queueInfoMessage(msg);
 }
+
+int infoSERVER( char *msg) {
+  struct timeval akt_time;
+  gettimeofday(&akt_time, NULL);
+  if(server_reset_state == 1) {
+    sprintf(msg, "%lu.%.3lu 100 INFO 0 SERVER RESETTING\n", akt_time.tv_sec, akt_time.tv_usec/1000);
+  } else {
+    if(server_shutdown_state==1) {
+       sprintf(msg, "%lu.%.3lu 100 INFO 0 SERVER TERMINATING\n", akt_time.tv_sec, akt_time.tv_usec/1000);      
+    } else {
+       sprintf(msg, "%lu.%.3lu 100 INFO 0 SERVER RUNNING\n", akt_time.tv_sec, akt_time.tv_usec/1000);            
+    }
+  }
+  return SRCP_OK;
+}

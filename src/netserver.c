@@ -301,6 +301,10 @@ handleGET(int sessionid, int bus, char *device, char *parameter,
     if (bus_has_devicegroup(bus, DG_POWER) &&strncasecmp(device, "POWER", 5) == 0) {
 	    rc = infoPower(bus, reply);
     }
+    if (bus_has_devicegroup(bus, DG_SERVER) &&strncasecmp(device, "SERVER", 6) == 0) {
+	    rc = infoSERVER(reply);
+    }
+
     if (bus_has_devicegroup(bus, DG_TIME) &&strncasecmp(device, "TIME", 4) == 0) {
 	    if (vtime.ratio_x && vtime.ratio_y) {
 		rc = infoTIME(reply);
