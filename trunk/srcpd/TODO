@@ -1,10 +1,3 @@
 Priority burning:
 - Bugfixing ;=)
 
-Priority high:
-- implement a server for LI100
-
-
-Priority low:
-- change srcpd.conf to xml-format
-- implement programming of decoders
