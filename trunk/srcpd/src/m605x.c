@@ -28,7 +28,7 @@
 #include "srcp-power.h"
 #include "srcp-info.h"
 #include "srcp-srv.h"
-
+#include "srcp-error.h"
 
 #define __m6051 ((M6051_DATA*)busses[busnumber].driverdata)
 
@@ -206,13 +206,13 @@ int term_bus_M6051(int bus)
 
 /**
  * initGL: modifies the gl data used to initialize the device
- 
+ *
  */
 int init_gl_M6051(struct _GLSTATE *gl) {
 	gl -> direction = 1; /* undocumented feature of the 6021: 9193 is a hard reset */
 	gl -> n_fs = 14;
 	gl -> protocol = 'M';
-	return 0;
+	return SRCP_OK;
 }
 
 /**
@@ -221,7 +221,7 @@ int init_gl_M6051(struct _GLSTATE *gl) {
  */
 int init_ga_M6051(struct _GASTATE *ga) {
 	ga -> protocol = 'M';
-	return 0;
+	return SRCP_OK;
 }
 
 void* thr_sendrec_M6051(void *v)
@@ -305,7 +305,7 @@ void* thr_sendrec_M6051(void *v)
         SendByte = addr;
         writeByte(bus, SendByte, pause_between_cmd);
         /* Erweiterte Funktionen des 6021 senden, manchmal */
-        if ( !((busses[bus].flags & M6020_MODE) == M6020_MODE) && (gltmp.funcs != glakt.funcs))
+        if ( !(( ((M6051_DATA*)busses[bus].driverdata)-> flags & M6020_MODE) == M6020_MODE) && (gltmp.funcs != glakt.funcs))
         {
           c = ((gltmp.funcs >> 1 ) & 0x0f) + 64;
           writeByte(bus, c, pause_between_bytes);
