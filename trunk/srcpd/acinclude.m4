@@ -1675,9 +1675,10 @@ else
  $3
 fi
 ])
+
 AC_DEFUN(AC_ENABLE_TESTMODE,
 [
- AC_ARG_ENABLE(testmode,[  --enable-testmode          build code for testing without an interface[default=no]],
+ AC_ARG_ENABLE(testmode,[  --enable-testmode       build for testing without an interface[default=no]],
  [
   if test $enableval = "no"; dnl
   then
@@ -1690,6 +1691,24 @@ AC_DEFUN(AC_ENABLE_TESTMODE,
  if test $srcpd_testmode = "yes"; dnl
  then
    AC_DEFINE_UNQUOTED(TESTMODE, 1, [Defines if your system should use testmode])
+ fi
+])
+
+AC_DEFUN(AC_ENABLE_COMPORT,
+[
+ AC_ARG_ENABLE(comport,[  --enable-comport        build code for reinitializing comport[default=yes]],
+ [
+  if test $enableval = "no"; dnl
+  then
+    srcpd_comport="no"
+  else
+    srcpd_comport="yes"
+   fi
+ ], [srcpd_comport="yes"
+ ])
+ if test $srcpd_comport = "yes"; dnl
+ then
+   AC_DEFINE_UNQUOTED(REINIT_COMPORT, 1, [Defines if your system should reinit comport])
  fi
 ])
 
