@@ -234,15 +234,9 @@ int main(int argc, char **argv)
     if(server_shutdown_state == 1)
     {
       sleep(2); /* Protokollforderung */
-      pthread_cancel(ttid_cmd);
-      pthread_cancel(ttid_clock);
-      /* und jetzt die ganzen Busse */
-      for(i=1; i<=num_busses;i++)
-      {
-        pthread_cancel(busses[i].pid);
-      }
       break; /* leave the while() loop */
     }
+    /* Wachhund einmal pro Sekunde */
     sleep(1);
     /* Jetzt Wachhund spielen, falls gewünscht */
     for(i=1; i<=num_busses; i++)
@@ -256,7 +250,7 @@ int main(int argc, char **argv)
         if(error)
         {
           perror("cannot restart Interface Thread!");
-          exit(1);
+          break; /* ermöglicht aufräumen am Ende */
         }
         busses[i].pid = ttid_pid;
         pthread_detach(busses[i].pid);
@@ -266,11 +260,17 @@ int main(int argc, char **argv)
   }
   syslog(LOG_INFO, "Shutting down server...");
   /* hierher kommen wir nur nach einem break */
-  for(i=1; i<=num_busses; i++)
+  pthread_cancel(ttid_cmd);
+  pthread_cancel(ttid_clock);
+  /* und jetzt die ganzen Busse */
+  for(i=1; i<=num_busses;i++) {
+        pthread_cancel(busses[i].pid);
+  }
+  DeletePIDFile();
+  for(i=num_busses; i>=0; i--) // der Server als letzter
   {
     (*busses[i].term_func)(i);
   }
-  DeletePIDFile();
   wait(0);
   syslog(LOG_INFO, "und tschüß.. ;=)");
   exit(0);

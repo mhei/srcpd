@@ -40,6 +40,6 @@ void readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber);
 int init_bus_S88(int);
 int term_bus_S88(int);
 void * thr_sendrec_S88(void *);
-
+void *thr_sendrec_dummy(void *v);
 
 #endif

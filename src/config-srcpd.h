@@ -79,6 +79,6 @@ extern struct _BUS busses[];
 extern int num_busses;
 extern char PIDFILE[MAXPATHLEN];
 
-void readConfig(const char *filename);
+int readConfig(const char *filename);
 
 #endif
