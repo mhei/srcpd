@@ -54,6 +54,25 @@ void writeByte(int bus, unsigned char *b, unsigned long msecs)
 {
   if(busses[bus].debuglevel <= DBG_DEBUG)
   {
+#ifdef __FreeBSD__
+	if (busses[bus].type == SERVER_M605X)
+	{
+		// gucken, ob RTS&CTS an sind, wenn nicht, schlafen legen
+		int State;
+		int ok=0;
+
+		do
+		{
+			ioctl(busses[bus].fd,TIOCMGET,&State);
+			if ( (State & TIOCM_RTS)== 0 || (State & TIOCM_CTS) == 0)
+			{
+				//DBG(bus,DBG_INFO,"bus %d output not possible. Sleeping...",bus);
+				sleep(1);
+			}
+			else ok=1;
+		} while (ok == 0);
+	}
+#endif
     write(busses[bus].fd, b, 1);
     tcdrain(busses[bus].fd);
   }
