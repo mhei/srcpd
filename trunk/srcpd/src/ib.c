@@ -962,19 +962,19 @@ static int init_line_IB(int busnumber)
 	
 	printf("Sending BREAK... ");
 
-// do we still need the difference between Linux and BSD here?
-// on Linux we no send the break without the kernel-module, too!
-#ifdef linux
+
+//#ifdef linux
   
   status = sendBreak(fd);
   close(fd);
   
-#endif
-#ifdef __FreeBSD__
+//#endif
+//#ifdef __FreeBSD__
 /*
  * Eigentlich will er ja nur ein BREAK senden, das machen wir mal
  * etwas einfacher...
  */
+ /*
  DBG(busnumber,DBG_INFO,"FBSD BREAK an Ibox senden");
  ioctl(fd,TIOCSBRK,0);
   usleep(1000000);
@@ -982,6 +982,7 @@ static int init_line_IB(int busnumber)
   usleep(6000000);
   close(fd);
 #endif
+*/
 
 	if (status == 0)
 	{
@@ -1061,6 +1062,8 @@ static int sendBreak(const int fd)
 // old code preserved just in case, the new BREAK-style does not work as expected...
 static int sendBreakViaIboxDevice(const int port)
 {
+	
+#ifdef linux
       unsigned int LSR;
       int fd;
 
@@ -1081,6 +1084,8 @@ static int sendBreakViaIboxDevice(const int port)
       usleep(600000);
       close(fd);
       sleep(1);
+#endif
+			
     return 0;
 }
 
