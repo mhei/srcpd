@@ -38,6 +38,8 @@ extern char* WELCOME_MSG;
 extern int debuglevel;
 extern int working_server;
 extern int NUMBER_FB;
+extern int NUMBER_GA;
+extern int NUMBER_GL;
 extern volatile int fb[MAXFBS];
 extern volatile struct _GL gl[MAXGLS];  /* aktueller Stand, mehr gibt es nicht */
 extern volatile struct _GA ga[MAXGAS];  /* soviele Generic Accessoires gibts             */
@@ -386,7 +388,7 @@ void* thr_doInfoClient(void *v)
 
   /* Jetzt die initialen Informationen */
   /* gem‰ﬂ 0.7.3 zusammenstellen       */
-  for(i=1; i<MAXGLS; i++)
+  for(i=1; i<NUMBER_GL; i++)
   {
 	  gll[i] = gl[i];
 	  if(gll[i].tv.tv_sec>0)
@@ -400,7 +402,7 @@ void* thr_doInfoClient(void *v)
 	    }
 	  }
   }
-  for(i=1; i<MAXGAS; i++)
+  for(i=1; i<NUMBER_GA; i++)
   {
 	  gal[i] = ga[i];
 	  if(gal[i].tv[0].tv_sec || gal[i].tv[1].tv_sec)
@@ -462,8 +464,9 @@ void* thr_doInfoClient(void *v)
   while(1)
   {
     bzero(infoline, sizeof(infoline));
-	  for(i=1; i<MAXGLS; i++)
+	  for(i=1; i<NUMBER_GL; i++)
 	  {
+
 	    if(!cmpGL(gll[i], gl[i]))
 	    {
 	      gll[i] = gl[i];
@@ -473,7 +476,7 @@ void* thr_doInfoClient(void *v)
 	  }
 	  if(infoline[0] == '\0')
 	  {
-	    for(i=1; i<MAXGAS; i++)
+	    for(i=1; i<NUMBER_GA; i++)
 		  {
 		    if(!cmpGA(ga[i], gal[i]))
 		    {

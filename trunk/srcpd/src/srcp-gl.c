@@ -29,12 +29,8 @@ volatile struct _GL ogl[50];      // manuelle Änderungen
 volatile int commands_gl  = 0;
 volatile int sending_gl		= 0;
 
-int MAXGLS_SERVER[NUMBER_SERVERS] =
-{
-  10239, 80, 9999, 9999
-};
-
 extern int working_server;
+extern int NUMBER_GL;
 
 /* Übernehme die neuen Angaben für die Lok, einige wenige Prüfungen */
 void setGL(char *prot, int addr, int dir, int speed, int maxspeed, int f, 
@@ -86,7 +82,7 @@ void setGL(char *prot, int addr, int dir, int speed, int maxspeed, int f,
   syslog(LOG_INFO, "in setGL für %i", addr);
 
   /* Daten einfüllen, aber nur, wenn id == 0!!, darauf warten wir max. 1 Sekunde */
-  if((addr > 0) && (addr < MAXGLS_SERVER[working_server]))
+  if((addr > 0) && (addr < NUMBER_GL))
   {
     for(i=0;i<1000;i++)
     {
@@ -131,7 +127,7 @@ void setGL(char *prot, int addr, int dir, int speed, int maxspeed, int f,
 
 int getGL(char *prot, int addr, struct _GL *l)
 {
-  if((addr>0) && (addr<MAXGLS_SERVER[working_server]))
+  if((addr>0) && (addr < NUMBER_GL))
   {
     *l = gl[addr];
     return 1;
