@@ -136,6 +136,7 @@ static int get_number_gl (int bus) {
  return number_gl;
 }
 
+
 int getGL(int bus, int addr, struct _GL *l) {
   int number_gl = get_number_gl(bus);
   if(number_gl<0) return SRCP_UNSUPPORTEDDEVICEGROUP;

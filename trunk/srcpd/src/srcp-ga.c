@@ -65,14 +65,8 @@ static int get_number_ga (int bus) {
 int queueGA(int bus, int addr, int port, int action, long int activetime)
 {
   struct timeval akt_time;
-  int number_ga;
+  int number_ga = get_number_ga(bus);
 
-  syslog(LOG_INFO, "setga für %i", addr);
-  if(busses[bus].type == SERVER_M605X) {
-    number_ga =   ( (M6051_DATA *) busses[bus].driverdata)  -> number_ga;
-  } else {
-    return SRCP_UNSUPPORTEDDEVICEGROUP;
-  }
   if ((addr > 0) && (addr <= number_ga) )
   {
     while (queue_isfull(bus))
@@ -100,15 +94,11 @@ int queueGA(int bus, int addr, int port, int action, long int activetime)
   return SRCP_OK;
 }
 
-int
-queue_GA_isempty(int bus)
-{
+int queue_GA_isempty(int bus){
   return (in[bus] == out[bus]);
 }
 
-static int
-queue_len(int bus)
-{
+static int queue_len(int bus){
   if (in[bus] >= out[bus])
     return in[bus] - out[bus];
   else
@@ -116,16 +106,12 @@ queue_len(int bus)
 }
 
 /* maybe, 1 element in the queue cannot be used.. */
-static int
-queue_isfull(int bus)
-{
+static int queue_isfull(int bus) {
   return queue_len(bus) >= QUEUELEN - 1;
 }
 
 /** liefert nächsten Eintrag und >=0, oder -1 */
-int
-getNextGA(int bus, struct _GA *ga)
-{
+int getNextGA(int bus, struct _GA *ga) {
   if (in[bus] == out[bus])
     return -1;
   *ga = queue[bus][out[bus]];
@@ -133,9 +119,7 @@ getNextGA(int bus, struct _GA *ga)
 }
 
 /** liefert nächsten Eintrag oder -1, setzt fifo pointer neu! */
-int
-unqueueNextGA(int bus, struct _GA *ga)
-{
+int unqueueNextGA(int bus, struct _GA *ga) {
   if (in[bus] == out[bus])
     return -1;
 
@@ -146,15 +130,9 @@ unqueueNextGA(int bus, struct _GA *ga)
   return out[bus];
 }
 
-int
-getGA(int bus, int addr, struct _GA *l)
-{
-  int number_ga;
-  if(busses[bus].type == SERVER_M605X) {
-    number_ga =   ( (M6051_DATA *) busses[bus].driverdata)  -> number_ga;
-  } else {
-    return SRCP_UNSUPPORTEDDEVICEGROUP;
-  }
+
+int getGA(int bus, int addr, struct _GA *l) {
+  int number_ga = get_number_ga(bus);
 
   if((addr>0) && (addr <= number_ga))
   {
@@ -167,21 +145,31 @@ getGA(int bus, int addr, struct _GA *l)
   }
 }
 
-/**
-
-*/
-int
-setGA(int bus, int addr, struct _GA l)
-{
-  int number_ga;
-  if(busses[bus].type == SERVER_M605X) {
-    number_ga =   ( (M6051_DATA *) busses[bus].driverdata)  -> number_ga;
+static int initGA_default(int bus, int addr) {
+  int number_ga = get_number_ga(bus);
+  if((addr>0) && (addr <= number_ga))
+  {
+        strcpy(ga[bus][addr]. protocol, "P");
+        return SRCP_OK;
   } else {
-    return SRCP_UNSUPPORTEDDEVICEGROUP;
+       return SRCP_UNSUPPORTEDDEVICE;
   }
+}
+
+static int isInitializedGA(int bus, int addr) {
+   return ga[bus][addr].protocol==NULL;
+}
+/* ********************
+     SRCP Kommandos
+*/
+int setGA(int bus, int addr, struct _GA l) {
+  int number_ga = get_number_ga(bus);
 
   if((addr>0) && (addr <= number_ga))
   {
+    if(!isInitializedGA(bus, addr)) {
+           initGA_default(bus, addr);
+    }
     ga[bus][addr] = l;
     gettimeofday((struct timeval*)&ga[bus][addr].tv, NULL);
     return SRCP_OK;
@@ -198,8 +186,7 @@ int describeGA(int bus, int addr, char *msg) {
   if(number_ga<0) return SRCP_UNSUPPORTEDDEVICEGROUP;
 
   if((addr>0) && (addr <= number_ga) && (ga[bus][addr].protocol) ) {
-    sprintf(msg, "%d GA %d %s",
-      bus, addr, ga[bus][addr].protocol);
+    sprintf(msg, "%d GA %d %s", bus, addr, ga[bus][addr].protocol);
   } else {
     strcpy(msg, "");
     return SRCP_NODATA;
@@ -208,13 +195,7 @@ int describeGA(int bus, int addr, char *msg) {
 }
 
 int infoGA(int bus, int addr, char* msg) {
-  int number_ga;
-  if(busses[bus].type == SERVER_M605X) {
-    number_ga =   ( (M6051_DATA *) busses[bus].driverdata)  -> number_ga;
-  } else {
-    return SRCP_UNSUPPORTEDDEVICEGROUP;
-  }
-
+  int number_ga = get_number_ga(bus);
   if((addr>0) && (addr <= number_ga))
   {
     sprintf(msg, "GA %d %d %d %ld\n", ga[bus][addr].id, ga[bus][addr].port,
@@ -225,6 +206,17 @@ int infoGA(int bus, int addr, char* msg) {
     return SRCP_NODATA;
   }
   return SRCP_INFO;
+}
+
+int initGA(int bus, int addr, const char *protocol) {
+  int number_ga = get_number_ga(bus);
+  if((addr>0) && (addr <= number_ga))
+  {
+        strcpy(ga[bus][addr]. protocol, protocol);
+        return SRCP_OK;
+  } else {
+       return SRCP_UNSUPPORTEDDEVICE;
+  }
 }
 
 int lockGA(int bus, int addr, long int sessionid) {
