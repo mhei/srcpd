@@ -27,7 +27,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <syslog.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -104,7 +103,7 @@ void readconfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     __hsi->number_fb[0] = 0;
     __hsi->number_fb[1] = 0;
     __hsi->number_fb[2] = 0;
-    syslog(LOG_INFO, "Can't create array for feedback");
+    DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
   }
 }
 
@@ -310,13 +309,13 @@ void* thr_sendrec_HSI_88(void *v)
 
   busnumber = (int)v;
   refresh_time = __hsi->refresh;
-  syslog(LOG_INFO, "thr_sendrec_hsi_88 is startet");
+  DBG(busnumber, DBG_INFO, "thr_sendrec_hsi_88 is startet");
 
   zaehler1 = 0;
   fb_zaehler1 = 0;
   fb_zaehler2 = 1;
 
-  if (busses[busnumber].debuglevel < 7)
+  if (busses[busnumber].debuglevel <= DBG_DEBUG)
   {
     status = 1;
     while(status)
@@ -348,7 +347,7 @@ void* thr_sendrec_HSI_88(void *v)
       }
       readByte(busnumber, 0, &rr);           // Anzahl angemeldeter Module
       anzahl = (int)rr;
-      syslog(LOG_INFO, "Anzahl Module: %i", anzahl);
+      DBG(busnumber, DBG_INFO, "Anzahl Module: %i", anzahl);
       anzahl -= __hsi->number_fb[0];
       anzahl -= __hsi->number_fb[1];
       anzahl -= __hsi->number_fb[2];
@@ -358,7 +357,7 @@ void* thr_sendrec_HSI_88(void *v)
       }
       else
       {
-        syslog(LOG_INFO, "Fehler bei Initialisierung");
+        DBG(busnumber, DBG_ERROR, "Fehler bei Initialisierung");
         sleep(1);
         while(readByte(busnumber, 0, &rr) == 0)
         {
@@ -374,7 +373,7 @@ void* thr_sendrec_HSI_88(void *v)
 
   while(1)
   {
-    if (busses[busnumber].debuglevel < 7)
+    if (busses[busnumber].debuglevel <= DBG_DEBUG)
     {
       rr = 0;
       while(rr != 'i')
@@ -393,8 +392,7 @@ void* thr_sendrec_HSI_88(void *v)
         temp <<= 8;
         readByte(busnumber, 0, &rr);
         setFBmodul(busnumber, i, temp | rr);
-        if (busses[busnumber].debuglevel > 4)
-          syslog(LOG_INFO, "Rückmeldung %i mit 0x%02x", i, temp|rr);
+        DBG(busnumber, DBG_DEBUG, "Rückmeldung %i mit 0x%02x", i, temp|rr);
       }
       readByte(busnumber, 0, &rr);            // <CR>
     }

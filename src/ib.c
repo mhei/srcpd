@@ -36,7 +36,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <syslog.h>
 #include <termios.h>
 #include <unistd.h>
 #include <sys/io.h>
@@ -72,7 +71,7 @@ static int init_line_IB(int);
 void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
   xmlNodePtr child = node->children;
-  syslog(LOG_INFO, "reading configuration for intellibox at bus %d", busnumber);
+  DBG(busnumber, DBG_INFO, "reading configuration for intellibox at bus %d", busnumber);
 
   busses[busnumber].type = SERVER_IB;
   busses[busnumber].init_func = &init_bus_IB;
@@ -115,18 +114,18 @@ void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   if(init_GA(busnumber, __ib->number_ga))
   {
     __ib->number_ga = 0;
-    syslog(LOG_INFO, "Can't create array for assesoirs");
+    DBG(busnumber, DBG_ERROR, "Can't create array for assesoirs");
   }
 
   if(init_GL(busnumber, __ib->number_gl))
   {
     __ib->number_gl = 0;
-    syslog(LOG_INFO, "Can't create array for locomotivs");
+    DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
   }
   if(init_FB(busnumber, __ib->number_fb*16))
   {
     __ib->number_fb = 0;
-    syslog(LOG_INFO, "Can't create array for feedback");
+    DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
   }
 }
 
@@ -191,7 +190,7 @@ void* thr_sendrec_IB(void *v)
   int zaehler1, fb_zaehler1, fb_zaehler2;
 
   busnumber = (int) v;
-  syslog(LOG_INFO, "thr_sendrecintellibox is startet as bus %i", busnumber);
+    DBG(busnumber, DBG_INFO, "thr_sendrecintellibox is startet as bus %i", busnumber);
 
   zaehler1 = 0;
   fb_zaehler1 = 0;
@@ -241,7 +240,7 @@ void send_command_ga(int busnumber)
   {
     if(tga[i].id)
     {
-      syslog(LOG_INFO, "Zeit %i,%i", (int)akt_time.tv_sec, (int)akt_time.tv_usec);
+    DBG(busnumber, DBG_DEBUG, "Zeit %i,%i", (int)akt_time.tv_sec, (int)akt_time.tv_usec);
       cmp_time = tga[i].t;
       if(cmpTime(&cmp_time, &akt_time))      // Ausschaltzeitpunkt erreicht ?
       {
@@ -309,7 +308,7 @@ void send_command_ga(int busnumber)
           }
           tga[i] = gatmp;
           status = 0;
-          syslog(LOG_INFO, "GA %i für Abschaltung um %i,%i auf %i", tga[i].id, (int)tga[i].t.tv_sec, (int)tga[i].t.tv_usec, i);
+          DBG(busnumber, DBG_DEBUG, "GA %i für Abschaltung um %i,%i auf %i", tga[i].id, (int)tga[i].t.tv_sec, (int)tga[i].t.tv_usec, i);
           break;
         }
       }
@@ -571,7 +570,7 @@ void send_command_sm(int busnumber)
     last_typeaddr[busnumber] = smakt.typeaddr;
     last_bit[busnumber]      = smakt.bit;
 
-    syslog(LOG_INFO, "in send_command_sm: last_type[%d] = %d", busnumber, last_type[busnumber]);    
+    DBG(busnumber, DBG_DEBUG, "in send_command_sm: last_type[%d] = %d", busnumber, last_type[busnumber]);    
     switch (smakt.command)
     {
       case SET:
@@ -772,14 +771,13 @@ static int open_comport(int busnumber, speed_t baud)
   unsigned char rr;
   struct termios interface;
 
-  printf("try opening serial line %s for %i baud\n", name, (2400 * (1 << (baud - 11))));
-  syslog(LOG_INFO, "try opening serial line %s for %i baud", name, (2400 * (1 << (baud - 11))));
+  DBG(busnumber, DBG_INFO, "try opening serial line %s for %i baud", name, (2400 * (1 << (baud - 11))));
   fd = open(name, O_RDWR);
-  syslog(LOG_INFO, "fd nach open(...) = %d", fd);
+  DBG(busnumber, DBG_DEBUG, "fd nach open(...) = %d", fd);
   busses[busnumber].fd = fd;
   if (fd < 0)
   {
-    printf("dammit, couldn't open device.\n");
+    DBG(busnumber, DBG_ERROR,"dammit, couldn't open device.\n");
   }
   else
   {
@@ -814,10 +812,9 @@ static int init_line_IB(int busnumber)
   char *name = busses[busnumber].device;
   printf("Begin detecting IB on serial line: %s\n", name);
 
-
-  printf("Opening serial line %s for 2400 baud\n", name);
+  DBG(busnumber, DBG_INFO, "Opening serial line %s for 2400 baud\n", name);
   fd=open(name, O_RDWR);
-  syslog(LOG_INFO, "fd = %d", fd);
+  DBG(busnumber, DBG_INFO, "fd = %d", fd);
   if (fd == -1)
   {
     printf("dammit, couldn't open device.\n");
@@ -848,7 +845,7 @@ static int init_line_IB(int busnumber)
   LSR = serial_line.port + 3;
   printf("sending BREAK\n");
   fd = open("/dev/ibox", O_RDWR);
-  syslog(LOG_INFO, "fd for ibox-dev = %d", fd);
+  DBG(busnumber, DBG_INFO, "fd for ibox-dev = %d", fd);
   if(fd < 0)
     return(-1);
   if(ioctl(fd, IB_IOCTINIT, LSR) < 0)
@@ -918,7 +915,7 @@ static int init_line_IB(int busnumber)
     
   sleep(1);
   fd = open_comport(busnumber, busses[busnumber].baudrate);
-  syslog(LOG_INFO, "fd nach open_comport = %d", fd);
+  DBG(busnumber, DBG_DEBUG, "fd nach open_comport = %d", fd);
   if(fd < 0)
   {
     printf("init comport fehlgeschlagen\n");
