@@ -36,7 +36,7 @@ int FEEDBACKPORT = 12346;          /* default feedback port        */
 int INFOPORT     = 12347;          /* default info port            */
 
 /* Willkommensmeldung */
-const char *WELCOME_MSG = "srcpd V0.1; SRCP 0.7.3; Juli 2001; WILLKOMMEN\n";
+const char *WELCOME_MSG = "srcpd V1.0; SRCP 0.7.3; Juli 2001; WILLKOMMEN\n";
 
 /* Anschluﬂport */
 char *DEV_COMPORT;
