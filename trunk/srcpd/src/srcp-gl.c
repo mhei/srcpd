@@ -48,11 +48,10 @@ static int initGL_default(int busnumber, int addr)
   switch (busses[busnumber].type)
   {
     case SERVER_M605X:
-        initGL(busnumber, addr, "M", 2, 14, 5);
+        initGL(busnumber, addr, "M", 1, 14, 1);
         break;
     case SERVER_IB:
-        gl[busnumber].glstate[addr].n_fs =  126;
-        gl[busnumber].glstate[addr].n_func = 1;
+        initGL(busnumber, addr, "P", 1, 126, 5);
         break;
     case SERVER_LOOPBACK:
         initGL(busnumber, addr, "P", 1, 100, 5);
@@ -100,7 +99,7 @@ int queueGL(int busnumber, int addr, int dir, int speed, int maxspeed, int f,  i
     while (queue_isfull(busnumber))
     {
       DBG(busnumber, DBG_WARN, "GL Command Queue full");
-      usleep(1000);
+      sleep(1);
     }
 
     pthread_mutex_lock(&queue_mutex[busnumber]);
@@ -217,6 +216,7 @@ int initGL(int busnumber, int addr, const char *protocol, int protoversion, int 
   {
     char msg[1000];
     gettimeofday(&gl[busnumber].glstate[addr].inittime, NULL);
+    gettimeofday(&gl[busnumber].glstate[addr].tv, NULL);    
     gl[busnumber].glstate[addr].n_fs=n_fs;
     gl[busnumber].glstate[addr].n_func=n_func;
     gl[busnumber].glstate[addr].protocolversion=protoversion;

@@ -61,7 +61,7 @@ int queueGA(int busnumber, int addr, int port, int action, long int activetime)
     while (queue_isfull(busnumber))
     {
       DBG(busnumber, DBG_WARN, "GA Command Queue full");
-      usleep(1000);
+      sleep(1);
     }
 
     pthread_mutex_lock(&queue_mutex[busnumber]);
@@ -240,6 +240,8 @@ int initGA(int busnumber, int addr, const char *protocol)
     strcpy(ga[busnumber].gastate[addr].protocol, protocol);
     ga[busnumber].gastate[addr].activetime = 0;
     ga[busnumber].gastate[addr].action = 0;
+    gettimeofday(&ga[busnumber].gastate[addr].tv[0], NULL);
+    gettimeofday(&ga[busnumber].gastate[addr].tv[1], NULL);    
     describeGA(busnumber, addr, msg);
     queueInfoMessage(msg);
     return SRCP_OK;
