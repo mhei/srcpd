@@ -61,7 +61,7 @@ void readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     if (strcmp(child->name, "p_time") == 0)
     {
       char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-     set_min_time(busnumber, atoi(txt));
+      set_min_time(busnumber, atoi(txt));
       free(txt);
     }
 
@@ -188,7 +188,7 @@ static int init_lineHSI88(int busnumber, int modules_left, int modules_center, i
   status = 1;
   while(status)
   {
-    // Modulbelegung initialisieren
+    // initialise module-numbers
     // up to "GO", non feedback-module
     byte2send = 's';
     writeByte(busnumber, byte2send, 0);
@@ -212,7 +212,7 @@ static int init_lineHSI88(int busnumber, int modules_left, int modules_center, i
       usleep(100000);
       readByte(busnumber, 0, &rr);
     }
-    readByte(busnumber, 0, &rr);    // Anzahl angemeldeter Module
+    readByte(busnumber, 0, &rr);    // number of given modules
     status = 0;
   }
   return 0;
@@ -225,7 +225,7 @@ int init_bus_HSI_88(int busnumber)
   int anzahl;
 
   status = 0;
-  printf("Bus %d mit Debuglevel %d\n", busnumber, busses[busnumber].debuglevel);
+  printf("Bus %d with Debuglevel %d\n", busnumber, busses[busnumber].debuglevel);
   if(busses[busnumber].type != SERVER_HSI_88)
   {
     status = -2;
@@ -270,7 +270,7 @@ int init_bus_HSI_88(int busnumber)
   if (status == 0)
     working_HSI88 = 1;
 
-  printf("INIT_BUS_HSI mit Code: %d\n", status);
+  printf("INIT_BUS_HSI with code: %d\n", status);
   return status;
 }
 
@@ -338,19 +338,19 @@ void* thr_sendrec_HSI_88(void *v)
         usleep(100000);
         readByte(busnumber, 0, &rr);
       }
-      readByte(busnumber, 0, &rr);           // Anzahl angemeldeter Module
+      readByte(busnumber, 0, &rr);           // number of given modules
       anzahl = (int)rr;
-      DBG(busnumber, DBG_INFO, "Anzahl Module: %i", anzahl);
+      DBG(busnumber, DBG_INFO, "number of modules: %i", anzahl);
       anzahl -= __hsi->number_fb[0];
       anzahl -= __hsi->number_fb[1];
       anzahl -= __hsi->number_fb[2];
-      if(anzahl == 0)                     // HSI initialisation correct ?
+      if(anzahl == 0)                       // HSI initialisation correct ?
       {
         status = 0;
       }
       else
       {
-        DBG(busnumber, DBG_ERROR, "Fehler bei Initialisierung");
+        DBG(busnumber, DBG_ERROR, "error while initialising");
         sleep(1);
         while(readByte(busnumber, 0, &rr) == 0)
         {
@@ -366,10 +366,14 @@ void* thr_sendrec_HSI_88(void *v)
       rr = 0;
       while(rr != 'i')
       {
+        // first check here for reset of feedbacks
+        // (do this check at the end, we will not run, until
+        //  get new changes from HSI)
+        check_reset_fb(busnumber);
         usleep(refresh_time);
         readByte(busnumber, 0, &rr);
       }
-      readByte(busnumber, 1, &rr);            // Anzahl zu meldender Module
+      readByte(busnumber, 1, &rr);            // number of given modules
       anzahl = (int)rr;
       for(zaehler1=0;zaehler1<anzahl;zaehler1++)
       {
@@ -380,7 +384,7 @@ void* thr_sendrec_HSI_88(void *v)
         temp <<= 8;
         readByte(busnumber, 1, &rr);
         setFBmodul(busnumber, i, temp | rr);
-        DBG(busnumber, DBG_DEBUG, "Rckmeldung %i mit 0x%04x", i, temp|rr);
+        DBG(busnumber, DBG_DEBUG, "feedback %i with 0x%04x", i, temp|rr);
       }
       readByte(busnumber, 1, &rr);            // <CR>
     }
@@ -396,6 +400,5 @@ void* thr_sendrec_HSI_88(void *v)
       }
       sleep(2);
     }
-    check_reset_fb(busnumber);
   }
 }
