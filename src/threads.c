@@ -80,6 +80,9 @@ void* thr_handlePort(void *v)
     }
     if(sckt)
     {
+      val = 1;
+      setsockopt(sckt, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val));
+
       syslog(LOG_INFO, "New Client: IP: %s, port %hd", inet_ntoa(socketAddr.sin_addr), ntohs(socketAddr.sin_port));
       error = pthread_create(&ttid, NULL, ti.func, (void*)sckt);
       if(error)
