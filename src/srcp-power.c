@@ -16,9 +16,11 @@ int
 setPower(int bus, int state, char *msg)
 {
   gettimeofday(& busses[bus].power_change_time, NULL);
-  busses[bus].power_state = (state == -1) ? 0 : state;
+//  busses[bus].power_state = (state == -1) ? 0 : state;
+  busses[bus].power_state = state;
   strcpy(busses[bus].power_msg, msg);
-  busses[bus].power_changed = (state == -1) ? 0 : 1;
+//  busses[bus].power_changed = (state == -1) ? 0 : 1;
+  busses[bus].power_changed = 1;
   return SRCP_OK;
 }
 
