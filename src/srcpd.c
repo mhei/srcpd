@@ -25,7 +25,6 @@
 #include "netserver.h"
 #include "srcp-descr.h"
 #include "srcp-fb.h"
-#include "srcp-fb-i8255.h"
 #include "srcp-ga.h"
 #include "srcp-gl.h"
 #include "srcp-lock.h"
