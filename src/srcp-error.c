@@ -89,9 +89,6 @@ int srcp_fmt_msg(int errorcode, char *msg)
     case 424:
       sprintf(msg, "%d ERROR device reinitialized", errorcode);
       break;
-    case 425:
-      sprintf(msg, "%d ERROR not supported", errorcode);
-      break;
     default:
       sprintf(msg, "600 ERROR internal error %d, please report to srcpd-devel@srcpd.sorceforge.net", errorcode);
       return 1;

@@ -37,7 +37,6 @@
 #define SRCP_UNSUPPORTEDDEVICEGROUP     422
 #define SRCP_UNSUPPORTEDOPERATION       423
 #define SRCP_DEVICEREINITIALIZED        424
-#define SRCP_NOTSUPPORTED               425
 
 int srcp_fmt_msg(int errorcode, char *msg);
 

@@ -1,13 +1,12 @@
-Autor: Matthias Trute, mailto:mtrute@web.de et al
-Datum: Sommer 2002
+Autor: Matthias Trute, et al
+Datum: Winter 2002/2003
 Version: 2 ($Id$)
 Lizenz: GPL v2 für das gesamte Packet
 
 Zweck des Programms: 
     SRCP Kommandos werden über das Netzwerk entgegengenommen und mit
-    einem am Server angeschlossenen Interfaces (zur Zeit Märklin
-    Interface 6050/6051 und Intellibox, HSI-S88 und S88 am Parallelport) 
-    an die Modellbahn übermittelt und die Rückmeldemodule eingelesen.
+    am Server angeschlossener Interfaces an die Modellbahn übermittelt 
+    und die Rückmeldemodule eingelesen.
 
 
 SRCP?
@@ -22,7 +21,8 @@ Konfiguration
     Diese heißt standardmäßig /etc/srcpd.conf. Es handelt sich um eine Textdatei
     im XML Format, die mit jedem Editor bearbeitet werden kann.
     
-    Die Dokumentstruktur basiert auf der Busstruktur des SRCP 0.8.x. 
+    Die Dokumentstruktur basiert auf der Busstruktur des SRCP 0.8.x. Eine DTD ist
+    in Arbeit.
     
     Die Datei wird sequentiell ausgewertet. Dies bedeutet, das die Busse
     in der numerisch korrekten Reihenfolge angegeben werden müssen. Zu
@@ -76,7 +76,7 @@ Konfiguration
     
     Märklin 6051
     Das Märklin Interface belegt einen Bus, der die Gerätegruppen
-    GA, GL, FB und POWER unterstützt.
+    GA, GL, FB und POWER unterstützt. Ebenso wird ein Watchdog unterstützt.
     
      <bus number="5">
         <m605x>
@@ -92,12 +92,12 @@ Konfiguration
 Installieren und Benutzen:
 
     Installation der rpm Packete ist wie immer bei solchen mit
-    "rpm -i <dateiname.rpm>". Dabei werden die erforderlichen
+    "rpm -i <dateiname>.rpm". Dabei werden die erforderlichen
     Links zum Starten des Daemons in /etc/init.d angelegt (aber
     nicht automatisch gestartet). Manuell kann der Daemon dann mit den
     Standardverfahren gestartet und gestoppt werden. Da sich die
-    Distributoren leider noch  nicht geeinigt haben, funktioniert
-    das nur unter aktuellen (7.x, 8.0) SuSE Versionen. 
+    Distributoren leider noch nicht geeinigt haben, funktioniert
+    das nur unter aktuellen (7.x, 8.x) SuSE Versionen. 
     
     Das Deinstallieren stoppt einen laufenden Daemon zuerst, bevor
     die Dateien entfernt werden.
@@ -111,6 +111,7 @@ Installieren und Benutzen:
     
     Dann einfach das Programm mit "/usr/sbin/rcsrcpd start" starten. 
     Je nach angeschlossener Hardware muß dies ggf. als root erfolgen.
+    Auch sind ggf. vorher Kernelmodule zu laden.
 
     Je nach eingestellter <verbosity> werden mehr oder weniger viele Daten
     in das Systemprotokoll geschrieben. Hierzu wird der syslog Dienst benutzt,
@@ -124,21 +125,19 @@ Bekannte Unzulänglichkeiten
 
     Die Totzeit bis zum Wirksamwerden eines Befehls kann schon mal
     länger dauern, vor allem wenn viele Befehle für ein Gerät anstehen.
-    Dies liegt aber auch am 6021, das einige Befehle vom 6051 erst beim
-    normalen Refresh einarbeitet, und das kann einige Sekunden dauern...
 
-    Beim Hängenbleiben der 6051-Kommunikation wird dieser nach 2 Sekunden neu
-    gestartet, dabei wird der aktuelle Befehl zwar verworfen, aber danach
-    fast immer neu gesendet. Das "fast" ist aber wirklich Pech.
+    Beim 6021, das einige Befehle vom 6051 erst beim normalen Refresh 
+    einarbeitet, kann es systembedingt einige Sekunden dauern... Ohne, das
+    man was daran ändern könnte.
 
 Ausrüstung beim Autor (Matthias Trute):
     6021 mit 6051, daran einige Vissmann 5217 (S88 komp.)
-    8 Weichenantriebe, 3 Entkupplungsgleise über k83
-    4 Loks mit Digitaldekoder (delta, 6090x), zusätzlich ein S88 am
-    Parallelport.
+    einige Weichenantriebe, 3 Entkupplungsgleise über k83
+    einige Loks mit Digitaldekoder (delta, 6090x, Sinus, Loksound), 
+    zusätzlich S88 am Parallelport (einfache Schaltung).
     
-    2Pentium's, zusammen 366MHz und 100MBit dazwischen.
-    jeweils SuSE 7.x, 2.2.x und 2.4.x Kernel; 
+    3Pentium's, zusammen 2366MHz und 100MBit dazwischen.
+    jeweils SuSE 7.x/8.x, 2.2.x und 2.4.x Kernel; 
 
 Ausrüstung beim Autor (Frank Schmischke):
     (im Aufbau befindliche Vereinsanlage der
@@ -149,8 +148,6 @@ Ausrüstung beim Autor (Frank Schmischke):
     Loks zur Zeit zwischen 2 und 10 mit Decodern von Lenz und Kühne.
 
     Celeron mit 366MHz/160MB mit glibc 2.2.2, kernel 2.4.5
-
-    Homepage:   http://srcpd.sourcforge.net
 
 Verwandte Programme:
     siehe http://www.der-moba.de/Digital
@@ -165,7 +162,7 @@ Rechtliches:
     Mitgefühl. Mehr aber auch nicht. Wir erstellen die Software nicht gewerblich.
     
 Sonst noch was?
-    Jede Änderung und jeder Erfahrungsbericht ist a) willkommen und b) sollte irgendwie
+    Jede Änderung und jeder Erfahrungsbericht ist a) willkommen und sollte b) irgendwie
     auch bei den Autoren ankommen. Hilfreich sind dann Angaben zur Version (steht im Welcome des
     laufenden Servers).
 

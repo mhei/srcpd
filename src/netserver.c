@@ -407,7 +407,7 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
 }
 
 int handleRESET(int sessionid, int bus, char *device, char *parameter, char *reply) {
-  return SRCP_NOTSUPPORTED;
+  return SRCP_UNSUPPORTEDOPERATION;
 }
 
 int handleWAIT(int sessionid, int bus, char *device, char *parameter, char *reply)
@@ -503,7 +503,7 @@ int handleTERM(int sessionid, int bus, char *device, char *parameter, char *repl
 }
 
 int handleINIT(int sessionid, int bus, char *device, char *parameter, char *reply) {
-  int rc = SRCP_NOTSUPPORTED;
+  int rc = SRCP_UNSUPPORTEDDEVICEGROUP;
   if (strncasecmp(device, "GL", 2) == 0)
   {
     long addr, protversion, n_fs, n_func;
@@ -523,12 +523,12 @@ int handleINIT(int sessionid, int bus, char *device, char *parameter, char *repl
 
 int handleVERIFY(int sessionid, int bus, char *device, char *parameter, char *reply)
 {
-  return SRCP_NOTSUPPORTED;
+  return SRCP_UNSUPPORTEDOPERATION;
 }
 
 int handleCHECK(int sessionid, int bus, char *device, char *parameter, char *reply)
 {
-  return SRCP_NOTSUPPORTED;
+  return SRCP_UNSUPPORTEDOPERATION;
 }
 
 /***************************************************************
