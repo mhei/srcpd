@@ -278,7 +278,7 @@ void send_command_ga(int busnumber)
         }
         writeByte(busnumber, &byte2send, 2);
         readByte(busnumber, 1, &rr);
-        setGA(busnumber, addr, gatmp, 0);
+        setGA(busnumber, addr, gatmp, 1);
         tga[i].id=0;
       }
     }
@@ -323,7 +323,7 @@ void send_command_ga(int busnumber)
             gatmp.t.tv_sec++;
             gatmp.t.tv_usec -= 1000000;
           }
-          tga[i] = gatmp;
+          tga[i1] = gatmp;
           status = 0;
           DBG(busnumber, DBG_DEBUG, "GA %i für Abschaltung um %i,%i auf %i", tga[i].id, (int)tga[i].t.tv_sec, (int)tga[i].t.tv_usec, i);
           break;
@@ -333,7 +333,7 @@ void send_command_ga(int busnumber)
     readByte(busnumber, 1, &rr);
     if(status)
     {
-      setGA(busnumber, addr, gatmp, 0);
+      setGA(busnumber, addr, gatmp, 1);
     }
   }
 }
@@ -396,7 +396,7 @@ void send_command_gl(int busnumber)
       readByte(busnumber, 1, &status);
       if((status == 0) || (status == 0x41) || (status == 0x42))
       {
-        setGL(busnumber, addr, gltmp, 0);
+        setGL(busnumber, addr, gltmp, 1);
       }
     }
   }
@@ -646,7 +646,7 @@ void check_status(int busnumber)
      2. manuelle Lokbefehle
      3. manuelle Weichenbefehle */
 
-#warning add loconet
+//#warning add loconet
 
   byte2send = 0xC8;
   writeByte(busnumber, &byte2send, 2);
@@ -698,20 +698,19 @@ void check_status(int busnumber)
 
   if(xevnt1 & 0x04)        // mindestens eine Rückmeldung hat sich geändert
   {
-    byte2send = 0xCB;
-    writeByte(busnumber, &byte2send, 2);
-    readByte(busnumber, 1, &rr);
-    while(rr != 0x00)
-    {
-      rr--;
-      i = rr;
+      byte2send = 0xCB;
+      writeByte(busnumber, &byte2send, 2);
       readByte(busnumber, 1, &rr);
-      temp = rr;
-      temp <<= 8;
-      readByte(busnumber, 1, &rr);
-      setFBmodul(busnumber, i, temp|rr);
-      readByte(busnumber, 1, &rr);
-    }
+      while(rr != 0x00)
+      {
+          int aktS88 = rr;
+          readByte(busnumber, 1, &rr);
+          temp = rr;
+          temp <<= 8;
+          readByte(busnumber, 1, &rr);
+          setFBmodul(busnumber, aktS88+1, temp|rr);
+          readByte(busnumber, 1, &rr);
+      }
   }
 
   if(xevnt1 & 0x20)        // mindestens eine Weiche wurde von Hand geschaltet
