@@ -30,7 +30,7 @@ getPower(int bus)
 int
 infoPower(int bus, char *msg)
 {
-  sprintf(msg, "%d POWER %s %s", bus, busses[bus].power_state?"ON":"OFF", busses[bus].power_msg);
+  sprintf(msg, "%d POWER %s %s\n", bus, busses[bus].power_state?"ON":"OFF", busses[bus].power_msg);
   return SRCP_INFO;
 }
 

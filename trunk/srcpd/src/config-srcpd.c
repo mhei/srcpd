@@ -170,6 +170,12 @@ static int register_bus(xmlDocPtr doc, xmlNodePtr node)
      if (strcmp(txt, "yes") == 0)
        busses[busnumber].flags |= RESTORE_COM_SETTINGS;
    }
+   if (strcmp(child->name, "auto_power_on") == 0)
+   {
+     found = 1;
+     if (strcmp(txt, "yes") == 0)
+          busses[busnumber].flags |= AUTO_POWER_ON ;
+   }
    if (strcmp(child->name, "p_time") == 0)
    {
      found = 1;
@@ -254,11 +260,11 @@ void DBG(int busnumber, int dbglevel, const char *fmt, ...)
   va_start(parm, fmt);
    /* need some more checks, may segfault! */
    if (dbglevel <= busses[busnumber].debuglevel) {
-	if (busses[busnumber].debuglevel>=DBG_DEBUG)
+	if (busses[busnumber].debuglevel>DBG_WARN)
 	{
 	    fprintf(stderr,"[bus %d] ",busnumber);
 	    vfprintf(stderr,fmt,parm);
-	    if (strchr(fmt,'\n'==NULL)) fprintf(stderr,"\n");
+	    if (strchr(fmt,'\n')==NULL) fprintf(stderr,"\n");
 	}
 	else
 	{
