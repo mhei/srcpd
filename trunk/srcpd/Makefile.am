@@ -5,8 +5,6 @@ srcpd_SOURCES = config-srcpd.c srcpd.c ib.c io.c threads.c srcp-time.c \
 		netserver.c m605x.c ddl-s88.c hsi-88.c li100.c loopback.c srcp-error.c \
 		srcp-lock.c srcp-session.c srcp-descr.c srcp-info.c srcp-sm.c i2c-dev.c
 
-srcpd_LDADD   = -lpthread
-
 EXTRA_DIST = AUTHORS COPYING ChangeLog INSTALL README TODO srcpd.lsm srcpd.conf m605x.c \
 	    m605x.h netserver.c netserver.h srcp-fb-i8255.c srcp-fb-i8255.h srcp-fb.c \
 	    srcp-fb.h srcp-ga.c srcp-ga.h srcp-gl.c srcp-gl.h srcp-power.c srcp-power.h \
@@ -26,7 +24,7 @@ INCLUDES = $(all_includes)
 AM_CFLAGS = -D_REENTRANT
 
 # the library search path.
-srcpd_LDFLAGS = $(all_libraries) 
+srcpd_LDFLAGS = $(all_libraries) `./systemtest`
                                                                                 
 install-data-local:
 	$(mkinstalldirs) $(prefix)/
