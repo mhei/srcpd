@@ -35,6 +35,8 @@
 #include "config-srcpd.h"
 #include "srcp-fb.h"
 #include "ddl-s88.h"
+#include "io.h"
+
 
 /***************************************************************/
 /* erddcd - Electric Railroad Direct Digital Command Daemon    */
@@ -81,6 +83,7 @@ void readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     busses[busnumber].term_func = &term_bus_S88;
     busses[busnumber].thr_func = &thr_sendrec_S88;
     busses[busnumber].driverdata = malloc(sizeof(struct _DDL_S88_DATA));
+
     ((DDL_S88_DATA *) busses[busnumber].driverdata)->port = 0x0378;
     ((DDL_S88_DATA *) busses[busnumber].driverdata)->clockscale = 35;
     ((DDL_S88_DATA *) busses[busnumber].driverdata)->refresh = 100;
@@ -163,8 +166,8 @@ int init_bus_S88(int bus)
     unsigned int i;		// loop counter
     int isin = 0;		// reminder for checking
     int S88PORT = ((DDL_S88_DATA *) busses[bus].driverdata)->port;
-    int S88CLOCK_SCALE =
-	((DDL_S88_DATA *) busses[bus].driverdata)->clockscale;
+    int S88CLOCK_SCALE = ((DDL_S88_DATA *) busses[bus].driverdata)->clockscale;
+    syslog(LOG_INFO, "init_bus DDL S88%d", bus);
     // is the port disabled from user, everything is fine
     if (!S88PORT) {
 	syslog(LOG_INFO, "   s88 port is disabled.");
@@ -194,22 +197,22 @@ int init_bus_S88(int bus)
 		       "   warning: There is no port for s88 at 0x%X.",
 		       S88PORT);
 		ioperm(S88PORT, 3, 0);	// stopping access to port address
-		return 0;
+		return 1;
 	    }
 	} else {
 	    syslog(LOG_INFO, "   warning: Access to port 0x%X denied.",
 		   S88PORT);
-	    return 0;
+	    return 1;
 	}
     } else {
 	syslog(LOG_INFO,
 	       "   warning: 0x%X is not valid port adress for s88 device.",
 	       S88PORT);
-	return 0;
+	return 1;
     }
     syslog(LOG_INFO, "   s88 port sucsessfully initialized at 0x%X.",
 	   S88PORT);
-    return 1;
+    return 0;
 }
 
 /****************************************************************
@@ -274,23 +277,15 @@ void s88load(int bus)
 		    S88_WRITE(S88_CLOCK);
 		    S88_WRITE(S88_QUIET);
 		}
-		if (j <
-		    ((DDL_S88_DATA *) busses[bus].driverdata)->
-		    number_fb[0] * 2)
+		if (j < ((DDL_S88_DATA *) busses[bus].driverdata)-> number_fb[0] * 2)
 		    setFBmodul(bus, j + 1, s88data[j]);
-		if (j <
-		    ((DDL_S88_DATA *) busses[bus].driverdata)->
-		    number_fb[1] * 2)
+		if (j < ((DDL_S88_DATA *) busses[bus].driverdata)-> number_fb[1] * 2)
 		    setFBmodul(bus + 1, j + 1,
 				s88data[j + S88_MAXPORTSB]);
-		if (j <
-		    ((DDL_S88_DATA *) busses[bus].driverdata)->
-		    number_fb[2] * 2)
+		if (j < ((DDL_S88_DATA *) busses[bus].driverdata)-> number_fb[2] * 2)
 		    setFBmodul(bus + 2, j + 1,
 				s88data[j + 2 * S88_MAXPORTSB]);
-		if (j <
-		    ((DDL_S88_DATA *) busses[bus].driverdata)->
-		    number_fb[3] * 2)
+		if (j < ((DDL_S88_DATA *) busses[bus].driverdata)-> number_fb[3] * 2)
 		    setFBmodul(bus + 3, j + 1,
 				s88data[j + 3 * S88_MAXPORTSB]);
 	    }

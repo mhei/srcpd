@@ -1,4 +1,3 @@
-/* cvs: $Id$             */
 
 /*
  * Vorliegende Software unterliegt der General Public License,
@@ -46,12 +45,12 @@ static void check_bus(int busnumber)
 {
   if (busnumber == 0)
   {
-    printf("Sorry, at bus 0 is only tag \"server\" allowed!\n");
+    printf("Sorry, at bus 0 is only type=server allowed!\n");
     exit(1);
   }
 }
 
-static void register_bus(xmlDocPtr doc, xmlNodePtr node)
+static int register_bus(xmlDocPtr doc, xmlNodePtr node)
 {
   xmlNodePtr child;
   char *proptxt;
@@ -59,7 +58,7 @@ static void register_bus(xmlDocPtr doc, xmlNodePtr node)
   int found;
 
   if (strcmp(node->name, "bus"))
-    return; // only bus definitions
+    return 1; // only bus definitions
 
   proptxt = xmlGetProp(node, "number");
   busnumber = atoi(proptxt);
@@ -67,7 +66,7 @@ static void register_bus(xmlDocPtr doc, xmlNodePtr node)
   if (busnumber > MAX_BUSSES || busnumber < 0)
   {
     // you need to recompile
-    return;
+    return 1;
   }
 
   if (busnumber <= num_busses)
@@ -86,7 +85,8 @@ static void register_bus(xmlDocPtr doc, xmlNodePtr node)
     if (strcmp(child->name, "text") == 0)
     {
       child = child->next;
-      syslog(LOG_INFO, "ignoring");
+      // es könnte auch einfach nur ein Linefeed sein. Kein syslog
+      // syslog(LOG_INFO, "ignoring");
       continue;
     }
     txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
@@ -100,7 +100,7 @@ static void register_bus(xmlDocPtr doc, xmlNodePtr node)
       }
       else
       {
-        printf("Sorry, tag \"server\" is only at bus 0 allowed!\n");
+        printf("Sorry, type=server is only at bus 0 allowed!\n");
       }
     }
     /* but the most important are not ;=)  */
@@ -122,13 +122,13 @@ static void register_bus(xmlDocPtr doc, xmlNodePtr node)
       readconfig_loopback(doc, child, busnumber);
       found = 1;
     }
-    if (strcmp(child->name, "ddl-S88") == 0)
+    if (strcmp(child->name, "ddl-s88") == 0)
     {
       check_bus(busnumber);
       readconfig_DDL_S88(doc, child, busnumber);
       found = 1;
     }
-    if (strcmp(child->name, "hsi-88") == 0)
+    if (strcmp(child->name, "hsi-s88") == 0)
     {
       check_bus(busnumber);
       readconfig_HSI_88(doc, child, busnumber);
@@ -167,15 +167,17 @@ static void register_bus(xmlDocPtr doc, xmlNodePtr node)
     }
     if (!found)
     {
-      printf("WARNING, \"%s\" is an unknown tag!\n", child->name);
+      printf("WARNING, \"%s\" (bus %d) is an unknown tag!\n", child->name, busnumber);
     }
     free(txt);
     child = child->next;
   }
+  return 0;
 }
 
 static int walk_config_xml(xmlDocPtr doc)
 {
+  int rc = 0;
   xmlNodePtr root, child;
 
   root = xmlDocGetRootElement(doc);
@@ -183,10 +185,10 @@ static int walk_config_xml(xmlDocPtr doc)
 
   while (child)
   {
-    register_bus(doc, child);
+    rc = register_bus(doc, child);
     child = child->next;
   }
-  return 0;
+  return rc;
 }
 
 static xmlDocPtr load_config_xml(const char *filename)
@@ -197,8 +199,7 @@ static xmlDocPtr load_config_xml(const char *filename)
 int readConfig(const char *filename)
 {
   xmlDocPtr doc;
-  int i;
-
+  int i, rc;
   // something to initialize
   memset(busses, 0, sizeof(busses));
   for(i=0;i<MAX_BUSSES;i++)
@@ -210,7 +211,7 @@ int readConfig(const char *filename)
   if (doc != 0)
   {
     syslog(LOG_INFO, "parsing %s", filename);
-    walk_config_xml(doc);
+    rc = walk_config_xml(doc);
     syslog(LOG_INFO, " %s done", filename);
     xmlFreeDoc(doc);
   }
@@ -218,5 +219,5 @@ int readConfig(const char *filename)
   {
     exit(1);
   }
-  return 0;
+  return rc;
 }

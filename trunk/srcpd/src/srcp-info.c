@@ -214,16 +214,16 @@ static int generate_info_msg(struct _INFO *info_t, char *reply)
   switch (info_t->infoType)
   {
     case INFO_GL:
-      sprintf(reply, "%d GL %d\n", info_t->bus, info_t->id);
+      sprintf(reply, "%d GL %d", info_t->bus, info_t->id);
       break;
     case INFO_GA:
-      sprintf(reply, "%d GA %d %d %d\n", info_t->bus, info_t->id, info_t->port, info_t->action);
+      sprintf(reply, "%d GA %d %d %d", info_t->bus, info_t->id, info_t->port, info_t->action);
       break;
     case INFO_FB:
-      sprintf(reply, "%d FB %d %d\n", info_t->bus, info_t->id, info_t->action);
+      sprintf(reply, "%d FB %d %d", info_t->bus, info_t->id, info_t->action);
       break;
     case INFO_SM:
-      sprintf(reply, "%d SM %d\n", info_t->bus, info_t->id);
+      sprintf(reply, "%d SM %d", info_t->bus, info_t->id);
       break;
     default:
       error_code = SRCP_NOTSUPPORTED;
@@ -291,30 +291,13 @@ void sendInfos(int current)
 //   startup-messages
 int doInfoClient(int Socket, int sessionid)
 {
-  int ret_code;
-
-  if (number_of_clients < MAX_CLIENTS)
-  {
     pthread_mutex_lock(&queue_mutex_client);
     socketOfClients[number_of_clients] = Socket;
     sessionOfClients[number_of_clients] = sessionid;
     number_of_clients++;
     pthread_mutex_unlock(&queue_mutex_client);
     sendInfos(number_of_clients - 1);
-    ret_code = SRCP_OK;
-  }
-  else
-  {
-    ret_code = SRCP_TEMPORARILYPROHIBITED;
-  }
-  return ret_code;
-}
 
-// this thread is started on program-start
-// every client will registrated and a message will be send to all
-// registrated clients at once
-void *thr_doInfoClient(void *v)
-{
   while(1)
   {
     syslog(LOG_INFO, "I'm living with %d clients and %d entries in queue", number_of_clients, queueLengthInfo());
@@ -333,7 +316,6 @@ void *thr_doInfoClient(void *v)
       }
       else
         usleep(10000);
-
     }
   }
 }
