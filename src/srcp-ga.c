@@ -55,6 +55,8 @@ int queueGA(int busnumber, int addr, int port, int action, long int activetime)
 {
   struct timeval akt_time;
   int number_ga = get_number_ga(busnumber);
+  
+  DBG(busnumber, DBG_DEBUG, "queueGA(): number_ga = %d", number_ga);
 
   if ((addr > 0) && (addr <= number_ga) )
   {
@@ -365,11 +367,13 @@ int init_GA(int busnumber, int number)
 
   if(number > 0)
   {
-    ga[busnumber].gastate = malloc(number * sizeof(struct _GASTATE));
+	// one more, 'cause we do not use index 0, but start with 1
+    ga[busnumber].gastate = malloc((number+1) * sizeof(struct _GASTATE));
     if (ga[busnumber].gastate == NULL)
       return 1;
     ga[busnumber].numberOfGa = number;
-    for(i=0;i<number;i++) {
+	
+    for(i=0;i<=number;i++) {
       ga[busnumber].gastate[i].protocol = 0x00;
 	ga[busnumber].gastate[i].locked_by = 0;
       ga[busnumber].gastate[i].action = 0;    
