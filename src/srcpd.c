@@ -105,7 +105,7 @@ int main(int argc, char **argv)
 
   // MAM 01/13/03 Pfad wird von Automake erzeugt
   //
-  sprintf(conffile, "%s/etc/srcpd.conf",PREFIX);
+  sprintf(conffile, "%s/srcpd.conf",PREFIX);
 
   /* Parameter auswerten */
   opterr=0;
