@@ -32,6 +32,7 @@ static int queue_isfull(int busnumber);
  * returns true or false. false, if not all requierements are met.
  */
 int isValidGL(busnumber, addr) {
+    DBG(busnumber, DBG_INFO, "GL VALID: %d %d %d %d", busnumber, addr, num_busses, gl[busnumber].numberOfGl);
     if (busnumber > 0 &&  		/* in bus 0 GL are not allowed */
 	busnumber <= num_busses &&       /* only num_busses are configured */
 	gl[busnumber].numberOfGl > 0 && /* number of GL is set */
@@ -111,7 +112,11 @@ int queueGL(int busnumber, int addr, int dir, int speed, int maxspeed, const int
 
 	pthread_mutex_lock(&queue_mutex[busnumber]);
 	// Protokollbezeichner und sonstige INIT Werte in die Queue kopieren!
+	queue[busnumber][in[busnumber]].protocol        = gl[busnumber].glstate[addr].protocol;
+	queue[busnumber][in[busnumber]].protocolversion = gl[busnumber].glstate[addr].protocolversion;
+	
 	queue[busnumber][in[busnumber]].speed     = calcspeed(speed, maxspeed, gl[busnumber].glstate[addr].n_fs);
+	
 	queue[busnumber][in[busnumber]].direction = dir;
 	queue[busnumber][in[busnumber]].funcs     = f;
 	gettimeofday(&akt_time, NULL);
@@ -232,8 +237,10 @@ int initGL(int busnumber, int addr, const char protocol, int protoversion, int n
     queueInfoMessage(msg);
     queueGL(busnumber, addr, 0, 0, 1, 0);
     return SRCP_OK;
+  } else {
+  DBG(busnumber, DBG_WARN, "init GL: %d %c %d %d %d", addr, protocol, protoversion, n_fs, n_func);
+     return SRCP_WRONGVALUE;
   }
-  return SRCP_WRONGVALUE;
 }
 
 
@@ -442,7 +449,7 @@ int startup_GL(void)
 int init_GL(int busnumber, int number)
 {
   int i;
-
+    DBG(DBG_WARN, busnumber, "INIT GL: %d", number);
   if (busnumber >= MAX_BUSSES)
     return 1;
 

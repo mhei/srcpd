@@ -186,7 +186,7 @@ Konfiguration
     
     HSI S88
     ~~~~~~~
-    Das Hiperformance S88 Interface von Littfinski.
+    Das Highperformance S88 Interface von Littfinski.
     
     xmltag: hsi-88
     
@@ -196,7 +196,22 @@ Konfiguration
     number_fb_center:Anzahl der S88 Module am "mittleren" Kanel
     number_fb_right: Anzahl der S88 Module am "rechten" Kanel
 
+
+    DDL
+    ~~~
+    Erzeugen der Signale direkt am tty des PC, einzig ein Booster
+    wird benötigt. Achtung: Derzeit ist nur eine Instanz dieses
+    Bustyps möglich, da verschiedene Datenstrukturen noch global
+    benutzt werden. Wenn mehrere Busse diesen Typs eingerichtet
+    werden, wird vermutlich keiner so funktionieren, wie er soll.
     
+    Kernroutinen zur Signalgenerierung aus erddcd von 
+    Torsten Vogt, Packet DDL (erddcd-1.5.0wip5)
+    
+    xmltag: ddl
+    
+    keine Parameter derzeit
+        
 Installieren und Benutzen:
 
     Installation der rpm Packete ist wie immer bei solchen mit
