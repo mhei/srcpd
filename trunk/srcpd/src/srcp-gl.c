@@ -284,10 +284,14 @@ int lockGL(int busnumber, int addr, long int sessionid)
   else
   {
     if(gl[busnumber].glstate[addr].locked_by==0) {
+        char msg[256];
         gl[busnumber].glstate[addr].locked_by=sessionid;
+        gettimeofday(& gl[busnumber].glstate[addr].locktime, NULL);
+        describeLOCKGL(busnumber, addr, msg);
+        queueInfoMessage(msg);
         return SRCP_OK;
     } else {
-        return SRCP_DEVICELOCKED;      
+        return SRCP_DEVICELOCKED;
     }
   }
   /* unreached */
@@ -299,12 +303,25 @@ int getlockGL(int busnumber, int addr, long int *session_id)
   return SRCP_OK;
 }
 
+int describeLOCKGL(int bus, int addr, char *reply) {
+    sprintf(reply, "%lu.%.3lu 100 INFO %d LOCK GL %d %ld\n",
+          gl[bus].glstate[addr].locktime.tv_sec,
+          gl[bus].glstate[addr].locktime.tv_usec/1000,
+          bus, addr, gl[bus].glstate[addr].locked_by);
+    return SRCP_OK;
+}
 
 int unlockGL(int busnumber, int addr, long int sessionid)
 {
   if(gl[busnumber].glstate[addr].locked_by==sessionid)
-  {
+  { char msg[256];
     gl[busnumber].glstate[addr].locked_by = 0;
+    gettimeofday(& gl[busnumber].glstate[addr].locktime, NULL);
+    sprintf(msg, "%lu.%.3lu 102 INFO %d LOCK GL %d %ld\n",
+      gl[busnumber].glstate[addr].locktime.tv_sec,
+      gl[busnumber].glstate[addr].locktime.tv_usec/1000,
+      busnumber, addr, sessionid);
+    queueInfoMessage(msg);
     return SRCP_OK;
   }
   else
@@ -317,16 +334,16 @@ void unlock_gl_bysessionid(long int sessionid)
 {
   int i,j;
   int number;
-  DBG(0, DBG_DEBUG, "unlock GL by session-ID %ld", sessionid);
-  for(i=0; i<MAX_BUSSES; i++)
+  DBG(0, DBG_INFO, "unlock GL by session-ID %ld", sessionid);
+  for(i=0; i<=num_busses; i++)
   {
     number = get_number_gl(i);
     DBG(i, DBG_DEBUG, "number of gl for busnumber %d is %d", i, number);
-    for(j=0;j<number; j++)
+    for(j=1;j<number; j++)
     {
       if(gl[i].glstate[j].locked_by == sessionid)
       {
-        unlockGL(i, j+1, sessionid);
+        unlockGL(i, j, sessionid);
       }
     }
   }

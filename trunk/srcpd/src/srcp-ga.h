@@ -25,6 +25,7 @@ struct _GASTATE
   struct timeval inittime;
   struct timeval tv[MAXGAPORT]; /* Zeitpunkt der letzten Aktivierungen, ein Wert pro Port   */
   struct timeval t;     /* Auschaltzeitpunkt */
+  struct timeval locktime;
   long int locked_by;     /* wer hält den Lock? */
 };
 
@@ -52,6 +53,7 @@ int isInitializedGA(int busnumber, int addr);
 
 int lockGA(int busnumber, int addr, long int sessionid);
 int getlockGA(int busnumber, int addr, long int *sessionid);
-int unlockGA(int busnumber, int addr, int sessionid);
+int unlockGA(int busnumber, int addr, long int sessionid);
 void unlock_ga_bysessionid(long int);
+int describeLOCKGA(int bus, int addr, char *reply);
 #endif

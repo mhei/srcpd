@@ -71,7 +71,7 @@ void readconfig_intellibox(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   busses[busnumber].flags |= FB_16_PORTS;
   busses[busnumber].baudrate = B38400;
   busses[busnumber].numberOfSM = 9999;
-  strcpy(busses[busnumber].description, "GA GL FB SM POWER");
+  strcpy(busses[busnumber].description, "GA GL FB SM POWER LOCK");
 
   __ib->number_fb = 0;            // max. 31 for S88; Loconet is missing this time
   __ib->number_ga = 256;
