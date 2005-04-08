@@ -35,9 +35,11 @@ typedef struct _LI100_DATA
     int code_interface;
     int version_zentrale;
     int code_zentrale;
+    int extern_engine[100];
+    int extern_engine_ctr;
 } LI100_DATA;
 
-void readConfig_LI100(xmlDocPtr doc, xmlNodePtr node,  int busnumber);
+int readConfig_LI100(xmlDocPtr doc, xmlNodePtr node,  int busnumber);
 
 int init_bus_LI100(int busnumber);
 int term_bus_LI100(int busnumber);
@@ -50,5 +52,8 @@ void send_command_ga_LI100(int busnumber);
 void send_command_gl_LI100(int busnumber);
 void check_status_LI100(int busnumber);
 int send_command_LI100(int busnumber, unsigned char *str);
+
+void add_extern_engine(int busnumber, int address);
+void remove_extern_engine(int busnumber, int address);
 
 #endif

@@ -9,10 +9,10 @@
 
 /*
 * i2c-dev: Busdriver for i2c-dev-Interface of the Linux-Kernel
-* 					can be used to access hardware found on
-*					http://www.matronix.de/
+*           can be used to access hardware found on
+*         http://www.matronix.de/
 *
-*					2002-2005 by Manuel Borchers <manuel@matronix.de>
+*         2002-2005 by Manuel Borchers <manuel@matronix.de>
 *
 */
 #ifdef linux
@@ -24,7 +24,7 @@
 // we have to use kernel-headers directly, sorry!
 
 #ifndef I2C_SLAVE
-#define I2C_SLAVE	0x0703
+#define I2C_SLAVE 0x0703
 #warning "defined hardcoded I2C_SLAVE, due to an yet unknown problem with headers."
 #endif
 
@@ -43,29 +43,29 @@
 
 static int write_PCF8574(int bus, int addr, __u8 byte)
 {
-	
+
   int busfd = busses[bus].fd;
   int ret;
 
   ret = ioctl(busfd, I2C_SLAVE, addr);
-  
+
   if (ret < 0) {
-    DBG(bus, DBG_INFO, "Couldn't access address %d (%s)", 
+    DBG(bus, DBG_INFO, "Couldn't access address %d (%s)",
         addr, strerror(errno));
     return (ret);
   }
 
-  ret = i2c_smbus_write_byte(busfd, byte);
-  
+//  ret = i2c_smbus_write_byte(busfd, byte);
+
   if (ret < 0) {
-    DBG(bus, DBG_INFO, "Couldn't send byte %d to address %d (%s)", 
+    DBG(bus, DBG_INFO, "Couldn't send byte %d to address %d (%s)",
         byte, addr, strerror(errno));
     return (ret);
   }
-  
+
   DBG(bus, DBG_DEBUG, "Sent byte %d to address %d", byte, addr);
   return (0);
-  
+
 }
 
 
@@ -74,25 +74,25 @@ static int write_PCF8574(int bus, int addr, __u8 byte)
 static int read_PCF8574(int bus, int addr, __u8 *byte)
 {
     int busfd = busses[bus].fd;
-  	int ret;
+    int ret;
 
-  	ret = ioctl(busfd, I2C_SLAVE, addr);
-  	if (ret < 0) {
-    	DBG(bus, DBG_INFO, "Can't access adress %d (%s)", 
-        	addr, strerror(errno));
-    	return (ret);
-  	}
+    ret = ioctl(busfd, I2C_SLAVE, addr);
+    if (ret < 0) {
+      DBG(bus, DBG_INFO, "Can't access adress %d (%s)",
+          addr, strerror(errno));
+      return (ret);
+    }
 
-  	ret = i2c_smbus_read_byte(busfd);
-  	if (ret < 0) {
-    	DBG(bus, DBG_INFO, "Can't read byte from adress %d (%s)", 
-        	addr, strerror(errno));
-    	return (ret);
-  	}
-  	*byte = 0xFF & (ret);
-  	DBG(bus, DBG_DEBUG, "Read byte %d from adress %d", 
-      	*byte, addr);
-  	return (ret);
+    ret = i2c_smbus_read_byte(busfd);
+    if (ret < 0) {
+      DBG(bus, DBG_INFO, "Can't read byte from adress %d (%s)",
+          addr, strerror(errno));
+      return (ret);
+    }
+    *byte = 0xFF & (ret);
+    DBG(bus, DBG_DEBUG, "Read byte %d from adress %d",
+        *byte, addr);
+    return (ret);
 }
 */
 
@@ -100,13 +100,13 @@ static int read_PCF8574(int bus, int addr, __u8 *byte)
 
 static int write_i2c_dev(int bus, int addr, I2C_VALUE value)
 {
-  	if (((addr >=32) && (addr < 39)) ||  /* Currently we handle only PCF8574 */
+    if (((addr >=32) && (addr < 39)) ||  /* Currently we handle only PCF8574 */
         ((addr >=56) && (addr < 63))) {
-		return (write_PCF8574(bus, addr, 0xFF & value));
-  	}
+    return (write_PCF8574(bus, addr, 0xFF & value));
+    }
 
-  	DBG(bus, DBG_ERROR, "Unsupported i2c device at address %d", addr);
-  	return (-1);
+    DBG(bus, DBG_ERROR, "Unsupported i2c device at address %d", addr);
+    return (-1);
 }
 
 /*  Handle set command of GA */
@@ -114,253 +114,253 @@ static int write_i2c_dev(int bus, int addr, I2C_VALUE value)
 static int handle_i2c_set_ga(int bus, struct _GASTATE *gatmp)
 {
     I2C_ADDR    i2c_addr;
-	I2C_VALUE   i2c_val;
-	I2C_VALUE   value;
+  I2C_VALUE   i2c_val;
+  I2C_VALUE   value;
     I2C_PORT    port;
     I2C_MUX_BUS mult_busnum;
     I2CDEV_DATA *data = (I2CDEV_DATA *)busses[bus].driverdata;
     int addr;
     int reset_old_value;
-   	int ga_min_active_time    = data->ga_min_active_time;
-	int ga_hardware_inverters = data->ga_hardware_inverters;
-		
-	addr  = gatmp->id;
-	port  = gatmp->port;
-	value = gatmp->action;
-			
-	mult_busnum = (addr / 256) + 1;
-	select_bus(mult_busnum, busses[bus].fd, bus);
-			
-	i2c_addr = (addr % 256); 
-/*	gettimeofday(gatmp->tv[0], NULL); */
-		
-	if (gatmp->activetime >= 0) {			
-		gatmp->activetime = (gatmp->activetime > ga_min_active_time) ? 
-											gatmp->activetime :  ga_min_active_time;			
-		reset_old_value = 1;
-	} else {
-		gatmp->activetime = ga_min_active_time;	// always wait minimum time
-		reset_old_value = 0;
-	}	           
-	
-	DBG(bus, DBG_DEBUG, "i2c_addr = %d on multiplexed bus #%d",
-				i2c_addr, mult_busnum);		
-	// port: 0     - direct write of value to device
-	//       other - select portpins directly, value = {0,1}
-			
-	if (port == 0) {
-		
-		// write directly to device
-				
-		if (ga_hardware_inverters == 1) {
-			i2c_val = ~value;	
-	  	} else {
-			i2c_val = value;
-		}
-		
-	} else {
-		
-		// set bit for selected port to 1
-		I2C_VALUE pin_bit = 1 << (port - 1);
+    int ga_min_active_time    = data->ga_min_active_time;
+  int ga_hardware_inverters = data->ga_hardware_inverters;
+
+  addr  = gatmp->id;
+  port  = gatmp->port;
+  value = gatmp->action;
+
+  mult_busnum = (addr / 256) + 1;
+  select_bus(mult_busnum, busses[bus].fd, bus);
+
+  i2c_addr = (addr % 256);
+/*  gettimeofday(gatmp->tv[0], NULL); */
+
+  if (gatmp->activetime >= 0) {
+    gatmp->activetime = (gatmp->activetime > ga_min_active_time) ?
+                      gatmp->activetime :  ga_min_active_time;
+    reset_old_value = 1;
+  } else {
+    gatmp->activetime = ga_min_active_time; // always wait minimum time
+    reset_old_value = 0;
+  }
+
+  DBG(bus, DBG_DEBUG, "i2c_addr = %d on multiplexed bus #%d",
+        i2c_addr, mult_busnum);
+  // port: 0     - direct write of value to device
+  //       other - select portpins directly, value = {0,1}
+
+  if (port == 0) {
+
+    // write directly to device
+
+    if (ga_hardware_inverters == 1) {
+      i2c_val = ~value;
+      } else {
+      i2c_val = value;
+    }
+
+  } else {
+
+    // set bit for selected port to 1
+    I2C_VALUE pin_bit = 1 << (port - 1);
         value = (value & 1);
         i2c_val = data->i2c_values[i2c_addr][mult_busnum-1];
-		
-		if (ga_hardware_inverters == 1) {
+
+    if (ga_hardware_inverters == 1) {
           value = (~value) & 1;
-        }		
+        }
 
         if (value != 0) {     /* Set bit */
-			i2c_val |= pin_bit;
+      i2c_val |= pin_bit;
         }
         else {                /* Reset bit */
-			i2c_val &= (~pin_bit);
+      i2c_val &= (~pin_bit);
         }
-		
-  	}  
 
-	if (write_i2c_dev(bus, i2c_addr, i2c_val) < 0) {
-      DBG(bus, DBG_ERROR, "Device not found at address %d", addr); 
+    }
+
+  if (write_i2c_dev(bus, i2c_addr, i2c_val) < 0) {
+      DBG(bus, DBG_ERROR, "Device not found at address %d", addr);
       return (-1);
     }
-	
-	usleep(1000 * (unsigned long) gatmp->activetime);
-				
-	if (reset_old_value == 1) {
-		
-		if (write_i2c_dev(bus, i2c_addr, data->i2c_values[i2c_addr][mult_busnum-1]) < 0) {
-			DBG(bus, DBG_ERROR, "Device not found at address %d", addr); 
-      		return (-1);
+
+  usleep(1000 * (unsigned long) gatmp->activetime);
+
+  if (reset_old_value == 1) {
+
+    if (write_i2c_dev(bus, i2c_addr, data->i2c_values[i2c_addr][mult_busnum-1]) < 0) {
+      DBG(bus, DBG_ERROR, "Device not found at address %d", addr);
+          return (-1);
         }
-		
-		usleep(1000 * (unsigned long) gatmp->activetime);
-		
-	} else {
-		data->i2c_values[i2c_addr][mult_busnum-1] = i2c_val;
+
+    usleep(1000 * (unsigned long) gatmp->activetime);
+
+  } else {
+    data->i2c_values[i2c_addr][mult_busnum-1] = i2c_val;
     }
-	
+
     return (0);
 }
 
 int readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
-	xmlNodePtr child = node->children;
-	
-	busses[busnumber].type = SERVER_I2C_DEV;
-	busses[busnumber].init_func = &init_bus_I2C_DEV;
-	busses[busnumber].term_func = &term_bus_I2C_DEV;
-	busses[busnumber].thr_func = &thr_sendrec_I2C_DEV;
-	busses[busnumber].driverdata = malloc(sizeof(I2CDEV_DATA));
-	strcpy(busses[busnumber].description, "GA POWER DESCRIPTION");
-	
-	__i2cdev->number_ga = 0;
-	__i2cdev->multiplex_busses = 0;
-	__i2cdev->ga_hardware_inverters = 0;
-	__i2cdev->ga_reset_devices = 1;
-	__i2cdev->ga_min_active_time = 75;
-	
-	while (child) {
-		if (strncmp(child->name, "text", 4) == 0) {
-			child = child->next;
-			continue;
-		}
-		
-		/*
-		if (strcmp(child->name, "number_gl") == 0) {
-			char *txt =
-			xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-			__i2cdev->number_gl = atoi(txt);
-			free(txt);
-		}
-		*/
-		
-		if (strcmp(child->name, "multiplex_busses") == 0) {
-			char *txt =
-			xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-			__i2cdev->multiplex_busses = atoi(txt);
-			free(txt);
-		}
-		
-		if (strcmp(child->name, "ga_hardware_inverters") == 0) {
-			char *txt =
-			xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-			__i2cdev->ga_hardware_inverters = atoi(txt);
-			free(txt);
-		}
-		
-		if (strcmp(child->name, "ga_reset_devices") == 0) {
-			char *txt =
-			xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-			__i2cdev->ga_reset_devices = atoi(txt);
-			free(txt);
-		}
+  xmlNodePtr child = node->children;
 
-		
-		child = child->next;
-	}				// while
-	
-	
-	// init the stuff
-	
-	__i2cdev->number_ga = 256 * (__i2cdev->multiplex_busses);
-	
-	if (init_GA(busnumber, __i2cdev->number_ga)) {
-		__i2cdev->number_ga = 0;
-		DBG(busnumber, DBG_ERROR, "Can't create array for accessoires");
-	}
-	
-	/*
-	if (init_GL(busnumber, __i2cdev->number_gl)) {
-		__i2cdev->number_gl = 0;
-		DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
-	}
-	*/
-	/*
-	if (init_FB(busnumber, __i2cdev->number_ga)) {
-		__i2cdev->number_ga = 0;
-		DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
-	}
-	*/
-	return(1);
+  busses[busnumber].type = SERVER_I2C_DEV;
+  busses[busnumber].init_func = &init_bus_I2C_DEV;
+  busses[busnumber].term_func = &term_bus_I2C_DEV;
+  busses[busnumber].thr_func = &thr_sendrec_I2C_DEV;
+  busses[busnumber].driverdata = malloc(sizeof(I2CDEV_DATA));
+  strcpy(busses[busnumber].description, "GA POWER DESCRIPTION");
+
+  __i2cdev->number_ga = 0;
+  __i2cdev->multiplex_busses = 0;
+  __i2cdev->ga_hardware_inverters = 0;
+  __i2cdev->ga_reset_devices = 1;
+  __i2cdev->ga_min_active_time = 75;
+
+  while (child) {
+    if (strncmp(child->name, "text", 4) == 0) {
+      child = child->next;
+      continue;
+    }
+
+    /*
+    if (strcmp(child->name, "number_gl") == 0) {
+      char *txt =
+      xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      __i2cdev->number_gl = atoi(txt);
+      free(txt);
+    }
+    */
+
+    if (strcmp(child->name, "multiplex_busses") == 0) {
+      char *txt =
+      xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      __i2cdev->multiplex_busses = atoi(txt);
+      free(txt);
+    }
+
+    if (strcmp(child->name, "ga_hardware_inverters") == 0) {
+      char *txt =
+      xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      __i2cdev->ga_hardware_inverters = atoi(txt);
+      free(txt);
+    }
+
+    if (strcmp(child->name, "ga_reset_devices") == 0) {
+      char *txt =
+      xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      __i2cdev->ga_reset_devices = atoi(txt);
+      free(txt);
+    }
+
+
+    child = child->next;
+  }       // while
+
+
+  // init the stuff
+
+  __i2cdev->number_ga = 256 * (__i2cdev->multiplex_busses);
+
+  if (init_GA(busnumber, __i2cdev->number_ga)) {
+    __i2cdev->number_ga = 0;
+    DBG(busnumber, DBG_ERROR, "Can't create array for accessoires");
+  }
+
+  /*
+  if (init_GL(busnumber, __i2cdev->number_gl)) {
+    __i2cdev->number_gl = 0;
+    DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
+  }
+  */
+  /*
+  if (init_FB(busnumber, __i2cdev->number_ga)) {
+    __i2cdev->number_ga = 0;
+    DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
+  }
+  */
+  return(1);
 }
 
 
 int init_lineI2C_DEV(int bus)
 {
-	int FD;
-	
-	if (busses[bus].debuglevel > 0) {
-		DBG(bus, DBG_INFO, "Opening i2c-dev: %s", busses[bus].device);
-	}
-	
-	FD = open(busses[bus].device, O_RDWR);
-	
-	if (FD <= 0) {
-		DBG(bus, DBG_FATAL, "Couldn't open device %s.",
-		    busses[bus].device);
-		FD = -1;
-	}
-	
-	return FD;
-	
+  int FD;
+
+  if (busses[bus].debuglevel > 0) {
+    DBG(bus, DBG_INFO, "Opening i2c-dev: %s", busses[bus].device);
+  }
+
+  FD = open(busses[bus].device, O_RDWR);
+
+  if (FD <= 0) {
+    DBG(bus, DBG_FATAL, "Couldn't open device %s.",
+        busses[bus].device);
+    FD = -1;
+  }
+
+  return FD;
+
 }
 
 void reset_ga(int busnumber, int busfd) {
-	
-	// reset ga devices to values stored in data->i2c_values
 
-	I2CDEV_DATA *data = (I2CDEV_DATA *)busses[busnumber].driverdata;
-	int i, multiplexer_adr;
-	int multiplex_busses;
-	
-	multiplex_busses = data->multiplex_busses;
-	
-	if (multiplex_busses > 0) {
-		
-		for (multiplexer_adr = 1; multiplexer_adr <= multiplex_busses; multiplexer_adr++)
-		{
-			
-			select_bus(multiplexer_adr, busfd, busnumber);
-			
-			// first PCF 8574 P
-			for (i = 32; i <= 39; i++) {
-                write_PCF8574(busnumber, i, 
-					data->i2c_values[i][multiplexer_adr-1]);
-			}
-			
-			// now PCF 8574 AP
-			for (i = 56; i <= 63; i++) {
-				write_PCF8574(busnumber, i, 
-					data->i2c_values[i][multiplexer_adr-1]);
-			}
-		}
-		
-		select_bus(0, busfd, busnumber);
-		
-	}
-	
+  // reset ga devices to values stored in data->i2c_values
+
+  I2CDEV_DATA *data = (I2CDEV_DATA *)busses[busnumber].driverdata;
+  int i, multiplexer_adr;
+  int multiplex_busses;
+
+  multiplex_busses = data->multiplex_busses;
+
+  if (multiplex_busses > 0) {
+
+    for (multiplexer_adr = 1; multiplexer_adr <= multiplex_busses; multiplexer_adr++)
+    {
+
+      select_bus(multiplexer_adr, busfd, busnumber);
+
+      // first PCF 8574 P
+      for (i = 32; i <= 39; i++) {
+                write_PCF8574(busnumber, i,
+          data->i2c_values[i][multiplexer_adr-1]);
+      }
+
+      // now PCF 8574 AP
+      for (i = 56; i <= 63; i++) {
+        write_PCF8574(busnumber, i,
+          data->i2c_values[i][multiplexer_adr-1]);
+      }
+    }
+
+    select_bus(0, busfd, busnumber);
+
+  }
+
 }
 
 void select_bus(int mult_busnum, int busfd, int busnumber) {
-	
-	int addr, value=0;
-	
-	//addr = 224 + (2 * (int) (mult_busnum / 9));
-	addr = 224;
-	if (mult_busnum > 8) mult_busnum = 0;
-	
-	if (busses[busnumber].power_state == 1) value = 64;
-	value = value | (mult_busnum % 9);
-	write_PCF8574(busnumber, (addr >> 1), value);
-/*	ioctl(busfd, I2C_SLAVE, (addr >> 1));
-	writeByte(busnumber, value, 1);*/
-	
+
+  int addr, value=0;
+
+  //addr = 224 + (2 * (int) (mult_busnum / 9));
+  addr = 224;
+  if (mult_busnum > 8) mult_busnum = 0;
+
+  if (busses[busnumber].power_state == 1) value = 64;
+  value = value | (mult_busnum % 9);
+  write_PCF8574(busnumber, (addr >> 1), value);
+/*  ioctl(busfd, I2C_SLAVE, (addr >> 1));
+  writeByte(busnumber, value, 1);*/
+
 }
 
 int term_bus_I2C_DEV(int bus)
 {
-	DBG(bus, DBG_INFO, "i2c-dev bus %d terminating", bus);
-	close(busses[bus].fd);
-	return 0;
+  DBG(bus, DBG_INFO, "i2c-dev bus %d terminating", bus);
+  close(busses[bus].fd);
+  return 0;
 }
 
 /*
@@ -370,59 +370,59 @@ int term_bus_I2C_DEV(int bus)
 *
 */
 int init_bus_I2C_DEV(int i)
-{	
-	
-	I2CDEV_DATA *data = (I2CDEV_DATA *)busses[i].driverdata;
-	int ga_hardware_inverters;
-	int j, multiplexer_adr;
-	int multiplex_busses;
-	char buf;
-	
-	DBG(i, DBG_INFO, "i2c-dev init: bus #%d, debug %d", i,
-	busses[i].debuglevel);
-	
-	
-	// init the hardware interface
-	if (busses[i].debuglevel < 6) {
-		busses[i].fd = init_lineI2C_DEV(i);
-	} else {
-		busses[i].fd = -1;
-	}
-	
-	
-	// init software
-	ga_hardware_inverters = data->ga_hardware_inverters;
-	multiplex_busses = data->multiplex_busses;
-	
-	memset(data->i2c_values, 0, sizeof ( I2C_DEV_VALUES ));
-	
-	if(ga_hardware_inverters == 1) {
-		buf = 0xFF;
-	} else {
-		buf = 0x00;
-	}
-	
-	// preload data->i2c_values
-	
-	if (multiplex_busses > 0) {
-		
-		for (multiplexer_adr = 1; multiplexer_adr <= multiplex_busses; multiplexer_adr++)
-		{	
-			// first PCF 8574 P
-			for (j = 32; j <= 39; j++) { 
-				data->i2c_values[j][multiplexer_adr-1] = buf;
-			}
-			
-			// now PCF 8574 AP
-			for (j = 56; j <= 63; j++) { 
-				data->i2c_values[j][multiplexer_adr-1] = buf;
-			}
-		}
-		
-	}
-	
-	DBG(i, DBG_INFO, "i2c-dev init done");
-	return 0;
+{
+
+  I2CDEV_DATA *data = (I2CDEV_DATA *)busses[i].driverdata;
+  int ga_hardware_inverters;
+  int j, multiplexer_adr;
+  int multiplex_busses;
+  char buf;
+
+  DBG(i, DBG_INFO, "i2c-dev init: bus #%d, debug %d", i,
+  busses[i].debuglevel);
+
+
+  // init the hardware interface
+  if (busses[i].debuglevel < 6) {
+    busses[i].fd = init_lineI2C_DEV(i);
+  } else {
+    busses[i].fd = -1;
+  }
+
+
+  // init software
+  ga_hardware_inverters = data->ga_hardware_inverters;
+  multiplex_busses = data->multiplex_busses;
+
+  memset(data->i2c_values, 0, sizeof ( I2C_DEV_VALUES ));
+
+  if(ga_hardware_inverters == 1) {
+    buf = 0xFF;
+  } else {
+    buf = 0x00;
+  }
+
+  // preload data->i2c_values
+
+  if (multiplex_busses > 0) {
+
+    for (multiplexer_adr = 1; multiplexer_adr <= multiplex_busses; multiplexer_adr++)
+    {
+      // first PCF 8574 P
+      for (j = 32; j <= 39; j++) {
+        data->i2c_values[j][multiplexer_adr-1] = buf;
+      }
+
+      // now PCF 8574 AP
+      for (j = 56; j <= 63; j++) {
+        data->i2c_values[j][multiplexer_adr-1] = buf;
+      }
+    }
+
+  }
+
+  DBG(i, DBG_INFO, "i2c-dev init done");
+  return 0;
 }
 
 /*
@@ -437,59 +437,59 @@ int init_bus_I2C_DEV(int i)
 void *thr_sendrec_I2C_DEV(void *v)
 {
     char msg[1000];
-   
-	int bus = (int) v;
-	
-	struct _GASTATE gatmp;
-	
-	I2CDEV_DATA *data = busses[bus].driverdata;
-	
-	int ga_reset_devices = data->ga_reset_devices;
-	int old_power_state;
-	
-	
-	DBG(bus, DBG_INFO, "i2c-dev started, bus #%d, %s", bus,
-    	busses[bus].device);
-	
-	busses[bus].watchdog = 1;
-	
-	
-	// command processing starts here
-	
-    while (1) {
-		
-		// process POWER changes
-		if (busses[bus].power_changed == 1) {
-			
-			// dummy select, power state is directly read by select_bus()
-			select_bus(0, busses[bus].fd, bus);
-			busses[bus].power_changed = 0;
-			infoPower(bus, msg);
-			queueInfoMessage(msg);
-			
-			if((ga_reset_devices == 1) && (busses[bus].power_state == 1)) {
-				reset_ga(bus, busses[bus].fd);
-			}
-			
-		}
 
-		// do nothing, if power off
-		if(busses[bus].power_state==0) {
-			usleep(1000);
-			continue;
-		}
-		
-		busses[bus].watchdog = 4;
-		
-		// process GA commands
-		if (!queue_GA_isempty(bus)) {
-			unqueueNextGA(bus, &gatmp);
-			handle_i2c_set_ga(bus, &gatmp);
-			setGA(bus, gatmp.id, gatmp);
-			select_bus(0, busses[bus].fd, bus);
-			busses[bus].watchdog = 6;
-		}
-		usleep(1000);
-	}
+  int bus = (int) v;
+
+  struct _GASTATE gatmp;
+
+  I2CDEV_DATA *data = busses[bus].driverdata;
+
+  int ga_reset_devices = data->ga_reset_devices;
+  int old_power_state;
+
+
+  DBG(bus, DBG_INFO, "i2c-dev started, bus #%d, %s", bus,
+      busses[bus].device);
+
+  busses[bus].watchdog = 1;
+
+
+  // command processing starts here
+
+    while (1) {
+
+    // process POWER changes
+    if (busses[bus].power_changed == 1) {
+
+      // dummy select, power state is directly read by select_bus()
+      select_bus(0, busses[bus].fd, bus);
+      busses[bus].power_changed = 0;
+      infoPower(bus, msg);
+      queueInfoMessage(msg);
+
+      if((ga_reset_devices == 1) && (busses[bus].power_state == 1)) {
+        reset_ga(bus, busses[bus].fd);
+      }
+
+    }
+
+    // do nothing, if power off
+    if(busses[bus].power_state==0) {
+      usleep(1000);
+      continue;
+    }
+
+    busses[bus].watchdog = 4;
+
+    // process GA commands
+    if (!queue_GA_isempty(bus)) {
+      unqueueNextGA(bus, &gatmp);
+      handle_i2c_set_ga(bus, &gatmp);
+      setGA(bus, gatmp.id, gatmp);
+      select_bus(0, busses[bus].fd, bus);
+      busses[bus].watchdog = 6;
+    }
+    usleep(1000);
+  }
 }
 #endif

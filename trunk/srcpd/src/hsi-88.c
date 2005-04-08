@@ -26,7 +26,7 @@
 
 static int working_HSI88;
 
-void readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
+int readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
   int number;
 
@@ -97,6 +97,7 @@ void readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     __hsi->number_fb[2] = 0;
     DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
   }
+  return(1);
 }
 
 static int open_lineHSI88(char *name)
