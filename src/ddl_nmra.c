@@ -1239,8 +1239,12 @@ int waitUARTempty_scanACK(int busnumber) {
    int result;
    int ack = 0;
    do {         /* wait until UART is empty */
-      if (scanACK(busnumber)) ack=1;  /* scan ACK */ 
+      if (scanACK(busnumber)) ack=1;  /* scan ACK */
+#if linux
       ioctl(busses[busnumber].fd,TIOCSERGETLSR,&result);
+#else
+      ioctl(busses[busnumber].fd,TCSADRAIN,&result);
+#endif
    } while(!result);
    return ack;
 } 

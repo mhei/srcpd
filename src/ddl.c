@@ -148,6 +148,7 @@ int queue_get(int *addr, char *packet, int *packet_size) {
 static struct termios maerklin_dev_termios;
 static struct termios nmra_dev_termios;
 
+#if linux
 static struct serial_struct *serinfo_marklin=NULL;
 static struct serial_struct *serinfo_nmradcc=NULL;
 
@@ -178,6 +179,7 @@ int reset_customdivisor(int fd) {
    if (ioctl(fd, TIOCSSERIAL, serinfo) < 0) return -1;
    return 0;
 }
+#endif
 
 int setSerialMode(int busnumber, int mode) {
 
@@ -188,12 +190,14 @@ int setSerialMode(int busnumber, int mode) {
                DBG(busnumber, DBG_ERROR,"   error setting serial device mode to marklin!");
                return -1;
             }
+#if linux
             if (__DDL->IMPROVE_NMRADCC_TIMING) {
                if (set_customdivisor(busses[busnumber].fd, serinfo_marklin)!=0) {
-	           DBG(busnumber, DBG_ERROR, "   cannot set custom divisor for maerklin of serial device!");
+                  DBG(busnumber, DBG_ERROR, "   cannot set custom divisor for maerklin of serial device!");
                   return -1;
                }
             }
+#endif
             __DDL -> SERIAL_DEVICE_MODE = SDM_MAERKLIN;
          }
          break;
@@ -203,12 +207,14 @@ int setSerialMode(int busnumber, int mode) {
                DBG(busnumber, DBG_ERROR,"   error setting serial device mode to NMRA!");
                return -1;
             }
+#if linux
             if (__DDL -> IMPROVE_NMRADCC_TIMING) {
                if (set_customdivisor(busses[busnumber].fd, serinfo_nmradcc)!=0) {
                   DBG(busnumber, DBG_ERROR, "   cannot set custom divisor for nmra dcc of serial device!");
                   return -1;
                }
             }
+#endif
             __DDL -> SERIAL_DEVICE_MODE = SDM_NMRA;
          }
          break;
@@ -232,10 +238,12 @@ int init_lineDDL(int busnumber) {
       exit (1);                             /* theres no chance to continue */
    }
 
+#if linux
    if (reset_customdivisor(dev)!=0) {
       DBG(busnumber, DBG_FATAL, "   error initializing device %s. Abort!", busses[busnumber].device);
       exit(1);
    }
+#endif
 
    tcflush(dev,TCOFLUSH);
    tcflow(dev,TCOOFF);          /* suspend output */
@@ -268,6 +276,7 @@ int init_lineDDL(int busnumber) {
    else
       cfsetospeed(&nmra_dev_termios,B19200);      /* baud rate: 19200 */
 
+#if linux
    // if IMPROVE_NMRADCC_TIMING is set, we have to initialize some
    // structures
    if (__DDL -> IMPROVE_NMRADCC_TIMING) {
@@ -280,6 +289,7 @@ int init_lineDDL(int busnumber) {
          exit(1);
       }
    }
+#endif
    busses[busnumber].fd = dev; /* we need that value at the next step */
    /* setting serial device to default mode */
    if (!setSerialMode(busnumber,SDM_DEFAULT)==0) {
@@ -485,14 +495,22 @@ static struct timespec rmtp;
 void waitUARTempty_COMMON(busnumber) {
    int result;
    do {         /* wait until UART is empty */
+#if linux
       ioctl(busses[busnumber].fd,TIOCSERGETLSR,&result);
+#else
+      ioctl(busses[busnumber].fd,TCSADRAIN,&result);
+#endif
    } while(!result);
 }
 
 void waitUARTempty_COMMON_USLEEPPATCH(busnumber) {
    int result;
    do {         /* wait until UART is empty */
+#if linux
       ioctl(busses[busnumber].fd,TIOCSERGETLSR,&result);
+#else
+      ioctl(busses[busnumber].fd,TCSADRAIN,&result);
+#endif
       usleep(__DDL->WAITUART_USLEEP_USEC);
    } while(!result);
 }

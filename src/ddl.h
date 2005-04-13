@@ -18,12 +18,14 @@
 #include <sys/uio.h>
 #include <termios.h>
 #include <signal.h>
-#include <sys/io.h>
 
 #include <pthread.h>
 #include <sched.h>
 
+#if linux
+#include <sys/io.h>
 #include <linux/serial.h>
+#endif
 
 #include <libxml/tree.h>
 
