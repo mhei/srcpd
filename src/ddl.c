@@ -280,7 +280,7 @@ int init_lineDDL(int busnumber) {
    else
    {
       cfsetospeed(&nmra_dev_termios,B19200);      /* baud rate: 19200 */
-	  cfsetospeed(&nmra_dev_termios,B19200);      /* baud rate: 19200 */
+	  cfsetispeed(&nmra_dev_termios,B19200);      /* baud rate: 19200 */
    }
 
 #if linux
