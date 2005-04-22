@@ -264,6 +264,7 @@ int init_lineDDL(int busnumber) {
    maerklin_dev_termios.c_cflag &= ~(CSIZE | PARENB);
    maerklin_dev_termios.c_cflag |= CS6;        /* 6 data bits      */
    cfsetospeed(&maerklin_dev_termios,B38400);  /* baud rate: 38400 */
+   cfsetispeed(&maerklin_dev_termios,B38400);  /* baud rate: 38400 */
 
    /* init termios structur for nmra mode */
    nmra_dev_termios.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
@@ -272,9 +273,15 @@ int init_lineDDL(int busnumber) {
    nmra_dev_termios.c_cflag &= ~(CSIZE | PARENB);
    nmra_dev_termios.c_cflag |= CS8;            /* 8 data bits      */
    if (__DDL->IMPROVE_NMRADCC_TIMING)
+   {
       cfsetospeed(&nmra_dev_termios,B38400);      /* baud rate: 38400 */
+	  cfsetispeed(&nmra_dev_termios,B38400);      /* baud rate: 38400 */
+   }
    else
+   {
       cfsetospeed(&nmra_dev_termios,B19200);      /* baud rate: 19200 */
+	  cfsetospeed(&nmra_dev_termios,B19200);      /* baud rate: 19200 */
+   }
 
 #if linux
    // if IMPROVE_NMRADCC_TIMING is set, we have to initialize some
@@ -754,8 +761,9 @@ void set_SerialLine(int busnumber, int line, int mode) {
 void start_voltage(int busnumber) {
    int error;
 
-   if (__DDL->ptid==(pthread_t)NULL) {
+   if (__DDL->started_thread_flag==0) {
       error = pthread_create(&(__DDL->ptid), NULL,  thr_refresh_cycle, (void*) busnumber);
+	  __DDL->started_thread_flag=1;
       if (error) {
           DBG(busnumber, DBG_FATAL,"cannot create thread: refresh_cycle. Abort!");
           exit(1);
@@ -765,14 +773,14 @@ void start_voltage(int busnumber) {
 }
 
 void stop_voltage(int busnumber) {
-  if (__DDL->ptid!=(pthread_t)NULL) {
+  if (__DDL->started_thread_flag!=0) {
      cancel_refresh_cycle(busnumber);
   }
   DBG(busnumber, DBG_INFO, "refresh cycle canceled.");
 }
 
 void reset(int busnumber) {
-   if (__DDL->ptid!=(pthread_t)NULL) {
+   if (__DDL->started_thread_flag!=0) {
       cancel_refresh_cycle(busnumber);
    }
    init_MaerklinPacketPool(busnumber);
@@ -792,7 +800,9 @@ void cancel_refresh_cycle(int busnumber) {
    tcflow(busses[busnumber].fd, TCOOFF);
    set_SerialLine(busnumber, SL_DTR,OFF);
    /* clear thread struct */
-   __DDL->ptid=(pthread_t)NULL;
+   //__DDL->ptid=(pthread_t)NULL;
+   __DDL->started_thread_flag = 0;
+   pthread_exit(__DDL->ptid);
 }
 
 
@@ -800,7 +810,9 @@ void mkclean(busnumber) {
    tcflush(busses[busnumber].fd, TCOFLUSH);
    tcflow(busses[busnumber].fd, TCOOFF);
    set_SerialLine(busnumber,SL_DTR,OFF);
-   __DDL->ptid=(pthread_t)NULL;
+   //__DDL->ptid=(pthread_t)NULL;
+   __DDL->started_thread_flag = 0;
+   pthread_exit(__DDL->ptid);
 }
 
 void *thr_refresh_cycle(void *v) {
