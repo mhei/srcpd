@@ -52,7 +52,7 @@ typedef struct _DDL_DATA {
     struct timeval tv1, tv2;
     struct timezone tz;
     pthread_t ptid;
-
+    int started_thread_flag;
 } DDL_DATA;
 
 int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, int busnumber);
