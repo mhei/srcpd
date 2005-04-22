@@ -941,6 +941,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   __DDL -> WAITUART_USLEEP_USEC = 0;      /* usecs for usleep patch       */
 
   __DDL -> SERIAL_DEVICE_MODE = SDM_NOTINITIALIZED;
+  __DDL -> started_thread_flag = 0;
   while (child)
   {
     if(strncmp(child->name, "text", 4)==0)
