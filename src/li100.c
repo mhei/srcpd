@@ -47,6 +47,7 @@ int cmpTime( struct timeval *t1, struct timeval *t2 );
 static int readAnswer_LI100( int busnumber, unsigned char *str );
 static int initLine_LI100( int busnumber );
 void check_extern_engines( int busnumber );
+void get_status_sm_LI100( int busnumber );
 
 int readConfig_LI100( xmlDocPtr doc, xmlNodePtr node, int busnumber )
 {
@@ -101,6 +102,18 @@ int readConfig_LI100( xmlDocPtr doc, xmlNodePtr node, int busnumber )
       char * txt = xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
       set_min_time( busnumber, atoi( txt ) );
       free( txt );
+    }
+    if ( strcmp( child->name, "baudrate" ) == 0 )
+    {
+      char * txt = xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
+      if ( strcmp( txt, "9600" ) == 0 )
+        busses[ busnumber ].baudrate = B9600;
+      if ( strcmp( txt, "19200" ) == 0 )
+        busses[ busnumber ].baudrate = B19200;
+      if ( strcmp( txt, "38400" ) == 0 )
+        busses[ busnumber ].baudrate = B38400;
+      if ( strcmp( txt, "57600" ) == 0 )
+        busses[ busnumber ].baudrate = B57600;
     }
     child = child->next;
   }
@@ -280,7 +293,7 @@ void* thr_sendrec_LI100( void *v )
       byte2send[ 0 ] = 0x21;
       byte2send[ 1 ] = busses[ busnumber ].power_state ? 0x81 : 0x80;
       status = send_command_LI100( busnumber, byte2send );
-      if ( status == 0 )                                                                  // war alles OK ?
+      if ( status == 0 )                                                                            // war alles OK ?
         busses[ busnumber ].power_changed = 0;
     }
 
@@ -288,6 +301,7 @@ void* thr_sendrec_LI100( void *v )
     send_command_ga_LI100( busnumber );
     check_status_LI100( busnumber );
     check_extern_engines( busnumber );
+    send_command_sm_LI100( busnumber );
     check_reset_fb( busnumber );
     busses[ busnumber ].watchdog = 1;
     usleep( 50000 );
@@ -312,7 +326,7 @@ void send_command_ga_LI100( int busnumber )
     {
       syslog( LOG_INFO, "Zeit %i,%i", ( int ) akt_time.tv_sec, ( int ) akt_time.tv_usec );
       cmp_time = __li100->tga[ i ].t;
-      if ( cmpTime( &cmp_time, &akt_time ) )                                                          // Ausschaltzeitpunkt erreicht ?
+      if ( cmpTime( &cmp_time, &akt_time ) )                                                                    // Ausschaltzeitpunkt erreicht ?
       {
         gatmp = __li100->tga[ i ];
         addr = gatmp.id;
@@ -411,7 +425,7 @@ void send_command_gl_LI100( int busnumber )
          ( gltmp.funcs != glakt.funcs ) )
     {
       // Lokkommando soll gesendet werden
-      if ( gltmp.direction == 2 )                                                           // emergency stop for one locomotiv
+      if ( gltmp.direction == 2 )                                                                     // emergency stop for one locomotiv
       {
         if ( __li100->version_zentrale >= 0x0300 )
         {
@@ -676,6 +690,260 @@ void check_extern_engines( int busnumber )
   __li100->last_value = -1;
 }
 
+int read_register_LI100( int busnumber, int reg )
+{
+  unsigned char byte2send[ 20 ];
+  unsigned char status;
+
+  byte2send[ 0 ] = 0x22;
+  byte2send[ 1 ] = 0x11;
+  byte2send[ 2 ] = reg;
+
+  status = send_command_LI100( busnumber, byte2send );
+  get_status_sm_LI100( busnumber );
+  return status;
+}
+
+int write_register_LI100( int busnumber, int reg, int value )
+{
+  unsigned char byte2send[ 20 ];
+  unsigned char status;
+
+  byte2send[ 0 ] = 0x23;
+  byte2send[ 1 ] = 0x12;
+  byte2send[ 2 ] = reg;
+  byte2send[ 3 ] = value;
+
+  status = send_command_LI100( busnumber, byte2send );
+
+  return status;
+}
+
+int read_page_LI100( int busnumber, int cv )
+{
+  unsigned char byte2send[ 20 ];
+  unsigned char status;
+
+  byte2send[ 0 ] = 0x22;
+  byte2send[ 1 ] = 0x14;
+  byte2send[ 2 ] = cv;
+
+  status = send_command_LI100( busnumber, byte2send );
+  get_status_sm_LI100( busnumber );
+  return status;
+}
+
+int write_page_LI100( int busnumber, int cv, int value )
+{
+  unsigned char byte2send[ 20 ];
+  unsigned char status;
+
+  byte2send[ 0 ] = 0x23;
+  byte2send[ 1 ] = 0x17;
+  byte2send[ 2 ] = cv;
+  byte2send[ 3 ] = value;
+
+  status = send_command_LI100( busnumber, byte2send );
+
+  return status;
+}
+
+int read_cv_LI100( int busnumber, int cv )
+{
+  unsigned char byte2send[ 20 ];
+  unsigned char status;
+
+  byte2send[ 0 ] = 0x22;
+  byte2send[ 1 ] = 0x15;
+  byte2send[ 2 ] = cv;
+
+  status = send_command_LI100( busnumber, byte2send );
+  get_status_sm_LI100( busnumber );
+  return status;
+}
+
+int write_cv_LI100( int busnumber, int cv, int value )
+{
+  unsigned char byte2send[ 20 ];
+  unsigned char status;
+
+  byte2send[ 0 ] = 0x23;
+  byte2send[ 1 ] = 0x16;
+  byte2send[ 2 ] = cv;
+  byte2send[ 3 ] = value;
+
+  status = send_command_LI100( busnumber, byte2send );
+
+  return status;
+}
+
+// program decoder on the main
+int send_pom_cv_LI100( int busnumber, int addr, int cv, int value )
+{
+  unsigned char byte2send[ 20 ];
+  unsigned char status;
+  int ret_val;
+  int tmp;
+
+  cv--;
+
+  // send pom-command
+  byte2send[ 0 ] = 0xE6;
+  byte2send[ 1 ] = 0x30;
+  // high-byte of decoder-adress
+  tmp = addr >> 8;
+  byte2send[ 2 ] = tmp;
+  // low-byte of decoder-adress
+  tmp = addr & 0xFF;
+  byte2send[ 3 ] = tmp;
+  tmp = 0x7C | ( ( cv >> 8 ) & 0x03 );
+  byte2send[ 4 ] = tmp;
+  byte2send[ 5 ] = cv & 0xff;
+  byte2send[ 6 ] = value;
+
+  status = send_command_LI100( busnumber, byte2send );
+
+  ret_val = 0;
+  if ( status != 0 )
+    ret_val = -1;
+  return ret_val;
+}
+
+// program decoder on the main
+int send_pom_cvbit_LI100( int busnumber, int addr, int cv, int cvbit, int value )
+{
+  unsigned char byte2send[ 20 ];
+  unsigned char status;
+  int ret_val;
+  int tmp;
+
+  cv--;
+
+  // send pom-command
+  byte2send[ 0 ] = 0xE6;
+  byte2send[ 1 ] = 0x30;
+  // high-byte of decoder-adress
+  tmp = addr >> 8;
+  byte2send[ 2 ] = tmp;
+  // low-byte of decoder-adress
+  tmp = addr & 0xFF;
+  byte2send[ 3 ] = tmp;
+  tmp = 0x7C | ( ( cv >> 8 ) & 0x03 );
+  byte2send[ 4 ] = tmp;
+  byte2send[ 5 ] = cv & 0xff;
+  byte2send[ 6 ] = cvbit;
+  if ( value )
+    byte2send[ 6 ] |= 0x08;
+
+  status = send_command_LI100( busnumber, byte2send );
+
+  ret_val = 0;
+  if ( status != 0 )
+    ret_val = -1;
+  return ret_val;
+}
+
+int term_pgm_LI100( int busnumber )
+{
+  unsigned char byte2send[ 20 ];
+  unsigned char status;
+
+  // send command "turn all on"
+  byte2send[ 0 ] = 0x21;
+  byte2send[ 1 ] = 0x81;
+
+  status = send_command_LI100( busnumber, byte2send );
+
+  return status;
+}
+
+void send_command_sm_LI100( int busnumber )
+{
+  //unsigned char byte2send;
+  //unsigned char status;
+  struct _SM smakt;
+
+  /* Lokdecoder */
+  //fprintf(stderr, "LOK's... ");
+  /* nur senden, wenn wirklich etwas vorliegt */
+  if ( ! queue_SM_isempty( busnumber ) )
+  {
+    unqueueNextSM( busnumber, &smakt );
+
+    __li100 -> last_type = smakt.type;
+    __li100 -> last_typeaddr = smakt.typeaddr;
+    __li100 -> last_bit = smakt.bit;
+    __li100 -> last_value = smakt.value;
+
+    DBG( busnumber, DBG_DEBUG, "in send_command_sm: last_type[%d] = %d", busnumber, __li100 -> last_type );
+    switch ( smakt.command )
+    {
+      case SET:
+        if ( smakt.addr == -1 )
+        {
+          switch ( smakt.type )
+          {
+            case REGISTER:
+              write_register_LI100( busnumber, smakt.typeaddr, smakt.value );
+              break;
+            case CV:
+              write_cv_LI100( busnumber, smakt.typeaddr, smakt.value );
+              break;
+              /*        case CV_BIT:
+                        write_cvbit( busnumber, smakt.typeaddr, smakt.bit, smakt.value );
+                        break;*/
+            case PAGE:
+              write_page_LI100( busnumber, smakt.typeaddr, smakt.value );
+          }
+        }
+        else
+        {
+          switch ( smakt.type )
+          {
+            case CV:
+              send_pom_cv_LI100( busnumber, smakt.addr, smakt.typeaddr, smakt.value );
+              break;
+            case CV_BIT:
+              send_pom_cvbit_LI100( busnumber, smakt.addr, smakt.typeaddr, smakt.bit, smakt.value );
+              break;
+          }
+        }
+        break;
+      case GET:
+        switch ( smakt.type )
+        {
+          case REGISTER:
+            read_register_LI100( busnumber, smakt.typeaddr );
+            break;
+          case CV:
+            read_cv_LI100( busnumber, smakt.typeaddr );
+            break;
+            /*      case CV_BIT:
+                    read_cvbit( busnumber, smakt.typeaddr, smakt.bit );
+                    break;*/
+          case PAGE:
+            read_page_LI100( busnumber, smakt.typeaddr );
+        }
+        break;
+      case VERIFY:
+        break;
+      case TERM:
+        term_pgm_LI100( busnumber );
+        break;
+    }
+  }
+}
+
+void get_status_sm_LI100( int busnumber )
+{
+  unsigned char byte2send[ 20 ];
+
+  byte2send[ 0 ] = 0x21;
+  byte2send[ 1 ] = 0x10;
+
+  send_command_LI100( busnumber, byte2send );
+}
+
 void check_status_LI100( int busnumber )
 {
   int i;
@@ -712,7 +980,7 @@ int send_command_LI100( int busnumber, unsigned char *str )
   str[ 19 ] = 0x00;                   // control-byte for xor
   ctr = str[ 0 ] & 0x0f;              // generate length of command
   ctr++;
-  for ( i = 0;i < ctr;i++ )                                                                    // send command
+  for ( i = 0;i < ctr;i++ )                                                                              // send command
   {
     str[ 19 ] ^= str[ i ];
     writeByte( busnumber, str[ i ], 0 );
@@ -740,7 +1008,7 @@ static int readAnswer_LI100( int busnumber, unsigned char *str )
   }
   ctr = str[ 0 ] & 0x0f;              // generate length of answer
   ctr += 2;
-  for ( i = 1;i < ctr;i++ )                                                    // read answer
+  for ( i = 1;i < ctr;i++ )                                                              // read answer
   {
     readByte( busnumber, 1, &str[ i ] );
   }
@@ -750,7 +1018,7 @@ static int readAnswer_LI100( int busnumber, unsigned char *str )
   {
     cXor ^= str[ i ];
   }
-  if ( cXor != 0x00 )                                                                     // must be 0x00
+  if ( cXor != 0x00 )                                                                               // must be 0x00
     status = -1;                    // error
   //9216 PRINT #2, SEND$; : IST$ = "--": GOSUB 9000           'senden
   //9218 '
@@ -762,7 +1030,7 @@ static int readAnswer_LI100( int busnumber, unsigned char *str )
   //9230 IF IST$ = "KA" THEN GOSUB 9280                       'keine antwort
   //9232 RETURN
 
-  if ( str[ 0 ] == 0x02 )                                                           // version-number of interface
+  if ( str[ 0 ] == 0x02 )                                                                     // version-number of interface
   {
     __li100->version_interface = ( ( str[ 1 ] & 0xf0 ) << 4 ) + ( str[ 1 ] & 0x0f );
     __li100->code_interface = ( int ) str[ 2 ];
@@ -922,7 +1190,7 @@ static int readAnswer_LI100( int busnumber, unsigned char *str )
   {
     ctr = str[ 0 ] & 0xf;
     ctr += 2;
-    for ( i = 1;i < ctr;i + 2 )
+    for ( i = 1;i < ctr;i += 2 )
     {
       switch ( str[ i + 1 ] & 0x60 )
       {
@@ -950,10 +1218,29 @@ static int readAnswer_LI100( int busnumber, unsigned char *str )
                 }
 
                     break;*/
-        case 0x40:                                       // feedback-decoder
+        case 0x40:                                                 // feedback-decoder
           setFBmodul( busnumber, ( str[ i ] * 2 ) + ( ( str[ i + 1 ] & 0x80 ) ? 1 : 0 ), str[ i + 1 ] & 0x0f );
           break;
       }
+    }
+  }
+
+  // answer of programming
+  if ( ( str[ 0 ] == 0x63 ) && ( ( str[ 1 ] & 0xf0 ) == 0x10 ) )
+  {
+    if ( __li100->last_type != -1 )
+    {
+      setSM( busnumber, __li100 -> last_type, -1, __li100 -> last_typeaddr, __li100->last_bit, ( int ) str[ 3 ], 0 );
+      __li100 -> last_type = -1;
+    }
+  }
+  if ( ( str[ 0 ] == 0x61 )
+       && ( str[ 1 ] == 0x13 ) )
+  {
+    if ( __li100->last_type != -1 )
+    {
+      setSM( busnumber, __li100 -> last_type, -1, __li100 -> last_typeaddr, __li100->last_bit, __li100->last_value, -1 );
+      __li100 -> last_type = -1;
     }
   }
   return status;
@@ -969,7 +1256,25 @@ static int initLine_LI100( int busnumber )
   char *name = busses[ busnumber ].device;
   printf( "Begining to detect LI100 on serial line: %s\n", name );
 
-  printf( "try opening serial line %s for 9600 baud\n", name );
+  switch ( busses[ busnumber ].baudrate )
+  {
+    case B9600:
+      strcpy( byte2send, "9600" );
+      break;
+    case B19200:
+      strcpy( byte2send, "19200" );
+      break;
+    case B38400:
+      strcpy( byte2send, "38400" );
+      break;
+    case B57600:
+      strcpy( byte2send, "57600" );
+      break;
+    default:
+      strcpy( byte2send, "9600" );
+      break;
+  }
+  printf( "try opening serial line %s for %s baud\n", name, byte2send );
   fd = open( name, O_RDWR );
   if ( fd == -1 )
   {
@@ -982,8 +1287,8 @@ static int initLine_LI100( int busnumber )
   interface.c_cflag = CS8 | CRTSCTS | CSTOPB | CLOCAL | CREAD | HUPCL;
   interface.c_iflag = IGNBRK;
   interface.c_lflag = IEXTEN;
-  cfsetispeed( &interface, B9600 );
-  cfsetospeed( &interface, B9600 );
+  cfsetispeed( &interface, busses[ busnumber ].baudrate );
+  cfsetospeed( &interface, busses[ busnumber ].baudrate );
   interface.c_cc[ VMIN ] = 0;
   interface.c_cc[ VTIME ] = 1;
   tcsetattr( fd, TCSANOW, &interface );

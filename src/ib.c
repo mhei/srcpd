@@ -485,7 +485,7 @@ void send_command_gl_IB( int busnumber )
   }
 }
 
-int read_register( int busnumber, int reg )
+int read_register_IB( int busnumber, int reg )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -502,7 +502,7 @@ int read_register( int busnumber, int reg )
   return status;
 }
 
-int write_register( int busnumber, int reg, int value )
+int write_register_IB( int busnumber, int reg, int value )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -521,7 +521,7 @@ int write_register( int busnumber, int reg, int value )
   return status;
 }
 
-int read_page( int busnumber, int cv )
+int read_page_IB( int busnumber, int cv )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -543,7 +543,7 @@ int read_page( int busnumber, int cv )
   return status;
 }
 
-int write_page( int busnumber, int cv, int value )
+int write_page_IB( int busnumber, int cv, int value )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -565,7 +565,7 @@ int write_page( int busnumber, int cv, int value )
   return status;
 }
 
-int read_cv( int busnumber, int cv )
+int read_cv_IB( int busnumber, int cv )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -587,7 +587,7 @@ int read_cv( int busnumber, int cv )
   return status;
 }
 
-int write_cv( int busnumber, int cv, int value )
+int write_cv_IB( int busnumber, int cv, int value )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -611,7 +611,7 @@ int write_cv( int busnumber, int cv, int value )
   return status;
 }
 
-int read_cvbit( int busnumber, int cv, int bit )
+int read_cvbit_IB( int busnumber, int cv, int bit )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -633,7 +633,7 @@ int read_cvbit( int busnumber, int cv, int bit )
   return status;
 }
 
-int write_cvbit( int busnumber, int cv, int bit, int value )
+int write_cvbit_IB( int busnumber, int cv, int bit, int value )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -660,7 +660,7 @@ int write_cvbit( int busnumber, int cv, int bit, int value )
 }
 
 // program decoder on the main
-int send_pom( int busnumber, int addr, int cv, int value )
+int send_pom_IB( int busnumber, int addr, int cv, int value )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -697,7 +697,7 @@ int send_pom( int busnumber, int addr, int cv, int value )
   return ret_val;
 }
 
-int term_pgm( int busnumber )
+int term_pgm_IB( int busnumber )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -742,43 +742,43 @@ void send_command_sm_IB( int busnumber )
         switch ( smakt.type )
         {
         case REGISTER:
-          write_register( busnumber, smakt.typeaddr, smakt.value );
+          write_register_IB( busnumber, smakt.typeaddr, smakt.value );
           break;
         case CV:
-          write_cv( busnumber, smakt.typeaddr, smakt.value );
+          write_cv_IB( busnumber, smakt.typeaddr, smakt.value );
           break;
         case CV_BIT:
-          write_cvbit( busnumber, smakt.typeaddr, smakt.bit, smakt.value );
+          write_cvbit_IB( busnumber, smakt.typeaddr, smakt.bit, smakt.value );
           break;
         case PAGE:
-          write_page( busnumber, smakt.typeaddr, smakt.value );
+          write_page_IB( busnumber, smakt.typeaddr, smakt.value );
         }
       }
       else
       {
-        send_pom( busnumber, smakt.addr, smakt.typeaddr, smakt.value );
+        send_pom_IB( busnumber, smakt.addr, smakt.typeaddr, smakt.value );
       }
       break;
     case GET:
       switch ( smakt.type )
       {
       case REGISTER:
-        read_register( busnumber, smakt.typeaddr );
+        read_register_IB( busnumber, smakt.typeaddr );
         break;
       case CV:
-        read_cv( busnumber, smakt.typeaddr );
+        read_cv_IB( busnumber, smakt.typeaddr );
         break;
       case CV_BIT:
-        read_cvbit( busnumber, smakt.typeaddr, smakt.bit );
+        read_cvbit_IB( busnumber, smakt.typeaddr, smakt.bit );
         break;
       case PAGE:
-        read_page( busnumber, smakt.typeaddr );
+        read_page_IB( busnumber, smakt.typeaddr );
       }
       break;
     case VERIFY:
       break;
     case TERM:
-      term_pgm( busnumber );
+      term_pgm_IB( busnumber );
       break;
     }
   }
