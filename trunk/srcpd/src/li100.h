@@ -50,6 +50,7 @@ int init_ga_LI100(struct _GASTATE *ga);
 void* thr_sendrec_LI100(void*);
 void send_command_ga_LI100(int busnumber);
 void send_command_gl_LI100(int busnumber);
+void send_command_sm_LI100(int busnumber);
 void check_status_LI100(int busnumber);
 int send_command_LI100(int busnumber, unsigned char *str);
 
