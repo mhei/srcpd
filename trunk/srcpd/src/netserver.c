@@ -718,6 +718,21 @@ int handleINIT(int sessionid, int bus, char *device, char *parameter, char *repl
     }
   }
 
+  if (bus_has_devicegroup(bus, DG_FB) && strncasecmp(device, "FB", 2) == 0)
+  {
+    long addr, index, nelem;
+    char prot;
+    nelem = sscanf(parameter, "%ld %c %ld", &addr, &prot, &index);
+    if (nelem >= 3)
+    {
+      rc = initFB(bus, addr, prot, index);
+    }
+    else
+    {
+      rc = SRCP_LISTTOOSHORT;
+    }
+  }
+
   if (bus_has_devicegroup(bus, DG_TIME)  && strncasecmp(device, "TIME", 4) == 0)
   {
     long rx, ry, nelem;

@@ -1,328 +1,456 @@
 /* cvs: $Id$             */
 
 /*
- * Vorliegende Software unterliegt der General Public License,
- * Version 1, 2005. (c) Gerard van der Sel, 2005-2006.
- *
- * Version 0.1: Locomotiv ansteurung
- * Version 0.0: Umgezetster file M605X
+* Vorliegende Software unterliegt der General Public License,
+* Version 1, 2005. (c) Gerard van der Sel, 2005-2006.
+* Version 0.4: 20050521: Feedback responce
+* Version 0.3: 20050521: Controlling a switch/signal
+* Version 0.2: 20050514: Controlling a engine
+* Version 0.1: 20050508: Connection with CC-2000 and power on/off
+* Version 0.0: 20050501: Translated file from file M605X which compiles
+*/
+
+/*
+ * This software does the translation for a selectrix centrol centre
+ * A old centrol centre is the default selection
+ * In the xml-file the control centre can be changed to the new CC-2000
+ *   A CC-2000 can program a engine
+ *   (Control centre of MUT and Uwe Magnus are CC-2000 compatible)
  */
 
-
 /* Die Konfiguration des seriellen Ports von M6050emu (D. Schaefer)   */
-/* wenngleich etwas verändert, mea culpa..                            */
+/* wenngleich etwas verï¿½dert, mea culpa..                            */
 
 #include "stdincludes.h"
-#include "config-srcpd.h"
 #include "io.h"
-#include "selectrix.h"
-#include "srcp-fb.h"
-#include "srcp-ga.h"
-#include "srcp-gl.h"
+#include "config-srcpd.h"
 #include "srcp-power.h"
 #include "srcp-info.h"
 #include "srcp-srv.h"
 #include "srcp-error.h"
+#include "srcp-gl.h"
+#include "srcp-ga.h"
+#include "srcp-fb.h"
+#include "selectrix.h"
 
 /* Macro definition  */
 #define __selectrix ((SELECTRIX_DATA*)busses[busnumber].driverdata)
 
-/** readconfig_selectrix: liest den Teilbaum der xml Configuration und parametriert
-     den busspezifischen Datenteil, wird von register_bus() aufgerufen */
-
-int readconfig_selectrix(xmlDocPtr doc, xmlNodePtr node, int busnumber)
+/*******************************************************
+*  readconfig_selectrix: liest den Teilbaum der xml Configuration und parametriert
+*  den busspezifischen Datenteil, wird von register_bus() aufgerufen 
+********************************************************/
+int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
-  xmlNodePtr child = node->children;
-  busses[busnumber].type = SERVER_SELECTRIX;
-  busses[busnumber].init_func = &init_bus_SELECTRIX;
-  busses[busnumber].term_func = &term_bus_SELECTRIX;
-  busses[busnumber].thr_func = &thr_sendrec_SELECTRIX;
-  busses[busnumber].init_gl_func = &init_gl_SELECTRIX;
-  busses[busnumber].init_ga_func = &init_ga_SELECTRIX;
-  busses[busnumber].driverdata = malloc(sizeof(struct _SELECTRIX_DATA));
-  busses[ busnumber ].baudrate = B9600;
-  __selectrix->number_fb = 1;
-  __selectrix->number_ga = 1;
-  __selectrix->number_gl = 1; 
-  __selectrix->number_adres = 112;  /* total of fb + ga + gl max 112 oder 104 */
-  __selectrix->flags = 0;
-  strcpy(busses[busnumber].description, "GA GL FB POWER LOCK DESCRIPTION");
+	int i;
+	
+	busses[busnumber].type= SERVER_SELECTRIX;
+	busses[busnumber].baudrate= B9600;
+	busses[busnumber].init_func= &init_bus_Selectrix;
+	busses[busnumber].term_func= &term_bus_Selectrix;
+	busses[busnumber].thr_func= &thr_sendrec_Selectrix;
+	busses[busnumber].init_gl_func= &init_gl_Selectrix;
+	busses[busnumber].init_ga_func= &init_ga_Selectrix;
+	busses[busnumber].init_fb_func= &init_fb_Selectrix;
+	busses[busnumber].driverdata= malloc(sizeof(struct _SELECTRIX_DATA));
+	__selectrix->number_gl= SXmax;
+	__selectrix->number_ga= SXmax;
+	__selectrix->number_fb= SXmax;
+	__selectrix->flags= 0;
+	__selectrix->number_adres = SXmax;
+	for (i= 0; i< SXmax; i++)
+	{
+		__selectrix->bus_data[i]= 0;         /* Set all outputs to 0 */
+		__selectrix->fb_adresses[i]= 255;    /* Set invalid adresses */
+	}
+	strcpy(busses[busnumber].description, "GA GL FB POWER LOCK DESCRIPTION");
 
-  while (child)
-  {
-    if(strncmp(child->name, "text", 4)==0)
-    {
-      child = child -> next;
-      continue;
-    }
-
-    if (strcmp(child->name, "number_fb") == 0)
-    {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      __m6051->number_fb = atoi(txt);
-      free(txt);
-    }
-
-    if (strcmp(child->name, "number_gl") == 0)
-    {
-      char *txt =
-      xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      __m6051->number_gl = atoi(txt);
-      free(txt);
-    }
-
-    if (strcmp(child->name, "number_ga") == 0)
-    {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      __m6051->number_ga = atoi(txt);
-      free(txt);
-    }
-
-    if (strcmp(child->name, "mode_cc2000") == 0)
-    {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      if (strcmp(txt, "yes") == 0)
-      {
-        __SELECTRIX->flags |= CC2000_MODE;
-        __selectrix->number_adres = 104;     /* Last 8 adresses for the CC2000 */
-        strcpy(busses[busnumber].description, "GA GL FB SM POWER LOCK DESCRIPTION");
-      }
-      free(txt);
-    }
-
-    child = child->next;
-  }
-  /* Initialise the array's if there are not to much adresses used */
-  if ((__selectrix->number_fb + __selectrix->number_ga + __selectrix->number_gl) >  __selectrix->number_adres )
-  {
-    if(init_GA(busnumber, __selectrix->number_ga))
-    {
-      __selectrix->number_ga = 0;
-      DBG(busnumber, DBG_ERROR, "Can't create array for assesoirs");
-    }
-
-    if(init_GL(busnumber, __selectrix->number_gl))
-    {
-      __selectrix->number_gl = 0;
-      DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
-    }
-    if(init_FB(busnumber, __selectrix->number_fb * 8))
-    {
-      __selectrix->number_fb = 0;
-      DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
-    }
-  }
-  else
-  {
-    __selectrix->number_ga = 0;
-    __selectrix->number_gl = 0;
-    __selectrix->number_fb = 0;
-    DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs, assesoirs and feedback");
-  }
-  return 0;
+	xmlNodePtr child = node->children;
+	while (child)
+	{
+		if(strncmp(child->name, "text", 4)==0)
+		{
+			child= child->next;
+			continue;
+		}
+		if (strcmp(child->name, "number_fb") == 0)
+		{
+			char *txt= xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+			__selectrix->number_fb = atoi(txt);
+			free(txt);
+		}
+		
+		if (strcmp(child->name, "number_gl") == 0)
+		{
+			char *txt= xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+			__selectrix->number_gl = atoi(txt);
+			free(txt);
+		}
+		if (strcmp(child->name, "number_ga") == 0)
+		{
+			char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+			__selectrix->number_ga = atoi(txt);
+			free(txt);
+		}
+		if (strcmp(child->name, "mode_cc2000") == 0)
+		{
+			char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+			if (strcmp(txt, "yes") == 0)
+			{
+				__selectrix->flags |= CC2000_MODE;
+				__selectrix->number_adres = SXcc2000;     /* Last 8 adresses for the CC2000 */
+				__selectrix->number_gl= SXcc2000;
+				__selectrix->number_ga= SXcc2000;
+				__selectrix->number_fb= SXcc2000;	
+				strcpy(busses[busnumber].description, "GA GL FB SM POWER LOCK DESCRIPTION");
+			}
+			free(txt);
+		}
+		child = child->next;
+	}
+	if(init_GL(busnumber, __selectrix->number_gl))
+	{
+		__selectrix->number_gl= 0;
+		DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
+	}
+	if(init_GA(busnumber, __selectrix->number_ga))
+	{
+		__selectrix->number_ga= 0;
+		DBG(busnumber, DBG_ERROR, "Can't create array for assesoirs");
+	}
+	if(init_FB(busnumber, __selectrix->number_fb* 8))
+	{
+		__selectrix->number_fb= 0;
+		DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
+	}
+	return 1;
 }
 
 
 /*******************************************************
- *     SERIELLE SCHNITTSTELLE KONFIGURIEREN
- *******************************************************
- */
-static int init_lineSelectrix(int bus) {
-  int FD;
-  struct termios interface;
-
-  if (busses[bus].debuglevel>0)
-  {
-    DBG(bus, DBG_INFO, "Opening aelectrix: %s", busses[bus].device);
-  }
-  if ((FD = open(busses[bus].device, O_RDWR | O_NONBLOCK)) == -1)
-  {
-    DBG(bus, DBG_FATAL, "couldn't open device %s.", busses[bus].device);
-    return -1;
-  }
-  tcgetattr(FD, &interface);
-#ifdef linux
-  interface.c_cflag = CS8 | CRTSCTS | CREAD | CSTOPB;
-  interface.c_oflag = ONOCR | ONLRET;
-  interface.c_oflag &= ~(OLCUC | ONLCR | OCRNL);
-  interface.c_iflag = IGNBRK | IGNPAR;
-  interface.c_iflag &= ~(ISTRIP | IXON | IXOFF | IXANY);
-  interface.c_lflag = NOFLSH | IEXTEN;
-  interface.c_lflag &= ~(ISIG | ICANON | ECHO | ECHOE | TOSTOP | PENDIN);
-
-  cfsetospeed(&interface, busses[busnumber].baudrate );
-  cfsetispeed(&interface, busses[busnumber].baudrate );
-#else
-  cfmakeraw(&interface);
-  interface.c_ispeed = interface.c_ospeed = busses[busnumber].baudrate ;
-  interface.c_cflag = CREAD  | HUPCL | CS8 | CSTOPB | CRTSCTS;
-#endif
-  tcsetattr(FD, TCSANOW, &interface);
-   DBG(bus, DBG_INFO, "Opening Selectrix succeeded FD=%d", FD);
-  return FD;
-}
-
-int init_bus_Selectrix(int bus) {
-
-  DBG(bus, DBG_INFO," Selectrix  init: debug %d", busses[bus].debuglevel);
-  if(busses[bus].debuglevel<=DBG_DEBUG)
-  {
-    busses[bus].fd = init_lineSelectrix(bus);
-  }
-  else
-  {
-    busses[bus].fd = -1;
-  }
-  DBG(bus, DBG_INFO, "Selectrix init done, fd=%d",  busses[bus].fd);
-  DBG(bus, DBG_INFO, "Selectrix: %s",busses[bus].description);
-  DBG(bus, DBG_INFO, "Selectrix flags: %d", busses[bus].flags & AUTO_POWER_ON);
-  return 0;
-}
-
-int term_bus_Selectrix(int bus)
+*     SERIELLE SCHNITTSTELLE KONFIGURIEREN
+********************************************************/
+int init_lineSelectrix(int busnumber)
 {
-  DBG(bus, DBG_INFO, "Selectrix bus term done, fd=%d",  busses[bus].fd);
-  return 0;
+	int FD;
+	struct termios interface;
+
+	if (busses[busnumber].debuglevel>0)
+	{
+		DBG(busnumber, DBG_INFO, "Opening Selectrix: %s", busses[busnumber].device);
+	}
+	if ((FD = open(busses[busnumber].device, O_RDWR | O_NONBLOCK)) == -1)
+	{
+		DBG(busnumber, DBG_FATAL, "couldn't open device %s.", busses[busnumber].device);
+		return -1;
+	}
+	tcgetattr(FD, &interface);
+#ifdef linux
+	interface.c_cflag = CS8 | CRTSCTS | CREAD | CSTOPB;
+	interface.c_oflag = ONOCR | ONLRET;
+	interface.c_oflag &= ~(OLCUC | ONLCR | OCRNL);
+	interface.c_iflag = IGNBRK | IGNPAR;
+	interface.c_iflag &= ~(ISTRIP | IXON | IXOFF | IXANY);
+	interface.c_lflag = NOFLSH | IEXTEN;
+	interface.c_lflag &= ~(ISIG | ICANON | ECHO | ECHOE | TOSTOP | PENDIN);
+
+	cfsetospeed(&interface, busses[busnumber].baudrate );
+	cfsetispeed(&interface, busses[busnumber].baudrate );
+#else
+	cfmakeraw(&interface);
+	interface.c_ispeed = interface.c_ospeed = busses[busnumber].baudrate ;
+	interface.c_cflag = CREAD  | HUPCL | CS8 | CSTOPB | CRTSCTS;
+#endif
+	tcsetattr(FD, TCSANOW, &interface);
+	DBG(busnumber, DBG_INFO, "Opening Selectrix succeeded FD=%d", FD);
+	return FD;
 }
 
-/**
- * initGL: modifies the gl data used to initialize the device
- *
- */
+int init_bus_Selectrix(int busnumber)
+{
+	DBG(busnumber, DBG_INFO," Selectrix  init: debug %d", busses[busnumber].debuglevel);
+	if(busses[busnumber].debuglevel<= DBG_DEBUG)
+	{
+		busses[busnumber].fd = init_lineSelectrix(busnumber);
+	}
+	else
+	{
+		busses[busnumber].fd = -1;
+	}
+	DBG(busnumber, DBG_INFO, "Selectrix init done, fd=%d",  busses[busnumber].fd);
+	DBG(busnumber, DBG_INFO, "Selectrix description: %s", busses[busnumber].description);
+	DBG(busnumber, DBG_INFO, "Selectrix flags: %d", busses[busnumber].flags);
+	return 0;
+}
+
+int term_bus_Selectrix(int busnumber)
+{
+	DBG(busnumber, DBG_INFO, "Selectrix bus term done, fd=%d",  busses[busnumber].fd);
+	return 0;
+}
+
+/*******************************************************
+*     Device initialisation
+********************************************************/
+/* Engines */
 int init_gl_Selectrix(struct _GLSTATE *gl)
 {
-  if( gl -> protocol != 'S' ) 
-    return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
-  return ( gl->n_fs == 31) ? SRCP_OK : SRCP_WRONGVALUE;
+	if (gl->protocol!= 'S')
+	{
+		return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
+	}
+      return ((gl->n_fs== 31)&& (gl->protocolversion== 1)&& (gl->n_func== 2))? SRCP_OK: SRCP_WRONGVALUE;
 }
 
-/**
- * initGA: modifies the ga data used to initialize the device
-
- */
-int init_ga_Selectrix(struct _GASTATE *ga) {
-  if( ga->protocol != 'S')
-    return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
-  return SRCP_OK;
-}
-
-int readSXbus(int bus, int SXadres)
+/* Switches, signals, ... */
+int init_ga_Selectrix(struct _GASTATE *ga)
 {
-  unsigned char rr;
-  int temp;
-
-  /* Make sure the connection is empty */
-  ioctl(busses[bus].fd, FIONREAD, &temp);
-  while (temp > 0)
-  {
-    readByte(bus, 0, &rr);
-    ioctl(busses[bus].fd, FIONREAD, &temp);
-    DBG(bus, DBG_INFO, "ignoring unread byte: %d ", rr);
-  }
-  /* write SXadres und read commando */
-  writeByte(bus, SXread + SXadres, 0);
-  /* extra byte for power to receive data */
-  writeByte(bus, 0x5A, 0);
-  /* receive data */
-  readByte(bus, 0, &rr);
-  return rr;
+	return (ga->protocol== 'S')? SRCP_OK: SRCP_UNSUPPORTEDDEVICEPROTOCOL;
 }
 
-void writeSXbus(int bus, int SXadres, int SXdata)
+/* Feedbacks */
+int init_fb_Selectrix(int busnumber, int adres, const char protocol, int index)
 {
-  /*  */
-  writeByte(bus, SXwrite + SXadres, 0);
-  /*  */
-  writeByte(bus, SXdata, 0);
+	if (protocol== 'S')
+	{
+		if ((__selectrix->number_adres> adres)&& (__selectrix->number_fb>= index))
+		{
+			__selectrix->fb_adresses[index]= adres;
+			return SRCP_OK;
+		}
+		else
+		{
+			return SRCP_WRONGVALUE;
+		}
+	}
+	return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
 }
 
+/*******************************************************
+*     Base communication with the interface (Selectrix)
+********************************************************/
+/* Read data from the SX-bus (8 bits) */
+int readSXbus(int busnumber, int SXadres)
+{
+	unsigned char rr;
+	int temp;
+
+	/* Make sure the connection is empty */
+	ioctl(busses[busnumber].fd, FIONREAD, &temp);
+	while (temp> 0)
+	{
+		readByte(busnumber, 0, &rr);
+		ioctl(busses[busnumber].fd, FIONREAD, &temp);
+		DBG(busnumber, DBG_INFO, "Selectrix on bus %d, ignoring unread byte: %d ", busnumber, rr);
+	}
+	/* write SXadres and the read command */
+	writeByte(busnumber, SXread+ SXadres, 0);
+	/* extra byte for power to receive data */
+	writeByte(busnumber, 0xaa, 0);
+	/* receive data */
+	readByte(busnumber, 0, &rr);
+	return rr;
+}
+
+/* Write data to the SX-bus (8bits) */
+void writeSXbus(int busnumber, int SXadres, int SXdata)
+{
+	/* write SXadres and the write command */
+	writeByte(busnumber, SXwrite+ SXadres, 0);
+	/* write data to the SX-bus */
+	writeByte(busnumber, SXdata, 0);
+}
+
+/*******************************************************
+*     Command processing (Selectrix)
+********************************************************/
 void* thr_sendrec_Selectrix(void *v)
 {
-  unsigned char SendByte;
-  int addr, temp, number_fb;
-  char c;
-  unsigned char rr;
-  struct _GLSTATE gltmp, glakt;
-  struct _GASTATE gatmp;
-  int bus = (int) v;
-  number_fb = ((SELECTRIX_DATA *)busses[bus].driverdata)->number_fb;
+	int addr, data, power, actFB;
+	struct _GLSTATE gltmp;
+	struct _GASTATE gatmp;
+	int busnumber = (int) v;
 
-  busses[bus].watchdog = 1;
-  DBG(bus, DBG_INFO, "Selectrix on bus %d thread started, fd=%d",  bus, busses[bus].fd);
-  ioctl(busses[bus].fd, FIONREAD, &temp);
-  while (temp > 0)
-  {
-    readByte(bus, 0, &rr);
-    ioctl(busses[bus].fd, FIONREAD, &temp);
-    DBG(bus, DBG_INFO, "ignoring unread byte: %d ", rr);
-  }
-  while (1)
-  {
-    busses[bus].watchdog = 1;
-    /* Start/Stop */
-    if ((busses[bus].power_changed)&&(((SELECTRIX_DATA *)busses[bus].driverdata)->flags== CC2000_MODE)
-    {
-      char msg[1000];
-      busses[bus].watchdog = 2;
-      SendByte = (busses[bus].power_state) ? 96 : 97;
-      writeSXbus(bus, SendByte);
-      busses[bus].power_changed = 0;
-      infoPower(bus, msg);
-      queueInfoMessage(msg);
-    }
-    /* do nothing, if power off */
-    busses[bus].watchdog = 3;
-    if(busses[bus].power_state==0)
-    {
-      busses[bus].watchdog = 4;
-      usleep(1000);
-      continue;
-    }
-    /* Lokdecoder */
-    busses[bus].watchdog = 5;
-    if (!queue_GL_isempty(bus))
-    {
-      busses[bus].watchdog = 6;
-      unqueueNextGL(bus, &gltmp);
-      addr = gltmp.id;
-      getGL(bus, addr, &glakt);
-      if (gltmp.direction == 2)
-      {
-        gltmp.speed = 0;
-        gltmp.direction = !glakt.direction;
-      }
-      /* Send adresse fur locomotiv */
-      /* Geschwindigkeit, Direction, Licht und Function setzen,  */
-      c = gltmp.speed + ((gltmp.direction ) ? 0x20 : 0) + ((gltmp.funcs & 0x01) ? 0x40 : 0) + ((gltmp.funcs & 0x02) ? 0x80 : 0);
-      writeSXbus(bus, addr, c);
-      setGL(bus, addr, gltmp);
-    }
-    busses[bus].watchdog = 7;
-    /* Antriebe (Weichen und Signale) */
-    if (!queue_GA_isempty(bus))
-    {
-      busses[bus].watchdog = 8;
-      unqueueNextGA(bus, &gatmp);
-      addr = gatmp.id;
-      if (gatmp.action == 1)
-      {
-        setGA(bus, addr, gatmp);
-        c = 33 + (gatmp.port ? 0 : 1);
-        SendByte = gatmp.id;
-        writeByte(bus, c, 0);
-        writeByte(bus, SendByte, 0);
-      }
-    }
-    busses[bus].watchdog = 9;
-    /* Zuruck meldungen */
-    if ( (number_fb>0) 
-    {
-      busses[bus].watchdog = 10;
-      /* Calculate the modul adres */
-      /* Lese der SXbus */
-      rr = readSXbus(bus, modul);
-      setFBmodul(bus, modul, rr);
-    }
-    busses[bus].watchdog = 11;
-  }
+	actFB= 1;
+	busses[busnumber].watchdog= 1;
+	DBG(busnumber, DBG_INFO, "Selectrix on bus %d thread started.",  busnumber);
+	while (1)
+	{
+		busses[busnumber].watchdog= 1;
+		/* Start/Stop */
+		if (busses[busnumber].power_changed!= 0)
+		{
+			char msg[1000];
+			busses[busnumber].watchdog= 2;
+			power= ((busses[busnumber].power_state) ? 0x80 : 0x00);
+			writeSXbus(busnumber, SXcontrol, power);
+			infoPower(busnumber, msg);
+			queueInfoMessage(msg);
+			DBG(busnumber, DBG_INFO, "Selectrix on bus %d had a power change.",  busnumber);
+			busses[busnumber].power_changed= 0;
+		}
+		busses[busnumber].watchdog= 3;
+		/* do nothing, if power off */
+		if (busses[busnumber].power_state== 0)
+		{
+			busses[busnumber].watchdog= 4;
+			usleep(1000);
+			continue;
+		}
+		/* Lokdecoder */
+		busses[busnumber].watchdog= 5;
+		if (!queue_GL_isempty(busnumber))
+		{
+			busses[busnumber].watchdog= 6;
+			unqueueNextGL(busnumber, &gltmp);
+			/* Adres of the engine */
+			addr= gltmp.id;
+			/* Check if valid adres */
+			if (__selectrix->number_adres> addr)
+			{
+				/* Check: terminating the engine */
+				if (gltmp.state== 2)
+				{
+					DBG(busnumber, DBG_INFO, "Selectrix on bus %d, engine with adres %d is removed", busnumber, addr);
+					__selectrix->number_gl--;
+				}
+				/* Check: emergency stop */
+				if (gltmp.direction== 2)
+				{
+					gltmp.speed= 0;
+				}
+				/*      Speed,                   Direction,                     Light                          Function           */
+				data= gltmp.speed+ ((gltmp.direction )? 0: 0x20)+ ((gltmp.funcs & 0x01)? 0x40: 0)+ ((gltmp.funcs & 0x02)? 0x80: 0);
+				writeSXbus(busnumber, addr, data);
+				__selectrix->bus_data[addr]= data;
+				setGL(busnumber, addr, gltmp);
+				DBG(busnumber, DBG_INFO, "Selectrix on bus %d, engine with adres %d has data %X.", busnumber, addr, data);
+			}
+			else
+			{
+				DBG(busnumber, DBG_INFO, "Selectrix on bus %d, invalid adres %d with engine", busnumber, addr);
+			}
+		}
+		busses[busnumber].watchdog= 7;
+		/* Antriebe (Weichen und Signale) */
+		if (!queue_GA_isempty(busnumber))
+		{
+			busses[busnumber].watchdog= 8;
+			unqueueNextGA(busnumber, &gatmp);
+			addr= gatmp.id;
+			if (__selectrix->number_adres> addr)
+			{
+				data= __selectrix->bus_data[addr];
+				DBG(busnumber, DBG_INFO, "Selectrix on bus %d, adres %d has olddata %X.", busnumber, addr, data);
+				/* Select the action to do */
+				if (gatmp.action== 0)
+				{
+					/* Set pin to "0" */
+					switch (gatmp.port)
+					{
+					case 1:
+						data&= 0xfe;
+						break;
+					case 2:
+						data&= 0xfd;
+						break;
+					case 3:
+						data&= 0xfb;
+						break;
+					case 4:
+						data&= 0xf7;
+						break;
+					case 5:
+						data&= 0xef;
+						break;
+					case 6:
+						data&= 0xdf;
+						break;
+					case 7:
+						data&= 0xbf;
+						break;
+					case 8:
+						data&= 0x7f;
+						break;
+					default:
+						DBG(busnumber, DBG_INFO, "Selectrix on bus %d, invalid portnumber %d with switch/signal or ...", busnumber, gatmp.port);
+						break;
+					}
+				}
+				else
+				{
+					/* Set pin to "1" */
+					switch (gatmp.port)
+					{
+					case 1:
+						data|= 0x01;
+						break;
+					case 2:
+						data|= 0x02;
+						break;
+					case 3:
+						data|= 0x04;
+						break;
+					case 4:
+						data|= 0x08;
+						break;
+					case 5:
+						data|= 0x10;
+						break;
+					case 6:
+						data|= 0x20;
+						break;
+					case 7:
+						data|= 0x40;
+						break;
+					case 8:
+						data|= 0x80;
+						break;
+					default:
+						DBG(busnumber, DBG_INFO, "Selectrix on bus %d, invalid portnumber %d with switch/signal or ...", busnumber, gatmp.port);
+						break;
+					}
+				}
+				writeSXbus(busnumber, addr, data);
+				__selectrix->bus_data[addr]= data;
+				DBG(busnumber, DBG_INFO, "Selectrix on bus %d, adres %d has newdata %X.", busnumber, addr, data);
+			}
+			else
+			{
+				DBG(busnumber, DBG_INFO, "Selectrix on bus %d, invalid adres %d with switch/signal or ...", busnumber, addr);
+			}
+		}
+		busses[busnumber].watchdog= 9;
+		/* Feed back contacts */
+		if (__selectrix->number_fb> 0) 
+		{
+			busses[busnumber].watchdog= 10;
+			/* Fetch the modul adres */
+			addr= __selectrix->fb_adresses[actFB];
+			//DBG(busnumber, DBG_INFO, "Selectrix on bus %d, feedbackadres %d.", busnumber, addr); 
+			if (__selectrix->number_adres> addr)
+			{
+				/* Read the SXbus */
+				data= readSXbus(busnumber, addr);
+				__selectrix->bus_data[addr]= data;
+				/* Set the deamon global data */
+				setFBmodul(busnumber, actFB, data); /* Use 1, 2, ... as adres for feedback */
+				//setFBmodul(busnumber, addr, data); /* Use real adres for feedback */
+				DBG(busnumber, DBG_INFO, "Selectrix on bus %d, adres %d has feedbackdata %X.", busnumber, addr, data);
+			}
+			else
+			{
+				DBG(busnumber, DBG_INFO, "Selectrix on bus %d, invalid adres %d with feedback.", busnumber, addr);
+			}
+			// Select the next module
+			if (actFB>= __selectrix->number_fb)
+			{
+				actFB= 1;   // Reset to start
+			}
+			else
+			{
+				actFB++;    // Next
+			}
+		}
+	}
 }

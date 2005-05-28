@@ -34,6 +34,7 @@ typedef struct _RESET_FB
 int startup_FB(void);
 int init_FB(int bus, int number);
 int get_number_fb(int bus);
+int initFB(int busnumber, int addr, const char protocol, int index);
 
 int getFB(int bus, int port, struct timeval *time, int *value);
 void updateFB(int bus, int port, int value);

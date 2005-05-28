@@ -37,6 +37,7 @@
 #define SERVER_HSI_88           7         // srcpd-bus works as HSI88-server
 #define SERVER_I2C_DEV          8         // srcpd-bus works as I2C-DEV-server
 #define SERVER_ZIMO             9         // srcpd-bus works as Zimo MX1
+#define SERVER_SELECTRIX       10	  // srcpd-bus works as Selectrix-server
 
 /* generic flags */
 #define USE_WATCHDOG          0x0001      // use watchdog
@@ -47,6 +48,7 @@
 #define FB_ORDER_0            0x0200      // feedback port 0 is bit 0
 #define FB_16_PORTS           0x0400      // feedback-modul has 16 ports
 #define FB_4_PORTS            0x0800      // used for Lenz, sening 2x4 ports instead 8 at once
+
 
 
 /* Busstruktur */
@@ -76,6 +78,7 @@ typedef struct _BUS
   int (*term_func)(int);                     //! addr of init function
   int (*init_gl_func) ( struct _GLSTATE *);  //! called to check default init
   int (*init_ga_func) ( struct _GASTATE *);  //! called to check default init
+  int (*init_fb_func) (int busnumber, int addr, const char protocolb, int index);  //! called to check default init
   int watchdog;                              //! used to monitor the thread
   int power_state;
   int power_changed;

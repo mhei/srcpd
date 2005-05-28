@@ -10,28 +10,48 @@
 
 #include <libxml/tree.h>
 
-#define CC2000_MODE            0x0001      //! CC2000 can programmmand has restricted bus space
-#define SXread                 0x00        /* Lese befehl fur Selectrixbus */
-#define SXwrite                0x80        /* Schreib befehl fur Selectrixbus */
+/* Read and Write command for the interface (Send with the adres) */
+#define SXread			0x00		/* Lese befehl fur Selectrixbus */
+#define SXwrite			0x80		/* Schreib befehl fur Selectrixbus */
 
+/* Maximum number off adresses on the SX-bus */
+#define SXmax			112		/* Number of adresses on the SX-bus*/
+#define SXcc2000		104		/* Number of adresses on the SX-bus with a CC-2000 */
+
+/* Adressses on the SX_bus */
+#define SXcontrol		127		/* Control adres (all SX controllers) */
+#define SXstatus		109		/* Status adres (CC-2000) */
+#define SXcommand		106		/* Command adres (CC-2000) */
+#define SXprog2			105		/* Program parameter 2 (CC-2000) */
+#define SXporg1			104		/* Program parameter 1 (CC-2000) */
+
+/* Central is a CC-2000 */
+#define CC2000_MODE		0x0001		/* CC2000 has restricted bus space and can program decoders */
+
+/* Array with the size of an SX-bus */
+typedef int SX_BUS[SXmax];
+
+/* Structure of a Selectrix bus */
 typedef struct _SELECTRIX_DATA {
     int number_fb;
     int number_ga;
     int number_gl;
     int number_adres;
     int flags;
-    SX_FB_ADRESSEN fb_adressen;
+    SX_BUS fb_adresses;
+    SX_BUS bus_data;
 } SELECTRIX_DATA;
 
-int readconfig_selectrix(xmlDocPtr doc, xmlNodePtr node, int busnumber);
+/* Initialisation of the structure */
+int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, int busnumber);
 
+/* Methods for Selectrix */
 int init_lineSelectrix(int bus);
 int init_bus_Selectrix(int bus);
 int term_bus_Selectrix(int bus);
 int init_gl_Selectrix(struct _GLSTATE *gl);
 int init_ga_Selectrix(struct _GASTATE *ga);
-int init_fb_Selectrix(struct _FBSTATE *fb);
-int getDescription_Selectrix(char *reply);
+int init_fb_Selectrix(int busnumber, int addr, const char protocol, int index);
 void* thr_sendrec_Selectrix(void *);
 
 #endif
