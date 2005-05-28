@@ -6,8 +6,9 @@
 * 04.07.2001 Frank Schmischke
 *            Einfhrung der Konfigurationsdatei
 * 05.08.2001 Matthias Trute
-*        Umstellung auf XML Format
-*
+*            Umstellung auf XML Format
+* 16.05.2005 Gerard van der Sel
+*            addition of Selectrix 
 */
 
 #include "stdincludes.h"
@@ -16,6 +17,7 @@
 #include "srcp-srv.h"
 #include "ddl.h"
 #include "m605x.h"
+#include "selectrix.h"
 #include "ib.h"
 #include "loopback.h"
 #include "ddl-s88.h"
@@ -140,6 +142,11 @@ static int register_bus(int busnumber, xmlDocPtr doc, xmlNodePtr node)
      busnumber += readConfig_LI100(doc, child, busnumber);
      found = 1;
    }
+   if (strcmp(child->name, "selectrix") == 0)
+   {
+     busnumber += readconfig_Selectrix(doc, child, busnumber);
+     found = 1;
+   }
    if (strcmp(child->name, "i2c-dev") == 0)
    {
 #ifdef linux
@@ -192,6 +199,12 @@ static int register_bus(int busnumber, xmlDocPtr doc, xmlNodePtr node)
      {
        case 2400:
          busses[current_bus].baudrate = B2400;
+         break;
+       case 4800:
+         busses[current_bus].baudrate = B4800;
+         break;
+       case 9600:
+         busses[current_bus].baudrate = B9600;
          break;
        case 19200:
          busses[current_bus].baudrate = B19200;

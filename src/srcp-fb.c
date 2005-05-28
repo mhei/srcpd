@@ -274,6 +274,19 @@ int init_FB( int bus, int number )
   return 0;
 }
 
+int initFB(int busnumber, int adres, const char protocol, int index)
+{
+  int rc = SRCP_OK;
+  int number_fb = get_number_fb(busnumber);
+  DBG(busnumber, DBG_DEBUG, "init FB: %d %c %d", adres, protocol, index);
+  if((adres > 0) && (adres <= number_fb))
+  { 
+    if(busses[busnumber].init_fb_func)
+	    rc = (*busses[busnumber].init_fb_func)(busnumber, adres, protocol, index);
+  }
+  return rc;
+}
+
 int get_number_fb( int bus )
 {
   return fb[ bus ].numberOfFb;
