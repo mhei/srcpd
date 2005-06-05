@@ -1,3 +1,11 @@
+2005-06-05  Matthias Trute    <mtrute@users.sf.net>
+	* removed ibox kernel module 
+	* integrated (only) zimo GL patches from Johann 
+	    Vieselthaler, dropped GA Support
+	* re-set default runtime config to loopback bus
+	* prepared release 2.0.8. 
+	* minor cleanups (^M removed)
+
 2005-05-16  Frank Schmischke  <frank.schmischke@t-online.de>
 
 	* li100: various improvements

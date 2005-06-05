@@ -3,7 +3,7 @@ srcpd_SOURCES = config-srcpd.c srcpd.c ib.c io.c threads.c srcp-time.c \
 		srcp-srv.c srcp-power.c srcp-gl.c srcp-ga.c srcp-fb.c \
 		netserver.c m605x.c ddl-s88.c hsi-88.c li100.c loopback.c srcp-error.c \
 		srcp-lock.c srcp-session.c srcp-descr.c srcp-info.c srcp-sm.c i2c-dev.c \
-		zimo.c ddl.c ddl_maerklin.c ddl_nmra.c
+		zimo.c ddl.c ddl_maerklin.c ddl_nmra.c selectrix.c
 
 EXTRA_DIST = AUTHORS COPYING ChangeLog INSTALL README README.freebsd \
 	README.ibox TODO NEWS Makefile.dist PROGRAMMING-HOWTO \
@@ -16,6 +16,7 @@ EXTRA_DIST = AUTHORS COPYING ChangeLog INSTALL README README.freebsd \
 	srcp-session.c srcp-descr.c srcp-session.h srcp-descr.h srcp-lock.c srcp-lock.h \
 	srcp-info.c srcp-info.h srcp-sm.c srcp-sm.h zimo.c zimo.h i2c-dev.c i2c-dev.h \
 	ddl.c ddl_maerklin.c ddl_nmra.c ddl.h ddl_maerklin.h ddl_nmra.h systemtest \
+	selectrix.c selectrix.h \
 	rcsrcpd
 
 # set the include path found by configure

@@ -1,9 +1,9 @@
 Begin3
 Title:          srcpd 
 Version:        2.0
-Entered-date:   2002-2004
+Entered-date:   2002-2005
 Description:    srcpd is a network demon speaking SRCP
-Keywords:       SRCP der-moba.de maerklin intellibox hsi-88 ddl
+Keywords:       SRCP der-moba.de maerklin intellibox hsi-88 ddl zimo selectrix
 Author:         see AUTHORS
 Maintained-by:  srcpd Team
 Primary-site:	http://srcpd.sourceforge.net
