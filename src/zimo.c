@@ -15,8 +15,42 @@
 #include "srcp-power.h"
 #include "srcp-srv.h"
 #include "srcp-info.h"
+#include <sys/time.h>
+#include <time.h>
 
 #define __zimo ((zimo_DATA*)busses[busnumber].driverdata)
+
+static long tdiff (struct timeval t1, struct timeval t2) {
+    return (t2.tv_sec*1000+t2.tv_usec/1000-t1.tv_sec*1000-t1.tv_usec/1000) ;
+}
+
+int readanswer(int bus, char cmd, char* buf, int maxbuflen, long timeout_ms){
+ int i,status,cnt=0;
+ char c,lc=13;
+ struct timeval ts,tn;
+ 
+ gettimeofday(&ts,NULL);
+ while(1) {
+  status = ioctl(busses[bus].fd, FIONREAD, &i);
+  if(status<0) return -1;
+  if(i)
+  {readByte(bus,0,&c);
+   DBG(bus, DBG_INFO, "zimo read %02X", c);
+   if((lc==10 || lc==13) && c==cmd) cnt=1;
+   if(cnt)
+   {if(c==10 || c==13) return cnt;
+    if(cnt>maxbuflen) return -2;
+    buf[cnt-1]=c;
+    cnt++;
+   }
+   //DBG(bus, DBG_INFO, "%ld", tdiff(ts,tn));
+   gettimeofday(&tn,NULL);
+   if(tdiff(ts,tn)>timeout_ms) return 0;
+   lc=c;
+  } else
+   usleep(1);
+ }
+}
 
 int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
@@ -27,7 +61,7 @@ int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   busses[busnumber].term_func = &term_bus_zimo;
   busses[busnumber].thr_func = &thr_sendrec_zimo;
   busses[busnumber].driverdata = malloc(sizeof(struct _zimo_DATA));
-  strcpy(busses[busnumber].description, "GA GL POWER LOCK DESCRIPTION");
+  strcpy(busses[busnumber].description, "GL POWER LOCK DESCRIPTION");
 
   __zimo->number_fb = 0;  /* max 31 */
   __zimo->number_ga = 256;
@@ -140,88 +174,60 @@ void* thr_sendrec_zimo (void *v)
   int addr, temp, i;
   int bus = (int) v;
   char msg[20];
+  char rr;
+  char databyte1,  databyte2, databyte3;
+  unsigned int error,cv,val;
+  unsigned char databyte, address;
   DBG(bus, DBG_INFO, "zimo started, bus #%d, %s", bus, busses[bus].device);
 
   busses[bus].watchdog = 1;
-  while (1) {
-    if(busses[bus].power_changed==1) {
-      sprintf(msg, "S%c%c", (busses[bus].power_state) ? 'E' : 'A', 13);
-      writeString(bus, msg, 0);
-      busses[bus].power_changed = 0;
-      infoPower(bus, msg);
-      queueInfoMessage(msg);
-    }
-    sprintf(msg, "Z%c", 13);
+  while (1)
+  {if(busses[bus].power_changed==1)
+   {sprintf(msg, "S%c%c", (busses[bus].power_state) ? 'E' : 'A', 13);
     writeString(bus, msg, 0);
-    ioctl(busses[bus].fd, FIONREAD, &temp);
-    for(i=0; i<temp; i++) {
-  char rr;
-  readByte(bus, 0, &rr);
-  msg[i]=rr;
-  msg[i+1]=0x00;
+    busses[bus].power_changed = 0;
+    infoPower(bus, msg);
+    queueInfoMessage(msg);
+   }
+   if(!queue_GL_isempty(bus))
+   {unqueueNextGL(bus, &gltmp);
+    addr = gltmp.id;
+    getGL(bus, addr, &glakt);
+    databyte1 = (gltmp.direction?0:32);
+    databyte1 |= (gltmp.funcs & 0x01) ? 16 : 0;
+    if(glakt.n_fs == 128) databyte1 |= 12;
+    if(glakt.n_fs == 28) databyte1 |= 8;
+    if(glakt.n_fs == 14) databyte1 |= 4;
+    databyte2 = gltmp.funcs >> 1;
+    databyte3 = 0x00;
+    if(addr>128)
+    {sprintf(msg,"E%04X%c",addr,13);
+     DBG(bus, DBG_INFO, "%s", msg);
+     writeString(bus, msg, 0);
+     addr=0;
+     i=readanswer(bus,'E',msg,20,40);
+     DBG(bus, DBG_INFO, "readed %d", i);
+     switch(i)
+     {case 8:sscanf(&msg[1],"%02X",&addr);
+             break;
+      case 10:sscanf(&msg[3],"%02X",&addr);
+             break;
+     }
     }
-    DBG(bus, DBG_DEBUG, "status response: %s ", msg);
-
-    if(busses[bus].power_state==0) {
-          usleep(1000);
-          continue;
+    if(addr)
+    {sprintf(msg, "F%c%02X%02X%02X%02X%02X%c", glakt.protocol, addr, gltmp.speed, databyte1, databyte2, databyte3, 13);
+     DBG(bus, DBG_INFO, "%s", msg);
+     writeString(bus, msg, 0);
+     ioctl(busses[bus].fd, FIONREAD, &temp);
+     while(temp > 0)
+     {readByte(bus, 0, &rr);
+      ioctl(busses[bus].fd, FIONREAD, &temp);
+      DBG(bus, DBG_INFO, "ignoring unread byte: %d (%c)", rr, rr);
+     }
+     setGL(bus, addr, gltmp);
     }
-
-    if (!queue_GL_isempty(bus))  {
-        char databyte1,  databyte2, databyte3;
-
-        unqueueNextGL(bus, &gltmp);
-        addr = gltmp.id;
-        getGL(bus, addr, &glakt);
-        databyte1 = (gltmp.direction?0:32);
-        databyte1 |= (gltmp.funcs & 0x01) ? 16 : 0;
-        if(glakt.n_fs == 128)
-          databyte1 |= 12;
-        if(glakt.n_fs == 28)
-          databyte1 |= 8;
-        if(glakt.n_fs == 14)
-          databyte1 |= 4;
-        databyte2 = gltmp.funcs >> 1;
-        databyte3 = 0x00;
-
-        sprintf(msg, "F%c%02X%02X%02X%02X%02X%c", glakt.protocol, addr, gltmp.speed, databyte1, databyte2, databyte3, 13);
-        DBG(bus, DBG_DEBUG, "%s", msg);
-        writeString(bus, msg, 0);
-        ioctl(busses[bus].fd, FIONREAD, &temp);
-        while (temp > 0)  {
-            char rr;
-          readByte(bus, 0, &rr);
-          ioctl(busses[bus].fd, FIONREAD, &temp);
-          DBG(bus, DBG_INFO, "ignoring unread byte: %d (%c)", rr, rr);
-       }
-       setGL(bus, addr, gltmp);
-    }
-    busses[bus].watchdog = 4;
-    if (!queue_GA_isempty(bus)) {
-          unsigned char databyte, address;
-          unqueueNextGA(bus, &gatmp);
-          addr = gatmp.id;
-          getGA(bus, addr, &gaakt);
-          // "M(N|M|Z)<addr><databyte>#13"
-          databyte = (addr % 4)+1 + (gatmp.action?8:0);
-          address  = addr / 4 + 1;
-          DBG(bus,DBG_INFO, "Protocol= %c, modul=%d, databyte=%d: ein/aus=%d subadresse=%d port=%d ", gaakt.protocol, address, databyte,
-            gatmp.action, (addr % 4)+1, gatmp.port);
-          sprintf(msg, "M%c%02X%02X%c", gaakt.protocol, address, databyte, 13);
-          DBG(bus, DBG_INFO, "%s", msg);
-          writeString(bus, msg, 0);
-        ioctl(busses[bus].fd, FIONREAD, &temp);
-        while (temp > 0)  {
-            char rr;
-          readByte(bus, 0, &rr);
-          ioctl(busses[bus].fd, FIONREAD, &temp);
-          DBG(bus, DBG_INFO, "ignoring unread byte: %d (%c)", rr, rr);
-       }
-          setGA(bus, addr, gatmp);
-          busses[bus].watchdog = 6;
-      check_reset_fb(bus);
-    }
-
-    usleep(1000);
+   }
+   busses[bus].watchdog = 4;
+   usleep(10);
   }
 }
