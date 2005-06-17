@@ -65,80 +65,72 @@
 static char idle_data[MAXDATA];
 static char NMRA_idle_data[PKTSIZE];
 
-/* ******** Q U E U E *****************/
+/********* Q U E U E *****************/
 
-#define QSIZE 2000
+/* returns the numbre of commands inside the queue, never used */
+//int monitor_NrOfQCmds(int busnumber) {
+//   if ((__DDL->queue_in)>=(__DDL->queue_out)) return (__DDL->queue_in - __DDL->queue_out);
+//   return (QSIZE - __DDL->queue_out + __DDL->queue_in);
+//}
 
-static pthread_mutex_t queue_mutex;   /* mutex to synchronize queue inserts */
-static int queue_initialized = 0;
-static int out=0, in=0;
-
-typedef struct _tQData {
-   int  packet_type;
-   int  packet_size;
-   char packet[PKTSIZE];
-   int  addr;
-} tQData ;
-static tQData QData[QSIZE];
-
-int monitor_NrOfQCmds() {
-   if (in>=out) return in-out;
-   return QSIZE-out+in;
-}
-
-void queue_init() {
+void queue_init(int busnumber) {
 
    int error,i;
 
-   error = pthread_mutex_init(&queue_mutex, NULL);
+   error = pthread_mutex_init(&__DDL->queue_mutex, NULL);
    if (error) {
       DBG(0, DBG_ERROR, "DDL Engine: cannot create mutex. Abort!");
       exit(1);
    }
 
+   pthread_mutex_lock(&__DDL->queue_mutex);
    for (i=0; i<QSIZE; i++) {
-      QData[i].packet_type=QNOVALIDPKT;
-      QData[i].addr=0;
-      memset(QData[i].packet, 0, PKTSIZE);
+      __DDL->QData[i].packet_type=QNOVALIDPKT;
+      __DDL->QData[i].addr=0;
+      memset(__DDL->QData[i].packet, 0, PKTSIZE);
    }
-   in  = 0;
-   out = 0;
+   __DDL->queue_in  = 0;
+   __DDL->queue_out = 0;
 
-   queue_initialized = 1;
+   __DDL->queue_initialized = TRUE;
+   pthread_mutex_unlock(&__DDL->queue_mutex);
 }
 
-int queue_empty() {
-   return (in==out);
+int queue_empty(int busnumber) {
+   return (__DDL->queue_in == __DDL->queue_out);
 }
 
-void queue_add(int addr, char *packet, int packet_type, int packet_size) {
+void queue_add(int busnumber, int addr, char *packet, int packet_type, int packet_size) {
 
-   if (!queue_initialized) queue_init();
+   if (!__DDL->queue_initialized) queue_init(busnumber);
 
-   pthread_mutex_lock(&queue_mutex);
-   memset(QData[in].packet,0,PKTSIZE);
-   memcpy(QData[in].packet,packet,packet_size);
-   QData[in].packet_type=packet_type;
-   QData[in].packet_size=packet_size;
-   QData[in].addr=addr;
-   in++;
-   if (in==QSIZE) in=0;
-   pthread_mutex_unlock(&queue_mutex);
+   pthread_mutex_lock(&__DDL->queue_mutex);
+   memset(__DDL->QData[__DDL->queue_in].packet,0,PKTSIZE);
+   memcpy(__DDL->QData[__DDL->queue_in].packet,packet,packet_size);
+   __DDL->QData[__DDL->queue_in].packet_type=packet_type;
+   __DDL->QData[__DDL->queue_in].packet_size=packet_size;
+   __DDL->QData[__DDL->queue_in].addr=addr;
+   __DDL->queue_in++;
+   if (__DDL->queue_in==QSIZE) __DDL->queue_in=0;
+   pthread_mutex_unlock(&__DDL->queue_mutex);
 }
 
-int queue_get(int *addr, char *packet, int *packet_size) {
+int queue_get(int busnumber, int *addr, char *packet, int *packet_size) {
 
    int rtc;
 
-   if (!queue_initialized || queue_empty()) return QEMPTY;
+   if (!__DDL->queue_initialized || queue_empty(busnumber)) return QEMPTY;
 
-   memcpy(packet,QData[out].packet,PKTSIZE);
-   rtc=QData[out].packet_type;
-   *packet_size=QData[out].packet_size;
-   *addr=QData[out].addr;
-   QData[out].packet_type=QNOVALIDPKT;
-   out++;
-   if (out==QSIZE) out=0;
+   pthread_mutex_lock(&__DDL->queue_mutex);
+   memcpy(packet,__DDL->QData[__DDL->queue_out].packet,PKTSIZE);
+   rtc=__DDL->QData[__DDL->queue_out].packet_type;
+   *packet_size=__DDL->QData[__DDL->queue_out].packet_size;
+   *addr=__DDL->QData[__DDL->queue_out].addr;
+   __DDL->QData[__DDL->queue_out].packet_type=QNOVALIDPKT;
+   __DDL->queue_out++;
+   if (__DDL->queue_out==QSIZE) __DDL->queue_out=0;
+   pthread_mutex_unlock(&__DDL->queue_mutex);
+
    return rtc;
 }
 
@@ -443,9 +435,9 @@ void init_NMRAPacketPool(int busnumber) {
       NMRAPacketPool.knownAdresses[i]=0;
    }
    NMRAPacketPool.NrOfKnownAdresses = 0;
-   pthread_mutex_unlock(&nmra_pktpool_mutex);
 
    isNMRAPackedPoolInitialized=TRUE;
+   pthread_mutex_unlock(&nmra_pktpool_mutex);
 
    /* put idle packet in packet pool */
    j=translateBitstream2Packetstream(__DDL->NMRADCC_TR_V, idle_packet, idle_pktstr, FALSE);
@@ -858,7 +850,7 @@ void *thr_refresh_cycle(void *v) {
    gettimeofday(& (__DDL->tv1), & (__DDL->tz));
    for (;;) {
       write(busses[busnumber].fd,idle_data,MAXDATA);
-      packet_type=queue_get(&addr,packet,&packet_size);/*now,look at commands*/
+      packet_type=queue_get(busnumber,&addr,packet,&packet_size);/*now,look at commands*/
       if (packet_type>QNOVALIDPKT) {
          tcflush(busses[busnumber].fd, TCOFLUSH);
          while (packet_type>QNOVALIDPKT) {
@@ -867,7 +859,7 @@ void *thr_refresh_cycle(void *v) {
              send_packet(busnumber, addr,packet,packet_size,packet_type,FALSE);
              if (__DDL->ENABLED_PROTOCOLS==(EP_MAERKLIN | EP_NMRADCC))
                 write(busses[busnumber].fd,NMRA_idle_data,13);
-             packet_type=queue_get(&addr,packet,&packet_size);
+             packet_type=queue_get(busnumber,&addr,packet,&packet_size);
          }
       } else {                          /* no commands? Then we do a refresh */
          if (__DDL->CHECKSHORT) if (checkShortcut(busnumber)==1) {mkclean(busnumber);return NULL;}
@@ -927,6 +919,11 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 
   __DDL -> number_gl = 81;
   __DDL -> number_ga = 324;
+
+  __DDL -> queue_initialized = FALSE;
+  __DDL -> queue_out = 0;
+  __DDL -> queue_in = 0;
+
   __DDL -> RI_CHECK = FALSE;              /* ring indicator checking      */
   __DDL -> CHECKSHORT = FALSE;            /* default no shortcut checking */
   __DDL -> DSR_INVERSE = FALSE;           /* controls how DSR is used to  */
