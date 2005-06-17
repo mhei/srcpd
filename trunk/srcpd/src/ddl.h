@@ -31,11 +31,26 @@
 
 #include "config-srcpd.h"
 
+#define QSIZE       2000
+#define PKTSIZE     40
+
+typedef struct _tQData {
+		int  packet_type;
+		int  packet_size;
+		char packet[PKTSIZE];
+		int  addr;
+		} tQData ;
 
 typedef struct _DDL_DATA {
     int number_gl;
     int number_ga;
-    int SERIAL_DEVICE_MODE;
+
+		pthread_mutex_t queue_mutex;   /* mutex to synchronize queue inserts */
+		int queue_initialized;
+		int queue_out, queue_in;
+		tQData QData[QSIZE];
+
+    int        SERIAL_DEVICE_MODE;
     int        RI_CHECK;              /* ring indicator checking      */
     int        CHECKSHORT;            /* default no shortcut checking */
     int        DSR_INVERSE;           /* controls how DSR is used to  */
@@ -74,8 +89,6 @@ void* thr_sendrec_DDL(void *);
 #define SDM_NMRA            1
 int setSerialMode(int busnumber, int mode);
 
-#define PKTSIZE     40
-
 #define QEMPTY      -1
 #define QNOVALIDPKT 0
 #define QM1LOCOPKT  1
@@ -86,11 +99,11 @@ int setSerialMode(int busnumber, int mode);
 #define QNBLOCOPKT  6
 #define QNBACCPKT   7
 
-void queue_init();
-void queue_add(int addr, char *packet, int packet_type, int packet_size);
-int  queue_get(int *addr, char *packet, int *packet_size);
+void queue_init(int busnumber);
+void queue_add(int busnumber, int addr, char *packet, int packet_type, int packet_size);
+int  queue_get(int busnumber, int *addr, char *packet, int *packet_size);
 
-int monitor_NrOfQCmds();
+//int monitor_NrOfQCmds(int busnumber);
 
 #define MAX_MARKLIN_ADDRESS 256
 #define MAX_NMRA_ADDRESS 10367 /* idle-addr + 127 basic addr's + 10239 long's */

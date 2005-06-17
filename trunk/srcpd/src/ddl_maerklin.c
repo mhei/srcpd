@@ -364,7 +364,7 @@ int comp_maerklin_1(int busnumber, int address, int direction, int speed, int fu
    }
 
    update_MaerklinPacketPool(busnumber, address, packet, packet, packet, packet, packet);
-   queue_add(address, packet,QM1LOCOPKT,18);
+   queue_add(busnumber, address, packet, QM1LOCOPKT,18);
 
    return 0;
 }
@@ -473,8 +473,8 @@ int comp_maerklin_2(int busnumber, int address, int direction, int speed, int fu
 
    update_MaerklinPacketPool(busnumber, adr, packet, f_packets[0], f_packets[1],
                                           f_packets[2], f_packets[3]);
-   if (!fx_changed) queue_add(adr,packet,QM2LOCOPKT,18);
-   else queue_add(adr,f_packets[fx],QM2FXPKT,18);
+   if (!fx_changed) queue_add(busnumber, adr, packet, QM2LOCOPKT,18);
+   else queue_add(busnumber, adr, f_packets[fx], QM2FXPKT,18);
 
    return 0;
 }
@@ -592,8 +592,8 @@ int comp_maerklin_3(int busnumber, int address, int direction, int speed, int fu
 
    update_MaerklinPacketPool(busnumber, adr, packet, f_packets[0], f_packets[1],
                                           f_packets[2], f_packets[3]);
-   if (!fx_changed) queue_add(adr, packet,QM2LOCOPKT,18);
-   else queue_add(adr, f_packets[fx],QM2FXPKT,18);
+   if (!fx_changed) queue_add(busnumber, adr, packet, QM2LOCOPKT,18);
+   else queue_add(busnumber, adr, f_packets[fx], QM2FXPKT,18);
 
    return 0;
 }
@@ -701,8 +701,8 @@ int comp_maerklin_4(int busnumber, int address, int direction, int speed, int fu
 
    update_MaerklinPacketPool(busnumber, adr, packet, f_packets[0], f_packets[1],
                                           f_packets[2], f_packets[3]);
-   if (!fx_changed) queue_add(adr, packet,QM2LOCOPKT,18);
-   else queue_add(adr, f_packets[fx],QM2FXPKT,18);
+   if (!fx_changed) queue_add(busnumber, adr, packet, QM2LOCOPKT,18);
+   else queue_add(busnumber, adr, f_packets[fx], QM2FXPKT,18);
 
    return 0;
 }
@@ -846,7 +846,7 @@ int comp_maerklin_ms(int busnumber, int address, int port, int action) {
 #if 0 // GA Packet Cache
    }
 #endif
-   queue_add(address, p_packet,QM1SOLEPKT,9);
+   queue_add(busnumber, address, p_packet,QM1SOLEPKT,9);
 #if 0 // GA Packet Cache
    updateMaerklinGaPacketPool(address,port,action,p_packet);
 #endif
@@ -885,7 +885,7 @@ int comp_maerklin_mf(int busnumber, int address, int f1, int f2, int f3, int f4)
       }
    }
 
-   queue_add(address, packet,QM1FUNCPKT,9);
+   queue_add(busnumber, address, packet,QM1FUNCPKT,9);
 
    return 0;
 }

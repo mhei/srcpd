@@ -819,7 +819,7 @@ int comp_nmra_accessory(int busnumber, int nr, int output, int activate) {
    }
 #endif
    if (j>0) {
-      queue_add(address,p_packetstream,QNBACCPKT,j);
+      queue_add(busnumber, address, p_packetstream, QNBACCPKT,j);
 #if 0 // GA Packet Cache
       updateNMRAGaPacketPool(nr,output,activate,p_packetstream,j);
 #endif
@@ -868,7 +868,7 @@ int comp_nmra_baseline(int busnumber, int address, int direction, int speed) {
 
    if (j>0) {
       update_NMRAPacketPool(busnumber, adr,packetstream,j,packetstream,j);   
-      queue_add(adr, packetstream,QNBLOCOPKT,j);
+      queue_add(busnumber, adr, packetstream, QNBLOCOPKT,j);
 
       return 0;
    }
@@ -941,8 +941,8 @@ int comp_nmra_f4b7s28(int busnumber, int address, int direction, int speed, int 
 
    if (j>0 && jj>0) {
       update_NMRAPacketPool(busnumber, adr,packetstream,j,packetstream2,jj);   
-      queue_add(adr,packetstream,QNBLOCOPKT,j);
-      queue_add(adr,packetstream2,QNBLOCOPKT,jj);
+      queue_add(busnumber, adr, packetstream, QNBLOCOPKT,j);
+      queue_add(busnumber, adr, packetstream2, QNBLOCOPKT,jj);
 
       return 0;
    }
@@ -1003,7 +1003,7 @@ int comp_nmra_f4b7s128(int busnumber, int address, int direction, int speed, int
    strcat(bitstream, "1");
 
    xor_two_bytes(errdbyte, addrbyte, funcbyte);
-                                                 
+
    /* putting all together in a 'bitstream' (char array) (functions) */
    memset(bitstream2, 0, 100);
    strcat(bitstream2, preamble);
@@ -1020,14 +1020,14 @@ int comp_nmra_f4b7s128(int busnumber, int address, int direction, int speed, int
 
    if (j>0 && jj>0) {
       update_NMRAPacketPool(busnumber, adr,packetstream,j,packetstream2,jj);
-      queue_add(adr,packetstream,QNBLOCOPKT,j);
-      queue_add(adr,packetstream2,QNBLOCOPKT,jj);
+      queue_add(busnumber, adr, packetstream, QNBLOCOPKT, j);
+      queue_add(busnumber, adr, packetstream2, QNBLOCOPKT, jj);
 
       return 0;
    }
 
    return 1;
-}   
+}
 
 int comp_nmra_f4b14s28(int busnumber, int address, int direction, int speed, int func,
                        int f1, int f2, int f3, int f4) {
@@ -1103,8 +1103,8 @@ int comp_nmra_f4b14s28(int busnumber, int address, int direction, int speed, int
  
    if (j>0 && jj>0) {
       update_NMRAPacketPool(busnumber, adr+ADDR14BIT_OFFSET,packetstream,j,packetstream2,jj);
-      queue_add(adr+ADDR14BIT_OFFSET,packetstream,QNBLOCOPKT,j);
-      queue_add(adr+ADDR14BIT_OFFSET,packetstream2,QNBLOCOPKT,jj);
+      queue_add(busnumber, adr+ADDR14BIT_OFFSET, packetstream, QNBLOCOPKT, j);
+      queue_add(busnumber, adr+ADDR14BIT_OFFSET, packetstream2, QNBLOCOPKT, jj);
  
       return 0;
    }
@@ -1189,8 +1189,8 @@ int comp_nmra_f4b14s128(int busnumber, int address, int direction, int speed, in
  
    if (j>0 && jj>0) {
       update_NMRAPacketPool(busnumber, adr+ADDR14BIT_OFFSET,packetstream,j,packetstream2,jj);
-      queue_add(adr+ADDR14BIT_OFFSET,packetstream,QNBLOCOPKT,j);
-      queue_add(adr+ADDR14BIT_OFFSET,packetstream2,QNBLOCOPKT,jj);
+      queue_add(busnumber, adr+ADDR14BIT_OFFSET, packetstream, QNBLOCOPKT, j);
+      queue_add(busnumber, adr+ADDR14BIT_OFFSET, packetstream2, QNBLOCOPKT, jj);
  
       return 0;
    }
