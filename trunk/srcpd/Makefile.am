@@ -6,8 +6,7 @@ srcpd_SOURCES = config-srcpd.c srcpd.c ib.c io.c threads.c srcp-time.c \
 		zimo.c ddl.c ddl_maerklin.c ddl_nmra.c selectrix.c
 
 EXTRA_DIST = AUTHORS COPYING ChangeLog INSTALL README README.freebsd \
-	README.ibox TODO NEWS Makefile.dist PROGRAMMING-HOWTO \
-        srcpd.lsm srcpd.conf m605x.c \
+	README.ibox TODO NEWS PROGRAMMING-HOWTO srcpd.lsm m605x.c \
 	m605x.h netserver.c netserver.h srcp-fb.c stdincludes.h srcpd.8 \
 	srcp-fb.h srcp-ga.c srcp-ga.h srcp-gl.c srcp-gl.h srcp-power.c srcp-power.h \
 	srcp-srv.c srcp-srv.h srcp-time.c srcp-time.h threads.c threads.h io.h io.c \
@@ -25,5 +24,6 @@ AM_CFLAGS = -D_REENTRANT
 AM_CPPFLAGS = -DSYSCONFDIR=\"$(sysconfdir)\"
 # the library search path.
 srcpd_LDFLAGS = $(all_libraries) `./systemtest`
-sysconf_DATA = srcpd.conf
+
+dist_sysconf_DATA = srcpd.conf
 man8_MANS = srcpd.8
