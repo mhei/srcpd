@@ -407,7 +407,7 @@ void send_command_gl_LI100( int busnumber )
   int temp;
   int addr;
   unsigned char byte2send[ 20 ];
-  unsigned char status;
+  int status = -1;
   struct _GLSTATE gltmp, glakt;
 
   /* Lokdecoder */
@@ -434,13 +434,13 @@ void send_command_gl_LI100( int busnumber )
           if ( addr > 99 )
             byte2send[ 1 ] |= 0xc0;
           byte2send[ 2 ] = addr & 0xff;
-          send_command_LI100( busnumber, byte2send );
+          status = send_command_LI100( busnumber, byte2send );
         }
         else
         {
           byte2send[ 0 ] = 0x91;
           byte2send[ 1 ] = addr;
-          send_command_LI100( busnumber, byte2send );
+          status = send_command_LI100( busnumber, byte2send );
         }
       }
       else
@@ -464,7 +464,7 @@ void send_command_gl_LI100( int busnumber )
           }
           // functions f1..f4
           byte2send[ 3 ] = ( gltmp.funcs >> 1 ) & 0x000F;
-          send_command_LI100( busnumber, byte2send );
+          status = send_command_LI100( busnumber, byte2send );
         }
         if ( ( __li100->version_zentrale > 0x0150 ) &&
              ( __li100->version_zentrale < 0x0300 ) )
@@ -553,7 +553,7 @@ void send_command_gl_LI100( int busnumber )
           }
           // functions f1..f4
           byte2send[ 3 ] = ( gltmp.funcs >> 1 ) & 0x000F;
-          send_command_LI100( busnumber, byte2send );
+          status = send_command_LI100( busnumber, byte2send );
         }
         if ( __li100->version_zentrale >= 0x0300 )
         {
@@ -594,7 +594,7 @@ void send_command_gl_LI100( int busnumber )
           {
             byte2send[ 4 ] |= 0x80;
           }
-          send_command_LI100( busnumber, byte2send );
+          status = send_command_LI100( busnumber, byte2send );
 
           // send functions f0..f4
           byte2send[ 0 ] = 0xe4;
@@ -616,7 +616,7 @@ void send_command_gl_LI100( int busnumber )
           {
             byte2send[ 4 ] |= 0x10;
           }
-          send_command_LI100( busnumber, byte2send );
+          status = send_command_LI100( busnumber, byte2send );
         }
       }
       if ( status == 0 )
@@ -998,7 +998,7 @@ static int readAnswer_LI100( int busnumber, unsigned char *str )
   int tmp_addr;
   unsigned char cXor;
   struct _GLSTATE gltmp, glakt;
-  struct _GASTATE gatmp, gaakt;
+  // TODO: struct _GASTATE gatmp, gaakt;
 
   status = -1;                      // wait for answer
   while ( status == -1 )
