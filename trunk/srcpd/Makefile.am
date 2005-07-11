@@ -1,29 +1,49 @@
-sbin_PROGRAMS = srcpd
-srcpd_SOURCES = config-srcpd.c srcpd.c ib.c io.c threads.c srcp-time.c \
-		srcp-srv.c srcp-power.c srcp-gl.c srcp-ga.c srcp-fb.c \
-		netserver.c m605x.c ddl-s88.c hsi-88.c li100.c loopback.c srcp-error.c \
-		srcp-lock.c srcp-session.c srcp-descr.c srcp-info.c srcp-sm.c i2c-dev.c \
-		zimo.c ddl.c ddl_maerklin.c ddl_nmra.c selectrix.c
+# Makefile.am for srcpd
 
-EXTRA_DIST = AUTHORS COPYING ChangeLog INSTALL README README.freebsd \
-	README.ibox TODO NEWS PROGRAMMING-HOWTO srcpd.lsm m605x.c \
-	m605x.h netserver.c netserver.h srcp-fb.c stdincludes.h srcpd.8 \
-	srcp-fb.h srcp-ga.c srcp-ga.h srcp-gl.c srcp-gl.h srcp-power.c srcp-power.h \
-	srcp-srv.c srcp-srv.h srcp-time.c srcp-time.h threads.c threads.h io.h io.c \
-	ib.c ib.h srcpd.c config-srcpd.c config-srcpd.h ddl-s88.c ddl-s88.h hsi-88.c \
-	hsi-88.h li100.c li100.h loopback.h loopback.c srcp-error.c srcp-error.h \
-	srcp-session.c srcp-descr.c srcp-session.h srcp-descr.h srcp-lock.c srcp-lock.h \
-	srcp-info.c srcp-info.h srcp-sm.c srcp-sm.h zimo.c zimo.h i2c-dev.c i2c-dev.h \
-	ddl.c ddl_maerklin.c ddl_nmra.c ddl.h ddl_maerklin.h ddl_nmra.h systemtest \
+sbin_PROGRAMS = srcpd
+
+srcpd_SOURCES = config-srcpd.c config-srcpd.h \
+	ddl-s88.c ddl-s88.h \
+	ddl.c ddl.h \
+	ddl_maerklin.c ddl_maerklin.h \
+	ddl_nmra.c ddl_nmra.h \
+	hsi-88.c hsi-88.h \
+	i2c-dev.c i2c-dev.h \
+	ib.c ib.h \
+	io.c io.h \
+	li100.c li100.h \
+	loopback.c loopback.h \
+	m605x.c m605x.h \
+	netserver.c netserver.h \
 	selectrix.c selectrix.h \
-	rcsrcpd
+	srcp-descr.c srcp-descr.h \
+	srcp-error.c srcp-error.h \
+	srcp-fb.c srcp-fb.h \
+	srcp-ga.c srcp-ga.h \
+	srcp-gl.c srcp-gl.h \
+	srcp-info.c srcp-info.h \
+	srcp-lock.c srcp-lock.h \
+	srcp-power.c srcp-power.h \
+	srcp-session.c srcp-session.h \
+	srcp-sm.c srcp-sm.h \
+	srcp-srv.c srcp-srv.h \
+	srcp-time.c srcp-time.h \
+	srcpd.c stdincludes.h \
+	threads.c threads.h \
+	zimo.c zimo.h
+
+EXTRA_DIST = AUTHORS COPYING TODO NEWS ChangeLog INSTALL DESIGN \
+	README README.freebsd README.ibox README.selectrix  \
+	PROGRAMMING-HOWTO srcpd.lsm rcsrcpd systemtest
+
+dist_sysconf_DATA = srcpd.conf
+
+dist_man_MANS = srcpd.8
 
 # set the include path found by configure
 INCLUDES = $(all_includes)
 AM_CFLAGS = -D_REENTRANT
 AM_CPPFLAGS = -DSYSCONFDIR=\"$(sysconfdir)\"
+
 # the library search path.
 srcpd_LDFLAGS = $(all_libraries) `./systemtest`
-
-dist_sysconf_DATA = srcpd.conf
-man8_MANS = srcpd.8
