@@ -29,6 +29,7 @@
 #include "srcp-info.h"
 #include "srcp-srv.h"
 #include "srcp-error.h"
+#include "ttycygwin.h"
 
 #define __m6051 ((M6051_DATA*)busses[busnumber].driverdata)
 

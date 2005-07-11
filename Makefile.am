@@ -30,6 +30,7 @@ srcpd_SOURCES = config-srcpd.c config-srcpd.h \
 	srcp-time.c srcp-time.h \
 	srcpd.c stdincludes.h \
 	threads.c threads.h \
+        ttycygwin.c ttycygwin.h \
 	zimo.c zimo.h
 
 EXTRA_DIST = AUTHORS COPYING TODO NEWS ChangeLog INSTALL DESIGN \
