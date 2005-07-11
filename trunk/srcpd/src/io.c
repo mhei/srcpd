@@ -18,6 +18,7 @@
 
 #include "io.h"
 #include "config-srcpd.h"
+#include "ttycygwin.h"
 
 int readByte(int bus, int wait, unsigned char *the_byte)
 {

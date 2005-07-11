@@ -1,3 +1,7 @@
+2005-07-11 Guido Scholz <guido.scholz@bayernline.de>
+	* configure.in, ttycygwin.c ttycygwin.h, ddl-s88.c, ib.c,
+	selectix.c, m605x.c: cygwin support added
+
 2005-06-05  Matthias Trute    <mtrute@users.sf.net>
 	* removed ibox kernel module 
 	* integrated (only) zimo GL patches from Johann 

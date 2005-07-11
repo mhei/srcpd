@@ -63,7 +63,7 @@ fi
 %{_mandir}/man8/*
 %config(noreplace) %{_sysconfdir}/srcpd.conf
 %doc COPYING AUTHORS README NEWS DESIGN PROGRAMMING-HOWTO
-%doc README.ibox README.freebsd README.selectrix
+%doc README.ibox README.freebsd README.selectrix TODO
 
 %preun
 # remove runlevel links
@@ -73,7 +73,7 @@ if [ -x /usr/lib/lsb/install_initd ] ; then
 fi
 
 %changelog
-* Mon Jul 11 2004 Guido Scholz <guido.scholz@bayernline.de>
+* Mon Jul 11 2005 Guido Scholz <guido.scholz@bayernline.de>
 - More documentation files added
 
 * Mon Nov 01 2004 Guido Scholz <guido.scholz@bayernline.de>

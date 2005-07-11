@@ -24,11 +24,15 @@
 #include <linux/lp.h>
 #include <sys/io.h>
 #else
+#ifdef __CYGWIN__
+#include <sys/io.h>
+#else
 #if __FreeBSD__
 #include <dev/ppbus/ppi.h>
 #include <dev/ppbus/ppbconf.h>
 #else
 #error This driver is not usable on your operation system. Sorry.
+#endif
 #endif
 #endif
 

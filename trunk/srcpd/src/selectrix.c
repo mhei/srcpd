@@ -32,6 +32,7 @@
 #include "srcp-ga.h"
 #include "srcp-fb.h"
 #include "selectrix.h"
+#include "ttycygwin.h"
 
 /* Macro definition  */
 #define __selectrix ((SELECTRIX_DATA*)busses[busnumber].driverdata)

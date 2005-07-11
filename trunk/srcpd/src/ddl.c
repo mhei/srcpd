@@ -60,6 +60,10 @@
 #define TRUE  1
 #define FALSE 0
 
+#ifdef __CYGWIN__
+#define TIOCOUTQ 0x5411
+#endif
+
 //#define MAXDATA      40
 #define MAXDATA      20
 static char idle_data[MAXDATA];
