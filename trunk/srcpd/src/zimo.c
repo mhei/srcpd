@@ -170,14 +170,14 @@ int init_bus_zimo(int i)
 void* thr_sendrec_zimo (void *v)
 {
   struct _GLSTATE gltmp, glakt;
-  struct _GASTATE gatmp, gaakt;
+  // TODO: struct _GASTATE gatmp, gaakt;
   int addr, temp, i;
   int bus = (int) v;
   char msg[20];
   char rr;
   char databyte1,  databyte2, databyte3;
-  unsigned int error,cv,val;
-  unsigned char databyte, address;
+  // TODO: unsigned int error, cv, val;
+  // TODO: unsigned char databyte, address;
   DBG(bus, DBG_INFO, "zimo started, bus #%d, %s", bus, busses[bus].device);
 
   busses[bus].watchdog = 1;

@@ -792,9 +792,9 @@ void cancel_refresh_cycle(int busnumber) {
    tcflow(busses[busnumber].fd, TCOOFF);
    set_SerialLine(busnumber, SL_DTR,OFF);
    /* clear thread struct */
-   //__DDL->ptid=(pthread_t)NULL;
+   __DDL->ptid=(pthread_t)NULL;
    __DDL->started_thread_flag = 0;
-   pthread_exit(__DDL->ptid);
+   pthread_exit(NULL);
 }
 
 
@@ -802,9 +802,9 @@ void mkclean(busnumber) {
    tcflush(busses[busnumber].fd, TCOFLUSH);
    tcflow(busses[busnumber].fd, TCOOFF);
    set_SerialLine(busnumber,SL_DTR,OFF);
-   //__DDL->ptid=(pthread_t)NULL;
+   __DDL->ptid=(pthread_t)NULL;
    __DDL->started_thread_flag = 0;
-   pthread_exit(__DDL->ptid);
+   pthread_exit(NULL);
 }
 
 void *thr_refresh_cycle(void *v) {

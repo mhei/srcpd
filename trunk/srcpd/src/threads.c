@@ -62,9 +62,9 @@ void change_privileges(int bus)
 }
 int ipv6_supported()
 {
- int s;
-
 #if defined (ENABLE_IPV6)
+  int s;
+
   s = socket (AF_INET6, SOCK_STREAM, 0);
   if (s != -1) {
     (void) close (s);
