@@ -40,7 +40,7 @@ case $host in
     AC_CHECK_HEADERS(sys/io.h)
     ;;
   *-*-freebsd*)
-    AC_CHECK_HEADERS(dev/ppbus/ppi.h dev/ppbus/ppbconf.h)
+    AC_CHECK_HEADERS(dev/ppbus/ppi.h)
     ;;
   *)
     AC_MSG_WARN(System $host not known.)
@@ -49,8 +49,8 @@ esac
 
 
 dnl Checks for header files.
-AC_CHECK_HEADERS(fcntl.h malloc.h syslog.h errno.h \
-        pthread.h pwd.h sys/time.h signal.h termios.h)
+AC_CHECK_HEADERS(fcntl.h stdlib.h string.h strings.h syslog.h unistd.h \
+         errno.h pthread.h pwd.h sys/time.h signal.h termios.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -70,7 +70,6 @@ fi
 
 dnl Checks for library functions.
 AC_FUNC_MEMCMP
-AC_CHECK_FUNC(ioperm, , AC_MSG_ERROR(support missing))
 AM_PATH_XML2([2.4.0], [HAVE_XML2=yes], [exit 1])
 
 CFLAGS="${CFLAGS} ${XML_CFLAGS}"
@@ -117,4 +116,3 @@ main()
 ))
 
 AC_OUTPUT(Makefile)
-
