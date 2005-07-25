@@ -104,7 +104,7 @@ int queue_empty(int busnumber) {
    return (__DDL->queue_in == __DDL->queue_out);
 }
 
-void queue_add(int busnumber, int addr, char *packet, int packet_type, int packet_size) {
+void queue_add(int busnumber, int addr, char * const packet, int packet_type, int packet_size) {
 
    if (!__DDL->queue_initialized) queue_init(busnumber);
 
@@ -775,13 +775,24 @@ void stop_voltage(int busnumber) {
   DBG(busnumber, DBG_INFO, "refresh cycle canceled.");
 }
 
-void reset(int busnumber) {
-   if (__DDL->started_thread_flag!=0) {
-      cancel_refresh_cycle(busnumber);
-   }
-   init_MaerklinPacketPool(busnumber);
-   init_NMRAPacketPool(busnumber);
-   DBG(busnumber, DBG_INFO, "ddl bus reset done.\n");
+//void reset(int busnumber) {
+//   if (__DDL->started_thread_flag!=0) {
+//      cancel_refresh_cycle(busnumber);
+//   }
+//   init_MaerklinPacketPool(busnumber);
+//   init_NMRAPacketPool(busnumber);
+//   DBG(busnumber, DBG_INFO, "ddl bus reset done.\n");
+//}
+
+void mkclean(busnumber) {
+   /* set interface lines to the off state */
+   tcflush(busses[busnumber].fd, TCOFLUSH);
+   tcflow(busses[busnumber].fd, TCOOFF);
+   set_SerialLine(busnumber,SL_DTR,OFF);
+   /* clear thread struct */
+   __DDL->ptid=(pthread_t)NULL;
+   __DDL->started_thread_flag = 0;
+   pthread_exit(NULL);
 }
 
 void cancel_refresh_cycle(int busnumber) {
@@ -791,24 +802,7 @@ void cancel_refresh_cycle(int busnumber) {
    pthread_cancel(__DDL->ptid);
    /* wait until the refresh cycle has terminated */
    pthread_join(__DDL->ptid,&pThreadReturn);
-   /* set interface lines to the off state */
-   tcflush(busses[busnumber].fd, TCOFLUSH);
-   tcflow(busses[busnumber].fd, TCOOFF);
-   set_SerialLine(busnumber, SL_DTR,OFF);
-   /* clear thread struct */
-   __DDL->ptid=(pthread_t)NULL;
-   __DDL->started_thread_flag = 0;
-   pthread_exit(NULL);
-}
-
-
-void mkclean(busnumber) {
-   tcflush(busses[busnumber].fd, TCOFLUSH);
-   tcflow(busses[busnumber].fd, TCOOFF);
-   set_SerialLine(busnumber,SL_DTR,OFF);
-   __DDL->ptid=(pthread_t)NULL;
-   __DDL->started_thread_flag = 0;
-   pthread_exit(NULL);
+   mkclean(busnumber);
 }
 
 void *thr_refresh_cycle(void *v) {
