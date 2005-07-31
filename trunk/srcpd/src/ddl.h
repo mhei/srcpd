@@ -138,11 +138,11 @@ typedef struct _tNMRAPacketPool {
 
 void init_MaerklinPacketPool(int busnumber);
 char *get_maerklin_packet(int bus, int adr, int fx);
-void update_MaerklinPacketPool(int bus, int adr, char *sd_packet, char *f1, char *f2,
-                                                         char *f3, char *f4);
+void update_MaerklinPacketPool(int bus, int adr, char const * const sd_packet, char const * const f1,
+                                char const * const f2, char const * const f3, char const * const f4);
 void init_NMRAPacketPool(int busnumber);
-void update_NMRAPacketPool(int bus, int adr, char *packet, int packet_size,
-                                    char *fx_packet, int fx_packet_size);
+void update_NMRAPacketPool(int bus, int adr, char const * const packet, int packet_size,
+                                    char const * const fx_packet, int fx_packet_size);
 
 void *thr_refresh_cycle(void *v);
 void cancel_refresh_cycle(int bus);

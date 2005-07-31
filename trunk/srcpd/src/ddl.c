@@ -381,8 +381,8 @@ char *get_maerklin_packet(int bus, int adr, int fx) {
    return MaerklinPacketPool.packets[adr].f_packets[fx];
 }
 
-void update_MaerklinPacketPool(int bus, int adr, char *sd_packet, char *f1, char *f2,
-                                                         char *f3, char *f4) {
+void update_MaerklinPacketPool(int bus, int adr, char const * const sd_packet, char const * const f1,
+                                char const * const f2, char const * const f3, char const * const f4) {
 
    int i, found;
 
@@ -453,8 +453,8 @@ void init_NMRAPacketPool(int busnumber) {
    memcpy(NMRA_idle_data,idle_pktstr,j);
 }
 
-void update_NMRAPacketPool(int bus, int adr, char *packet, int packet_size,
-                                    char *fx_packet, int fx_packet_size) {
+void update_NMRAPacketPool(int bus, int adr, char const * const packet, int packet_size,
+                                    char const * const fx_packet, int fx_packet_size) {
 
    int i, found;
 
