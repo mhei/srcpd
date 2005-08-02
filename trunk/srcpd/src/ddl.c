@@ -382,7 +382,7 @@ char *get_maerklin_packet(int bus, int adr, int fx) {
 }
 
 void update_MaerklinPacketPool(int bus, int adr, char const * const sd_packet, char const * const f1,
-                                char const * const f2, char const * const f3, char const * const f4) {
+                                 char const * const f2, char const * const f3, char const * const f4) {
 
    int i, found;
 
