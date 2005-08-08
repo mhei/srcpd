@@ -64,21 +64,9 @@
 #define TIOCOUTQ 0x5411
 #endif
 
-//#define MAXDATA      40
-#define MAXDATA      20
-static char idle_data[MAXDATA];
-static char NMRA_idle_data[PKTSIZE];
-
 /********* Q U E U E *****************/
 
-/* returns the numbre of commands inside the queue, never used */
-//int monitor_NrOfQCmds(int busnumber) {
-//   if ((__DDL->queue_in)>=(__DDL->queue_out)) return (__DDL->queue_in - __DDL->queue_out);
-//   return (QSIZE - __DDL->queue_out + __DDL->queue_in);
-//}
-
 void queue_init(int busnumber) {
-
    int error,i;
 
    error = pthread_mutex_init(&__DDL->queue_mutex, NULL);
@@ -105,9 +93,6 @@ int queue_empty(int busnumber) {
 }
 
 void queue_add(int busnumber, int addr, char * const packet, int packet_type, int packet_size) {
-
-   if (!__DDL->queue_initialized) queue_init(busnumber);
-
    pthread_mutex_lock(&__DDL->queue_mutex);
    memset(__DDL->QData[__DDL->queue_in].packet,0,PKTSIZE);
    memcpy(__DDL->QData[__DDL->queue_in].packet,packet,packet_size);
@@ -120,7 +105,6 @@ void queue_add(int busnumber, int addr, char * const packet, int packet_type, in
 }
 
 int queue_get(int busnumber, int *addr, char *packet, int *packet_size) {
-
    int rtc;
 
    if (!__DDL->queue_initialized || queue_empty(busnumber)) return QEMPTY;
@@ -141,13 +125,7 @@ int queue_get(int busnumber, int *addr, char *packet, int *packet_size) {
 
 /* functions to open, initialize and close comport */
 
-static struct termios maerklin_dev_termios;
-static struct termios nmra_dev_termios;
-
 #if linux
-static struct serial_struct *serinfo_marklin=NULL;
-static struct serial_struct *serinfo_nmradcc=NULL;
-
 int init_serinfo(int fd, int divisor, struct serial_struct **serinfo) {
    if (*serinfo==NULL) {
       *serinfo=malloc(sizeof(struct serial_struct));
@@ -182,13 +160,13 @@ int setSerialMode(int busnumber, int mode) {
    switch (mode) {
       case SDM_MAERKLIN:
          if (__DDL -> SERIAL_DEVICE_MODE != SDM_MAERKLIN) {
-            if (tcsetattr(busses[busnumber].fd,TCSANOW,&maerklin_dev_termios)!=0) {
+            if (tcsetattr(busses[busnumber].fd,TCSANOW,&__DDL->maerklin_dev_termios)!=0) {
                DBG(busnumber, DBG_ERROR,"   error setting serial device mode to marklin!");
                return -1;
             }
 #if linux
             if (__DDL->IMPROVE_NMRADCC_TIMING) {
-               if (set_customdivisor(busses[busnumber].fd, serinfo_marklin)!=0) {
+               if (set_customdivisor(busses[busnumber].fd, __DDL->serinfo_marklin)!=0) {
                   DBG(busnumber, DBG_ERROR, "   cannot set custom divisor for maerklin of serial device!");
                   return -1;
                }
@@ -199,13 +177,13 @@ int setSerialMode(int busnumber, int mode) {
          break;
       case SDM_NMRA:
          if (__DDL -> SERIAL_DEVICE_MODE != SDM_NMRA) {
-            if (tcsetattr(busses[busnumber].fd,TCSANOW,&nmra_dev_termios)!=0) {
+            if (tcsetattr(busses[busnumber].fd,TCSANOW,&__DDL->nmra_dev_termios)!=0) {
                DBG(busnumber, DBG_ERROR,"   error setting serial device mode to NMRA!");
                return -1;
             }
 #if linux
             if (__DDL -> IMPROVE_NMRADCC_TIMING) {
-               if (set_customdivisor(busses[busnumber].fd, serinfo_nmradcc)!=0) {
+               if (set_customdivisor(busses[busnumber].fd, __DDL->serinfo_nmradcc)!=0) {
                   DBG(busnumber, DBG_ERROR, "   cannot set custom divisor for nmra dcc of serial device!");
                   return -1;
                }
@@ -244,50 +222,50 @@ int init_lineDDL(int busnumber) {
    tcflush(dev,TCOFLUSH);
    tcflow(dev,TCOOFF);          /* suspend output */
 
-   if (tcgetattr(dev, &maerklin_dev_termios)!=0) {
+   if (tcgetattr(dev, &__DDL->maerklin_dev_termios)!=0) {
       DBG(busnumber, DBG_FATAL, "   error initializing device %s. Abort!", busses[busnumber].device);
       exit(1);
    }
-   if (tcgetattr(dev, &nmra_dev_termios)!=0) {
+   if (tcgetattr(dev, &__DDL->nmra_dev_termios)!=0) {
       DBG(busnumber, DBG_FATAL, "   error initializing device %s. Abort!", busses[busnumber].device);
       exit(1);
    }
 
    /* init termios structur for maerklin mode */
-   maerklin_dev_termios.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
-   maerklin_dev_termios.c_oflag &= ~(OPOST);
-   maerklin_dev_termios.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
-   maerklin_dev_termios.c_cflag &= ~(CSIZE | PARENB);
-   maerklin_dev_termios.c_cflag |= CS6;        /* 6 data bits      */
-   cfsetospeed(&maerklin_dev_termios,B38400);  /* baud rate: 38400 */
-   cfsetispeed(&maerklin_dev_termios,B38400);  /* baud rate: 38400 */
+   __DDL->maerklin_dev_termios.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
+   __DDL->maerklin_dev_termios.c_oflag &= ~(OPOST);
+   __DDL->maerklin_dev_termios.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
+   __DDL->maerklin_dev_termios.c_cflag &= ~(CSIZE | PARENB);
+   __DDL->maerklin_dev_termios.c_cflag |= CS6;        /* 6 data bits      */
+   cfsetospeed(&__DDL->maerklin_dev_termios,B38400);  /* baud rate: 38400 */
+   cfsetispeed(&__DDL->maerklin_dev_termios,B38400);  /* baud rate: 38400 */
 
    /* init termios structur for nmra mode */
-   nmra_dev_termios.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
-   nmra_dev_termios.c_oflag &= ~(OPOST);
-   nmra_dev_termios.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
-   nmra_dev_termios.c_cflag &= ~(CSIZE | PARENB);
-   nmra_dev_termios.c_cflag |= CS8;            /* 8 data bits      */
+   __DDL->nmra_dev_termios.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
+   __DDL->nmra_dev_termios.c_oflag &= ~(OPOST);
+   __DDL->nmra_dev_termios.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
+   __DDL->nmra_dev_termios.c_cflag &= ~(CSIZE | PARENB);
+   __DDL->nmra_dev_termios.c_cflag |= CS8;            /* 8 data bits      */
    if (__DDL->IMPROVE_NMRADCC_TIMING)
    {
-      cfsetospeed(&nmra_dev_termios,B38400);      /* baud rate: 38400 */
-	  cfsetispeed(&nmra_dev_termios,B38400);      /* baud rate: 38400 */
+      cfsetospeed(&__DDL->nmra_dev_termios,B38400);      /* baud rate: 38400 */
+      cfsetispeed(&__DDL->nmra_dev_termios,B38400);      /* baud rate: 38400 */
    }
    else
    {
-      cfsetospeed(&nmra_dev_termios,B19200);      /* baud rate: 19200 */
-	  cfsetispeed(&nmra_dev_termios,B19200);      /* baud rate: 19200 */
+      cfsetospeed(&__DDL->nmra_dev_termios,B19200);      /* baud rate: 19200 */
+      cfsetispeed(&__DDL->nmra_dev_termios,B19200);      /* baud rate: 19200 */
    }
 
 #if linux
    // if IMPROVE_NMRADCC_TIMING is set, we have to initialize some
    // structures
    if (__DDL -> IMPROVE_NMRADCC_TIMING) {
-      if (init_serinfo(dev,3,&serinfo_marklin)!=0) {
+      if (init_serinfo(dev,3,&__DDL->serinfo_marklin)!=0) {
          DBG(busnumber, DBG_FATAL, "   error initializing device %s. Abort!", busses[busnumber].device);
          exit(1);
       }
-      if (init_serinfo(dev,7,&serinfo_nmradcc)!=0) {
+      if (init_serinfo(dev,7,&__DDL->serinfo_nmradcc)!=0) {
          DBG(busnumber, DBG_FATAL, "   error initializing device %s. Abort!",  busses[busnumber].device);
          exit(1);
       }
@@ -317,108 +295,83 @@ int init_lineDDL(int busnumber) {
 }
 
 
-/****** routines and data types for maerklin packet pool ******/
-
-static pthread_mutex_t maerklin_pktpool_mutex = PTHREAD_MUTEX_INITIALIZER;
-static int isMaerklinPackedPoolInitialized = FALSE;
-
-static tMaerklinPacketPool MaerklinPacketPool;
+/****** routines for maerklin packet pool *********************/
 
 void init_MaerklinPacketPool(int busnumber) {
    int i,j;
    int error;
 
-   if (!(__DDL -> ENABLED_PROTOCOLS & EP_MAERKLIN)) return;
+   //if (!(__DDL -> ENABLED_PROTOCOLS & EP_MAERKLIN)) return;
 
-   error = pthread_mutex_init(&maerklin_pktpool_mutex, NULL);
+   error = pthread_mutex_init(&__DDL->maerklin_pktpool_mutex, NULL);
    if (error) {
       DBG(busnumber, DBG_ERROR, "cannot create mutex (maerklin packet pool). Abort!");
       exit(1);
    }
 
-   pthread_mutex_lock(&maerklin_pktpool_mutex);
+   pthread_mutex_lock(&__DDL->maerklin_pktpool_mutex);
 
    for (i=0; i<=MAX_MARKLIN_ADDRESS; i++) {
-      MaerklinPacketPool.knownAdresses[i]=0;
+      __DDL->MaerklinPacketPool.knownAdresses[i]=0;
    }
-   MaerklinPacketPool.NrOfKnownAdresses = 1;
-   MaerklinPacketPool.knownAdresses[MaerklinPacketPool.NrOfKnownAdresses-1]=81;
+   __DDL->MaerklinPacketPool.NrOfKnownAdresses = 1;
+   __DDL->MaerklinPacketPool.knownAdresses[__DDL->MaerklinPacketPool.NrOfKnownAdresses-1]=81;
    /* generate idle packet */
    for (i=0; i<4; i++) {
-      MaerklinPacketPool.packets[81].packet[2*i]   = HI;
-      MaerklinPacketPool.packets[81].packet[2*i+1] = LO;
+      __DDL->MaerklinPacketPool.packets[81].packet[2*i]   = HI;
+      __DDL->MaerklinPacketPool.packets[81].packet[2*i+1] = LO;
       for (j=0; j<4; j++) {
-         MaerklinPacketPool.packets[81].f_packets[j][2*i]   = HI;
-         MaerklinPacketPool.packets[81].f_packets[j][2*i+1] = LO;
+         __DDL->MaerklinPacketPool.packets[81].f_packets[j][2*i]   = HI;
+         __DDL->MaerklinPacketPool.packets[81].f_packets[j][2*i+1] = LO;
       }
    }
    for (i=4; i<9; i++) {
-      MaerklinPacketPool.packets[81].packet[2*i]   = LO;
-      MaerklinPacketPool.packets[81].packet[2*i+1] = LO;
+      __DDL->MaerklinPacketPool.packets[81].packet[2*i]   = LO;
+      __DDL->MaerklinPacketPool.packets[81].packet[2*i+1] = LO;
       for (j=0; j<4; j++) {
-         MaerklinPacketPool.packets[81].f_packets[j][2*i]   = LO;
-         MaerklinPacketPool.packets[81].f_packets[j][2*i+1] = LO;
+         __DDL->MaerklinPacketPool.packets[81].f_packets[j][2*i]   = LO;
+         __DDL->MaerklinPacketPool.packets[81].f_packets[j][2*i+1] = LO;
       }
    }
-   isMaerklinPackedPoolInitialized = TRUE;
+   //isMaerklinPackedPoolInitialized = TRUE;
 
-   pthread_mutex_unlock(&maerklin_pktpool_mutex);
-
-   /* generate idle_data */
-   for (i=0; i<MAXDATA; i++) idle_data[i]=0x55;      /* 0x55 = 01010101 */
-   for (i=0; i<PKTSIZE; i++) NMRA_idle_data[i]=0x55;
-   /* ATTENTION: if nmra dcc mode is activated idle_data[] and NMRA_idle_data
-                 must be overidden from init_NMRAPacketPool().
-                 This means, that init_NMRAPacketPool()
-                 must be called after init_MaerklinPacketPool().
-    */
+   pthread_mutex_unlock(&__DDL->maerklin_pktpool_mutex);
 }
 
-char *get_maerklin_packet(int bus, int adr, int fx) {
-   if (isMaerklinPackedPoolInitialized == FALSE) {
-      init_MaerklinPacketPool(bus);
-   }
-   return MaerklinPacketPool.packets[adr].f_packets[fx];
+char *get_maerklin_packet(int busnumber, int adr, int fx) {
+   return __DDL->MaerklinPacketPool.packets[adr].f_packets[fx];
 }
 
-void update_MaerklinPacketPool(int bus, int adr, char const * const sd_packet, char const * const f1,
+void update_MaerklinPacketPool(int busnumber, int adr, char const * const sd_packet, char const * const f1,
                                  char const * const f2, char const * const f3, char const * const f4) {
-
    int i, found;
 
-   if (isMaerklinPackedPoolInitialized == FALSE) {
-      init_MaerklinPacketPool(bus);
-   }
-   DBG(bus, DBG_INFO, "update MM Packet Pool: %d", adr);
+   DBG(busnumber, DBG_INFO, "update MM Packet Pool: %d", adr);
    found = 0;
-   for (i=0; i<MaerklinPacketPool.NrOfKnownAdresses && !found; i++)
-      if (MaerklinPacketPool.knownAdresses[i]==adr) found=TRUE;
+   for (i=0; i<__DDL->MaerklinPacketPool.NrOfKnownAdresses && !found; i++)
+      if (__DDL->MaerklinPacketPool.knownAdresses[i]==adr) found=TRUE;
 
-   pthread_mutex_lock(&maerklin_pktpool_mutex);
-   memcpy(MaerklinPacketPool.packets[adr].packet,sd_packet,18);
-   memcpy(MaerklinPacketPool.packets[adr].f_packets[0],f1,18);
-   memcpy(MaerklinPacketPool.packets[adr].f_packets[1],f2,18);
-   memcpy(MaerklinPacketPool.packets[adr].f_packets[2],f3,18);
-   memcpy(MaerklinPacketPool.packets[adr].f_packets[3],f4,18);
-   pthread_mutex_unlock(&maerklin_pktpool_mutex);
+   pthread_mutex_lock(&__DDL->maerklin_pktpool_mutex);
+   memcpy(__DDL->MaerklinPacketPool.packets[adr].packet,sd_packet,18);
+   memcpy(__DDL->MaerklinPacketPool.packets[adr].f_packets[0],f1,18);
+   memcpy(__DDL->MaerklinPacketPool.packets[adr].f_packets[1],f2,18);
+   memcpy(__DDL->MaerklinPacketPool.packets[adr].f_packets[2],f3,18);
+   memcpy(__DDL->MaerklinPacketPool.packets[adr].f_packets[3],f4,18);
+   pthread_mutex_unlock(&__DDL->maerklin_pktpool_mutex);
 
-   if (MaerklinPacketPool.NrOfKnownAdresses==1 &&
-       MaerklinPacketPool.knownAdresses[0]==81) {
-      MaerklinPacketPool.NrOfKnownAdresses=0;
+   if (__DDL->MaerklinPacketPool.NrOfKnownAdresses==1 &&
+       __DDL->MaerklinPacketPool.knownAdresses[0]==81) {
+      __DDL->MaerklinPacketPool.NrOfKnownAdresses=0;
    }
    if (!found) {
-     MaerklinPacketPool.knownAdresses[MaerklinPacketPool.NrOfKnownAdresses]=adr;
-     MaerklinPacketPool.NrOfKnownAdresses++;
+     __DDL->MaerklinPacketPool.knownAdresses[__DDL->MaerklinPacketPool.NrOfKnownAdresses]=adr;
+     __DDL->MaerklinPacketPool.NrOfKnownAdresses++;
    }
 }
 
 /**********************************************************/
 
-/****** routines and data types for NMRA packet pool ******/
-
-static pthread_mutex_t nmra_pktpool_mutex = PTHREAD_MUTEX_INITIALIZER;
-static int isNMRAPackedPoolInitialized = FALSE;
-static tNMRAPacketPool NMRAPacketPool;
+/****** routines for NMRA packet pool *********************/
 
 void init_NMRAPacketPool(int busnumber) {
    int i,j;
@@ -426,76 +379,57 @@ void init_NMRAPacketPool(int busnumber) {
    char idle_packet[] = "11111111111111101111111100000000001111111110";
    char idle_pktstr[PKTSIZE];
 
-   if (!(__DDL->ENABLED_PROTOCOLS & EP_NMRADCC)) return;
-
-   error = pthread_mutex_init(&nmra_pktpool_mutex, NULL);
+   error = pthread_mutex_init(&__DDL->nmra_pktpool_mutex, NULL);
    if (error) {
       DBG(busnumber, DBG_ERROR, "cannot create mutex (nmra packet pool). Abort!");
       exit(1);
    }
 
-   pthread_mutex_lock(&nmra_pktpool_mutex);
+   pthread_mutex_lock(&__DDL->nmra_pktpool_mutex);
    for (i=0; i<=MAX_NMRA_ADDRESS; i++) {
-      NMRAPacketPool.knownAdresses[i]=0;
+      __DDL->NMRAPacketPool.knownAdresses[i]=0;
    }
-   NMRAPacketPool.NrOfKnownAdresses = 0;
+   __DDL->NMRAPacketPool.NrOfKnownAdresses = 0;
 
-   isNMRAPackedPoolInitialized=TRUE;
-   pthread_mutex_unlock(&nmra_pktpool_mutex);
+   pthread_mutex_unlock(&__DDL->nmra_pktpool_mutex);
 
    /* put idle packet in packet pool */
    j=translateBitstream2Packetstream(__DDL->NMRADCC_TR_V, idle_packet, idle_pktstr, FALSE);
    update_NMRAPacketPool(busnumber, 255, idle_pktstr, j, idle_pktstr, j);
 
-   /* generate idle_data */
-   for (i=0; i<MAXDATA; i++) idle_data[i]=idle_pktstr[i % j];
-   for (i=(MAXDATA/j)*j; i<MAXDATA; i++) idle_data[i]=0xC6;
-   memcpy(NMRA_idle_data,idle_pktstr,j);
+   /* generate and override idle_data */
+   for (i=0; i<MAXDATA; i++) __DDL->idle_data[i]=idle_pktstr[i % j];
+   for (i=(MAXDATA/j)*j; i<MAXDATA; i++) __DDL->idle_data[i]=0xC6;
+   memcpy(__DDL->NMRA_idle_data,idle_pktstr,j);
 }
 
-void update_NMRAPacketPool(int bus, int adr, char const * const packet, int packet_size,
+void update_NMRAPacketPool(int busnumber, int adr, char const * const packet, int packet_size,
                                     char const * const fx_packet, int fx_packet_size) {
-
    int i, found;
 
-   if (isNMRAPackedPoolInitialized == FALSE) {
-      init_NMRAPacketPool(bus);
-   }
-
    found = 0;
-   for (i=0; i<=NMRAPacketPool.NrOfKnownAdresses && !found; i++)
-      if (NMRAPacketPool.knownAdresses[i]==adr) found=TRUE;
+   for (i=0; i<=__DDL->NMRAPacketPool.NrOfKnownAdresses && !found; i++)
+      if (__DDL->NMRAPacketPool.knownAdresses[i]==adr) found=TRUE;
 
-   pthread_mutex_lock(&nmra_pktpool_mutex);
-   memcpy(NMRAPacketPool.packets[adr].packet,packet,packet_size);
-   NMRAPacketPool.packets[adr].packet_size=packet_size;
-   memcpy(NMRAPacketPool.packets[adr].fx_packet,fx_packet,fx_packet_size);
-   NMRAPacketPool.packets[adr].fx_packet_size=fx_packet_size;
-   pthread_mutex_unlock(&nmra_pktpool_mutex);
+   pthread_mutex_lock(&__DDL->nmra_pktpool_mutex);
+   memcpy(__DDL->NMRAPacketPool.packets[adr].packet,packet,packet_size);
+   __DDL->NMRAPacketPool.packets[adr].packet_size=packet_size;
+   memcpy(__DDL->NMRAPacketPool.packets[adr].fx_packet,fx_packet,fx_packet_size);
+   __DDL->NMRAPacketPool.packets[adr].fx_packet_size=fx_packet_size;
+   pthread_mutex_unlock(&__DDL->nmra_pktpool_mutex);
 
-   if (NMRAPacketPool.NrOfKnownAdresses==1 &&
-       NMRAPacketPool.knownAdresses[0]==255) {
-      NMRAPacketPool.NrOfKnownAdresses=0;
+   if (__DDL->NMRAPacketPool.NrOfKnownAdresses==1 &&
+       __DDL->NMRAPacketPool.knownAdresses[0]==255) {
+      __DDL->NMRAPacketPool.NrOfKnownAdresses=0;
    }
    if (!found) {
-      NMRAPacketPool.knownAdresses[NMRAPacketPool.NrOfKnownAdresses]=adr;
-      NMRAPacketPool.NrOfKnownAdresses++;
+      __DDL->NMRAPacketPool.knownAdresses[__DDL->NMRAPacketPool.NrOfKnownAdresses]=adr;
+      __DDL->NMRAPacketPool.NrOfKnownAdresses++;
    }
 }
-/* argument for nanosleep to do non-busy waiting */
-static struct timespec rqtp_sleep  = { 0, 2500000 }; /* ==> non-busy waiting */
 
-/* arguments for nanosleep and marklin loco decoders (19KHz) */
-static struct timespec rqtp_btw19K = { 0, 1250000 }; /* ==> busy waiting     */
-static struct timespec rqtp_end19K = { 0, 1700000 }; /* ==> busy waiting     */
 
-/* arguments for nanosleep and marklin solenoids/func decoders (38KHz) */
-static struct timespec rqtp_btw38K = { 0,  625000 }; /* ==> busy waiting     */
-static struct timespec rqtp_end38K = { 0,  850000 }; /* ==> busy waiting     */
-
-static struct timespec rmtp;
-
-void waitUARTempty_COMMON(busnumber) {
+void waitUARTempty_COMMON(int busnumber) {
    int result;
    do {         /* wait until UART is empty */
 #if linux
@@ -506,7 +440,7 @@ void waitUARTempty_COMMON(busnumber) {
    } while(!result);
 }
 
-void waitUARTempty_COMMON_USLEEPPATCH(busnumber) {
+void waitUARTempty_COMMON_USLEEPPATCH(int busnumber) {
    int result;
    do {         /* wait until UART is empty */
 #if linux
@@ -522,7 +456,6 @@ void waitUARTempty_COMMON_USLEEPPATCH(busnumber) {
 /* from Harald Barth */
 #define SLEEPFACTOR 48000l                /* used in waitUARTempty() */
 #define NUMBUFFERBYTES 1024               /* used in waitUARTempty() */
-static struct timespec sleeptime = {0,2000000L}; /* used in waitUARTempty() */
 
 void waitUARTempty_CLEANNMRADCC(int busnumber) {
    int outbytes;
@@ -531,6 +464,7 @@ void waitUARTempty_CLEANNMRADCC(int busnumber) {
    ioctl(busses[busnumber].fd,TIOCOUTQ, &outbytes);
 
    if (outbytes > NUMBUFFERBYTES) {
+      struct timespec sleeptime;
       /* calculate sleeptime */
       sleeptime.tv_sec = outbytes / SLEEPFACTOR;
       sleeptime.tv_nsec = (outbytes % SLEEPFACTOR)*(1000000000l/SLEEPFACTOR);
@@ -539,11 +473,6 @@ void waitUARTempty_CLEANNMRADCC(int busnumber) {
    }
 }
 
-static struct timeval tv_short_detected = {0, 0};
-static struct timeval tv_short_now = {0, 0};
-static time_t short_detected=0;
-static time_t short_now=0;
-static struct timezone tz_short;
 
 int checkRingIndicator(int busnumber) {
    int result, arg;
@@ -563,24 +492,28 @@ int checkRingIndicator(int busnumber) {
 
 int checkShortcut(int busnumber) {
    int result, arg;
+   time_t short_now = 0;
+   struct timeval tv_shortcut = {0, 0};
+   //struct timezone tz_shortcut;
+
    result = ioctl(busses[busnumber].fd, TIOCMGET, &arg);
    if (result>=0) {
       if ( ((arg&TIOCM_DSR)&&(!__DDL->DSR_INVERSE)) ||
            ((~arg&TIOCM_DSR)&&(__DDL->DSR_INVERSE))) {
-         if (short_detected==0) {
-            gettimeofday(&tv_short_detected,&tz_short);
-            short_detected=tv_short_detected.tv_sec*1000000 +
-                           tv_short_detected.tv_usec;
+         if (__DDL->short_detected==0) {
+            gettimeofday(&tv_shortcut,NULL);
+            __DDL->short_detected=tv_shortcut.tv_sec*1000000 +
+                           tv_shortcut.tv_usec;
          }
-         gettimeofday(&tv_short_now,&tz_short);
-         short_now=tv_short_now.tv_sec*1000000+tv_short_now.tv_usec;
-         if (__DDL->SHORTCUTDELAY<=(short_now-short_detected)) {
+         gettimeofday(&tv_shortcut,NULL);
+         short_now=tv_shortcut.tv_sec*1000000+tv_shortcut.tv_usec;
+         if (__DDL->SHORTCUTDELAY<=(short_now-__DDL->short_detected)) {
             DBG(busnumber, DBG_INFO, "   shortcut detected. power on tracks stopped!");
             return 1;
          }
       }
       else {
-         short_detected=0;
+         __DDL->short_detected=0;
          return 0;
       }
    }
@@ -594,6 +527,12 @@ int checkShortcut(int busnumber) {
 void send_packet(int busnumber, int addr, char *packet, int packet_size, int packet_type, int refresh) {
 
    int i,laps;
+   /* arguments for nanosleep and marklin loco decoders (19KHz) */
+   struct timespec rqtp_btw19K = { 0, 1250000 }; /* ==> busy waiting     */
+   struct timespec rqtp_end19K = { 0, 1700000 }; /* ==> busy waiting     */
+   /* arguments for nanosleep and marklin solenoids/func decoders (38KHz) */
+   struct timespec rqtp_btw38K = { 0,  625000 }; /* ==> busy waiting     */
+   struct timespec rqtp_end38K = { 0,  850000 }; /* ==> busy waiting     */
 
    waitUARTempty(busnumber);
 
@@ -603,10 +542,10 @@ void send_packet(int busnumber, int addr, char *packet, int packet_size, int pac
          if (setSerialMode(busnumber,SDM_MAERKLIN)<0) return;
          if (refresh) laps=2; else laps=4;    // YYTV 9
          for (i=0; i<laps; i++) {
-            nanosleep(&rqtp_end19K, &rmtp);
+            nanosleep(&rqtp_end19K, &__DDL->rmtp);
             write(busses[busnumber].fd,packet,18);
             waitUARTempty(busnumber);
-            nanosleep(&rqtp_btw19K, &rmtp);
+            nanosleep(&rqtp_btw19K, &__DDL->rmtp);
             write(busses[busnumber].fd,packet,18);
             waitUARTempty(busnumber);
          }
@@ -615,10 +554,10 @@ void send_packet(int busnumber, int addr, char *packet, int packet_size, int pac
          if (setSerialMode(busnumber,SDM_MAERKLIN)<0) return;
          if (refresh) laps=2; else laps=3;   // YYTV 6
          for (i=0; i<laps; i++) {
-            nanosleep(&rqtp_end19K, &rmtp);
+            nanosleep(&rqtp_end19K, &__DDL->rmtp);
             write(busses[busnumber].fd,packet,18);
             waitUARTempty(busnumber);
-            nanosleep(&rqtp_btw19K, &rmtp);
+            nanosleep(&rqtp_btw19K, &__DDL->rmtp);
             write(busses[busnumber].fd,packet,18);
             waitUARTempty(busnumber);
          }
@@ -627,10 +566,10 @@ void send_packet(int busnumber, int addr, char *packet, int packet_size, int pac
       case QM1SOLEPKT:
          if (setSerialMode(busnumber,SDM_MAERKLIN)<0) return;
          for (i=0; i<2; i++) {
-           nanosleep(&rqtp_end38K, &rmtp);
+           nanosleep(&rqtp_end38K, &__DDL->rmtp);
            write(busses[busnumber].fd,packet,9);
            waitUARTempty(busnumber);
-           nanosleep(&rqtp_btw38K, &rmtp);
+           nanosleep(&rqtp_btw38K, &__DDL->rmtp);
            write(busses[busnumber].fd,packet,9);
            waitUARTempty(busnumber);
          }
@@ -640,69 +579,64 @@ void send_packet(int busnumber, int addr, char *packet, int packet_size, int pac
          if (setSerialMode(busnumber,SDM_NMRA)<0) return;
          write(busses[busnumber].fd,packet,packet_size);
          waitUARTempty(busnumber);
-         write(busses[busnumber].fd,NMRA_idle_data,13);
+         write(busses[busnumber].fd,__DDL->NMRA_idle_data,13);
          waitUARTempty(busnumber);
-         // nanosleep(&rqtp_btw38K, &rmtp);
+         // nanosleep(&rqtp_btw38K, &__DDL->rmtp);
          write(busses[busnumber].fd,packet,packet_size);
          // waitUARTempty();
          break;
    }
    if (__DDL->ENABLED_PROTOCOLS & EP_MAERKLIN)
-      nanosleep(&rqtp_end38K, &rmtp);
+      nanosleep(&rqtp_end38K, &__DDL->rmtp);
    if (setSerialMode(busnumber,SDM_DEFAULT)<0) return;
 }
 
-static int last_refreshed_loco      = 0;
-static int last_refreshed_fx        = -1;
-static int last_refreshed_nmra_loco = 0;
-static int nmra_fx_refresh          = -1;
-static int maerklin_refresh         = 0;
 
 void refresh_loco(int busnumber) {
 
     int adr;
 
-    if (maerklin_refresh) {
-       adr = MaerklinPacketPool.knownAdresses[last_refreshed_loco];
+    if (__DDL->maerklin_refresh) {
+       adr = __DDL->MaerklinPacketPool.knownAdresses[__DDL->last_refreshed_maerklin_loco];
        tcflush(busses[busnumber].fd, TCOFLUSH);
-       if (last_refreshed_fx<0)
-          send_packet(busnumber, adr,MaerklinPacketPool.packets[adr].packet,
+       if (__DDL->last_refreshed_maerklin_fx<0)
+          send_packet(busnumber, adr,__DDL->MaerklinPacketPool.packets[adr].packet,
                       18,QM2LOCOPKT,TRUE);
        else
-          send_packet(busnumber, adr,MaerklinPacketPool.packets[adr].f_packets[last_refreshed_fx],18,QM2FXPKT,TRUE);
-       last_refreshed_fx++;
-       if (last_refreshed_fx==4) {
-          last_refreshed_fx=-1;
-          last_refreshed_loco++;
-          if (last_refreshed_loco>=MaerklinPacketPool.NrOfKnownAdresses) {
-             last_refreshed_loco=0;
+          send_packet(busnumber, adr,__DDL->MaerklinPacketPool.packets[adr].f_packets[__DDL->last_refreshed_maerklin_fx],18,QM2FXPKT,TRUE);
+       __DDL->last_refreshed_maerklin_fx++;
+       if (__DDL->last_refreshed_maerklin_fx==4) {
+          __DDL->last_refreshed_maerklin_fx=-1;
+          __DDL->last_refreshed_maerklin_loco++;
+          if (__DDL->last_refreshed_maerklin_loco>=__DDL->MaerklinPacketPool.NrOfKnownAdresses) {
+             __DDL->last_refreshed_maerklin_loco=0;
           }
        }
     }
     else {
-       adr = NMRAPacketPool.knownAdresses[last_refreshed_nmra_loco];
+       adr = __DDL->NMRAPacketPool.knownAdresses[__DDL->last_refreshed_nmra_loco];
        if (adr>=0) {
-          if (nmra_fx_refresh<0) {
-             send_packet(busnumber, adr,NMRAPacketPool.packets[adr].packet,
-                       NMRAPacketPool.packets[adr].packet_size,QNBLOCOPKT,TRUE);
-             nmra_fx_refresh=0;
+          if (__DDL->last_refreshed_nmra_fx<0) {
+             send_packet(busnumber, adr,__DDL->NMRAPacketPool.packets[adr].packet,
+                       __DDL->NMRAPacketPool.packets[adr].packet_size,QNBLOCOPKT,TRUE);
+             __DDL->last_refreshed_nmra_fx=0;
           }
           else {
-             send_packet(busnumber, adr,NMRAPacketPool.packets[adr].fx_packet,
-                    NMRAPacketPool.packets[adr].fx_packet_size,QNBLOCOPKT,TRUE);
-             nmra_fx_refresh=1;
+             send_packet(busnumber, adr,__DDL->NMRAPacketPool.packets[adr].fx_packet,
+                    __DDL->NMRAPacketPool.packets[adr].fx_packet_size,QNBLOCOPKT,TRUE);
+             __DDL->last_refreshed_nmra_fx=1;
           }
        }
-       if (nmra_fx_refresh==1) {
-          last_refreshed_nmra_loco++;
-          nmra_fx_refresh=-1;
-          if (last_refreshed_nmra_loco>=NMRAPacketPool.NrOfKnownAdresses) {
-             last_refreshed_nmra_loco=0;
+       if (__DDL->last_refreshed_nmra_fx==1) {
+          __DDL->last_refreshed_nmra_loco++;
+          __DDL->last_refreshed_nmra_fx=-1;
+          if (__DDL->last_refreshed_nmra_loco>=__DDL->NMRAPacketPool.NrOfKnownAdresses) {
+             __DDL->last_refreshed_nmra_loco=0;
           }
        }
     }
     if (__DDL->ENABLED_PROTOCOLS == (EP_MAERKLIN | EP_NMRADCC))
-       maerklin_refresh = !maerklin_refresh;
+       __DDL->maerklin_refresh = !__DDL->maerklin_refresh;
 }
 
 long int compute_delta(struct timeval tv1, struct timeval tv2) {
@@ -775,16 +709,7 @@ void stop_voltage(int busnumber) {
   DBG(busnumber, DBG_INFO, "refresh cycle canceled.");
 }
 
-//void reset(int busnumber) {
-//   if (__DDL->started_thread_flag!=0) {
-//      cancel_refresh_cycle(busnumber);
-//   }
-//   init_MaerklinPacketPool(busnumber);
-//   init_NMRAPacketPool(busnumber);
-//   DBG(busnumber, DBG_INFO, "ddl bus reset done.\n");
-//}
-
-void mkclean(busnumber) {
+void mkclean(int busnumber) {
    /* set interface lines to the off state */
    tcflush(busses[busnumber].fd, TCOFLUSH);
    tcflow(busses[busnumber].fd, TCOOFF);
@@ -813,7 +738,12 @@ void *thr_refresh_cycle(void *v) {
    int packet_type;
    char packet[PKTSIZE];
    int addr;
-   int busnumber = (int) v;;
+   int busnumber = (int) v;
+   struct timeval tv1, tv2;
+   struct timezone tz;
+
+   /* argument for nanosleep to do non-busy waiting */
+   struct timespec rqtp_sleep  = { 0, 2500000 }; /* ==> non-busy waiting */
 
    // set the best waitUARTempty-Routine
    waitUARTempty = waitUARTempty_COMMON;
@@ -824,30 +754,17 @@ void *thr_refresh_cycle(void *v) {
       waitUARTempty = waitUARTempty_CLEANNMRADCC;
    }
 
-   if (__DDL->ENABLED_PROTOCOLS & EP_MAERKLIN)
-      maerklin_refresh=1;
-   else
-      maerklin_refresh=0;
-
-   if (isMaerklinPackedPoolInitialized == FALSE) {
-      init_MaerklinPacketPool(busnumber);
-   }
-
-   if (isNMRAPackedPoolInitialized == FALSE) {
-      init_NMRAPacketPool(busnumber);
-   }
-
    sparam.sched_priority=10;
    sched_setscheduler(0,SCHED_FIFO,&sparam);
    tcflow(busses[busnumber].fd, TCOON);
    set_SerialLine(busnumber, SL_DTR,ON);
 
-   short_detected=0;
+   __DDL->short_detected=0;
 
    l=0;
-   gettimeofday(& (__DDL->tv1), & (__DDL->tz));
+   gettimeofday(&tv1, &tz);
    for (;;) {
-      write(busses[busnumber].fd,idle_data,MAXDATA);
+      write(busses[busnumber].fd,__DDL->idle_data,MAXDATA);
       packet_type=queue_get(busnumber,&addr,packet,&packet_size);/*now,look at commands*/
       if (packet_type>QNOVALIDPKT) {
          tcflush(busses[busnumber].fd, TCOFLUSH);
@@ -856,18 +773,18 @@ void *thr_refresh_cycle(void *v) {
              if (__DDL->RI_CHECK) if (checkRingIndicator(busnumber)==1){mkclean(busnumber);return NULL;}
              send_packet(busnumber, addr,packet,packet_size,packet_type,FALSE);
              if (__DDL->ENABLED_PROTOCOLS==(EP_MAERKLIN | EP_NMRADCC))
-                write(busses[busnumber].fd,NMRA_idle_data,13);
+                write(busses[busnumber].fd,__DDL->NMRA_idle_data,13);
              packet_type=queue_get(busnumber,&addr,packet,&packet_size);
          }
       } else {                          /* no commands? Then we do a refresh */
          if (__DDL->CHECKSHORT) if (checkShortcut(busnumber)==1) {mkclean(busnumber);return NULL;}
          if (__DDL->RI_CHECK)   if (checkRingIndicator(busnumber)==1) {mkclean(busnumber);return NULL;}
-         gettimeofday(&(__DDL->tv2), &(__DDL->tz));
-         if (compute_delta(__DDL->tv1,__DDL->tv2)>100000) {        /* but not every time! */
+         gettimeofday(&tv2, &tz);
+         if (compute_delta(tv1,tv2)>100000) {        /* but not every time! */
             refresh_loco(busnumber);
-            gettimeofday(&(__DDL->tv1), &(__DDL->tz));
+            gettimeofday(&tv1, &tz);
          } else {
-            nanosleep(&rqtp_sleep, &rmtp);
+            nanosleep(&rqtp_sleep, &__DDL->rmtp);
          }
       }
    }
@@ -918,10 +835,6 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   __DDL -> number_gl = 81;
   __DDL -> number_ga = 324;
 
-  __DDL -> queue_initialized = FALSE;
-  __DDL -> queue_out = 0;
-  __DDL -> queue_in = 0;
-
   __DDL -> RI_CHECK = FALSE;              /* ring indicator checking      */
   __DDL -> CHECKSHORT = FALSE;            /* default no shortcut checking */
   __DDL -> DSR_INVERSE = FALSE;           /* controls how DSR is used to  */
@@ -936,7 +849,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   __DDL -> WAITUART_USLEEP_USEC = 0;      /* usecs for usleep patch       */
 
   __DDL -> SERIAL_DEVICE_MODE = SDM_NOTINITIALIZED;
-  __DDL -> started_thread_flag = 0;
+
   while (child)
   {
     if(strncmp(child->name, "text", 4)==0)
@@ -1053,22 +966,52 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   return(1);
 }
 
-int term_bus_DDL(int bus)
+int term_bus_DDL(int busnumber)
 {
-  DBG(bus, DBG_INFO, "DDL bus %d terminating", bus);
+  DBG(busnumber, DBG_INFO, "DDL bus %d terminating", busnumber);
   return 0;
 }
 
 /* Initialisiere den Bus, signalisiere Fehler */
 /* Einmal aufgerufen mit busnummer als einzigem Parameter */
 /* return code wird ignoriert (vorerst) */
-int init_bus_DDL(int i)
+int init_bus_DDL(int busnumber)
 {
-  DBG(i, DBG_INFO,"DDL init: bus #%d, debug %d", i, busses[i].debuglevel);
-  busses[i].fd = init_lineDDL(i);
-  init_MaerklinPacketPool(i);
-  init_NMRAPacketPool(i);
-  DBG(i, DBG_INFO, "DDL init done");
+  DBG(busnumber, DBG_INFO,"DDL init: bus #%d, debug %d", busnumber, busses[busnumber].debuglevel);
+  int i;
+
+  busses[busnumber].fd = init_lineDDL(busnumber);
+
+  __DDL -> short_detected=0;
+
+  __DDL -> queue_initialized = FALSE;
+  __DDL -> queue_out = 0;
+  __DDL -> queue_in = 0;
+  queue_init(busnumber);
+
+  /* generate idle_data */
+  for (i=0; i<MAXDATA; i++) __DDL -> idle_data[i]=0x55;      /* 0x55 = 01010101 */
+  for (i=0; i<PKTSIZE; i++) __DDL -> NMRA_idle_data[i]=0x55;
+  /* ATTENTION: if nmra dcc mode is activated __DDL->idle_data[] and __DDL->NMRA_idle_data
+   *            must be overidden from init_NMRAPacketPool().
+   *            This means, that init_NMRAPacketPool()
+   *            must be called after init_MaerklinPacketPool().
+   */
+
+  __DDL -> last_refreshed_maerklin_loco      = 0;
+  __DDL -> last_refreshed_maerklin_fx        = -1;
+  __DDL -> last_refreshed_nmra_loco = 0;
+  __DDL -> last_refreshed_nmra_fx          = -1;
+
+  if (__DDL->ENABLED_PROTOCOLS & EP_MAERKLIN) {
+    init_MaerklinPacketPool(busnumber);
+    __DDL->maerklin_refresh=1;
+  }
+  else __DDL->maerklin_refresh=0;
+  if (__DDL->ENABLED_PROTOCOLS & EP_NMRADCC) init_NMRAPacketPool(busnumber);
+
+  __DDL -> started_thread_flag = FALSE;
+  DBG(busnumber, DBG_INFO, "DDL init done");
   return 0;
 }
 
@@ -1077,67 +1020,67 @@ void* thr_sendrec_DDL (void *v)
   struct _GLSTATE gltmp;
   struct _GASTATE gatmp;
   int addr;
-  int bus = (int) v;
+  int busnumber = (int) v;
   char msg[110];
 
-  DBG(bus, DBG_INFO, "DDL started, bus #%d, %s", bus, busses[bus].device);
+  DBG(busnumber, DBG_INFO, "DDL started, bus #%d, %s", busnumber, busses[busnumber].device);
 
-  busses[bus].watchdog = 1;
+  busses[busnumber].watchdog = 1;
 
   while (1) {
-    if(short_detected>0) {
-        busses[bus].power_changed=1;
-        strcpy(busses[bus].power_msg, "SHORT DETECTED");
-        infoPower(bus, msg);
+    if(__DDL->short_detected>0) {
+        busses[busnumber].power_changed=1;
+        strcpy(busses[busnumber].power_msg, "SHORT DETECTED");
+        infoPower(busnumber, msg);
         queueInfoMessage(msg);
     }
-    if(busses[bus].power_changed==1) {
+    if(busses[busnumber].power_changed==1) {
 
-      if (busses[bus].power_state==0)
-        stop_voltage(bus);
-      if (busses[bus].power_state==1)
-        start_voltage(bus);
+      if (busses[busnumber].power_state==0)
+        stop_voltage(busnumber);
+      if (busses[busnumber].power_state==1)
+        start_voltage(busnumber);
 
-      busses[bus].power_changed = 0;
-      infoPower(bus, msg);
+      busses[busnumber].power_changed = 0;
+      infoPower(busnumber, msg);
       queueInfoMessage(msg);
 
     }
-    if(busses[bus].power_state==0) {
+    if(busses[busnumber].power_state==0) {
           usleep(1000);
           continue;
     }
 
-    if (!queue_GL_isempty(bus))  {
+    if (!queue_GL_isempty(busnumber))  {
 	char p;
 	int pv;
 	int speed;
 	int direction;
 
-        unqueueNextGL(bus, &gltmp);
+  unqueueNextGL(busnumber, &gltmp);
 	p = gltmp.protocol;
 	pv = gltmp.protocolversion; // need to compute from the n_fs and n_func parameters
 	addr = gltmp.id;
 	speed = gltmp.speed;
 	direction = gltmp.direction;
-	DBG(bus, DBG_DEBUG, "next command: %c (%x) %d %d", p, p, pv, addr);
+	DBG(busnumber, DBG_DEBUG, "next command: %c (%x) %d %d", p, p, pv, addr);
 	switch(p) {
 	    case 'M': /* Motorola Codes */
 		if(speed==1) speed++; /* Never send FS1 */
                 if(direction == 2) speed = 0;
 		switch(pv) {
-		    case 1: comp_maerklin_1(bus, addr, gltmp.direction, speed, gltmp.funcs & 0x01);
+		    case 1: comp_maerklin_1(busnumber, addr, gltmp.direction, speed, gltmp.funcs & 0x01);
 			    break;
-		    case 2: comp_maerklin_2(bus, addr, gltmp.direction, speed, gltmp.funcs & 0x01,
+		    case 2: comp_maerklin_2(busnumber, addr, gltmp.direction, speed, gltmp.funcs & 0x01,
 			    ( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>2) & 0x01), ( (gltmp.funcs>>3) & 0x01),
 			    ( (gltmp.funcs>>4) & 0x01));break;
-		    case 3: comp_maerklin_3(bus, addr, gltmp.direction, speed, gltmp.funcs & 0x01,
+		    case 3: comp_maerklin_3(busnumber, addr, gltmp.direction, speed, gltmp.funcs & 0x01,
 			    ( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>2) & 0x01), ( (gltmp.funcs>>3) & 0x01),
 			    ( (gltmp.funcs>>4) & 0x01));break;
-		    case 4: comp_maerklin_4(bus, addr, gltmp.direction, speed, gltmp.funcs & 0x01,
+		    case 4: comp_maerklin_4(busnumber, addr, gltmp.direction, speed, gltmp.funcs & 0x01,
 			    ( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>2) & 0x01), ( (gltmp.funcs>>3) & 0x01),
 			    ( (gltmp.funcs>>4) & 0x01));break;
-		    case 5: comp_maerklin_5(bus, addr, gltmp.direction, speed, gltmp.funcs & 0x01,
+		    case 5: comp_maerklin_5(busnumber, addr, gltmp.direction, speed, gltmp.funcs & 0x01,
 			    ( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>2) & 0x01), ( (gltmp.funcs>>3) & 0x01),
 			    ( (gltmp.funcs>>4) & 0x01));break;
 		}
@@ -1147,90 +1090,90 @@ void* thr_sendrec_DDL (void *v)
 	        switch (pv) {
 	           case 1:
 	               if (direction != 2)
-    		          comp_nmra_baseline(bus, addr, direction, speed);
+    		          comp_nmra_baseline(busnumber, addr, direction, speed);
 	               else
-    		          comp_nmra_baseline(bus, addr, 0, 1);  // emergency halt: FS 1
+    		          comp_nmra_baseline(busnumber, addr, 0, 1);  // emergency halt: FS 1
 	               break;
 
     		  case 2:
 	               if (direction != 2)
-    		          comp_nmra_f4b7s28(bus, addr,direction,speed, gltmp.funcs & 0x01,
+    		          comp_nmra_f4b7s28(busnumber, addr,direction,speed, gltmp.funcs & 0x01,
 			  ( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>2) & 0x01), ( (gltmp.funcs>>3) & 0x01),
     			  ( (gltmp.funcs>>4) & 0x01));
             		else  // emergency halt: FS 1
-                	    comp_nmra_f4b7s28(bus, addr,0,1,gltmp.funcs & 0x01,
+                	    comp_nmra_f4b7s28(busnumber, addr,0,1,gltmp.funcs & 0x01,
 			    ( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>2) & 0x01), ( (gltmp.funcs>>3) & 0x01),
 			    ( (gltmp.funcs>>4) & 0x01));
 	               break;
 
     		  case 3:
 	               if (direction != 2)
-    		          comp_nmra_f4b7s128(bus, addr,direction,speed,gltmp.funcs & 0x01,
+    		          comp_nmra_f4b7s128(busnumber, addr,direction,speed,gltmp.funcs & 0x01,
 			    ( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>2) & 0x01), ( (gltmp.funcs>>3) & 0x01),
 			    ( (gltmp.funcs>>4) & 0x01));
             		else  // emergency halt: FS 1
-                	  comp_nmra_f4b7s128(bus, addr,0,1, gltmp.funcs & 0x01,
+                	  comp_nmra_f4b7s128(busnumber, addr,0,1, gltmp.funcs & 0x01,
 			    ( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>2) & 0x01), ( (gltmp.funcs>>3) & 0x01),
 			    ( (gltmp.funcs>>4) & 0x01));
 
 	               break;
     		  case 4:
 	               if (direction != 2)
-    		          comp_nmra_f4b14s28(bus, addr,direction,speed,gltmp.funcs & 0x01,
+    		          comp_nmra_f4b14s28(busnumber, addr,direction,speed,gltmp.funcs & 0x01,
 			    ( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>2) & 0x01), ( (gltmp.funcs>>3) & 0x01),
 			    ( (gltmp.funcs>>4) & 0x01));
 
             		else  // emergency halt: FS 1
-                	  comp_nmra_f4b14s28(bus, addr,0,1,gltmp.funcs & 0x01,
+                	  comp_nmra_f4b14s28(busnumber, addr,0,1,gltmp.funcs & 0x01,
 			    ( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>2) & 0x01), ( (gltmp.funcs>>3) & 0x01),
 			    ( (gltmp.funcs>>4) & 0x01));
 	               break;
     		  case 5:
 	               if (direction != 2)
-    		          comp_nmra_f4b14s128(bus, addr,direction,speed,gltmp.funcs & 0x01,
+    		          comp_nmra_f4b14s128(busnumber, addr,direction,speed,gltmp.funcs & 0x01,
 			    ( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>2) & 0x01), ( (gltmp.funcs>>3) & 0x01),
 			    ( (gltmp.funcs>>4) & 0x01));
 
             		else  // emergency halt: FS 1
-                	  comp_nmra_f4b14s128(bus, addr,0,1,gltmp.funcs & 0x01,
+                	  comp_nmra_f4b14s128(busnumber, addr,0,1,gltmp.funcs & 0x01,
 			    ( (gltmp.funcs>>1) & 0x01), ( (gltmp.funcs>>2) & 0x01), ( (gltmp.funcs>>3) & 0x01),
 			    ( (gltmp.funcs>>4) & 0x01));
 
 	               break;
 		}
 	    }
-        setGL(bus, addr, gltmp);
+        setGL(busnumber, addr, gltmp);
     }
-    busses[bus].watchdog = 4;
-    if (!queue_GA_isempty(bus)) {
+    busses[busnumber].watchdog = 4;
+    if (!queue_GA_isempty(busnumber)) {
     	char p;
-	unqueueNextGA(bus, &gatmp);
+	unqueueNextGA(busnumber, &gatmp);
         addr = gatmp.id;
 	p = gatmp.protocol;
-	DBG(bus, DBG_DEBUG, "next GA command: %c (%x) %d", p, p, addr);
+	DBG(busnumber, DBG_DEBUG, "next GA command: %c (%x) %d", p, p, addr);
 	switch(p) {
 	    case 'M': /* Motorola Codes */
-		comp_maerklin_ms(bus, addr, gatmp.port, gatmp.action);
+		comp_maerklin_ms(busnumber, addr, gatmp.port, gatmp.action);
 		break;
 	    case 'N':
-		comp_nmra_accessory(bus, addr, gatmp.port, gatmp.action);
+		comp_nmra_accessory(busnumber, addr, gatmp.port, gatmp.action);
 		break;
           }
-          setGA(bus, addr, gatmp);
-          busses[bus].watchdog = 5;
+          setGA(busnumber, addr, gatmp);
+          busses[busnumber].watchdog = 5;
           if(gatmp.activetime>=0) {
             usleep(1000L * (unsigned long) gatmp.activetime);
             gatmp.action = 0;
-            DBG(bus, DBG_DEBUG, "delayed GA command: %c (%x) %d", p, p, addr);
+            DBG(busnumber, DBG_DEBUG, "delayed GA command: %c (%x) %d", p, p, addr);
 	    switch(p) {
 	     case 'M': /* Motorola Codes */
-		comp_maerklin_ms(bus, addr, gatmp.port, gatmp.action);
+		comp_maerklin_ms(busnumber, addr, gatmp.port, gatmp.action);
 		break;
 	     case 'N':
-		comp_nmra_accessory(bus, addr, gatmp.port, gatmp.action);
+		comp_nmra_accessory(busnumber, addr, gatmp.port, gatmp.action);
 		break;
             }
-            setGA(bus, addr, gatmp);
+            setGA(busnumber, addr, gatmp);
       }
 
     }
