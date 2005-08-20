@@ -78,6 +78,14 @@ static int register_bus(int busnumber, xmlDocPtr doc, xmlNodePtr node)
 
  num_busses = busnumber;
  child = node->children;
+ /* some default values */
+ busses[current_bus].debuglevel = 1;
+ free(busses[current_bus].device);
+ busses[current_bus].device = malloc(strlen("/dev/null") + 1);
+ strcpy(busses[current_bus].device, "/dev/null");
+ busses[current_bus].flags = 0;
+ busses[current_bus].baudrate = B2400;
+
  while (child)
  {
    char *txt;
@@ -289,18 +297,19 @@ void DBG(int busnumber, int dbglevel, const char *fmt, ...)
 {
   va_list parm;
   va_start(parm, fmt);
-   if (dbglevel <= busses[busnumber].debuglevel) {
-          char *msg;
-          msg = (char *)malloc (sizeof(char) * (strlen(fmt) + 10));
-      if (msg == NULL) return; // MAM: Wat solls? Ist eh am Ende
-      sprintf (msg, "[bus %d] %s", busnumber, fmt);
-          vsyslog(LOG_INFO, msg, parm);
-          free (msg);
-
-         if (busses[busnumber].debuglevel>DBG_WARN) {
-        fprintf(stderr,"[bus %d] ",busnumber);
-      vfprintf(stderr,fmt,parm);
-      if (strchr(fmt,'\n')==NULL) fprintf(stderr,"\n");
-  }
+  if (dbglevel <= busses[busnumber].debuglevel) {
+    char *msg;
+    msg = (char *)malloc (sizeof(char) * (strlen(fmt) + 10));
+    if (msg == NULL) return; // MAM: Wat solls? Ist eh am Ende
+    sprintf (msg, "[bus %d] %s", busnumber, fmt);
+    vsyslog(LOG_INFO, msg, parm);
+    free (msg);
+    if (busses[busnumber].debuglevel>DBG_WARN) {
+	fprintf(stderr,"[bus %d] ",busnumber);
+	vfprintf(stderr,fmt,parm);
+	if (strchr(fmt,'\n')==NULL) 
+	    fprintf(stderr,"\n");
+        }
     }
+  va_end(parm);
 }
