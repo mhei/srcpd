@@ -1,3 +1,7 @@
+2005-08-20 Matthias Trute <mtrute@users.sf.net>
+	* DDL code did not compile (syntax error with gcc 3.3.5)
+	* default values for all busses with busnumber > 0 defined.
+
 2005-07-11 Guido Scholz <guido.scholz@bayernline.de>
 	* configure.in, ttycygwin.c ttycygwin.h, ddl-s88.c, ib.c,
 	selectix.c, m605x.c: cygwin support added
