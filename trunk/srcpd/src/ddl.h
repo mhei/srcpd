@@ -2,6 +2,7 @@
 
 #ifndef _DDL_H
 #define _DDL_H
+
 #include <syslog.h>
 #include <errno.h>
 #include <string.h>
@@ -91,11 +92,11 @@ typedef struct _DDL_DATA {
 
     struct termios maerklin_dev_termios;
     struct termios nmra_dev_termios;
+    
 #if linux
-    struct serial_struct *serinfo_marklin=NULL;
-    struct serial_struct *serinfo_nmradcc=NULL;
+    struct serial_struct *serinfo_marklin;
+    struct serial_struct *serinfo_nmradcc;
 #endif
-
     pthread_mutex_t queue_mutex;   /* mutex to synchronize queue inserts */
     int queue_initialized;
     int queue_out, queue_in;
