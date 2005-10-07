@@ -1,0 +1,18 @@
+Source: srcpd
+Section: electronics
+Priority: optional
+Maintainer: Kai-Cheung Leung (梁啟昌) <kcleung@users.sourceforge.net>
+Build-Depends: debhelper (>= 4.0.0), autotools-dev, libxml2-dev (>=2.4.0)
+Standards-Version: 3.6.1
+
+Package: srcpd
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: SRCP 0.8.2 server daemon
+ srcpd is a Simple Railroad Command Protocol server (SRCP Version 0.8.2)
+ transmitting commands from and to SRCP clients or connected digital
+ model railway control units.
+ srcpd can act as central contol unit and directly generate and feed
+ Motorola or DCC signals to the booster of the digital model railway
+ layout or as well transmit commands to other control units connected to
+ the serial interface.
