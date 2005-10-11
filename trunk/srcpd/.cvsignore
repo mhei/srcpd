@@ -10,3 +10,6 @@ configure
 acinclude.m4
 aclocal.m4
 stamp-h1
+autom4te.cache
+*.gz
+*.bz2
