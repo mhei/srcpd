@@ -4,13 +4,9 @@ Makefile.in
 config.log
 config.cache
 config.status
-config.h
-config.h.in
 configure
 .kde*
 *.in
-*.o
-srcpd
 acinclude.m4
 aclocal.m4
 stamp-h1
