@@ -1,3 +1,10 @@
+2005-10-11 Guido Scholz <guido.scholz@bayernline.de>
+	* configure.in, Makefile.am, src/Makefile.am: adaptations to new
+	src directory
+
+2005-10-07 Guido Scholz <guido.scholz@bayernline.de>
+	* debian:  debian control files added
+
 2005-08-20 Matthias Trute <mtrute@users.sf.net>
 	* DDL code did not compile (syntax error with gcc 3.3.5)
 	* default values for all busses with busnumber > 0 defined.
@@ -24,49 +31,48 @@
 
 2005-03-28  Frank Schmischke  <frank.schmischke@t-online.de>
 
- * hsi-88: improve detect interface on usb-seriell-adapter
- * li100: check version of LZ100
-             send GL for version >= 3.00
+	* hsi-88: improve detect interface on usb-seriell-adapter
+	* li100: check version of LZ100 send GL for version >= 3.00
 
 2005-03-14  Manuel Borchers <manuel@matronix.de>
 
- * i2c-dev: major modifications of writting to i2c-devices
+	* i2c-dev: major modifications of writting to i2c-devices
             by Ulrich Eckhardt <uli.e@gmx.de>;
             better initialisation and better power handling
 
 2005-01-09  Matthias Trute <mtrute@users.sourceforge.net>
 
- * corrected some misplaced config.h occurancies.
- 
+	* corrected some misplaced config.h occurancies.
+
 2005-01-08  Matthias Trute <mtrute@users.sourceforge.net>
 
- * XML configuration ignores property number for definition of
+	* XML configuration ignores property number for definition of
    busses. They are simply numbered as they appear in the configuration.
    The API for the register_bus_XX functions has changed to reflect this.
- * DDL changes (mostly untested but should work)
+	* DDL changes (mostly untested but should work)
     - short detection
     - automatic deactivation of GA after specified delay
     - emergency stop for GL (M protocols)
  
 2005-01-02  Frank Schmischke  <frank.schmischke@t-online.de>
 
- * ib.c: use of watchdog added
- * Makefile.am: remove all references to no longer needed ibox-kernel-modul
+	* ib.c: use of watchdog added
+	* Makefile.am: remove all references to no longer needed ibox-kernel-modul
 
 2004-11-04 Matthias Trute <mtrute@users.sourceforge.net>
 
- * varios files : reinit made possible, loopback and 605x
+	* varios files : reinit made possible, loopback and 605x
     with stricter value check on allowed init parameters.
     
- * Makefile.am, srcpd.c: SYSCONFDIR as suggested by Guido Scholz
+	* Makefile.am, srcpd.c: SYSCONFDIR as suggested by Guido Scholz
 
 2004-11-03 Matthias Trute <mtrute@users.sourceforge.net>
 
- * varios files : made some regression tests. Improved error handling.
+	* varios files : made some regression tests. Improved error handling.
 
 2004-07-20  Frank Schmischke  <frank.schmischke@t-online.de>
 
- * ib.c : correct logic for emergency-stop and pressing "POWER ON"-Button at IB
+	* ib.c : correct logic for emergency-stop and pressing "POWER ON"-Button at IB
 
 2004-06-13  Frank Schmischke  <frank.schmischke@t-online.de>
 
