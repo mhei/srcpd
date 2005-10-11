@@ -4,10 +4,10 @@ dnl Last update: $Date$
 
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT([srcpd], [2.0.8], [Matthias Trute <mtrute@users.sourceforge.net>])
+AC_INIT([srcpd], [2.0.9], [Matthias Trute <mtrute@users.sourceforge.net>])
 AC_CANONICAL_TARGET
-AC_CONFIG_HEADER([config.h])
-AC_CONFIG_SRCDIR([srcpd.c])
+AC_CONFIG_HEADER([src/config.h])
+AC_CONFIG_SRCDIR([src/srcpd.c])
 AM_INIT_AUTOMAKE([dist-bzip2])
 
 AC_PREFIX_DEFAULT(/usr/local)
@@ -139,4 +139,5 @@ main()
   ipv6=no
 ))
 
-AC_OUTPUT(Makefile)
+AC_CONFIG_FILES([Makefile src/Makefile])
+AC_OUTPUT
