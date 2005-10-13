@@ -2,7 +2,7 @@
 
 Programmierung von srcpd Modulen
 
-Stand: Herbst/Winter 2002
+Stand: 2005-10-12
 
 0. Allgemeines
 
@@ -151,9 +151,9 @@ allzuweit vom PC angesiedelt ist) unterstützt
 Lesen darf jeder. Anleitung findet sich auf 
 http://sourceforge.net/projects/srcpd, Rubrik CVS
 
-Das erste, was nach einem CVS Checkout ansteht, ist ein
+Das erste, was nach einem CVS-Checkout ansteht, ist ein
 
-make -f Makefile.dist
+ autoreconf
 
 Damit wird das autoconf System initialisiert und steht für den configure-
 Lauf bereit.

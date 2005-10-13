@@ -81,7 +81,10 @@ fi
 
 dnl Checks for library functions.
 AC_FUNC_MEMCMP
+
 AM_PATH_XML2([2.4.0], [HAVE_XML2=yes], [exit 1])
+CFLAGS="${CFLAGS} ${XML_CFLAGS}"
+LIBS="${LIBS} ${XML_LIBS}"
 
 dnl Checks for host dependend library functions.
 case $host in
@@ -96,9 +99,6 @@ case $host in
   *)
     ;;
 esac
-
-CFLAGS="${CFLAGS} ${XML_CFLAGS}"
-LIBS="${LIBS} ${XML_LIBS}"
 
 AC_TYPE_PID_T
 AC_HEADER_TIME
