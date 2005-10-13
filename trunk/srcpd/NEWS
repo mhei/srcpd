@@ -4,13 +4,14 @@ Version 2.0
 	- Redesign: Framework mit Modulen
 	- Unterstützung der Gerätegruppe SM bei passender Hardware
 	- viel mehr und neue Hardware, auch mehrere gleichartige 
-	  gleichzeitig: Intellibox, Märklin 605x, HSI S88,  S88 am Parallelport, 
-	  I2C (Eigenbau), RS232 (via Booster)
+	  gleichzeitig: Intellibox, Märklin 605x, HSI S88, S88 am
+          Parallelport, I2C (Eigenbau), RS232 (via Booster)
 	- Portierung auf FreeBSD
 	- Loopbackbus für Modellbahner ohne Anlage(nanschluß), auch als
-	  Ausgangspunkt für eigene Entwicklungen geeignet (kann alles, was
-	  ein "richtiger" Bus kann!)
-	- Warteschlangen für Befehle und Rückmeldungen, nichts geht mehr verloren
+	  Ausgangspunkt für eigene Entwicklungen geeignet (kann alles,
+          was ein "richtiger" Bus kann!)
+	- Warteschlangen für Befehle und Rückmeldungen, nichts geht mehr
+          verloren
 	
 Version 1.2 (nie veröffentlicht)
         - FIFO's für die Befehle.
