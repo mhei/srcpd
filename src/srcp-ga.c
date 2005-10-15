@@ -56,7 +56,7 @@ int queueGA(int busnumber, int addr, int port, int action, long int activetime)
   {
     if (queue_isfull(busnumber))
     {
-      DBG(busnumber, DBG_WARN, "GA Command Queue full");
+      DBG(busnumber, DBG_WARN, _("GA Command Queue full"));
       return SRCP_TEMPORARILYPROHIBITED;
     }
 
@@ -205,7 +205,7 @@ int initGA(int busnumber, int addr, const char protocol)
 {
   int rc = SRCP_OK;
   int number_ga = get_number_ga(busnumber);
-  DBG(busnumber, DBG_DEBUG, "init GA: %d %c", addr, protocol);
+  DBG(busnumber, DBG_DEBUG, _("init GA: %d %c"), addr, protocol);
   if((addr > 0) && (addr <= number_ga))
   {
     char msg[100];
@@ -288,11 +288,11 @@ void unlock_ga_bysessionid(long int sessionid)
 {
   int i,j;
   int number;
-  DBG(0, DBG_DEBUG, "unlock GA by session-ID %ld", sessionid);
+  DBG(0, DBG_DEBUG, _("unlock GA by session-ID %ld"), sessionid);
   for(i=0; i<num_busses; i++)
   {
     number = get_number_ga(i);
-    DBG(i, DBG_DEBUG, "number of GA for busnumber %d is %d", i, number);
+    DBG(i, DBG_DEBUG, _("number of GA for busnumber %d is %d"), i, number);
     for(j=1;j<=number; j++)
     {
       if(ga[i].gastate[j].locked_by == sessionid)
@@ -307,11 +307,11 @@ void unlock_ga_bysessionid(long int sessionid)
 void unlock_ga_bytime(void) {
   int i,j;
   int number;
-  DBG(0, DBG_DEBUG, "unlock GA by time");
+  DBG(0, DBG_DEBUG, _("unlock GA by time"));
   for(i=0; i<num_busses; i++)
   {
     number = get_number_ga(i);
-    DBG(i, DBG_DEBUG, "number of GA for busnumber %d is %d", i, number);
+    DBG(i, DBG_DEBUG, _("number of GA for busnumber %d is %d"), i, number);
     for(j=1;j<=number; j++)
     {
       if(ga[i].gastate[j].lockduration-- == 1)

@@ -9,7 +9,7 @@
  *
  * 05.07.2001 Frank Schmischke
  *            - Anpassungen wegen srcpd
- *            - es werden nur noch Befehle gesendet, wenn Auftrge vorliegen,
+ *            - es werden nur noch Befehle gesendet, wenn Auftraege vorliegen,
  *              es werden nicht mehr alle Adressen auf Verdacht durchsucht
  *
  */
@@ -126,18 +126,18 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   if(init_GA(busnumber, __m6051->number_ga))
   {
     __m6051->number_ga = 0;
-    DBG(busnumber, DBG_ERROR, "Can't create array for assesoirs");
+    DBG(busnumber, DBG_ERROR, _("Can't create array for assesoirs"));
   }
 
   if(init_GL(busnumber, __m6051->number_gl))
   {
     __m6051->number_gl = 0;
-    DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
+    DBG(busnumber, DBG_ERROR, _("Can't create array for locomotivs"));
   }
   if(init_FB(busnumber, __m6051->number_fb*16))
   {
     __m6051->number_fb = 0;
-    DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
+    DBG(busnumber, DBG_ERROR, _("Can't create array for feedback"));
   }
   return 1;
 }
@@ -153,11 +153,11 @@ static int init_lineM6051(int bus) {
 
   if (busses[bus].debuglevel>0)
   {
-    DBG(bus, DBG_INFO, "Opening 605x: %s", busses[bus].device);
+    DBG(bus, DBG_INFO, _("Opening 605x: %s"), busses[bus].device);
   }
   if ((FD = open(busses[bus].device, O_RDWR | O_NONBLOCK)) == -1)
   {
-    DBG(bus, DBG_FATAL, "couldn't open device %s.", busses[bus].device);
+    DBG(bus, DBG_FATAL, _("Couldn't open device %s."), busses[bus].device);
     return -1;
   }
   tcgetattr(FD, &interface);
@@ -178,13 +178,13 @@ static int init_lineM6051(int bus) {
   interface.c_cflag = CREAD  | HUPCL | CS8 | CSTOPB | CRTSCTS;
 #endif
   tcsetattr(FD, TCSANOW, &interface);
-   DBG(bus, DBG_INFO, "Opening 605x succeeded FD=%d", FD);
+   DBG(bus, DBG_INFO, _("Opening 605x succeeded FD=%d"), FD);
   return FD;
 }
 
 int init_bus_M6051(int bus) {
 
-  DBG(bus, DBG_INFO," M605x  init: debug %d", busses[bus].debuglevel);
+  DBG(bus, DBG_INFO,_("M605x  init: debug %d"), busses[bus].debuglevel);
   if(busses[bus].debuglevel<=DBG_DEBUG)
   {
     busses[bus].fd = init_lineM6051(bus);
@@ -193,15 +193,15 @@ int init_bus_M6051(int bus) {
   {
     busses[bus].fd = -1;
   }
-  DBG(bus, DBG_INFO, "M605x init done, fd=%d",  busses[bus].fd);
-  DBG(bus, DBG_INFO, "M605x: %s",busses[bus].description);
-  DBG(bus, DBG_INFO, "M605x flags: %d", busses[bus].flags & AUTO_POWER_ON);
+  DBG(bus, DBG_INFO, _("M605x init done, fd=%d"),  busses[bus].fd);
+  DBG(bus, DBG_INFO, _("M605x: %s"),busses[bus].description);
+  DBG(bus, DBG_INFO, _("M605x flags: %d"), busses[bus].flags & AUTO_POWER_ON);
   return 0;
 }
 
 int term_bus_M6051(int bus)
 {
-  DBG(bus, DBG_INFO, "M605x bus term done, fd=%d",  busses[bus].fd);
+  DBG(bus, DBG_INFO, _("M605x bus term done, fd=%d"),  busses[bus].fd);
   return 0;
 }
 
@@ -252,7 +252,7 @@ void* thr_sendrec_M6051(void *v)
   akt_S88 = 1;
   busses[bus].watchdog = 1;
 
-  DBG(bus, DBG_INFO, "M605x on bus %d thread started, fd=%d",  bus, busses[bus].fd);
+  DBG(bus, DBG_INFO, _("M605x on bus %d thread started, fd=%d"),  bus, busses[bus].fd);
   ioctl(busses[bus].fd, FIONREAD, &temp);
   if (( (M6051_DATA *) busses[bus].driverdata)  -> cmd32_pending)
   {
@@ -263,7 +263,7 @@ void* thr_sendrec_M6051(void *v)
   while (temp > 0)  {
         readByte(bus, 0, &rr);
         ioctl(busses[bus].fd, FIONREAD, &temp);
-        DBG(bus, DBG_INFO, "ignoring unread byte: %d ", rr);
+        DBG(bus, DBG_INFO, _("Ignoring unread byte: %d "), rr);
   }
   while (1)
   {
@@ -371,7 +371,7 @@ void* thr_sendrec_M6051(void *v)
       {
         readByte(bus, 0, &rr);
         ioctl(busses[bus].fd, FIONREAD, &temp);
-        DBG(bus, DBG_INFO, "FB M6051: oops; ignoring unread byte: %d ", rr);
+        DBG(bus, DBG_INFO, _("FB M6051: oops; ignoring unread byte: %d "), rr);
       }
       SendByte = 192 + akt_S88;
       writeByte(bus, SendByte, pause_between_cmd);

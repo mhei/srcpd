@@ -10,6 +10,9 @@ AC_CONFIG_HEADER([src/config.h])
 AC_CONFIG_SRCDIR([src/srcpd.c])
 AM_INIT_AUTOMAKE([dist-bzip2])
 
+AM_GNU_GETTEXT_VERSION(0.14.1)
+AM_GNU_GETTEXT([external])
+
 AC_PREFIX_DEFAULT(/usr/local)
 
 dnl this is from scmxx
@@ -139,6 +142,15 @@ main()
   ipv6=no
 ))
 
-AC_CONFIG_FILES([Makefile src/Makefile])
-AC_CONFIG_FILES([debian/Makefile])
+## directory for language files
+LOCALEDIR='${prefix}/share/locale'
+AC_ARG_WITH(localedir,
+    AC_HELP_STRING([--with-localedir=DIR],
+        [create language files in DIR (default ${prefix}/share/locale)]),
+    [LOCALEDIR="$withval"])
+AC_SUBST(LOCALEDIR)
+
+AC_CONFIG_FILES(Makefile src/Makefile)
+AC_CONFIG_FILES(po/Makefile.in m4/Makefile)
+AC_CONFIG_FILES(debian/Makefile)
 AC_OUTPUT

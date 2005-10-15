@@ -71,8 +71,10 @@ static int register_bus(int busnumber, xmlDocPtr doc, xmlNodePtr node)
 
  if (busnumber >= MAX_BUSSES || busnumber < 0)
  {
-   printf("Sorry, you have used an invalid busnumber (%d). If this is greater than or equal to %d.\n", busnumber, MAX_BUSSES);
-   printf("you need to recompile the sources. Exiting now\n");
+   printf(_("Sorry, you have used an invalid busnumber (%d). "
+            "If this is greater than or equal to %d,\n"
+            "you need to recompile the sources. Exiting now.\n"),
+            busnumber, MAX_BUSSES);
    return busnumber;
  }
 
@@ -105,7 +107,7 @@ static int register_bus(int busnumber, xmlDocPtr doc, xmlNodePtr node)
      }
      else
      {
-       printf("Sorry, type=server is only at bus 0 allowed!\n");
+       printf(_("Sorry, type=server is only allowed at bus 0!\n"));
      }
    }
    /* but the most important are not ;=)  */
@@ -161,7 +163,7 @@ static int register_bus(int busnumber, xmlDocPtr doc, xmlNodePtr node)
      busnumber += readconfig_I2C_DEV(doc, child, busnumber);
      found = 1;
 #else
-  printf("Sorry, I2C-DEV only available on Linux (yet)\n");
+  printf(_("Sorry, I2C-DEV only available on Linux (yet)\n"));
 #endif
    }
    /* some attributes are common for all (real) busses */
@@ -172,7 +174,7 @@ static int register_bus(int busnumber, xmlDocPtr doc, xmlNodePtr node)
      busses[current_bus].device = malloc(strlen(txt) + 1);
      if (busses[current_bus].device == NULL)
      {
-       printf("cannot allocate memory\n");
+       printf(_("cannot allocate memory\n"));
        exit(1);
      }
      strcpy(busses[current_bus].device, txt);
@@ -227,7 +229,7 @@ static int register_bus(int busnumber, xmlDocPtr doc, xmlNodePtr node)
    }
    if (!found)
    {
-     printf("WARNING, \"%s\" (bus %d) is an unknown tag!\n", child->name, current_bus);
+     printf(_("WARNING, \"%s\" (bus %d) is an unknown tag!\n"), child->name, current_bus);
    }
    free(txt);
    child = child->next;

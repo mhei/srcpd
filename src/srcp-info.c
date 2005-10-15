@@ -112,10 +112,10 @@ int doInfoClient(int Socket, int sessionid)
 struct timeval cmp_time;
 int busnumber;
 current = in;
-DBG(0, DBG_DEBUG, "new Info-client requested %ld", sessionid);
+DBG(0, DBG_DEBUG, _("new Info-client requested %ld"), sessionid);
 for (busnumber = 0; busnumber <= num_busses; busnumber++)
 {
-  DBG(busnumber, DBG_DEBUG, "send all data for busnumber %d to new client", busnumber);
+  DBG(busnumber, DBG_DEBUG, _("send all data for busnumber %d to new client"), busnumber);
   // first some global bus data
   // send Descriptions for busses
   describeBus(busnumber, reply);
@@ -193,18 +193,18 @@ for (busnumber = 0; busnumber <= num_busses; busnumber++)
       }
     }
   }
-  DBG(0, DBG_DEBUG,  "all data to new Info-Client (%ld) sent", sessionid);
+  DBG(0, DBG_DEBUG, _("all data to new Info-Client (%ld) sent"), sessionid);
   /* this is a racing condition: we should stop
       queing new messages until we reach this this point, it
       is possible to miss some data changed since we started this thread */
   if(in != current) {
-    DBG(0, DBG_WARN, "INFO queue dropped some information (%d elements). Sorry", abs(in - current));
+    DBG(0, DBG_WARN, _("INFO queue dropped some information (%d elements). Sorry"), abs(in - current));
   }
   current = in;
   while (1)   {
     while(queueIsEmptyInfo(current)) usleep(2000); // busy waiting, anyone with better code out there?
     current = unqueueNextInfo(current, reply);
-    DBG(0, DBG_DEBUG, "reply-length = %d", strlen(reply));
+    DBG(0, DBG_DEBUG, _("reply-length = %d"), strlen(reply));
     status = socket_writereply(Socket, reply);
     if (status < 0) {
       break;

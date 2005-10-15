@@ -272,6 +272,7 @@
 #define hHHHl       0xd5
 
 
+#include "stdincludes.h"
 #include "ddl.h"  
 #include "ddl_nmra.h"
 
@@ -423,7 +424,7 @@ int translateBitstream2Packetstream_v1(char *Bitstream, char *Packetstream,
          i = DataCnt-1;  
       }
       if (j>=PKTSIZE-1 || bufsize==BUFFERSIZE) {
-         syslog(LOG_INFO, "cannot translate bitstream '%s' to NMRA packet",
+         syslog(LOG_INFO, _("cannot translate bitstream '%s' to NMRA packet"),
                 Bitstream);
          return 0;
       }

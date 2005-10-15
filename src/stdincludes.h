@@ -106,4 +106,7 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
+#include <libintl.h>
+#define _(String) gettext(String)
+
 #endif         // _SRCP_MASTER_INCLUDE_H

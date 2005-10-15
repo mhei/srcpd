@@ -1,4 +1,4 @@
-Summary: srcpd is a server daemon to control (some) digital model railroads
+Summary: srcpd is a SRCP server daemon to control digital model railroads
 Summary(de): srcpd ist ein SRCP-Server zur Steuerung von digitalen Modelleisenbahnen
 Name: srcpd
 Version: 2.0.9
@@ -6,7 +6,7 @@ Release: 1
 Source0: %{name}-%{version}.tar.bz2
 License: GPL
 Group: Games/Daemon
-Packager: Matthias Trute <mtrute@users.sf.net>
+Packager: Matthias Trute <mtrute@users.sourceforge.net>
 Vendor: the srcpd team
 URL: http://srcpd.sourceforge.net/
 Prefix: /usr
@@ -16,7 +16,7 @@ Requires: libxml2 zlib
 %description
 
 The srcpd is a server daemon that enables you to control and play with 
-a digital model railroad using any SRCP Client. Actually it supports an 
+a digital model railroad using any SRCP client. Currently it supports an 
 Intellibox (tm), a Maerklin Interface 6050 or 6051 (tm?), and many more
 interfaces. 
 
@@ -30,7 +30,6 @@ This is a beta release, do not use for production!
 %setup -q
 
 %build
-# make -f Makefile.dist
 CFLAGS=$RPM_OPT_FLAGS \
 ./configure --prefix=%{_prefix} \
             --mandir=%{_mandir} \
@@ -42,8 +41,8 @@ make
 install -d $RPM_BUILD_ROOT%{_sbindir}
 install -d $RPM_BUILD_ROOT%{_sysconfdir}/init.d
 make DESTDIR=$RPM_BUILD_ROOT install
-install -m 744 rcsrcpd $RPM_BUILD_ROOT%{_sysconfdir}/init.d/srcpd
-ln -s %{_sysconfdir}/init.d/srcpd $RPM_BUILD_ROOT%{_sbindir}/rcsrcpd
+install -m 744 rcsrcpd $RPM_BUILD_ROOT%{_sysconfdir}/init.d/%{name}
+ln -s %{_sysconfdir}/init.d/%{name} $RPM_BUILD_ROOT%{_sbindir}/rcsrcpd
 
 %clean
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
@@ -51,28 +50,32 @@ ln -s %{_sysconfdir}/init.d/srcpd $RPM_BUILD_ROOT%{_sbindir}/rcsrcpd
 %post
 # Initialize runlevel links
 if [ -x /usr/lib/lsb/install_initd ] ; then
-    /usr/lib/lsb/install_initd %{_sysconfdir}/init.d/srcpd
+    /usr/lib/lsb/install_initd %{_sysconfdir}/init.d/%{name}
+fi
+
+%preun
+# remove runlevel links
+%{_sysconfdir}/init.d/%{name} stop
+if [ -x /usr/lib/lsb/install_initd ] ; then
+    /usr/lib/lsb/remove_initd %{_sysconfdir}/init.d/%{name}
 fi
 
 %files
 %defattr(-,root,root)
-%{_sbindir}/srcpd
+%{_sbindir}/%{name}
 %{_sbindir}/rcsrcpd
-%{_sysconfdir}/init.d/srcpd
+%{_sysconfdir}/init.d/%{name}
 %docdir %{_mandir}/man8/*
 %{_mandir}/man8/*
-%config(noreplace) %{_sysconfdir}/srcpd.conf
+%{_datadir}/locale/*/LC_MESSAGES/%{name}.mo
+%config(noreplace) %{_sysconfdir}/%{name}.conf
 %doc COPYING AUTHORS README NEWS DESIGN PROGRAMMING-HOWTO
 %doc README.ibox README.freebsd README.selectrix TODO
 
-%preun
-# remove runlevel links
-%{_sysconfdir}/init.d/srcpd stop
-if [ -x /usr/lib/lsb/install_initd ] ; then
-    /usr/lib/lsb/remove_initd %{_sysconfdir}/init.d/srcpd
-fi
-
 %changelog
+* Sat Oct 15 2005 Guido Scholz <guido.scholz@bayernline.de>
+- translation files added
+
 * Mon Jul 11 2005 Guido Scholz <guido.scholz@bayernline.de>
 - More documentation files added
 
