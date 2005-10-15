@@ -50,6 +50,7 @@
 
 **********************************************************************/
 
+#include "stdincludes.h"
 #include "ddl.h"
 #include "ddl_maerklin.h"
 #include "srcp-gl.h"
@@ -329,7 +330,7 @@ int comp_maerklin_1(int busnumber, int address, int direction, int speed, int fu
    char packet[18];
    int i,j;
    struct _GLSTATE loco;
-   DBG(busnumber, DBG_DEBUG,"command for Märklin protocol type 1: %d received", address);
+   DBG(busnumber, DBG_DEBUG, _("Command for Maerklin protocol type 1: %d received"), address);
 
    /* no special error handling, it's job of the clients */
    if (address<0 || address>80 || func<0 || func>1 || speed<0 || speed>15 ||
@@ -383,7 +384,7 @@ int comp_maerklin_2(int busnumber, int address, int direction, int speed, int fu
    int adr=0;
    int mspeed;
 
-   DBG(busnumber, DBG_DEBUG, "command for Märklin protocol type 2 (M2) received");
+   DBG(busnumber, DBG_DEBUG, _("Command for Maerklin protocol type 2 (M2) received"));
 
    adr=address;
    if (direction==0) direction=-1; else direction=1;

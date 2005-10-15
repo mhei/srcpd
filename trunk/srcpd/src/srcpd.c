@@ -43,7 +43,7 @@ void CreatePIDFile(int pid)
   FILE *f;
   f=fopen(((SERVER_DATA *) busses[0].driverdata)->PIDFILE,"wb");
   if (!f)
-    syslog(LOG_INFO,"   cannot open %s. Ignoring.", ((SERVER_DATA *) busses[0].driverdata)->PIDFILE);
+    syslog(LOG_INFO,_("   cannot open %s. Ignoring."), ((SERVER_DATA *) busses[0].driverdata)->PIDFILE);
   else
   {
     fprintf(f,"%d", pid);
@@ -61,7 +61,7 @@ void hup_handler(int s)
 {
   /* signal SIGHUP(1) caught */
   server_reset_state=1;
-  syslog(LOG_INFO,"SIGHUP(1) received! Reset done. Working in initial state.");
+  syslog(LOG_INFO,_("SIGHUP(1) received! Reset done. Working in initial state."));
 
   signal(s, hup_handler);
     
@@ -71,7 +71,7 @@ void hup_handler(int s)
 void term_handler(int s)
 {
   // signal SIGTERM(15) caught
-  syslog(LOG_INFO,"SIGTERM(15) received! Terminating ...");
+  syslog(LOG_INFO,_("SIGTERM(15) received! Terminating ..."));
   server_shutdown_state = 1;
   DeletePIDFile();
 }
@@ -95,6 +95,11 @@ int main(int argc, char **argv)
   char c, conffile[MAXPATHLEN];
   pthread_t ttid_cmd, ttid_clock, ttid_pid;
   struct _THREADS cmds;
+  
+  setlocale(LC_ALL,"");
+  bindtextdomain(PACKAGE, LOCALEDIR);
+  textdomain(PACKAGE);
+ 
   install_signal_handler();
 
   /* First: Init the device data used internally*/
@@ -127,14 +132,14 @@ int main(int argc, char **argv)
       case 'h':
         printf(WELCOME_MSG);
         printf("srcpd -f <conffile> -v -h\n");
-        printf("v           -  prints program version and exits\n");
-        printf("f           -  use another config file (default %s)\n", conffile);
-        printf("h           -  prints this text and exits\n");
+        printf(_("v           -  prints program version and exits\n"));
+        printf(_("f           -  use another config file (default %s)\n"), conffile);
+        printf(_("h           -  prints this text and exits\n"));
         exit(1);
         break;
       default:
-        printf("unknown Parameter\n");
-        printf("use: \"srcpd -h\" for help, exiting\n");
+        printf(_("unknown Parameter\n"));
+        printf(_("use: \"srcpd -h\" for help, exiting\n"));
         exit(1);
         break;
     }
@@ -151,7 +156,7 @@ int main(int argc, char **argv)
     {
       if (busses[i].driverdata == NULL)
       {
-        printf("Sorry, there is an error in your srcpd.conf for bus %i !\n", i);
+        printf(_("Sorry, there is an error in your srcpd.conf for bus %i !\n"), i);
         exit(1);
       }
     }
@@ -197,7 +202,7 @@ int main(int argc, char **argv)
   error = pthread_create(&ttid_cmd, NULL, thr_handlePort, &cmds);
   if(error)
   {
-    syslog(LOG_INFO, "cannot start Command Thread #%d: %d", i, error);
+    syslog(LOG_INFO, _("cannot start Command Thread #%d: %d"), i, error);
     exit(1);
   }
   pthread_detach(ttid_cmd);
@@ -206,32 +211,32 @@ int main(int argc, char **argv)
   error = pthread_create(&ttid_clock, NULL, thr_clock, NULL);
   if(error)
   {
-    syslog(LOG_INFO, "cannot start Clock Thread!");
+    syslog(LOG_INFO, _("cannot start Clock Thread!"));
   }
   pthread_detach(ttid_clock);
   /* und jetzt die Bustreiber selbst starten. Das Device ist offen, die Datenstrukturen
      initialisiert */
-  syslog(LOG_INFO, "Going to start %d Interface Threads for the busses", num_busses);
+  syslog(LOG_INFO, _("Going to start %d Interface Threads for the busses"), num_busses);
   /* Jetzt die Threads für die Busse */
   for (i=1; i<=num_busses; i++)
   {
-    syslog(LOG_INFO, "going to start Interface Thread  %d type(%d)", i, busses[i].type);
+    syslog(LOG_INFO, _("going to start Interface Thread  %d type(%d)"), i, busses[i].type);
     error = pthread_create(&ttid_pid, NULL, busses[i].thr_func, (void *)i);
     if(error)
     {
-      syslog(LOG_INFO, "cannot start Interface Thread # %d", i);
+      syslog(LOG_INFO, _("cannot start Interface Thread # %d"), i);
       exit(1);
     }
     pthread_detach(ttid_pid);
     busses[i].pid = ttid_pid;
-    syslog(LOG_INFO, "Interface Thread %d started successfully type(%d): pid %ld", i, busses[i].type, (long)(busses[i].pid));
+    syslog(LOG_INFO, _("Interface Thread %d started successfully type(%d): pid %ld"), i, busses[i].type, (long)(busses[i].pid));
     if (( (busses[i].flags & AUTO_POWER_ON) == AUTO_POWER_ON) ) {
       setPower(i, 1, "AUTO POWER ON");
     } else {
       setPower(i, 0, "AUTO POWER OFF");
     }
   }
-  syslog(LOG_INFO, "All Threads started");
+  syslog(LOG_INFO, _("All Threads started"));
   server_shutdown_state = 0;
   sleep_ctr = 10;
   /* And now: Wait for _real_ tasks: shutdown, reset, watch for hanging processes */
@@ -255,13 +260,13 @@ int main(int argc, char **argv)
       {
         if(busses[i].watchdog == 0 && (busses[i].flags & USE_WATCHDOG))
         {
-          syslog(LOG_INFO, "Oops: Interface Thread %d hangs, restarting it: (old pid: %ld, %d)", i, (long) busses[i].pid, busses[i].watchdog);
+          syslog(LOG_INFO, _("Oops: Interface Thread %d hangs, restarting it: (old pid: %ld, %d)"), i, (long) busses[i].pid, busses[i].watchdog);
           pthread_cancel(busses[i].pid);
           waitpid((long) busses[i].pid, NULL, 0);
           error = pthread_create(&ttid_pid, NULL, busses[i].thr_func, (void *)i);
           if(error)
           {
-            perror("cannot restart Interface Thread!");
+            perror(_("Cannot restart Interface Thread!"));
             break; /* ermöglicht aufräumen am Ende */
           }
           busses[i].pid = ttid_pid;
@@ -272,7 +277,7 @@ int main(int argc, char **argv)
       sleep_ctr = 10;
     }
   }
-  syslog(LOG_INFO, "Shutting down server...");
+  syslog(LOG_INFO, _("Shutting down server..."));
   /* hierher kommen wir nur nach einem break */
   pthread_cancel(ttid_cmd);
   pthread_cancel(ttid_clock);
@@ -287,6 +292,6 @@ int main(int argc, char **argv)
     (*busses[i].term_func)(i);
   }
   wait(0);
-  syslog(LOG_INFO, "und tschüß.. ;=)");
+  syslog(LOG_INFO, _("bye bye... ;=)"));
   exit(0);
 }

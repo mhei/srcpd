@@ -27,16 +27,16 @@ void change_privileges(int bus)
     {
       if (setegid(group->gr_gid) != 0)
       {
-            DBG(0, DBG_WARN, "could not change to group %s: %s",group->gr_name,strerror(errno));
+            DBG(0, DBG_WARN, _("could not change to group %s: %s"), group->gr_name, strerror(errno));
       }
       else
       {
-            DBG(0, DBG_INFO, "changed to group %s",group->gr_name);
+            DBG(0, DBG_INFO, _("changed to group %s"), group->gr_name);
       }
     }
     else
     {
-          DBG(0,  DBG_WARN, "could not change to group %s",grp);
+          DBG(0,  DBG_WARN, _("could not change to group %s"), grp);
     }
   }
 
@@ -47,16 +47,16 @@ void change_privileges(int bus)
     {
       if (seteuid(passwd->pw_uid) != 0)
       {
-            DBG(0, DBG_INFO,"could not change to user %s: %s",passwd->pw_name,strerror(errno));
+            DBG(0, DBG_INFO, _("could not change to user %s: %s"), passwd->pw_name, strerror(errno));
       }
       else
       {
-        DBG(0, DBG_INFO, "changed to user %s",passwd->pw_name);
+        DBG(0, DBG_INFO, _("changed to user %s"), passwd->pw_name);
       }
     }
     else
     {
-      DBG(0, DBG_INFO,"could not change to user %s", uid);
+      DBG(0, DBG_INFO, _("could not change to user %s"), uid);
     }
   }
 }
@@ -105,7 +105,7 @@ void* thr_handlePort(void *v)
     /* Try to create a socket for listening */
     lsock = socket (AF_INET6, SOCK_STREAM, 0);
     if (lsock == -1) {
-       DBG (0, DBG_ERROR, "Error while creating a socket\n");
+       DBG (0, DBG_ERROR, _("Error while creating a socket\n"));
        exit(1);
     }
     saddr = (struct sockaddr *)&sin6; /* This should work since we are assigning the pointer */
@@ -124,7 +124,7 @@ void* thr_handlePort(void *v)
      /* Create the socket */
     lsock = socket (AF_INET, SOCK_STREAM, 0); /* Create an AF_INET socket */
     if (lsock == -1) {
-      DBG(0, DBG_ERROR, "Error while creating a socket\n");
+      DBG(0, DBG_ERROR, _("Error while creating a socket\n"));
       exit(1);
     }
     saddr = (struct sockaddr *)&sin;
@@ -138,20 +138,20 @@ void* thr_handlePort(void *v)
 
   sock_opt = 1;
   if (setsockopt (lsock, SOL_SOCKET, SO_REUSEADDR, &sock_opt, sizeof(sock_opt)) == -1) {
-    DBG(0, DBG_ERROR, "Error while setting socket option SO_REUSEADDR\n");
+    DBG(0, DBG_ERROR, _("Error while setting socket option SO_REUSEADDR\n"));
     close (lsock);
     exit(1);
   }
 
   /* saddr=(sockaddr_in) if lsock is of type AF_INET else its (sockaddr_in6) */
   if (bind(lsock, (struct sockaddr*)saddr, socklen) == -1) {
-    DBG(0, DBG_ERROR, "Unable to bind\n");
+    DBG(0, DBG_ERROR, _("Unable to bind\n"));
     close (lsock);
     exit(1);
   }
 
   if (listen (lsock, 1) == -1) {
-    DBG(0, DBG_ERROR, "Error in listen()\n");
+    DBG(0, DBG_ERROR, _("Error in listen()\n"));
     close (lsock);
     exit(1);
   }
@@ -163,11 +163,11 @@ void* thr_handlePort(void *v)
 
     if (newsock == -1) {
       /* Possibly the connection got aborted */
-      DBG (0, DBG_WARN, "Unable to accept the new connection\n");
+      DBG (0, DBG_WARN, _("Unable to accept the new connection\n"));
       continue;
     }
 
-    DBG (0, DBG_INFO, "Received a new connection\n");
+    DBG (0, DBG_INFO, _("Received a new connection\n"));
     /* Now process the connection as per the protocol */
 #ifdef ENABLE_IPV6
     if (ipv6_supported()) {
@@ -177,10 +177,10 @@ void* thr_handlePort(void *v)
       struct sockaddr_in6 *sin6_ptr = (struct sockaddr_in6 *)fsaddr;
       char addrbuf[INET6_ADDRSTRLEN];
       if (IN6_IS_ADDR_V4MAPPED(&(sin6_ptr->sin6_addr))) {
-        DBG(0, DBG_INFO, "Connection from an IPv4 client\n");
+        DBG(0, DBG_INFO, _("Connection from an IPv4 client\n"));
       }
 
-      DBG(0, DBG_INFO, "Connection from %s/%d\n",
+      DBG(0, DBG_INFO, _("Connection from %s/%d\n"),
                      inet_ntop(AF_INET6, (void *)&(sin6_ptr->sin6_addr),
                      addrbuf, sizeof (addrbuf)),
                      ntohs(sin6_ptr->sin6_port));
@@ -189,14 +189,14 @@ void* thr_handlePort(void *v)
 #endif
      {
         struct sockaddr_in *sin_ptr = (struct sockaddr_in *)fsaddr;
-        DBG (0, DBG_INFO, "Connection from %s/%d\n", inet_ntoa(sin_ptr->sin_addr), ntohs(sin_ptr->sin_port));
+        DBG (0, DBG_INFO, _("Connection from %s/%d\n"), inet_ntoa(sin_ptr->sin_addr), ntohs(sin_ptr->sin_port));
      }
       sock_opt = 1;
       setsockopt(newsock, SOL_SOCKET, SO_KEEPALIVE, &sock_opt, sizeof(sock_opt));
 
       if(pthread_create(&ttid, NULL, ti.func, (void*)newsock))
       {
-        perror("cannot create thread to handle client. Abort!");
+        perror(_("Cannot create thread to handle client. Abort!"));
         exit(1);
       }
       pthread_detach(ttid);

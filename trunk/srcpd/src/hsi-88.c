@@ -95,7 +95,7 @@ int readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     __hsi->number_fb[0] = 0;
     __hsi->number_fb[1] = 0;
     __hsi->number_fb[2] = 0;
-    DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
+    DBG(busnumber, DBG_ERROR, _("Can't create array for feedback"));
   }
   return(1);
 }
@@ -105,11 +105,11 @@ static int open_lineHSI88(char *name)
   int fd;
   struct termios interface;
 
-  printf("try opening serial line %s for 9600 baud\n", name);
+  printf(_("try opening serial line %s for 9600 baud\n"), name);
   fd = open(name, O_RDWR);
   if (fd == -1)
   {
-    printf("dammit, couldn't open device.\n");
+    printf(_("dammit, couldn't open device.\n"));
   }
   else
   {
@@ -226,7 +226,7 @@ int init_bus_HSI_88(int busnumber)
   int anzahl;
 
   status = 0;
-  printf("Bus %d with Debuglevel %d\n", busnumber, busses[busnumber].debuglevel);
+  printf(_("Bus %d with Debuglevel %d\n"), busnumber, busses[busnumber].debuglevel);
   if(busses[busnumber].type != SERVER_HSI_88)
   {
     status = -2;
@@ -246,7 +246,7 @@ int init_bus_HSI_88(int busnumber)
 
     if (anzahl > 31)
     {
-      printf("number of feedback-modules greater than 31 !!!");
+      printf(_("Number of feedback-modules greater than 31!"));
       status = -4;
     }
   }
@@ -271,7 +271,7 @@ int init_bus_HSI_88(int busnumber)
   if (status == 0)
     working_HSI88 = 1;
 
-  printf("INIT_BUS_HSI with code: %d\n", status);
+  printf(_("INIT_BUS_HSI with code: %d\n"), status);
   return status;
 }
 
@@ -302,7 +302,7 @@ void* thr_sendrec_HSI_88(void *v)
 
   busnumber = (int)v;
   refresh_time = __hsi->refresh;
-  DBG(busnumber, DBG_INFO, "thr_sendrec_HSI_88 is startet");
+  DBG(busnumber, DBG_INFO, _("thr_sendrec_HSI_88 is startet"));
 
   zaehler1 = 0;
   fb_zaehler1 = 0;
@@ -341,7 +341,7 @@ void* thr_sendrec_HSI_88(void *v)
       }
       readByte(busnumber, 0, &rr);           // number of given modules
       anzahl = (int)rr;
-      DBG(busnumber, DBG_INFO, "number of modules: %i", anzahl);
+      DBG(busnumber, DBG_INFO, _("number of modules: %i"), anzahl);
       anzahl -= __hsi->number_fb[0];
       anzahl -= __hsi->number_fb[1];
       anzahl -= __hsi->number_fb[2];
@@ -351,7 +351,7 @@ void* thr_sendrec_HSI_88(void *v)
       }
       else
       {
-        DBG(busnumber, DBG_ERROR, "error while initialising");
+        DBG(busnumber, DBG_ERROR, _("error while initialising"));
         sleep(1);
         while(readByte(busnumber, 0, &rr) == 0)
         {
@@ -385,7 +385,7 @@ void* thr_sendrec_HSI_88(void *v)
         temp <<= 8;
         readByte(busnumber, 1, &rr);
         setFBmodul(busnumber, i, temp | rr);
-        DBG(busnumber, DBG_DEBUG, "feedback %i with 0x%04x", i, temp|rr);
+        DBG(busnumber, DBG_DEBUG, _("feedback %i with 0x%04x"), i, temp|rr);
       }
       readByte(busnumber, 1, &rr);            // <CR>
     }

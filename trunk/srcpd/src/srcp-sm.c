@@ -84,43 +84,43 @@ int queueInfoSM(int busnumber, int addr, int type, int typeaddr, int bit, int va
       switch (return_code)
       {
         case 0xF2:
-          sprintf(tmp, "Cannot terminate task ");
+          sprintf(tmp, _("Cannot terminate task"));
           break;
         case 0xF3:
-          sprintf(tmp, "No task to terminate");
+          sprintf(tmp, _("No task to terminate"));
           break;
         case 0xF4:
-          sprintf(tmp, "Task terminated");
+          sprintf(tmp, _("Task terminated"));
           break;
         case 0xF6:
-          sprintf(tmp, "XPT_DCCQD: Not Ok (direkt bit read mode is (probably) not supported)");
+          sprintf(tmp, _("XPT_DCCQD: Not Ok (direkt bit read mode is (probably) not supported)"));
           break;
         case 0xF7:
-          sprintf(tmp, "XPT_DCCQD: Ok (direkt bit read mode is (probably) supported)");
+          sprintf(tmp, _("XPT_DCCQD: Ok (direkt bit read mode is (probably) supported)"));
           break;
         case 0xF8:
-          sprintf(tmp, "Error during Selectrix read");
+          sprintf(tmp, _("Error during Selectrix read"));
           break;
         case 0xF9:
-          sprintf(tmp, "No acknowledge to paged operation (paged r/w not supported?)");
+          sprintf(tmp, _("No acknowledge to paged operation (paged r/w not supported?)"));
           break;
         case 0xFA:
-          sprintf(tmp, "Error during DCC direct bit mode operation");
+          sprintf(tmp, _("Error during DCC direct bit mode operation"));
           break;
         case 0xFB:
-          sprintf(tmp, "Generic Error");
+          sprintf(tmp, _("Generic Error"));
           break;
         case 0xFC:
-          sprintf(tmp, "No decoder detected");
+          sprintf(tmp, _("No decoder detected"));
           break;
         case 0xFD:
-          sprintf(tmp, "Short! (on the PT)");
+          sprintf(tmp, _("Short! (on the PT)"));
           break;
         case 0xFE:
-          sprintf(tmp, "No acknowledge from decoder (but a write maybe was successful)");
+          sprintf(tmp, _("No acknowledge from decoder (but a write maybe was successful)"));
           break;
         case 0xFF:
-          sprintf(tmp, "Timeout");
+          sprintf(tmp, _("Timeout"));
           break;
       }
    }
@@ -140,7 +140,7 @@ int queueSM(int busnumber, int command, int type, int addr, int typeaddr, int bi
 {
   struct timeval akt_time;
   int number_sm = get_number_sm(busnumber);
-  DBG(busnumber, DBG_DEBUG, "queueSM fr %i", addr);
+  DBG(busnumber, DBG_DEBUG, _("queueSM for %i"), addr);
   // addr == -1 means using separate progrm-track
   // addr != -1 means programming on the main (only availible with CV)
   if ( (addr == -1) || ((addr > 0) && (addr <= number_sm) && (type == CV)) )
@@ -217,12 +217,12 @@ int unqueueNextSM(int busnumber, struct _SM *l)
 int setSM(int busnumber, int type, int addr, int typeaddr, int bit, int value, int return_code)
 {
   int number_sm = get_number_sm(busnumber);
-  DBG(busnumber, DBG_DEBUG, "in setSM with number_sm=%i", number_sm);
+  DBG(busnumber, DBG_DEBUG, _("in setSM with number_sm=%i"), number_sm);
   struct timeval tv;
   if(number_sm == 0)
     return SRCP_UNSUPPORTEDDEVICEGROUP;
 
-  DBG(busnumber, DBG_DEBUG, "CV: %d         BIT: %d         VALUE: 0x%02x", typeaddr, bit ,value);
+  DBG(busnumber, DBG_DEBUG, _("CV: %d         BIT: %d         VALUE: 0x%02x"), typeaddr, bit ,value);
   if ( (addr == -1) || ((addr > 0) && (addr <= number_sm) && (type == CV)) )
   {
     gettimeofday(&tv, NULL);
@@ -240,10 +240,10 @@ int setSM(int busnumber, int type, int addr, int typeaddr, int bit, int value, i
 int infoSM(int busnumber, int command, int type, int addr, int typeaddr, int bit, int value, char* info)
 {
   int status;
-  DBG(busnumber, DBG_DEBUG, "CV: %d         BIT: %d         VALUE: 0x%02x", typeaddr, bit ,value);
+  DBG(busnumber, DBG_DEBUG, _("CV: %d         BIT: %d         VALUE: 0x%02x"), typeaddr, bit ,value);
   status = queueSM(busnumber, command, type, addr, typeaddr, bit, value);
 
-  sprintf(info, "       >> currently under construction <<\n");
+  sprintf(info, _("       >> currently under construction <<\n"));
 
   return status;
 }

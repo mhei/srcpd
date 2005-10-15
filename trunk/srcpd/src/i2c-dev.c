@@ -50,7 +50,7 @@ static int write_PCF8574(int bus, int addr, __u8 byte)
   ret = ioctl(busfd, I2C_SLAVE, addr);
 
   if (ret < 0) {
-    DBG(bus, DBG_INFO, "Couldn't access address %d (%s)",
+    DBG(bus, DBG_INFO, _("Couldn't access address %d (%s)"),
         addr, strerror(errno));
     return (ret);
   }
@@ -58,12 +58,12 @@ static int write_PCF8574(int bus, int addr, __u8 byte)
 //  ret = i2c_smbus_write_byte(busfd, byte);
 
   if (ret < 0) {
-    DBG(bus, DBG_INFO, "Couldn't send byte %d to address %d (%s)",
+    DBG(bus, DBG_INFO, _("Couldn't send byte %d to address %d (%s)"),
         byte, addr, strerror(errno));
     return (ret);
   }
 
-  DBG(bus, DBG_DEBUG, "Sent byte %d to address %d", byte, addr);
+  DBG(bus, DBG_DEBUG, _("Sent byte %d to address %d"), byte, addr);
   return (0);
 
 }
@@ -105,7 +105,7 @@ static int write_i2c_dev(int bus, int addr, I2C_VALUE value)
     return (write_PCF8574(bus, addr, 0xFF & value));
     }
 
-    DBG(bus, DBG_ERROR, "Unsupported i2c device at address %d", addr);
+    DBG(bus, DBG_ERROR, _("Unsupported i2c device at address %d"), addr);
     return (-1);
 }
 
@@ -143,7 +143,7 @@ static int handle_i2c_set_ga(int bus, struct _GASTATE *gatmp)
     reset_old_value = 0;
   }
 
-  DBG(bus, DBG_DEBUG, "i2c_addr = %d on multiplexed bus #%d",
+  DBG(bus, DBG_DEBUG, _("i2c_addr = %d on multiplexed bus #%d"),
         i2c_addr, mult_busnum);
   // port: 0     - direct write of value to device
   //       other - select portpins directly, value = {0,1}
@@ -179,7 +179,7 @@ static int handle_i2c_set_ga(int bus, struct _GASTATE *gatmp)
     }
 
   if (write_i2c_dev(bus, i2c_addr, i2c_val) < 0) {
-      DBG(bus, DBG_ERROR, "Device not found at address %d", addr);
+      DBG(bus, DBG_ERROR, _("Device not found at address %d"), addr);
       return (-1);
     }
 
@@ -188,7 +188,7 @@ static int handle_i2c_set_ga(int bus, struct _GASTATE *gatmp)
   if (reset_old_value == 1) {
 
     if (write_i2c_dev(bus, i2c_addr, data->i2c_values[i2c_addr][mult_busnum-1]) < 0) {
-      DBG(bus, DBG_ERROR, "Device not found at address %d", addr);
+      DBG(bus, DBG_ERROR, _("Device not found at address %d"), addr);
           return (-1);
         }
 
@@ -265,7 +265,7 @@ int readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 
   if (init_GA(busnumber, __i2cdev->number_ga)) {
     __i2cdev->number_ga = 0;
-    DBG(busnumber, DBG_ERROR, "Can't create array for accessoires");
+    DBG(busnumber, DBG_ERROR, _("Can't create array for accessoires"));
   }
 
   /*
@@ -289,13 +289,13 @@ int init_lineI2C_DEV(int bus)
   int FD;
 
   if (busses[bus].debuglevel > 0) {
-    DBG(bus, DBG_INFO, "Opening i2c-dev: %s", busses[bus].device);
+    DBG(bus, DBG_INFO, _("Opening i2c-dev: %s"), busses[bus].device);
   }
 
   FD = open(busses[bus].device, O_RDWR);
 
   if (FD <= 0) {
-    DBG(bus, DBG_FATAL, "Couldn't open device %s.",
+    DBG(bus, DBG_FATAL, _("Couldn't open device %s."),
         busses[bus].device);
     FD = -1;
   }
@@ -358,7 +358,7 @@ void select_bus(int mult_busnum, int busfd, int busnumber) {
 
 int term_bus_I2C_DEV(int bus)
 {
-  DBG(bus, DBG_INFO, "i2c-dev bus %d terminating", bus);
+  DBG(bus, DBG_INFO, _("i2c-dev bus %d terminating"), bus);
   close(busses[bus].fd);
   return 0;
 }
@@ -378,7 +378,7 @@ int init_bus_I2C_DEV(int i)
   int multiplex_busses;
   char buf;
 
-  DBG(i, DBG_INFO, "i2c-dev init: bus #%d, debug %d", i,
+  DBG(i, DBG_INFO, _("i2c-dev init: bus #%d, debug %d"), i,
   busses[i].debuglevel);
 
 
@@ -421,7 +421,7 @@ int init_bus_I2C_DEV(int i)
 
   }
 
-  DBG(i, DBG_INFO, "i2c-dev init done");
+  DBG(i, DBG_INFO, _("i2c-dev init done"));
   return 0;
 }
 
@@ -445,10 +445,9 @@ void *thr_sendrec_I2C_DEV(void *v)
   I2CDEV_DATA *data = busses[bus].driverdata;
 
   int ga_reset_devices = data->ga_reset_devices;
-  int old_power_state;
 
 
-  DBG(bus, DBG_INFO, "i2c-dev started, bus #%d, %s", bus,
+  DBG(bus, DBG_INFO, _("i2c-dev started, bus #%d, %s"), bus,
       busses[bus].device);
 
   busses[bus].watchdog = 1;

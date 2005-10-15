@@ -519,7 +519,7 @@ int handleWAIT(int sessionid, int bus, char *device, char *parameter, char *repl
     long int port, timeout, nelem;
     int value, waitvalue;
     nelem = sscanf(parameter, "%ld %d %ld", &port, &waitvalue, &timeout);
-    DBG(bus, DBG_INFO, "wait: %d %d %d", port, waitvalue, timeout);
+    DBG(bus, DBG_INFO, _("wait: %d %d %d"), port, waitvalue, timeout);
     if(nelem>=3)
     {
       if (getFB(bus, port, &time, &value) == SRCP_OK && value == waitvalue)
@@ -779,7 +779,7 @@ int doCmdClient(int Socket, int sessionid)
   long int rc, nelem;
   struct timeval akt_time;
 
-  DBG(0, DBG_INFO, "Command mode just starting for session", sessionid);
+  DBG(0, DBG_INFO, _("Command mode just starting for session"), sessionid);
   while (1)
   {
     memset(line, 0, sizeof(line));
@@ -847,7 +847,7 @@ int doCmdClient(int Socket, int sessionid)
     }
     else
     {
-      DBG(0, DBG_DEBUG, "list too short in session %ld: %d", sessionid, nelem);
+      DBG(0, DBG_DEBUG, _("list too short in session %ld: %d"), sessionid, nelem);
       rc = SRCP_LISTTOOSHORT;
       gettimeofday(&akt_time, NULL);
       srcp_fmt_msg(rc, reply, akt_time);
