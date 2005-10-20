@@ -71,7 +71,7 @@ void queue_init(int busnumber) {
 
    error = pthread_mutex_init(&__DDL->queue_mutex, NULL);
    if (error) {
-      DBG(0, DBG_ERROR, _("DDL Engine: cannot create mutex. Abort!"));
+      DBG(0, DBG_ERROR, "DDL Engine: cannot create mutex. Abort!");
       exit(1);
    }
 
@@ -161,13 +161,13 @@ int setSerialMode(int busnumber, int mode) {
       case SDM_MAERKLIN:
          if (__DDL -> SERIAL_DEVICE_MODE != SDM_MAERKLIN) {
             if (tcsetattr(busses[busnumber].fd,TCSANOW,&__DDL->maerklin_dev_termios)!=0) {
-               DBG(busnumber, DBG_ERROR, _("   error setting serial device mode to marklin!"));
+               DBG(busnumber, DBG_ERROR, "   error setting serial device mode to marklin!");
                return -1;
             }
 #if linux
             if (__DDL->IMPROVE_NMRADCC_TIMING) {
                if (set_customdivisor(busses[busnumber].fd, __DDL->serinfo_marklin)!=0) {
-                  DBG(busnumber, DBG_ERROR, _("   cannot set custom divisor for maerklin of serial device!"));
+                  DBG(busnumber, DBG_ERROR, "   cannot set custom divisor for maerklin of serial device!");
                   return -1;
                }
             }

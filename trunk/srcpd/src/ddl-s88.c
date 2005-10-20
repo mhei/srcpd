@@ -184,22 +184,22 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   if(init_FB(busnumber, __ddl_s88->number_fb[0]*16))
   {
     __ddl_s88->number_fb[0] = 0;
-    DBG(busnumber, DBG_ERROR,  _("Can't create array for feedback"));
+    DBG(busnumber, DBG_ERROR,  "Can't create array for feedback");
   }
   if(init_FB(busnumber, __ddl_s88->number_fb[1]*16))
   {
     __ddl_s88->number_fb[1] = 0;
-    DBG(busnumber, DBG_ERROR, _("Can't create array for feedback"));
+    DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
   }
   if(init_FB(busnumber, __ddl_s88->number_fb[2]*16))
   {
     __ddl_s88->number_fb[2] = 0;
-    DBG(busnumber, DBG_ERROR, _("Can't create array for feedback"));
+    DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
   }
   if(init_FB(busnumber, __ddl_s88->number_fb[3]*16))
   {
     __ddl_s88->number_fb[3] = 0;
-    DBG(busnumber, DBG_ERROR, _("Can't create array for feedback"));
+    DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
   }
   return(4);
 }
@@ -236,7 +236,7 @@ int init_bus_S88(int busnumber)
   // is the port disabled from user, everything is fine
   if (!S88PORT)
   {
-        DBG(busnumber, DBG_INFO, _("   s88 port is disabled."));
+        DBG(busnumber, DBG_INFO, "   s88 port is disabled.");
     return 1;
   }
   // test, whether S88DEV is a valid io-address for a parallel device
@@ -264,7 +264,7 @@ int init_bus_S88(int busnumber)
       }
       else
       {
-            DBG(busnumber, DBG_WARN, _("   warning: There is no port for s88 at 0x%X."),
+            DBG(busnumber, DBG_WARN, "   warning: There is no port for s88 at 0x%X.",
            S88PORT);
         ioperm(S88PORT, 3, 0);  // stopping access to port address
         return 1;
@@ -272,18 +272,18 @@ int init_bus_S88(int busnumber)
     }
     else
     {
-          DBG(busnumber, DBG_ERROR, _("   warning: Access to port 0x%X denied."),
+          DBG(busnumber, DBG_ERROR, "   warning: Access to port 0x%X denied.",
        S88PORT);
       return 1;
     }
   }
   else
   {
-        DBG(busnumber, DBG_WARN, _("   warning: 0x%X is not valid port adress for s88 device."),
+        DBG(busnumber, DBG_WARN, "   warning: 0x%X is not valid port adress for s88 device.",
       S88PORT);
     return 1;
   }
-      DBG(busnumber, DBG_INFO, _("   s88 port sucsessfully initialized at 0x%X."),
+      DBG(busnumber, DBG_INFO, "   s88 port sucsessfully initialized at 0x%X.",
      S88PORT);
   return 0;
 }
@@ -426,11 +426,11 @@ int FBSD_ioperm(int Port,int KeineAhnung, int DesiredAccess,int busnumber)
     if (__ddl_s88->Fd != -1)
     {
        close(__ddl_s88->Fd);
-              DBG(busnumber, DBG_DEBUG,  _("FBSD DDL-S88 closing port %04X"), Port);
+              DBG(busnumber, DBG_DEBUG,  "FBSD DDL-S88 closing port %04X", Port);
     }
     else
     {
-       DBG(busnumber, DBG_WARN,  _("FBSD DDL-S88 closing NOT OPEN port %04X"), Port);
+       DBG(busnumber, DBG_WARN,  "FBSD DDL-S88 closing NOT OPEN port %04X", Port);
       }
     __ddl_s88->Fd=-1;
     return 0;
@@ -465,10 +465,10 @@ int FBSD_ioperm(int Port,int KeineAhnung, int DesiredAccess,int busnumber)
   if (Fd < 0)
   {
 
-         DBG(busnumber, DBG_ERROR,  _("FBSD DDL-S88 cannot open port %04X on %s"), Port, DevName);
+         DBG(busnumber, DBG_ERROR,  "FBSD DDL-S88 cannot open port %04X on %s", Port, DevName);
      return Fd;
   }
-       DBG(busnumber, DBG_INFO,  _("FBSD DDL-S88 success opening port %04X on %s"), Port, DevName);
+       DBG(busnumber, DBG_INFO,  "FBSD DDL-S88 success opening port %04X on %s", Port, DevName);
 
   __ddl_s88->Fd = Fd;
   return 0;
@@ -487,7 +487,7 @@ unsigned char FBSD_inb(int Woher,int busnumber)
   //DBG(busnumber, DBG_DEBUG,  "FBSD DDL-S88 InB start on port %04X",Woher);
   if (__ddl_s88->Fd == -1)
   {
-         DBG(busnumber, DBG_ERROR,  _("FBSD DDL-S88 Device not open for reading"));
+         DBG(busnumber, DBG_ERROR,  "FBSD DDL-S88 Device not open for reading");
     exit (1) ;
   }
 
@@ -499,7 +499,7 @@ unsigned char FBSD_inb(int Woher,int busnumber)
     case 1:  WelcherIoctl=PPIGSTATUS; break;
     case 2: WelcherIoctl=PPIGCTRL; break;
     default:
-      DBG(busnumber, DBG_FATAL, _("FBSD DDL-S88 Read access to port %04X requested, not applicable!"), Woher);
+      DBG(busnumber, DBG_FATAL, "FBSD DDL-S88 Read access to port %04X requested, not applicable!", Woher);
       return 0;
   }
   ioctl(__ddl_s88->Fd,WelcherIoctl,&i);
@@ -517,7 +517,7 @@ unsigned char FBSD_outb(unsigned char Data, int Wohin,int busnumber)
   //DBG(busnumber, DBG_DEBUG,  "FBSD DDL-S88 OutB %d on Port %04X",Data,Wohin);
     if (__ddl_s88->Fd == -1)
   {
-         DBG(busnumber, DBG_ERROR,  _("FBSD DDL-S88 Device not open for writing byte %d"), Data);
+         DBG(busnumber, DBG_ERROR,  "FBSD DDL-S88 Device not open for writing byte %d", Data);
     exit (1) ;
     return -1;
   }
@@ -530,7 +530,7 @@ unsigned char FBSD_outb(unsigned char Data, int Wohin,int busnumber)
     case 1: WelcherIoctl= PPISSTATUS; break;
     case 2: WelcherIoctl= PPISCTRL; break;
     default:
-      DBG(busnumber, DBG_FATAL, _("FBSD DDL-S88 Write access to port %04X requested, not applicable!"), Wohin);
+      DBG(busnumber, DBG_FATAL, "FBSD DDL-S88 Write access to port %04X requested, not applicable!", Wohin);
       return 0;
   }
   ioctl(__ddl_s88->Fd,WelcherIoctl,&Data);

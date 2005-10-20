@@ -52,7 +52,7 @@ void get_status_sm_LI100( int busnumber );
 int readConfig_LI100( xmlDocPtr doc, xmlNodePtr node, int busnumber )
 {
   xmlNodePtr child = node->children;
-  DBG( busnumber, DBG_INFO, _("reading configuration for LI100 at bus %d"), busnumber );
+  DBG( busnumber, DBG_INFO, "reading configuration for LI100 at bus %d", busnumber );
 
   busses[ busnumber ].type = SERVER_LI100;
   busses[ busnumber ].init_func = &init_bus_LI100;
@@ -148,22 +148,22 @@ int init_bus_LI100( int busnumber )
   if ( init_GA( busnumber, __li100->number_ga ) )
   {
     __li100->number_ga = 0;
-    DBG( busnumber, DBG_ERROR, _("Can't create array for assesoirs"));
+    DBG( busnumber, DBG_ERROR, "Can't create array for assesoirs");
   }
 
   if ( init_GL( busnumber, __li100->number_gl ) )
   {
     __li100->number_gl = 0;
-    DBG( busnumber, DBG_ERROR, _("Can't create array for locomotivs"));
+    DBG( busnumber, DBG_ERROR, "Can't create array for locomotivs");
   }
   if ( init_FB( busnumber, __li100->number_fb * 16 ) )
   {
     __li100->number_fb = 0;
-    DBG( busnumber, DBG_ERROR, _("Can't create array for feedback"));
+    DBG( busnumber, DBG_ERROR, "Can't create array for feedback");
   }
 
   status = 0;
-  printf(_("Bus %d with debuglevel %d\n"), busnumber, busses[ busnumber ].debuglevel);
+  printf("Bus %d with debuglevel %d\n", busnumber, busses[ busnumber ].debuglevel);
   if ( busses[ busnumber ].type != SERVER_LI100 )
   {
     status = -2;
@@ -189,7 +189,7 @@ int init_bus_LI100( int busnumber )
   if ( status == 0 )
     __li100->working_LI100 = 1;
 
-  printf(_("INIT_BUS_LI100 exited with code: %d\n"), status );
+  printf("INIT_BUS_LI100 exited with code: %d\n", status );
 
   __li100->last_type = -1;
   __li100->last_value = -1;
@@ -274,7 +274,7 @@ void* thr_sendrec_LI100( void *v )
   int zaehler1, fb_zaehler1, fb_zaehler2;
 
   busnumber = ( int ) v;
-  DBG(busnumber, DBG_INFO, _("thr_sendrec_LI100 is startet as bus %i"), busnumber );
+  DBG(busnumber, DBG_INFO, "thr_sendrec_LI100 is startet as bus %i", busnumber );
 
   // initialize tga-structure
   for ( zaehler1 = 0;zaehler1 < 50;zaehler1++ )
@@ -389,7 +389,7 @@ void send_command_ga_LI100( int busnumber )
           }
           __li100->tga[ i1 ] = gatmp;
           status = 0;
-          DBG(busnumber, DBG_DEBUG, _("GA %i for switch off at %i,%i on %i"), __li100->tga[ i1 ].id,
+          DBG(busnumber, DBG_DEBUG, "GA %i for switch off at %i,%i on %i", __li100->tga[ i1 ].id,
                ( int ) __li100->tga[ i1 ].t.tv_sec, ( int ) __li100->tga[ i1 ].t.tv_usec, i1 );
           break;
         }
@@ -875,7 +875,7 @@ void send_command_sm_LI100( int busnumber )
     __li100 -> last_bit = smakt.bit;
     __li100 -> last_value = smakt.value;
 
-    DBG(busnumber, DBG_DEBUG, _("in send_command_sm: last_type[%d] = %d"), busnumber, __li100 -> last_type);
+    DBG(busnumber, DBG_DEBUG, "in send_command_sm: last_type[%d] = %d", busnumber, __li100 -> last_type);
     switch ( smakt.command )
     {
       case SET:
@@ -962,9 +962,9 @@ void check_status_LI100( int busnumber )
       {
         char msg[ 200 ];
         strcpy( msg, strerror( errno ) );
-        DBG(busnumber, DBG_ERROR, _("readbyte(): IOCTL   status: %d with errno = %d: %s"), status, errno, msg );
+        DBG(busnumber, DBG_ERROR, "readbyte(): IOCTL   status: %d with errno = %d: %s", status, errno, msg );
       }
-      DBG(busnumber, DBG_DEBUG, _("readbyte(): (fd = %d), there are %d bytes to read."), busses[ busnumber ].fd, i );
+      DBG(busnumber, DBG_DEBUG, "readbyte(): (fd = %d), there are %d bytes to read.", busses[ busnumber ].fd, i );
       // read only, if there is really an input
       if ( i > 0 )
         status = readAnswer_LI100( busnumber, str );
@@ -1065,11 +1065,11 @@ static int readAnswer_LI100( int busnumber, unsigned char *str )
     // power on
     if ( str[ 1 ] == 0x01 )
     {
-      DBG(busnumber, DBG_DEBUG, _("on bus %i power detected; old-state is %i"), busnumber, getPower( busnumber ) );
+      DBG(busnumber, DBG_DEBUG, "on bus %i power detected; old-state is %i", busnumber, getPower( busnumber ) );
       if ( ( __li100->emergency_on_LI100 == 1 ) || ( !getPower( busnumber ) ) )
       {
         char msg[ 500 ];
-        setPower( busnumber, 1, _("No Emergency Stop"));
+        setPower( busnumber, 1, "No Emergency Stop");
         infoPower( busnumber, msg );
         queueInfoMessage( msg );
         __li100->emergency_on_LI100 = 0;
@@ -1077,11 +1077,11 @@ static int readAnswer_LI100( int busnumber, unsigned char *str )
       // power off
       if ( str[ 1 ] == 0x00 )
       {
-        DBG(busnumber, DBG_DEBUG, _("on bus %i no power detected; old-state is %i"), busnumber, getPower( busnumber ) );
+        DBG(busnumber, DBG_DEBUG, "on bus %i no power detected; old-state is %i", busnumber, getPower(busnumber));
         if ( ( __li100->emergency_on_LI100 == 0 ) && ( getPower( busnumber ) ) )
         {
           char msg[ 500 ];
-          setPower( busnumber, 0, _("Emergency Stop"));
+          setPower( busnumber, 0, "Emergency Stop");
           infoPower( busnumber, msg );
           queueInfoMessage( msg );
           __li100->emergency_on_LI100 = 1;
@@ -1254,7 +1254,7 @@ static int initLine_LI100( int busnumber )
   struct termios interface;
 
   char *name = busses[ busnumber ].device;
-  printf(_("Begining to detect LI100 on serial line: %s\n"), name);
+  printf("Begining to detect LI100 on serial line: %s\n", name);
 
   switch ( busses[ busnumber ].baudrate )
   {
@@ -1274,11 +1274,11 @@ static int initLine_LI100( int busnumber )
       strcpy( byte2send, "9600" );
       break;
   }
-  printf(_("try opening serial line %s for %s baud\n"), name, byte2send );
+  printf("try opening serial line %s for %s baud\n", name, byte2send );
   fd = open( name, O_RDWR );
   if ( fd == -1 )
   {
-    printf(_("dammit, couldn't open device.\n"));
+    printf("dammit, couldn't open device.\n");
     return 1;
   }
   busses[ busnumber ].fd = fd;
