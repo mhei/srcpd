@@ -34,7 +34,7 @@ int start_session(long int sessionid, int mode)
   char msg[1000];
   struct timeval akt_time;
   gettimeofday(&akt_time, NULL);
-  DBG(0, DBG_INFO, _("Session started; clientid %ld, mode %d"), sessionid, mode);
+  DBG(0, DBG_INFO, "Session started; client-ID %ld, mode %d", sessionid, mode);
   sprintf(msg, "%lu.%.3lu 101 INFO 0 SESSION %lu %s\n", akt_time.tv_sec, akt_time.tv_usec/1000, sessionid,
      (mode==1?"COMMAND":"INFO"));
   queueInfoMessage(msg);
@@ -50,7 +50,7 @@ int stop_session(long int sessionid)
   struct timeval akt_time;
   gettimeofday(&akt_time, NULL);
 
-  DBG(0, DBG_INFO, _("Session terminated clientid %ld"), sessionid);
+  DBG(0, DBG_INFO, "Session terminated client-ID %ld", sessionid);
   // clean all locks
   unlock_ga_bysessionid(sessionid);
   unlock_gl_bysessionid(sessionid);

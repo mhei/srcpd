@@ -40,9 +40,7 @@ EXTRA_DIST = systemtest
 # set the include path found by configure
 INCLUDES = $(all_includes)
 
-DEFS = -D_REENTRANT -DSYSCONFDIR=\"$(sysconfdir)\" -DLOCALEDIR=\"@LOCALEDIR@\" @DEFS@
-
-LIBS = @LIBINTL@ @LIBS@
+DEFS = -D_REENTRANT -DSYSCONFDIR=\"$(sysconfdir)\" @DEFS@
 
 # the library search path.
 srcpd_LDFLAGS = $(all_libraries) `./systemtest`

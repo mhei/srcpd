@@ -124,12 +124,12 @@ void updateFB( int bus, int port, int value )
   // minimalize problems from contacts bitween track and train
   if ( fb[ bus ].fbstate[ port_t ].state != value )
   {
-    DBG(bus, DBG_DEBUG, _("FB %02i/%03i  was gone to \"%i\""), bus, port, value);
+    DBG(bus, DBG_DEBUG, "FB %02i/%03i  was gone to \"%i\"", bus, port, value);
 
     gettimeofday( &akt_time, &dummy );
     if ( value == 0 )
     {
-      DBG(bus, DBG_DEBUG, _("FB %02i/%03i  was gone to 0"), bus, port );
+      DBG(bus, DBG_DEBUG, "FB %02i/%03i  was gone to 0", bus, port );
       if ( min_time[ bus ] == 0 )
       {
         fb[ bus ].fbstate[ port_t ].state = value;
@@ -278,7 +278,7 @@ int initFB(int busnumber, int adres, const char protocol, int index)
 {
   int rc = SRCP_OK;
   int number_fb = get_number_fb(busnumber);
-  DBG(busnumber, DBG_DEBUG, _("init FB: %d %c %d"), adres, protocol, index);
+  DBG(busnumber, DBG_DEBUG, "init FB: %d %c %d", adres, protocol, index);
   if((adres > 0) && (adres <= number_fb))
   { 
     if(busses[busnumber].init_fb_func)
@@ -307,13 +307,13 @@ void check_reset_fb( int busnumber )
     else
     {
       gettimeofday( &cmp_time, NULL );
-      DBG(busnumber, DBG_DEBUG, _("FB %02i/%03i  time: %ld.%ld  compare: %ld.%ld"),
+      DBG(busnumber, DBG_DEBUG, "FB %02i/%03i  time: %ld.%ld  compare: %ld.%ld",
            busnumber, reset_fb.port, cmp_time.tv_sec, cmp_time.tv_usec,
            reset_fb.timestamp.tv_sec, reset_fb.timestamp.tv_usec );
       diff_time.tv_sec = cmp_time.tv_sec - reset_fb.timestamp.tv_sec;
       diff_time.tv_usec = cmp_time.tv_usec - reset_fb.timestamp.tv_usec;
       diff_time.tv_usec += ( diff_time.tv_sec * 1000000 );
-      DBG(busnumber, DBG_DEBUG, _("FB %02i/%03i  time-diff = %ld us (need %d us)"),
+      DBG(busnumber, DBG_DEBUG, "FB %02i/%03i  time-diff = %ld us (need %d us)",
            busnumber, reset_fb.port, diff_time.tv_usec, min_time[ busnumber ] );
       if ( diff_time.tv_usec < min_time[ busnumber ] )
       {
@@ -321,7 +321,7 @@ void check_reset_fb( int busnumber )
       }
       else
       {
-        DBG(busnumber, DBG_DEBUG, _("set %d feedback to 0"), reset_fb.port);
+        DBG(busnumber, DBG_DEBUG, "set %d feedback to 0", reset_fb.port);
         unqueueNextFB( busnumber );
         pthread_mutex_lock( &queue_mutex_fb );
         fb[ busnumber ].fbstate[ reset_fb.port ].state = 0;

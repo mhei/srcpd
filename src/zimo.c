@@ -35,7 +35,7 @@ int readanswer(int bus, char cmd, char* buf, int maxbuflen, long timeout_ms){
   if(status<0) return -1;
   if(i)
   {readByte(bus,0,&c);
-   DBG(bus, DBG_INFO, _("zimo read %02X"), c);
+   DBG(bus, DBG_INFO, "zimo read %02X", c);
    if((lc==10 || lc==13) && c==cmd) cnt=1;
    if(cnt)
    {if(c==10 || c==13) return cnt;
@@ -106,19 +106,19 @@ int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   if(init_GL(busnumber, __zimo->number_gl))
   {
     __zimo->number_gl = 0;
-    DBG(busnumber, DBG_ERROR, _("Can't create array for locomotivs"));
+    DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
   }
 
   if(init_GA(busnumber, __zimo->number_ga))
   {
     __zimo->number_ga = 0;
-    DBG(busnumber, DBG_ERROR, _("Can't create array for accessoires"));
+    DBG(busnumber, DBG_ERROR, "Can't create array for accessoires");
   }
 
   if(init_FB(busnumber, __zimo->number_fb))
   {
     __zimo->number_fb = 0;
-    DBG(busnumber, DBG_ERROR, _("Can't create array for feedback"));
+    DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
   }
   return(1);
 }
@@ -128,11 +128,11 @@ int init_linezimo (char *name)
     int fd;
   struct termios interface;
 
-  printf(_("Try opening serial line %s for 9600 baud\n"), name);
+  printf("Try opening serial line %s for 9600 baud\n", name);
   fd = open(name, O_RDWR);
   if (fd == -1)
   {
-    printf(_("dammit, couldn't open device.\n"));
+    printf("dammit, couldn't open device.\n");
   }
   else
   {
@@ -152,7 +152,7 @@ int init_linezimo (char *name)
 
 int term_bus_zimo(int bus)
 {
-  DBG(bus, DBG_INFO, _("zimo bus %d terminating"), bus);
+  DBG(bus, DBG_INFO, "zimo bus %d terminating", bus);
   return 0;
 }
 
@@ -161,7 +161,7 @@ int term_bus_zimo(int bus)
 /* return code wird ignoriert (vorerst) */
 int init_bus_zimo(int i)
 {
-  DBG(i, DBG_INFO, _("zimo init: bus #%d, debug %d, device %s"), i, busses[i].debuglevel, busses[i].device);
+  DBG(i, DBG_INFO, "zimo init: bus #%d, debug %d, device %s", i, busses[i].debuglevel, busses[i].device);
   busses[i].fd = init_linezimo(busses[i].device);
   DBG(i, DBG_INFO, "zimo init done");
   return 0;
@@ -178,7 +178,7 @@ void* thr_sendrec_zimo (void *v)
   char databyte1,  databyte2, databyte3;
   // TODO: unsigned int error, cv, val;
   // TODO: unsigned char databyte, address;
-  DBG(bus, DBG_INFO, _("zimo started, bus #%d, %s"), bus, busses[bus].device);
+  DBG(bus, DBG_INFO, "zimo started, bus #%d, %s", bus, busses[bus].device);
 
   busses[bus].watchdog = 1;
   while (1)
@@ -206,7 +206,7 @@ void* thr_sendrec_zimo (void *v)
      writeString(bus, msg, 0);
      addr=0;
      i=readanswer(bus,'E',msg,20,40);
-     DBG(bus, DBG_INFO, _("readed %d"), i);
+     DBG(bus, DBG_INFO, "readed %d", i);
      switch(i)
      {case 8:sscanf(&msg[1],"%02X",&addr);
              break;
@@ -222,7 +222,7 @@ void* thr_sendrec_zimo (void *v)
      while(temp > 0)
      {readByte(bus, 0, &rr);
       ioctl(busses[bus].fd, FIONREAD, &temp);
-      DBG(bus, DBG_INFO, _("ignoring unread byte: %d (%c)"), rr, rr);
+      DBG(bus, DBG_INFO, "ignoring unread byte: %d (%c)", rr, rr);
      }
      setGL(bus, addr, gltmp);
     }

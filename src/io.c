@@ -38,9 +38,9 @@ int readByte(int bus, int wait, unsigned char *the_byte)
     {
       char msg[200];
       strcpy(msg, strerror(errno));
-      DBG(bus, DBG_ERROR, _("readbyte(): IOCTL   status: %d with errno = %d: %s"), status, errno, msg);
+      DBG(bus, DBG_ERROR, "readbyte(): IOCTL   status: %d with errno = %d: %s", status, errno, msg);
     }
-    DBG(bus, DBG_DEBUG, _("readbyte(): (fd = %d), there are %d bytes to read."), busses[bus].fd, i);
+    DBG(bus, DBG_DEBUG, "readbyte(): (fd = %d), there are %d bytes to read.", busses[bus].fd, i);
     // read only, if there is really an input
     if ((i > 0) || (wait == 1))
     {
@@ -49,10 +49,10 @@ int readByte(int bus, int wait, unsigned char *the_byte)
       {
         char emsg[200];
         strerror_r(errno, emsg, sizeof(emsg));
-        DBG(bus, DBG_ERROR, _("readbyte(): read status: %d with errno = %d: %s"), i, errno, *emsg);
+        DBG(bus, DBG_ERROR, "readbyte(): read status: %d with errno = %d: %s", i, errno, *emsg);
       }
       if (i > 0)
-        DBG(bus, DBG_DEBUG, _("readbyte(): byte read: 0x%02x"), *the_byte);
+        DBG(bus, DBG_DEBUG, "readbyte(): byte read: 0x%02x", *the_byte);
     }
   }
   return (i > 0 ? 0 : -1);
@@ -67,7 +67,7 @@ void writeByte(int bus, unsigned char b, unsigned long msecs)
     i = write(busses[bus].fd, &byte, 1);
     tcdrain(busses[bus].fd);
   }
-  DBG(bus, DBG_DEBUG, _("(FD: %d) %i byte sent: 0x%02x (%d)"), busses[bus].fd, i, b, b);
+  DBG(bus, DBG_DEBUG, "(FD: %d) %i byte sent: 0x%02x (%d)", busses[bus].fd, i, b, b);
   usleep(msecs * 1000);
 }
 
@@ -87,7 +87,7 @@ void save_comport(int businfo)
   fd=open(busses[businfo].device, O_RDWR);
   if (fd == -1)
   {
-    printf(_("dammit, couldn't open device.\n"));
+    printf("dammit, couldn't open device.\n");
   }
   else
   {
@@ -100,25 +100,25 @@ void restore_comport(int bus)
 {
   int fd;
 
-  DBG(bus, DBG_INFO, _("Restoring attributes for serial line %s"), busses[bus].device);
+  DBG(bus, DBG_INFO, "Restoring attributes for serial line %s", busses[bus].device);
   fd=open(busses[bus].device,O_RDWR);
   if (fd == -1)
   {
-    DBG(bus, DBG_ERROR, _("dammit, couldn't open device."));
+    DBG(bus, DBG_ERROR, "dammit, couldn't open device.");
   }
   else
   {
-    DBG(bus, DBG_INFO, _("Restoring old values..."));
+    DBG(bus, DBG_INFO, "Restoring old values...");
     tcsetattr(fd, TCSANOW, &busses[bus].devicesettings);
     close(fd);
-    DBG(bus, DBG_INFO, _("Old values succesfully restored"));
+    DBG(bus, DBG_INFO, "Old values succesfully restored");
   }
 }
 
 void close_comport(int bus)
 {
   struct termios interface;
-  DBG(bus, DBG_INFO, _("Closing serial line"));
+  DBG(bus, DBG_INFO, "Closing serial line");
 
   tcgetattr(busses[bus].fd, &interface);
   cfsetispeed(&interface, B0);
@@ -177,7 +177,7 @@ int socket_writereply(int Socket, const char *line)
   if (linelen<=0)
     return 0;
 
-  DBG(0, DBG_DEBUG, _("socket %d, write %s"), Socket, line);
+  DBG(0, DBG_DEBUG, "socket %d, write %s", Socket, line);
   while(i<=linelen-MAXSRCPLINELEN-1 && status>=0)
   {
     memset(tmp, 0, sizeof(tmp));
@@ -190,6 +190,6 @@ int socket_writereply(int Socket, const char *line)
   {
     status = write(Socket, line+i, linelen-i);
   }
-  DBG(0, DBG_DEBUG, _("Status from write: %d"), status);
+  DBG(0, DBG_DEBUG, "Status from write: %d", status);
   return status;
 }

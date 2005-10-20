@@ -21,7 +21,7 @@ int server_shutdown_state;
 int readconfig_server(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
   xmlNodePtr child = node->children;
-  DBG(busnumber, DBG_INFO, _("bus %d starting configuration child %s"), busnumber, node->name);
+  DBG(busnumber, DBG_INFO, "bus %d starting configuration child %s", busnumber, node->name);
   busses[0].type = SERVER_SERVER;
   busses[0].init_func = &init_bus_server;
   busses[0].term_func = &term_bus_server;
@@ -72,7 +72,7 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, int busnumber)
       __srv->username = malloc(strlen(txt) + 1);
       if (__srv->username == NULL)
       {
-        printf(_("Cannot allocate memory\n"));
+        printf("Cannot allocate memory\n");
         exit(1);
       }
       strcpy(__srv->username, txt);
@@ -85,7 +85,7 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, int busnumber)
       __srv->groupname = malloc(strlen(txt) + 1);
       if (__srv->groupname == NULL)
       {
-        printf(_("Cannot allocate memory\n"));
+        printf("Cannot allocate memory\n");
         exit(1);
       }
       strcpy(__srv->groupname, txt);

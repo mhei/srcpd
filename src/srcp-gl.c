@@ -33,7 +33,7 @@ static int queue_isfull( int busnumber );
  */
 int isValidGL( busnumber, addr )
 {
-  DBG(busnumber, DBG_INFO, _("GL VALID: %d %d (from %d to %d)"), busnumber, addr, num_busses, gl[ busnumber ].numberOfGl - 1 );
+  DBG(busnumber, DBG_INFO, "GL VALID: %d %d (from %d to %d)", busnumber, addr, num_busses, gl[ busnumber ].numberOfGl - 1 );
   if ( busnumber > 0 &&       /* in bus 0 GL are not allowed */
        busnumber <= num_busses &&        /* only num_busses are configured */
        gl[ busnumber ].numberOfGl > 0 &&  /* number of GL is set */
@@ -119,11 +119,11 @@ int queueGL( int busnumber, int addr, int dir, int speed, int maxspeed, const in
     if ( !isInitializedGL( busnumber, addr ) )
     {
       initGL( busnumber, addr, 'P', 1, 14, 1 );
-      DBG(busnumber, DBG_WARN, _("GL default init for %d-%d"), busnumber, addr);
+      DBG(busnumber, DBG_WARN, "GL default init for %d-%d", busnumber, addr);
     }
     if ( queue_isfull( busnumber ) )
     {
-      DBG(busnumber, DBG_WARN, _("GL Command Queue full"));
+      DBG(busnumber, DBG_WARN, "GL Command Queue full");
       return SRCP_TEMPORARILYPROHIBITED;
     }
 
@@ -440,7 +440,7 @@ void unlock_gl_bysessionid( long int sessionid )
 {
   int i, j;
   int number;
-  DBG(0, DBG_INFO, _("unlock GL by session-ID %ld"), sessionid );
+  DBG(0, DBG_INFO, "unlock GL by session-ID %ld", sessionid );
   for ( i = 0; i <= num_busses; i++ )
   {
     number = getMaxAddrGL( i );
