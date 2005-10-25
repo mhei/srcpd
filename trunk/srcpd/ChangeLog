@@ -1,13 +1,6 @@
 2005-10-14 Guido Scholz <guido.scholz@bayernline.de>
-	* package: internationalization (i18n) prepared
-	* po: partly german translation added
+	* *.c: some non-ASCII strings fixed
         
-2005-10-14  gettextize  <bug-gnu-gettext@gnu.org>
-	* Makefile.am (SUBDIRS): Add m4.
-	(ACLOCAL_AMFLAGS): New variable.
-	(EXTRA_DIST): Add config.rpath.
-	* configure.in (AC_CONFIG_FILES): Add po/Makefile.in,
- 
 2005-10-11 Guido Scholz <guido.scholz@bayernline.de>
 	* configure.in, Makefile.am, src/Makefile.am: adaptations to new
 	src directory

@@ -67,7 +67,6 @@ fi
 %{_sysconfdir}/init.d/%{name}
 %docdir %{_mandir}/man8/*
 %{_mandir}/man8/*
-%{_datadir}/locale/*/LC_MESSAGES/%{name}.mo
 %config(noreplace) %{_sysconfdir}/%{name}.conf
 %doc COPYING AUTHORS README NEWS DESIGN PROGRAMMING-HOWTO
 %doc README.ibox README.freebsd README.selectrix TODO
