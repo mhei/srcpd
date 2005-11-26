@@ -105,7 +105,6 @@ typedef struct _DDL_DATA {
     time_t short_detected;
 
     pthread_t ptid;
-    int started_thread_flag;
 
     char idle_data[MAXDATA];
     char NMRA_idle_data[PKTSIZE];
@@ -178,10 +177,10 @@ void send_packet(int busnumber, int addr, char *packet, int packet_size, int pac
 void refresh_loco(int busnumber);
 long int compute_delta(struct timeval tv1, struct timeval tv2);
 void set_SerialLine(int busnumber, int line, int mode);
-void start_voltage(int busnumber);
-void stop_voltage(int busnumber);
-void cancel_refresh_cycle(int busnumber);
-void mkclean(int busnumber);
+//void start_voltage(int busnumber);
+//void stop_voltage(int busnumber);
+int check_lines(int busnumber);
+void set_lines_off(int busnumber);
 void *thr_refresh_cycle(void *v);
 
 /* serial line modes: */
