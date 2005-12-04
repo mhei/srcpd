@@ -310,11 +310,11 @@ void DBG(int busnumber, int dbglevel, const char *fmt, ...)
     free (msg);
     if (busses[busnumber].debuglevel>DBG_WARN) {
 	fprintf(stderr,"[bus %d] ",busnumber);
-	vfprintf(stderr,fmt,parm);
+	vfprintf(stderr,fmt,parm2);
 	if (strchr(fmt,'\n')==NULL) 
 	    fprintf(stderr,"\n");
-        }
     }
     va_end(parm2);
-    va_end(parm);
+  }
+  va_end(parm);
 }
