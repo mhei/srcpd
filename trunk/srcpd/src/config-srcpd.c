@@ -300,6 +300,8 @@ void DBG(int busnumber, int dbglevel, const char *fmt, ...)
   va_list parm;
   va_start(parm, fmt);
   if (dbglevel <= busses[busnumber].debuglevel) {
+    va_list parm2;
+    va_start(parm2, fmt);
     char *msg;
     msg = (char *)malloc (sizeof(char) * (strlen(fmt) + 10));
     if (msg == NULL) return; // MAM: Wat solls? Ist eh am Ende
@@ -313,5 +315,6 @@ void DBG(int busnumber, int dbglevel, const char *fmt, ...)
 	    fprintf(stderr,"\n");
         }
     }
-  va_end(parm);
+    va_end(parm2);
+    va_end(parm);
 }
