@@ -46,7 +46,7 @@ void CreatePIDFile(int pid)
     syslog(LOG_INFO, "   cannot open %s. Ignoring.", ((SERVER_DATA *) busses[0].driverdata)->PIDFILE);
   else
   {
-    fprintf(f,"%d", pid);
+    fprintf(f,"%d\n", pid);
     fflush(f);
     fclose(f);
   }
