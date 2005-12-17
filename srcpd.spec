@@ -10,7 +10,9 @@ Vendor: the srcpd team
 URL: http://srcpd.sourceforge.net/
 Prefix: /usr
 Buildroot: %{_tmppath}/%{name}-%{version}-buildroot
-Requires: libxml2 zlib
+Provides: srcpd
+Requires: libxml2
+BuildRequires: libxml2-devel
 
 %description
 
