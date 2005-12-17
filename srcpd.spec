@@ -1,7 +1,7 @@
 Summary: srcpd is a SRCP server daemon to control digital model railroads
 Summary(de): srcpd ist ein SRCP-Server zur Steuerung von digitalen Modelleisenbahnen
 Name: srcpd
-Version: 2.0.9
+Version: 2.0.10-cvs
 Release: 1%{?dist}
 Source0: %{name}-%{version}.tar.bz2
 License: GPL
@@ -17,15 +17,12 @@ BuildRequires: libxml2-devel
 %description
 
 The srcpd is a server daemon that enables you to control and play with 
-a digital model railroad using any SRCP client. Currently it supports an 
-Intellibox (tm), a Maerklin Interface 6050 or 6051 (tm?), and many more
-interfaces. 
+a digital model railroad using any SRCP client. Currently it supports many
+interface (both self made and commercally) and direct signal generation.
 
 More information about SRCP and links to many really cool clients (and 
 other servers for different hardware) can be found at 
-http://srcpd.sourceforge.net/ and http://www.der-moba.de/Digital/
-
-This is a beta release, do not use for production!
+http://srcpd.sourceforge.net/ and http://www.der-moba.de/
 
 %prep
 %setup -q
