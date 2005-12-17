@@ -63,7 +63,7 @@ static int write_PCF8574(int bus, int addr, __u8 byte)
     return (ret);
   }
 
-  DBG(bus, DBG_DEBUG, "Sent byte %d to address %d"), byte, addr;
+  DBG(bus, DBG_DEBUG, "Sent byte %d to address %d", byte, addr);
   return (0);
 
 }
