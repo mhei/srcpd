@@ -34,7 +34,7 @@ int readanswer(int bus, char cmd, char* buf, int maxbuflen, long timeout_ms){
   status = ioctl(busses[bus].fd, FIONREAD, &i);
   if(status<0) return -1;
   if(i)
-  {readByte(bus,0,&c);
+  { readByte(bus ,0 , (unsigned char*)&c);
    DBG(bus, DBG_INFO, "zimo read %02X", c);
    if((lc==10 || lc==13) && c==cmd) cnt=1;
    if(cnt)
@@ -69,34 +69,34 @@ int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 
   while (child)
   {
-    if(strncmp(child->name, "text", 4)==0)
+    if (xmlStrncmp(child->name, (const xmlChar *) "text", 4) == 0)
     {
       child = child -> next;
       continue;
     }
 
-    if (strcmp(child->name, "number_fb") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "number_fb") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __zimo->number_fb = atoi(txt);
       free(txt);
     }
-    if (strcmp(child->name, "p_time") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "p_time") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
      set_min_time(busnumber, atoi(txt));
       free(txt);
     }
 
-    if (strcmp(child->name, "number_gl") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "number_gl") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __zimo->number_gl = atoi(txt);
       free(txt);
     }
-    if (strcmp(child->name, "number_ga") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "number_ga") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __zimo->number_ga = atoi(txt);
       free(txt);
     }
@@ -184,7 +184,7 @@ void* thr_sendrec_zimo (void *v)
   while (1)
   {if(busses[bus].power_changed==1)
    {sprintf(msg, "S%c%c", (busses[bus].power_state) ? 'E' : 'A', 13);
-    writeString(bus, msg, 0);
+    writeString(bus, (unsigned char*)msg, 0);
     busses[bus].power_changed = 0;
     infoPower(bus, msg);
     queueInfoMessage(msg);
@@ -203,7 +203,7 @@ void* thr_sendrec_zimo (void *v)
     if(addr>128)
     {sprintf(msg,"E%04X%c",addr,13);
      DBG(bus, DBG_INFO, "%s", msg);
-     writeString(bus, msg, 0);
+     writeString(bus, (unsigned char*)msg, 0);
      addr=0;
      i=readanswer(bus,'E',msg,20,40);
      DBG(bus, DBG_INFO, "readed %d", i);
@@ -217,10 +217,10 @@ void* thr_sendrec_zimo (void *v)
     if(addr)
     {sprintf(msg, "F%c%02X%02X%02X%02X%02X%c", glakt.protocol, addr, gltmp.speed, databyte1, databyte2, databyte3, 13);
      DBG(bus, DBG_INFO, "%s", msg);
-     writeString(bus, msg, 0);
+     writeString(bus, (unsigned char*)msg, 0);
      ioctl(busses[bus].fd, FIONREAD, &temp);
      while(temp > 0)
-     {readByte(bus, 0, &rr);
+     {readByte(bus, 0, (unsigned char*)&rr);
       ioctl(busses[bus].fd, FIONREAD, &temp);
       DBG(bus, DBG_INFO, "ignoring unread byte: %d (%c)", rr, rr);
      }

@@ -37,20 +37,20 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 
   while (child)
   {
-    if (strncmp(child->name, "text", 4) == 0)
+    if (xmlStrncmp(child->name, (const xmlChar *) "text", 4) == 0)
     {
       child = child -> next;
       continue;
     }
-    if (strcmp(child->name, "tcp-port") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "tcp-port") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __srv->TCPPORT = atoi(txt);
       free(txt);
     }
-    if (strcmp(child->name, "listen-ip") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "listen-ip") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       free(__srv->listenip);
       __srv->listenip = malloc(strlen(txt) + 1);
       strcpy(__srv->listenip, txt);
@@ -58,16 +58,16 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, int busnumber)
       free(txt);
     }
 
-    if (strcmp(child->name, "pid-file") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "pid-file") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       strncpy(__srv->PIDFILE, txt, MAXPATHLEN-2);
       __srv->PIDFILE[MAXPATHLEN-1] = 0x00;
       free(txt);
     }
-    if (strcmp(child->name, "username") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "username") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       free(__srv->username);
       __srv->username = malloc(strlen(txt) + 1);
       if (__srv->username == NULL)
@@ -78,9 +78,9 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, int busnumber)
       strcpy(__srv->username, txt);
       free(txt);
     }
-    if (strcmp(child->name, "groupname") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "groupname") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       free(__srv->groupname);
       __srv->groupname = malloc(strlen(txt) + 1);
       if (__srv->groupname == NULL)

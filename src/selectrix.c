@@ -69,33 +69,34 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 	xmlNodePtr child = node->children;
 	while (child)
 	{
-		if(strncmp(child->name, "text", 4)==0)
+        if (xmlStrncmp(child->name, (const xmlChar *) "text", 4) == 0)
 		{
 			child= child->next;
 			continue;
 		}
-		if (strcmp(child->name, "number_fb") == 0)
+        if (xmlStrcmp(child->name, (const xmlChar *) "number_fb") == 0)
 		{
-			char *txt= xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+			char *txt= (char *)(void *)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
 			__selectrix->number_fb = atoi(txt);
 			free(txt);
 		}
 		
-		if (strcmp(child->name, "number_gl") == 0)
+        if (xmlStrcmp(child->name, (const xmlChar *) "number_gl") == 0)
 		{
-			char *txt= xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+			char *txt= (char *)(void *)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
 			__selectrix->number_gl = atoi(txt);
 			free(txt);
 		}
-		if (strcmp(child->name, "number_ga") == 0)
+        if (xmlStrcmp(child->name, (const xmlChar *) "number_ga") == 0)
 		{
-			char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+			char *txt = (char *)(void *)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
 			__selectrix->number_ga = atoi(txt);
 			free(txt);
 		}
-		if (strcmp(child->name, "mode_cc2000") == 0)
+//		if (strcmp(child->name, "mode_cc2000") == 0)
+        if (xmlStrcmp(child->name, (const xmlChar *) "mode_cc2000") == 0)
 		{
-			char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+			char *txt = (char *)(void *)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
 			if (strcmp(txt, "yes") == 0)
 			{
 				__selectrix->flags |= CC2000_MODE;

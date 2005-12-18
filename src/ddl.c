@@ -905,48 +905,47 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 
   while (child)
   {
-    if(strncmp(child->name, "text", 4)==0)
+    if (xmlStrncmp(child->name, (const xmlChar *) "text", 4) == 0)
     {
       child = child -> next;
       continue;
     }
-    if (strcmp(child->name, "number_gl") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "number_gl") == 0)
     {
-      char *txt =
-      xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __DDL->number_gl = atoi(txt);
       free(txt);
     }
-    if (strcmp(child->name, "number_ga") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "number_ga") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __DDL->number_ga = atoi(txt);
       free(txt);
     }
 
-    if (strcmp(child->name, "enable_ringindicator_checking") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "enable_ringindicator_checking") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __DDL->RI_CHECK = (strcmp(txt, "yes") == 0) ? TRUE:FALSE;
       free(txt);
     }
 
-    if (strcmp(child->name, "enable_checkshort_checking") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "enable_checkshort_checking") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __DDL->CHECKSHORT = (strcmp(txt, "yes") == 0) ? TRUE:FALSE;
       free(txt);
     }
-    if (strcmp(child->name, "inverse_dsr_handling") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "inverse_dsr_handling") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __DDL->DSR_INVERSE = (strcmp(txt, "yes") == 0) ? TRUE:FALSE;
       free(txt);
     }
 
-    if (strcmp(child->name, "enable_maerklin") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "enable_maerklin") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       if (strcmp(txt, "yes") == 0)
       {
         __DDL->ENABLED_PROTOCOLS |= EP_MAERKLIN;
@@ -956,9 +955,9 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, int busnumber)
       free(txt);
     }
 
-    if (strcmp(child->name, "enable_nmradcc") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "enable_nmradcc") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       if (strcmp(txt, "yes") == 0)
       {
         __DDL->ENABLED_PROTOCOLS |= EP_NMRADCC;
@@ -968,37 +967,39 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, int busnumber)
       free(txt);
     }
 
-    if (strcmp(child->name, "improve_nmradcc_timing") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "improve_nmradcc_timing") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __DDL->IMPROVE_NMRADCC_TIMING = (strcmp(txt, "yes") == 0) ? TRUE:FALSE;
       free(txt);
     }
 
-    if (strcmp(child->name, "shortcut_failure_delay") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "shortcut_failure_delay") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      if (txt != NULL) {
       __DDL->SHORTCUTDELAY = atoi(txt);
       free(txt);
+      }
     }
 
-    if (strcmp(child->name, "nmradcc_translation_routine") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "nmradcc_translation_routine") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __DDL->NMRADCC_TR_V = atoi(txt);
       free(txt);
     }
 
-    if (strcmp(child->name, "enable_ulseep_patch") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "enable_ulseep_patch") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __DDL->WAITUART_USLEEP_PATCH = (strcmp(txt, "yes") == 0) ? TRUE:FALSE;
       free(txt);
     }
 
-    if (strcmp(child->name, "usleep_usec") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "usleep_usec") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __DDL->WAITUART_USLEEP_USEC = atoi(txt);
       free(txt);
     }

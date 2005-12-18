@@ -50,7 +50,7 @@
 static int initLine_IB( int busnumber );
 
 // IB helper functions
-static int sendBreak( const int fd );
+static int sendBreak( const int fd, int busnumber );
 static int switchOffP50Command( const int busnumber );
 static int readAnswer_IB( const int busnumber, const int generatePrintf );
 static int readByte_IB( int bus, int wait, unsigned char *the_byte );
@@ -79,28 +79,32 @@ int readConfig_IB( xmlDocPtr doc, xmlNodePtr node, int busnumber )
 
   while ( child )
   {
-    if ( strcmp( child->name, "number_fb" ) == 0 )
+    //if ( strcmp( child->name, "number_fb" ) == 0 )
+    if (xmlStrcmp(child->name, (const xmlChar *) "number_fb") == 0)
     {
-      char * txt = xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
+      char * txt = (char *)(void *)xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
       __ib->number_fb = atoi( txt );
       free( txt );
     }
 
-    if ( strcmp( child->name, "number_gl" ) == 0 )
+    //if ( strcmp( child->name, "number_gl" ) == 0 )
+    if (xmlStrcmp(child->name, (const xmlChar *) "number_gl") == 0)
     {
-      char * txt = xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
+      char * txt = (char *)(void *)xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
       __ib->number_gl = atoi( txt );
       free( txt );
     }
-    if ( strcmp( child->name, "number_ga" ) == 0 )
+    //if ( strcmp( child->name, "number_ga" ) == 0 )
+    if (xmlStrcmp(child->name, (const xmlChar *) "number_ga") == 0)
     {
-      char * txt = xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
+      char * txt = (char *)(void *)xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
       __ib->number_ga = atoi( txt );
       free( txt );
     }
-    if ( strcmp( child->name, "p_time" ) == 0 )
+    //if ( strcmp( child->name, "p_time" ) == 0 )
+    if (xmlStrcmp(child->name, (const xmlChar *) "p_time") == 0)
     {
-      char * txt = xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
+      char * txt = (char *)(void *)xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
       set_min_time( busnumber, atoi( txt ) );
       free( txt );
     }
@@ -174,7 +178,8 @@ int init_bus_IB( int busnumber )
   }
 
   status = 0;
-  printf("Bus %d with debuglevel %d\n", busnumber, busses[ busnumber ].debuglevel);
+  //printf("Bus %d with debuglevel %d\n", busnumber, busses[ busnumber ].debuglevel);
+  DBG( busnumber, DBG_INFO, "Bus %d with debuglevel %d\n", busnumber, busses[ busnumber ].debuglevel );
   if ( busses[ busnumber ].type != SERVER_IB )
   {
     status = -2;
@@ -200,7 +205,8 @@ int init_bus_IB( int busnumber )
   if ( status == 0 )
     __ib -> working_IB = 1;
 
-  printf("INIT_BUS_IB exited with code: %d\n", status);
+   DBG( busnumber, DBG_INFO, "INIT_BUS_IB exited with code: %d\n", status );
+   //  printf( "INIT_BUS_IB exited with code: %d\n", status );
 
   __ib->last_type = -1;
   __ib->emergency_on_ib = 0;
@@ -1083,14 +1089,16 @@ static int initLine_IB( int busnumber )
   struct termios interface;
 
   char *name = busses[ busnumber ].device;
-  printf("Begining to detect IB on serial line: %s\n", name);
+  DBG(busnumber, DBG_INFO, "Begining to detect IB on serial line: %s\n", name );
+  //printf("Begining to detect IB on serial line: %s\n", name);
 
   DBG( busnumber, DBG_INFO, "Opening serial line %s for 2400 baud\n", name);
   fd = open( name, O_RDWR );
   DBG( busnumber, DBG_INFO, "fd = %d", fd );
   if ( fd == -1 )
   {
-    printf("dammit, couldn't open device.\n");
+    DBG(busnumber, DBG_ERROR, "dammit, couldn't open device.\n" );
+    //printf("dammit, couldn't open device.\n");
     return 1;
   }
   busses[ busnumber ].fd = fd;
@@ -1107,24 +1115,26 @@ static int initLine_IB( int busnumber )
 
   status = 0;
   sleep( 1 );
-  printf("Clearing input-buffer\n");
+  DBG(busnumber, DBG_INFO, "Clearing input-buffer\n" );
+//  printf("Clearing input-buffer\n");
   while ( status != -1 )
     status = readByte_IB( busnumber, 1, &rr );
 
   status = 0;
 
-  printf("Sending BREAK... ");
+  DBG(busnumber, DBG_INFO, "Sending BREAK... ");
+  //printf("Sending BREAK... ");
 
-  status = sendBreak( fd );
+  status = sendBreak( fd, busnumber );
   close( fd );
 
   if ( status == 0 )
   {
-    printf("successful.\n");
+    DBG(busnumber, DBG_INFO, "successful.\n");
   }
   else
   {
-    printf("unsuccessful!\n");
+    DBG(busnumber, DBG_INFO, "successful.\n");
   }
 
   // open the comport in 2400, to get buadrate from IB und turn off P50 commands
@@ -1132,7 +1142,7 @@ static int initLine_IB( int busnumber )
   fd = open_comport( busnumber, baud );
   if ( fd < 0 )
   {
-    printf("open_comport() failed\n");
+    DBG(busnumber, DBG_ERROR, "open_comport() failed\n");
     return ( -1 );
   }
   //printf("open_comport() successful; fd = %d\n", fd );
@@ -1140,7 +1150,7 @@ static int initLine_IB( int busnumber )
   baud = checkBaudrate( fd, busnumber );
   if ( ( baud == B0 ) || ( baud > B38400 ) )
   {
-    printf("checkBaudrate() failed\n");
+    DBG(busnumber, DBG_ERROR, "checkBaurate() failed\n");
     return -1;
   }
 
@@ -1168,25 +1178,25 @@ static int initLine_IB( int busnumber )
     return ( 1 );
   if ( rr == 'D' )
   {
-    printf("Intellibox in download mode.\nDO NOT PROCEED!\n");
+    DBG(busnumber, DBG_FATAL, "Intellibox in download mode.\nDO NOT PROCEED!\n");
     return ( 2 );
   }
 
   return 0;
 }
 
-static int sendBreak( const int fd )
+static int sendBreak( const int fd, int busnumber )
 {
   if ( tcflush( fd, TCIOFLUSH ) != 0 )
   {
-    printf("sendBreak(): Error in tcflush before break\n");
+    DBG(busnumber, DBG_ERROR, "sendBreak(): Error in tcflush before break\n");
     return -1;
   }
   tcflow( fd, TCOOFF );
   usleep( 300000 ); // 300 ms
   if ( tcsendbreak( fd, 100 ) != 0 )
   {
-    printf("sendBreak(): Error in tcsendbreak \n");
+    DBG(busnumber, DBG_ERROR, "sendBreak(): Error in tcsendbreak \n");
     return -1;
   }
   sleep( 3 );
@@ -1216,13 +1226,12 @@ speed_t checkBaudrate( const int fd, const int busnumber )
   speed_t internalBaudrate = B0;
   char msg[ 200 ];
 
-  printf("Checking baudrate inside IB, see special option S1 in IB-Handbook\n");
+  DBG(busnumber, DBG_INFO, "Checking baudrate inside IB, see special option S1 in IB-Handbook\n");
   for ( i = 0; i < 10; i++ )
     input[ i ] = 0;
   while ( ( found == 0 ) && ( baudrate <= 38400 ) )
   {
-    printf("baudrate = %d ?????\n", baudrate);
-    DBG( busnumber, DBG_INFO, "baudrate = %i\n" , baudrate );
+    DBG(busnumber, DBG_INFO, "baudrate = %i\n" , baudrate);
     error = tcgetattr( fd, &interface );
     if ( error < 0 )
     {
@@ -1254,7 +1263,7 @@ speed_t checkBaudrate( const int fd, const int busnumber )
     if ( cfsetispeed( &interface, internalBaudrate ) != 0 )
     {
       strcpy( msg, strerror( errno ) );
-      DBG( busnumber, DBG_INFO, "CheckBaudate: Error in cfsetispeed, error #%d: %s\n", error, msg );
+      DBG(busnumber, DBG_INFO, "CheckBaudate: Error in cfsetispeed, error #%d: %s\n", error, msg);
     }
     tcflush( fd, TCOFLUSH );
     error = tcsetattr( fd, TCSANOW, &interface );
@@ -1286,17 +1295,17 @@ speed_t checkBaudrate( const int fd, const int busnumber )
       found = 1;
       if ( input[ 0 ] == 'D' )
       {
-        printf("Intellibox in download mode.\nDO NOT PROCEED!\n");
+         DBG(busnumber, DBG_FATAL, "Intellibox in download mode.\nDO NOT PROCEED!\n");
         return ( 2 );
       }
-      printf("IBox found; P50-commands are disabled.\n");
+      DBG(busnumber, DBG_INFO, "IBox found; P50-commands are disabled.\n" );
       break;
     case 2:
       // IBox has P50 commands enabled
       found = 1;
       // don't know if this also works, when P50 is enabled...
       // check disabled for now...
-      printf("IBox found; P50-commands are enabled.\n");
+      DBG(busnumber, DBG_INFO, "IBox found; P50-commands are enabled.\n");
       break;
     default:
       found = 0;
@@ -1309,7 +1318,7 @@ speed_t checkBaudrate( const int fd, const int busnumber )
     }
     usleep ( 200000 );  // 200 ms
   }
-  printf("Baudrate checked: %d\n", baudrate);
+  DBG(busnumber, DBG_INFO, "Baudrate checked: %d\n", baudrate );
   return internalBaudrate;
 }
 
@@ -1322,33 +1331,33 @@ static int resetBaudrate( const speed_t speed, const int busnumber )
 {
   unsigned char byte2send;
   int status;
-  unsigned char* sendString = "";
+  char* sendString = "";
   switch ( speed )
   {
   case B2400:
-    printf("Changing baudrate to 2400 bps\n");
+    DBG(busnumber, DBG_INFO, "Changing baudrate to 2400 bps\n");
     sendString = "B2400";
-    writeString( busnumber, sendString, 0 );
+    writeString( busnumber, (unsigned char *)sendString, 0 );
     break;
   case B4800:
-    printf("Changing baudrate to 4800 bps\n");
+    DBG(busnumber, DBG_INFO, "Changing baudrate to 4800 bps\n");
     sendString = "B4800";
-    writeString( busnumber, sendString, 0 );
+    writeString( busnumber, (unsigned char *)sendString, 0 );
     break;
   case B9600:
-    printf("Changing baudrate to 9600 bps\n");
+    DBG(busnumber, DBG_INFO, "Changing baudrate to 9600 bps\n");
     sendString = "B9600";
-    writeString( busnumber, sendString, 0 );
+    writeString( busnumber, (unsigned char *)sendString, 0 );
     break;
   case B19200:
-    printf("Changing baudrate to 19200 bps\n");
+    DBG(busnumber, DBG_INFO, "Changing baudrate to 19200 bps\n");
     sendString = "B19200";
-    writeString( busnumber, sendString, 0 );
+    writeString( busnumber, (unsigned char *)sendString, 0 );
     break;
   case B38400:
-    printf("Changing baudrate to 38400 bps\n");
+    DBG(busnumber, DBG_INFO, "Changing baudrate to 38400 bps\n");
     sendString = "B38400";
-    writeString( busnumber, sendString, 0 );
+    writeString( busnumber, (unsigned char *)sendString, 0 );
     break;
   }
   byte2send = 0x0d;
@@ -1373,12 +1382,12 @@ static int resetBaudrate( const speed_t speed, const int busnumber )
 static int switchOffP50Command( const int busnumber )
 {
   unsigned char byte2send;
-  unsigned char *sendString = "xZzA1";
+  char *sendString = "xZzA1";
   int status;
 
-  printf("Switching off P50-commands\n");
-
-  writeString( busnumber, sendString, 0 );
+  DBG(busnumber, DBG_INFO, "Switching off P50-commands\n" );
+  
+  writeString( busnumber, (unsigned char *)sendString, 0 );
   byte2send = 0x0d;
   writeByte( busnumber, byte2send, 0 );
 
@@ -1427,7 +1436,7 @@ static int readAnswer_IB( const int busnumber, const int generatePrintf )
     return -1;
   if ( generatePrintf > 0 )
   {
-    printf("IBox returned: %s\n", input );
+    DBG(busnumber, DBG_INFO, "IBox returned: %s\n", input );
   }
   return 0;
 }

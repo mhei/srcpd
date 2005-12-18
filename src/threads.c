@@ -88,7 +88,7 @@ void* thr_handlePort(void *v)
   struct sockaddr_in sin;
   struct sockaddr_in fsin;
   struct sockaddr *saddr, *fsaddr;
-  int socklen, fsocklen;
+  socklen_t socklen, fsocklen;
   int sock_opt;
 
 #ifdef ENABLE_IPV6

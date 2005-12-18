@@ -125,57 +125,57 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 
   while (child)
   {
-    if (strncmp(child->name, "text", 4) == 0)
+    if (xmlStrncmp(child->name, (const xmlChar *) "text", 4) == 0)
     {
       child = child->next;
       continue;
     }
-    if (strcmp(child->name, "ioport") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "ioport") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __ddl_s88->port = strtol(txt, (char **) NULL, 0);  // better than atoi(3)
       free(txt);
     }
-    if (strcmp(child->name, "clockscale") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "clockscale") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __ddl_s88->clockscale = atoi(txt);
       free(txt);
     }
-    if (strcmp(child->name, "refresh") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "refresh") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __ddl_s88->refresh = atoi(txt);
       free(txt);
     }
-    if (strcmp(child->name, "p_time") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "p_time") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
      set_min_time(busnumber, atoi(txt));
       free(txt);
     }
 
-    if (strcmp(child->name, "number_fb_1") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "number_fb_1") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __ddl_s88->number_fb[0] = atoi(txt);
       free(txt);
     }
-    if (strcmp(child->name, "number_fb_2") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "number_fb_2") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __ddl_s88->number_fb[1] = atoi(txt);
       free(txt);
     }
-    if (strcmp(child->name, "number_fb_3") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "number_fb_3") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __ddl_s88->number_fb[2] = atoi(txt);
       free(txt);
     }
-    if (strcmp(child->name, "number_fb_4") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "number_fb_4") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __ddl_s88->number_fb[3] = atoi(txt);
       free(txt);
     }

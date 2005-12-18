@@ -47,39 +47,39 @@ int readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 
   while (child)
   {
-    if (strncmp(child->name, "text", 4) == 0)
+    if (xmlStrncmp(child->name, (const xmlChar *) "text", 4) == 0)
     {
       child = child -> next;
       continue;
     }
-    if (strcmp(child->name, "refresh") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "refresh") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __hsi->refresh = atoi(txt);
       free(txt);
     }
-    if (strcmp(child->name, "p_time") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "p_time") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       set_min_time(busnumber, atoi(txt));
       free(txt);
     }
 
-    if (strcmp(child->name, "number_fb_left") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "number_fb_left") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __hsi->number_fb[0] = atoi(txt);
       free(txt);
     }
-    if (strcmp(child->name, "number_fb_center") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "number_fb_center") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __hsi->number_fb[1] = atoi(txt);
       free(txt);
     }
-    if (strcmp(child->name, "number_fb_right") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "number_fb_right") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __hsi->number_fb[2] = atoi(txt);
       free(txt);
     }
