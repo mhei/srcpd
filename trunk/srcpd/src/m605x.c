@@ -16,7 +16,7 @@
 
 
 /* Die Konfiguration des seriellen Ports von M6050emu (D. Schaefer)   */
-/* wenngleich etwas verändert, mea culpa..                            */
+/* wenngleich etwas verï¿½ndert, mea culpa..                            */
 
 #include "stdincludes.h"
 #include "config-srcpd.h"
@@ -57,65 +57,65 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 
   while (child)
   {
-    if(strncmp(child->name, "text", 4)==0)
+    if (xmlStrncmp(child->name, (const xmlChar *) "text", 4) == 0)
     {
       child = child -> next;
       continue;
     }
 
-    if (strcmp(child->name, "number_fb") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "number_fb") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __m6051->number_fb = atoi(txt);
       free(txt);
     }
 
-    if (strcmp(child->name, "number_gl") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "number_gl") == 0)
     {
       char *txt =
-      xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __m6051->number_gl = atoi(txt);
       free(txt);
     }
-    if (strcmp(child->name, "number_ga") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "number_ga") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __m6051->number_ga = atoi(txt);
       free(txt);
     }
-    if (strcmp(child->name, "mode_m6020") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "mode_m6020") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       if (strcmp(txt, "yes") == 0)
       {
         __m6051->flags |= M6020_MODE;
       }
       free(txt);
     }
-    if (strcmp(child->name, "p_time") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "p_time") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
      set_min_time(busnumber, atoi(txt));
       free(txt);
     }
 
-    if (strcmp(child->name, "ga_min_activetime") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "ga_min_activetime") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __m6051->ga_min_active_time =  atoi(txt);
       free(txt);
     }
 
-    if (strcmp(child->name, "pause_between_commands") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "pause_between_commands") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __m6051->pause_between_cmd = atoi(txt);
       free(txt);
     }
 
-    if (strcmp(child->name, "pause_between_bytes") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "pause_between_bytes") == 0)
     {
-      char *txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __m6051->pause_between_bytes = atoi(txt);
       free(txt);
     }
@@ -299,7 +299,7 @@ void* thr_sendrec_M6051(void *v)
           gltmp.speed = 0;
           gltmp.direction = !glakt.direction;
         }
-        /* Vorwärts/Rückwärts */
+        /* forward/backward */
         if (gltmp.direction != glakt.direction)
         {
           c = 15 + 16 * ((gltmp.funcs & 0x10) ? 1 : 0);
@@ -340,7 +340,7 @@ void* thr_sendrec_M6051(void *v)
         {
           gatmp.activetime = (gatmp.activetime > ga_min_active_time) ?
                         ga_min_active_time : gatmp.activetime;
-          gatmp.action = 0;  // nächste Aktion ist automatisches Aus
+          gatmp.action = 0;  // nï¿½chste Aktion ist automatisches Aus
         }
         else
         {

@@ -79,7 +79,7 @@
 #include <sys/termio.h>
 #warning Your system only supports termio instead of termios. Prepare of a major rewrite of some parts of the code
 #else
-#error Your system neither has termio or termios. You are on your own.
+#error "Your system neither has termio or termios. You are on your own."
 #endif
 #endif
 

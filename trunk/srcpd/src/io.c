@@ -73,7 +73,7 @@ void writeByte(int bus, unsigned char b, unsigned long msecs)
 
 void writeString(int bus, unsigned char *s, unsigned long msecs)
 {
-  int l = strlen(s);
+  int l = strlen((char*)s);
   int i;
   for(i=0; i<l;i++) {
     writeByte(bus, s[i], msecs);

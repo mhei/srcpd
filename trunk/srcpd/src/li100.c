@@ -72,40 +72,46 @@ int readConfig_LI100( xmlDocPtr doc, xmlNodePtr node, int busnumber )
 
   while ( child )
   {
-    if ( strcmp( child->name, "number_fb" ) == 0 )
+    //if ( strcmp( child->name, "number_fb" ) == 0 )
+    if (xmlStrcmp(child->name, (const xmlChar *) "number_fb") == 0)
     {
-      char * txt = xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
+      char * txt = (char*)(void*)xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
       __li100->number_fb = atoi( txt );
       free( txt );
     }
 
-    if ( strcmp( child->name, "number_gl" ) == 0 )
+    //if ( strcmp( child->name, "number_gl" ) == 0 )
+    if (xmlStrcmp(child->name, (const xmlChar *) "number_gl") == 0)
     {
-      char * txt = xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
+      char * txt = (char*)(void*)xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
       __li100->number_gl = atoi( txt );
       free( txt );
     }
-    if ( strcmp( child->name, "number_ga" ) == 0 )
+    //if ( strcmp( child->name, "number_ga" ) == 0 )
+    if (xmlStrcmp(child->name, (const xmlChar *) "bumber_ga") == 0)
     {
-      char * txt = xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
+      char * txt = (char*)(void*)xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
       __li100->number_ga = atoi( txt );
       free( txt );
     }
-    if ( strcmp( child->name, "number_sm" ) == 0 )
+    //if ( strcmp( child->name, "number_sm" ) == 0 )
+    if (xmlStrcmp(child->name, (const xmlChar *) "number_sm") == 0)
     {
-      char * txt = xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
+      char * txt = (char*)(void*)xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
       busses[ busnumber ].numberOfSM = atoi( txt );
       free( txt );
     }
-    if ( strcmp( child->name, "p_time" ) == 0 )
+    //if ( strcmp( child->name, "p_time" ) == 0 )
+    if (xmlStrcmp(child->name, (const xmlChar *) "p_time") == 0)
     {
-      char * txt = xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
+      char * txt = (char*)(void*)xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
       set_min_time( busnumber, atoi( txt ) );
       free( txt );
     }
-    if ( strcmp( child->name, "baudrate" ) == 0 )
+    //if ( strcmp( child->name, "baudrate" ) == 0 )
+    if (xmlStrcmp(child->name, (const xmlChar *) "baudrate") == 0)
     {
-      char * txt = xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
+      char * txt = (char*)(void*)xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
       if ( strcmp( txt, "9600" ) == 0 )
         busses[ busnumber ].baudrate = B9600;
       if ( strcmp( txt, "19200" ) == 0 )
@@ -1259,19 +1265,19 @@ static int initLine_LI100( int busnumber )
   switch ( busses[ busnumber ].baudrate )
   {
     case B9600:
-      strcpy( byte2send, "9600" );
+      strcpy( (char*)byte2send, "9600" );
       break;
     case B19200:
-      strcpy( byte2send, "19200" );
+      strcpy( (char*)byte2send, "19200" );
       break;
     case B38400:
-      strcpy( byte2send, "38400" );
+      strcpy( (char*)byte2send, "38400" );
       break;
     case B57600:
-      strcpy( byte2send, "57600" );
+      strcpy( (char*)byte2send, "57600" );
       break;
     default:
-      strcpy( byte2send, "9600" );
+      strcpy( (char*)byte2send, "9600" );
       break;
   }
   printf("try opening serial line %s for %s baud\n", name, byte2send );
