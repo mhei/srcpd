@@ -266,8 +266,8 @@ int init_bus_S88(int busnumber)
   // is the port disabled from user, everything is fine
   if (!S88PORT)
   {
-        DBG(busnumber, DBG_INFO, "   s88 port is disabled.");
-    return 1;
+      DBG(busnumber, DBG_INFO, "s88 port is disabled.");
+      return 1;
   }
   // test, whether S88DEV is a valid io-address for a parallel device
   for (i = 0; i < LPT_NUM; i++)
@@ -294,27 +294,27 @@ int init_bus_S88(int busnumber)
       }
       else
       {
-            DBG(busnumber, DBG_WARN, "   warning: There is no port for s88 at 0x%X.",
-           S88PORT);
-        ioperm(S88PORT, 3, 0);  // stopping access to port address
-        return 1;
+          DBG(busnumber, DBG_WARN, "warning: There is no port for s88 at 0x%X.",
+                  S88PORT);
+          ioperm(S88PORT, 3, 0);  // stopping access to port address
+          return 1;
       }
     }
     else
     {
-          DBG(busnumber, DBG_ERROR, "   warning: Access to port 0x%X denied.",
-       S88PORT);
-      return 1;
+        DBG(busnumber, DBG_ERROR, "warning: Access to port 0x%X denied.",
+                S88PORT);
+        return 1;
     }
   }
   else
   {
-        DBG(busnumber, DBG_WARN, "   warning: 0x%X is not valid port adress for s88 device.",
-      S88PORT);
-    return 1;
+      DBG(busnumber, DBG_WARN, "warning: 0x%X is not valid port adress for s88 device.",
+              S88PORT);
+      return 1;
   }
-      DBG(busnumber, DBG_INFO, "   s88 port sucsessfully initialized at 0x%X.",
-     S88PORT);
+  DBG(busnumber, DBG_INFO, "s88 port sucsessfully initialized at 0x%X.",
+          S88PORT);
   return 0;
 }
 
