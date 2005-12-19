@@ -38,108 +38,128 @@
 
 int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
-  xmlNodePtr child = node->children;
-  busses[busnumber].type = SERVER_M605X;
-  busses[busnumber].init_func = &init_bus_M6051;
-  busses[busnumber].term_func = &term_bus_M6051;
-  busses[busnumber].thr_func = &thr_sendrec_M6051;
-  busses[busnumber].init_gl_func = &init_gl_M6051;
-  busses[busnumber].init_ga_func = &init_ga_M6051;
-  busses[busnumber].driverdata = malloc(sizeof(struct _M6051_DATA));
-  busses[busnumber].flags |= FB_16_PORTS;
-  __m6051->number_fb = 0;  /* max 31 */
-  __m6051->number_ga = 256;
-  __m6051->number_gl = 80;
-  __m6051->ga_min_active_time = 75;
-  __m6051->pause_between_cmd = 200;
-  __m6051->pause_between_bytes = 2;
-  strcpy(busses[busnumber].description, "GA GL FB POWER LOCK DESCRIPTION");
+    busses[busnumber].type = SERVER_M605X;
+    busses[busnumber].init_func = &init_bus_M6051;
+    busses[busnumber].term_func = &term_bus_M6051;
+    busses[busnumber].thr_func = &thr_sendrec_M6051;
+    busses[busnumber].init_gl_func = &init_gl_M6051;
+    busses[busnumber].init_ga_func = &init_ga_M6051;
+    busses[busnumber].driverdata = malloc(sizeof(struct _M6051_DATA));
+    busses[busnumber].flags |= FB_16_PORTS;
+    __m6051->number_fb = 0;  /* max 31 */
+    __m6051->number_ga = 256;
+    __m6051->number_gl = 80;
+    __m6051->ga_min_active_time = 75;
+    __m6051->pause_between_cmd = 200;
+    __m6051->pause_between_bytes = 2;
+    strcpy(busses[busnumber].description, "GA GL FB POWER LOCK DESCRIPTION");
 
-  while (child)
-  {
-    if (xmlStrncmp(child->name, (const xmlChar *) "text", 4) == 0)
+    xmlNodePtr child = node->children;
+    xmlChar *txt = NULL;
+
+    while (child)
     {
-      child = child -> next;
-      continue;
+        if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0)
+        {
+            child = child -> next;
+            continue;
+        }
+
+        if (xmlStrcmp(child->name, BAD_CAST "number_fb") == 0)
+        {
+            txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+            if (txt != NULL) {
+                __m6051->number_fb = atoi((char*) txt);
+                xmlFree(txt);
+            }
+        }
+
+        if (xmlStrcmp(child->name, BAD_CAST "number_gl") == 0)
+        {
+            txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+            if (txt != NULL) {
+                __m6051->number_gl = atoi((char*) txt);
+                xmlFree(txt);
+            }
+        }
+
+        if (xmlStrcmp(child->name, BAD_CAST "number_ga") == 0)
+        {
+            txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+            if (txt != NULL) {
+                __m6051->number_ga = atoi((char*) txt);
+                xmlFree(txt);
+            }
+        }
+
+        if (xmlStrcmp(child->name, BAD_CAST "mode_m6020") == 0)
+        {
+            txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+            if (txt != NULL) {
+                if (xmlStrcmp(txt, BAD_CAST "yes") == 0)
+                    __m6051->flags |= M6020_MODE;
+                xmlFree(txt);
+            }
+        }
+
+        if (xmlStrcmp(child->name, BAD_CAST "p_time") == 0)
+        {
+            txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+            if (txt != NULL) {
+                set_min_time(busnumber, atoi((char*) txt));
+                xmlFree(txt);
+            }
+        }
+
+        if (xmlStrcmp(child->name, BAD_CAST "ga_min_activetime") == 0)
+        {
+            txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+            if (txt != NULL) {
+                __m6051->ga_min_active_time =  atoi((char*) txt);
+                xmlFree(txt);
+            }
+        }
+
+        if (xmlStrcmp(child->name, BAD_CAST "pause_between_commands") == 0)
+        {
+            txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+            if (txt != NULL) {
+                __m6051->pause_between_cmd = atoi((char*) txt);
+                xmlFree(txt);
+            }
+        }
+
+        if (xmlStrcmp(child->name, BAD_CAST "pause_between_bytes") == 0)
+        {
+            txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+            if (txt != NULL) {
+                __m6051->pause_between_bytes = atoi((char*) txt);
+                xmlFree(txt);
+            }
+        }
+
+        child = child->next;
     }
 
-    if (xmlStrcmp(child->name, (const xmlChar *) "number_fb") == 0)
+    if (init_GA(busnumber, __m6051->number_ga))
     {
-      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      __m6051->number_fb = atoi(txt);
-      free(txt);
+        __m6051->number_ga = 0;
+        DBG(busnumber, DBG_ERROR, "Can't create array for assesoirs");
     }
 
-    if (xmlStrcmp(child->name, (const xmlChar *) "number_gl") == 0)
+    if (init_GL(busnumber, __m6051->number_gl))
     {
-      char *txt =
-      (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      __m6051->number_gl = atoi(txt);
-      free(txt);
-    }
-    if (xmlStrcmp(child->name, (const xmlChar *) "number_ga") == 0)
-    {
-      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      __m6051->number_ga = atoi(txt);
-      free(txt);
-    }
-    if (xmlStrcmp(child->name, (const xmlChar *) "mode_m6020") == 0)
-    {
-      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      if (strcmp(txt, "yes") == 0)
-      {
-        __m6051->flags |= M6020_MODE;
-      }
-      free(txt);
-    }
-    if (xmlStrcmp(child->name, (const xmlChar *) "p_time") == 0)
-    {
-      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-     set_min_time(busnumber, atoi(txt));
-      free(txt);
+        __m6051->number_gl = 0;
+        DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
     }
 
-    if (xmlStrcmp(child->name, (const xmlChar *) "ga_min_activetime") == 0)
+    if (init_FB(busnumber, __m6051->number_fb*16))
     {
-      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      __m6051->ga_min_active_time =  atoi(txt);
-      free(txt);
+        __m6051->number_fb = 0;
+        DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
     }
 
-    if (xmlStrcmp(child->name, (const xmlChar *) "pause_between_commands") == 0)
-    {
-      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      __m6051->pause_between_cmd = atoi(txt);
-      free(txt);
-    }
-
-    if (xmlStrcmp(child->name, (const xmlChar *) "pause_between_bytes") == 0)
-    {
-      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      __m6051->pause_between_bytes = atoi(txt);
-      free(txt);
-    }
-
-    child = child->next;
-  }
-
-  if(init_GA(busnumber, __m6051->number_ga))
-  {
-    __m6051->number_ga = 0;
-    DBG(busnumber, DBG_ERROR, "Can't create array for assesoirs");
-  }
-
-  if(init_GL(busnumber, __m6051->number_gl))
-  {
-    __m6051->number_gl = 0;
-    DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
-  }
-  if(init_FB(busnumber, __m6051->number_fb*16))
-  {
-    __m6051->number_fb = 0;
-    DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
-  }
-  return 1;
+    return 1;
 }
 
 

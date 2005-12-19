@@ -934,7 +934,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     {
         txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
         if (txt != NULL) {
-            __DDL->RI_CHECK = (xmlStrcmp(txt, "yes") == 0) ? TRUE:FALSE;
+            __DDL->RI_CHECK = (xmlStrcmp(txt, BAD_CAST "yes") == 0) ? TRUE:FALSE;
             xmlFree(txt);
         }
     }
@@ -943,7 +943,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     {
         txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
         if (txt != NULL) {
-            __DDL->CHECKSHORT = (xmlStrcmp(txt, "yes") == 0) ? TRUE:FALSE;
+            __DDL->CHECKSHORT = (xmlStrcmp(txt, BAD_CAST "yes") == 0) ? TRUE:FALSE;
             xmlFree(txt);
         }
     }
@@ -959,7 +959,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, int busnumber)
     {
         txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
         if (txt != NULL) {
-            if (strcmp(txt, "yes") == 0)
+            if (xmlStrcmp(txt, BAD_CAST "yes") == 0)
                 __DDL->ENABLED_PROTOCOLS |= EP_MAERKLIN;
             else
                 __DDL->ENABLED_PROTOCOLS &= ~EP_MAERKLIN;

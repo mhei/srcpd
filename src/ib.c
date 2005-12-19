@@ -59,8 +59,7 @@ static int resetBaudrate( const speed_t speed, const int busnumber );
 
 int readConfig_IB( xmlDocPtr doc, xmlNodePtr node, int busnumber )
 {
-  xmlNodePtr child = node->children;
-  DBG( busnumber, DBG_INFO, "reading configuration for intellibox at bus %d", busnumber);
+  DBG(busnumber, DBG_INFO, "reading configuration for intellibox at bus %d", busnumber);
 
   busses[ busnumber ].type = SERVER_IB;
   busses[ busnumber ].init_func = &init_bus_IB;
@@ -77,41 +76,51 @@ int readConfig_IB( xmlDocPtr doc, xmlNodePtr node, int busnumber )
   __ib->number_ga = 256;
   __ib->number_gl = 80;
 
-  while ( child )
+  xmlNodePtr child = node->children;
+  xmlChar *txt = NULL;
+  
+  while (child)
   {
-    //if ( strcmp( child->name, "number_fb" ) == 0 )
-    if (xmlStrcmp(child->name, (const xmlChar *) "number_fb") == 0)
+    if (xmlStrcmp(child->name, BAD_CAST "number_fb") == 0)
     {
-      char * txt = (char *)(void *)xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
-      __ib->number_fb = atoi( txt );
-      free( txt );
+        txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+        if (txt != NULL) {
+            __ib->number_fb = atoi((char*) txt);
+            xmlFree(txt);
+        }
     }
 
-    //if ( strcmp( child->name, "number_gl" ) == 0 )
-    if (xmlStrcmp(child->name, (const xmlChar *) "number_gl") == 0)
+    if (xmlStrcmp(child->name, BAD_CAST "number_gl") == 0)
     {
-      char * txt = (char *)(void *)xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
-      __ib->number_gl = atoi( txt );
-      free( txt );
+        txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+        if (txt != NULL) {
+            __ib->number_gl = atoi((char*) txt);
+            xmlFree(txt);
+        }
     }
-    //if ( strcmp( child->name, "number_ga" ) == 0 )
-    if (xmlStrcmp(child->name, (const xmlChar *) "number_ga") == 0)
+
+    if (xmlStrcmp(child->name, BAD_CAST "number_ga") == 0)
     {
-      char * txt = (char *)(void *)xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
-      __ib->number_ga = atoi( txt );
-      free( txt );
+        txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+        if (txt != NULL) {
+            __ib->number_ga = atoi((char*) txt);
+            xmlFree(txt);
+        }
     }
-    //if ( strcmp( child->name, "p_time" ) == 0 )
-    if (xmlStrcmp(child->name, (const xmlChar *) "p_time") == 0)
+
+    if (xmlStrcmp(child->name, BAD_CAST "p_time") == 0)
     {
-      char * txt = (char *)(void *)xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
-      set_min_time( busnumber, atoi( txt ) );
-      free( txt );
+        txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+        if (txt != NULL) {
+            set_min_time(busnumber, atoi((char*) txt));
+            xmlFree(txt);
+        }
     }
 
     child = child->next;
   }
-  return (1);
+
+  return(1);
 }
 
 int cmpTime( struct timeval *t1, struct timeval *t2 )
@@ -135,6 +144,7 @@ int cmpTime( struct timeval *t1, struct timeval *t2 )
   }
   return result;
 }
+
 /**
  * initGL: modifies the gl data used to initialize the device
  * this is called whenever a new loco comes in town...
@@ -146,6 +156,7 @@ int init_gl_IB( struct _GLSTATE *gl )
   gl -> protocol = 'P';
   return SRCP_OK;
 }
+
 /**
  * initGA: modifies the ga data used to initialize the device
 

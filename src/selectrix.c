@@ -59,72 +59,90 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 	__selectrix->number_fb= SXmax;
 	__selectrix->flags= 0;
 	__selectrix->number_adres = SXmax;
-	for (i= 0; i< SXmax; i++)
+        
+	for (i = 0; i < SXmax; i++)
 	{
 		__selectrix->bus_data[i]= 0;         /* Set all outputs to 0 */
 		__selectrix->fb_adresses[i]= 255;    /* Set invalid adresses */
 	}
+        
 	strcpy(busses[busnumber].description, "GA GL FB POWER LOCK DESCRIPTION");
 
 	xmlNodePtr child = node->children;
-	while (child)
-	{
-        if (xmlStrncmp(child->name, (const xmlChar *) "text", 4) == 0)
-		{
-			child= child->next;
-			continue;
-		}
-        if (xmlStrcmp(child->name, (const xmlChar *) "number_fb") == 0)
-		{
-			char *txt= (char *)(void *)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-			__selectrix->number_fb = atoi(txt);
-			free(txt);
-		}
-		
-        if (xmlStrcmp(child->name, (const xmlChar *) "number_gl") == 0)
-		{
-			char *txt= (char *)(void *)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-			__selectrix->number_gl = atoi(txt);
-			free(txt);
-		}
-        if (xmlStrcmp(child->name, (const xmlChar *) "number_ga") == 0)
-		{
-			char *txt = (char *)(void *)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-			__selectrix->number_ga = atoi(txt);
-			free(txt);
-		}
-//		if (strcmp(child->name, "mode_cc2000") == 0)
-        if (xmlStrcmp(child->name, (const xmlChar *) "mode_cc2000") == 0)
-		{
-			char *txt = (char *)(void *)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-			if (strcmp(txt, "yes") == 0)
-			{
-				__selectrix->flags |= CC2000_MODE;
-				__selectrix->number_adres = SXcc2000;     /* Last 8 adresses for the CC2000 */
-				__selectrix->number_gl= SXcc2000;
-				__selectrix->number_ga= SXcc2000;
-				__selectrix->number_fb= SXcc2000;	
-				strcpy(busses[busnumber].description, "GA GL FB SM POWER LOCK DESCRIPTION");
-			}
-			free(txt);
-		}
-		child = child->next;
-	}
-	if(init_GL(busnumber, __selectrix->number_gl))
+        xmlChar *txt = NULL;
+
+        while (child)
+        {
+            if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0)
+            {
+                child = child->next;
+                continue;
+            }
+
+            if (xmlStrcmp(child->name, BAD_CAST "number_fb") == 0)
+            {
+                txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+                if (txt != NULL) {
+                    __selectrix->number_fb = atoi((char*) txt);
+                    xmlFree(txt);
+                }
+            }
+
+            if (xmlStrcmp(child->name, BAD_CAST "number_gl") == 0)
+            {
+                txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+                if (txt != NULL) {
+                    __selectrix->number_gl = atoi((char*) txt);
+                    xmlFree(txt);
+                }
+            }
+
+            if (xmlStrcmp(child->name, BAD_CAST "number_ga") == 0)
+            {
+                txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+                if (txt != NULL) {
+                    __selectrix->number_ga = atoi((char*) txt);
+                    xmlFree(txt);
+                }
+            }
+
+            if (xmlStrcmp(child->name, BAD_CAST "mode_cc2000") == 0)
+            {
+                txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+                if (txt != NULL) {
+                    if (xmlStrcmp(txt, BAD_CAST "yes") == 0)
+                    {
+                        __selectrix->flags |= CC2000_MODE;
+                        __selectrix->number_adres = SXcc2000;     /* Last 8 adresses for the CC2000 */
+                        __selectrix->number_gl= SXcc2000;
+                        __selectrix->number_ga= SXcc2000;
+                        __selectrix->number_fb= SXcc2000;	
+                        strcpy(busses[busnumber].description, "GA GL FB SM POWER LOCK DESCRIPTION");
+                    }
+                    xmlFree(txt);
+                }
+            }
+            child = child->next;
+        }
+        
+	if (init_GL(busnumber, __selectrix->number_gl))
 	{
 		__selectrix->number_gl= 0;
 		DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
 	}
-	if(init_GA(busnumber, __selectrix->number_ga))
+        
+	if (init_GA(busnumber, __selectrix->number_ga))
 	{
 		__selectrix->number_ga= 0;
 		DBG(busnumber, DBG_ERROR, "Can't create array for assesoirs");
 	}
-	if(init_FB(busnumber, __selectrix->number_fb* 8))
+        
+	if (init_FB(busnumber, __selectrix->number_fb* 8))
 	{
 		__selectrix->number_fb= 0;
 		DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
 	}
+
 	return 1;
 }
 

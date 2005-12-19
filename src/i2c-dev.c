@@ -203,8 +203,6 @@ static int handle_i2c_set_ga(int bus, struct _GASTATE *gatmp)
 
 int readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
-  xmlNodePtr child = node->children;
-
   busses[busnumber].type = SERVER_I2C_DEV;
   busses[busnumber].init_func = &init_bus_I2C_DEV;
   busses[busnumber].term_func = &term_bus_I2C_DEV;
@@ -218,46 +216,52 @@ int readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   __i2cdev->ga_reset_devices = 1;
   __i2cdev->ga_min_active_time = 75;
 
+  xmlNodePtr child = node->children;
+  xmlChar *txt = NULL;
+
   while (child) {
-    if (xmlStrncmp(child->name, (const xmlChar *) "text", 4) == 0) {
+
+    if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) {
       child = child->next;
       continue;
     }
 
     /*
-    //if (strcmp(child->name, "number_gl") == 0) {
-    if (xmlStrcmp(child->name, (const xmlChar *) "number_gl") == 0) {
-      char *txt =
-      (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      __i2cdev->number_gl = atoi(txt);
-      free(txt);
+    if (xmlStrcmp(child->name, BAD_CAST "number_gl") == 0) {
+        txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+        if (txt != NULL) {
+            __i2cdev->number_gl = atoi((char*) txt);
+            xmlFree(txt);
+        }
     }
     */
 
-    if (xmlStrcmp(child->name, (const xmlChar *) "multiplex_busses") == 0) {
-      char *txt =
-      (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      __i2cdev->multiplex_busses = atoi(txt);
-      free(txt);
+    if (xmlStrcmp(child->name, BAD_CAST "multiplex_busses") == 0) {
+        txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+        if (txt != NULL) {
+            __i2cdev->multiplex_busses = atoi((char*) txt);
+            xmlFree(txt);
+        }
     }
 
-    if (xmlStrcmp(child->name, (const xmlChar *) "ga_hardware_inverters") == 0) {
-      char *txt =
-      (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      __i2cdev->ga_hardware_inverters = atoi(txt);
-      free(txt);
+    if (xmlStrcmp(child->name, BAD_CAST "ga_hardware_inverters") == 0) {
+        txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+        if (txt != NULL) {
+            __i2cdev->ga_hardware_inverters = atoi((char*) txt);
+            xmlFree(txt);
+        }
     }
 
-    if (xmlStrcmp(child->name, (const xmlChar *) "ga_reset_device") == 0) {
-      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      __i2cdev->ga_reset_devices = atoi(txt);
-      free(txt);
+    if (xmlStrcmp(child->name, BAD_CAST "ga_reset_device") == 0) {
+        txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+        if (txt != NULL) {
+            __i2cdev->ga_reset_devices = atoi((char*) txt);
+            xmlFree(txt);
+        }
     }
-
 
     child = child->next;
-  }       // while
-
+  }
 
   // init the stuff
 
@@ -335,9 +339,7 @@ void reset_ga(int busnumber, int busfd) {
     }
 
     select_bus(0, busfd, busnumber);
-
   }
-
 }
 
 void select_bus(int mult_busnum, int busfd, int busnumber) {
@@ -353,7 +355,6 @@ void select_bus(int mult_busnum, int busfd, int busnumber) {
   write_PCF8574(busnumber, (addr >> 1), value);
 /*  ioctl(busfd, I2C_SLAVE, (addr >> 1));
   writeByte(busnumber, value, 1);*/
-
 }
 
 int term_bus_I2C_DEV(int bus)

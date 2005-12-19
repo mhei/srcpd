@@ -54,8 +54,6 @@ int readanswer(int bus, char cmd, char* buf, int maxbuflen, long timeout_ms){
 
 int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
-  xmlNodePtr child = node->children;
-
   busses[busnumber].type = SERVER_ZIMO;
   busses[busnumber].init_func = &init_bus_zimo;
   busses[busnumber].term_func = &term_bus_zimo;
@@ -67,49 +65,61 @@ int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   __zimo->number_ga = 256;
   __zimo->number_gl = 80;
 
+  xmlNodePtr child = node->children;
+  xmlChar *txt = NULL;
+
   while (child)
   {
-    if (xmlStrncmp(child->name, (const xmlChar *) "text", 4) == 0)
+    if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0)
     {
       child = child -> next;
       continue;
     }
 
-    if (xmlStrcmp(child->name, (const xmlChar *) "number_fb") == 0)
+    if (xmlStrcmp(child->name, BAD_CAST "number_fb") == 0)
     {
-      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      __zimo->number_fb = atoi(txt);
-      free(txt);
+        txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+        if (txt != NULL) {
+            __zimo->number_fb = atoi((char*) txt);
+            xmlFree(txt);
+        }
     }
-    if (xmlStrcmp(child->name, (const xmlChar *) "p_time") == 0)
+    if (xmlStrcmp(child->name, BAD_CAST "p_time") == 0)
     {
-      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-     set_min_time(busnumber, atoi(txt));
-      free(txt);
+        txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+        if (txt != NULL) {
+            set_min_time(busnumber, atoi((char*) txt));
+            xmlFree(txt);
+        }
     }
 
-    if (xmlStrcmp(child->name, (const xmlChar *) "number_gl") == 0)
+    if (xmlStrcmp(child->name, BAD_CAST "number_gl") == 0)
     {
-      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      __zimo->number_gl = atoi(txt);
-      free(txt);
+        txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+        if (txt != NULL) {
+            __zimo->number_gl = atoi((char*) txt);
+            xmlFree(txt);
+        }
     }
-    if (xmlStrcmp(child->name, (const xmlChar *) "number_ga") == 0)
+    if (xmlStrcmp(child->name, BAD_CAST "number_ga") == 0)
     {
-      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      __zimo->number_ga = atoi(txt);
-      free(txt);
+        txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+        if (txt != NULL) {
+            __zimo->number_ga = atoi((char*) txt);
+            xmlFree(txt);
+        }
     }
+
     child = child -> next;
   } // while
 
-  if(init_GL(busnumber, __zimo->number_gl))
+  if (init_GL(busnumber, __zimo->number_gl))
   {
     __zimo->number_gl = 0;
     DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
   }
 
-  if(init_GA(busnumber, __zimo->number_ga))
+  if (init_GA(busnumber, __zimo->number_ga))
   {
     __zimo->number_ga = 0;
     DBG(busnumber, DBG_ERROR, "Can't create array for accessoires");
