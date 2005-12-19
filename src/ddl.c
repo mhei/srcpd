@@ -990,7 +990,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, int busnumber)
       free(txt);
     }
 
-    if (xmlStrcmp(child->name, (const xmlChar *) "enable_ulseep_patch") == 0)
+    if (xmlStrcmp(child->name, (const xmlChar *) "enable_usleep_patch") == 0)
     {
       char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
       __DDL->WAITUART_USLEEP_PATCH = (strcmp(txt, "yes") == 0) ? TRUE:FALSE;
