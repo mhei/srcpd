@@ -62,7 +62,7 @@ void queue_init(int busnumber)
   error = pthread_mutex_init(&__DDL->queue_mutex, NULL);
   if (error)
   {
-    DBG(0, DBG_ERROR, "DDL Engine: cannot create mutex. Abort!");
+    DBG(0, DBG_ERROR, "DDL Engine: Cannot create mutex. Abort!");
     exit(1);
   }
   
@@ -163,7 +163,7 @@ int setSerialMode(int busnumber, int mode)
       {
         if (tcsetattr(busses[busnumber].fd,TCSANOW,&__DDL->maerklin_dev_termios)!=0)
         {
-          DBG(busnumber, DBG_ERROR, "   error setting serial device mode to marklin!");
+          DBG(busnumber, DBG_ERROR, "error setting serial device mode to marklin!");
           return -1;
         }
 #if linux
@@ -171,7 +171,7 @@ int setSerialMode(int busnumber, int mode)
         {
           if (set_customdivisor(busses[busnumber].fd, __DDL->serinfo_marklin)!=0)
           {
-            DBG(busnumber, DBG_ERROR, "   cannot set custom divisor for maerklin of serial device!");
+            DBG(busnumber, DBG_ERROR, "cannot set custom divisor for maerklin of serial device!");
             return -1;
           }
         }
@@ -184,7 +184,7 @@ int setSerialMode(int busnumber, int mode)
       {
         if (tcsetattr(busses[busnumber].fd,TCSANOW,&__DDL->nmra_dev_termios)!=0)
         {
-          DBG(busnumber, DBG_ERROR,"   error setting serial device mode to NMRA!");
+          DBG(busnumber, DBG_ERROR, "error setting serial device mode to NMRA!");
           return -1;
         }
 #if linux
@@ -192,7 +192,7 @@ int setSerialMode(int busnumber, int mode)
         {
           if (set_customdivisor(busses[busnumber].fd, __DDL->serinfo_nmradcc)!=0)
           {
-            DBG(busnumber, DBG_ERROR, "   cannot set custom divisor for nmra dcc of serial device!");
+            DBG(busnumber, DBG_ERROR, "cannot set custom divisor for nmra dcc of serial device!");
             return -1;
           }
         }
@@ -201,7 +201,7 @@ int setSerialMode(int busnumber, int mode)
       }
       break;
     default:
-      DBG(busnumber, DBG_ERROR,"   error setting serial device to unknown mode!");
+      DBG(busnumber, DBG_ERROR, "error setting serial device to unknown mode!");
       return -1;
   }
   return 0;
@@ -217,14 +217,14 @@ int init_lineDDL(int busnumber)
   dev = open(busses[busnumber].device, O_WRONLY);            /* open comport                 */
   if (dev<0)
   {
-    DBG(busnumber, DBG_FATAL, "   device %s can not be opened for writing. Abort!", busses[busnumber].device);
+    DBG(busnumber, DBG_FATAL, "device %s can not be opened for writing. Abort!", busses[busnumber].device);
     exit (1);                             /* theres no chance to continue */
   }
   
 #if linux
   if (reset_customdivisor(dev)!=0)
   {
-    DBG(busnumber, DBG_FATAL, "   error initializing device %s. Abort!", busses[busnumber].device);
+    DBG(busnumber, DBG_FATAL, "error initializing device %s. Abort!", busses[busnumber].device);
     exit(1);
   }
 #endif
@@ -234,12 +234,12 @@ int init_lineDDL(int busnumber)
   
   if (tcgetattr(dev, &__DDL->maerklin_dev_termios)!=0)
   {
-    DBG(busnumber, DBG_FATAL, "   error initializing device %s. Abort!", busses[busnumber].device);
+    DBG(busnumber, DBG_FATAL, "error initializing device %s. Abort!", busses[busnumber].device);
     exit(1);
   }
   if (tcgetattr(dev, &__DDL->nmra_dev_termios)!=0)
   {
-    DBG(busnumber, DBG_FATAL, "   error initializing device %s. Abort!", busses[busnumber].device);
+    DBG(busnumber, DBG_FATAL, "error initializing device %s. Abort!", busses[busnumber].device);
     exit(1);
   }
   
@@ -276,12 +276,12 @@ int init_lineDDL(int busnumber)
   {
     if (init_serinfo(dev,3,&__DDL->serinfo_marklin)!=0)
     {
-      DBG(busnumber, DBG_FATAL, "   error initializing device %s. Abort!", busses[busnumber].device);
+      DBG(busnumber, DBG_FATAL, "error initializing device %s. Abort!", busses[busnumber].device);
       exit(1);
     }
     if (init_serinfo(dev,7,&__DDL->serinfo_nmradcc)!=0)
     {
-      DBG(busnumber, DBG_FATAL, "   error initializing device %s. Abort!",  busses[busnumber].device);
+      DBG(busnumber, DBG_FATAL, "error initializing device %s. Abort!",  busses[busnumber].device);
       exit(1);
     }
   }
@@ -290,7 +290,7 @@ int init_lineDDL(int busnumber)
   /* setting serial device to default mode */
   if (!setSerialMode(busnumber,SDM_DEFAULT)==0)
   {
-    DBG(busnumber, DBG_FATAL, "   error initializing device %s. Abort!", busses[busnumber].device);
+    DBG(busnumber, DBG_FATAL, "error initializing device %s. Abort!", busses[busnumber].device);
     exit(1);
   }
   
@@ -488,14 +488,14 @@ int checkRingIndicator(int busnumber)
   {
     if (arg&TIOCM_RI)
     {
-      DBG(busnumber, DBG_INFO, "   ring indicator alert. power on tracks stopped!");
+      DBG(busnumber, DBG_INFO, "ring indicator alert. Power on tracks stopped!");
       return 1;
     }
   return 0;
   }
   else
   {
-    DBG(busnumber, DBG_ERROR, "   ioctl() call failed. power on tracks stopped!");
+    DBG(busnumber, DBG_ERROR, "ioctl() call failed. Power on tracks stopped!");
     return 1;
   }
 }
@@ -520,7 +520,7 @@ int checkShortcut(int busnumber)
       short_now=tv_shortcut.tv_sec*1000000+tv_shortcut.tv_usec;
       if (__DDL->SHORTCUTDELAY<=(short_now-__DDL->short_detected))
       {
-        DBG(busnumber, DBG_INFO, "   shortcut detected. power on tracks stopped!");
+        DBG(busnumber, DBG_INFO, "shortcut detected. Power on tracks stopped!");
         return 1;
       }
     }
@@ -532,7 +532,7 @@ int checkShortcut(int busnumber)
   }
   else
   {
-    DBG(busnumber, DBG_INFO, "   ioctl() call failed. power on tracks stopped!");
+    DBG(busnumber, DBG_INFO, "ioctl() call failed. Power on tracks stopped!");
     return 1;
   }
   return 0;
@@ -708,7 +708,7 @@ void set_SerialLine(int busnumber, int line, int mode)
     result = ioctl(busses[busnumber].fd, TIOCMSET, &arg);
   }
   if (result<0)
-    DBG(busnumber, DBG_ERROR, "   ioctl() call failed. Serial line not set! (%d: %d)", line, mode);
+    DBG(busnumber, DBG_ERROR, "ioctl() call failed. Serial line not set! (%d: %d)", line, mode);
 }
 
 /* ************************************************ */
@@ -1067,7 +1067,7 @@ int term_bus_DDL(int busnumber)
 /* return code wird ignoriert (vorerst) */
 int init_bus_DDL(int busnumber)
 {
-  DBG(busnumber, DBG_INFO,"DDL init: bus #%d, debug %d", busnumber, busses[busnumber].debuglevel);
+  DBG(busnumber, DBG_INFO, "DDL init with debug level %d", busses[busnumber].debuglevel);
   int i, error;
 
   busses[busnumber].fd = init_lineDDL(busnumber);
@@ -1103,7 +1103,7 @@ int init_bus_DDL(int busnumber)
   /* Starting the thread that is responsible for the signals on the serial port. */
   error = pthread_create(&(__DDL->ptid), NULL,  thr_refresh_cycle, (void*) busnumber);
   if (error) {
-    DBG(busnumber, DBG_FATAL,"cannot create thread: refresh_cycle. Abort!");
+    DBG(busnumber, DBG_FATAL, "cannot create thread: refresh_cycle. Abort!");
     exit(1);
   }
 
@@ -1118,7 +1118,7 @@ void* thr_sendrec_DDL (void *v)
   int addr;
   int busnumber = (int) v;
 
-  DBG(busnumber, DBG_INFO, "DDL started, bus #%d, %s", busnumber, busses[busnumber].device);
+  DBG(busnumber, DBG_INFO, "DDL started on device %s", busses[busnumber].device);
 
   busses[busnumber].watchdog = 1;
 
