@@ -51,8 +51,7 @@ void get_status_sm_LI100( int busnumber );
 
 int readConfig_LI100( xmlDocPtr doc, xmlNodePtr node, int busnumber )
 {
-  xmlNodePtr child = node->children;
-  DBG( busnumber, DBG_INFO, "reading configuration for LI100 at bus %d", busnumber );
+  DBG(busnumber, DBG_INFO, "reading configuration for LI100 at bus %d", busnumber);
 
   busses[ busnumber ].type = SERVER_LI100;
   busses[ busnumber ].init_func = &init_bus_LI100;
@@ -70,61 +69,78 @@ int readConfig_LI100( xmlDocPtr doc, xmlNodePtr node, int busnumber )
   __li100->number_ga = 256;
   __li100->number_gl = 99;
 
-  while ( child )
+  xmlNodePtr child = node->children;
+  xmlChar *txt = NULL;
+  
+  while (child)
   {
-    //if ( strcmp( child->name, "number_fb" ) == 0 )
-    if (xmlStrcmp(child->name, (const xmlChar *) "number_fb") == 0)
+    if (xmlStrcmp(child->name, BAD_CAST "number_fb") == 0)
     {
-      char * txt = (char*)(void*)xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
-      __li100->number_fb = atoi( txt );
-      free( txt );
+        txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+        if (txt != NULL) {
+            __li100->number_fb = atoi((char*) txt);
+            xmlFree(txt);
+        }
     }
 
-    //if ( strcmp( child->name, "number_gl" ) == 0 )
-    if (xmlStrcmp(child->name, (const xmlChar *) "number_gl") == 0)
+    if (xmlStrcmp(child->name, BAD_CAST "number_gl") == 0)
     {
-      char * txt = (char*)(void*)xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
-      __li100->number_gl = atoi( txt );
-      free( txt );
+        txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+        if (txt != NULL) {
+            __li100->number_gl = atoi((char*) txt);
+            xmlFree(txt);
+        }
     }
-    //if ( strcmp( child->name, "number_ga" ) == 0 )
-    if (xmlStrcmp(child->name, (const xmlChar *) "bumber_ga") == 0)
+
+    if (xmlStrcmp(child->name, BAD_CAST "bumber_ga") == 0)
     {
-      char * txt = (char*)(void*)xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
-      __li100->number_ga = atoi( txt );
-      free( txt );
+        txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+        if (txt != NULL) {
+            __li100->number_ga = atoi((char*) txt);
+            xmlFree(txt);
+        }
     }
-    //if ( strcmp( child->name, "number_sm" ) == 0 )
-    if (xmlStrcmp(child->name, (const xmlChar *) "number_sm") == 0)
+
+    if (xmlStrcmp(child->name, BAD_CAST "number_sm") == 0)
     {
-      char * txt = (char*)(void*)xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
-      busses[ busnumber ].numberOfSM = atoi( txt );
-      free( txt );
+        txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+        if (txt != NULL) {
+            busses[ busnumber ].numberOfSM = atoi((char*) txt);
+            xmlFree(txt);
+        }
     }
-    //if ( strcmp( child->name, "p_time" ) == 0 )
-    if (xmlStrcmp(child->name, (const xmlChar *) "p_time") == 0)
+
+    if (xmlStrcmp(child->name, BAD_CAST "p_time") == 0)
     {
-      char * txt = (char*)(void*)xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
-      set_min_time( busnumber, atoi( txt ) );
-      free( txt );
+        txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+        if (txt != NULL) {
+            set_min_time( busnumber, atoi((char*) txt));
+            xmlFree(txt);
+        }
     }
-    //if ( strcmp( child->name, "baudrate" ) == 0 )
-    if (xmlStrcmp(child->name, (const xmlChar *) "baudrate") == 0)
+
+    if (xmlStrcmp(child->name, BAD_CAST "baudrate") == 0)
     {
-      char * txt = (char*)(void*)xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
-      if ( strcmp( txt, "9600" ) == 0 )
-        busses[ busnumber ].baudrate = B9600;
-      if ( strcmp( txt, "19200" ) == 0 )
-        busses[ busnumber ].baudrate = B19200;
-      if ( strcmp( txt, "38400" ) == 0 )
-        busses[ busnumber ].baudrate = B38400;
-      if ( strcmp( txt, "57600" ) == 0 )
-        busses[ busnumber ].baudrate = B57600;
+        txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+        if (txt != NULL) {
+            if (xmlStrcmp(txt, BAD_CAST "9600") == 0)
+                busses[busnumber].baudrate = B9600;
+            else if (xmlStrcmp(txt, BAD_CAST "19200") == 0)
+                busses[busnumber].baudrate = B19200;
+            else if (xmlStrcmp(txt, BAD_CAST "38400") == 0)
+                busses[busnumber].baudrate = B38400;
+            else if (xmlStrcmp(txt, BAD_CAST "57600") == 0)
+                busses[busnumber].baudrate = B57600;
+
+            xmlFree(txt);
+        }
     }
+
     child = child->next;
   }
-  return ( 1 );
+  return (1);
 }
+
 /**
  * initGL: modifies the gl data used to initialize the device
  * this is called whenever a new loco comes in town...

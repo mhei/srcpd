@@ -20,7 +20,6 @@ int server_shutdown_state;
 
 int readconfig_server(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
-  xmlNodePtr child = node->children;
   DBG(busnumber, DBG_INFO, "bus %d starting configuration child %s", busnumber, node->name);
   busses[0].type = SERVER_SERVER;
   busses[0].init_func = &init_bus_server;
@@ -35,64 +34,83 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   __srv->username = NULL;
   __srv->listenip = NULL;
 
+  xmlNodePtr child = node->children;
+  xmlChar *txt = NULL;
+  
   while (child)
   {
-    if (xmlStrncmp(child->name, (const xmlChar *) "text", 4) == 0)
-    {
-      child = child -> next;
-      continue;
-    }
-    if (xmlStrcmp(child->name, (const xmlChar *) "tcp-port") == 0)
-    {
-      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      __srv->TCPPORT = atoi(txt);
-      free(txt);
-    }
-    if (xmlStrcmp(child->name, (const xmlChar *) "listen-ip") == 0)
-    {
-      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      free(__srv->listenip);
-      __srv->listenip = malloc(strlen(txt) + 1);
-      strcpy(__srv->listenip, txt);
-      DBG(busnumber, DBG_INFO, "listen-ip: %s", txt);
-      free(txt);
-    }
+      if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0)
+      {
+          child = child -> next;
+          continue;
+      }
 
-    if (xmlStrcmp(child->name, (const xmlChar *) "pid-file") == 0)
-    {
-      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      strncpy(__srv->PIDFILE, txt, MAXPATHLEN-2);
-      __srv->PIDFILE[MAXPATHLEN-1] = 0x00;
-      free(txt);
-    }
-    if (xmlStrcmp(child->name, (const xmlChar *) "username") == 0)
-    {
-      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      free(__srv->username);
-      __srv->username = malloc(strlen(txt) + 1);
-      if (__srv->username == NULL)
+      if (xmlStrcmp(child->name, BAD_CAST "tcp-port") == 0)
       {
-        printf("Cannot allocate memory\n");
-        exit(1);
+          txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+          if (txt != NULL) {
+              __srv->TCPPORT = atoi((char*) txt);
+              xmlFree(txt);
+          }
       }
-      strcpy(__srv->username, txt);
-      free(txt);
-    }
-    if (xmlStrcmp(child->name, (const xmlChar *) "groupname") == 0)
-    {
-      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      free(__srv->groupname);
-      __srv->groupname = malloc(strlen(txt) + 1);
-      if (__srv->groupname == NULL)
+
+      if (xmlStrcmp(child->name, BAD_CAST "listen-ip") == 0)
       {
-        printf("Cannot allocate memory\n");
-        exit(1);
+          txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+          if (txt != NULL) {
+              xmlFree(__srv->listenip);
+              __srv->listenip = malloc(strlen((char*) txt) + 1);
+              strcpy(__srv->listenip, (char*) txt);
+              DBG(busnumber, DBG_INFO, "listen-ip: %s", txt);
+              xmlFree(txt);
+          }
       }
-      strcpy(__srv->groupname, txt);
-      free(txt);
-    }
-    child = child->next;
-  } /* while */
+
+      if (xmlStrcmp(child->name, BAD_CAST "pid-file") == 0)
+      {
+          txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+          if (txt != NULL) {
+              strncpy(__srv->PIDFILE, (char*) txt, MAXPATHLEN-2);
+              __srv->PIDFILE[MAXPATHLEN-1] = 0x00;
+              xmlFree(txt);
+          }
+      }
+
+      if (xmlStrcmp(child->name, BAD_CAST "username") == 0)
+      {
+          txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+          if (txt != NULL) {
+              xmlFree(__srv->username);
+              __srv->username = malloc(strlen((char*) txt) + 1);
+              if (__srv->username == NULL)
+              {
+                  printf("Cannot allocate memory\n");
+                  exit(1);
+              }
+              strcpy(__srv->username, (char*) txt);
+              xmlFree(txt);
+          }
+      }
+
+      if (xmlStrcmp(child->name, BAD_CAST "groupname") == 0)
+      {
+          txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+          if (txt != NULL) {
+              xmlFree(__srv->groupname);
+              __srv->groupname = malloc(strlen((char*) txt) + 1);
+              if (__srv->groupname == NULL)
+              {
+                  printf("Cannot allocate memory\n");
+                  exit(1);
+              }
+              strcpy(__srv->groupname, (char*) txt);
+              xmlFree(txt);
+          }
+      }
+
+      child = child->next;
+  }
+
   return(1);
 }
 

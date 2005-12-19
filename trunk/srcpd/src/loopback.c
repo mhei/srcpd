@@ -21,8 +21,6 @@
 
 int readconfig_loopback(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
-  xmlNodePtr child = node->children;
-
   busses[busnumber].type = SERVER_LOOPBACK;
   busses[busnumber].init_func = &init_bus_Loopback;
   busses[busnumber].term_func = &term_bus_Loopback;
@@ -37,34 +35,44 @@ int readconfig_loopback(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   __loopback->number_ga = 256;
   __loopback->number_gl = 80;
 
+  xmlNodePtr child = node->children;
+  xmlChar *txt = NULL;
+
   while (child)
   {
-    if (xmlStrncmp(child->name, (const xmlChar *) "text", 4) == 0)
-    {
-      child = child -> next;
-      continue;
+      if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0)
+      {
+          child = child->next;
+          continue;
+      }
+
+      if (xmlStrcmp(child->name, BAD_CAST "number_fb") == 0)
+      {
+          txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+          if (txt != NULL) {
+              __loopback->number_fb = atoi((char*) txt);
+              xmlFree(txt);
+          }
+      }
+      if (xmlStrcmp(child->name, BAD_CAST "number_gl") == 0)
+      {
+          txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+          if (txt != NULL) {
+              __loopback->number_gl = atoi((char*) txt);
+              xmlFree(txt);
+          }
+      }
+      if (xmlStrcmp(child->name, BAD_CAST "number_ga") == 0)
+      {
+          txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+          if (txt != NULL) {
+              __loopback->number_ga = atoi((char*) txt);
+              xmlFree(txt);
+          }
     }
 
-    if (xmlStrcmp(child->name, (const xmlChar *) "number_fb") == 0)
-    {
-      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      __loopback->number_fb = atoi(txt);
-      free(txt);
-    }
-    if (xmlStrcmp(child->name, (const xmlChar *) "number_gl") == 0)
-    {
-      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      __loopback->number_gl = atoi(txt);
-      free(txt);
-    }
-    if (xmlStrcmp(child->name, (const xmlChar *) "number_ga") == 0)
-    {
-      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      __loopback->number_ga = atoi(txt);
-      free(txt);
-    }
-    child = child -> next;
-  } // while
+    child = child->next;
+  }
 
   if(init_GL(busnumber, __loopback->number_gl))
   {

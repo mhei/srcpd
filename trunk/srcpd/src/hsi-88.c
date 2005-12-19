@@ -30,8 +30,6 @@ int readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
   int number;
 
-  xmlNodePtr child = node->children;
-
   busses[busnumber].type = SERVER_HSI_88;
   busses[busnumber].init_func = &init_bus_HSI_88;
   busses[busnumber].term_func = &term_bus_HSI_88;
@@ -45,44 +43,62 @@ int readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   __hsi->number_fb[1] = 0;
   __hsi->number_fb[2] = 0;
 
+  xmlNodePtr child = node->children;
+  xmlChar *txt = NULL;
+
   while (child)
   {
-    if (xmlStrncmp(child->name, (const xmlChar *) "text", 4) == 0)
+    if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0)
     {
-      child = child -> next;
+      child = child->next;
       continue;
     }
-    if (xmlStrcmp(child->name, (const xmlChar *) "refresh") == 0)
+    
+    if (xmlStrcmp(child->name, BAD_CAST "refresh") == 0)
     {
-      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      __hsi->refresh = atoi(txt);
-      free(txt);
+        txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+        if (txt != NULL) {
+            __hsi->refresh = atoi((char*) txt);
+            xmlFree(txt);
+        }
     }
-    if (xmlStrcmp(child->name, (const xmlChar *) "p_time") == 0)
+    
+    if (xmlStrcmp(child->name, BAD_CAST "p_time") == 0)
     {
-      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      set_min_time(busnumber, atoi(txt));
-      free(txt);
+        txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+        if (txt != NULL) {
+            set_min_time(busnumber, atoi((char*) txt));
+            xmlFree(txt);
+        }
     }
 
-    if (xmlStrcmp(child->name, (const xmlChar *) "number_fb_left") == 0)
+    if (xmlStrcmp(child->name, BAD_CAST "number_fb_left") == 0)
     {
-      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      __hsi->number_fb[0] = atoi(txt);
-      free(txt);
+        txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+        if (txt != NULL) {
+            __hsi->number_fb[0] = atoi((char*) txt);
+            xmlFree(txt);
+        }
     }
-    if (xmlStrcmp(child->name, (const xmlChar *) "number_fb_center") == 0)
+    
+    if (xmlStrcmp(child->name, BAD_CAST "number_fb_center") == 0)
     {
-      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      __hsi->number_fb[1] = atoi(txt);
-      free(txt);
+        txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+        if (txt != NULL) {
+            __hsi->number_fb[1] = atoi((char*) txt);
+            xmlFree(txt);
+        }
     }
-    if (xmlStrcmp(child->name, (const xmlChar *) "number_fb_right") == 0)
+
+    if (xmlStrcmp(child->name, BAD_CAST "number_fb_right") == 0)
     {
-      char *txt = (char*)(void*)xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-      __hsi->number_fb[2] = atoi(txt);
-      free(txt);
+        txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+        if (txt != NULL) {
+            __hsi->number_fb[2] = atoi((char*) txt);
+            xmlFree(txt);
+        }
     }
+
     child = child->next;
   }
 
@@ -90,13 +106,15 @@ int readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   number  = __hsi->number_fb[0];
   number += __hsi->number_fb[1];
   number += __hsi->number_fb[2];
-  if(init_FB(busnumber, number * 16))
+  
+  if (init_FB(busnumber, number * 16))
   {
     __hsi->number_fb[0] = 0;
     __hsi->number_fb[1] = 0;
     __hsi->number_fb[2] = 0;
     DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
   }
+
   return(1);
 }
 
@@ -137,7 +155,7 @@ static int init_lineHSI88(int busnumber, int modules_left, int modules_center, i
 
   sleep(1);
   byte2send = 0x0d;
-  for(i=0;i<10;i++)
+  for (i=0;i<10;i++)
     writeByte(busnumber, byte2send, 500);
 
   while(readByte(busnumber, 0, &rr) == 0)
