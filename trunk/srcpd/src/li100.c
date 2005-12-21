@@ -92,7 +92,7 @@ int readConfig_LI100( xmlDocPtr doc, xmlNodePtr node, int busnumber )
         }
     }
 
-    if (xmlStrcmp(child->name, BAD_CAST "bumber_ga") == 0)
+    if (xmlStrcmp(child->name, BAD_CAST "number_ga") == 0)
     {
         txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
         if (txt != NULL) {
