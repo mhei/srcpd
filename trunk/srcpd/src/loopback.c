@@ -94,7 +94,7 @@ int readconfig_loopback(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   return(1);
 }
 
-int init_lineLoopback (char *name)
+static int init_lineLoopback (int bus)
 {
   int FD;
   FD = -1;
@@ -117,7 +117,7 @@ int init_gl_Loopback(struct _GLSTATE *gl) {
 	case 'P':
 	    return SRCP_OK;
 	    break;
-	case 'M':
+	case 'M': 
 	  switch(gl->protocolversion) {
 	    case 1:
 		return ( gl -> n_fs == 14) ? SRCP_OK : SRCP_WRONGVALUE;
@@ -127,7 +127,7 @@ int init_gl_Loopback(struct _GLSTATE *gl) {
 		         (gl -> n_fs == 27) ||
 			 (gl -> n_fs == 28) ) ? SRCP_OK : SRCP_WRONGVALUE;
 		break;
-    	  }
+	  }
 	  return SRCP_WRONGVALUE;
           break;
 	case 'N':
@@ -166,7 +166,7 @@ int init_bus_Loopback(int i)
   if(busses[i].debuglevel==0)
   {
    DBG(i, DBG_INFO, "loopback bus %d open device %s (not really!)", i, busses[i].device);
-    busses[i].fd = init_lineLoopback(busses[i].device);
+    busses[i].fd = init_lineLoopback(i);
   }
   else
   {
