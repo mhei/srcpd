@@ -10,7 +10,6 @@ typedef struct _LOOPBACK_DATA {
 } LOOPBACK_DATA;
 
 int readconfig_loopback(xmlDocPtr doc, xmlNodePtr node, int busnumber);
-int init_lineLoopback(char *);
 int init_bus_Loopback(int );
 int term_bus_Loopback(int );
 int init_gl_Loopback(struct _GLSTATE *);
