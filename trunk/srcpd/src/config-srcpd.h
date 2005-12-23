@@ -38,6 +38,7 @@
 #define SERVER_I2C_DEV          8         // srcpd-bus works as I2C-DEV-server
 #define SERVER_ZIMO             9         // srcpd-bus works as Zimo MX1
 #define SERVER_SELECTRIX       10	  // srcpd-bus works as Selectrix-server
+#define SERVER_LOCONET         11	  // srcpd-bus works as Loconet Gateway
 
 /* generic flags */
 #define USE_WATCHDOG          0x0001      // use watchdog

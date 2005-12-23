@@ -25,6 +25,7 @@
 #include "i2c-dev.h"
 #include "zimo.h"
 #include "li100.h"
+#include "loconet.h"
 
 /* Willkommensmeldung */
 const char *WELCOME_MSG = "srcpd V" VERSION "; SRCP 0.8.2\n";
@@ -136,6 +137,12 @@ static int register_bus(int busnumber, xmlDocPtr doc, xmlNodePtr node)
          busnumber += readConfig_IB(doc, child, busnumber);
          found = 1;
      }
+
+     if (xmlStrcmp(child->name, BAD_CAST "loconet") == 0)
+     {
+         busnumber += readConfig_LOCONET(doc, child, busnumber);
+         found = 1;
+     }
      
      if (xmlStrcmp(child->name, BAD_CAST "loopback") == 0)
      {
@@ -243,6 +250,9 @@ static int register_bus(int busnumber, xmlDocPtr doc, xmlNodePtr node)
              default:
                  busses[current_bus].baudrate = B2400;
                  break;
+	    case 57600:
+	         busses[current_bus].baudrate = B57600;
+    		 break;
          }
      }
      
