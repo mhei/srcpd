@@ -118,24 +118,6 @@ int readConfig_LI100( xmlDocPtr doc, xmlNodePtr node, int busnumber )
             xmlFree(txt);
         }
     }
-
-    if (xmlStrcmp(child->name, BAD_CAST "baudrate") == 0)
-    {
-        txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-        if (txt != NULL) {
-            if (xmlStrcmp(txt, BAD_CAST "9600") == 0)
-                busses[busnumber].baudrate = B9600;
-            else if (xmlStrcmp(txt, BAD_CAST "19200") == 0)
-                busses[busnumber].baudrate = B19200;
-            else if (xmlStrcmp(txt, BAD_CAST "38400") == 0)
-                busses[busnumber].baudrate = B38400;
-            else if (xmlStrcmp(txt, BAD_CAST "57600") == 0)
-                busses[busnumber].baudrate = B57600;
-
-            xmlFree(txt);
-        }
-    }
-
     child = child->next;
   }
   return (1);
