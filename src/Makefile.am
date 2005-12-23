@@ -14,6 +14,7 @@ srcpd_SOURCES = config-srcpd.c config-srcpd.h \
 	ib.c ib.h \
 	io.c io.h \
 	li100.c li100.h \
+	loconet.c loconet.h \
 	loopback.c loopback.h \
 	m605x.c m605x.h \
 	netserver.c netserver.h \
