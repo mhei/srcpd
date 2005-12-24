@@ -4,6 +4,7 @@
 #define _LOCONET_H
 
 typedef struct _LOCONET_DATA {
+    int number_fb;
 } LOCONET_DATA;
 
 int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, int busnumber);
