@@ -11,7 +11,7 @@ URL: http://srcpd.sourceforge.net/
 Prefix: /usr
 Buildroot: %{_tmppath}/%{name}-%{version}-buildroot
 Provides: srcpd
-# if you use the LSB compliant init.d script, add "insserv" here:
+# if you use the LSB compliant init.d script, add "redhat-lsb" here:
 Requires: libxml2
 BuildRequires: libxml2-devel
 
@@ -42,10 +42,9 @@ install -d $RPM_BUILD_ROOT%{_sysconfdir}/init.d
 
 make DESTDIR=$RPM_BUILD_ROOT install
 
-# to use the LSB compliant init.d script change "init.d.suse" to
+# to use the LSB compliant init.d script change "init.d.redhat" to
 # "init.d.lsb":
-install -m 744 init.d.suse $RPM_BUILD_ROOT%{_sysconfdir}/init.d/%{name}
-ln -s %{_sysconfdir}/init.d/%{name} $RPM_BUILD_ROOT%{_sbindir}/rcsrcpd
+install -m 755 init.d.redhat $RPM_BUILD_ROOT%{_sysconfdir}/init.d/%{name}
 
 %clean
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
@@ -66,7 +65,6 @@ fi
 %files
 %defattr(-,root,root)
 %{_sbindir}/%{name}
-%{_sbindir}/rcsrcpd
 %{_sysconfdir}/init.d/%{name}
 %docdir %{_mandir}/man8/*
 %{_mandir}/man8/*
@@ -75,6 +73,9 @@ fi
 %doc README.ibox README.freebsd README.selectrix TODO
 
 %changelog
+* Mon Dec 26 2005 Guido Scholz <guido.scholz@bayernline.de>
+- adaptation to redhat/fedora style
+
 * Sun Dec 11 2005 Guido Scholz <guido.scholz@bayernline.de>
 - dist tag added, hard coded packager removed
 
