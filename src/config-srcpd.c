@@ -247,12 +247,12 @@ static int register_bus(int busnumber, xmlDocPtr doc, xmlNodePtr node)
              case 38400:
                  busses[current_bus].baudrate = B38400;
                  break;
-             default:
-                 busses[current_bus].baudrate = B2400;
-                 break;
 	    case 57600:
 	         busses[current_bus].baudrate = B57600;
     		 break;
+             default:
+                 busses[current_bus].baudrate = B2400;
+                 break;
          }
      }
      
