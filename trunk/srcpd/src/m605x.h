@@ -12,7 +12,7 @@
 
 #include <libxml/tree.h>
 
-#define M6020_MODE            0x0001      //! Subtyp zum M605X
+#define M6020_MODE            0x0001    //! Subtyp zum M605X
 
 typedef struct _M6051_DATA {
     int number_fb;
@@ -33,6 +33,6 @@ int term_bus_M6051(int bus);
 int init_gl_M6051(struct _GLSTATE *gl);
 int init_ga_M6051(struct _GASTATE *ga);
 int getDescription_M6051(char *reply);
-void* thr_sendrec_M6051(void *);
+void *thr_sendrec_M6051(void *);
 
 #endif
