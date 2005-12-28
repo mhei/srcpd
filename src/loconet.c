@@ -19,6 +19,8 @@
 
 #define __loconet ((LOCONET_DATA*)busses[busnumber].driverdata)
 
+#define OPC_IDLE 0xb5
+
 static int init_gl_Loconet(struct _GLSTATE *);
 static int init_ga_Loconet(struct _GASTATE *);
 
@@ -70,6 +72,7 @@ static int init_lineLoconet (int bus)
   }
   busses[ bus ].fd = fd;
   tcgetattr( fd, &interface );
+
   interface.c_oflag = ONOCR;
   interface.c_cflag = CS8 | CRTSCTS | CSTOPB | CLOCAL | CREAD | HUPCL;
   interface.c_iflag = IGNBRK;
@@ -77,7 +80,8 @@ static int init_lineLoconet (int bus)
   cfsetispeed( &interface, busses[ bus ].baudrate );
   cfsetospeed( &interface, busses[ bus ].baudrate );
   interface.c_cc[ VMIN ] = 0;
-  interface.c_cc[ VTIME ] = 1;
+  interface.c_cc[ VTIME ] = 0;
+
   tcsetattr( fd, TCSANOW, &interface );
   return 1;
 }
@@ -123,7 +127,17 @@ int init_bus_Loconet(int i)
   return 0;
 }
 
-static int ln_read(int fd, unsigned char *cmd, int len) {
+static unsigned char ln_checksum(const unsigned char *cmd, int len) {
+    unsigned char chksum = 0xff; 
+    int i;
+    for(i = 0; i < len; i++) {
+        chksum ^= cmd[i];
+    }
+    return chksum;
+}
+
+static int ln_read(int bus, unsigned char *cmd, int len) {
+    int fd = busses[bus].fd;
     fd_set fds;
     struct timeval t = {0,0};
     int retval;
@@ -132,9 +146,8 @@ static int ln_read(int fd, unsigned char *cmd, int len) {
     retval = select(fd + 1, &fds, NULL, NULL, &t);
     if (retval > 0 && FD_ISSET(fd, &fds))	{
 	/* read data from locobuffer */
-	int total, pktlen;
+	int pktlen;
 	unsigned char c;
-	ioctl(fd, FIONREAD, &total);
 	/* read exactly one loconet packet; there must be at least one
 	   character due to select call result */
 	/* a valid loconet packet starts with a byte >= 0x080
@@ -154,32 +167,32 @@ static int ln_read(int fd, unsigned char *cmd, int len) {
 	cmd[0] = c;
 	read(fd, &cmd[1], pktlen - 1);
 	retval = pktlen;
+	c = ln_checksum(cmd, pktlen - 1);
+        DBG(bus, DBG_DEBUG, "got loconet packet with OPC 0x%02x, %d bytes (Checksum 0x%02x <-> 0x%02x)", 
+	    cmd[0], pktlen, cmd[pktlen-1], c);
     }
     return retval;
 }
 
-static int ln_write(int fd, const char *cmd, int len) {
-    int i;
+
+static int ln_write(int bus, const unsigned char *cmd, unsigned char len) {
+    unsigned char i;
+    unsigned char chksum = 0;
     for(i=0; i<len; i++) {
-	writeByte(fd, cmd[i], 1);
+	writeByte(bus, cmd[i], 0);
+	chksum ^= cmd[i];
     }
+    DBG(bus, DBG_DEBUG, "wrote loconet packet with OPC 0x%02x, %d bytes (chksum 0x%02x must be 0xff)", 
+	cmd[0], len, chksum);
     return 0;
 }
 
-static int ln_checksum(int len, char *buf) {
-    int chksum = 0xff; 
-    int i;
-    for(i = 0; i < len; i++) {
-        chksum ^= buf[i];
-    }
-    return chksum;
-}
 
 void* thr_sendrec_Loconet (void *v)
 {
   int bus = (int) v;
   unsigned char ln_packet[128]; /* max length is coded with 7 bit */
-  int ln_packetlen=2;
+  unsigned char ln_packetlen=2;
   unsigned int addr;
   int value;
   
@@ -187,33 +200,37 @@ void* thr_sendrec_Loconet (void *v)
 
   while (1) {
     busses[bus].watchdog = 1;
-    if( (ln_packetlen = ln_read(busses[bus].fd, ln_packet, sizeof(ln_packet)))>0) {
+    memset(ln_packet, 0, sizeof(ln_packet));
+    if( (ln_packetlen = ln_read(bus, ln_packet, sizeof(ln_packet)))>0) {
 	/* process data packet from loconet*/
-	DBG(bus, DBG_DEBUG, "got ln packet with 0x%x OPC %d bytes", ln_packet[0], ln_packetlen);
 	switch (ln_packet[0]) {
 	    case 0xb2: /* OPC_INPUT_REP */
 		addr = ln_packet[1] | ((ln_packet[2] & 0xf) <<7);
 		addr = addr  | (((ln_packet[2] & 0x2) >>1) << 8);
 		value = (ln_packet[2] & 0x10) >> 4;
-		DBG(bus, DBG_DEBUG, "OPC_INPUT_REP: %d: %d", addr, value);
+		DBG(bus, DBG_DEBUG, "OPC_INPUT_REP ( 0xb2 0x%02x 0x%02x 0x%02x): %d: %d", ln_packet[1], ln_packet[2],ln_packet[3], addr, value);
 		updateFB(bus, addr, value);
 		break;
 	}
     }
+    ln_packet[0] = OPC_IDLE;
+    ln_packetlen = 2;
     if(busses[bus].power_changed==1) {
       char msg[110];
-      ln_packet[0] = 0x83 - busses[bus].power_state;
+      ln_packet[0] = 0x82 + busses[bus].power_state;
       ln_packetlen = 2;
       busses[bus].power_changed = 0;
       infoPower(bus, msg);
       queueInfoMessage(msg);
     }
+    ln_packet[ln_packetlen-1] = ln_checksum(ln_packet, ln_packetlen-1);
+    if( ln_packet[0] != OPC_IDLE) {
+	ln_write(bus, ln_packet, ln_packetlen);
+    }
     if(busses[bus].power_state==0) {
           usleep(1000);
           continue;
     }
-    ln_packet[ln_packetlen] = ln_checksum(ln_packetlen, ln_packet);
-    ln_write(busses[bus].fd, ln_packet, ln_packetlen);
     usleep(1000);
   }
 }
