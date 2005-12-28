@@ -124,12 +124,11 @@ void updateFB( int bus, int port, int value )
   // minimalize problems from contacts bitween track and train
   if ( fb[ bus ].fbstate[ port_t ].state != value )
   {
-    DBG(bus, DBG_DEBUG, "FB %02i/%03i  was gone to \"%i\"", bus, port, value);
+    DBG(bus, DBG_DEBUG, "FB %02i/%04i is set to \"%i\"", bus, port, value);
 
     gettimeofday( &akt_time, &dummy );
     if ( value == 0 )
     {
-      DBG(bus, DBG_DEBUG, "FB %02i/%03i  was gone to 0", bus, port );
       if ( min_time[ bus ] == 0 )
       {
         fb[ bus ].fbstate[ port_t ].state = value;
