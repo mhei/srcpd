@@ -396,13 +396,12 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
 
   if (bus_has_devicegroup(bus, DG_SM) && strncasecmp(device, "SM", 2) == 0)
   {
-    long /*addr, */value1, value2;
+    long addr, value1, value2;
     int type;
     char *ctype;
 
     ctype = malloc(MAXSRCPLINELEN);
-    sscanf(parameter, "%s %ld %ld", ctype, &value1, &value2);
-//    sscanf(parameter, "%ld %s %ld %ld", &addr, ctype, &value1, &value2);
+    sscanf(parameter, "%ld %s %ld %ld", &addr, ctype, &value1, &value2);
     type = CV;
     if (strcasecmp(ctype, "REG") == 0)
       type = REGISTER;
@@ -415,7 +414,7 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
     free(ctype);
     if (type != CV_BIT)
       value2 = 0;
-    rc = infoSM(bus, GET, type, -1 /*addr*/, value1, value2, 0, reply);
+    rc = infoSM(bus, GET, type, addr, value1, value2, 0, reply);
   }
 
   if (bus_has_devicegroup(bus, DG_POWER) &&strncasecmp(device, "POWER", 5) == 0)
