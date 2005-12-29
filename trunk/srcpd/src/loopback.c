@@ -19,14 +19,14 @@
 
 #define __loopback ((LOOPBACK_DATA*)busses[busnumber].driverdata)
 
-int readconfig_loopback(xmlDocPtr doc, xmlNodePtr node, int busnumber)
+int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 {
   busses[busnumber].type = SERVER_LOOPBACK;
-  busses[busnumber].init_func = &init_bus_Loopback;
-  busses[busnumber].term_func = &term_bus_Loopback;
-  busses[busnumber].thr_func = &thr_sendrec_Loopback;
-  busses[busnumber].init_gl_func = &init_gl_Loopback;
-  busses[busnumber].init_ga_func = &init_ga_Loopback;
+  busses[busnumber].init_func = &init_bus_LOOPBACK;
+  busses[busnumber].term_func = &term_bus_LOOPBACK;
+  busses[busnumber].thr_func = &thr_sendrec_LOOPBACK;
+  busses[busnumber].init_gl_func = &init_gl_LOOPBACK;
+  busses[busnumber].init_ga_func = &init_ga_LOOPBACK;
 
   busses[busnumber].driverdata = malloc(sizeof(struct _LOOPBACK_DATA));
   strcpy(busses[busnumber].description, "GA GL FB POWER LOCK DESCRIPTION");
@@ -101,7 +101,7 @@ static int init_lineLoopback (int bus)
   return FD;
 }
 
-int term_bus_Loopback(int bus)
+int term_bus_LOOPBACK(int bus)
 {
   DBG(bus, DBG_INFO, "loopback bus %d terminating", bus);
   return 0;
@@ -111,7 +111,7 @@ int term_bus_Loopback(int bus)
  * initGL: modifies the gl data used to initialize the device
 
  */
-int init_gl_Loopback(struct _GLSTATE *gl) {
+int init_gl_LOOPBACK(struct _GLSTATE *gl) {
     switch(gl->protocol) {
 	case 'L':
 	case 'P':
@@ -151,7 +151,7 @@ int init_gl_Loopback(struct _GLSTATE *gl) {
  * initGA: modifies the ga data used to initialize the device
 
  */
-int init_ga_Loopback(struct _GASTATE *ga) {
+int init_ga_LOOPBACK(struct _GASTATE *ga) {
   if( (ga -> protocol == 'M') ||  (ga -> protocol == 'N') ||  (ga -> protocol == 'P') )
       return SRCP_OK;
   return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
@@ -160,7 +160,7 @@ int init_ga_Loopback(struct _GASTATE *ga) {
 /* Initialisiere den Bus, signalisiere Fehler */
 /* Einmal aufgerufen mit busnummer als einzigem Parameter */
 /* return code wird ignoriert (vorerst) */
-int init_bus_Loopback(int i)
+int init_bus_LOOPBACK(int i)
 {
   DBG(i, DBG_INFO, "loopback init: bus #%d, debug %d", i, busses[i].debuglevel);
   if(busses[i].debuglevel==0)
@@ -176,7 +176,7 @@ int init_bus_Loopback(int i)
   return 0;
 }
 
-void* thr_sendrec_Loopback (void *v)
+void* thr_sendrec_LOOPBACK (void *v)
 {
   struct _GLSTATE gltmp, glakt;
   struct _GASTATE gatmp;

@@ -146,7 +146,7 @@ static int register_bus(int busnumber, xmlDocPtr doc, xmlNodePtr node)
      
      if (xmlStrcmp(child->name, BAD_CAST "loopback") == 0)
      {
-         busnumber += readconfig_loopback(doc, child, busnumber);
+         busnumber += readconfig_LOOPBACK(doc, child, busnumber);
          found = 1;
      }
      

@@ -1,73 +1,85 @@
 -*- text -*-
 
-Programmierung von srcpd Modulen
+Programming of modules for the srcpd
 
-Stand: 2005-10-12
+Stand: 2005-10-29
 
-0. Allgemeines
+0. Overview
 
-Alle srcpd Module müssen reentrant programmiert werden. Sie müssen
-davon ausgehen, das sie mehrfach mit unterschiedlicher Parametrierung
-vorkommen.
+All modules can be used multiply and in parallel. 
 
-Sie werden grundsätzlich statisch eingebunden. Eine configure-option
-gibt es (derzeit) nicht.
+All modules are included at compile time. An option
+to select them (e.g. via configure) is not available at
+this time.
 
-Die Initialisierung erfolgt ausschließlich über die Konfigurationsdatei
-(/etc/srcpd.conf). Das XML Format erfordert einige Disziplin, insbesondere
-bei der Wahl der Busbezeichner; und bei Leerzeichen/Leerzeilen.
+All configuration is done with the srcpd config file. The XML
+based format needs some discipline, e.g. with respect to spaces
+within busnames (developer task) and file/device names (user task).
 
-1. Initialisierung
+1. Startup
 
-Beim Parsen der Konfiguration wird je nach Bustyp (der in config-srcpd.*
-hinterlegt werden muß) eine Routine mit dem XML Teilbaum und der Busnummer
-aufgerufen. In dem globalen Array busses stehen für jeden Bus _seine_
-Datenbereiche. Insbesondere müssen dort Pointer auf folgende Funktionen
-hinterlegt werden:
+During the startup _the_ config file (compile time build in name or
+configurable with the -f option) is read. In the file config-srcpd.c
+the function register_bus() calls the hard coded functions from the
+respective busses with there DOM subtree and there effective bus number.
 
-- init_bus: Pendant zum SRCP INIT <bus>
-- term_bus: Pendant zum SRCP TERM <bus>
-- send_rec: Wird als Thread aufgerufen, der nicht terminiert und die
-   gesamte Kommunikation mit der konkreten Hardware abwickelt.
-- Descriptionstring mit den unterstützten Gerätegruppen
+This parsing route must initialize all data fields it's global
+busses array entry and analyse the XML DOM subtree. It should 
+provide useful default values.
 
-Hinzu kommen Hardwarespezifische Details, wie Gerätename, Anzahl der
-jeweils unterstützten Geräte etc.
+The framework expects the following call back function pointers to
+be set:
 
-Die Funktion register_bus() in config-srcpd.c muß entsprechend den bereits
-enthaltenen Modulen ergänzt werden.
+- init_bus: called as "SRCP INIT <bus>"
+- term_bus: called as "SRCP TERM <bus>"
+- send_rec: called as separate thread. That thread works as endless
+  loop to communicate with the real hardware (if any) 
+- string DESCRIPTION with all supported device groups.
 
-2. Initialisierung
+In addition all specific data such as device names etc.
 
-Wird vor dem Start des Threads aufgerufen. 
 
-3. Terminierung
+2. init_bus
 
-Wird nach Beendigung des Threads aufgerufen, um aufzuräumen.
+Is called before the (send_rec)() thread
 
-4. Thread
+3. term_bus
 
-Endlosschleife, die die zuständigen Queues abfragt und die anstehenden
-Ausgaben zur Hardware auszuführen. Daneben auch verantwortlich für das
-Einlesen der Hardwareangaben, um sie dem Framework zurückzumelden.
+Is called after canceling the (send_rec)() thread to cleanup
 
-Kann vom Wachhund überwacht werden, um Hänger zu erkennen. Dann wird
-der Thread gecancelt und neu gestartet. Eine Ausführung der TERM/INIT
-Sequenz ist dabei _nicht_ vorgesehen.
+4. send_rec
+
+endless loop to process the device queries to comminucate with
+hardware and read back information. It gets a single parameter:
+the bus number. The return type should be void*, it will be ignored
+by now.
+
+void* thr_sendrec_LOOPBACK (void *v)
+{
+  int bus = (int) v;
+
+
+Can be supervised by a watchdog to detect blocks. In this case
+the thread is canceled and restarted. Note that the init_bus/term_bus
+function are _not_ called.
 
 5. Watchdog
 
-Nicht jeder Thread braucht den. Wenn aktiviert, wird vom Masterthread
-laufend eine Variable watchdog im Array busses abgefragt. Steht diese
-auf 0, wird der Thread neu gestartet. Gleichfalls wird bei jeder Abfrage
-diese Variable auf 0 gesetzt. Es ist am Thread, diese ständig auf
-einen anderen Wert zu setzen.
+Not every module may need it. If active, the master process checks
+the variable watchdog in the busses-array and sets it to 0 (zero).
+If the value found _is_ already 0 (zero) the rend_rec thread is restarted.
+A syslog message is generated.
+
+The send_rec thread has to set this watchdog variable constantly to
+a value greater than 0.
 
 6. Debugging
 
-Debugging der bestehenden Threads erfolgt via DBG() anstelle von
-printf(). Hierbei ist der Vebositylevel zu beachten. Vordefinierte
-Werte sind
+Debugging within the srcpd may be tricky dou the potentially many
+threads and the lack of a console. To assist _please_ do not use
+even temporarily such constructs. Use the function DBG() instead.
+
+This function provides the following user selectable verbosity levels
 
 #define DGB_NONE 0
 #define DBG_FATAL 1
@@ -76,21 +88,19 @@ Werte sind
 #define DBG_INFO 4
 #define DBG_DEBUG 5
 
-Bei Werten größer 5 kann eine direkte Kommunikation mit der Hardware
-unterbleiben.
+A value greater than 5 can be used to disable communication with the
+hardware.
 
-7. Beispielcode
+7. Sample code
 
-Die Datei loopback.[ch] sind als Dummygeräte ohne wirklich Hardware
-und als Ausgangspunkt für eigene Entwicklungen geeignet.
+The module loopback (loopback.[hc]) can be used as a starting point
+to develop a new modules.
 
 8. Queues
 
-Jede Gerätegruppe hat auf jedem Bus eine eigene Queue, die von den
-SRCP Netzwerkroutinen gefüllt wird. 
-
-Sinnvoll ist die eigentlich nur bei GA und GL (m.E. FB). 
-Andere Gerätegruppen brauchen die nicht.
+Every device group provides it's own queue for every bus. These
+queues are filled from the srcp network code. The queues are simple
+first-in-first-out queues.
 
 if(!queue_GA_isempty(bus)) {
     unqueueNextGA(&ga);
@@ -98,64 +108,68 @@ if(!queue_GA_isempty(bus)) {
     setGA(ga)
 }
 
-Die Routine unqueueNextGA() (sinngemäß für die restlichen Gerätegruppen)
-liest den als nächstes auszuführende GA-Befehl aus und entfernt ihn aus
-der Queue. Die Queue ist eine simple First-In-First-Out Queue.
+The function unqueueNext<devicegroup>() unqueues the next command.
 
-Mit der Funktion getNextGA läßt sich der nächste Befehl auslesen, _ohne_
-ihn aus der Queue selbst zu entfernen.
+The function getNext<devicegroup> can be used to read the next command
+without remove it from the queue.
 
-setGA aktualisiert alle internen Daten und veranlasst das Kundtun auf
-den Infokanälen.
+The function set<devicegroup> updates the internal data and and sends
+the information to all INFORMATION sessions.
 
-9. Namenskonventionen
+9. Naming Convention
 
-9.1 Funktionsnamen
+9.1 Function Names
 
-Die Threads haben mit thr_ beginnende Funktionsnamen. Kommandos mit Bezug zum
-SRCP haben den betreffenden Bezug im Namen (GA, TERM). Funktionen, die nur im
-Modul selbst Sinn haben, werden static deklariert. Exportierte Funktionen haben
-grundsätzlich den Gerätenamen zu enthalten (z.B. readconfig_M6051 für das 6051 
-von Märklin)
+The thread function have names prefixed with thr_. Functions with relation with
+SRCP have the command name and the device group in there names (GA, TERM).
+Functions used internally by a module have to be declared static. Exported functions
+(those in the header file) have to contain the module name in uppercase.
+(e.g. readconfig_LOOPBACK for the loopback module)
 
-9.2 Busparameter
+9.2 Bus parameter
 
-Alle Funktionen werden vom Framework mit der wirksamen Busnummer aufgerufen.
-Damit lassen sich die busspezifischen Angaben auf dem busses[] Array auslesen.
+All functions are called with the current bus number. Any remaining
+data can be found in the array busses.
 
 9.3 busses-Array
 
-Der Array busses ist zum einen generisch, enthält aber einen Bustypspezifischen
-Datenteil. Der allg. Teil umfaßt die Pointer auf die Funktionen, allg Parameter
-(Watchdog, Description) und eine Typspezifikation. Hinzu kommt ein Pointer auf
-driverspezifische Daten, der auch NULL sein kann.
+The array busses contains all configuration and working data for the configured
+busses. It is currently declared as a static array with 20 entries (0..19).
 
-Es ist ein primitives OO Design (im Sinne von Klassenvererbung) damit verbunden.
+The data structure reflects the XML configuration structure. Commonly used
+data  such as pointer to the functions, watchdog, description string etc and
+the bus type is provided. Module specific data (such as data from the XML
+subtree) is provided as the (void*) pointer driverdata. This pointer _can_
+be NULL.
+
 
 10. SRCP Hacking
 
-Nur entsprechend der SRCP Spezifikation. Keine eigenmächtigen Veränderungen.
+Any changes to the SRCP MUST be in covered by the SRCP specification. No
+extensions.
 
-11. Andere Betriebssysteme
+11. Other Operating Systems
 
-Sollten nicht ignoriert werden. Linux (aktuell zudem) ist aber Schwerpunkt.
-Portabel geht aber vor genial. Ein 386er kann, muß aber nicht ausreichen.
+Currently the srcpd is very linux specific. Some modules can be used on
+other unixoid systems (FreeBSD is known to work). 
 
-OS, die wesentlich von Unix abweichen, kommen später; vielleicht.
+OSs which are very different from unix can be supported, but this
+will need the respective developer(s). Cygwin is currently on the
+way..
 
-FreeBSD ist zumindest teilweise (d.h. bei derjenigen Hardware, die nicht
-allzuweit vom PC angesiedelt ist) unterstützt
+12. Use of CVS
 
-12. CVS Benutzung.
+Every one is permitted to read (sourceforge updates the public
+cvs server with a delay of some hours!). The instructions to
+access can be found at http://sourceforge.net/projects/srcpd,
+topic CVS
 
-Lesen darf jeder. Anleitung findet sich auf 
-http://sourceforge.net/projects/srcpd, Rubrik CVS
-
-Das erste, was nach einem CVS-Checkout ansteht, ist ein
+After CVS checkout the first to do is a 
 
  autoreconf
 
-Damit wird das autoconf System initialisiert und steht für den configure-
-Lauf bereit.
+After that the usual ./configure && make && make install should do
+the work.
 
-Wer CVS Schreibrechte haben möchte, wende sich an den/die Projektbetreuer.
+Who wants to get write access (and immediate read without the delay)
+should contact the project admins. 

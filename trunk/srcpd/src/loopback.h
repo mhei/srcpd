@@ -9,12 +9,12 @@ typedef struct _LOOPBACK_DATA {
     int number_fb;
 } LOOPBACK_DATA;
 
-int readconfig_loopback(xmlDocPtr doc, xmlNodePtr node, int busnumber);
-int init_bus_Loopback(int );
-int term_bus_Loopback(int );
-int init_gl_Loopback(struct _GLSTATE *);
-int init_ga_Loopback(struct _GASTATE *);
+int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, int busnumber);
+int init_bus_LOOPBACK(int );
+int term_bus_LOOPBACK(int );
+int init_gl_LOOPBACK(struct _GLSTATE *);
+int init_ga_LOOPBACK(struct _GASTATE *);
 int getDescription_LOOPBACK(char *reply);
-void* thr_sendrec_Loopback(void *);
+void* thr_sendrec_LOOPBACK(void *);
 
 #endif
