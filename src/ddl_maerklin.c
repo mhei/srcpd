@@ -55,9 +55,6 @@
 #include "ddl_maerklin.h"
 #include "srcp-gl.h"
 
-#define TRUE 1
-#define FALSE 0
-
 typedef struct _tMotorolaCodes {
    int  rAdr;
    int  bAdr;

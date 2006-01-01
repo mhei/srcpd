@@ -276,13 +276,6 @@
 #include "ddl.h"  
 #include "ddl_nmra.h"
 
-#ifndef FALSE
-#define FALSE 0
-#endif
-#ifndef TRUE
-#define TRUE 1
-#endif
-
 typedef struct {
    char *pattern;
    int  patternlength;
