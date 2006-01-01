@@ -46,9 +46,6 @@
 #include "ddl_maerklin.h"
 #include "ddl_nmra.h"
 
-#define TRUE  1
-#define FALSE 0
-
 #ifdef __CYGWIN__
 #define TIOCOUTQ 0x5411
 #endif
