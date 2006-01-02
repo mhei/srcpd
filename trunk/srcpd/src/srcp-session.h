@@ -24,4 +24,11 @@ int start_session(long int sessionid, int mode);
 int stop_session(long int sessionid);
 int describeSESSION(int bus, int sessionid, char *reply);
 int termSESSION(int bus, int sessionid, int termsessionid, char *reply);
+
+int session_preparewait(int busnumber);
+int session_wait(int busnumber, struct timespec timeout, int *result);
+int session_endwait(int busnumber, int returnvalue);
+int session_cleanupwait(int busnumber);
+
+int session_processwait(int busnumber);
 #endif

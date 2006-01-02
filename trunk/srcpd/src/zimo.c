@@ -16,6 +16,7 @@
 #include "srcp-power.h"
 #include "srcp-srv.h"
 #include "srcp-info.h"
+#include "srcp-session.h"
 #include <sys/time.h>
 #include <time.h>
 
@@ -251,6 +252,7 @@ void *thr_sendrec_zimo(void *v)
             }
         }
         if (!queue_SM_isempty(bus)) {
+	    int returnvalue = -1;
             unqueueNextSM(bus, &smtmp);
             //DBG(bus, DBG_INFO, "UNQUEUE SM, cmd:%d addr:%d type:%d typeaddr:%d bit:%04X ",smtmp.command,smtmp.addr,smtmp.type,smtmp.typeaddr,smtmp.bit);
             addr = smtmp.addr;
@@ -263,16 +265,14 @@ void *thr_sendrec_zimo(void *v)
                     sprintf(msg, "RN%02X%02X%c", smtmp.typeaddr,
                             smtmp.value, 13);
                     writeString(bus, msg, 0);
-                    pthread_mutex_lock(getp_cb_mutex(bus));
-                    *getp_cb_data(bus) = -1;
+		    session_processwait(bus);
                     if (readanswer(bus, 'Q', msg, 20, 1000) > 3) {
                         sscanf(&msg[1], "%2X%2X%2X", &error, &cv, &val);
                         if (!error && cv == smtmp.typeaddr
                             && val == smtmp.value)
-                            *getp_cb_data(bus) = 0;
+                            returnvalue = 0;
                     }
-                    pthread_cond_broadcast(getp_cb_cond(bus));
-                    pthread_mutex_unlock(getp_cb_mutex(bus));
+		    session_endwait(bus, val);
                     gettimeofday(&smtmp.tv, NULL);
                     setSM(bus, smtmp.type, addr, smtmp.typeaddr, smtmp.bit,
                           smtmp.value, 0);
@@ -281,18 +281,16 @@ void *thr_sendrec_zimo(void *v)
                     DBG(bus, DBG_INFO, "SM GET #%d", smtmp.typeaddr);
                     sprintf(msg, "Q%02X%c", smtmp.typeaddr, 13);
                     writeString(bus, msg, 0);
-                    pthread_mutex_lock(getp_cb_mutex(bus));
-                    *getp_cb_data(bus) = 0;
+		    session_processwait(bus);
                     if (readanswer(bus, 'Q', msg, 20, 10000) > 3) {     //sscanf(&msg[1],"%2X%2X%2X",&error,&cv,&val);
                         sscanf(&msg[1], "%*3c%2X%2X", &cv, &val);
                         DBG(bus, DBG_INFO,
                             "SM GET ANSWER: error %d, cv %d, val %d",
                             error, cv, val);
                         //if(!error && cv==smtmp.typeaddr)
-                        *getp_cb_data(bus) = val;
+                        returnvalue =  val;
                     }
-                    pthread_cond_broadcast(getp_cb_cond(bus));
-                    pthread_mutex_unlock(getp_cb_mutex(bus));
+		    session_endwait(bus, returnvalue);
                     break;
                 }
             }

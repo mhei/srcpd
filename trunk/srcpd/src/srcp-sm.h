@@ -50,10 +50,6 @@ struct _SM {
     struct timeval tv;          // time of change 
 } SM;
 
-pthread_mutex_t *getp_cb_mutex(int bus);
-pthread_cond_t *getp_cb_cond(int bus);
-int *getp_cb_data(int bus);
-
 int queueSM(int busnumber, int command, int type, int addr, int typeaddr,
             int bit, int value);
 int queue_SM_isempty(int busnumber);

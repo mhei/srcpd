@@ -20,6 +20,7 @@
 #include "config-srcpd.h"
 #include "srcp-error.h"
 #include "srcp-info.h"
+#include "srcp-session.h"
 #include "srcp-sm.h"
 
 #define QUEUELEN 2
@@ -44,28 +45,11 @@
 /* Kommandoqueues pro Bus */
 static struct _SM queue[MAX_BUSSES][QUEUELEN];  // Kommandoqueue
 static pthread_mutex_t queue_mutex[MAX_BUSSES];
-static int out[MAX_BUSSES], in[MAX_BUSSES];
-static pthread_mutex_t cb_mutex[MAX_BUSSES];
-static pthread_cond_t cb_cond[MAX_BUSSES];
-static int cb_data[MAX_BUSSES];
+static volatile int out[MAX_BUSSES], in[MAX_BUSSES];
 
 /* internal functions */
 static int queue_len(int busnumber);
 static int queue_isfull(int busnumber);
-
-pthread_mutex_t *getp_cb_mutex(int bus)
-{
-    return ((bus >= 0 && bus < MAX_BUSSES) ? &cb_mutex[bus] : NULL);
-}
-
-pthread_cond_t *getp_cb_cond(int bus)
-{
-    return ((bus >= 0 && bus < MAX_BUSSES) ? &cb_cond[bus] : NULL);
-}
-int *getp_cb_data(int bus)
-{
-    return ((bus >= 0 && bus < MAX_BUSSES) ? &cb_data[bus] : NULL);
-}
 
 int queueInfoSM(int busnumber, int addr, int type, int typeaddr, int bit,
                 int value, int return_code, struct timeval *akt_time)
@@ -158,34 +142,32 @@ int queueSM(int busnumber, int command, int type, int addr, int typeaddr,
             int bit, int value)
 {
     struct timeval akt_time;
-    DBG(busnumber, DBG_INFO, "queueSM for %i", addr);
+    DBG(busnumber, DBG_INFO, "queueSM for %i (in=%d out=%d)", addr,
+        in[busnumber], out[busnumber]);
     // addr == -1 means using separate progrm-track
     // addr != -1 means programming on the main (only availible with CV)
     //if ( (addr == -1) || ((addr > 0) && (addr <= number_sm) && (type == CV)) )
-    if (1) {
-        while (queue_isfull(busnumber)) {
-            usleep(1000);
-        }
-
-        pthread_mutex_lock(&queue_mutex[busnumber]);
-
-        queue[busnumber][in[busnumber]].bit = bit;
-        queue[busnumber][in[busnumber]].type = type;
-        queue[busnumber][in[busnumber]].value = value;
-        queue[busnumber][in[busnumber]].typeaddr = typeaddr;
-        queue[busnumber][in[busnumber]].command = command;
-        gettimeofday(&akt_time, NULL);
-        queue[busnumber][in[busnumber]].tv = akt_time;
-        queue[busnumber][in[busnumber]].addr = addr;
-        in[busnumber]++;
-        if (in[busnumber] == QUEUELEN)
-            in[busnumber] = 0;
-
-        pthread_mutex_unlock(&queue_mutex[busnumber]);
+    if (queue_isfull(busnumber)) {
+        DBG(busnumber, DBG_DEBUG, "SM Queue is full");
+	return SRCP_TEMPORARILYPROHIBITED;
     }
-    else {
-        return SRCP_WRONGVALUE;
-    }
+
+    pthread_mutex_lock(&queue_mutex[busnumber]);
+
+    queue[busnumber][in[busnumber]].bit = bit;
+    queue[busnumber][in[busnumber]].type = type;
+    queue[busnumber][in[busnumber]].value = value;
+    queue[busnumber][in[busnumber]].typeaddr = typeaddr;
+    queue[busnumber][in[busnumber]].command = command;
+    gettimeofday(&akt_time, NULL);
+    queue[busnumber][in[busnumber]].tv = akt_time;
+    queue[busnumber][in[busnumber]].addr = addr;
+    in[busnumber]++;
+    if (in[busnumber] == QUEUELEN)
+        in[busnumber] = 0;
+
+    pthread_mutex_unlock(&queue_mutex[busnumber]);
+    DBG(busnumber, DBG_DEBUG, "SM queued");
     return SRCP_OK;
 }
 
@@ -259,26 +241,25 @@ int setSM(int busnumber, int type, int addr, int typeaddr, int bit,
 int infoSM(int busnumber, int command, int type, int addr, int typeaddr,
            int bit, int value, char *info)
 {
-    int status;
+    int status, result;
     struct timeval now;
     struct timespec timeout;
 
     DBG(busnumber, DBG_INFO, "TYPE: %d, CV: %d, BIT: %d, VALUE: 0x%02x",
         type, typeaddr, bit, value);
-    pthread_mutex_lock(&cb_mutex[busnumber]);
+    session_preparewait(busnumber);
+    // pthread_mutex_lock(&cb_mutex[busnumber]);
     status = queueSM(busnumber, command, type, addr, typeaddr, bit, value);
     gettimeofday(&now, NULL);
     timeout.tv_sec = now.tv_sec + 10;
     timeout.tv_nsec = 0;
-    if (pthread_cond_timedwait
-        (&cb_cond[busnumber], &cb_mutex[busnumber],
-         &timeout) == ETIMEDOUT) {
-        sprintf(info, "%ld.%ld 417 ERROR timeout\n", now.tv_sec, now.tv_usec / 1000);
-    }
-    else {
+    if ( session_wait(busnumber, timeout, &result) == ETIMEDOUT) {
+        sprintf(info, "%ld.%ld 417 ERROR timeout\n", now.tv_sec,
+                now.tv_usec / 1000);
+    } else {
         sprintf(info, "%ld.%ld 100 INFO %d SM %d\n", now.tv_sec,
-                now.tv_usec / 1000, busnumber, cb_data[busnumber]);
+                now.tv_usec / 1000, busnumber, result);
     }
-    pthread_mutex_unlock(&cb_mutex[busnumber]);
+    session_cleanupwait(busnumber);
     return status;
 }
