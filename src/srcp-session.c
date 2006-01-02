@@ -23,9 +23,21 @@
 #include "srcp-error.h"
 #include "srcp-info.h"
 
+static pthread_mutex_t cb_mutex[MAX_BUSSES];
+static pthread_cond_t cb_cond[MAX_BUSSES];
+static int cb_data[MAX_BUSSES];
+
+/**
+ * First initialisation after program startup
+ */
 int startup_SESSION(void)
 {
-  return 0;
+    int i;
+    for (i = 0; i < MAX_BUSSES; i++) {
+        pthread_mutex_init(&cb_mutex[i], NULL);
+        pthread_cond_init(&cb_cond[i], NULL);
+    }
+    return 0;
 }
 
 int start_session(long int sessionid, int mode)
@@ -75,4 +87,35 @@ int termSESSION(int bus, int sessionid, int termsessionid, char *reply)
     return - SRCP_OK;
   }
   return SRCP_FORBIDDEN;
+}
+
+int session_preparewait(int busnumber) {
+    DBG(busnumber, DBG_DEBUG, "SESSION prepare wait");
+    return pthread_mutex_lock(&cb_mutex[busnumber]);
+}
+
+int session_cleanupwait(int busnumber) {
+    DBG(busnumber, DBG_DEBUG, "SESSION cleanup wait");
+    return pthread_mutex_unlock(&cb_mutex[busnumber]);
+}
+
+int session_wait(int busnumber, struct timespec timeout, int *result) {
+    int rc;
+    DBG(busnumber, DBG_DEBUG, "SESSION start wait");
+    rc = pthread_cond_timedwait( &cb_cond[busnumber], &cb_mutex[busnumber], &timeout);
+    *result = cb_data[busnumber];
+    return rc;
+}
+
+int session_endwait(int busnumber, int returnvalue) {
+    DBG(busnumber, DBG_DEBUG, "SESSION end wait");
+    cb_data[busnumber] = returnvalue;
+    pthread_cond_broadcast(&cb_cond[busnumber]);
+    pthread_mutex_unlock(&cb_mutex[busnumber]);
+    return returnvalue;
+}
+
+int session_processwait(int busnumber) {
+    DBG(busnumber, DBG_DEBUG, "SESSION process wait");
+    return pthread_mutex_lock(&cb_mutex[busnumber]);
 }
