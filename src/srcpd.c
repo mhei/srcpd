@@ -64,7 +64,7 @@ void hup_handler(int s)
   syslog(LOG_INFO, "SIGHUP(1) received! Reset done. Working in initial state.");
 
   signal(s, hup_handler);
-    
+
   return;
 }
 
@@ -89,13 +89,14 @@ void install_signal_handler()
 
 int main(int argc, char **argv)
 {
-  int error, i;
+  int error;
+  long int i;
   int sleep_ctr;
   pid_t pid;
   char c, conffile[MAXPATHLEN];
   pthread_t ttid_cmd, ttid_clock, ttid_pid;
   struct _THREADS cmds;
-  
+
   install_signal_handler();
 
   /* First: Init the device data used internally*/
@@ -119,7 +120,7 @@ int main(int argc, char **argv)
     {
       case 'f':
         if(strlen(optarg)<MAXPATHLEN-1)
-		strcpy(conffile, optarg);
+    strcpy(conffile, optarg);
         break;
       case 'v':
         printf(WELCOME_MSG);
@@ -152,7 +153,7 @@ int main(int argc, char **argv)
     {
       if (busses[i].driverdata == NULL)
       {
-        printf("Sorry, there is an error in your srcpd.conf for bus %i !\n", i);
+        printf("Sorry, there is an error in your srcpd.conf for bus %ld !\n", i);
         exit(1);
       }
     }
@@ -188,22 +189,22 @@ int main(int argc, char **argv)
         exit(0);
       }
     }
-    // ab hier keine Konsole mehr... Wir sind ein Dämon geworden!
+    // ab hier keine Konsole mehr... Wir sind ein Dï¿½on geworden!
     chdir("/");
   }
- 
+
   CreatePIDFile(getpid());
 
   /* Netzwerkverbindungen */
   error = pthread_create(&ttid_cmd, NULL, thr_handlePort, &cmds);
   if(error)
   {
-    syslog(LOG_INFO, "cannot start Command Thread #%d: %d", i, error);
+    syslog(LOG_INFO, "cannot start Command Thread #%ld: %d", i, error);
     exit(1);
   }
   pthread_detach(ttid_cmd);
-  
-  /* Modellzeitgeber starten, der ist aber zunächst idle */
+
+  /* Modellzeitgeber starten, der ist aber zunï¿½hst idle */
   error = pthread_create(&ttid_clock, NULL, thr_clock, NULL);
   if(error)
   {
@@ -213,19 +214,19 @@ int main(int argc, char **argv)
   /* und jetzt die Bustreiber selbst starten. Das Device ist offen, die Datenstrukturen
      initialisiert */
   syslog(LOG_INFO, "Going to start %d Interface Threads for the busses", num_busses);
-  /* Jetzt die Threads für die Busse */
+  /* Jetzt die Threads fr die Busse */
   for (i=1; i<=num_busses; i++)
   {
-    syslog(LOG_INFO, "going to start Interface Thread  %d type(%d)", i, busses[i].type);
+    syslog(LOG_INFO, "going to start Interface Thread  #%ld type(%d)", i, busses[i].type);
     error = pthread_create(&ttid_pid, NULL, busses[i].thr_func, (void *)i);
     if(error)
     {
-      syslog(LOG_INFO, "cannot start Interface Thread # %d", i);
+      syslog(LOG_INFO, "cannot start Interface Thread #%ld", i);
       exit(1);
     }
     pthread_detach(ttid_pid);
     busses[i].pid = ttid_pid;
-    syslog(LOG_INFO, "Interface Thread %d started successfully type(%d): pid %ld", i, busses[i].type, (long)(busses[i].pid));
+    syslog(LOG_INFO, "Interface Thread #%ld started successfully type(%d): pid %ld", i, busses[i].type, (long)(busses[i].pid));
     if (( (busses[i].flags & AUTO_POWER_ON) == AUTO_POWER_ON) ) {
       setPower(i, 1, "AUTO POWER ON");
     } else {
@@ -244,26 +245,26 @@ int main(int argc, char **argv)
       break; /* leave the while() loop */
     }
     usleep(100000);
-  
+
     sleep_ctr--;
     if (sleep_ctr == 0)
     {
        /* LOCKs aufraeumen */
        unlock_gl_bytime();
        unlock_ga_bytime();
-      /* Jetzt Wachhund spielen, falls gewünscht */
+      /* Jetzt Wachhund spielen, falls gewnscht */
       for(i=1; i<=num_busses; i++)
       {
         if(busses[i].watchdog == 0 && (busses[i].flags & USE_WATCHDOG))
         {
-          syslog(LOG_INFO, "Oops: Interface Thread %d hangs, restarting it: (old pid: %ld, %d)", i, (long) busses[i].pid, busses[i].watchdog);
+          syslog(LOG_INFO, "Oops: Interface Thread #%ld hangs, restarting it: (old pid: %ld, %d)", i, (long) busses[i].pid, busses[i].watchdog);
           pthread_cancel(busses[i].pid);
           waitpid((long) busses[i].pid, NULL, 0);
           error = pthread_create(&ttid_pid, NULL, busses[i].thr_func, (void *)i);
           if(error)
           {
             perror("Cannot restart Interface Thread!");
-            break; /* ermöglicht aufräumen am Ende */
+            break; /* ermï¿½licht aufrï¿½men am Ende */
           }
           busses[i].pid = ttid_pid;
           pthread_detach(busses[i].pid);

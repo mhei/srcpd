@@ -110,7 +110,7 @@ int doInfoClient(int Socket, int sessionid)
 
 // send startup-infos to a new client
 struct timeval cmp_time;
-int busnumber;
+long int busnumber;
 current = in;
 DBG(0, DBG_DEBUG, "new Info-client requested %ld", sessionid);
 for (busnumber = 0; busnumber <= num_busses; busnumber++)
@@ -168,7 +168,7 @@ for (busnumber = 0; busnumber <= num_busses; busnumber++)
         for (port = 0; port <=1; port++) {
           rc = infoGA(busnumber, i, port, reply);
           if ( (rc == SRCP_INFO) ) {
-	      socket_writereply(Socket, reply);*reply = 0x00;
+        socket_writereply(Socket, reply);*reply = 0x00;
           }
       }
       getlockGA(busnumber, i, &lockid);

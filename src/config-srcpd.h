@@ -37,8 +37,8 @@
 #define SERVER_HSI_88           7         // srcpd-bus works as HSI88-server
 #define SERVER_I2C_DEV          8         // srcpd-bus works as I2C-DEV-server
 #define SERVER_ZIMO             9         // srcpd-bus works as Zimo MX1
-#define SERVER_SELECTRIX       10	  // srcpd-bus works as Selectrix-server
-#define SERVER_LOCONET         11	  // srcpd-bus works as Loconet Gateway
+#define SERVER_SELECTRIX       10   // srcpd-bus works as Selectrix-server
+#define SERVER_LOCONET         11   // srcpd-bus works as Loconet Gateway
 
 /* generic flags */
 #define USE_WATCHDOG          0x0001      // use watchdog
@@ -78,11 +78,11 @@ typedef struct _BUS
 
   pthread_t pid;                             //! PID of the thread
   void *thr_func;                            //! addr of the thread function
-  int (*init_func)(int);                     //! addr of init function
-  int (*term_func)(int);                     //! addr of init function
-  int (*init_gl_func) ( struct _GLSTATE *);  //! called to check default init
-  int (*init_ga_func) ( struct _GASTATE *);  //! called to check default init
-  int (*init_fb_func) (int busnumber, int addr, const char protocolb, int index);  //! called to check default init
+  long int (*init_func)(long int);           //! addr of init function
+  long int (*term_func)(long int);           //! addr of init function
+  long int (*init_gl_func) ( struct _GLSTATE *);  //! called to check default init
+  long int (*init_ga_func) ( struct _GASTATE *);  //! called to check default init
+  long int (*init_fb_func) (long int busnumber, int addr, const char protocolb, int index);  //! called to check default init
   int watchdog;                              //! used to monitor the thread
   int power_state;
   int power_changed;
@@ -110,7 +110,7 @@ int readConfig(char *filename);
 #define DG_DESCRIPTION 8
 #define DG_SERVER 9
 #define DG_POWER 10
-int bus_has_devicegroup(int bus, int dg);
+int bus_has_devicegroup(long int bus, int dg);
 
 #define DGB_NONE 0
 #define DBG_FATAL 1
@@ -119,5 +119,5 @@ int bus_has_devicegroup(int bus, int dg);
 #define DBG_INFO 4
 #define DBG_DEBUG 5
 
-void DBG(int busnumber, int dbglevel, const char *fmt, ...);
+void DBG(long int busnumber, int dbglevel, const char *fmt, ...);
 #endif

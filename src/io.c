@@ -20,7 +20,7 @@
 #include "config-srcpd.h"
 #include "ttycygwin.h"
 
-int readByte(int bus, int wait, unsigned char *the_byte)
+int readByte(long int bus, int wait, unsigned char *the_byte)
 {
   int i;
   int status;
@@ -58,7 +58,7 @@ int readByte(int bus, int wait, unsigned char *the_byte)
   return (i > 0 ? 0 : -1);
 }
 
-void writeByte(int bus, unsigned char b, unsigned long msecs)
+void writeByte(long int bus, unsigned char b, unsigned long msecs)
 {
   int i=0;
   char byte=b;
@@ -71,7 +71,7 @@ void writeByte(int bus, unsigned char b, unsigned long msecs)
   usleep(msecs * 1000);
 }
 
-void writeString(int bus, unsigned char *s, unsigned long msecs)
+void writeString(long int bus, unsigned char *s, unsigned long msecs)
 {
   int l = strlen((char*)s);
   int i;
@@ -80,7 +80,7 @@ void writeString(int bus, unsigned char *s, unsigned long msecs)
   }
 }
 
-void save_comport(int businfo)
+void save_comport(long int businfo)
 {
   int fd;
 
@@ -96,7 +96,7 @@ void save_comport(int businfo)
   }
 }
 
-void restore_comport(int bus)
+void restore_comport(long int bus)
 {
   int fd;
 
@@ -115,7 +115,7 @@ void restore_comport(int bus)
   }
 }
 
-void close_comport(int bus)
+void close_comport(long int bus)
 {
   struct termios interface;
   DBG(bus, DBG_INFO, "Closing serial line");

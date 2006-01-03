@@ -1,7 +1,7 @@
 /* $Id$ */
 
-/* 
- * Vorliegende Software unterliegt der General Public License, 
+/*
+ * Vorliegende Software unterliegt der General Public License,
  * Version 2, 1991. (c) Matthias Trute, 2000-2001.
  *
  */
@@ -38,27 +38,27 @@ typedef struct _GL
 } GL;
 
 int startup_GL(void);
-int init_GL(int busnumber, int number);
-int getMaxAddrGL(int busnumber);
-int isInitializedGL(int busnumber, int addr);
-int isValidGL(int busnumber, int addr);
+int init_GL(long int busnumber, int number);
+int getMaxAddrGL(long int busnumber);
+int isInitializedGL(long int busnumber, int addr);
+int isValidGL(long int busnumber, int addr);
 
-int queueGL(int busnumber, int addr, int dir, int speed, int maxspeed, int f);
-int queue_GL_isempty(int busnumber);
-int unqueueNextGL(int busnumber, struct _GLSTATE *l);
+int queueGL(long int busnumber, int addr, int dir, int speed, int maxspeed, int f);
+int queue_GL_isempty(long int busnumber);
+int unqueueNextGL(long int busnumber, struct _GLSTATE *l);
 
-int getGL(int busnumber, int addr, struct _GLSTATE *l);
-int setGL(int busnumber, int addr, struct _GLSTATE l);
-int infoGL(int busnumber, int addr, char* info);
-int describeGL(int busnumber, int addr, char *msg);
-int initGL(int busnumber, int addr, const char protocol, int protoversion, int n_fs, int n_func);
-int termGL(int busnumber, int addr);
+int getGL(long int busnumber, int addr, struct _GLSTATE *l);
+int setGL(long int busnumber, int addr, struct _GLSTATE l);
+int infoGL(long int busnumber, int addr, char* info);
+int describeGL(long int busnumber, int addr, char *msg);
+int initGL(long int busnumber, int addr, const char protocol, int protoversion, int n_fs, int n_func);
+int termGL(long int busnumber, int addr);
 
-int lockGL(int busnumber, int addr, long int duration, long int sessionid);
-int getlockGL(int busnumber, int addr, long int *sessionid);
-int unlockGL(int busnumber, int addr, long int sessionid);
+int lockGL(long int busnumber, int addr, long int duration, long int sessionid);
+int getlockGL(long int busnumber, int addr, long int *sessionid);
+int unlockGL(long int busnumber, int addr, long int sessionid);
 void unlock_gl_bysessionid(long int sessionid);
 void unlock_gl_bytime(void);
-int describeLOCKGL(int bus, int addr, char *reply);
+int describeLOCKGL(long int bus, int addr, char *reply);
 
 #endif

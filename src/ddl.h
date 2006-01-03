@@ -92,7 +92,7 @@ typedef struct _DDL_DATA {
 
     struct termios maerklin_dev_termios;
     struct termios nmra_dev_termios;
-    
+
 #if linux
     struct serial_struct *serinfo_marklin;
     struct serial_struct *serinfo_nmradcc;
@@ -124,12 +124,12 @@ typedef struct _DDL_DATA {
     tMaerklinPacketPool MaerklinPacketPool;
 } DDL_DATA;
 
-int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, int busnumber);
-int init_lineDDL(int busnumber);
-int init_bus_DDL(int busnumber);
-int term_bus_DDL(int busnumber);
-int init_gl_DDL(struct _GLSTATE *);
-int init_ga_DDL(struct _GASTATE *);
+int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, long int busnumber);
+int init_lineDDL(long int busnumber);
+long int init_bus_DDL(long int busnumber);
+long int term_bus_DDL(long int busnumber);
+long int init_gl_DDL(struct _GLSTATE *);
+long int init_ga_DDL(struct _GASTATE *);
 int getDescription_DDL(char *reply);
 void* thr_sendrec_DDL(void *);
 
@@ -141,7 +141,7 @@ void* thr_sendrec_DDL(void *);
 #define SDM_DEFAULT         1  /* must be one of the following values */
 #define SDM_MAERKLIN        0
 #define SDM_NMRA            1
-int setSerialMode(int busnumber, int mode);
+int setSerialMode(long int busnumber, int mode);
 
 #define QEMPTY      -1
 #define QNOVALIDPKT 0
@@ -153,34 +153,34 @@ int setSerialMode(int busnumber, int mode);
 #define QNBLOCOPKT  6
 #define QNBACCPKT   7
 
-void queue_init(int busnumber);
-int  queue_empty(int busnumber);
-void queue_add(int busnumber, int addr, char * const packet, int packet_type, int packet_size);
-int  queue_get(int busnumber, int *addr, char *packet, int *packet_size);
+void queue_init(long int busnumber);
+int  queue_empty(long int busnumber);
+void queue_add(long int busnumber, int addr, char * const packet, int packet_type, int packet_size);
+int  queue_get(long int busnumber, int *addr, char *packet, int *packet_size);
 
 #define ADDR14BIT_OFFSET 128   /* internal offset of the long addresses       */
 
 
-void init_MaerklinPacketPool(int busnumber);
-char *get_maerklin_packet(int busnumber, int adr, int fx);
-void update_MaerklinPacketPool(int busnumber, int adr, char const * const sd_packet, char const * const f1,
+void init_MaerklinPacketPool(long int busnumber);
+char *get_maerklin_packet(long int busnumber, int adr, int fx);
+void update_MaerklinPacketPool(long int busnumber, int adr, char const * const sd_packet, char const * const f1,
                                  char const * const f2, char const * const f3, char const * const f4);
-void init_NMRAPacketPool(int busnumber);
-void update_NMRAPacketPool(int busnumber, int adr, char const * const packet, int packet_size,
+void init_NMRAPacketPool(long int busnumber);
+void update_NMRAPacketPool(long int busnumber, int adr, char const * const packet, int packet_size,
                                     char const * const fx_packet, int fx_packet_size);
 
 
-void (*waitUARTempty)(int busnumber);
-int checkRingIndicator(int busnumber);
-int checkShortcut(int busnumber);
-void send_packet(int busnumber, int addr, char *packet, int packet_size, int packet_type, int refresh);
-void refresh_loco(int busnumber);
+void (*waitUARTempty)(long int busnumber);
+int checkRingIndicator(long int busnumber);
+int checkShortcut(long int busnumber);
+void send_packet(long int busnumber, int addr, char *packet, int packet_size, int packet_type, int refresh);
+void refresh_loco(long int busnumber);
 long int compute_delta(struct timeval tv1, struct timeval tv2);
-void set_SerialLine(int busnumber, int line, int mode);
-//void start_voltage(int busnumber);
-//void stop_voltage(int busnumber);
-int check_lines(int busnumber);
-void set_lines_off(int busnumber);
+void set_SerialLine(long int busnumber, int line, int mode);
+//void start_voltage(long int busnumber);
+//void stop_voltage(long int busnumber);
+int check_lines(long int busnumber);
+void set_lines_off(long int busnumber);
 void *thr_refresh_cycle(void *v);
 
 /* serial line modes: */

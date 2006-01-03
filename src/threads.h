@@ -1,7 +1,7 @@
 /* $Id$ */
 
-/* 
- * Vorliegende Software unterliegt der General Public License, 
+/*
+ * Vorliegende Software unterliegt der General Public License,
  * Version 2, 1991. (c) Matthias Trute, 2000-2001.
  *
  */
@@ -17,6 +17,6 @@ typedef struct _THREADS
 } THREADS;
 
 void* thr_handlePort(void *);
-void change_privileges(int bus);
+void change_privileges(long int bus);
 
 #endif

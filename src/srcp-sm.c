@@ -48,17 +48,17 @@ static pthread_mutex_t queue_mutex[MAX_BUSSES];
 static volatile int out[MAX_BUSSES], in[MAX_BUSSES];
 
 /* internal functions */
-static int queue_len(int busnumber);
-static int queue_isfull(int busnumber);
+static int queue_len(long int busnumber);
+static int queue_isfull(long int busnumber);
 
-int queueInfoSM(int busnumber, int addr, int type, int typeaddr, int bit,
+int queueInfoSM(long int busnumber, int addr, int type, int typeaddr, int bit,
                 int value, int return_code, struct timeval *akt_time)
 {
     char buffer[1000], msg[1000];
     char tmp[100];
 
     if (return_code == 0) {
-        sprintf(buffer, "%ld.%ld 100 INFO %d SM %d",
+        sprintf(buffer, "%ld.%ld 100 INFO %ld SM %d",
                 akt_time->tv_sec, akt_time->tv_usec / 1000,
                 busnumber, addr);
         switch (type) {
@@ -77,7 +77,7 @@ int queueInfoSM(int busnumber, int addr, int type, int typeaddr, int bit,
         }
     }
     else {
-        sprintf(buffer, "%ld.%ld 600 ERROR %d SM %d %d",
+        sprintf(buffer, "%ld.%ld 600 ERROR %ld SM %d %d",
                 akt_time->tv_sec, akt_time->tv_usec / 1000,
                 busnumber, addr, return_code);
         switch (return_code) {
@@ -132,13 +132,13 @@ int queueInfoSM(int busnumber, int addr, int type, int typeaddr, int bit,
 }
 
 
-int get_number_sm(int busnumber)
+int get_number_sm(long int busnumber)
 {
     return busses[busnumber].numberOfSM;
 }
 
 // queue SM after some checks
-int queueSM(int busnumber, int command, int type, int addr, int typeaddr,
+int queueSM(long int busnumber, int command, int type, int addr, int typeaddr,
             int bit, int value)
 {
     struct timeval akt_time;
@@ -149,7 +149,7 @@ int queueSM(int busnumber, int command, int type, int addr, int typeaddr,
     //if ( (addr == -1) || ((addr > 0) && (addr <= number_sm) && (type == CV)) )
     if (queue_isfull(busnumber)) {
         DBG(busnumber, DBG_DEBUG, "SM Queue is full");
-	return SRCP_TEMPORARILYPROHIBITED;
+  return SRCP_TEMPORARILYPROHIBITED;
     }
 
     pthread_mutex_lock(&queue_mutex[busnumber]);
@@ -171,12 +171,12 @@ int queueSM(int busnumber, int command, int type, int addr, int typeaddr,
     return SRCP_OK;
 }
 
-int queue_SM_isempty(int busnumber)
+int queue_SM_isempty(long int busnumber)
 {
     return (in[busnumber] == out[busnumber]);
 }
 
-static int queue_len(int busnumber)
+static int queue_len(long int busnumber)
 {
     if (in[busnumber] >= out[busnumber])
         return in[busnumber] - out[busnumber];
@@ -185,13 +185,13 @@ static int queue_len(int busnumber)
 }
 
 /* maybe, 1 element in the queue cannot be used.. */
-static int queue_isfull(int busnumber)
+static int queue_isfull(long int busnumber)
 {
     return queue_len(busnumber) >= QUEUELEN - 1;
 }
 
 /** liefert n�hsten Eintrag und >=0, oder -1 */
-int getNextSM(int busnumber, struct _SM *l)
+int getNextSM(long int busnumber, struct _SM *l)
 {
     if (in[busnumber] == out[busnumber])
         return -1;
@@ -200,7 +200,7 @@ int getNextSM(int busnumber, struct _SM *l)
 }
 
 /** liefert n�hsten Eintrag oder -1, setzt fifo pointer neu! */
-int unqueueNextSM(int busnumber, struct _SM *l)
+int unqueueNextSM(long int busnumber, struct _SM *l)
 {
     if (in[busnumber] == out[busnumber])
         return -1;
@@ -212,7 +212,7 @@ int unqueueNextSM(int busnumber, struct _SM *l)
     return out[busnumber];
 }
 
-int setSM(int busnumber, int type, int addr, int typeaddr, int bit,
+int setSM(long int busnumber, int type, int addr, int typeaddr, int bit,
           int value, int return_code)
 {
     int number_sm = get_number_sm(busnumber);
@@ -238,7 +238,7 @@ int setSM(int busnumber, int type, int addr, int typeaddr, int bit,
     }
 }
 
-int infoSM(int busnumber, int command, int type, int addr, int typeaddr,
+int infoSM(long int busnumber, int command, int type, int addr, int typeaddr,
            int bit, int value, char *info)
 {
     int status, result;
@@ -257,7 +257,7 @@ int infoSM(int busnumber, int command, int type, int addr, int typeaddr,
         sprintf(info, "%ld.%ld 417 ERROR timeout\n", now.tv_sec,
                 now.tv_usec / 1000);
     } else {
-        sprintf(info, "%ld.%ld 100 INFO %d SM %d\n", now.tv_sec,
+        sprintf(info, "%ld.%ld 100 INFO %ld SM %d\n", now.tv_sec,
                 now.tv_usec / 1000, busnumber, result);
     }
     session_cleanupwait(busnumber);

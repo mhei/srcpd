@@ -47,18 +47,18 @@ struct _SM {
     int typeaddr;
     int bit;                    // bit to set/get for CVBIT
     int value;
-    struct timeval tv;          // time of change 
+    struct timeval tv;          // time of change
 } SM;
 
-int queueSM(int busnumber, int command, int type, int addr, int typeaddr,
+int queueSM(long int busnumber, int command, int type, int addr, int typeaddr,
             int bit, int value);
-int queue_SM_isempty(int busnumber);
-int unqueueNextSM(int busnumber, struct _SM *l);
+int queue_SM_isempty(long int busnumber);
+int unqueueNextSM(long int busnumber, struct _SM *l);
 
-int getSM(int busnumber, int addr, struct _SM *l);
-int setSM(int busnumber, int type, int addr, int typeaddr, int bit,
+int getSM(long int busnumber, int addr, struct _SM *l);
+int setSM(long int busnumber, int type, int addr, int typeaddr, int bit,
           int value, int return_value);
-int infoSM(int busnumber, int command, int type, int addr, int typeaddr,
+int infoSM(long int busnumber, int command, int type, int addr, int typeaddr,
            int bit, int value, char *info);
 
 #endif

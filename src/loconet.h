@@ -17,9 +17,9 @@ typedef struct _LOCONET_DATA {
     unsigned char ln_message[128]; /* last message sent */
 } LOCONET_DATA;
 
-int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, int busnumber);
-int init_bus_LOCONET(int);
-int term_bus_LOCONET(int);
+int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, long int busnumber);
+long int init_bus_LOCONET(long int);
+long int term_bus_LOCONET(long int);
 int getDescription_LOCONET(char *reply);
 void *thr_sendrec_LOCONET(void *);
 
@@ -56,18 +56,21 @@ void *thr_sendrec_LOCONET(void *);
  *
  * Version Control:
  * $Log$
+ * Revision 1.4  2006/01/03 21:45:56  schmischi
+ * change some 'int' to 'long int' for x86_64
+ *
  * Revision 1.3  2006/01/02 09:57:00  mtrute
  * several huge changes
  *
- * 	major extension for loconet (dump loconet packets in clear text)
- * 		thanks to code from Ron W. Auld (llnmon package, see loconet_hackers
- * 		yahoo group).
+ *  major extension for loconet (dump loconet packets in clear text)
+ *    thanks to code from Ron W. Auld (llnmon package, see loconet_hackers
+ *    yahoo group).
  *
- * 	getting loconet SV now sometimes works fine, but sometime blocks the
- * 		the sending of commands (reading packets still works fine).
+ *  getting loconet SV now sometimes works fine, but sometime blocks the
+ *    the sending of commands (reading packets still works fine).
  *
- * 	Sessions can now wait for results from the driver (see srcp-session.*
- * 		and zimo.c/loconet.c how to use it). Mostly untested.
+ *  Sessions can now wait for results from the driver (see srcp-session.*
+ *    and zimo.c/loconet.c how to use it). Mostly untested.
  *
  * Revision 1.2  2001/05/31 17:40:05  rauld
  * Added options and code needed for llnmon to use a Locobuffer interface instead

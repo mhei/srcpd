@@ -1,7 +1,7 @@
 /* $Id$ */
 
-/* 
- * Vorliegende Software unterliegt der General Public License, 
+/*
+ * Vorliegende Software unterliegt der General Public License,
  * Version 2, 1991. (c) Matthias Trute, 2000-2001.
  *
  */
@@ -10,5 +10,5 @@
 #define _SRCP_DESCR_H
 
 int startup_DESCRIPTION(void);
-int describeBus(int bus, char *reply);
+int describeBus(long int bus, char *reply);
 #endif

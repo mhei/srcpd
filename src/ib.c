@@ -47,19 +47,19 @@
 
 #define __ib ((IB_DATA*)busses[busnumber].driverdata)
 
-static int initLine_IB( int busnumber );
+static int initLine_IB( long int busnumber );
 
 // IB helper functions
-static int sendBreak( const int fd, int busnumber );
-static int switchOffP50Command( const int busnumber );
-static int readAnswer_IB( const int busnumber, const int generatePrintf );
-static int readByte_IB( int bus, int wait, unsigned char *the_byte );
-static speed_t checkBaudrate( const int fd, const int busnumber );
-static int resetBaudrate( const speed_t speed, const int busnumber );
+static int sendBreak( const int fd, long int busnumber );
+static int switchOffP50Command( const long int busnumber );
+static int readAnswer_IB( const long int busnumber, const int generatePrintf );
+static int readByte_IB( long int bus, int wait, unsigned char *the_byte );
+static speed_t checkBaudrate( const int fd, const long int busnumber );
+static int resetBaudrate( const speed_t speed, const long int busnumber );
 
-int readConfig_IB( xmlDocPtr doc, xmlNodePtr node, int busnumber )
+int readConfig_IB( xmlDocPtr doc, xmlNodePtr node, long int busnumber )
 {
-  DBG(busnumber, DBG_INFO, "reading configuration for intellibox at bus %d", busnumber);
+  DBG(busnumber, DBG_INFO, "reading configuration for intellibox at bus %ld", busnumber);
 
   busses[ busnumber ].type = SERVER_IB;
   busses[ busnumber ].init_func = &init_bus_IB;
@@ -78,7 +78,7 @@ int readConfig_IB( xmlDocPtr doc, xmlNodePtr node, int busnumber )
 
   xmlNodePtr child = node->children;
   xmlChar *txt = NULL;
-  
+
   while (child)
   {
     if (xmlStrcmp(child->name, BAD_CAST "number_fb") == 0)
@@ -149,7 +149,7 @@ int cmpTime( struct timeval *t1, struct timeval *t2 )
  * initGL: modifies the gl data used to initialize the device
  * this is called whenever a new loco comes in town...
  */
-int init_gl_IB( struct _GLSTATE *gl )
+long int init_gl_IB( struct _GLSTATE *gl )
 {
   gl -> n_fs = 126;
   gl -> n_func = 5;
@@ -161,15 +161,15 @@ int init_gl_IB( struct _GLSTATE *gl )
  * initGA: modifies the ga data used to initialize the device
 
  */
-int init_ga_IB( struct _GASTATE *ga )
+long int init_ga_IB( struct _GASTATE *ga )
 {
   ga -> protocol = 'M';
   return SRCP_OK;
 }
 
-int init_bus_IB( int busnumber )
+long int init_bus_IB( long int busnumber )
 {
-  int status;
+  long int status;
 
   if ( init_GA( busnumber, __ib->number_ga ) )
   {
@@ -225,7 +225,7 @@ int init_bus_IB( int busnumber )
   return status;
 }
 
-int term_bus_IB( int busnumber )
+long int term_bus_IB( long int busnumber )
 {
   if ( busses[ busnumber ].type != SERVER_IB )
     return 1;
@@ -246,10 +246,10 @@ void* thr_sendrec_IB( void *v )
   unsigned char byte2send;
   int status;
   unsigned char rr;
-  int busnumber;
+  long int busnumber;
   int zaehler1, fb_zaehler1, fb_zaehler2;
 
-  busnumber = ( int ) v;
+  busnumber = ( long int ) v;
   DBG(busnumber, DBG_INFO, "thr_sendrec_IB is startet as bus %i", busnumber);
 
   // initialize tga-structure
@@ -329,7 +329,7 @@ void* thr_sendrec_IB( void *v )
   }      // Ende WHILE(1)
 }
 
-void send_command_ga_IB( int busnumber )
+void send_command_ga_IB( long int busnumber )
 {
   int i, i1;
   int temp;
@@ -429,7 +429,7 @@ void send_command_ga_IB( int busnumber )
   }
 }
 
-void send_command_gl_IB( int busnumber )
+void send_command_gl_IB( long int busnumber )
 {
   int temp;
   int addr = 0;
@@ -503,7 +503,7 @@ void send_command_gl_IB( int busnumber )
   }
 }
 
-int read_register_IB( int busnumber, int reg )
+int read_register_IB( long int busnumber, int reg )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -520,7 +520,7 @@ int read_register_IB( int busnumber, int reg )
   return status;
 }
 
-int write_register_IB( int busnumber, int reg, int value )
+int write_register_IB( long int busnumber, int reg, int value )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -539,7 +539,7 @@ int write_register_IB( int busnumber, int reg, int value )
   return status;
 }
 
-int read_page_IB( int busnumber, int cv )
+int read_page_IB( long int busnumber, int cv )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -561,7 +561,7 @@ int read_page_IB( int busnumber, int cv )
   return status;
 }
 
-int write_page_IB( int busnumber, int cv, int value )
+int write_page_IB( long int busnumber, int cv, int value )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -583,7 +583,7 @@ int write_page_IB( int busnumber, int cv, int value )
   return status;
 }
 
-int read_cv_IB( int busnumber, int cv )
+int read_cv_IB( long int busnumber, int cv )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -605,7 +605,7 @@ int read_cv_IB( int busnumber, int cv )
   return status;
 }
 
-int write_cv_IB( int busnumber, int cv, int value )
+int write_cv_IB( long int busnumber, int cv, int value )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -629,7 +629,7 @@ int write_cv_IB( int busnumber, int cv, int value )
   return status;
 }
 
-int read_cvbit_IB( int busnumber, int cv, int bit )
+int read_cvbit_IB( long int busnumber, int cv, int bit )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -651,7 +651,7 @@ int read_cvbit_IB( int busnumber, int cv, int bit )
   return status;
 }
 
-int write_cvbit_IB( int busnumber, int cv, int bit, int value )
+int write_cvbit_IB( long int busnumber, int cv, int bit, int value )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -678,7 +678,7 @@ int write_cvbit_IB( int busnumber, int cv, int bit, int value )
 }
 
 // program decoder on the main
-int send_pom_IB( int busnumber, int addr, int cv, int value )
+int send_pom_IB( long int busnumber, int addr, int cv, int value )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -715,7 +715,7 @@ int send_pom_IB( int busnumber, int addr, int cv, int value )
   return ret_val;
 }
 
-int term_pgm_IB( int busnumber )
+int term_pgm_IB( long int busnumber )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -733,7 +733,7 @@ int term_pgm_IB( int busnumber )
   return ret_val;
 }
 
-void send_command_sm_IB( int busnumber )
+void send_command_sm_IB( long int busnumber )
 {
   //unsigned char byte2send;
   //unsigned char status;
@@ -802,7 +802,7 @@ void send_command_sm_IB( int busnumber )
   }
 }
 
-void check_status_IB( int busnumber )
+void check_status_IB( long int busnumber )
 {
   int i;
   int temp;
@@ -992,7 +992,7 @@ void check_status_IB( int busnumber )
     check_status_pt_IB( busnumber );
 }
 
-void check_status_pt_IB( int busnumber )
+void check_status_pt_IB( long int busnumber )
 {
   int i;
   //int temp;
@@ -1041,7 +1041,7 @@ void check_status_pt_IB( int busnumber )
   }
 }
 
-static int open_comport( int busnumber, speed_t baud )
+static int open_comport( long int busnumber, speed_t baud )
 {
   int fd;
   char *name = busses[ busnumber ].device;
@@ -1090,7 +1090,7 @@ static int open_comport( int busnumber, speed_t baud )
   return fd;
 }
 
-static int initLine_IB( int busnumber )
+static int initLine_IB( long int busnumber )
 {
   int fd;
   int status;
@@ -1196,7 +1196,7 @@ static int initLine_IB( int busnumber )
   return 0;
 }
 
-static int sendBreak( const int fd, int busnumber )
+static int sendBreak( const int fd, long int busnumber )
 {
   if ( tcflush( fd, TCIOFLUSH ) != 0 )
   {
@@ -1224,7 +1224,7 @@ static int sendBreak( const int fd, int busnumber )
  * @param  busnumber inside srcp
  * @return the correct baudrate or -1 if nor recognized
 **/
-speed_t checkBaudrate( const int fd, const int busnumber )
+speed_t checkBaudrate( const int fd, const long int busnumber )
 {
   int found = 0;
   short error = 0;
@@ -1338,7 +1338,7 @@ speed_t checkBaudrate( const int fd, const int busnumber )
  * @param requested baudrate
  * @return: 0 if successfull
 **/
-static int resetBaudrate( const speed_t speed, const int busnumber )
+static int resetBaudrate( const speed_t speed, const long int busnumber )
 {
   unsigned char byte2send;
   int status;
@@ -1390,14 +1390,14 @@ static int resetBaudrate( const speed_t speed, const int busnumber )
  * @param  busnumber inside srcpd
  * @return 0 if ok
 **/
-static int switchOffP50Command( const int busnumber )
+static int switchOffP50Command( const long int busnumber )
 {
   unsigned char byte2send;
   char *sendString = "xZzA1";
   int status;
 
   DBG(busnumber, DBG_INFO, "Switching off P50-commands\n" );
-  
+
   writeString( busnumber, (unsigned char *)sendString, 0 );
   byte2send = 0x0d;
   writeByte( busnumber, byte2send, 0 );
@@ -1421,7 +1421,7 @@ static int switchOffP50Command( const int busnumber )
  * @param if > 0 the answer is printed
  * @return 0 if ok
 **/
-static int readAnswer_IB( const int busnumber, const int generatePrintf )
+static int readAnswer_IB( const long int busnumber, const int generatePrintf )
 {
   unsigned char input[ 80 ];
   int counter = 0;
@@ -1462,7 +1462,7 @@ static int readAnswer_IB( const int busnumber, const int generatePrintf )
  * @param:wait time during read
  * @param:adress of the byte to be received.
  **/
-static int readByte_IB( int bus, int wait, unsigned char *the_byte )
+static int readByte_IB( long int bus, int wait, unsigned char *the_byte )
 {
   int i;
   int status;

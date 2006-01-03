@@ -41,7 +41,7 @@
 #define __i2cdev ((I2CDEV_DATA*)busses[busnumber].driverdata)
 
 
-static int write_PCF8574(int bus, int addr, __u8 byte)
+static int write_PCF8574(long int bus, int addr, __u8 byte)
 {
 
   int busfd = busses[bus].fd;
@@ -71,7 +71,7 @@ static int write_PCF8574(int bus, int addr, __u8 byte)
 
 /*  Currently feedback is not supported */
 /*
-static int read_PCF8574(int bus, int addr, __u8 *byte)
+static int read_PCF8574(long int bus, int addr, __u8 *byte)
 {
     int busfd = busses[bus].fd;
     int ret;
@@ -98,7 +98,7 @@ static int read_PCF8574(int bus, int addr, __u8 *byte)
 
 /* Write value to a i2c device, determine i2c device by adress */
 
-static int write_i2c_dev(int bus, int addr, I2C_VALUE value)
+static int write_i2c_dev(long int bus, int addr, I2C_VALUE value)
 {
     if (((addr >=32) && (addr < 39)) ||  /* Currently we handle only PCF8574 */
         ((addr >=56) && (addr < 63))) {
@@ -111,7 +111,7 @@ static int write_i2c_dev(int bus, int addr, I2C_VALUE value)
 
 /*  Handle set command of GA */
 
-static int handle_i2c_set_ga(int bus, struct _GASTATE *gatmp)
+static int handle_i2c_set_ga(long int bus, struct _GASTATE *gatmp)
 {
     I2C_ADDR    i2c_addr;
   I2C_VALUE   i2c_val;
@@ -201,7 +201,7 @@ static int handle_i2c_set_ga(int bus, struct _GASTATE *gatmp)
     return (0);
 }
 
-int readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, int busnumber)
+int readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
 {
   busses[busnumber].type = SERVER_I2C_DEV;
   busses[busnumber].init_func = &init_bus_I2C_DEV;
@@ -288,7 +288,7 @@ int readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 }
 
 
-int init_lineI2C_DEV(int bus)
+int init_lineI2C_DEV(long int bus)
 {
   int FD;
 
@@ -308,7 +308,7 @@ int init_lineI2C_DEV(int bus)
 
 }
 
-void reset_ga(int busnumber, int busfd) {
+void reset_ga(long int busnumber, int busfd) {
 
   // reset ga devices to values stored in data->i2c_values
 
@@ -342,7 +342,7 @@ void reset_ga(int busnumber, int busfd) {
   }
 }
 
-void select_bus(int mult_busnum, int busfd, int busnumber) {
+void select_bus(int mult_busnum, int busfd, long int busnumber) {
 
   int addr, value=0;
 
@@ -357,9 +357,9 @@ void select_bus(int mult_busnum, int busfd, int busnumber) {
   writeByte(busnumber, value, 1);*/
 }
 
-int term_bus_I2C_DEV(int bus)
+long int term_bus_I2C_DEV(long int bus)
 {
-  DBG(bus, DBG_INFO, "i2c-dev bus %d terminating"), bus;
+  DBG(bus, DBG_INFO, "i2c-dev bus #%ld terminating"), bus;
   close(busses[bus].fd);
   return 0;
 }
@@ -370,7 +370,7 @@ int term_bus_I2C_DEV(int bus)
 * If bus unavailible, fd = -1
 *
 */
-int init_bus_I2C_DEV(int i)
+long int init_bus_I2C_DEV(long int i)
 {
 
   I2CDEV_DATA *data = (I2CDEV_DATA *)busses[i].driverdata;
@@ -379,7 +379,7 @@ int init_bus_I2C_DEV(int i)
   int multiplex_busses;
   char buf;
 
-  DBG(i, DBG_INFO, "i2c-dev init: bus #%d, debug %d", i,
+  DBG(i, DBG_INFO, "i2c-dev init: bus #%ld, debug %d", i,
   busses[i].debuglevel);
 
 
@@ -439,7 +439,7 @@ void *thr_sendrec_I2C_DEV(void *v)
 {
     char msg[1000];
 
-  int bus = (int) v;
+  long int bus = (long int) v;
 
   struct _GASTATE gatmp;
 
@@ -448,7 +448,7 @@ void *thr_sendrec_I2C_DEV(void *v)
   int ga_reset_devices = data->ga_reset_devices;
 
 
-  DBG(bus, DBG_INFO, "i2c-dev started, bus #%d, %s", bus,
+  DBG(bus, DBG_INFO, "i2c-dev started, bus #%ld, %s", bus,
       busses[bus].device);
 
   busses[bus].watchdog = 1;

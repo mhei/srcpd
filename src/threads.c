@@ -1,7 +1,7 @@
 /* cvs: $Id$             */
 
-/* 
- * Vorliegende Software unterliegt der General Public License, 
+/*
+ * Vorliegende Software unterliegt der General Public License,
  * Version 2, 1991. (c) Matthias Trute, 2000-2001.
  *
  */
@@ -12,7 +12,7 @@
 #include "config-srcpd.h"
 #include "srcp-srv.h"
 
-void change_privileges(int bus)
+void change_privileges(long int bus)
 {
   struct group *group;
   struct passwd *passwd;
@@ -79,7 +79,8 @@ void* thr_handlePort(void *v)
   pthread_t ttid;
   struct _THREADS ti = *((THREADS *)v);
 /* ******** */
- int lsock, newsock; /* The listen socket */
+  int lsock;
+  long int newsock; /* The listen socket */
 
 #if defined (ENABLE_IPV6)
   struct sockaddr_in6 sin6;
@@ -119,7 +120,7 @@ void* thr_handlePort(void *v)
     memset (&sin, 0, sizeof (sin));
     sin.sin_family = AF_INET; /* IPv4 address family */
     sin.sin_port = htons(ti.socket);
-    sin.sin_addr.s_addr = INADDR_ANY; 
+    sin.sin_addr.s_addr = INADDR_ANY;
 
      /* Create the socket */
     lsock = socket (AF_INET, SOCK_STREAM, 0); /* Create an AF_INET socket */
@@ -184,7 +185,7 @@ void* thr_handlePort(void *v)
                      inet_ntop(AF_INET6, (void *)&(sin6_ptr->sin6_addr),
                      addrbuf, sizeof (addrbuf)),
                      ntohs(sin6_ptr->sin6_port));
-     } 
+     }
      else
 #endif
      {

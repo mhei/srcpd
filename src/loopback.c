@@ -19,7 +19,7 @@
 
 #define __loopback ((LOOPBACK_DATA*)busses[busnumber].driverdata)
 
-int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, int busnumber)
+int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
 {
   busses[busnumber].type = SERVER_LOOPBACK;
   busses[busnumber].init_func = &init_bus_LOOPBACK;
@@ -94,16 +94,16 @@ int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   return(1);
 }
 
-static int init_lineLoopback (int bus)
+static int init_lineLoopback (long int bus)
 {
   int FD;
   FD = -1;
   return FD;
 }
 
-int term_bus_LOOPBACK(int bus)
+long int term_bus_LOOPBACK(long int bus)
 {
-  DBG(bus, DBG_INFO, "loopback bus %d terminating", bus);
+  DBG(bus, DBG_INFO, "loopback bus #%ld terminating", bus);
   return 0;
 }
 
@@ -111,37 +111,37 @@ int term_bus_LOOPBACK(int bus)
  * initGL: modifies the gl data used to initialize the device
 
  */
-int init_gl_LOOPBACK(struct _GLSTATE *gl) {
+long int init_gl_LOOPBACK(struct _GLSTATE *gl) {
     switch(gl->protocol) {
-	case 'L':
-	case 'P':
-	    return SRCP_OK;
-	    break;
-	case 'M': 
-	  switch(gl->protocolversion) {
-	    case 1:
-		return ( gl -> n_fs == 14) ? SRCP_OK : SRCP_WRONGVALUE;
-		break;
-	    case 2:
-		return ( (gl -> n_fs == 14) ||
-		         (gl -> n_fs == 27) ||
-			 (gl -> n_fs == 28) ) ? SRCP_OK : SRCP_WRONGVALUE;
-		break;
-	  }
-	  return SRCP_WRONGVALUE;
+  case 'L':
+  case 'P':
+      return SRCP_OK;
+      break;
+  case 'M':
+    switch(gl->protocolversion) {
+      case 1:
+    return ( gl -> n_fs == 14) ? SRCP_OK : SRCP_WRONGVALUE;
+    break;
+      case 2:
+    return ( (gl -> n_fs == 14) ||
+             (gl -> n_fs == 27) ||
+       (gl -> n_fs == 28) ) ? SRCP_OK : SRCP_WRONGVALUE;
+    break;
+    }
+    return SRCP_WRONGVALUE;
           break;
-	case 'N':
+  case 'N':
           switch(gl->protocolversion) {
-	    case 1:
-		return ( (gl -> n_fs == 14) ||
-			 (gl -> n_fs == 128) ) ? SRCP_OK : SRCP_WRONGVALUE;
-		break;
-	    case 2:
-		return ( (gl -> n_fs == 14) ||
-			 (gl -> n_fs == 128) ) ? SRCP_OK : SRCP_WRONGVALUE;
-		break;
-    	  }
-	  return SRCP_WRONGVALUE;
+      case 1:
+    return ( (gl -> n_fs == 14) ||
+       (gl -> n_fs == 128) ) ? SRCP_OK : SRCP_WRONGVALUE;
+    break;
+      case 2:
+    return ( (gl -> n_fs == 14) ||
+       (gl -> n_fs == 128) ) ? SRCP_OK : SRCP_WRONGVALUE;
+    break;
+        }
+    return SRCP_WRONGVALUE;
           break;
        }
   return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
@@ -151,7 +151,7 @@ int init_gl_LOOPBACK(struct _GLSTATE *gl) {
  * initGA: modifies the ga data used to initialize the device
 
  */
-int init_ga_LOOPBACK(struct _GASTATE *ga) {
+long int init_ga_LOOPBACK(struct _GASTATE *ga) {
   if( (ga -> protocol == 'M') ||  (ga -> protocol == 'N') ||  (ga -> protocol == 'P') )
       return SRCP_OK;
   return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
@@ -160,12 +160,12 @@ int init_ga_LOOPBACK(struct _GASTATE *ga) {
 /* Initialisiere den Bus, signalisiere Fehler */
 /* Einmal aufgerufen mit busnummer als einzigem Parameter */
 /* return code wird ignoriert (vorerst) */
-int init_bus_LOOPBACK(int i)
+long int init_bus_LOOPBACK(long int i)
 {
-  DBG(i, DBG_INFO, "loopback init: bus #%d, debug %d", i, busses[i].debuglevel);
+  DBG(i, DBG_INFO, "loopback init: bus #%ld, debug %d", i, busses[i].debuglevel);
   if(busses[i].debuglevel==0)
   {
-   DBG(i, DBG_INFO, "loopback bus %d open device %s (not really!)", i, busses[i].device);
+    DBG(i, DBG_INFO, "loopback bus #%ld open device %s (not really!)", i, busses[i].device);
     busses[i].fd = init_lineLoopback(i);
   }
   else
@@ -181,7 +181,7 @@ void* thr_sendrec_LOOPBACK (void *v)
   struct _GLSTATE gltmp, glakt;
   struct _GASTATE gatmp;
   int addr;
-  int bus = (int) v;
+  long int bus = (long int) v;
 
   DBG(bus, DBG_INFO, "loopback started, bus #%d, %s", bus, busses[bus].device);
 
