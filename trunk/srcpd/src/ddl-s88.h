@@ -41,11 +41,11 @@ typedef struct _DDL_S88_DATA {
 
 } DDL_S88_DATA;
 
-int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber);
+int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, long int busnumber);
 
-int init_bus_S88(int);
-int term_bus_S88(int);
-void * thr_sendrec_S88(void *);
+long int init_bus_S88(long int);
+long int term_bus_S88(long int);
+void *thr_sendrec_S88(void *);
 void *thr_sendrec_dummy(void *v);
 
 #ifdef __FreeBSD__

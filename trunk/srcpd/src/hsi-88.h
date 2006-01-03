@@ -26,11 +26,11 @@ typedef struct _HSI_88_DATA
   char v_text[50];
 } HSI_88_DATA;
 
-int readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber);
+int readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, long int busnumber);
 
-int init_bus_HSI_88(int busnumber);
-int term_bus_HSI_88(int busnumber);
-int get_bus_config_HSI_88(int busnummer, int *num_gl, int *num_ga, int *num_fb);
+long int init_bus_HSI_88(long int busnumber);
+long int term_bus_HSI_88(long int busnumber);
+int get_bus_config_HSI_88(long int busnummer, int *num_gl, int *num_ga, int *num_fb);
 void* thr_sendrec_HSI_88(void*);
 
 #endif

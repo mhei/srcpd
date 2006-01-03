@@ -18,7 +18,7 @@ int server_shutdown_state;
 
 #define __srv ((SERVER_DATA*)busses[busnumber].driverdata)
 
-int readconfig_server(xmlDocPtr doc, xmlNodePtr node, int busnumber)
+int readconfig_server(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
 {
   DBG(busnumber, DBG_INFO, "bus %d starting configuration child %s", busnumber, node->name);
   busses[0].type = SERVER_SERVER;
@@ -36,7 +36,7 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 
   xmlNodePtr child = node->children;
   xmlChar *txt = NULL;
-  
+
   while (child)
   {
       if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0)
@@ -120,19 +120,19 @@ int startup_SERVER(void)
   return 0;
 }
 
-int describeSERVER(int bus, int addr, char *reply)
+int describeSERVER(long int bus, int addr, char *reply)
 {
   return SRCP_UNSUPPORTEDOPERATION;
 }
 
-int init_bus_server(int bus)
+long int init_bus_server(long int bus)
 {
   gettimeofday(& busses[0].power_change_time, NULL);
   DBG(bus, DBG_INFO, "init_bus %d", bus);
   return 0;
 }
 
-int term_bus_server(int bus)
+long int term_bus_server(long int bus)
 {
   DBG(bus, DBG_INFO, "term_bus %d", bus);
   return 0;

@@ -2,8 +2,8 @@
                           srcp-session.c  -  description
                              -------------------
     begin                : Don Apr 25 2002
-    copyright            : (C) 2002 by 
-    email                : 
+    copyright            : (C) 2002 by
+    email                :
  ***************************************************************************/
 
 /***************************************************************************
@@ -67,20 +67,20 @@ int stop_session(long int sessionid)
   unlock_ga_bysessionid(sessionid);
   unlock_gl_bysessionid(sessionid);
   sprintf(msg, "%lu.%.3lu 102 INFO 0 SESSION %lu\n", akt_time.tv_sec, akt_time.tv_usec/1000, sessionid);
-  queueInfoMessage(msg);  
+  queueInfoMessage(msg);
   return SRCP_OK;
 }
 
-int describeSESSION(int bus, int sessionid, char *reply)
+int describeSESSION(long int bus, int sessionid, char *reply)
 {
   return SRCP_UNSUPPORTEDOPERATION;
 }
 
 /**
- * called by srcp command session to finish a session; 
+ * called by srcp command session to finish a session;
  * return negative value of SRCP_OK to ack the request.
  */
-int termSESSION(int bus, int sessionid, int termsessionid, char *reply)
+int termSESSION(long int bus, int sessionid, int termsessionid, char *reply)
 {
   if(sessionid == termsessionid || termsessionid == 0)
   {
@@ -89,17 +89,17 @@ int termSESSION(int bus, int sessionid, int termsessionid, char *reply)
   return SRCP_FORBIDDEN;
 }
 
-int session_preparewait(int busnumber) {
+int session_preparewait(long int busnumber) {
     DBG(busnumber, DBG_DEBUG, "SESSION prepare wait");
     return pthread_mutex_lock(&cb_mutex[busnumber]);
 }
 
-int session_cleanupwait(int busnumber) {
+int session_cleanupwait(long int busnumber) {
     DBG(busnumber, DBG_DEBUG, "SESSION cleanup wait");
     return pthread_mutex_unlock(&cb_mutex[busnumber]);
 }
 
-int session_wait(int busnumber, struct timespec timeout, int *result) {
+int session_wait(long int busnumber, struct timespec timeout, int *result) {
     int rc;
     DBG(busnumber, DBG_DEBUG, "SESSION start wait");
     rc = pthread_cond_timedwait( &cb_cond[busnumber], &cb_mutex[busnumber], &timeout);
@@ -107,7 +107,7 @@ int session_wait(int busnumber, struct timespec timeout, int *result) {
     return rc;
 }
 
-int session_endwait(int busnumber, int returnvalue) {
+int session_endwait(long int busnumber, int returnvalue) {
     DBG(busnumber, DBG_DEBUG, "SESSION end wait");
     cb_data[busnumber] = returnvalue;
     pthread_cond_broadcast(&cb_cond[busnumber]);
@@ -115,7 +115,7 @@ int session_endwait(int busnumber, int returnvalue) {
     return returnvalue;
 }
 
-int session_processwait(int busnumber) {
+int session_processwait(long int busnumber) {
     DBG(busnumber, DBG_DEBUG, "SESSION process wait");
     return pthread_mutex_lock(&cb_mutex[busnumber]);
 }

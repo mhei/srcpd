@@ -2,8 +2,8 @@
                           srcp-session.h  -  description
                              -------------------
     begin                : Don Apr 25 2002
-    copyright            : (C) 2002 by 
-    email                : 
+    copyright            : (C) 2002 by
+    email                :
  ***************************************************************************/
 
 /***************************************************************************
@@ -22,13 +22,13 @@ int startup_SESSION(void);
 
 int start_session(long int sessionid, int mode);
 int stop_session(long int sessionid);
-int describeSESSION(int bus, int sessionid, char *reply);
-int termSESSION(int bus, int sessionid, int termsessionid, char *reply);
+int describeSESSION(long int bus, int sessionid, char *reply);
+int termSESSION(long int bus, int sessionid, int termsessionid, char *reply);
 
-int session_preparewait(int busnumber);
-int session_wait(int busnumber, struct timespec timeout, int *result);
-int session_endwait(int busnumber, int returnvalue);
-int session_cleanupwait(int busnumber);
+int session_preparewait(long int busnumber);
+int session_wait(long int busnumber, struct timespec timeout, int *result);
+int session_endwait(long int busnumber, int returnvalue);
+int session_cleanupwait(long int busnumber);
 
-int session_processwait(int busnumber);
+int session_processwait(long int busnumber);
 #endif

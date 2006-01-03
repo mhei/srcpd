@@ -26,7 +26,7 @@
 
 static int working_HSI88;
 
-int readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
+int readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
 {
   int number;
 
@@ -53,7 +53,7 @@ int readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
       child = child->next;
       continue;
     }
-    
+
     if (xmlStrcmp(child->name, BAD_CAST "refresh") == 0)
     {
         txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
@@ -62,7 +62,7 @@ int readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
             xmlFree(txt);
         }
     }
-    
+
     if (xmlStrcmp(child->name, BAD_CAST "p_time") == 0)
     {
         txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
@@ -80,7 +80,7 @@ int readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
             xmlFree(txt);
         }
     }
-    
+
     if (xmlStrcmp(child->name, BAD_CAST "number_fb_center") == 0)
     {
         txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
@@ -106,7 +106,7 @@ int readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
   number  = __hsi->number_fb[0];
   number += __hsi->number_fb[1];
   number += __hsi->number_fb[2];
-  
+
   if (init_FB(busnumber, number * 16))
   {
     __hsi->number_fb[0] = 0;
@@ -145,7 +145,7 @@ static int open_lineHSI88(char *name)
   return fd;
 }
 
-static int init_lineHSI88(int busnumber, int modules_left, int modules_center, int modules_right)
+static int init_lineHSI88(long int busnumber, int modules_left, int modules_center, int modules_right)
 {
   int status;
   int i;
@@ -237,14 +237,14 @@ static int init_lineHSI88(int busnumber, int modules_left, int modules_center, i
   return 0;
 }
 
-int init_bus_HSI_88(int busnumber)
+long int init_bus_HSI_88(long int busnumber)
 {
   int fd;
   int status;
   int anzahl;
 
   status = 0;
-  printf("Bus %d with debuglevel %d\n", busnumber, busses[busnumber].debuglevel);
+  printf("Bus %ld with debuglevel %d\n", busnumber, busses[busnumber].debuglevel);
   if(busses[busnumber].type != SERVER_HSI_88)
   {
     status = -2;
@@ -293,7 +293,7 @@ int init_bus_HSI_88(int busnumber)
   return status;
 }
 
-int term_bus_HSI_88(int busnumber)
+long int term_bus_HSI_88(long int busnumber)
 {
   if(busses[busnumber].type != SERVER_HSI_88)
     return 1;
@@ -311,14 +311,15 @@ int term_bus_HSI_88(int busnumber)
 
 void* thr_sendrec_HSI_88(void *v)
 {
-  int busnumber, refresh_time;
+  long int busnumber;
+  int refresh_time;
   int anzahl, i, temp;
   unsigned char byte2send;
   unsigned char rr;
   int status;
   int zaehler1, fb_zaehler1, fb_zaehler2;
 
-  busnumber = (int)v;
+  busnumber = (long int)v;
   refresh_time = __hsi->refresh;
   DBG(busnumber, DBG_INFO, "thr_sendrec_HSI_88 is startet");
 

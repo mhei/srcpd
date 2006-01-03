@@ -321,7 +321,7 @@ static tMotorolaCodes MotorolaCodes[256] = {
 };
 
 
-int comp_maerklin_1(int busnumber, int address, int direction, int speed, int func) {
+int comp_maerklin_1(long int busnumber, int address, int direction, int speed, int func) {
 
    char trits[9];
    char packet[18];
@@ -367,7 +367,7 @@ int comp_maerklin_1(int busnumber, int address, int direction, int speed, int fu
    return 0;
 }
 
-int comp_maerklin_2(int busnumber, int address, int direction, int speed, int func,
+int comp_maerklin_2(long int busnumber, int address, int direction, int speed, int func,
                      int f1, int f2, int f3, int f4) {
 
    char trits[9];
@@ -477,7 +477,7 @@ int comp_maerklin_2(int busnumber, int address, int direction, int speed, int fu
    return 0;
 }
 
-int comp_maerklin_3(int busnumber, int address, int direction, int speed, int func,
+int comp_maerklin_3(long int busnumber, int address, int direction, int speed, int func,
                      int f1, int f2, int f3, int f4) {
 
    char trits[9];
@@ -492,7 +492,7 @@ int comp_maerklin_3(int busnumber, int address, int direction, int speed, int fu
    int speed_halfstep =0;
    int mspeed;
 
-   DBG(busnumber, DBG_DEBUG,"command for Märklin protocol type 3 (28 speed steps) (M3) received");
+   DBG(busnumber, DBG_DEBUG,"command for Mï¿½klin protocol type 3 (28 speed steps) (M3) received");
 
    adr=address;
    if (direction==0) direction=-1; else direction=1;
@@ -596,7 +596,7 @@ int comp_maerklin_3(int busnumber, int address, int direction, int speed, int fu
    return 0;
 }
 
-int comp_maerklin_4(int busnumber, int address, int direction, int speed, int func,
+int comp_maerklin_4(long int busnumber, int address, int direction, int speed, int func,
                          int f1, int f2, int f3, int f4) {
 
    char trits[9];
@@ -610,7 +610,7 @@ int comp_maerklin_4(int busnumber, int address, int direction, int speed, int fu
    int adr=0;
    int mspeed;
 
-   DBG(busnumber, DBG_DEBUG,"command for Märklin protocol type 4 (M4, Uhlenbrock Intellibox) received");
+   DBG(busnumber, DBG_DEBUG,"command for Mï¿½klin protocol type 4 (M4, Uhlenbrock Intellibox) received");
 
    adr=address;
    if (direction==0) direction=-1; else direction=1;
@@ -705,7 +705,7 @@ int comp_maerklin_4(int busnumber, int address, int direction, int speed, int fu
    return 0;
 }
 
-int comp_maerklin_5(int busnumber, int address, int direction, int speed, int func,
+int comp_maerklin_5(long int busnumber, int address, int direction, int speed, int func,
                     int f1, int f2, int f3, int f4) {
 
    int sFS1, sFS2;
@@ -789,7 +789,7 @@ int comp_maerklin_5(int busnumber, int address, int direction, int speed, int fu
     return rtc;
 }
 
-int comp_maerklin_ms(int busnumber, int address, int port, int action) {
+int comp_maerklin_ms(long int busnumber, int address, int port, int action) {
 
    char trits[9];
    char packet[9];
@@ -851,13 +851,13 @@ int comp_maerklin_ms(int busnumber, int address, int port, int action) {
    return 0;
 }
 
-int comp_maerklin_mf(int busnumber, int address, int f1, int f2, int f3, int f4) {
+int comp_maerklin_mf(long int busnumber, int address, int f1, int f2, int f3, int f4) {
 
    char trits[9];
    char packet[9];
    int i;
 
-   DBG(busnumber, DBG_DEBUG,"command for func decoder (Märklin) (MF) received");
+   DBG(busnumber, DBG_DEBUG,"command for func decoder (Mï¿½klin) (MF) received");
 
    /* no special error handling, it's job of the clients */
    if (address<0 || address>80 || f1<0 || f1>1 ||

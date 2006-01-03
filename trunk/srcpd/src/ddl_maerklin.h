@@ -27,11 +27,11 @@
 /*                                                             */
 /* last changes: Torsten Vogt, march 2000                      */
 /*               Torsten Vogt, january 2001                    */
-/*                                                             */ 
+/*                                                             */
 /***************************************************************/
 
 #ifndef __MAERKLIN_H__
-#define __MAERKLIN_H__ 
+#define __MAERKLIN_H__
 
 #define LO (char)63
 #define HI (char)0
@@ -44,20 +44,20 @@
 #define WAIT_BETWEEN_19K     3750        /* 3750 */
 #define WAIT_END_19K         3750        /* 3750 */
 #define WAIT_BETWEEN_38K     2570        /* 1875 */
-#define WAIT_END_38K         2570        /* 1875 */  
+#define WAIT_END_38K         2570        /* 1875 */
 
 /* signal generating functions for maerklin */
-int comp_maerklin_1(int bus, int address, int direction, int speed, int func);
-int comp_maerklin_2(int bus, int address, int direction, int speed, int func,
+int comp_maerklin_1(long int bus, int address, int direction, int speed, int func);
+int comp_maerklin_2(long int bus, int address, int direction, int speed, int func,
                     int f1, int f2, int f3, int f4);
-int comp_maerklin_3(int bus, int address, int direction, int speed, int func,
+int comp_maerklin_3(long int bus, int address, int direction, int speed, int func,
                     int f1, int f2, int f3, int f4);
-int comp_maerklin_4(int bus, int address, int direction, int speed, int func,
+int comp_maerklin_4(long int bus, int address, int direction, int speed, int func,
                     int f1, int f2, int f3, int f4);
-int comp_maerklin_5(int bus, int address, int direction, int speed, int func,
+int comp_maerklin_5(long int bus, int address, int direction, int speed, int func,
                     int f1, int f2, int f3, int f4);
-int comp_maerklin_ms(int bus, int address, int port, int action);
-int comp_maerklin_mf(int bus, int address, 
+int comp_maerklin_ms(long int bus, int address, int port, int action);
+int comp_maerklin_mf(long int bus, int address,
                      int f1, int f2, int f3, int f4);
 
 #endif

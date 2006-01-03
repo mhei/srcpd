@@ -36,7 +36,7 @@
 /** readconfig_m605x: liest den Teilbaum der xml Configuration und parametriert
      den busspezifischen Datenteil, wird von register_bus() aufgerufen */
 
-int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, int busnumber)
+int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
 {
     busses[busnumber].type = SERVER_M605X;
     busses[busnumber].init_func = &init_bus_M6051;
@@ -155,7 +155,7 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, int busnumber)
  *     SERIELLE SCHNITTSTELLE KONFIGURIEREN
  *******************************************************
  */
-static int init_lineM6051(int bus)
+static int init_lineM6051(long int bus)
 {
     int FD;
     struct termios interface;
@@ -190,7 +190,7 @@ static int init_lineM6051(int bus)
     return FD;
 }
 
-int init_bus_M6051(int bus)
+long int init_bus_M6051(long int bus)
 {
 
     DBG(bus, DBG_INFO, "M605x  init: debug %d", busses[bus].debuglevel);
@@ -207,7 +207,7 @@ int init_bus_M6051(int bus)
     return 0;
 }
 
-int term_bus_M6051(int bus)
+long int term_bus_M6051(long int bus)
 {
     DBG(bus, DBG_INFO, "M605x bus term done, fd=%d", busses[bus].fd);
     return 0;
@@ -217,7 +217,7 @@ int term_bus_M6051(int bus)
  * initGL: modifies the gl data used to initialize the device
  *
  */
-int init_gl_M6051(struct _GLSTATE *gl)
+long int init_gl_M6051(struct _GLSTATE *gl)
 {
     if (gl->protocol != 'M')
         return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
@@ -238,7 +238,7 @@ int init_gl_M6051(struct _GLSTATE *gl)
  * initGA: modifies the ga data used to initialize the device
 
  */
-int init_ga_M6051(struct _GASTATE *ga)
+long int init_ga_M6051(struct _GASTATE *ga)
 {
     if ((ga->protocol != 'M') || (ga->protocol != 'P'))
         return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
@@ -253,7 +253,7 @@ void *thr_sendrec_M6051(void *v)
     unsigned char rr;
     struct _GLSTATE gltmp, glakt;
     struct _GASTATE gatmp;
-    int bus = (int) v;
+    long int bus = (long int) v;
     int ga_min_active_time =
         ((M6051_DATA *) busses[bus].driverdata)->ga_min_active_time;
     int pause_between_cmd =

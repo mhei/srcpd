@@ -43,32 +43,32 @@
  NB: NMRA baseline decoder
  (implemented)
 
- N1: NMRA 4-function decoder, 7-bit address, 28 speed steps 
+ N1: NMRA 4-function decoder, 7-bit address, 28 speed steps
  (implemented)
 
  N2: NMRA 4-function decoder, 7-bit address, 128 speed steps
- (implemented) 
+ (implemented)
 
  N3: NMRA 4-function decoder, 14-bit address, 28 speed steps
- (implemented) 
+ (implemented)
 
  N4: NMRA 4-function decoder, 14-bit address, 128 speed steps
- (implemented) 
+ (implemented)
 
  NA: accessory digital decoders
- (implemented) 
+ (implemented)
 
  service mode instruction packets for direct mode
  (verify cv, write cv, cv bit manipulation)
  (implemented)
- 
+
  service mode instruction packets for adress-only mode
  (verify address contents, write address contents)
  (NOT implemented)
 
  service mode instruction packets for physical register addressing
- (verify register contents, write register contents) 
- (implemented) 
+ (verify register contents, write register contents)
+ (implemented)
 
  service mode instruction packets paged cv addressing
  (verify/write register/cv contents)
@@ -76,11 +76,11 @@
 
  general notes:
 
-   configuration of the serial port: 
+   configuration of the serial port:
 
       startbit: 1
       stopbit : 1
-      databits: 8 
+      databits: 8
       baudrate: 19200
 
       ==> one serial bit takes 52.08 usec.
@@ -92,9 +92,9 @@
 
       0_______10_______10_______10_______10_______10_______10___ ...
 
-      problem: how to place the NMRA-0- and NMRA-1-Bits in the serial stream 
+      problem: how to place the NMRA-0- and NMRA-1-Bits in the serial stream
 
-      examples: 
+      examples:
 
       0          0xF0     _____-----
       00         0xC6     __--___---
@@ -104,13 +104,13 @@
       010        0x96     __--_-__--
       011        0x5C     ___---_-_-
       100        0x99     _-__--__--
-      101        0x71     _-___---_- 
+      101        0x71     _-___---_-
       110        0xC5     _-_-___---
       0111       0x56     __--_-_-_-
       1011       0x59     _-__--_-_-
       1101       0x65     _-_-__--_-
       1110       0x95     _-_-_-__--
-      11111      0x55     _-_-_-_-_- 
+      11111      0x55     _-_-_-_-_-
                           ^        ^
                           start-   stop-
                           bit      bit
@@ -137,106 +137,106 @@
         N2 058 1 114 0 0 0 0 0
         N2 059 1 115 0 0 0 0 0
         N2 060 1 116 0 0 0 0 0
-        N2 061 1 117 0 0 0 0 0 
+        N2 061 1 117 0 0 0 0 0
         N2 062 1 118 0 0 0 0 0
 
      I think, that these are not really problems. The only consequence is
      e.g. that some addresses has 127 speed steps instead of 128. Thats
-     life, don't worry. 
+     life, don't worry.
 
      New: completely new algorithm to generate the nmra packet stream
      (i call it 'version 3' of the translate routines)
 
-     The idea in this approach to generate nmra patterns is, to split the 
-     starting and ending bit in each pattern and share it with the next 
-     pattern. Therefore the patterns, which could be generated, are coded with 
+     The idea in this approach to generate nmra patterns is, to split the
+     starting and ending bit in each pattern and share it with the next
+     pattern. Therefore the patterns, which could be generated, are coded with
      h, H, l and L, lowercase describing the half bits. The longest possible
-     pattern contains two half h bits and four H bits. For the access into 
-     the coding table, the index of course doesn't differentiate between half 
-     and full bits, because the first one is always half and the last one 
-     determined by this table. This table shows, which bit pattern will be 
-     replaced by which pattern on the serial line. There is only one pattern 
-     left, which could not be directly translated. This pattern starts with 
-     an h, so we have to look at the patterns, which end with an h, if we want 
-     to avoid this pattern. All of the patterns, we access in the first try, 
-     contain an l or an L, which could be enlarged, to get rid of at least on 
-     bit in this pattern and don't have our problem in the next pattern. With 
-     the only exception of hHHHHh, but this pattern simply moves our problem 
-     into one byte before or upto the beginning of the sequence. And there, we 
-     could always add a bit. So we are sure, to be able, to translate any 
+     pattern contains two half h bits and four H bits. For the access into
+     the coding table, the index of course doesn't differentiate between half
+     and full bits, because the first one is always half and the last one
+     determined by this table. This table shows, which bit pattern will be
+     replaced by which pattern on the serial line. There is only one pattern
+     left, which could not be directly translated. This pattern starts with
+     an h, so we have to look at the patterns, which end with an h, if we want
+     to avoid this pattern. All of the patterns, we access in the first try,
+     contain an l or an L, which could be enlarged, to get rid of at least on
+     bit in this pattern and don't have our problem in the next pattern. With
+     the only exception of hHHHHh, but this pattern simply moves our problem
+     into one byte before or upto the beginning of the sequence. And there, we
+     could always add a bit. So we are sure, to be able, to translate any
      given sequence of bits.
 
     Because only the case of hHHHHh realy requires 6 bits, the translationtable
-    could be left at 32 entries. The other case, which has the same first five 
+    could be left at 32 entries. The other case, which has the same first five
     bits is our problem, so we have to handle it seperatly anyway.
 
-    Of course the resulting sequence is not dc free. But if this is required, 
-    one could replace the bytes in the TranslateData by an index in another 
-    table which holds for each data containing at least an L or two l 
-    replacements with different dc components. This way one could get a dc 
+    Of course the resulting sequence is not dc free. But if this is required,
+    one could replace the bytes in the TranslateData by an index in another
+    table which holds for each data containing at least an L or two l
+    replacements with different dc components. This way one could get a dc
     free signal or at will a signal with a given dc part.
 
-    #define ll          0xf0	_____-----
+    #define ll          0xf0  _____-----
 
-    #define lLl         0xcc	___--__---		000000  000001  000010 000011 000100 000101 000110  000111
+    #define lLl         0xcc  ___--__---    000000  000001  000010 000011 000100 000101 000110  000111
 
-    #define lHl         0xe8	____-_----
+    #define lHl         0xe8  ____-_----
 
-    #define lHLl        0x9a	__-_--__--		010000  010001  010010  010011
+    #define lHLl        0x9a  __-_--__--    010000  010001  010010  010011
 
-    #define lLHl        0xa6	__--__-_--		001000  001001  001010  001011
+    #define lLHl        0xa6  __--__-_--    001000  001001  001010  001011
 
-    #define lHHl        0xd4	___-_-_---		011000  011001  011010  011011
+    #define lHHl        0xd4  ___-_-_---    011000  011001  011010  011011
 
-    #define lHHHl       0xaa	__-_-_-_--
-
-
-
-    #define lh          0x00	_________-
-
-    #define lLh         0x1c	___---___-
-
-    #define lHh         0x40	_______-_-
-
-    #define lLHh        0x4c	___--__-_-		001100  001101  001110  001111
-
-    #define lHLh        0x34	___-_--__-		010100  010101  010110  010111
-
-    #define lHHh        0x50	_____-_-_-		011100  011101
-
-    #define lHHHh       0x54	___-_-_-_-		011110  011111
+    #define lHHHl       0xaa  __-_-_-_--
 
 
 
-    #define hLh         0x0f	_----____-
+    #define lh          0x00  _________-
 
-    #define hHLh        0x1d	_-_---___-		110100  110101
+    #define lLh         0x1c  ___---___-
 
-    #define hLHh        0x47	_---___-_-		101100  101101
+    #define lHh         0x40  _______-_-
 
-    #define hHHLh       0x35	_-_-_--__-		111010  111011
+    #define lLHh        0x4c  ___--__-_-    001100  001101  001110  001111
 
-    #define hHLHh       0x4d	_-_--__-_-		110110  110111
+    #define lHLh        0x34  ___-_--__-    010100  010101  010110  010111
 
-    #define hLHHh       0x53	_--__-_-_-      101110  101111
+    #define lHHh        0x50  _____-_-_-    011100  011101
 
-    #define hHHHHh      0x55	_-_-_-_-_-		111111
+    #define lHHHh       0x54  ___-_-_-_-    011110  011111
 
 
 
-    #define hl          0xff	_---------
+    #define hLh         0x0f  _----____-
 
-    #define hLl         0xc7	_---___---		100000  100001  100010  100011  100100  100101  100110  100111
+    #define hHLh        0x1d  _-_---___-    110100  110101
 
-    #define hHl         0xfd	_-_-------
+    #define hLHh        0x47  _---___-_-    101100  101101
 
-    #define hHLl        0xcd	_-_--__---		110000  110001  110010  110011
+    #define hHHLh       0x35  _-_-_--__-    111010  111011
 
-    #define hLHl        0xD3       	_--__-_---      101000  101001  101010  101011
+    #define hHLHh       0x4d  _-_--__-_-    110110  110111
 
-    #define hHHl        0xF5       	_-_-_-----      111000  111001
+    #define hLHHh       0x53  _--__-_-_-      101110  101111
 
-    #define hHHHl       0xd5	_-_-_-_---      111100  111101
+    #define hHHHHh      0x55  _-_-_-_-_-    111111
+
+
+
+    #define hl          0xff  _---------
+
+    #define hLl         0xc7  _---___---    100000  100001  100010  100011  100100  100101  100110  100111
+
+    #define hHl         0xfd  _-_-------
+
+    #define hHLl        0xcd  _-_--__---    110000  110001  110010  110011
+
+    #define hLHl        0xD3        _--__-_---      101000  101001  101010  101011
+
+    #define hHHl        0xF5        _-_-_-----      111000  111001
+
+    #define hHHHl       0xd5  _-_-_-_---      111100  111101
 
     not directly translatetable     111110
 
@@ -266,14 +266,14 @@
 #define hl          0xff
 #define hLl         0xc7
 #define hHl         0xfd
-#define hHLl        0xcd					 
-#define hLHl        0xD3 
-#define hHHl        0xF5 
+#define hHLl        0xcd
+#define hLHl        0xD3
+#define hHHl        0xF5
 #define hHHHl       0xd5
 
 
 #include "stdincludes.h"
-#include "ddl.h"  
+#include "ddl.h"
 #include "ddl_nmra.h"
 
 typedef struct {
@@ -283,7 +283,7 @@ typedef struct {
 } tTranslateData;
 
 typedef struct {
-   int  value; 
+   int  value;
    int  patternlength;
 } tTranslateData_v3;
 
@@ -367,7 +367,7 @@ int read_next_six_bits (char *Bitstream) {
    return bits;
 }
 
-int translateBitstream2Packetstream_v1(char *Bitstream, char *Packetstream, 
+int translateBitstream2Packetstream_v1(char *Bitstream, char *Packetstream,
                                        int force_translation) {
 
    char Buffer[BUFFERSIZE];
@@ -390,31 +390,31 @@ int translateBitstream2Packetstream_v1(char *Bitstream, char *Packetstream,
       correction=1;
    }
    bufsize = strlen(Buffer);
-   while (*pBs) { 
+   while (*pBs) {
       found = 0;
-      while (i>=0) { 
-         if (strncmp(pBs, TranslateData[i].pattern, 
+      while (i>=0) {
+         if (strncmp(pBs, TranslateData[i].pattern,
                           TranslateData[i].patternlength)==0){ found=1; break; }
          i--;
-      } 
+      }
       if (!found) {                                   /* now backtracking    */
-         pstack--;                                    /* back to last level  */ 
+         pstack--;                                    /* back to last level  */
          if (pstack>=0) {                             /* last level avail.?  */
             i=stack[pstack];
             pBs -= TranslateData[i].patternlength;    /* corrections         */
-            j--; 
+            j--;
             if (((highest_level-j)>=max_level_delta) &&
                 (!force_translation)) j=0;
             i--;                                      /* next try            */
          }
-      } 
+      }
       else {
          Packetstream[j]=(unsigned char)TranslateData[i].value;
          j++;
          if (j>highest_level) highest_level=j;
-         pBs += TranslateData[i].patternlength; 
+         pBs += TranslateData[i].patternlength;
          stack[pstack] = i; pstack++;
-         i = DataCnt-1;  
+         i = DataCnt-1;
       }
       if (j>=PKTSIZE-1 || bufsize==BUFFERSIZE) {
          syslog(LOG_INFO, "cannot translate bitstream '%s' to NMRA packet",
@@ -447,7 +447,7 @@ int translateBitstream2Packetstream_v2 (char *Bitstream, char *Packetstream) {
    int  found;              /* flag                                          */
    int  stack[PKTSIZE];     /* stack for the i's                             */
 
-   memset(Packetstream, 0, PKTSIZE); 
+   memset(Packetstream, 0, PKTSIZE);
    while (*Bitstream) {
       /* Check if the end of the buffer contains only 1s */
       if (strlen (Bitstream) <= 5) {
@@ -457,7 +457,7 @@ int translateBitstream2Packetstream_v2 (char *Bitstream, char *Packetstream) {
               return j + 1;
          }
       }
- 
+
       found = 0;
       while (i >= 0) {
          if (strncmp (Bitstream, TranslateData[i].pattern, TranslateData[i].patternlength)==0){
@@ -472,13 +472,13 @@ int translateBitstream2Packetstream_v2 (char *Bitstream, char *Packetstream) {
             i = stack [j];
             Bitstream -= TranslateData[i].patternlength; /* corrections      */
             i--;
- 
-         } 
+
+         }
          else {
             syslog(LOG_INFO, "cannot translate bitstream '%s' to NMRA packet", Bitstream);
             return 0;
-         }  
-      } 
+         }
+      }
       else {
          Packetstream[j]=(unsigned char)TranslateData[i].value;
          Bitstream += TranslateData[i].patternlength;
@@ -493,7 +493,7 @@ int translateBitstream2Packetstream_v2 (char *Bitstream, char *Packetstream) {
       }
    }
    return j+1;                          /* return nr of bytes in packetstream */
-}   
+}
 
 int translateBitstream2Packetstream_v3(char *Bitstream, char *Packetstream) {
 
@@ -555,7 +555,7 @@ int translateBitstream2Packetstream_v3(char *Bitstream, char *Packetstream) {
    }
 
    return generate_packet;             /* return nr of bytes in packetstream */
-}    
+}
 
 
 int translateBitstream2Packetstream(int NMRADCC_TR_V, char *Bitstream, char *Packetstream,
@@ -572,10 +572,10 @@ int translateBitstream2Packetstream(int NMRADCC_TR_V, char *Bitstream, char *Pac
 /*** some useful functions to calculate NMRA-DCC bytes (char arrays) ***/
 
 void calc_7bit_address_byte(char *byte, int address) {
-   /* calculating address byte: 0AAAAAAA */ 
+   /* calculating address byte: 0AAAAAAA */
 
    int i,j;
- 
+
    memset(byte, 0, 9);
    byte[0]='0';
    for (i=7; i>0; i--) {
@@ -585,14 +585,14 @@ void calc_7bit_address_byte(char *byte, int address) {
          case 0: byte[i]='0'; break;
          case 1: byte[i]='1'; break;
       }
-   } 
+   }
 }
 
 void calc_14bit_address_byte(char *byte1, char *byte2, int address) {
    /* calculating address bytes: 11AAAAAA AAAAAAAA */
- 
+
    int i,j;
- 
+
    memset(byte1, 0, 9);
    memset(byte2, 0, 9);
    byte1[0]='1';
@@ -613,7 +613,7 @@ void calc_14bit_address_byte(char *byte1, char *byte2, int address) {
          }
       }
    }
-} 
+}
 
 void calc_baseline_speed_byte(char *byte, int direction, int speed) {
    /* calculating speed byte2: 01DUSSSS  */
@@ -632,10 +632,10 @@ void calc_baseline_speed_byte(char *byte, int direction, int speed) {
          case 0: byte[i]='0'; break;
          case 1: byte[i]='1'; break;
       }
-   }  
+   }
 }
 
-void calc_28spst_speed_byte(char *byte, int direction, int speed) { 
+void calc_28spst_speed_byte(char *byte, int direction, int speed) {
    /* calculating speed byte: 01DSSSSS */
 
    int i,j;
@@ -679,12 +679,12 @@ void calc_function_group_one_byte(char* byte, int f[5]) {
    byte[8]=0;
 }
 
-void calc_128spst_adv_op_bytes(char *byte1, char *byte2, 
+void calc_128spst_adv_op_bytes(char *byte1, char *byte2,
                                int direction, int speed) {
 
    int i,j;
 
-   memset(byte1, 0, 9); 
+   memset(byte1, 0, 9);
    memset(byte2, 0, 9);
    strcpy(byte1, "00111111");
    if (direction == 1) byte2[0]='1'; else byte2[0]='0';
@@ -699,7 +699,7 @@ void calc_128spst_adv_op_bytes(char *byte1, char *byte2,
 }
 
 void calc_acc_address_byte(char *byte, char *rest, int address) {
-   /* calculating address byte: 10AAAAAA , returning rest */ 
+   /* calculating address byte: 10AAAAAA , returning rest */
 
    int i,j;
    char dummy[10];
@@ -717,7 +717,7 @@ void calc_acc_address_byte(char *byte, char *rest, int address) {
    byte[0]='1'; byte[1]='0';
    for (i=8; i>2; i--) {
       byte[i-1]=dummy[i];
-   }             
+   }
    memset(rest, 0, 3);
    for (i=2; i>=0; i--) rest[i]=dummy[i];
 }
@@ -741,10 +741,10 @@ void calc_acc_instr_byte(char *byte, char *rest, int activate, int pairnr, int o
          case '0': byte[i]='1'; break;
          case '1': byte[i]='0'; break;
          default : byte[i]='1'; break;
-      }  
-   } 
+      }
+   }
    byte[0]='1';
-}  
+}
 
 void xor_two_bytes(char *byte, char *byte1, char *byte2) {
 
@@ -753,12 +753,12 @@ void xor_two_bytes(char *byte, char *byte1, char *byte2) {
    memset(byte, 0, 9);
    for (i=0; i<8; i++) {
       if (byte1[i]==byte2[i]) byte[i]='0'; else byte[i]='1';
-   }   
+   }
 }
 
 /*** functions to generate NMRA-DCC data packets ***/
 
-int comp_nmra_accessory(int busnumber, int nr, int output, int activate) {
+int comp_nmra_accessory(long int busnumber, int nr, int output, int activate) {
    /* command: NA <nr [0001-4096]> <outp [0,1]> <activate [0,1]>
       example: NA 0012 0 1  */
 
@@ -773,7 +773,7 @@ int comp_nmra_accessory(int busnumber, int nr, int output, int activate) {
    char rest[3];
    int pairnr    = 0; /* decoders have pair of outputs               */
 
-   int j;        
+   int j;
 
    DBG(busnumber, DBG_DEBUG, "command for NMRA protocol for accessory decoders (NA) received");
 
@@ -788,7 +788,7 @@ int comp_nmra_accessory(int busnumber, int nr, int output, int activate) {
 #endif
       /* packet is not available */
       p_packetstream=packetstream;
-                               
+
       /*calculate the real address of the decoder and the pairnr of the switch*/
       address = ((nr-1) / 4) + 1;  /* valid decoder addresses: 1..1023 */
       pairnr  = (nr-1) % 4;
@@ -823,7 +823,7 @@ int comp_nmra_accessory(int busnumber, int nr, int output, int activate) {
    return 1;
 }
 
-int comp_nmra_baseline(int busnumber, int address, int direction, int speed) {
+int comp_nmra_baseline(long int busnumber, int address, int direction, int speed) {
 
    char byte1[9];
    char byte2[9];
@@ -839,16 +839,16 @@ int comp_nmra_baseline(int busnumber, int address, int direction, int speed) {
    adr=address;
 
    /* no special error handling, it's job of the clients */
-   if (address<1 || address>99 || direction<0 || direction>1 || 
+   if (address<1 || address>99 || direction<0 || direction>1 ||
        speed<0 || speed>15)
-      return 1; 
+      return 1;
 
    calc_7bit_address_byte(byte1, address);
    calc_baseline_speed_byte(byte2,direction,speed);
    xor_two_bytes(byte3, byte2, byte1);
 
    /* putting all together in a 'bitstream' (char array) */
-   memset(bitstream, 0, 100); 
+   memset(bitstream, 0, 100);
    strcat(bitstream, preamble);
    strcat(bitstream, "0");
    strcat(bitstream, byte1);
@@ -861,7 +861,7 @@ int comp_nmra_baseline(int busnumber, int address, int direction, int speed) {
    j=translateBitstream2Packetstream(busnumber, bitstream, packetstream, FALSE);
 
    if (j>0) {
-      update_NMRAPacketPool(busnumber, adr,packetstream,j,packetstream,j);   
+      update_NMRAPacketPool(busnumber, adr,packetstream,j,packetstream,j);
       queue_add(busnumber, adr, packetstream, QNBLOCOPKT,j);
 
       return 0;
@@ -870,7 +870,7 @@ int comp_nmra_baseline(int busnumber, int address, int direction, int speed) {
    return 1;
 }
 
-int comp_nmra_f4b7s28(int busnumber, int address, int direction, int speed, int func,
+int comp_nmra_f4b7s28(long int busnumber, int address, int direction, int speed, int func,
                            int f1, int f2, int f3, int f4) {
      /* 4-function-decoder with 7-bit address and 28 speed steps */
      /* N1 001 1 18 1 0 0 0 0                                    */
@@ -894,20 +894,20 @@ int comp_nmra_f4b7s28(int busnumber, int address, int direction, int speed, int 
    f[0]=func; f[1]=f1; f[2]=f2; f[3]=f3; f[4]=f4;
 
    /* no special error handling, it's job of the clients */
-   if (address<1 || address>99 || direction<0 || direction>1 || 
+   if (address<1 || address>99 || direction<0 || direction>1 ||
        speed<0 || speed>28)
       return 1;
-   for (i=0; i<5; i++) 
-      if (f[i]<0 || f[i]>1) 
+   for (i=0; i<5; i++)
+      if (f[i]<0 || f[i]>1)
          return 1;
 
    calc_7bit_address_byte(addrbyte, address);
    calc_28spst_speed_byte(spdrbyte, direction, speed);
-   calc_function_group_one_byte(funcbyte, f); 
-   xor_two_bytes(errdbyte, addrbyte, spdrbyte); 
+   calc_function_group_one_byte(funcbyte, f);
+   xor_two_bytes(errdbyte, addrbyte, spdrbyte);
 
    /* putting all together in a 'bitstream' (char array) (speed & direction) */
-   memset(bitstream, 0, 100); 
+   memset(bitstream, 0, 100);
    strcat(bitstream, preamble);
    strcat(bitstream, "0");
    strcat(bitstream, addrbyte);
@@ -917,7 +917,7 @@ int comp_nmra_f4b7s28(int busnumber, int address, int direction, int speed, int 
    strcat(bitstream, errdbyte);
    strcat(bitstream, "1");
 
-   xor_two_bytes(errdbyte, addrbyte, funcbyte); 
+   xor_two_bytes(errdbyte, addrbyte, funcbyte);
 
    /* putting all together in a 'bitstream' (char array) (functions) */
    memset(bitstream2, 0, 100);
@@ -934,7 +934,7 @@ int comp_nmra_f4b7s28(int busnumber, int address, int direction, int speed, int 
    jj=translateBitstream2Packetstream(busnumber, bitstream2, packetstream2, FALSE);
 
    if (j>0 && jj>0) {
-      update_NMRAPacketPool(busnumber, adr,packetstream,j,packetstream2,jj);   
+      update_NMRAPacketPool(busnumber, adr,packetstream,j,packetstream2,jj);
       queue_add(busnumber, adr, packetstream, QNBLOCOPKT,j);
       queue_add(busnumber, adr, packetstream2, QNBLOCOPKT,jj);
 
@@ -944,7 +944,7 @@ int comp_nmra_f4b7s28(int busnumber, int address, int direction, int speed, int 
    return 1;
 }
 
-int comp_nmra_f4b7s128(int busnumber, int address, int direction, int speed, int func,
+int comp_nmra_f4b7s128(long int busnumber, int address, int direction, int speed, int func,
                             int f1, int f2, int f3, int f4) {
      /* 4-function-decoder with 7-bit address and 128 speed steps */
      /* N2 001 1 057 1 0 0 0 0                                    */
@@ -972,7 +972,7 @@ int comp_nmra_f4b7s128(int busnumber, int address, int direction, int speed, int
    /* no special error handling, it's job of the clients */
    if (address<1 || address>99 || direction<0 || direction>1 ||
        speed<0 || speed>128)
-      return 1; 
+      return 1;
    for (i=0; i<5; i++)
       if (f[i]<0 || f[i]>1)
          return 1;
@@ -1023,11 +1023,11 @@ int comp_nmra_f4b7s128(int busnumber, int address, int direction, int speed, int
    return 1;
 }
 
-int comp_nmra_f4b14s28(int busnumber, int address, int direction, int speed, int func,
+int comp_nmra_f4b14s28(long int busnumber, int address, int direction, int speed, int func,
                        int f1, int f2, int f3, int f4) {
      /* 4-function-decoder with 14-bit address and 28 speed steps */
      /* N3 0001 1 18 1 0 0 0 0                                    */
- 
+
    char addrbyte1[9];
    char addrbyte2[9];
    char spdrbyte[9];
@@ -1038,16 +1038,16 @@ int comp_nmra_f4b14s28(int busnumber, int address, int direction, int speed, int
    char bitstream2[BUFFERSIZE];
    char packetstream[PKTSIZE];
    char packetstream2[PKTSIZE];
- 
+
    int adr       = 0;
    int f[5];
    int i,j,jj;
 
    DBG(busnumber, DBG_DEBUG,"command for NMRA protocol 4f14b28fs (N3) received");
- 
+
    adr=address;
    f[0]=func; f[1]=f1; f[2]=f2; f[3]=f3; f[4]=f4;
- 
+
    /* no special error handling, it's job of the clients */
    if (address<1 || address>10239 || direction<0 || direction>1 ||
        speed<0 || speed>28)
@@ -1055,14 +1055,14 @@ int comp_nmra_f4b14s28(int busnumber, int address, int direction, int speed, int
    for (i=0; i<5; i++)
       if (f[i]<0 || f[i]>1)
          return 1;
- 
+
    calc_14bit_address_byte(addrbyte1, addrbyte2, address);
    calc_28spst_speed_byte(spdrbyte, direction, speed);
    calc_function_group_one_byte(funcbyte, f);
 
    xor_two_bytes(dummy, addrbyte1, addrbyte2);
    xor_two_bytes(errdbyte, dummy, spdrbyte);
- 
+
    /* putting all together in a 'bitstream' (char array) (speed & direction) */
    memset(bitstream, 0, 100);
    strcat(bitstream, preamble);
@@ -1076,7 +1076,7 @@ int comp_nmra_f4b14s28(int busnumber, int address, int direction, int speed, int
    strcat(bitstream, errdbyte);
    strcat(bitstream, "1");
 
-   xor_two_bytes(dummy, addrbyte1, addrbyte2); 
+   xor_two_bytes(dummy, addrbyte1, addrbyte2);
    xor_two_bytes(errdbyte, dummy, funcbyte);
 
    /* putting all together in a 'bitstream' (char array) (functions) */
@@ -1091,26 +1091,26 @@ int comp_nmra_f4b14s28(int busnumber, int address, int direction, int speed, int
    strcat(bitstream2, "0");
    strcat(bitstream2, errdbyte);
    strcat(bitstream2, "1");
- 
+
    j=translateBitstream2Packetstream(busnumber, bitstream, packetstream, FALSE);
    jj=translateBitstream2Packetstream(busnumber, bitstream2, packetstream2, FALSE);
- 
+
    if (j>0 && jj>0) {
       update_NMRAPacketPool(busnumber, adr+ADDR14BIT_OFFSET,packetstream,j,packetstream2,jj);
       queue_add(busnumber, adr+ADDR14BIT_OFFSET, packetstream, QNBLOCOPKT, j);
       queue_add(busnumber, adr+ADDR14BIT_OFFSET, packetstream2, QNBLOCOPKT, jj);
- 
+
       return 0;
    }
- 
+
    return 1;
 }
- 
-int comp_nmra_f4b14s128(int busnumber, int address, int direction, int speed, int func,
+
+int comp_nmra_f4b14s128(long int busnumber, int address, int direction, int speed, int func,
                         int f1, int f2, int f3, int f4) {
      /* 4-function-decoder with 14-bit address and 128 speed steps */
      /* N4 001 1 057 1 0 0 0 0                                    */
- 
+
    char addrbyte1[9];
    char addrbyte2[9];
    char spdrbyte1[9];
@@ -1122,16 +1122,16 @@ int comp_nmra_f4b14s128(int busnumber, int address, int direction, int speed, in
    char bitstream2[BUFFERSIZE];
    char packetstream[PKTSIZE];
    char packetstream2[PKTSIZE];
- 
+
    int adr       = 0;
    int f[5];
    int i,j,jj;
- 
+
    DBG(busnumber, DBG_DEBUG, "command for NMRA protocol 4f14b128fs (N4) received");
- 
+
    adr=address;
    f[0]=func; f[1]=f1; f[2]=f2; f[3]=f3; f[4]=f4;
- 
+
    /* no special error handling, it's job of the clients */
    if (address<1 || address>10239 || direction<0 || direction>1 ||
        speed<0 || speed>128)
@@ -1139,14 +1139,14 @@ int comp_nmra_f4b14s128(int busnumber, int address, int direction, int speed, in
    for (i=0; i<5; i++)
       if (f[i]<0 || f[i]>1)
          return 1;
- 
+
    calc_14bit_address_byte(addrbyte1, addrbyte2, address);
    calc_128spst_adv_op_bytes(spdrbyte1, spdrbyte2, direction, speed);
    calc_function_group_one_byte(funcbyte, f);
    xor_two_bytes(errdbyte, addrbyte1, addrbyte2);
    xor_two_bytes(dummy, errdbyte, spdrbyte1);
    xor_two_bytes(errdbyte, dummy, spdrbyte2);
- 
+
    /* putting all together in a 'bitstream' (char array) (speed & direction) */
    memset(bitstream, 0, 100);
    strcat(bitstream, preamble);
@@ -1157,14 +1157,14 @@ int comp_nmra_f4b14s128(int busnumber, int address, int direction, int speed, in
    strcat(bitstream, "0");
    strcat(bitstream, spdrbyte1);
    strcat(bitstream, "0");
-   strcat(bitstream, spdrbyte2);    
+   strcat(bitstream, spdrbyte2);
    strcat(bitstream, "0");
    strcat(bitstream, errdbyte);
    strcat(bitstream, "1");
 
    xor_two_bytes(dummy, addrbyte1, addrbyte2);
    xor_two_bytes(errdbyte, dummy, funcbyte);
- 
+
    /* putting all together in a 'bitstream' (char array) (functions) */
    memset(bitstream2, 0, 100);
    strcat(bitstream2, preamble);
@@ -1177,20 +1177,20 @@ int comp_nmra_f4b14s128(int busnumber, int address, int direction, int speed, in
    strcat(bitstream2, "0");
    strcat(bitstream2, errdbyte);
    strcat(bitstream2, "1");
- 
+
    j=translateBitstream2Packetstream(busnumber, bitstream, packetstream, FALSE);
    jj=translateBitstream2Packetstream(busnumber,bitstream2, packetstream2, FALSE);
- 
+
    if (j>0 && jj>0) {
       update_NMRAPacketPool(busnumber, adr+ADDR14BIT_OFFSET,packetstream,j,packetstream2,jj);
       queue_add(busnumber, adr+ADDR14BIT_OFFSET, packetstream, QNBLOCOPKT, j);
       queue_add(busnumber, adr+ADDR14BIT_OFFSET, packetstream2, QNBLOCOPKT, jj);
- 
+
       return 0;
    }
- 
+
    return 1;
-}  
+}
 
 /*** the following function(s) supports the implementation of NMRA- ***
  *** programmers. It is recommended to use a programming track to   ***
@@ -1212,24 +1212,24 @@ static char reset_packet[] = "11111111111111111111111111111100000000000000000000
 static char page_preset_packet[] = "11111111111111111111111111111100111110100000000100111110010";
 static char idle_packet[] = "11111111111111111111111111111101111111100000000001111111110";
 
-void sm_init(int busnumber) {
+void sm_init(long int busnumber) {
    memset(resetstream, 0, PKTSIZE);
    rs_size=translateBitstream2Packetstream(busnumber,reset_packet, resetstream, FALSE);
    memset(idlestream, 0, PKTSIZE);
-   is_size=translateBitstream2Packetstream(busnumber,idle_packet, idlestream, FALSE);     
+   is_size=translateBitstream2Packetstream(busnumber,idle_packet, idlestream, FALSE);
    memset(pagepresetstream, 0, PKTSIZE);
-   ps_size=translateBitstream2Packetstream(busnumber,page_preset_packet,pagepresetstream,TRUE); 
+   ps_size=translateBitstream2Packetstream(busnumber,page_preset_packet,pagepresetstream,TRUE);
    sm_initialized = TRUE;
 }
 
-int scanACK(int busnumber) {
+int scanACK(long int busnumber) {
    int result, arg;
    result = ioctl(busses[busnumber].fd, TIOCMGET, &arg);
    if ((result>=0)&&(!(arg&TIOCM_RI))) return 1;
    return 0;
 }
 
-int waitUARTempty_scanACK(int busnumber) {
+int waitUARTempty_scanACK(long int busnumber) {
    int result;
    int ack = 0;
    do {         /* wait until UART is empty */
@@ -1241,13 +1241,13 @@ int waitUARTempty_scanACK(int busnumber) {
 #endif
    } while(!result);
    return ack;
-} 
+}
 
-void handleACK(int busnumber, int sckt, int ack) {
+void handleACK(long int busnumber, int sckt, int ack) {
 
    char buf[80];
 
-   //set_SerialLine(SL_RI,ON); 
+   //set_SerialLine(SL_RI,ON);
    usleep(1000);
    if ((ack==1) && (scanACK(busnumber)==1))
       sprintf(buf, "INFO GL SM 2\n");       // ack not supported
@@ -1257,7 +1257,7 @@ void handleACK(int busnumber, int sckt, int ack) {
    write(sckt,buf,strlen(buf));
 }
 
-void protocol_nmra_sm_direct_cvbyte(int busnumber, int sckt, int cv, int value, int verify) {
+void protocol_nmra_sm_direct_cvbyte(long int busnumber, int sckt, int cv, int value, int verify) {
    /* direct cv access */
 
    char byte2[9];
@@ -1294,7 +1294,7 @@ void protocol_nmra_sm_direct_cvbyte(int busnumber, int sckt, int cv, int value, 
       strcpy(byte2, "01110100");
    else
       strcpy(byte2, "01111100");
-   for (i=7; i>=6; i--) { 
+   for (i=7; i>=6; i--) {
       j=cv%2;
       cv=cv/2;
       switch (j) {
@@ -1353,23 +1353,23 @@ void protocol_nmra_sm_direct_cvbyte(int busnumber, int sckt, int cv, int value, 
 
    setSerialMode(busnumber,SDM_NMRA);
    tcflow(busses[busnumber].fd, TCOON);
-   write(busses[busnumber].fd,SendStream,l);  
+   write(busses[busnumber].fd,SendStream,l);
    ack=waitUARTempty_scanACK(busnumber);
    tcflow(busses[busnumber].fd, TCOOFF);
    setSerialMode(busnumber,SDM_DEFAULT);
 
    handleACK(busnumber, sckt, ack);
-} 
+}
 
-void protocol_nmra_sm_write_cvbyte(int bus, int sckt, int cv, int value) {
+void protocol_nmra_sm_write_cvbyte(long int bus, int sckt, int cv, int value) {
    protocol_nmra_sm_direct_cvbyte(bus, sckt, cv, value, FALSE);
 }
- 
-void protocol_nmra_sm_verify_cvbyte(int bus, int sckt, int cv, int value) {
-   protocol_nmra_sm_direct_cvbyte(bus, sckt, cv, value, TRUE); 
-} 
 
-void protocol_nmra_sm_write_cvbit(int bus, int sckt, int cv, int bit, int value) {
+void protocol_nmra_sm_verify_cvbyte(long int bus, int sckt, int cv, int value) {
+   protocol_nmra_sm_direct_cvbyte(bus, sckt, cv, value, TRUE);
+}
+
+void protocol_nmra_sm_write_cvbit(long int bus, int sckt, int cv, int bit, int value) {
    /* direct cv access */
 
    char byte2[9];
@@ -1387,7 +1387,7 @@ void protocol_nmra_sm_write_cvbit(int bus, int sckt, int cv, int bit, int value)
    /* no special error handling, it's job of the clients */
    if (cv<0 || cv>1023 || bit<0 || bit>7 || value<0 || value>1) return;
 
-   if (!sm_initialized) sm_init(bus); 
+   if (!sm_initialized) sm_init(bus);
 
    /* calculating byte3: AAAAAAAA (rest of CV#) */
    memset(byte3, 0, 9);
@@ -1398,7 +1398,7 @@ void protocol_nmra_sm_write_cvbit(int bus, int sckt, int cv, int bit, int value)
          case 0: byte3[i]='0'; break;
          case 1: byte3[i]='1'; break;
       }
-   }    
+   }
 
    /* calculating byte2: 011110AA (instruction byte1) */
    memset(byte2, 0, 9);
@@ -1423,7 +1423,7 @@ void protocol_nmra_sm_write_cvbit(int bus, int sckt, int cv, int bit, int value)
          case 0: byte4[i]='0'; break;
          case 1: byte4[i]='1'; break;
       }
-   }  
+   }
 
    /* calculating byte5: EEEEEEEE (error detection byte) */
    memset(byte5, 0, 9);
@@ -1456,14 +1456,14 @@ void protocol_nmra_sm_write_cvbit(int bus, int sckt, int cv, int bit, int value)
    setSerialMode(bus,SDM_NMRA);
    tcflow(busses[bus].fd, TCOON);
    write(busses[bus].fd,SendStream,l);
-   ack=waitUARTempty_scanACK(bus);      
+   ack=waitUARTempty_scanACK(bus);
    tcflow(busses[bus].fd, TCOOFF);
    setSerialMode(bus,SDM_DEFAULT);
 
    handleACK(bus, sckt, ack);
-} 
+}
 
-void protocol_nmra_sm_phregister(int bus, int sckt,int reg,int value,int verify) {
+void protocol_nmra_sm_phregister(long int bus, int sckt,int reg,int value,int verify) {
    /* physical register addressing */
 
    char byte1[9];
@@ -1478,18 +1478,18 @@ void protocol_nmra_sm_phregister(int bus, int sckt,int reg,int value,int verify)
    DBG(bus, DBG_DEBUG, "command for NMRA service mode instruction (SMPRA) received");
 
    /* no special error handling, it's job of the clients */
-   if (reg<1 || reg>8 || value<0 || value>255) return;      
+   if (reg<1 || reg>8 || value<0 || value>255) return;
 
-   if (!sm_initialized) sm_init(bus); 
+   if (!sm_initialized) sm_init(bus);
 
    /* calculating byte1: 0111CRRR (instruction and nr of register) */
    memset(byte1, 0, 9);
    if (verify)
       strcpy(byte1,"01110");
    else
-      strcpy(byte1,"01111"); 
+      strcpy(byte1,"01111");
    switch (reg) {
-      case 1: strcat(byte1, "000"); break; 
+      case 1: strcat(byte1, "000"); break;
       case 2: strcat(byte1, "001"); break;
       case 3: strcat(byte1, "010"); break;
       case 4: strcat(byte1, "011"); break;
@@ -1508,10 +1508,10 @@ void protocol_nmra_sm_phregister(int bus, int sckt,int reg,int value,int verify)
          case 0: byte2[i]='0'; break;
          case 1: byte2[i]='1'; break;
       }
-   } 
+   }
 
    /* calculating byte3 (error detection byte) */
-   xor_two_bytes(byte3, byte1, byte2);      
+   xor_two_bytes(byte3, byte1, byte2);
 
    /* putting all together in a 'bitstream' (char array) */
    memset(bitstream, 0, 100);
@@ -1564,15 +1564,15 @@ void protocol_nmra_sm_phregister(int bus, int sckt,int reg,int value,int verify)
    l=write(busses[bus].fd,SendStream,y);
    ack=waitUARTempty_scanACK(bus);
    tcflow(busses[bus].fd, TCOOFF);
-   setSerialMode(bus,SDM_DEFAULT);    
+   setSerialMode(bus,SDM_DEFAULT);
 
    handleACK(bus, sckt, ack);
-}  
+}
 
-void protocol_nmra_sm_write_phregister(int bus, int sckt,int reg,int value) {
+void protocol_nmra_sm_write_phregister(long int bus, int sckt,int reg,int value) {
    protocol_nmra_sm_phregister(bus, sckt,reg,value,FALSE);
 }
 
-void protocol_nmra_sm_verify_phregister(int bus, int sckt,int reg,int value) {
+void protocol_nmra_sm_verify_phregister(long int bus, int sckt,int reg,int value) {
    protocol_nmra_sm_phregister(bus, sckt,reg,value,TRUE);
-} 
+}

@@ -75,7 +75,7 @@
 #define S88_WRITE(x) for (i=0;i<S88CLOCK_SCALE;i++) outb(x,S88PORT)
 
 // possible io-addresses for the parallel port
-const unsigned long LPT_BASE[] = { 0x378, 0x278, 0x3BC };
+const unsigned long int LPT_BASE[] = { 0x378, 0x278, 0x3BC };
 // number of possible parallel ports
 const unsigned int LPT_NUM = 3;
 // values of the bits in a byte
@@ -83,7 +83,7 @@ const char BIT_VALUES[] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
 
 #define __ddl_s88 ((DDL_S88_DATA *) busses[busnumber].driverdata)
 
-int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
+int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
 {
   int i;
 
@@ -126,7 +126,7 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 
   xmlNodePtr child = node->children;
   xmlChar *txt = NULL;
-  
+
   while (child)
   {
     if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0)
@@ -134,7 +134,7 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
       child = child->next;
       continue;
     }
-    
+
     if (xmlStrcmp(child->name, BAD_CAST "ioport") == 0)
     {
         txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
@@ -144,7 +144,7 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
             xmlFree(txt);
         }
     }
-    
+
     if (xmlStrcmp(child->name, BAD_CAST "clockscale") == 0)
     {
         txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
@@ -153,7 +153,7 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
             xmlFree(txt);
         }
     }
-    
+
     if (xmlStrcmp(child->name, BAD_CAST "refresh") == 0)
     {
         txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
@@ -162,7 +162,7 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
             xmlFree(txt);
         }
     }
-    
+
     if (xmlStrcmp(child->name, BAD_CAST "p_time") == 0)
     {
         txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
@@ -180,7 +180,7 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
             xmlFree(txt);
         }
     }
-    
+
     if (xmlStrcmp(child->name, BAD_CAST "number_fb_2") == 0)
     {
         txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
@@ -189,7 +189,7 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
             xmlFree(txt);
         }
     }
-    
+
     if (xmlStrcmp(child->name, BAD_CAST "number_fb_3") == 0)
     {
         txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
@@ -198,7 +198,7 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
             xmlFree(txt);
         }
     }
-    
+
     if (xmlStrcmp(child->name, BAD_CAST "number_fb_4") == 0)
     {
         txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
@@ -250,7 +250,7 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, int busnumber)
 * bit ordering is changed from erddcd code! (MT)     *
 *                                                               *
 ****************************************************************/
-int init_bus_S88(int busnumber)
+long int init_bus_S88(long int busnumber)
 {
   unsigned int i;    // loop counter
   int isin = 0;    // reminder for checking
@@ -332,7 +332,7 @@ int init_bus_S88(int busnumber)
 * remarks: tested MW, 20.11.2000                                *
 *                                                               *
 ****************************************************************/
-void s88load(int busnumber)
+void s88load(long int busnumber)
 {
   int i, j, k, inbyte;
   struct timeval nowtime;
@@ -396,15 +396,15 @@ void s88load(int busnumber)
   }
 }
 
-int term_bus_S88(int bus)
+long int term_bus_S88(long int bus)
 {
     return 0;
 }
 
 void *thr_sendrec_S88(void *v)
 {
-  int busnumber = (int) v;
-  unsigned long sleepusec = 100000;
+  long int busnumber = (long int) v;
+  unsigned long int sleepusec = 100000;
 
   int S88REFRESH = __ddl_s88->refresh;
   // set refresh-cycle
@@ -442,7 +442,7 @@ void *thr_sendrec_dummy(void *v)
  * MAM 01/06/03
  *---------------------------------------------------------------------------*/
 
-int FBSD_ioperm(int Port,int KeineAhnung, int DesiredAccess,int busnumber)
+int FBSD_ioperm(int Port,int KeineAhnung, int DesiredAccess,long int busnumber)
 {
   int i;
   int found=0;
@@ -505,7 +505,7 @@ int FBSD_ioperm(int Port,int KeineAhnung, int DesiredAccess,int busnumber)
 }
 
 
-unsigned char FBSD_inb(int Woher,int busnumber)
+unsigned char FBSD_inb(int Woher,long int busnumber)
 {
   // Aufpassen! Manchmal wird das Datenport, manchmal die Steuer
   // leitungen angesprochen !
@@ -537,7 +537,7 @@ unsigned char FBSD_inb(int Woher,int busnumber)
   return i;
 }
 
-unsigned char FBSD_outb(unsigned char Data, int Wohin,int busnumber)
+unsigned char FBSD_outb(unsigned char Data, int Wohin,long int busnumber)
 {
   // suchen wir uns den richtigen ioctl zur richtigen Adresse...
 

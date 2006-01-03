@@ -1,7 +1,7 @@
 /* $Id$ */
 
-/* 
- * Vorliegende Software unterliegt der General Public License, 
+/*
+ * Vorliegende Software unterliegt der General Public License,
  * Version 2, 1991. (c) Matthias Trute, 2000-2001.
  *
  */
@@ -13,7 +13,7 @@
 #include "srcp-power.h"
 
 int
-setPower(int bus, int state, char *msg)
+setPower(long int bus, int state, char *msg)
 {
   gettimeofday(& busses[bus].power_change_time, NULL);
 //  busses[bus].power_state = (state == -1) ? 0 : state;
@@ -25,22 +25,22 @@ setPower(int bus, int state, char *msg)
 }
 
 int
-getPower(int bus)
+getPower(long int bus)
 {
   return busses[bus].power_state;
 }
 
 int
-infoPower(int bus, char *msg)
+infoPower(long int bus, char *msg)
 {
-  sprintf(msg, "%lu.%.3lu 100 INFO %d POWER %s %s\n",
+  sprintf(msg, "%lu.%.3lu 100 INFO %ld POWER %s %s\n",
   busses[bus].power_change_time.tv_sec,  busses[bus].power_change_time.tv_usec/1000,
   bus, busses[bus].power_state?"ON":"OFF", busses[bus].power_msg);
   return SRCP_INFO;
 }
 
 int
-initPower(int bus)
+initPower(long int bus)
 {
     return SRCP_OK;
 }

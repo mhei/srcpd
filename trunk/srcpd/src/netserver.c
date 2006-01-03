@@ -50,7 +50,7 @@ pthread_mutex_t SessionID_mut = PTHREAD_MUTEX_INITIALIZER;
 
 void *thr_doClient(void *v)
 {
-  int Socket = (int) v;
+  long int Socket = (long int) v;
   char line[MAXSRCPLINELEN], cmd[MAXSRCPLINELEN], parameter[MAXSRCPLINELEN], reply[MAXSRCPLINELEN];
   int mode = COMMAND;
   long int sessionid, rc, nelem;
@@ -153,7 +153,7 @@ void *thr_doClient(void *v)
  * handle all aspects of the command for all commands
  */
 
-static int handle_setcheck(int sessionid, int bus, char *device, char *parameter, char *reply, int setorcheck)
+static int handle_setcheck(int sessionid, long int bus, char *device, char *parameter, char *reply, int setorcheck)
 {
   struct timeval time;
   int rc = SRCP_UNSUPPORTEDDEVICEGROUP;
@@ -333,7 +333,7 @@ static int handle_setcheck(int sessionid, int bus, char *device, char *parameter
 /**
  * SET
  */
-int handleSET(int sessionid, int bus, char *device, char *parameter, char *reply)
+int handleSET(int sessionid, long int bus, char *device, char *parameter, char *reply)
 {
   return handle_setcheck(sessionid, bus, device, parameter, reply, 1);
 }
@@ -341,7 +341,7 @@ int handleSET(int sessionid, int bus, char *device, char *parameter, char *reply
 /***
  * CHECK -- like SET but no command must be sent
  */
-int handleCHECK(int sessionid, int bus, char *device, char *parameter, char *reply)
+int handleCHECK(int sessionid, long int bus, char *device, char *parameter, char *reply)
 {
   return handle_setcheck(sessionid, bus, device, parameter, reply, 0);
 }
@@ -349,7 +349,7 @@ int handleCHECK(int sessionid, int bus, char *device, char *parameter, char *rep
 /**
  * GET
  */
-int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply)
+int handleGET(int sessionid, long int bus, char *device, char *parameter, char *reply)
 {
   struct timeval akt_time;
   int rc = SRCP_UNSUPPORTEDDEVICEGROUP;
@@ -505,7 +505,7 @@ int handleGET(int sessionid, int bus, char *device, char *parameter, char *reply
 /**
  * WAIT
  */
-int handleWAIT(int sessionid, int bus, char *device, char *parameter, char *reply)
+int handleWAIT(int sessionid, long int bus, char *device, char *parameter, char *reply)
 {
   struct timeval time;
   int rc = SRCP_UNSUPPORTEDDEVICEGROUP;
@@ -586,7 +586,7 @@ int handleWAIT(int sessionid, int bus, char *device, char *parameter, char *repl
 /**
  * VERIFY
  */
-int handleVERIFY(int sessionid, int bus, char *device, char *parameter, char *reply)
+int handleVERIFY(int sessionid, long int bus, char *device, char *parameter, char *reply)
 {
   int rc = SRCP_UNSUPPORTEDOPERATION;
   struct timeval time;
@@ -598,7 +598,7 @@ int handleVERIFY(int sessionid, int bus, char *device, char *parameter, char *re
 /**
  * TERM
  * negative return code will terminate current session! */
-int handleTERM(int sessionid, int bus, char *device, char *parameter, char *reply)
+int handleTERM(int sessionid, long int bus, char *device, char *parameter, char *reply)
 {
   struct timeval akt_time;
   int rc = SRCP_UNSUPPORTEDDEVICEGROUP;
@@ -682,7 +682,7 @@ int handleTERM(int sessionid, int bus, char *device, char *parameter, char *repl
 /**
  * INIT
  */
-int handleINIT(int sessionid, int bus, char *device, char *parameter, char *reply)
+int handleINIT(int sessionid, long int bus, char *device, char *parameter, char *reply)
 {
   struct timeval time;
   int rc = SRCP_UNSUPPORTEDDEVICEGROUP;
@@ -754,7 +754,7 @@ int handleINIT(int sessionid, int bus, char *device, char *parameter, char *repl
 /**
  * RESET
  */
-int handleRESET(int sessionid, int bus, char *device, char *parameter, char *reply)
+int handleRESET(int sessionid, long int bus, char *device, char *parameter, char *reply)
 {
   struct timeval time;
   int rc = SRCP_UNSUPPORTEDOPERATION;
@@ -820,12 +820,12 @@ int doCmdClient(int Socket, int sessionid)
         {
           rc = handleTERM(sessionid, bus, devicegroup, parameter, reply);
           if (rc < 0) {
-	    if (socket_writereply(Socket, reply) < 0)
-	    {
-	      break;
-	    }
+      if (socket_writereply(Socket, reply) < 0)
+      {
+        break;
+      }
             break;
-	    }
+      }
           rc = abs(rc);
         }
         if (strncasecmp(command, "VERIFY", 6) == 0)

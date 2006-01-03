@@ -28,7 +28,7 @@ static long tdiff(struct timeval t1, struct timeval t2)
             t1.tv_usec / 1000);
 }
 
-int readanswer(int bus, char cmd, char *buf, int maxbuflen,
+int readanswer(long int bus, char cmd, char *buf, int maxbuflen,
                long timeout_ms)
 {
     int i, status, cnt = 0;
@@ -64,7 +64,7 @@ int readanswer(int bus, char cmd, char *buf, int maxbuflen,
     }
 }
 
-int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, int busnumber)
+int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
 {
     busses[busnumber].type = SERVER_ZIMO;
     busses[busnumber].init_func = &init_bus_zimo;
@@ -162,7 +162,7 @@ int init_linezimo(char *name)
     return fd;
 }
 
-int term_bus_zimo(int bus)
+long int term_bus_zimo(long int bus)
 {
     DBG(bus, DBG_INFO, "zimo bus %d terminating", bus);
     return 0;
@@ -171,7 +171,7 @@ int term_bus_zimo(int bus)
 /* Initialisiere den Bus, signalisiere Fehler */
 /* Einmal aufgerufen mit busnummer als einzigem Parameter */
 /* return code wird ignoriert (vorerst) */
-int init_bus_zimo(int i)
+long int init_bus_zimo(long int i)
 {
     DBG(i, DBG_INFO, "zimo init: bus #%d, debug %d, device %s", i,
         busses[i].debuglevel, busses[i].device);
@@ -186,7 +186,7 @@ void *thr_sendrec_zimo(void *v)
     struct _SM smtmp;
     // TODO: struct _GASTATE gatmp, gaakt;
     int addr, temp, i;
-    int bus = (int) v;
+    long int bus = (long int) v;
     char msg[20];
     char rr;
     char databyte1, databyte2, databyte3;
@@ -252,7 +252,7 @@ void *thr_sendrec_zimo(void *v)
             }
         }
         if (!queue_SM_isempty(bus)) {
-	    int returnvalue = -1;
+      int returnvalue = -1;
             unqueueNextSM(bus, &smtmp);
             //DBG(bus, DBG_INFO, "UNQUEUE SM, cmd:%d addr:%d type:%d typeaddr:%d bit:%04X ",smtmp.command,smtmp.addr,smtmp.type,smtmp.typeaddr,smtmp.bit);
             addr = smtmp.addr;
@@ -264,15 +264,15 @@ void *thr_sendrec_zimo(void *v)
                         smtmp.value);
                     sprintf(msg, "RN%02X%02X%c", smtmp.typeaddr,
                             smtmp.value, 13);
-                    writeString(bus, msg, 0);
-		    session_processwait(bus);
+                    writeString(bus, (unsigned char*)msg, 0);
+                    session_processwait(bus);
                     if (readanswer(bus, 'Q', msg, 20, 1000) > 3) {
                         sscanf(&msg[1], "%2X%2X%2X", &error, &cv, &val);
                         if (!error && cv == smtmp.typeaddr
                             && val == smtmp.value)
                             returnvalue = 0;
                     }
-		    session_endwait(bus, val);
+                    session_endwait(bus, val);
                     gettimeofday(&smtmp.tv, NULL);
                     setSM(bus, smtmp.type, addr, smtmp.typeaddr, smtmp.bit,
                           smtmp.value, 0);
@@ -280,8 +280,8 @@ void *thr_sendrec_zimo(void *v)
                 case GET:
                     DBG(bus, DBG_INFO, "SM GET #%d", smtmp.typeaddr);
                     sprintf(msg, "Q%02X%c", smtmp.typeaddr, 13);
-                    writeString(bus, msg, 0);
-		    session_processwait(bus);
+                    writeString(bus, (unsigned char*)msg, 0);
+                    session_processwait(bus);
                     if (readanswer(bus, 'Q', msg, 20, 10000) > 3) {     //sscanf(&msg[1],"%2X%2X%2X",&error,&cv,&val);
                         sscanf(&msg[1], "%*3c%2X%2X", &cv, &val);
                         DBG(bus, DBG_INFO,
@@ -290,7 +290,7 @@ void *thr_sendrec_zimo(void *v)
                         //if(!error && cv==smtmp.typeaddr)
                         returnvalue =  val;
                     }
-		    session_endwait(bus, returnvalue);
+                    session_endwait(bus, returnvalue);
                     break;
                 }
             }

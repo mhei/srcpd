@@ -24,14 +24,14 @@ static pthread_mutex_t queue_mutex[ MAX_BUSSES ];
 static int out[ MAX_BUSSES ], in[ MAX_BUSSES ];
 
 /* internal functions */
-static int queue_len( int busnumber );
-static int queue_isfull( int busnumber );
+static int queue_len( long int busnumber );
+static int queue_isfull( long int busnumber );
 
 /**
  * isValidGL: checks if a given address could be a valid GL.
  * returns true or false. false, if not all requierements are met.
  */
-int isValidGL( busnumber, addr )
+int isValidGL( long int busnumber, int addr )
 {
   DBG(busnumber, DBG_INFO, "GL VALID: %d %d (from %d to %d)", busnumber, addr, num_busses, gl[ busnumber ].numberOfGl - 1 );
   if ( busnumber > 0 &&       /* in bus 0 GL are not allowed */
@@ -54,7 +54,7 @@ int isValidGL( busnumber, addr )
             =0: no GL on that bus
       >0: maximum address
  */
-int getMaxAddrGL ( int busnumber )
+int getMaxAddrGL ( long int busnumber )
 {
   if ( busnumber > 0 && busnumber <= num_busses )
   {
@@ -94,7 +94,7 @@ static int calcspeed( int vs, int vmax, int n_fs )
 /* checks whether a GL is already initialized or not
  * returns false even, if it is an invalid address!
  */
-int isInitializedGL( int busnumber, int addr )
+int isInitializedGL( long int busnumber, int addr )
 {
   if ( isValidGL( busnumber, addr ) )
   {
@@ -110,7 +110,7 @@ int isInitializedGL( int busnumber, int addr )
    Lock wird in den SRCP Routinen beachtet, hier ist das nicht angebracht (Notstop)
 */
 
-int queueGL( int busnumber, int addr, int dir, int speed, int maxspeed, const int f )
+int queueGL( long int busnumber, int addr, int dir, int speed, int maxspeed, const int f )
 {
   struct timeval akt_time;
 
@@ -152,12 +152,12 @@ int queueGL( int busnumber, int addr, int dir, int speed, int maxspeed, const in
   }
 }
 
-int queue_GL_isempty( int busnumber )
+int queue_GL_isempty( long int busnumber )
 {
   return ( in[ busnumber ] == out[ busnumber ] );
 }
 
-static int queue_len( int busnumber )
+static int queue_len( long int busnumber )
 {
   if ( in[ busnumber ] >= out[ busnumber ] )
     return in[ busnumber ] - out[ busnumber ];
@@ -166,13 +166,13 @@ static int queue_len( int busnumber )
 }
 
 /* maybe, 1 element in the queue cannot be used.. */
-static int queue_isfull( int busnumber )
+static int queue_isfull( long int busnumber )
 {
   return queue_len( busnumber ) >= QUEUELEN - 1;
 }
 
 /** liefert n�hsten Eintrag oder -1, setzt fifo pointer neu! */
-int unqueueNextGL( int busnumber, struct _GLSTATE *l )
+int unqueueNextGL( long int busnumber, struct _GLSTATE *l )
 {
   if ( in[ busnumber ] == out[ busnumber ] )
     return -1;
@@ -184,7 +184,7 @@ int unqueueNextGL( int busnumber, struct _GLSTATE *l )
   return out[ busnumber ];
 }
 
-int getGL( int busnumber, int addr, struct _GLSTATE *l )
+int getGL( long int busnumber, int addr, struct _GLSTATE *l )
 {
   if ( isValidGL( busnumber, addr ) && isInitializedGL( busnumber, addr ) )
   {
@@ -203,7 +203,7 @@ int getGL( int busnumber, int addr, struct _GLSTATE *l )
  * within the SRCP SET Command code.
  * It respects the TERM function.
 */
-int setGL( int busnumber, int addr, struct _GLSTATE l )
+int setGL( long int busnumber, int addr, struct _GLSTATE l )
 {
   if ( isValidGL( busnumber, addr ) )
   {
@@ -214,7 +214,7 @@ int setGL( int busnumber, int addr, struct _GLSTATE l )
     gettimeofday( &gl[ busnumber ].glstate[ addr ].tv, NULL );
     if ( gl[ busnumber ].glstate[ addr ].state == 2 )
     {
-      sprintf( msg, "%lu.%.3lu 102 INFO %d GL %d",
+      sprintf( msg, "%lu.%.3lu 102 INFO %ld GL %d",
                gl[ busnumber ].glstate[ addr ].tv.tv_sec, gl[ busnumber ].glstate[ addr ].tv.tv_usec / 1000,
                busnumber, addr );
       bzero( &gl[ busnumber ].glstate[ addr ], sizeof( struct _GLSTATE ) );
@@ -232,7 +232,7 @@ int setGL( int busnumber, int addr, struct _GLSTATE l )
   }
 }
 
-int initGL( int busnumber, int addr, const char protocol, int protoversion, int n_fs, int n_func )
+int initGL( long int busnumber, int addr, const char protocol, int protoversion, int n_fs, int n_func )
 {
   int rc = SRCP_WRONGVALUE;
   if ( isValidGL( busnumber, addr ) )
@@ -267,7 +267,7 @@ int initGL( int busnumber, int addr, const char protocol, int protoversion, int 
 }
 
 
-int termGL( busnumber, addr )
+int termGL( long int busnumber, int addr )
 {
   if ( isInitializedGL( busnumber, addr ) )
   {
@@ -285,7 +285,7 @@ int termGL( busnumber, addr )
 /*
  * RESET a GL to its defaults
  */
-int resetGL( int busnumber, int addr )
+int resetGL( long int busnumber, int addr )
 {
   if ( isValidGL( busnumber, addr ) && isInitializedGL( busnumber, addr ) )
   {
@@ -297,11 +297,11 @@ int resetGL( int busnumber, int addr )
     return SRCP_NODATA;
   }
 }
-int describeGL( int busnumber, int addr, char *msg )
+int describeGL( long int busnumber, int addr, char *msg )
 {
   if ( isValidGL( busnumber, addr ) && isInitializedGL( busnumber, addr ) )
   {
-    sprintf( msg, "%lu.%.3lu 101 INFO %d GL %d %c %d %d %d\n",
+    sprintf( msg, "%lu.%.3lu 101 INFO %ld GL %d %c %d %d %d\n",
              gl[ busnumber ].glstate[ addr ].inittime.tv_sec, gl[ busnumber ].glstate[ addr ].inittime.tv_usec / 1000,
              busnumber, addr, gl[ busnumber ].glstate[ addr ].protocol, gl[ busnumber ].glstate[ addr ].protocolversion,
              gl[ busnumber ].glstate[ addr ].n_func, gl[ busnumber ].glstate[ addr ].n_fs );
@@ -314,13 +314,13 @@ int describeGL( int busnumber, int addr, char *msg )
   return SRCP_INFO;
 }
 
-int infoGL( int busnumber, int addr, char* msg )
+int infoGL( long int busnumber, int addr, char* msg )
 {
   int i;
   char *tmp;
   if ( isValidGL( busnumber, addr ) && isInitializedGL( busnumber, addr ) )
   {
-    sprintf( msg, "%lu.%.3lu 100 INFO %d GL %d %d %d %d %d",
+    sprintf( msg, "%lu.%.3lu 100 INFO %ld GL %d %d %d %d %d",
              gl[ busnumber ].glstate[ addr ].tv.tv_sec,
              gl[ busnumber ].glstate[ addr ].tv.tv_usec / 1000,
 
@@ -349,7 +349,7 @@ int infoGL( int busnumber, int addr, char* msg )
 }
 
 /* has to use a semaphore, must be atomare! */
-int lockGL( int busnumber, int addr, long int duration, long int sessionid )
+int lockGL( long int busnumber, int addr, long int duration, long int sessionid )
 {
   char msg[ 256 ];
   if ( isValidGL( busnumber, addr ) && isInitializedGL( busnumber, addr ) )
@@ -374,7 +374,7 @@ int lockGL( int busnumber, int addr, long int duration, long int sessionid )
   }
 }
 
-int getlockGL( int busnumber, int addr, long int *session_id )
+int getlockGL( long int busnumber, int addr, long int *session_id )
 {
   if ( isValidGL( busnumber, addr ) && isInitializedGL( busnumber, addr ) )
   {
@@ -388,12 +388,12 @@ int getlockGL( int busnumber, int addr, long int *session_id )
   }
 }
 
-int describeLOCKGL( int bus, int addr, char *reply )
+int describeLOCKGL( long int bus, int addr, char *reply )
 {
   if ( isValidGL( bus, addr ) && isInitializedGL( bus, addr ) )
   {
 
-    sprintf( reply, "%lu.%.3lu 100 INFO %d LOCK GL %d %ld %ld\n",
+    sprintf( reply, "%lu.%.3lu 100 INFO %ld LOCK GL %d %ld %ld\n",
              gl[ bus ].glstate[ addr ].locktime.tv_sec,
              gl[ bus ].glstate[ addr ].locktime.tv_usec / 1000,
              bus, addr, gl[ bus ].glstate[ addr ].lockduration, gl[ bus ].glstate[ addr ].locked_by );
@@ -405,7 +405,7 @@ int describeLOCKGL( int bus, int addr, char *reply )
   }
 }
 
-int unlockGL( int busnumber, int addr, long int sessionid )
+int unlockGL( long int busnumber, int addr, long int sessionid )
 {
   if ( isValidGL( busnumber, addr ) && isInitializedGL( busnumber, addr ) )
   {
@@ -415,7 +415,7 @@ int unlockGL( int busnumber, int addr, long int sessionid )
       char msg[ 256 ];
       gl[ busnumber ].glstate[ addr ].locked_by = 0;
       gettimeofday( & gl[ busnumber ].glstate[ addr ].locktime, NULL );
-      sprintf( msg, "%lu.%.3lu 102 INFO %d LOCK GL %d %ld\n",
+      sprintf( msg, "%lu.%.3lu 102 INFO %ld LOCK GL %d %ld\n",
                gl[ busnumber ].glstate[ addr ].locktime.tv_sec,
                gl[ busnumber ].glstate[ addr ].locktime.tv_usec / 1000,
                busnumber, addr, sessionid );
@@ -495,7 +495,7 @@ int startup_GL( void )
  * allocates memory to hold all the data
  * called from the configuration routines
  */
-int init_GL( int busnumber, int number )
+int init_GL( long int busnumber, int number )
 {
   int i;
   DBG( DBG_WARN, busnumber, "INIT GL: %d", number );

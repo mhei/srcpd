@@ -39,9 +39,9 @@ srcpd_SOURCES = config-srcpd.c config-srcpd.h \
 EXTRA_DIST = systemtest
 
 # set the include path found by configure
-INCLUDES = $(all_includes)
+INCLUDES = $(all_includes) $(XML_CPPFLAGS)
 
 DEFS = -D_REENTRANT -DSYSCONFDIR=\"$(sysconfdir)\" @DEFS@
 
 # the library search path.
-srcpd_LDFLAGS = $(all_libraries) `./systemtest`
+srcpd_LDFLAGS = $(all_libraries) `./systemtest` $(XML_LIBS)

@@ -44,14 +44,14 @@ email                : frank.schmischke@t-online.de
 
 int cmpTime( struct timeval *t1, struct timeval *t2 );
 
-static int readAnswer_LI100( int busnumber, unsigned char *str );
-static int initLine_LI100( int busnumber );
-void check_extern_engines( int busnumber );
-void get_status_sm_LI100( int busnumber );
+static int readAnswer_LI100( long int busnumber, unsigned char *str );
+static int initLine_LI100( long int busnumber );
+void check_extern_engines( long int busnumber );
+void get_status_sm_LI100( long int busnumber );
 
-int readConfig_LI100( xmlDocPtr doc, xmlNodePtr node, int busnumber )
+int readConfig_LI100( xmlDocPtr doc, xmlNodePtr node, long int busnumber )
 {
-  DBG(busnumber, DBG_INFO, "reading configuration for LI100 at bus %d", busnumber);
+  DBG(busnumber, DBG_INFO, "reading configuration for LI100 at bus #%ld", busnumber);
 
   busses[ busnumber ].type = SERVER_LI100;
   busses[ busnumber ].init_func = &init_bus_LI100;
@@ -71,7 +71,7 @@ int readConfig_LI100( xmlDocPtr doc, xmlNodePtr node, int busnumber )
 
   xmlNodePtr child = node->children;
   xmlChar *txt = NULL;
-  
+
   while (child)
   {
     if (xmlStrcmp(child->name, BAD_CAST "number_fb") == 0)
@@ -127,7 +127,7 @@ int readConfig_LI100( xmlDocPtr doc, xmlNodePtr node, int busnumber )
  * initGL: modifies the gl data used to initialize the device
  * this is called whenever a new loco comes in town...
  */
-int init_gl_LI100( struct _GLSTATE *gl )
+long int init_gl_LI100( struct _GLSTATE *gl )
 {
   gl -> n_fs = 14;
   gl -> n_func = 1;
@@ -138,13 +138,13 @@ int init_gl_LI100( struct _GLSTATE *gl )
  * initGA: modifies the ga data used to initialize the device
 
  */
-int init_ga_LI100( struct _GASTATE *ga )
+long int init_ga_LI100( struct _GASTATE *ga )
 {
   ga -> protocol = 'N';
   return SRCP_OK;
 }
 
-int init_bus_LI100( int busnumber )
+long int init_bus_LI100( long int busnumber )
 {
   int status;
   int i;
@@ -167,7 +167,7 @@ int init_bus_LI100( int busnumber )
   }
 
   status = 0;
-  printf("Bus %d with debuglevel %d\n", busnumber, busses[ busnumber ].debuglevel);
+  printf("Bus #%ld with debuglevel %d\n", busnumber, busses[ busnumber ].debuglevel);
   if ( busses[ busnumber ].type != SERVER_LI100 )
   {
     status = -2;
@@ -205,7 +205,7 @@ int init_bus_LI100( int busnumber )
   return status;
 }
 
-int term_bus_LI100( int busnumber )
+long int term_bus_LI100( long int busnumber )
 {
   if ( busses[ busnumber ].type != SERVER_LI100 )
     return 1;
@@ -221,7 +221,7 @@ int term_bus_LI100( int busnumber )
   return 0;
 }
 
-void add_extern_engine( int busnumber, int address )
+void add_extern_engine( long int busnumber, int address )
 {
   int i;
   int ctr;
@@ -254,7 +254,7 @@ void add_extern_engine( int busnumber, int address )
   }
 }
 
-void remove_extern_engine( int busnumber, int address )
+void remove_extern_engine( long int busnumber, int address )
 {
   int ctr;
 
@@ -271,14 +271,14 @@ void remove_extern_engine( int busnumber, int address )
 
 void* thr_sendrec_LI100( void *v )
 {
-  int busnumber;
+  long int busnumber;
   unsigned char byte2send[ 20 ];
   int status;
 
   int zaehler1, fb_zaehler1, fb_zaehler2;
 
-  busnumber = ( int ) v;
-  DBG(busnumber, DBG_INFO, "thr_sendrec_LI100 is startet as bus %i", busnumber );
+  busnumber = ( long int ) v;
+  DBG(busnumber, DBG_INFO, "thr_sendrec_LI100 is startet as bus #%ld", busnumber );
 
   // initialize tga-structure
   for ( zaehler1 = 0;zaehler1 < 50;zaehler1++ )
@@ -312,7 +312,7 @@ void* thr_sendrec_LI100( void *v )
   }      // Ende WHILE(1)
 }
 
-void send_command_ga_LI100( int busnumber )
+void send_command_ga_LI100( long int busnumber )
 {
   int i, i1;
   int temp;
@@ -406,7 +406,7 @@ void send_command_ga_LI100( int busnumber )
   }
 }
 
-void send_command_gl_LI100( int busnumber )
+void send_command_gl_LI100( long int busnumber )
 {
   int temp;
   int addr;
@@ -631,7 +631,7 @@ void send_command_gl_LI100( int busnumber )
   }
 }
 
-void check_extern_engines( int busnumber )
+void check_extern_engines( long int busnumber )
 {
   int i;
   int tmp_addr;
@@ -694,7 +694,7 @@ void check_extern_engines( int busnumber )
   __li100->last_value = -1;
 }
 
-int read_register_LI100( int busnumber, int reg )
+int read_register_LI100( long int busnumber, int reg )
 {
   unsigned char byte2send[ 20 ];
   unsigned char status;
@@ -708,7 +708,7 @@ int read_register_LI100( int busnumber, int reg )
   return status;
 }
 
-int write_register_LI100( int busnumber, int reg, int value )
+int write_register_LI100( long int busnumber, int reg, int value )
 {
   unsigned char byte2send[ 20 ];
   unsigned char status;
@@ -723,7 +723,7 @@ int write_register_LI100( int busnumber, int reg, int value )
   return status;
 }
 
-int read_page_LI100( int busnumber, int cv )
+int read_page_LI100( long int busnumber, int cv )
 {
   unsigned char byte2send[ 20 ];
   unsigned char status;
@@ -737,7 +737,7 @@ int read_page_LI100( int busnumber, int cv )
   return status;
 }
 
-int write_page_LI100( int busnumber, int cv, int value )
+int write_page_LI100( long int busnumber, int cv, int value )
 {
   unsigned char byte2send[ 20 ];
   unsigned char status;
@@ -752,7 +752,7 @@ int write_page_LI100( int busnumber, int cv, int value )
   return status;
 }
 
-int read_cv_LI100( int busnumber, int cv )
+int read_cv_LI100( long int busnumber, int cv )
 {
   unsigned char byte2send[ 20 ];
   unsigned char status;
@@ -766,7 +766,7 @@ int read_cv_LI100( int busnumber, int cv )
   return status;
 }
 
-int write_cv_LI100( int busnumber, int cv, int value )
+int write_cv_LI100( long int busnumber, int cv, int value )
 {
   unsigned char byte2send[ 20 ];
   unsigned char status;
@@ -782,7 +782,7 @@ int write_cv_LI100( int busnumber, int cv, int value )
 }
 
 // program decoder on the main
-int send_pom_cv_LI100( int busnumber, int addr, int cv, int value )
+int send_pom_cv_LI100( long int busnumber, int addr, int cv, int value )
 {
   unsigned char byte2send[ 20 ];
   unsigned char status;
@@ -814,7 +814,7 @@ int send_pom_cv_LI100( int busnumber, int addr, int cv, int value )
 }
 
 // program decoder on the main
-int send_pom_cvbit_LI100( int busnumber, int addr, int cv, int cvbit, int value )
+int send_pom_cvbit_LI100( long int busnumber, int addr, int cv, int cvbit, int value )
 {
   unsigned char byte2send[ 20 ];
   unsigned char status;
@@ -847,7 +847,7 @@ int send_pom_cvbit_LI100( int busnumber, int addr, int cv, int cvbit, int value 
   return ret_val;
 }
 
-int term_pgm_LI100( int busnumber )
+int term_pgm_LI100( long int busnumber )
 {
   unsigned char byte2send[ 20 ];
   unsigned char status;
@@ -861,7 +861,7 @@ int term_pgm_LI100( int busnumber )
   return status;
 }
 
-void send_command_sm_LI100( int busnumber )
+void send_command_sm_LI100( long int busnumber )
 {
   //unsigned char byte2send;
   //unsigned char status;
@@ -938,7 +938,7 @@ void send_command_sm_LI100( int busnumber )
   }
 }
 
-void get_status_sm_LI100( int busnumber )
+void get_status_sm_LI100( long int busnumber )
 {
   unsigned char byte2send[ 20 ];
 
@@ -948,7 +948,7 @@ void get_status_sm_LI100( int busnumber )
   send_command_LI100( busnumber, byte2send );
 }
 
-void check_status_LI100( int busnumber )
+void check_status_LI100( long int busnumber )
 {
   int i;
   int status;
@@ -976,7 +976,7 @@ void check_status_LI100( int busnumber )
   }
 }
 
-int send_command_LI100( int busnumber, unsigned char *str )
+int send_command_LI100( long int busnumber, unsigned char *str )
 {
   int ctr, i;
   int status;
@@ -995,7 +995,7 @@ int send_command_LI100( int busnumber, unsigned char *str )
   return status;
 }
 
-static int readAnswer_LI100( int busnumber, unsigned char *str )
+static int readAnswer_LI100( long int busnumber, unsigned char *str )
 {
   int status;
   int i, ctr;
@@ -1250,7 +1250,7 @@ static int readAnswer_LI100( int busnumber, unsigned char *str )
   return status;
 }
 
-static int initLine_LI100( int busnumber )
+static int initLine_LI100( long int busnumber )
 {
   int status;
   int fd;

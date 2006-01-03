@@ -8,7 +8,7 @@
 * 05.08.2001 Matthias Trute
 *            Umstellung auf XML Format
 * 16.05.2005 Gerard van der Sel
-*            addition of Selectrix 
+*            addition of Selectrix
 */
 
 #include "stdincludes.h"
@@ -35,7 +35,7 @@ int num_busses;
 
 // check that a bus has a devicegroup or not
 
-int bus_has_devicegroup(int bus, int dg) {
+int bus_has_devicegroup(long int bus, int dg) {
   switch (dg) {
     case DG_SESSION:
       return strstr(busses[bus].description, "SESSION") != NULL;
@@ -61,7 +61,7 @@ int bus_has_devicegroup(int bus, int dg) {
   }
   return 0;
 }
-static int register_bus(int busnumber, xmlDocPtr doc, xmlNodePtr node)
+static long int register_bus(long int busnumber, xmlDocPtr doc, xmlNodePtr node)
 {
  int found;
  int current_bus = busnumber;
@@ -71,7 +71,7 @@ static int register_bus(int busnumber, xmlDocPtr doc, xmlNodePtr node)
 
  if (busnumber >= MAX_BUSSES || busnumber < 0)
  {
-   printf("Sorry, you have used an invalid busnumber (%d). "
+   printf("Sorry, you have used an invalid busnumber (%ld). "
             "If this is greater than or equal to %d,\n"
             "you need to recompile the sources. Exiting now.\n",
             busnumber, MAX_BUSSES);
@@ -79,7 +79,7 @@ static int register_bus(int busnumber, xmlDocPtr doc, xmlNodePtr node)
  }
 
  num_busses = busnumber;
- 
+
  /* some default values */
  busses[current_bus].debuglevel = 1;
  free(busses[current_bus].device);
@@ -99,7 +99,7 @@ static int register_bus(int busnumber, xmlDocPtr doc, xmlNodePtr node)
          child = child->next;
          continue;
      }
-     
+
      txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
      found = 0;
      if (xmlStrncmp(child->name, BAD_CAST "server", 6) == 0)
@@ -112,14 +112,14 @@ static int register_bus(int busnumber, xmlDocPtr doc, xmlNodePtr node)
          else
              printf("Sorry, type=server is only allowed at bus 0!\n");
      }
-     
+
      /* but the most important are not ;=)  */
      if (xmlStrcmp(child->name, BAD_CAST "zimo") == 0)
      {
          busnumber += readconfig_zimo(doc, child, busnumber);
          found = 1;
      }
-     
+
      if (xmlStrcmp(child->name, BAD_CAST "ddl") == 0)
      {
          busnumber += readconfig_DDL(doc, child, busnumber);
@@ -131,7 +131,7 @@ static int register_bus(int busnumber, xmlDocPtr doc, xmlNodePtr node)
          busnumber += readconfig_m605x(doc, child, busnumber);
          found = 1;
      }
-     
+
      if (xmlStrcmp(child->name, BAD_CAST "intellibox") == 0)
      {
          busnumber += readConfig_IB(doc, child, busnumber);
@@ -143,37 +143,37 @@ static int register_bus(int busnumber, xmlDocPtr doc, xmlNodePtr node)
          busnumber += readConfig_LOCONET(doc, child, busnumber);
          found = 1;
      }
-     
+
      if (xmlStrcmp(child->name, BAD_CAST "loopback") == 0)
      {
          busnumber += readconfig_LOOPBACK(doc, child, busnumber);
          found = 1;
      }
-     
+
      if (xmlStrcmp(child->name, BAD_CAST "ddl-s88") == 0)
      {
          busnumber += readconfig_DDL_S88(doc, child, busnumber);
          found = 1;
      }
-     
+
      if (xmlStrcmp(child->name, BAD_CAST "hsi-88") == 0)
      {
          busnumber += readConfig_HSI_88(doc, child, busnumber);
          found = 1;
      }
-     
+
      if (xmlStrcmp(child->name, BAD_CAST "li100") == 0)
      {
          busnumber += readConfig_LI100(doc, child, busnumber);
          found = 1;
      }
-     
+
      if (xmlStrcmp(child->name, BAD_CAST "selectrix") == 0)
      {
          busnumber += readconfig_Selectrix(doc, child, busnumber);
          found = 1;
      }
-     
+
      if (xmlStrcmp(child->name, BAD_CAST "i2c-dev") == 0)
      {
 #ifdef linux
@@ -183,7 +183,7 @@ static int register_bus(int busnumber, xmlDocPtr doc, xmlNodePtr node)
          printf("Sorry, I2C-DEV only available on Linux (yet)\n");
 #endif
      }
-     
+
      /* some attributes are common for all (real) busses */
      if (xmlStrcmp(child->name, BAD_CAST "device") == 0)
      {
@@ -197,34 +197,34 @@ static int register_bus(int busnumber, xmlDocPtr doc, xmlNodePtr node)
          }
          strcpy(busses[current_bus].device, (char*) txt);
      }
-     
+
      if (xmlStrcmp(child->name, BAD_CAST "verbosity") == 0)
      {
          found = 1;
          busses[current_bus].debuglevel = atoi((char*) txt);
      }
-     
+
      if (xmlStrcmp(child->name, BAD_CAST "use_watchdog") == 0)
      {
          found = 1;
          if (xmlStrcmp(txt, BAD_CAST "yes") == 0)
              busses[current_bus].flags |= USE_WATCHDOG;
      }
-     
+
      if (xmlStrcmp(child->name, BAD_CAST "restore_device_settings") == 0)
      {
          found = 1;
          if (xmlStrcmp(txt, BAD_CAST "yes") == 0)
              busses[current_bus].flags |= RESTORE_COM_SETTINGS;
      }
-     
+
      if (xmlStrcmp(child->name, BAD_CAST "auto_power_on") == 0)
      {
          found = 1;
          if (xmlStrcmp(txt, BAD_CAST "yes") == 0)
              busses[current_bus].flags |= AUTO_POWER_ON ;
      }
-     
+
      if (xmlStrcmp(child->name, BAD_CAST "speed") == 0)
      {
          found = 1;
@@ -247,18 +247,18 @@ static int register_bus(int busnumber, xmlDocPtr doc, xmlNodePtr node)
              case 38400:
                  busses[current_bus].baudrate = B38400;
                  break;
-	    case 57600:
-	         busses[current_bus].baudrate = B57600;
-    		 break;
+      case 57600:
+           busses[current_bus].baudrate = B57600;
+         break;
              default:
                  busses[current_bus].baudrate = B2400;
                  break;
          }
      }
-     
+
      if (!found)
          printf("WARNING, \"%s\" (bus %d) is an unknown tag!\n", child->name, current_bus);
-     
+
      xmlFree(txt);
      child = child->next;
  }
@@ -268,7 +268,7 @@ static int register_bus(int busnumber, xmlDocPtr doc, xmlNodePtr node)
 
 static int walk_config_xml(xmlDocPtr doc)
 {
- int bus = 0;
+ long int bus = 0;
  xmlNodePtr root, child;
 
  root = xmlDocGetRootElement(doc);
@@ -324,7 +324,7 @@ int readConfig(char *filename)
   * @param ...
     remaining parameters according to formatstring
   */
-void DBG(int busnumber, int dbglevel, const char *fmt, ...)
+void DBG(long int busnumber, int dbglevel, const char *fmt, ...)
 {
   va_list parm;
   va_start(parm, fmt);
@@ -334,14 +334,14 @@ void DBG(int busnumber, int dbglevel, const char *fmt, ...)
     char *msg;
     msg = (char *)malloc (sizeof(char) * (strlen(fmt) + 10));
     if (msg == NULL) return; // MAM: Wat solls? Ist eh am Ende
-    sprintf (msg, "[bus %d] %s", busnumber, fmt);
+    sprintf (msg, "[bus %ld] %s", busnumber, fmt);
     vsyslog(LOG_INFO, msg, parm);
     free (msg);
     if (busses[busnumber].debuglevel>DBG_WARN) {
-	fprintf(stderr,"[bus %d] ",busnumber);
-	vfprintf(stderr,fmt,parm2);
-	if (strchr(fmt,'\n')==NULL) 
-	    fprintf(stderr,"\n");
+  fprintf(stderr,"[bus %ld] ",busnumber);
+  vfprintf(stderr,fmt,parm2);
+  if (strchr(fmt,'\n')==NULL)
+      fprintf(stderr,"\n");
     }
     va_end(parm2);
   }

@@ -33,22 +33,22 @@ typedef struct _IB_DATA
     int emergency_on_ib;
 } IB_DATA;
 
-int readConfig_IB(xmlDocPtr doc, xmlNodePtr node,  int busnumber);
+int readConfig_IB(xmlDocPtr doc, xmlNodePtr node,  long int busnumber);
 
 
-int init_bus_IB(int busnumber);
-int term_bus_IB(int busnumber);
+long int init_bus_IB(long int busnumber);
+long int term_bus_IB(long int busnumber);
 
-int init_gl_IB(struct _GLSTATE *gl);
-int init_ga_IB(struct _GASTATE *ga);
+long int init_gl_IB(struct _GLSTATE *gl);
+long int init_ga_IB(struct _GASTATE *ga);
 
 void* thr_sendrec_IB(void *);
 
-void send_command_ga_IB(int busnumber);
-void send_command_gl_IB(int busnumber);
-void send_command_sm_IB(int busnumber);
-void check_status_IB(int busnumber);
-void check_status_pt_IB(int busnumber);
+void send_command_ga_IB(long int busnumber);
+void send_command_gl_IB(long int busnumber);
+void send_command_sm_IB(long int busnumber);
+void check_status_IB(long int busnumber);
+void check_status_pt_IB(long int busnumber);
 
 
 #define XLok        0x80

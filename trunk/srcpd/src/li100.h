@@ -39,22 +39,22 @@ typedef struct _LI100_DATA
     int extern_engine_ctr;
 } LI100_DATA;
 
-int readConfig_LI100(xmlDocPtr doc, xmlNodePtr node,  int busnumber);
+int readConfig_LI100(xmlDocPtr doc, xmlNodePtr node,  long int busnumber);
 
-int init_bus_LI100(int busnumber);
-int term_bus_LI100(int busnumber);
+long int init_bus_LI100(long int busnumber);
+long int term_bus_LI100(long int busnumber);
 
-int init_gl_LI100(struct _GLSTATE *gl);
-int init_ga_LI100(struct _GASTATE *ga);
+long int init_gl_LI100(struct _GLSTATE *gl);
+long int init_ga_LI100(struct _GASTATE *ga);
 
 void* thr_sendrec_LI100(void*);
-void send_command_ga_LI100(int busnumber);
-void send_command_gl_LI100(int busnumber);
-void send_command_sm_LI100(int busnumber);
-void check_status_LI100(int busnumber);
-int send_command_LI100(int busnumber, unsigned char *str);
+void send_command_ga_LI100(long int busnumber);
+void send_command_gl_LI100(long int busnumber);
+void send_command_sm_LI100(long int busnumber);
+void check_status_LI100(long int busnumber);
+int send_command_LI100(long int busnumber, unsigned char *str);
 
-void add_extern_engine(int busnumber, int address);
-void remove_extern_engine(int busnumber, int address);
+void add_extern_engine(long int busnumber, int address);
+void remove_extern_engine(long int busnumber, int address);
 
 #endif

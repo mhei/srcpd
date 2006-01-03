@@ -1,7 +1,7 @@
 /* cvs: $Id$             */
 
-/* 
- * Vorliegende Software unterliegt der General Public License, 
+/*
+ * Vorliegende Software unterliegt der General Public License,
  * Version 2, 1991. (c) Matthias Trute, 2000-2001.
  *
  */
@@ -25,13 +25,13 @@ typedef struct _M6051_DATA {
     unsigned int pause_between_bytes;
 } M6051_DATA;
 
-int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, int busnumber);
+int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, long int busnumber);
 
-int init_line6051(int bus);
-int init_bus_M6051(int bus);
-int term_bus_M6051(int bus);
-int init_gl_M6051(struct _GLSTATE *gl);
-int init_ga_M6051(struct _GASTATE *ga);
+int init_line6051(long int bus);
+long int init_bus_M6051(long int bus);
+long int term_bus_M6051(long int bus);
+long int init_gl_M6051(struct _GLSTATE *gl);
+long int init_ga_M6051(struct _GASTATE *ga);
 int getDescription_M6051(char *reply);
 void *thr_sendrec_M6051(void *);
 
