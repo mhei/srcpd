@@ -53,9 +53,9 @@ void *thr_sendrec_dummy(void *v);
 #define ioperm(a,b,c) FBSD_ioperm(a,b,c,busnumber)
 #define inb(a) FBSD_inb(a,busnumber)
 #define outb(a,b) FBSD_outb(a,b,busnumber)
-int FBSD_ioperm(int,int,int,int);
-unsigned char FBSD_inb(int,int);
-unsigned char FBSD_outb(unsigned char, int,int);
+int FBSD_ioperm(int,int,int,long int);
+unsigned char FBSD_inb(int,long int);
+unsigned char FBSD_outb(unsigned char, int,long int);
 #endif
 
 #endif
