@@ -26,7 +26,7 @@ int describeSESSION(long int bus, int sessionid, char *reply);
 int termSESSION(long int bus, int sessionid, int termsessionid, char *reply);
 
 int session_preparewait(long int busnumber);
-int session_wait(long int busnumber, struct timespec timeout, int *result);
+int session_wait(long int busnumber, unsigned int timeout, int *result);
 int session_endwait(long int busnumber, int returnvalue);
 int session_cleanupwait(long int busnumber);
 

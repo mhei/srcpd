@@ -243,22 +243,20 @@ int infoSM(long int busnumber, int command, int type, int addr, int typeaddr,
 {
     int status, result;
     struct timeval now;
-    struct timespec timeout;
 
     DBG(busnumber, DBG_INFO, "TYPE: %d, CV: %d, BIT: %d, VALUE: 0x%02x",
         type, typeaddr, bit, value);
     session_preparewait(busnumber);
-    // pthread_mutex_lock(&cb_mutex[busnumber]);
     status = queueSM(busnumber, command, type, addr, typeaddr, bit, value);
-    gettimeofday(&now, NULL);
-    timeout.tv_sec = now.tv_sec + 10;
-    timeout.tv_nsec = 0;
-    if ( session_wait(busnumber, timeout, &result) == ETIMEDOUT) {
+
+    if ( session_wait(busnumber, 5, &result) == ETIMEDOUT) {
+        gettimeofday(&now, NULL);
         sprintf(info, "%ld.%ld 417 ERROR timeout\n", now.tv_sec,
                 now.tv_usec / 1000);
     } else {
-        sprintf(info, "%ld.%ld 100 INFO %ld SM %d\n", now.tv_sec,
-                now.tv_usec / 1000, busnumber, result);
+        gettimeofday(&now, NULL);
+        sprintf(info, "%ld.%ld 100 INFO %d SM %d CV %d %d\n", now.tv_sec,
+                now.tv_usec / 1000, busnumber, addr, typeaddr, result);
     }
     session_cleanupwait(busnumber);
     return status;

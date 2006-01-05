@@ -262,12 +262,12 @@ void *thr_sendrec_LOCONET(void *v)
     long int busnumber = (long int) v;
     unsigned char ln_packet[128];       /* max length is coded with 7 bit */
     unsigned char ln_packetlen = 2;
-    unsigned int addr;
+    unsigned int addr, timeoutcnt;
     int value;
     char msg[110];
     DBG(busnumber, DBG_INFO, "loconet started, bus #%d, %s", busnumber,
         busses[busnumber].device);
-
+    timeoutcnt = 0;
     while (1) {
         busses[busnumber].watchdog = 1;
         memset(ln_packet, 0, sizeof(ln_packet));
@@ -288,13 +288,12 @@ void *thr_sendrec_LOCONET(void *v)
                 infoPower(busnumber, msg);
                 queueInfoMessage(msg);
                 break;
-            case 0xb2:         /* OPC_INPUT_REP */
+            case 0xb2:        /* OPC_INPUT_REP */
                 addr =
-                    (unsigned int) ln_packet[1] |
+                    ((unsigned int) ln_packet[1] & 0x007f) |
                     (((unsigned int) ln_packet[2] & 0x000f) << 7);
-                addr =
-                    addr << 1 |
-                    ((((unsigned int) ln_packet[2] & 0x0002) >> 1));
+                addr = 1 + addr * 2 +
+                    ((((unsigned int) ln_packet[2] & 0x0020) >> 5));
                 value = (ln_packet[2] & 0x10) >> 4;
                 updateFB(busnumber, addr, value);
                 break;
@@ -318,21 +317,19 @@ void *thr_sendrec_LOCONET(void *v)
                 infoPower(busnumber, msg);
                 queueInfoMessage(msg);
             }
-
-            if (!queue_SM_isempty(busnumber)) {
+            else if (!queue_SM_isempty(busnumber)) {
                 struct _SM smtmp;
+                session_processwait(busnumber);
                 unqueueNextSM(busnumber, &smtmp);
                 addr = smtmp.addr;
                 switch (smtmp.command) {
                 case SET:
                     DBG(busnumber, DBG_DEBUG, "loconet: SM SET #%d %02X",
                         smtmp.addr, smtmp.value);
-                    session_processwait(busnumber);
                     break;
                 case GET:
                     DBG(busnumber, DBG_DEBUG, "loconet SM GET #%d[%d]",
                         smtmp.addr, smtmp.typeaddr);
-                    session_processwait(busnumber);
                     ln_packetlen = 16;
                     ln_packet[0] = 0xe5;        /* OPC_PEER_XFER, old fashioned */
                     ln_packet[1] = ln_packetlen;
@@ -352,12 +349,19 @@ void *thr_sendrec_LOCONET(void *v)
                 ln_checksum(ln_packet, ln_packetlen - 1);
             if (ln_packet[0] != OPC_IDLE) {
                 ln_write(busnumber, ln_packet, ln_packetlen);
+                timeoutcnt = 0;
             }
         }
         else {
             DBG(busnumber, DBG_DEBUG,
-                "Still waiting for echo of last command");
-            usleep(10000);
+                "Still waiting for echo of last command (%d)", timeoutcnt);
+            usleep(100000);
+            timeoutcnt++;
+            if (timeoutcnt > 10) {
+                DBG(busnumber, DBG_DEBUG,
+                    "time out for reading echo, giving up");
+                __loconet->ln_msglen = 0;
+            }
         }
         usleep(1000);
     }
