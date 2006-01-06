@@ -23,10 +23,10 @@
 #include <pthread.h>
 #include <sched.h>
 
-#if linux
-#include <sys/io.h>
-#include <linux/serial.h>
-#endif
+//#if linux
+//#include <sys/io.h>
+//#include <linux/serial.h>
+//#endif
 
 #include <libxml/tree.h>
 
@@ -93,10 +93,10 @@ typedef struct _DDL_DATA {
     struct termios maerklin_dev_termios;
     struct termios nmra_dev_termios;
 
-#if linux
-    struct serial_struct *serinfo_marklin;
-    struct serial_struct *serinfo_nmradcc;
-#endif
+//#if linux
+//    struct serial_struct *serinfo_marklin;
+//    struct serial_struct *serinfo_nmradcc;
+//#endif
     pthread_mutex_t queue_mutex;   /* mutex to synchronize queue inserts */
     int queue_initialized;
     int queue_out, queue_in;
@@ -174,11 +174,10 @@ void (*waitUARTempty)(long int busnumber);
 int checkRingIndicator(long int busnumber);
 int checkShortcut(long int busnumber);
 void send_packet(long int busnumber, int addr, char *packet, int packet_size, int packet_type, int refresh);
+void improve_nmradcc_write(long int busnumber, char *packet, int packet_size);
 void refresh_loco(long int busnumber);
 long int compute_delta(struct timeval tv1, struct timeval tv2);
 void set_SerialLine(long int busnumber, int line, int mode);
-//void start_voltage(long int busnumber);
-//void stop_voltage(long int busnumber);
 int check_lines(long int busnumber);
 void set_lines_off(long int busnumber);
 void *thr_refresh_cycle(void *v);

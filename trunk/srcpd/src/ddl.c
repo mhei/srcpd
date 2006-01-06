@@ -117,39 +117,39 @@ int queue_get(long int busnumber, int *addr, char *packet, int *packet_size)
 
 /* functions to open, initialize and close comport */
 
-#if linux
-int init_serinfo(int fd, int divisor, struct serial_struct **serinfo)
-{
-  if (*serinfo==NULL)
-  {
-    *serinfo=malloc(sizeof(struct serial_struct));
-    if (!*serinfo) return -1;
-  }
-  if (ioctl(fd, TIOCGSERIAL, *serinfo) < 0) return -1;
-  (*serinfo)->custom_divisor = divisor;
-  (*serinfo)->flags = ASYNC_SPD_CUST | ASYNC_SKIP_TEST;
-  return 0;
-}
-
-int set_customdivisor(int fd, struct serial_struct *serinfo)
-{
-  if (ioctl(fd, TIOCSSERIAL, serinfo) < 0) return -1;
-  return 0;
-}
-
-int reset_customdivisor(int fd)
-{
-  struct serial_struct *serinfo = NULL;
-
-  serinfo=malloc(sizeof(struct serial_struct));
-  if (!serinfo) return -1;
-  if (ioctl(fd, TIOCGSERIAL, serinfo) < 0) return -1;
-  (serinfo)->custom_divisor = 0;
-  (serinfo)->flags = 0;
-  if (ioctl(fd, TIOCSSERIAL, serinfo) < 0) return -1;
-  return 0;
-}
-#endif
+//#if linux
+//int init_serinfo(int fd, int divisor, struct serial_struct **serinfo)
+//{
+//  if (*serinfo==NULL)
+//  {
+//    *serinfo=malloc(sizeof(struct serial_struct));
+//    if (!*serinfo) return -1;
+//  }
+//  if (ioctl(fd, TIOCGSERIAL, *serinfo) < 0) return -1;
+//  (*serinfo)->custom_divisor = divisor;
+//  (*serinfo)->flags = ASYNC_SPD_CUST | ASYNC_SKIP_TEST;
+//  return 0;
+//}
+//
+//int set_customdivisor(int fd, struct serial_struct *serinfo)
+//{
+//  if (ioctl(fd, TIOCSSERIAL, serinfo) < 0) return -1;
+//  return 0;
+//}
+//
+//int reset_customdivisor(int fd)
+//{
+//  struct serial_struct *serinfo = NULL;
+//
+//  serinfo=malloc(sizeof(struct serial_struct));
+//  if (!serinfo) return -1;
+//  if (ioctl(fd, TIOCGSERIAL, serinfo) < 0) return -1;
+//  (serinfo)->custom_divisor = 0;
+//  (serinfo)->flags = 0;
+//  if (ioctl(fd, TIOCSSERIAL, serinfo) < 0) return -1;
+//  return 0;
+//}
+//#endif
 
 int setSerialMode(long int busnumber, int mode)
 {
@@ -163,16 +163,16 @@ int setSerialMode(long int busnumber, int mode)
           DBG(busnumber, DBG_ERROR, "error setting serial device mode to marklin!");
           return -1;
         }
-#if linux
-        if (__DDL->IMPROVE_NMRADCC_TIMING)
-        {
-          if (set_customdivisor(busses[busnumber].fd, __DDL->serinfo_marklin)!=0)
-          {
-            DBG(busnumber, DBG_ERROR, "cannot set custom divisor for maerklin of serial device!");
-            return -1;
-          }
-        }
-#endif
+//#if linux
+//        if (__DDL->IMPROVE_NMRADCC_TIMING)
+//        {
+//          if (set_customdivisor(busses[busnumber].fd, __DDL->serinfo_marklin)!=0)
+//          {
+//            DBG(busnumber, DBG_ERROR, "cannot set custom divisor for maerklin of serial device!");
+//            return -1;
+//          }
+//        }
+//#endif
         __DDL -> SERIAL_DEVICE_MODE = SDM_MAERKLIN;
       }
       break;
@@ -184,16 +184,16 @@ int setSerialMode(long int busnumber, int mode)
           DBG(busnumber, DBG_ERROR, "error setting serial device mode to NMRA!");
           return -1;
         }
-#if linux
-        if (__DDL -> IMPROVE_NMRADCC_TIMING)
-        {
-          if (set_customdivisor(busses[busnumber].fd, __DDL->serinfo_nmradcc)!=0)
-          {
-            DBG(busnumber, DBG_ERROR, "cannot set custom divisor for nmra dcc of serial device!");
-            return -1;
-          }
-        }
-#endif
+//#if linux
+//        if (__DDL -> IMPROVE_NMRADCC_TIMING)
+//        {
+//          if (set_customdivisor(busses[busnumber].fd, __DDL->serinfo_nmradcc)!=0)
+//          {
+//            DBG(busnumber, DBG_ERROR, "cannot set custom divisor for nmra dcc of serial device!");
+//            return -1;
+//          }
+//        }
+//#endif
         __DDL -> SERIAL_DEVICE_MODE = SDM_NMRA;
       }
       break;
@@ -218,13 +218,13 @@ int init_lineDDL(long int busnumber)
     exit (1);                             /* theres no chance to continue */
   }
 
-#if linux
-  if (reset_customdivisor(dev)!=0)
-  {
-    DBG(busnumber, DBG_FATAL, "error initializing device %s. Abort!", busses[busnumber].device);
-    exit(1);
-  }
-#endif
+//#if linux
+//  if (reset_customdivisor(dev)!=0)
+//  {
+//    DBG(busnumber, DBG_FATAL, "error initializing device %s. Abort!", busses[busnumber].device);
+//    exit(1);
+//  }
+//#endif
 
   tcflush(dev,TCOFLUSH);
   tcflow(dev,TCOOFF);          /* suspend output */
@@ -257,8 +257,8 @@ int init_lineDDL(long int busnumber)
   __DDL->nmra_dev_termios.c_cflag |= CS8;            /* 8 data bits      */
   if (__DDL->IMPROVE_NMRADCC_TIMING)
   {
-    cfsetospeed(&__DDL->nmra_dev_termios,B38400);      /* baud rate: 38400 */
-    cfsetispeed(&__DDL->nmra_dev_termios,B38400);      /* baud rate: 38400 */
+    cfsetospeed(&__DDL->nmra_dev_termios,B115200);      /* baud rate: 38400 */
+    cfsetispeed(&__DDL->nmra_dev_termios,B115200);      /* baud rate: 38400 */
   }
   else
   {
@@ -266,23 +266,23 @@ int init_lineDDL(long int busnumber)
     cfsetispeed(&__DDL->nmra_dev_termios,B19200);      /* baud rate: 19200 */
   }
 
-#if linux
-  // if IMPROVE_NMRADCC_TIMING is set, we have to initialize some
-  // structures
-  if (__DDL -> IMPROVE_NMRADCC_TIMING)
-  {
-    if (init_serinfo(dev,3,&__DDL->serinfo_marklin)!=0)
-    {
-      DBG(busnumber, DBG_FATAL, "error initializing device %s. Abort!", busses[busnumber].device);
-      exit(1);
-    }
-    if (init_serinfo(dev,7,&__DDL->serinfo_nmradcc)!=0)
-    {
-      DBG(busnumber, DBG_FATAL, "error initializing device %s. Abort!",  busses[busnumber].device);
-      exit(1);
-    }
-  }
-#endif
+//#if linux
+//  // if IMPROVE_NMRADCC_TIMING is set, we have to initialize some
+//  // structures
+//  if (__DDL -> IMPROVE_NMRADCC_TIMING)
+//  {
+//    if (init_serinfo(dev,3,&__DDL->serinfo_marklin)!=0)
+//    {
+//      DBG(busnumber, DBG_FATAL, "error initializing device %s. Abort!", busses[busnumber].device);
+//      exit(1);
+//    }
+//    if (init_serinfo(dev,7,&__DDL->serinfo_nmradcc)!=0)
+//    {
+//      DBG(busnumber, DBG_FATAL, "error initializing device %s. Abort!",  busses[busnumber].device);
+//      exit(1);
+//    }
+//  }
+//#endif
   busses[busnumber].fd = dev; /* we need that value at the next step */
   /* setting serial device to default mode */
   if (!setSerialMode(busnumber,SDM_DEFAULT)==0)
@@ -592,18 +592,44 @@ void send_packet(long int busnumber, int addr, char *packet, int packet_size, in
     case QNBLOCOPKT:
     case QNBACCPKT:
       if (setSerialMode(busnumber,SDM_NMRA)<0) return;
-      write(busses[busnumber].fd,packet,packet_size);
-      waitUARTempty(busnumber);
-      write(busses[busnumber].fd,__DDL->NMRA_idle_data,13);
-      waitUARTempty(busnumber);
-      // nanosleep(&rqtp_btw38K, &__DDL->rmtp);
-      write(busses[busnumber].fd,packet,packet_size);
-      // waitUARTempty();
+      if (__DDL->IMPROVE_NMRADCC_TIMING)
+      {
+        improve_nmradcc_write(busses[busnumber].fd,packet,packet_size);
+        waitUARTempty(busnumber);
+        improve_nmradcc_write(busses[busnumber].fd,__DDL->NMRA_idle_data,13);
+        waitUARTempty(busnumber);
+        improve_nmradcc_write(busses[busnumber].fd,packet,packet_size);
+      }
+      else
+      {
+        write(busses[busnumber].fd,packet,packet_size);
+        waitUARTempty(busnumber);
+        write(busses[busnumber].fd,__DDL->NMRA_idle_data,13);
+        waitUARTempty(busnumber);
+        write(busses[busnumber].fd,packet,packet_size);
+      }
       break;
   }
   if (__DDL->ENABLED_PROTOCOLS & EP_MAERKLIN)
     nanosleep(&rqtp_end38K, &__DDL->rmtp);
   if (setSerialMode(busnumber,SDM_DEFAULT)<0) return;
+}
+
+void improve_nmradcc_write(long int busnumber, char *packet, int packet_size)
+{
+  // Idee: NMRA läuft mit 17000 Baud
+  // 115200 Baud / 7 = 16457 Baud
+  // -> jedes Bit 7 mal senden
+  char improve_nmradcc_packet[packet_size*7];
+  int i,j;
+  for(i=0; i<packet_size; i++)
+  {
+    for(j=0; j<7; j++)
+    {
+      improve_nmradcc_packet[i*7+j] = packet[i];
+    }
+  }
+  write(busses[busnumber].fd,improve_nmradcc_packet,(packet_size*7));
 }
 
 void refresh_loco(long int busnumber)
