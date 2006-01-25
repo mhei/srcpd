@@ -3,10 +3,14 @@
 #ifndef _LOCONET_H
 #define _LOCONET_H
 
-#define LN_FLAG_ECHO 1
+#define LN_FLAG_ECHO 1        /* loconet interface sends commands back to rs232 */
+#define LN_FLAG_MS100 2       /* MS100 compatible settings (implicit no echo)   */
 
 typedef struct _LOCONET_DATA {
     int number_fb;              /* used internally */
+    int number_ga;              /* used internally */
+    int number_gl;              /* used internally */
+    
     unsigned char loconetID;    /* Sender ID       */
     unsigned int flags;         /* use echo */
 
@@ -56,6 +60,9 @@ void *thr_sendrec_LOCONET(void *);
  *
  * Version Control:
  * $Log$
+ * Revision 1.5  2006/01/25 19:37:42  mtrute
+ * added ms100 code and GA support for LocoIO
+ *
  * Revision 1.4  2006/01/03 21:45:56  schmischi
  * change some 'int' to 'long int' for x86_64
  *
