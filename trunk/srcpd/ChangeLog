@@ -1,3 +1,7 @@
+2006-01-25 Matthias Trute <mtrute@users.sf.net>
+  * loconet:  * added MS100 code
+	      * basic GA Support for LocoIO
+
 2006-01-05 Matthias Trute <mtrute@users.sf.net>
   *  loconet.* Feedback Sensors and basic loconet communication via
        loconbuffer implemented

@@ -19,6 +19,12 @@
 #include "srcp-session.h"
 #include "srcp-error.h"
 
+#ifdef HAVE_LINUX_SERIAL_H
+#include "linux/serial.h"
+#else
+#warning "MS100 support for linux only!"
+#endif
+
 #define __loconet ((LOCONET_DATA*)busses[busnumber].driverdata)
 
 static long int init_gl_LOCONET(struct _GLSTATE *);
@@ -40,11 +46,13 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
     busses[busnumber].driverdata = malloc(sizeof(struct _LOCONET_DATA));
 
     __loconet->number_fb = 2048;        /* max addr for OPC_INPUT_REP (10+1 bit) */
+    __loconet->number_ga = 2048;        /* max addr for OPC_SW_REQ */
     __loconet->loconetID = 0x50;        /* Loconet ID */
+    __loconet->flags = LN_FLAG_ECHO;
 
     busses[busnumber].baudrate = B57600;
 
-    strcpy(busses[busnumber].description, "SM FB POWER DESCRIPTION");
+    strcpy(busses[busnumber].description, "GA FB POWER");
 
     while (child) {
         if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) {
@@ -58,6 +66,19 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
                 xmlFree(txt);
             }
         }
+        if (xmlStrcmp(child->name, BAD_CAST "ms100") == 0) {
+#ifdef HAVE_LINUX_SERIAL_H
+            txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+            if (txt != NULL) {
+                if (xmlStrcmp(txt, BAD_CAST "yes") == 0) {
+                    __loconet->flags |= LN_FLAG_MS100;
+		    __loconet->flags &= ~LN_FLAG_ECHO;
+		}
+                xmlFree(txt);
+            }
+#endif
+        }
+
         child = child->next;
     }                           // while
 
@@ -65,33 +86,71 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
         DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
     }
 
+    if (init_GA(busnumber, __loconet->number_ga)) {
+        DBG(busnumber, DBG_ERROR, "Can't create array for GA");
+    }
+
     return (1);
 }
 
-static long int init_lineLOCONET(long int bus)
+static long int init_lineLOCONET(long int busnumber)
 {
     int fd;
     struct termios interface;
 
-    fd = open(busses[bus].device, O_RDWR | O_NDELAY | O_NOCTTY);
+    fd = open(busses[busnumber].device, O_RDWR | O_NDELAY | O_NOCTTY);
     if (fd == -1) {
-        DBG(bus, DBG_ERROR, "Sorry, couldn't open device.\n");
+        DBG(busnumber, DBG_ERROR, "Sorry, couldn't open device.\n");
         return 1;
     }
-    busses[bus].fd = fd;
-    tcgetattr(fd, &interface);
+    busses[busnumber].fd = fd;
+#ifdef HAVE_LINUX_SERIAL_H
+    if( (__loconet->flags & LN_FLAG_MS100) == 1 ) {
+	  struct serial_struct serial;
+	  struct termios tios;
+	  int rc;
+	  unsigned int cm;
 
-    interface.c_oflag = ONOCR;
-    interface.c_cflag = CS8 | CRTSCTS | CSTOPB | CLOCAL | CREAD | HUPCL;
-    interface.c_iflag = IGNBRK;
-    interface.c_lflag = IEXTEN;
-    interface.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
-    cfsetispeed(&interface, busses[bus].baudrate);
-    cfsetospeed(&interface, busses[bus].baudrate);
-    interface.c_cc[VMIN] = 0;
-    interface.c_cc[VTIME] = 0;
+	ioctl(fd, TIOCGSERIAL, &serial);
+	serial.custom_divisor=7;
+	serial.flags &= ~ASYNC_USR_MASK;
+	serial.flags |= ASYNC_SPD_CUST | ASYNC_LOW_LATENCY;
+	rc=ioctl(fd, TIOCSSERIAL, &serial);
+	tcgetattr(fd, &tios);
+        tios.c_iflag = IGNBRK | IGNPAR;
+	tios.c_oflag = 0;
+        tios.c_cflag = CS8 | CREAD | CLOCAL;
+	tios.c_lflag = 0;
+        cfsetospeed(&tios, B38400);
+	tcsetattr(fd, TCSANOW, &tios);
 
-    tcsetattr(fd, TCSANOW, &interface);
+        tcflow(fd, TCOON);
+	tcflow(fd, TCION);
+
+        ioctl(fd, TIOCMGET, &cm);
+	cm &= ~TIOCM_DTR;
+        cm |= TIOCM_RTS | TIOCM_CTS;
+	ioctl(fd, TIOCMSET, &cm);
+
+        tcflush(fd, TCOFLUSH);
+        tcflush(fd, TCIFLUSH);
+    } else {
+#endif
+        tcgetattr(fd, &interface);
+	interface.c_oflag = ONOCR;
+        interface.c_cflag = CS8 | CRTSCTS | CSTOPB | CLOCAL | CREAD | HUPCL;
+        interface.c_iflag = IGNBRK;
+        interface.c_lflag = IEXTEN;
+        interface.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
+        cfsetispeed(&interface, busses[busnumber].baudrate);
+        cfsetospeed(&interface, busses[busnumber].baudrate);
+        interface.c_cc[VMIN] = 0;
+        interface.c_cc[VTIME] = 0;
+
+        tcsetattr(fd, TCSANOW, &interface);
+#ifdef HAVE_LINUX_SERIAL_H
+    }
+#endif
     return 1;
 }
 
@@ -153,6 +212,11 @@ static int ln_isecho(long int busnumber, const unsigned char *ln_packet,
                      unsigned char ln_packetlen)
 {
     int i;
+    /* do we check for echos? */
+    if( (__loconet->flags & LN_FLAG_ECHO) == 0) {
+	return FALSE;
+    }
+
     if (__loconet->ln_msglen == 0)
         return FALSE;
     for (i = 0; i < ln_packetlen; i++) {
@@ -254,7 +318,7 @@ static int ln_opc_peer_xfer_read(long int busnumber,
 */
     session_endwait(busnumber,
                     ln_packet[12] | ((ln_packet[10] & 0x02 >> 1) << 7));
-
+    return 1;
 }
 
 void *thr_sendrec_LOCONET(void *v)
@@ -276,19 +340,19 @@ void *thr_sendrec_LOCONET(void *v)
               ln_read(busnumber, ln_packet, sizeof(ln_packet))) > 0)) {
 
             switch (ln_packet[0]) {
-            case 0x82:         /* OPC_GPOFF     */
+            case OPC_GPOFF:
                 busses[busnumber].power_state = 0;
                 strcpy(busses[busnumber].power_msg, "from loconet");
                 infoPower(busnumber, msg);
                 queueInfoMessage(msg);
                 break;
-            case 0x83:         /* OPC_GPON      */
+            case OPC_GPON:
                 busses[busnumber].power_state = 1;
                 strcpy(busses[busnumber].power_msg, "from loconet");
                 infoPower(busnumber, msg);
                 queueInfoMessage(msg);
                 break;
-            case 0xb2:        /* OPC_INPUT_REP */
+            case OPC_INPUT_REP:
                 addr =
                     ((unsigned int) ln_packet[1] & 0x007f) |
                     (((unsigned int) ln_packet[2] & 0x000f) << 7);
@@ -317,6 +381,25 @@ void *thr_sendrec_LOCONET(void *v)
                 infoPower(busnumber, msg);
                 queueInfoMessage(msg);
             }
+            else if (!queue_GA_isempty(busnumber)) {
+                struct _GASTATE gatmp;
+                unqueueNextGA(busnumber, &gatmp);
+                addr = gatmp.id;
+		ln_packetlen = 4;
+		ln_packet[0] = OPC_INPUT_REP;
+		ln_packet[1] = (unsigned short int) addr & 0x0007f;
+		ln_packet[2] = (unsigned short int) ( addr >> 7) & 0x000f;
+		ln_packet[2] |= (unsigned short int) gatmp.port;
+		ln_packet[2] |= ((unsigned short int) gatmp.action) << 4;
+		
+		if(gatmp.action == 1) {
+        	    gettimeofday(&gatmp.tv[gatmp.port], NULL);
+        	}
+        	setGA(busnumber, addr, gatmp);
+                DBG(busnumber, DBG_DEBUG, "loconet: GA SET #%d %02X",
+                        gatmp.id, gatmp.action);
+            }
+
             else if (!queue_SM_isempty(busnumber)) {
                 struct _SM smtmp;
                 session_processwait(busnumber);
