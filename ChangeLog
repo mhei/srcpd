@@ -1,3 +1,6 @@
+2006-02-08 Guido Scholz <guido.scholz@bayernline.de>
+	* srcp-power.c: added info message for power change
+
 2006-01-25 Matthias Trute <mtrute@users.sf.net>
   * loconet:  * added MS100 code
 	      * basic GA Support for LocoIO
