@@ -37,9 +37,8 @@ make
 
 %install
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
-install -d $RPM_BUILD_ROOT%{_sbindir}
-install -d $RPM_BUILD_ROOT%{_sysconfdir}/init.d
 
+install -d $RPM_BUILD_ROOT%{_sysconfdir}/init.d
 make DESTDIR=$RPM_BUILD_ROOT install
 
 # to use the LSB compliant init.d script change "init.d.suse" to
