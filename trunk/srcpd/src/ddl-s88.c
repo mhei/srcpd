@@ -30,11 +30,13 @@
 #if __FreeBSD__
 #include <dev/ppbus/ppi.h>
 #include <dev/ppbus/ppbconf.h>
-#else
-#error This driver is not usable on your operation system. Sorry.
+//#else
+//#error This driver is not usable on your operation system. Sorry.
 #endif
 #endif
 #endif
+
+#if defined(linux) || defined(__CYGWIN__) || defined(__FreeBSD__)
 
 #include "config-srcpd.h"
 #include "srcp-fb.h"
@@ -569,4 +571,4 @@ unsigned char FBSD_outb(unsigned char Data, int Wohin,long int busnumber)
 }
 
 #endif
-
+#endif

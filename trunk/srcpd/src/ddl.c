@@ -257,8 +257,8 @@ int init_lineDDL(long int busnumber)
   __DDL->nmra_dev_termios.c_cflag |= CS8;            /* 8 data bits      */
   if (__DDL->IMPROVE_NMRADCC_TIMING)
   {
-    cfsetospeed(&__DDL->nmra_dev_termios,B115200);      /* baud rate: 38400 */
-    cfsetispeed(&__DDL->nmra_dev_termios,B115200);      /* baud rate: 38400 */
+    cfsetospeed(&__DDL->nmra_dev_termios,B115200);      /* baud rate: 115200 */
+    cfsetispeed(&__DDL->nmra_dev_termios,B115200);      /* baud rate: 115200 */
   }
   else
   {
@@ -793,6 +793,7 @@ void *thr_refresh_cycle(void *v)
 {
   int l;
   struct sched_param sparam;
+  int policy;
   int packet_size;
   int packet_type;
   char packet[PKTSIZE];
@@ -811,8 +812,9 @@ void *thr_refresh_cycle(void *v)
   if ((__DDL->ENABLED_PROTOCOLS & EP_NMRADCC) && !(__DDL -> ENABLED_PROTOCOLS & EP_MAERKLIN))
     waitUARTempty = waitUARTempty_CLEANNMRADCC;
 
+  pthread_getschedparam(pthread_self(), &policy, &sparam);
   sparam.sched_priority=10;
-  sched_setscheduler(0,SCHED_FIFO,&sparam);
+  pthread_setschedparam(pthread_self(), SCHED_FIFO, &sparam);
 
   /* some boosters like the Maerklin 6017 must be initialized */
   tcflow(busses[busnumber].fd, TCOON);

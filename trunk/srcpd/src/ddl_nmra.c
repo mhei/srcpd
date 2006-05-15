@@ -344,7 +344,7 @@ static const tTranslateData_v3 TranslateData_v3[32][2] = {
 };
 
 static char *preamble = "111111111111111";
-static const int STACKSIZE  = 200;
+static const int NMRA_STACKSIZE  = 200;
 static const int BUFFERSIZE = 200;
 
 int translateabel(char *bs) {     /* the result is only an index, no warranty */
@@ -372,14 +372,14 @@ int translateBitstream2Packetstream_v1(char *Bitstream, char *Packetstream,
 
    char Buffer[BUFFERSIZE];
    char *pBs = Buffer;
-   int  i;                  /* decision of each recursion level              */
-   int  j=0;                /* index of Packetstream, level of recursion     */
-   int  found;              /* flag                                          */
-   int  stack[STACKSIZE];   /* stack for the i's                             */
-   int  pstack = 0;         /* stack pointer                                 */
-   int correction = 0;
-   int bufsize = 0;
-   int highest_level = 0;   /* highest recursion level reached during algo.  */
+   int  i;                      /* decision of each recursion level          */
+   int  j=0;                    /* index of Packetstream, level of recursion */
+   int  found;                  /* flag                                      */
+   int  stack[NMRA_STACKSIZE];  /* stack for the i's                         */
+   int  pstack = 0;             /* stack pointer                             */
+   int  correction = 0;
+   int  bufsize = 0;
+   int  highest_level = 0;  /* highest recursion level reached during algo.  */
    const int max_level_delta = 7; /* additional recursion base, speeds up    */
 
    pBs=strncpy(Buffer, Bitstream, BUFFERSIZE-1);
@@ -421,7 +421,7 @@ int translateBitstream2Packetstream_v1(char *Bitstream, char *Packetstream,
                 Bitstream);
          return 0;
       }
-      if (j<=0 || pstack<0 || pstack>STACKSIZE-1) {
+      if (j<=0 || pstack<0 || pstack>NMRA_STACKSIZE-1) {
          /* it's nasty, but a try: */
          strcat(Buffer,"1");            /* leading 1's don't make problems    */
          bufsize++;
