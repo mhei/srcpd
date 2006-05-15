@@ -152,8 +152,12 @@ static long int register_bus(long int busnumber, xmlDocPtr doc, xmlNodePtr node)
 
      if (xmlStrcmp(child->name, BAD_CAST "ddl-s88") == 0)
      {
+#if defined(linux) || defined(__CYGWIN__) || defined(__FreeBSD__)
          busnumber += readconfig_DDL_S88(doc, child, busnumber);
          found = 1;
+#else
+         printf("Sorry, DDL-S88 not (yet) available on MacOS X\n");
+#endif
      }
 
      if (xmlStrcmp(child->name, BAD_CAST "hsi-88") == 0)
