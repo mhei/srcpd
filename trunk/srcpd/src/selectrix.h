@@ -10,18 +10,18 @@
 
 #include <libxml/tree.h>
 
-/* Read and Write command for the interface (Send with the adres) */
+/* Read and Write command for the interface (Send with the address) */
 #define SXread      0x00    /* Lese befehl fur Selectrixbus */
 #define SXwrite     0x80    /* Schreib befehl fur Selectrixbus */
 
-/* Maximum number off adresses on the SX-bus */
-#define SXmax     112   /* Number of adresses on the SX-bus*/
-#define SXcc2000    104   /* Number of adresses on the SX-bus with a CC-2000 */
+/* Maximum number off addresses on the SX-bus */
+#define SXmax     112   /* Number of addresses on the SX-bus*/
+#define SXcc2000    104   /* Number of addresses on the SX-bus with a CC-2000 */
 
 /* Adressses on the SX_bus */
-#define SXcontrol   127   /* Control adres (all SX controllers) */
-#define SXstatus    109   /* Status adres (CC-2000) */
-#define SXcommand   106   /* Command adres (CC-2000) */
+#define SXcontrol   127   /* Control address (all SX controllers) */
+#define SXstatus    109   /* Status address (CC-2000) */
+#define SXcommand   106   /* Command address (CC-2000) */
 #define SXprog2     105   /* Program parameter 2 (CC-2000) */
 #define SXporg1     104   /* Program parameter 1 (CC-2000) */
 
@@ -36,9 +36,9 @@ typedef struct _SELECTRIX_DATA {
     int number_fb;
     int number_ga;
     int number_gl;
-    int number_adres;
+    int number_address;
     int flags;
-    SX_BUS fb_adresses;
+    SX_BUS fb_addresses;
     SX_BUS bus_data;
 } SELECTRIX_DATA;
 
