@@ -1,48 +1,91 @@
 Autor: Gerard van der Sel, et al 
 Datum: Mai 2005 
-Version: SRCP 2.0.8 (pre version) , Selectrix 1.0.0
-Lizenz: GPL v2 f r das gesamte Packet 
+Version: SRCP 2.0.8 (pre version), Selectrix 1.0.0
+Lizenz: GPL v2 for the whole package 
 
 Purpose:
-In this document the differences between a Marklin/Intellibox and Selectrix controlcentre is explained and the consequnces for the SRCP implementation with the selectrix protocol (SX_bus only).
-In the sources selectrix.c and selectrix.h is a translation module programmed that the bit command normal with Marklin and Intellibox translates to a byte transport. Different element are treated different. But an implementation of the GL, GA and FB commands of SRCP is done.
+In this document the differences between a Maerklin/Intellibox and
+Selectrix controlcenter is explained and the consequences for the SRCP
+implementation with the selectrix protocol (SX_bus only).
+In the sources selectrix.c and selectrix.h is a translation module
+programmed that the bit command normal with Marklin and Intellibox
+translates to a byte transport. Different elements are treated
+different. But an implementation of the GL, GA and FB commands of SRCP
+is done.
 
-GL (controlling a engine) translation:
-A GL on SCRP is on a Marklin/Intellibox system the same as on a selectrix system. It is on all systems a multiple bit command. A selectrix decoder accepts the following command:
-- Bit 4 – bit 0:	Speed of the engine (0= stop, 31= max speed)
-- Bit 5:		Direction of the engine (0= forward, 1= backward)
-- Bit 6:		Licht on/off (0= off, 1= on)
-- Bit 7:		Function on/off (0= off, 1= on) 
+GL (controlling an engine) translation:
+A GL on SCRP is on a Marklin/Intellibox system the same as on a
+selectrix system. It is on all systems a multiple bit command. A
+selectrix decoder accepts the following command:
+
+- Bit 4 – bit 0:	Speed of the engine (0 = stop, 31 = max speed)
+- Bit 5:		Direction of the engine (0 = forward, 1 = backward)
+- Bit 6:		Licht on/off (0 = off, 1 = on)
+- Bit 7:		Function on/off (0 = off, 1 = on) 
+
 With the SRCP the command for an engine would be:
-SET busnumber GL engineadres direction speed licht function
-where:
+SET busnumber GL engineaddress direction speed light function where:
+
 busnumber		Number of de selectrixbus
-engineadres		Adres of the engine on the SX-bus
+engineaddress		Adres of the engine on the SX-bus
 direction		Direction of the engine (2= emergency stop)
 speed			Speed of the engine
 licht			State of the engine lights
 function 		State of the engine function
 
 GA (controlling switches and signals) translation:
-A GA on SCRP is on a Marklin/Intellibox system a one bit instruction. Every switch or signal can be adressed individualy. After a predifined time the switch must be turned off. On the SX-bus (Selectrix) 8 switches are controlled in one action. The switch controller turns the switch command off. 
-In de SCRP server the switch turn off command is generated from software. The client doesn't have to turn off the switches. This makes the implementation of the switches as follows:
+A GA on SCRP is on a Maerklin/Intellibox system a one bit instruction.
+Every switch or signal can be addressed individualy. After a predefined
+time the switch must be turned off. On the SX-bus (Selectrix)
+8 switches are controlled in one action. The switch controller turns
+the switch command off.
+
+In de SCRP server the switch turn off command is generated from
+software. The client doesn't have to turn off the switches. This makes
+the implementation of the switches as follows:
+
 SET busnumber GA switchcontroller switchport switchvalue, where:
-busnumber		Number of de selectrixbus
-switchcontroller	Adres of switch controller on the SX-bus
-switchport		Number from 1 to 8 (giving the number of port the switch is connected to)
-switchvalue       0 Normal, <>0 Thrown
+
+busnumber	     Number of de selectrixbus
+switchcontroller     Adres of switch controller on the SX-bus
+switchport	     Number from 1 to 8 (giving the number of port the
+                     switch is connected to)
+switchvalue          0 Normal, <>0 Thrown
 
 FB (Feedback contacts from track) translation:
-A FB on SCRP is on a Marklin/Intellibox system a bitstream (packeds of 16 bits), which is read from the controller with a byte instruction. This is in SCRP converted to a one bit instruction. On a Selectrix system it is also a byte which is located on the SX-bus. A 'bitstream' of 8 bits is read from the SX-bus. An other 'bitstream' is red from the SX-bus at a different adres.
-In the SRCP serverall FB contacts are translated to single contacts. They are located in a big row. To let the Selectrix implementation make such a stream there has to be a further initialization to be done. The SX-bus adresses of the feedback contacts has to be given to the SCRP server. This is done by the command INIT busnumber FB adresfeedback S numberfeedback.
-adresfeedback	Physical adres on SX-bus
-numberfeedback	Number from 1 to 112. There may be gaps between the numbers. 
+A FB on SCRP is on a Maerklin/Intellibox system a bitstream
+(packeds of 16 bits), which is read from the controller with a byte
+instruction. This is in SCRP converted to a one bit instruction. On a
+Selectrix system it is also a byte which is located on the SX-bus. A
+'bitstream' of 8 bits is read from the SX-bus. An other 'bitstream'
+is read from the SX-bus at a different address.
+
+In the SRCP serveral FB contacts are translated to single
+contacts. They are located in a big row. To let the Selectrix
+implementation make such a stream there has to be a further
+initialization to be done. The SX-bus addresses of the feedback contacts
+have to be given to the SCRP server. This is done by the command
+
+  INIT <busnumber> FB <addressfeedback> S <numberfeedback>
+
+addressfeedback:  Physical address on SX-bus
+numberfeedback:    Number from 1 to 112. There may be gaps between the
+                   numbers. 
+
 The feedbacks are checked by:
-INFO busnumber FB feedbacknumber or GET busnumber FB feedbacknumber.
+
+  INFO <busnumber> FB <feedbacknumber>
+or
+  GET <busnumber> FB <feedbacknumber>
 
 Implementation:
-In the SRCP server the SX-bus is in an array in the structure Selectrix data. Every action with the SX-bus is done afterreading the other bits of the target adres. The byte send to the SX-bus is also placed in the array, so the array is up to date. This is done inside the IO thread, to make the data in the array thread-save.
-In a second array the adresses of the feedback modules are stored.  In a seperate counter the number of feedback modules is counted.
+In the SRCP server the SX-bus is in an array in the structure Selectrix
+data. Every action with the SX-bus is done after reading the other bits
+of the target address. The byte send to the SX-bus is also placed in the
+array, so the array is up to date. This is done inside the IO thread,
+to make the data in the array thread-save.
+In a second array the addresses of the feedback modules are stored.
+In a seperate counter the number of feedback modules is counted.
 The thread will process the data to and from the message queue.
 
 Example:
@@ -61,12 +104,13 @@ W1 \----------------------/ W2
 Used hardware:
 66800: CC2000 - Selectrix control centre
 66842: Communication interface to SX-bus (19200 baud)
-66820: Feedback controller (adres 100)
-66820: Feedback controller (adres 101)
-66828: Function decoder    (adres 50, switches)
-66828: Function decoder    (adres 51, 4 times a 3 expect signals (green-yellow-red))
+66820: Feedback controller (address 100)
+66820: Feedback controller (address 101)
+66828: Function decoder    (address 50, switches)
+66828: Function decoder    (address 51, 4 times a 3 expect signals
+                           (green-yellow-red))
 
-Two trains on the layout with decoders at adresses 5 and 10.
+Two trains on the layout with decoders at addresses 5 and 10.
 
 Configuration file for SRCPD:
 <?xml version="1.0"?>
@@ -113,9 +157,12 @@ SRCPD command: INIT 1 FB 101 S 2
 Driving (SCRPD):
 
 GL:
-Engine with adres 5 is set to: speed step 7, forward, light on, function off.
+Engine with address 5 is set to:
+  speed step 7, forward, light on, function off.
 SRCPD command: SET 1 GL 5 1 7 31 1 0
-Engine with adres 10 is set to: speed step 27, reverse, light off, function on.
+
+Engine with address 10 is set to:
+  speed step 27, reverse, light off, function on.
 SRCPD command: SET 1 GL 10 0 27 31 0 1
 
 GA, switch:
@@ -139,7 +186,7 @@ SRCPD command: SET 1 GA 51 7 0 0
 SRCPD command: SET 1 GA 51 8 0 0
 
 FB:
-Reading feedback contact 2 at adres 100:
+Reading feedback contact 2 at address 100:
 SRCPD command: GET 1 FB 2
-Reading feedback contact 4 at adres 101:
+Reading feedback contact 4 at address 101:
 SRCPD command: GET 1 FB 12
