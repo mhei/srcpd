@@ -104,6 +104,7 @@ static long int register_bus(long int busnumber, xmlDocPtr doc,
         if (txt == NULL) {
             printf("WARNING, no value found for tag \"%s\" (bus %d)!\n",
                    child->name, current_bus);
+            child = child->next;
             continue;
         }
         
