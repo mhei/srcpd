@@ -992,7 +992,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "number_ga") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "number_ga") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __DDL->number_ga = atoi((char *) txt);
@@ -1000,7 +1000,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp
+        else if (xmlStrcmp
             (child->name, BAD_CAST "enable_ringindicator_checking") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
@@ -1010,7 +1010,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "enable_checkshort_checking")
+        else if (xmlStrcmp(child->name, BAD_CAST "enable_checkshort_checking")
             == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
@@ -1020,14 +1020,14 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "inverse_dsr_handling") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "inverse_dsr_handling") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             __DDL->DSR_INVERSE =
                 (xmlStrcmp(txt, BAD_CAST "yes") == 0) ? TRUE : FALSE;
             xmlFree(txt);
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "enable_maerklin") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "enable_maerklin") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 if (xmlStrcmp(txt, BAD_CAST "yes") == 0)
@@ -1039,7 +1039,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "enable_nmradcc") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "enable_nmradcc") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 if (xmlStrcmp(txt, BAD_CAST "yes") == 0)
@@ -1051,7 +1051,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "improve_nmradcc_timing") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "improve_nmradcc_timing") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __DDL->IMPROVE_NMRADCC_TIMING = (xmlStrcmp(txt,
@@ -1061,7 +1061,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "shortcut_failure_delay") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "shortcut_failure_delay") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __DDL->SHORTCUTDELAY = atoi((char *) txt);
@@ -1069,7 +1069,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "nmradcc_translation_routine")
+        else if (xmlStrcmp(child->name, BAD_CAST "nmradcc_translation_routine")
             == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
@@ -1078,7 +1078,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "enable_usleep_patch") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "enable_usleep_patch") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __DDL->WAITUART_USLEEP_PATCH = (xmlStrcmp(txt,
@@ -1088,7 +1088,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "usleep_usec") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "usleep_usec") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __DDL->WAITUART_USLEEP_USEC = atoi((char *) txt);
