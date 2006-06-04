@@ -9,7 +9,7 @@
 
 #include "config-srcpd.h"
 #include "srcp-error.h"
-
+#include "srcp-info.h"
 #include "srcp-power.h"
 
 int setPower(long int bus, int state, char *msg)

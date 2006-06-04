@@ -255,7 +255,7 @@ int infoSM(long int busnumber, int command, int type, int addr, int typeaddr,
                 now.tv_usec / 1000);
     } else {
         gettimeofday(&now, NULL);
-        sprintf(info, "%ld.%ld 100 INFO %d SM %d CV %d %d\n", now.tv_sec,
+        sprintf(info, "%ld.%ld 100 INFO %ld SM %d CV %d %d\n", now.tv_sec,
                 now.tv_usec / 1000, busnumber, addr, typeaddr, result);
     }
     session_cleanupwait(busnumber);
