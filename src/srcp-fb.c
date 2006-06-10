@@ -105,6 +105,11 @@ int getFB( long int bus, int port, struct timeval *time, int *value )
   return SRCP_OK;
 }
 
+int setFB( long int bus, int port,  int value ) {
+  updateFB(bus, port, value);
+  return SRCP_OK;
+}
+
 void updateFB( long int bus, int port, int value )
 {
   struct timezone dummy;
