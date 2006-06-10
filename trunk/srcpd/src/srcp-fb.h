@@ -37,6 +37,7 @@ int get_number_fb(long int bus);
 int initFB(long int busnumber, int addr, const char protocol, int index);
 
 int getFB(long int bus, int port, struct timeval *time, int *value);
+int setFB( long int bus, int port,  int value );
 void updateFB(long int bus, int port, int value);
 int setFBmodul(long int bus, int mod, int values);
 int infoFB(long int bus, int port, char *msg);
