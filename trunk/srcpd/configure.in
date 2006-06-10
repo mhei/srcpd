@@ -8,7 +8,8 @@ AC_INIT([srcpd], [2.0.10-cvs], [srcpd-devel@lists.sourceforge.net>])
 AC_CANONICAL_TARGET
 AC_CONFIG_HEADER([src/config.h])
 AC_CONFIG_SRCDIR([src/srcpd.c])
-AM_INIT_AUTOMAKE([dist-bzip2])
+
+AM_INIT_AUTOMAKE
 
 AC_PREFIX_DEFAULT(/usr/local)
 
