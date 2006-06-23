@@ -46,125 +46,128 @@
 int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node,
                          long int busnumber)
 {
-	int i;
-	int portindex;
-	
-	portindex = 0;
-	busses[busnumber].type = SERVER_SELECTRIX;
-	busses[busnumber].baudrate = B9600;
-	busses[busnumber].init_func = &init_bus_Selectrix;
-	busses[busnumber].term_func = &term_bus_Selectrix;
-	busses[busnumber].thr_func = &thr_sendrec_Selectrix;
-	busses[busnumber].init_gl_func = &init_gl_Selectrix;
-	busses[busnumber].init_ga_func = &init_ga_Selectrix;
-	busses[busnumber].init_fb_func = &init_fb_Selectrix;
-	busses[busnumber].driverdata = malloc(sizeof(struct _SELECTRIX_DATA));
-	__selectrix->number_gl = 1;
-	__selectrix->number_ga = 1;
-	__selectrix->number_fb = 1;
-	__selectrix->flags = 0;
-	__selectrix->number_adres = SXmax;
-	
-	for (i = 0; i < SXmax; i++)	{
-		__selectrix->bus_data[i] = 0;         /* Set all outputs to 0 */
-		__selectrix->fb_adresses[i] = 255;    /* Set invalid adresses */
-	}
+    int i;
+    int portindex;
 
-	strcpy(busses[busnumber].description,
-		"GA GL FB POWER LOCK DESCRIPTION");
+    portindex = 0;
+    busses[busnumber].type = SERVER_SELECTRIX;
+    busses[busnumber].baudrate = B9600;
+    busses[busnumber].init_func = &init_bus_Selectrix;
+    busses[busnumber].term_func = &term_bus_Selectrix;
+    busses[busnumber].thr_func = &thr_sendrec_Selectrix;
+    busses[busnumber].init_gl_func = &init_gl_Selectrix;
+    busses[busnumber].init_ga_func = &init_ga_Selectrix;
+    busses[busnumber].init_fb_func = &init_fb_Selectrix;
+    busses[busnumber].driverdata = malloc(sizeof(struct _SELECTRIX_DATA));
+    __selectrix->number_gl = 1;
+    __selectrix->number_ga = 1;
+    __selectrix->number_fb = 1;
+    __selectrix->flags = 0;
+    __selectrix->number_adres = SXmax;
 
-	xmlNodePtr child = node->children;
-	xmlChar *txt = NULL;
+    for (i = 0; i < SXmax; i++) {
+        __selectrix->bus_data[i] = 0;   /* Set all outputs to 0 */
+        __selectrix->fb_adresses[i] = 255;      /* Set invalid adresses */
+    }
 
-	while (child) {
-		if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) {
-			child = child->next;
-			continue;
-		}
+    strcpy(busses[busnumber].description,
+           "GA GL FB POWER LOCK DESCRIPTION");
 
-		else if (xmlStrcmp(child->name, BAD_CAST "number_fb") == 0)	{
-			txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-			if (txt != NULL) {
-				__selectrix->number_fb = atoi((char *) txt);
-				xmlFree(txt);
-			}
-		}
+    xmlNodePtr child = node->children;
+    xmlChar *txt = NULL;
 
-		else if (xmlStrcmp(child->name, BAD_CAST "number_gl") == 0) {
-			txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-			if (txt != NULL) {
-				__selectrix->number_gl = atoi((char *) txt);
-				xmlFree(txt);
-			}
-		}
+    while (child) {
+        if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) {
+            child = child->next;
+            continue;
+        }
 
-		else if (xmlStrcmp(child->name, BAD_CAST "number_ga") == 0) {
-			txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-			if (txt != NULL) {
-				__selectrix->number_ga = atoi((char *) txt);
-				xmlFree(txt);
-			}
-		}
+        else if (xmlStrcmp(child->name, BAD_CAST "number_fb") == 0) {
+            txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+            if (txt != NULL) {
+                __selectrix->number_fb = atoi((char *) txt);
+                xmlFree(txt);
+            }
+        }
 
-		else if (xmlStrcmp(child->name, BAD_CAST "mode_cc2000") == 0) {
-			txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-			if (txt != NULL) {
-				if (xmlStrcmp(txt, BAD_CAST "yes") == 0) {
-					__selectrix->flags |= CC2000_MODE;
-					/* Last 8 addresses for the CC2000 */
-					__selectrix->number_adres = SXcc2000;
-					strcpy(busses[busnumber].description,
-						"GA GL FB SM POWER LOCK DESCRIPTION");
-				}
-				xmlFree(txt);
-			}
-		}
-		if (xmlStrcmp(child->name, BAD_CAST "ports") == 0) {
-			portindex = 1;
-			xmlNodePtr subchild = child->children;
-			xmlChar *subtxt = NULL;
-			while (subchild) {
-				if (xmlStrncmp(subchild->name, BAD_CAST "text", 4) == 0) {
-					subchild = subchild->next;
-					continue;
-				}
-				if (xmlStrcmp(subchild->name, BAD_CAST "port") == 0) {
-					subtxt = xmlNodeListGetString(doc, subchild->xmlChildrenNode, 1);
-					if (subtxt != NULL) {
-						__selectrix->fb_adresses[portindex]= atoi((char*) subtxt);
-						xmlFree(subtxt);
-						if (__selectrix->number_adres > portindex) {
-							portindex++;
-						}
-					}
-				}
-				subchild = subchild->next;
-			}
-		}
-		child = child->next;
-	}
-	
-	if (__selectrix->number_gl + __selectrix->number_ga +
-		__selectrix->number_fb < __selectrix->number_adres) {
-		if (init_GL(busnumber, __selectrix->number_gl)) {
-			__selectrix->number_gl = 0;
-			DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
-		}
+        else if (xmlStrcmp(child->name, BAD_CAST "number_gl") == 0) {
+            txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+            if (txt != NULL) {
+                __selectrix->number_gl = atoi((char *) txt);
+                xmlFree(txt);
+            }
+        }
 
-		if (init_GA(busnumber, __selectrix->number_ga)) {
-			__selectrix->number_ga = 0;
-			DBG(busnumber, DBG_ERROR, "Can't create array for assesoirs");
-		}
+        else if (xmlStrcmp(child->name, BAD_CAST "number_ga") == 0) {
+            txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+            if (txt != NULL) {
+                __selectrix->number_ga = atoi((char *) txt);
+                xmlFree(txt);
+            }
+        }
 
-		if (init_FB(busnumber, __selectrix->number_fb * 8)) {
-			__selectrix->number_fb = 0;
-			DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
-		}
-	}
-	else {
-		DBG(busnumber, DBG_ERROR, "Too many devices on the SX-bus");
-	}
-	return 1;
+        else if (xmlStrcmp(child->name, BAD_CAST "mode_cc2000") == 0) {
+            txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+            if (txt != NULL) {
+                if (xmlStrcmp(txt, BAD_CAST "yes") == 0) {
+                    __selectrix->flags |= CC2000_MODE;
+                    /* Last 8 addresses for the CC2000 */
+                    __selectrix->number_adres = SXcc2000;
+                    strcpy(busses[busnumber].description,
+                           "GA GL FB SM POWER LOCK DESCRIPTION");
+                }
+                xmlFree(txt);
+            }
+        }
+        else if (xmlStrcmp(child->name, BAD_CAST "ports") == 0) {
+            portindex = 1;
+            xmlNodePtr subchild = child->children;
+            xmlChar *subtxt = NULL;
+            while (subchild) {
+                if (xmlStrncmp(subchild->name, BAD_CAST "text", 4) == 0) {
+                    subchild = subchild->next;
+                    continue;
+                }
+                if (xmlStrcmp(subchild->name, BAD_CAST "port") == 0) {
+                    subtxt =
+                        xmlNodeListGetString(doc,
+                                             subchild->xmlChildrenNode, 1);
+                    if (subtxt != NULL) {
+                        __selectrix->fb_adresses[portindex] =
+                            atoi((char *) subtxt);
+                        xmlFree(subtxt);
+                        if (__selectrix->number_adres > portindex) {
+                            portindex++;
+                        }
+                    }
+                }
+                subchild = subchild->next;
+            }
+        }
+        child = child->next;
+    }
+
+    if (__selectrix->number_gl + __selectrix->number_ga +
+        __selectrix->number_fb < __selectrix->number_adres) {
+        if (init_GL(busnumber, __selectrix->number_gl)) {
+            __selectrix->number_gl = 0;
+            DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
+        }
+
+        if (init_GA(busnumber, __selectrix->number_ga)) {
+            __selectrix->number_ga = 0;
+            DBG(busnumber, DBG_ERROR, "Can't create array for assesoirs");
+        }
+
+        if (init_FB(busnumber, __selectrix->number_fb * 8)) {
+            __selectrix->number_fb = 0;
+            DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
+        }
+    }
+    else {
+        DBG(busnumber, DBG_ERROR, "Too many devices on the SX-bus");
+    }
+    return 1;
 }
 
 
@@ -173,67 +176,67 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node,
 ********************************************************/
 int init_lineSelectrix(long int busnumber)
 {
-	int FD;
-	struct termios interface;
-	
-	if (busses[busnumber].debuglevel > 0) {
-		DBG(busnumber, DBG_INFO, "Selectrix, opening device: %s",
-			busses[busnumber].device);
-	}
-	if ((FD = open(busses[busnumber].device, O_RDWR | O_NONBLOCK)) == -1) {
-		DBG(busnumber, DBG_FATAL, "Selectrix couldn't open device %s.",
-			busses[busnumber].device);
-		return -1;
-	}
-	tcgetattr(FD, &interface);
-#ifdef linux
-	interface.c_cflag = CS8 | CRTSCTS | CREAD | CSTOPB;
-	interface.c_oflag = ONOCR | ONLRET;
-	interface.c_oflag &= ~(OLCUC | ONLCR | OCRNL);
-	interface.c_iflag = IGNBRK | IGNPAR;
-	interface.c_iflag &= ~(ISTRIP | IXON | IXOFF | IXANY);
-	interface.c_lflag = NOFLSH | IEXTEN;
-	interface.c_lflag &= ~(ISIG | ICANON | ECHO | ECHOE | TOSTOP | PENDIN);
+    int FD;
+    struct termios interface;
 
-	cfsetospeed(&interface, busses[busnumber].baudrate);
-	cfsetispeed(&interface, busses[busnumber].baudrate);
+    if (busses[busnumber].debuglevel > 0) {
+        DBG(busnumber, DBG_INFO, "Selectrix, opening device: %s",
+            busses[busnumber].device);
+    }
+    if ((FD = open(busses[busnumber].device, O_RDWR | O_NONBLOCK)) == -1) {
+        DBG(busnumber, DBG_FATAL, "Selectrix couldn't open device %s.",
+            busses[busnumber].device);
+        return -1;
+    }
+    tcgetattr(FD, &interface);
+#ifdef linux
+    interface.c_cflag = CS8 | CRTSCTS | CREAD | CSTOPB;
+    interface.c_oflag = ONOCR | ONLRET;
+    interface.c_oflag &= ~(OLCUC | ONLCR | OCRNL);
+    interface.c_iflag = IGNBRK | IGNPAR;
+    interface.c_iflag &= ~(ISTRIP | IXON | IXOFF | IXANY);
+    interface.c_lflag = NOFLSH | IEXTEN;
+    interface.c_lflag &= ~(ISIG | ICANON | ECHO | ECHOE | TOSTOP | PENDIN);
+
+    cfsetospeed(&interface, busses[busnumber].baudrate);
+    cfsetispeed(&interface, busses[busnumber].baudrate);
 #else
-	cfmakeraw(&interface);
-	interface.c_ispeed = interface.c_ospeed = busses[busnumber].baudrate;
-	interface.c_cflag = CREAD  | HUPCL | CS8 | CSTOPB | CRTSCTS;
+    cfmakeraw(&interface);
+    interface.c_ispeed = interface.c_ospeed = busses[busnumber].baudrate;
+    interface.c_cflag = CREAD | HUPCL | CS8 | CSTOPB | CRTSCTS;
 #endif
-	tcsetattr(FD, TCSANOW, &interface);
-	DBG(busnumber, DBG_INFO, "Opening Selectrix succeeded FD=%d", FD);
-	return FD;
+    tcsetattr(FD, TCSANOW, &interface);
+    DBG(busnumber, DBG_INFO, "Opening Selectrix succeeded FD=%d", FD);
+    return FD;
 }
 
 long int init_bus_Selectrix(long int busnumber)
 {
-	DBG(busnumber, DBG_INFO, "Selectrix init: debug %d",
-		busses[busnumber].debuglevel);
-	if (busses[busnumber].debuglevel <= DBG_DEBUG) {
-		busses[busnumber].fd = init_lineSelectrix(busnumber);
-	}
-	else {
-		busses[busnumber].fd = -1;
-	}
-	DBG(busnumber, DBG_INFO, "Selectrix init done, fd=%d",
-		busses[busnumber].fd);
-	DBG(busnumber, DBG_INFO, "Selectrix description: %s",
-		busses[busnumber].description);
-	DBG(busnumber, DBG_INFO, "Selectrix flags: %d",
-		busses[busnumber].flags);
-	return 0;
+    DBG(busnumber, DBG_INFO, "Selectrix init: debug %d",
+        busses[busnumber].debuglevel);
+    if (busses[busnumber].debuglevel <= DBG_DEBUG) {
+        busses[busnumber].fd = init_lineSelectrix(busnumber);
+    }
+    else {
+        busses[busnumber].fd = -1;
+    }
+    DBG(busnumber, DBG_INFO, "Selectrix init done, fd=%d",
+        busses[busnumber].fd);
+    DBG(busnumber, DBG_INFO, "Selectrix description: %s",
+        busses[busnumber].description);
+    DBG(busnumber, DBG_INFO, "Selectrix flags: %d",
+        busses[busnumber].flags);
+    return 0;
 }
 
 long int term_bus_Selectrix(long int busnumber)
 {
-	if (!(busses[busnumber].fd != -1)) {
-		close_comport(busses[busnumber].fd);
-	}
-	DBG(busnumber, DBG_INFO, "Selectrix bus term done, "
-		"fd=%d", busses[busnumber].fd);
-	return 0;
+    if (!(busses[busnumber].fd != -1)) {
+        close_comport(busses[busnumber].fd);
+    }
+    DBG(busnumber, DBG_INFO, "Selectrix bus term done, "
+        "fd=%d", busses[busnumber].fd);
+    return 0;
 }
 
 /*******************************************************
@@ -242,35 +245,35 @@ long int term_bus_Selectrix(long int busnumber)
 /* Engines */
 long int init_gl_Selectrix(struct _GLSTATE *gl)
 {
-	if (gl->protocol != 'S') {
-		return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
-	}
-	return ((gl->n_fs == 31) && (gl->protocolversion == 1)
-			&& (gl->n_func == 2)) ? SRCP_OK : SRCP_WRONGVALUE;
+    if (gl->protocol != 'S') {
+        return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
+    }
+    return ((gl->n_fs == 31) && (gl->protocolversion == 1)
+            && (gl->n_func == 2)) ? SRCP_OK : SRCP_WRONGVALUE;
 }
 
 /* Switches, signals, ... */
 long int init_ga_Selectrix(struct _GASTATE *ga)
 {
-	return (ga->protocol ==
-			'S') ? SRCP_OK : SRCP_UNSUPPORTEDDEVICEPROTOCOL;
+    return (ga->protocol ==
+            'S') ? SRCP_OK : SRCP_UNSUPPORTEDDEVICEPROTOCOL;
 }
 
 /* Feedbacks */
 long int init_fb_Selectrix(long int busnumber, int adres,
-						   const char protocol, int index)
+                           const char protocol, int index)
 {
-	if (protocol== 'S') {
-		if ((__selectrix->number_adres> adres)
-			&& (__selectrix->number_fb>= index)) {
-			__selectrix->fb_adresses[index]= adres;
-			return SRCP_OK;
-		}
-		else {
-			return SRCP_WRONGVALUE;
-		}
-	}
-	return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
+    if (protocol == 'S') {
+        if ((__selectrix->number_adres > adres)
+            && (__selectrix->number_fb >= index)) {
+            __selectrix->fb_adresses[index] = adres;
+            return SRCP_OK;
+        }
+        else {
+            return SRCP_WRONGVALUE;
+        }
+    }
+    return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
 }
 
 /*******************************************************
@@ -279,43 +282,43 @@ long int init_fb_Selectrix(long int busnumber, int adres,
 /* Read data from the SX-bus (8 bits) */
 int readSXbus(long int busnumber, int SXadres)
 {
-	unsigned char rr;
-	int temp;
-	
-	if (busses[busnumber].fd != -1 ) {
-		return 0x100;				// If port closed > 255
-	}
-	else {
-		/* Make sure the connection is empty */
-		ioctl(busses[busnumber].fd, FIONREAD, &temp);
-		while (temp > 0) {
-			readByte(busnumber, 0, &rr);
-			ioctl(busses[busnumber].fd, FIONREAD, &temp);
-			DBG(busnumber, DBG_INFO,
-				"Selectrix on bus %d, ignoring unread byte: %d", busnumber,
-				rr);
-		}
-		/* write SXadres and the read command */
-		writeByte(busnumber, SXread+ SXadres, 0);
-		/* extra byte for power to receive data */
-		writeByte(busnumber, 0xaa, 0);
-		/* receive data */
-		if (readByte(busnumber, 0, &rr) == -1) {
-			rr= 0xff;			// If nothig receved all set
-		}
-		return rr;
-	}
+    unsigned char rr;
+    int temp;
+
+    if (busses[busnumber].fd != -1) {
+        return 0x100;           // If port closed > 255
+    }
+    else {
+        /* Make sure the connection is empty */
+        ioctl(busses[busnumber].fd, FIONREAD, &temp);
+        while (temp > 0) {
+            readByte(busnumber, 0, &rr);
+            ioctl(busses[busnumber].fd, FIONREAD, &temp);
+            DBG(busnumber, DBG_INFO,
+                "Selectrix on bus %d, ignoring unread byte: %d", busnumber,
+                rr);
+        }
+        /* write SXadres and the read command */
+        writeByte(busnumber, SXread + SXadres, 0);
+        /* extra byte for power to receive data */
+        writeByte(busnumber, 0xaa, 0);
+        /* receive data */
+        if (readByte(busnumber, 0, &rr) == -1) {
+            rr = 0xff;          // If nothig receved all set
+        }
+        return rr;
+    }
 }
 
 /* Write data to the SX-bus (8bits) */
 void writeSXbus(long int busnumber, int SXadres, int SXdata)
 {
-	if (!(busses[busnumber].fd != 0)) {
-		/* write SXadres and the write command */
-		writeByte(busnumber, SXwrite + SXadres, 0);
-		/* write data to the SX-bus */
-		writeByte(busnumber, SXdata, 0);
-	}
+    if (!(busses[busnumber].fd != 0)) {
+        /* write SXadres and the write command */
+        writeByte(busnumber, SXwrite + SXadres, 0);
+        /* write data to the SX-bus */
+        writeByte(busnumber, SXdata, 0);
+    }
 }
 
 /*******************************************************
@@ -323,208 +326,208 @@ void writeSXbus(long int busnumber, int SXadres, int SXdata)
 ********************************************************/
 void *thr_sendrec_Selectrix(void *v)
 {
-	int addr, data, power, actFB;
-	struct _GLSTATE gltmp;
-	struct _GASTATE gatmp;
-	long int busnumber = (long int) v;
-	
-	actFB = 1;
-	busses[busnumber].watchdog = 0;
-	DBG(busnumber, DBG_INFO, "Selectrix on bus #%ld thread started.",
-		busnumber);
-	while (1) {
-		busses[busnumber].watchdog = 1;
-		/* Start/Stop */
-		if (busses[busnumber].power_changed != 0) {
-			char msg[1000];
-			busses[busnumber].watchdog = 2;
-			power = ((busses[busnumber].power_state) ? 0x80 : 0x00);
-			writeSXbus(busnumber, SXcontrol, power);
-			infoPower(busnumber, msg);
-			queueInfoMessage(msg);
-			DBG(busnumber, DBG_DEBUG,
-				"Selectrix on bus %d had a power change.", busnumber);
-			busses[busnumber].power_changed = 0;
-		}
-		busses[busnumber].watchdog = 3;
-		/* do nothing, if power off */
-		if (busses[busnumber].power_state == 0)	{
-			busses[busnumber].watchdog = 4;
-			usleep(1000);
-			continue;
-		}
-		/* Loco decoders */
-		busses[busnumber].watchdog = 5;
-		if (!queue_GL_isempty(busnumber)) {
-			busses[busnumber].watchdog = 6;
-			unqueueNextGL(busnumber, &gltmp);
-			/* Adres of the engine */
-			addr = gltmp.id;
-			/* Check if valid address */
-			if (__selectrix->number_adres > addr) {
-				/* Check: terminating the engine */
-				if (gltmp.state == 2) {
-					DBG(busnumber, DBG_DEBUG,
-						"Selectrix on bus %d, engine with address %d "
-						"is removed", busnumber, addr);
-					__selectrix->number_gl--;
-				}
-				/* Check: emergency stop */
-				if (gltmp.direction == 2) {
-					gltmp.speed = 0;
-				}
-				/*Speed, Direction, Light, Function */
-				data = gltmp.speed + ((gltmp.direction) ? 0 : 0x20) +
-					((gltmp.funcs & 0x01) ? 0x40 : 0) +
-					((gltmp.funcs & 0x02) ? 0x80 : 0);
-				writeSXbus(busnumber, addr, data);
-				__selectrix->bus_data[addr] = data;
-				setGL(busnumber, addr, gltmp);
-				DBG(busnumber, DBG_DEBUG,
-					"Selectrix on bus %d, engine with address %d has data %X.",
-					busnumber, addr, data);
-			}
-			else {
-				DBG(busnumber, DBG_DEBUG,
-					"Selectrix on bus %d, invalid address %d with engine",
-					busnumber, addr);
-			}
-		}
-		busses[busnumber].watchdog = 7;
-		/* Antriebe (solenoids and signals) */
-		if (!queue_GA_isempty(busnumber)) {
-			busses[busnumber].watchdog = 8;
-			unqueueNextGA(busnumber, &gatmp);
-			addr = gatmp.id;
-			if (__selectrix->number_adres > addr) {
-				data = __selectrix->bus_data[addr];
-				DBG(busnumber, DBG_DEBUG,
-					"Selectrix on bus %d, address %d has old data %X.",
-					busnumber, addr, data);
-				/* Select the action to do */
-				if (gatmp.action == 0) {
-					/* Set pin to "0" */
-					switch (gatmp.port) {
-						case 1:
-							data &= 0xfe;
-							break;
-						case 2:
-							data &= 0xfd;
-							break;
-						case 3:
-							data &= 0xfb;
-							break;
-						case 4:
-							data &= 0xf7;
-							break;
-						case 5:
-							data &= 0xef;
-							break;
-						case 6:
-							data &= 0xdf;
-							break;
-						case 7:
-							data &= 0xbf;
-							break;
-						case 8:
-							data &= 0x7f;
-							break;
-						default:
-							DBG(busnumber, DBG_DEBUG,
-							"Selectrix on bus %d, invalid portnumber "
-							"%d with switch/signal or ...",
-							busnumber,  gatmp.port);
-							break;
-					}
-				}
-				else {
-					/* Set pin to "1" */
-					switch (gatmp.port) {
-						case 1:
-							data |= 0x01;
-							break;
-						case 2:
-							data |= 0x02;
-							break;
-						case 3:
-							data |= 0x04;
-							break;
-						case 4:
-							data |= 0x08;
-							break;
-						case 5:
-							data |= 0x10;
-							break;
-						case 6:
-							data |= 0x20;
-							break;
-						case 7:
-							data |= 0x40;
-							break;
-						case 8:
-							data |= 0x80;
-							break;
-						default:
-							DBG(busnumber, DBG_DEBUG,
-							"Selectrix on bus %d, invalid portnumber "
-							"%d with switch/signal or ...",
-							busnumber, gatmp.port);
-							break;
-					}
-				}
-				writeSXbus(busnumber, addr, data);
-				__selectrix->bus_data[addr] = data;
-				DBG(busnumber, DBG_DEBUG,
-					"Selectrix on bus %d, address %d has new data %X.",
-					busnumber, addr, data);
-				}
-				else {
-					DBG(busnumber, DBG_DEBUG,
-					"Selectrix on bus %d, invalid address %d with "
-					"switch/signal or ...", busnumber, addr);
-				}
-			}
-		busses[busnumber].watchdog = 9;
-		/* Feed back contacts */
-		if (__selectrix->number_fb > 0) {
-			busses[busnumber].watchdog = 10;
-			/* Fetch the modul address */
-			addr = __selectrix->fb_adresses[actFB];
-			//DBG(busnumber, DBG_DEBUG,
-			//	 "Selectrix on bus %d, feedbackaddress %d.",
-			//	 busnumber, addr);
-			if (__selectrix->number_adres > addr) {
-				/* Read the SXbus */
-				data = readSXbus(busnumber, addr);
-				if (data < 0x100) {
-					__selectrix->bus_data[addr] = data;
-					/* Set the deamon global data */
-					/* Use 1, 2, ... as adres for feedback */
-					setFBmodul(busnumber, actFB, data);
-					/* Use real adres for feedback */
-					//setFBmodul(busnumber, addr, data);
-					DBG(busnumber, DBG_DEBUG,
-						"Selectrix on bus %d, address %d has feedback data %X.",
-						busnumber, addr, data);
-				}
-				else {
-					DBG(busnumber, DBG_DEBUG,
-					"Selectrix on bus %d, no data on address %d.",
-					busnumber, addr);
-				}
-			}
-			else {
-				DBG(busnumber, DBG_DEBUG,
-				"Selectrix on bus %d, invalid address %d with feedback index %d.",
-				busnumber, addr, actFB);
-			}
-			// Select the next module
-			if (actFB >= __selectrix->number_fb)	{
-				actFB = 1;   // Reset to start
-			}
-			else {
-				actFB++;    // Next
-			}
-		}
-	}
+    int addr, data, power, actFB;
+    struct _GLSTATE gltmp;
+    struct _GASTATE gatmp;
+    long int busnumber = (long int) v;
+
+    actFB = 1;
+    busses[busnumber].watchdog = 0;
+    DBG(busnumber, DBG_INFO, "Selectrix on bus #%ld thread started.",
+        busnumber);
+    while (1) {
+        busses[busnumber].watchdog = 1;
+        /* Start/Stop */
+        if (busses[busnumber].power_changed != 0) {
+            char msg[1000];
+            busses[busnumber].watchdog = 2;
+            power = ((busses[busnumber].power_state) ? 0x80 : 0x00);
+            writeSXbus(busnumber, SXcontrol, power);
+            infoPower(busnumber, msg);
+            queueInfoMessage(msg);
+            DBG(busnumber, DBG_DEBUG,
+                "Selectrix on bus %d had a power change.", busnumber);
+            busses[busnumber].power_changed = 0;
+        }
+        busses[busnumber].watchdog = 3;
+        /* do nothing, if power off */
+        if (busses[busnumber].power_state == 0) {
+            busses[busnumber].watchdog = 4;
+            usleep(1000);
+            continue;
+        }
+        /* Loco decoders */
+        busses[busnumber].watchdog = 5;
+        if (!queue_GL_isempty(busnumber)) {
+            busses[busnumber].watchdog = 6;
+            unqueueNextGL(busnumber, &gltmp);
+            /* Adres of the engine */
+            addr = gltmp.id;
+            /* Check if valid address */
+            if (__selectrix->number_adres > addr) {
+                /* Check: terminating the engine */
+                if (gltmp.state == 2) {
+                    DBG(busnumber, DBG_DEBUG,
+                        "Selectrix on bus %d, engine with address %d "
+                        "is removed", busnumber, addr);
+                    __selectrix->number_gl--;
+                }
+                /* Check: emergency stop */
+                if (gltmp.direction == 2) {
+                    gltmp.speed = 0;
+                }
+                /*Speed, Direction, Light, Function */
+                data = gltmp.speed + ((gltmp.direction) ? 0 : 0x20) +
+                    ((gltmp.funcs & 0x01) ? 0x40 : 0) +
+                    ((gltmp.funcs & 0x02) ? 0x80 : 0);
+                writeSXbus(busnumber, addr, data);
+                __selectrix->bus_data[addr] = data;
+                setGL(busnumber, addr, gltmp);
+                DBG(busnumber, DBG_DEBUG,
+                    "Selectrix on bus %d, engine with address %d has data %X.",
+                    busnumber, addr, data);
+            }
+            else {
+                DBG(busnumber, DBG_DEBUG,
+                    "Selectrix on bus %d, invalid address %d with engine",
+                    busnumber, addr);
+            }
+        }
+        busses[busnumber].watchdog = 7;
+        /* Antriebe (solenoids and signals) */
+        if (!queue_GA_isempty(busnumber)) {
+            busses[busnumber].watchdog = 8;
+            unqueueNextGA(busnumber, &gatmp);
+            addr = gatmp.id;
+            if (__selectrix->number_adres > addr) {
+                data = __selectrix->bus_data[addr];
+                DBG(busnumber, DBG_DEBUG,
+                    "Selectrix on bus %d, address %d has old data %X.",
+                    busnumber, addr, data);
+                /* Select the action to do */
+                if (gatmp.action == 0) {
+                    /* Set pin to "0" */
+                    switch (gatmp.port) {
+                    case 1:
+                        data &= 0xfe;
+                        break;
+                    case 2:
+                        data &= 0xfd;
+                        break;
+                    case 3:
+                        data &= 0xfb;
+                        break;
+                    case 4:
+                        data &= 0xf7;
+                        break;
+                    case 5:
+                        data &= 0xef;
+                        break;
+                    case 6:
+                        data &= 0xdf;
+                        break;
+                    case 7:
+                        data &= 0xbf;
+                        break;
+                    case 8:
+                        data &= 0x7f;
+                        break;
+                    default:
+                        DBG(busnumber, DBG_DEBUG,
+                            "Selectrix on bus %d, invalid portnumber "
+                            "%d with switch/signal or ...",
+                            busnumber, gatmp.port);
+                        break;
+                    }
+                }
+                else {
+                    /* Set pin to "1" */
+                    switch (gatmp.port) {
+                    case 1:
+                        data |= 0x01;
+                        break;
+                    case 2:
+                        data |= 0x02;
+                        break;
+                    case 3:
+                        data |= 0x04;
+                        break;
+                    case 4:
+                        data |= 0x08;
+                        break;
+                    case 5:
+                        data |= 0x10;
+                        break;
+                    case 6:
+                        data |= 0x20;
+                        break;
+                    case 7:
+                        data |= 0x40;
+                        break;
+                    case 8:
+                        data |= 0x80;
+                        break;
+                    default:
+                        DBG(busnumber, DBG_DEBUG,
+                            "Selectrix on bus %d, invalid portnumber "
+                            "%d with switch/signal or ...",
+                            busnumber, gatmp.port);
+                        break;
+                    }
+                }
+                writeSXbus(busnumber, addr, data);
+                __selectrix->bus_data[addr] = data;
+                DBG(busnumber, DBG_DEBUG,
+                    "Selectrix on bus %d, address %d has new data %X.",
+                    busnumber, addr, data);
+            }
+            else {
+                DBG(busnumber, DBG_DEBUG,
+                    "Selectrix on bus %d, invalid address %d with "
+                    "switch/signal or ...", busnumber, addr);
+            }
+        }
+        busses[busnumber].watchdog = 9;
+        /* Feed back contacts */
+        if (__selectrix->number_fb > 0) {
+            busses[busnumber].watchdog = 10;
+            /* Fetch the modul address */
+            addr = __selectrix->fb_adresses[actFB];
+            //DBG(busnumber, DBG_DEBUG,
+            //       "Selectrix on bus %d, feedbackaddress %d.",
+            //       busnumber, addr);
+            if (__selectrix->number_adres > addr) {
+                /* Read the SXbus */
+                data = readSXbus(busnumber, addr);
+                if (data < 0x100) {
+                    __selectrix->bus_data[addr] = data;
+                    /* Set the deamon global data */
+                    /* Use 1, 2, ... as adres for feedback */
+                    setFBmodul(busnumber, actFB, data);
+                    /* Use real adres for feedback */
+                    //setFBmodul(busnumber, addr, data);
+                    DBG(busnumber, DBG_DEBUG,
+                        "Selectrix on bus %d, address %d has feedback data %X.",
+                        busnumber, addr, data);
+                }
+                else {
+                    DBG(busnumber, DBG_DEBUG,
+                        "Selectrix on bus %d, no data on address %d.",
+                        busnumber, addr);
+                }
+            }
+            else {
+                DBG(busnumber, DBG_DEBUG,
+                    "Selectrix on bus %d, invalid address %d with feedback index %d.",
+                    busnumber, addr, actFB);
+            }
+            // Select the next module
+            if (actFB >= __selectrix->number_fb) {
+                actFB = 1;      // Reset to start
+            }
+            else {
+                actFB++;        // Next
+            }
+        }
+    }
 }
