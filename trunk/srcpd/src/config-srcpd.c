@@ -66,7 +66,6 @@ int bus_has_devicegroup(long int bus, int dg)
 static long int register_bus(long int busnumber, xmlDocPtr doc,
                              xmlNodePtr node)
 {
-    int found;
     int current_bus = busnumber;
 
     if (xmlStrcmp(node->name, BAD_CAST "bus"))
@@ -86,6 +85,7 @@ static long int register_bus(long int busnumber, xmlDocPtr doc,
     busses[current_bus].debuglevel = 1;
     free(busses[current_bus].device);
     busses[current_bus].device = malloc(strlen("/dev/null") + 1);
+    /*TODO: what happens if malloc returns NULL? */
     strcpy(busses[current_bus].device, "/dev/null");
     busses[current_bus].flags = 0;
     busses[current_bus].baudrate = B2400;
@@ -93,7 +93,7 @@ static long int register_bus(long int busnumber, xmlDocPtr doc,
     xmlNodePtr child = node->children;
     xmlChar *txt = NULL;
 
-    while (child) {
+    while (child != NULL) {
         if ((xmlStrcmp(child->name, BAD_CAST "text") == 0) ||
             (xmlStrcmp(child->name, BAD_CAST "comment") == 0)) {
             child = child->next;
@@ -108,11 +108,9 @@ static long int register_bus(long int busnumber, xmlDocPtr doc,
             continue;
         }
         
-        found = 0;
         if (xmlStrncmp(child->name, BAD_CAST "server", 6) == 0) {
             if (busnumber == 0) {
                 busnumber += readconfig_server(doc, child, busnumber);
-                found = 1;
             }
             else
                 printf("Sorry, type=server is only allowed at bus 0!\n");
@@ -121,38 +119,31 @@ static long int register_bus(long int busnumber, xmlDocPtr doc,
         /* but the most important are not ;=)  */
         else if (xmlStrcmp(child->name, BAD_CAST "zimo") == 0) {
             busnumber += readconfig_zimo(doc, child, busnumber);
-            found = 1;
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "ddl") == 0) {
             busnumber += readconfig_DDL(doc, child, busnumber);
-            found = 1;
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "m605x") == 0) {
             busnumber += readconfig_m605x(doc, child, busnumber);
-            found = 1;
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "intellibox") == 0) {
             busnumber += readConfig_IB(doc, child, busnumber);
-            found = 1;
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "loconet") == 0) {
             busnumber += readConfig_LOCONET(doc, child, busnumber);
-            found = 1;
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "loopback") == 0) {
             busnumber += readconfig_LOOPBACK(doc, child, busnumber);
-            found = 1;
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "ddl-s88") == 0) {
 #if defined(linux) || defined(__CYGWIN__) || defined(__FreeBSD__)
             busnumber += readconfig_DDL_S88(doc, child, busnumber);
-            found = 1;
 #else
             printf("Sorry, DDL-S88 not (yet) available on MacOS X\n");
 #endif
@@ -160,23 +151,19 @@ static long int register_bus(long int busnumber, xmlDocPtr doc,
 
         else if (xmlStrcmp(child->name, BAD_CAST "hsi-88") == 0) {
             busnumber += readConfig_HSI_88(doc, child, busnumber);
-            found = 1;
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "li100") == 0) {
             busnumber += readConfig_LI100(doc, child, busnumber);
-            found = 1;
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "selectrix") == 0) {
             busnumber += readconfig_Selectrix(doc, child, busnumber);
-            found = 1;
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "i2c-dev") == 0) {
 #ifdef linux
             busnumber += readconfig_I2C_DEV(doc, child, busnumber);
-            found = 1;
 #else
             printf("Sorry, I2C-DEV only available on Linux (yet)\n");
 #endif
@@ -184,7 +171,6 @@ static long int register_bus(long int busnumber, xmlDocPtr doc,
 
         /* some attributes are common for all (real) busses */
         else if (xmlStrcmp(child->name, BAD_CAST "device") == 0) {
-            found = 1;
             free(busses[current_bus].device);
             busses[current_bus].device = malloc(strlen((char *) txt) + 1);
             if (busses[current_bus].device == NULL) {
@@ -195,31 +181,26 @@ static long int register_bus(long int busnumber, xmlDocPtr doc,
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "verbosity") == 0) {
-            found = 1;
             busses[current_bus].debuglevel = atoi((char *) txt);
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "use_watchdog") == 0) {
-            found = 1;
             if (xmlStrcmp(txt, BAD_CAST "yes") == 0)
                 busses[current_bus].flags |= USE_WATCHDOG;
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "restore_device_settings") ==
             0) {
-            found = 1;
             if (xmlStrcmp(txt, BAD_CAST "yes") == 0)
                 busses[current_bus].flags |= RESTORE_COM_SETTINGS;
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "auto_power_on") == 0) {
-            found = 1;
             if (xmlStrcmp(txt, BAD_CAST "yes") == 0)
                 busses[current_bus].flags |= AUTO_POWER_ON;
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "speed") == 0) {
-            found = 1;
             int speed = atoi((char *) txt);
 
             switch (speed) {
@@ -247,7 +228,7 @@ static long int register_bus(long int busnumber, xmlDocPtr doc,
             }
         }
 
-        if (!found)
+        else
             printf("WARNING, \"%s\" (bus %d) is an unknown tag!\n",
                    child->name, current_bus);
 
