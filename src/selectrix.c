@@ -76,7 +76,7 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node,
     xmlNodePtr child = node->children;
     xmlChar *txt = NULL;
 
-    while (child) {
+    while (child != NULL) {
         if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) {
             child = child->next;
             continue;
@@ -119,6 +119,7 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node,
                 xmlFree(txt);
             }
         }
+
         else if (xmlStrcmp(child->name, BAD_CAST "ports") == 0) {
             portindex = 1;
             xmlNodePtr subchild = child->children;
@@ -144,6 +145,12 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node,
                 subchild = subchild->next;
             }
         }
+
+        else
+            DBG(busnumber, DBG_INFO,
+                    "WARNING, unknown tag found: \"%s\"!\n",
+                    child->name);;
+        
         child = child->next;
     }
 
