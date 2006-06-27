@@ -264,6 +264,10 @@ static int walk_config_xml(xmlDocPtr doc)
     xmlNodePtr root, child;
 
     root = xmlDocGetRootElement(doc);
+    if (root == NULL) {
+        DBG(0, 0, "Error, no XML document root found.\n");
+        return bus;
+    }
     child = root->children;
 
     while (child) {
