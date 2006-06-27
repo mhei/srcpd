@@ -291,14 +291,15 @@ int readConfig(char *filename)
     /* some defaults */
     DBG(0, 0, "parsing %s", filename);
     doc = xmlParseFile(filename);
-    if (doc != 0) {             /* always put a message */
+    if (doc != NULL) {             /* always show a message */
         DBG(0, 0, "walking %s", filename);
         rc = walk_config_xml(doc);
         DBG(0, 0, " done %s; found %d busses", filename, rc);
         xmlFreeDoc(doc);
     }
     else {
-        /*TODO: add error message */
+        DBG(0, 0, "Error, no XML document tree found parsing %s.\n",
+                filename);
         exit(1);
     }
     return rc;
