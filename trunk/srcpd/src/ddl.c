@@ -978,7 +978,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
     xmlNodePtr child = node->children;
     xmlChar *txt = NULL;
 
-    while (child) {
+    while (child != NULL) {
         if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) {
             child = child->next;
             continue;
@@ -1095,6 +1095,12 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
                 xmlFree(txt);
             }
         }
+
+        else
+            DBG(busnumber, DBG_INFO,
+                    "WARNING, unknown tag found: \"%s\"!\n",
+                    child->name);;
+
 
         child = child->next;
     }                           // while
