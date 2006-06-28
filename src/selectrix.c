@@ -78,8 +78,7 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node,
 
     while (child != NULL) {
         if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) {
-            child = child->next;
-            continue;
+            /* just do nothing, it is only a comment */
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "number_fb") == 0) {
@@ -147,7 +146,7 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node,
         }
 
         else
-            DBG(busnumber, DBG_INFO,
+            DBG(busnumber, DBG_WARN,
                     "WARNING, unknown tag found: \"%s\"!\n",
                     child->name);;
         
