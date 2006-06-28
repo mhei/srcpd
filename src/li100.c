@@ -74,7 +74,7 @@ int readConfig_LI100(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
     xmlNodePtr child = node->children;
     xmlChar *txt = NULL;
 
-    while (child) {
+    while (child != NULL) {
         if (xmlStrcmp(child->name, BAD_CAST "number_fb") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
@@ -83,7 +83,7 @@ int readConfig_LI100(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "number_gl") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "number_gl") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __li100->number_gl = atoi((char *) txt);
@@ -91,7 +91,7 @@ int readConfig_LI100(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "number_ga") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "number_ga") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __li100->number_ga = atoi((char *) txt);
@@ -99,7 +99,7 @@ int readConfig_LI100(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "number_sm") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "number_sm") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 busses[busnumber].numberOfSM = atoi((char *) txt);
@@ -107,13 +107,19 @@ int readConfig_LI100(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "p_time") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "p_time") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 set_min_time(busnumber, atoi((char *) txt));
                 xmlFree(txt);
             }
         }
+
+        else
+            DBG(busnumber, DBG_WARN,
+                    "WARNING, unknown tag found: \"%s\"!\n",
+                    child->name);;
+
         child = child->next;
     }
     return (1);
