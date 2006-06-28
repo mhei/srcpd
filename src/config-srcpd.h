@@ -112,7 +112,7 @@ int readConfig(char *filename);
 #define DG_POWER 10
 int bus_has_devicegroup(long int bus, int dg);
 
-#define DGB_NONE 0
+#define DBG_NONE 0
 #define DBG_FATAL 1
 #define DBG_ERROR 2
 #define DBG_WARN 3
