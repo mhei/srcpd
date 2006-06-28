@@ -980,11 +980,10 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
 
     while (child != NULL) {
         if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) {
-            child = child->next;
-            continue;
+            /* just do nothing, it is only a comment */
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "number_gl") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "number_gl") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __DDL->number_gl = atoi((char *) txt);
@@ -1097,10 +1096,9 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
         }
 
         else
-            DBG(busnumber, DBG_INFO,
+            DBG(busnumber, DBG_WARN,
                     "WARNING, unknown tag found: \"%s\"!\n",
                     child->name);;
-
 
         child = child->next;
     }                           // while
