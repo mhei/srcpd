@@ -60,6 +60,7 @@ int readanswer(long int bus, char cmd, char *buf, int maxbuflen,
             lc = c;
         }
         else
+            
             usleep(1);
     }
 }
@@ -252,7 +253,7 @@ void *thr_sendrec_zimo(void *v)
             }
         }
         if (!queue_SM_isempty(bus)) {
-      int returnvalue = -1;
+            int returnvalue = -1;
             unqueueNextSM(bus, &smtmp);
             //DBG(bus, DBG_INFO, "UNQUEUE SM, cmd:%d addr:%d type:%d typeaddr:%d bit:%04X ",smtmp.command,smtmp.addr,smtmp.type,smtmp.typeaddr,smtmp.bit);
             addr = smtmp.addr;
@@ -264,7 +265,7 @@ void *thr_sendrec_zimo(void *v)
                         smtmp.value);
                     sprintf(msg, "RN%02X%02X%c", smtmp.typeaddr,
                             smtmp.value, 13);
-                    writeString(bus, (unsigned char*)msg, 0);
+                    writeString(bus, (unsigned char *) msg, 0);
                     session_processwait(bus);
                     if (readanswer(bus, 'Q', msg, 20, 1000) > 3) {
                         sscanf(&msg[1], "%2X%2X%2X", &error, &cv, &val);
@@ -280,15 +281,16 @@ void *thr_sendrec_zimo(void *v)
                 case GET:
                     DBG(bus, DBG_INFO, "SM GET #%d", smtmp.typeaddr);
                     sprintf(msg, "Q%02X%c", smtmp.typeaddr, 13);
-                    writeString(bus, (unsigned char*)msg, 0);
+                    writeString(bus, (unsigned char *) msg, 0);
                     session_processwait(bus);
-                    if (readanswer(bus, 'Q', msg, 20, 10000) > 3) {     //sscanf(&msg[1],"%2X%2X%2X",&error,&cv,&val);
+                    if (readanswer(bus, 'Q', msg, 20, 10000) > 3) {
+                        //sscanf(&msg[1],"%2X%2X%2X",&error,&cv,&val);
                         sscanf(&msg[1], "%*3c%2X%2X", &cv, &val);
                         DBG(bus, DBG_INFO,
                             "SM GET ANSWER: error %d, cv %d, val %d",
                             error, cv, val);
                         //if(!error && cv==smtmp.typeaddr)
-                        returnvalue =  val;
+                        returnvalue = val;
                     }
                     session_endwait(bus, returnvalue);
                     break;
