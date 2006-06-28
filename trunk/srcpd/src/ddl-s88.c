@@ -74,7 +74,7 @@
 #define S88_DATA4 0x10          // mask for data from S88 bus 4 (SEL)
 
 // Output a Signal to the Bus
-#define S88_WRITE(x) for (i=0;i<S88CLOCK_SCALE;i++) outb(x,S88PORT)
+#define S88_WRITE(x) for (i = 0; i < S88CLOCK_SCALE; i++) outb(x, S88PORT)
 
 // possible io-addresses for the parallel port
 const unsigned long int LPT_BASE[] = { 0x378, 0x278, 0x3BC };
@@ -130,13 +130,12 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
     xmlNodePtr child = node->children;
     xmlChar *txt = NULL;
 
-    while (child) {
+    while (child != NULL) {
         if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) {
-            child = child->next;
-            continue;
+            /* just do nothing, it is only a comment */
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "ioport") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "ioport") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 /* better than atoi(3) */
@@ -145,7 +144,7 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "clockscale") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "clockscale") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __ddl_s88->clockscale = atoi((char *) txt);
@@ -153,7 +152,7 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "refresh") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "refresh") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __ddl_s88->refresh = atoi((char *) txt);
@@ -161,7 +160,7 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "p_time") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "p_time") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 set_min_time(busnumber, atoi((char *) txt));
@@ -169,7 +168,7 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "number_fb_1") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "number_fb_1") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __ddl_s88->number_fb[0] = atoi((char *) txt);
@@ -177,7 +176,7 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "number_fb_2") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "number_fb_2") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __ddl_s88->number_fb[1] = atoi((char *) txt);
@@ -185,7 +184,7 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "number_fb_3") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "number_fb_3") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __ddl_s88->number_fb[2] = atoi((char *) txt);
@@ -193,13 +192,18 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "number_fb_4") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "number_fb_4") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __ddl_s88->number_fb[3] = atoi((char *) txt);
                 xmlFree(txt);
             }
         }
+
+        else
+            DBG(busnumber, DBG_WARN,
+                    "WARNING, unknown tag found: \"%s\"!\n",
+                    child->name);;
 
         child = child->next;
     }
@@ -337,6 +341,7 @@ void s88load(long int busnumber)
             // if port is disabled do nothing
             // load the bus
             ioperm(S88PORT, 3, 1);
+            /*TODO: check ioperm return value (should be 0) */
             S88_WRITE(S88_LOAD);
             S88_WRITE(S88_LOAD | S88_CLOCK);
             S88_WRITE(S88_QUIET);
