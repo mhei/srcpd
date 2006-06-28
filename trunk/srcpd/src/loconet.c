@@ -44,6 +44,7 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
     busses[busnumber].init_gl_func = &init_gl_LOCONET;
     busses[busnumber].init_ga_func = &init_ga_LOCONET;
     busses[busnumber].driverdata = malloc(sizeof(struct _LOCONET_DATA));
+    /*TODO: what happens if malloc returns NULL?*/
 
     __loconet->number_fb = 2048;        /* max addr for OPC_INPUT_REP (10+1 bit) */
     __loconet->number_ga = 2048;        /* max addr for OPC_SW_REQ */
@@ -54,19 +55,20 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
 
     strcpy(busses[busnumber].description, "GA FB POWER");
 
-    while (child) {
+    while (child != NULL) {
         if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) {
-            child = child->next;
-            continue;
+            /* just do nothing, it is only a comment */
         }
-        if (xmlStrcmp(child->name, BAD_CAST "loconetID") == 0) {
+        
+        else if (xmlStrcmp(child->name, BAD_CAST "loconetID") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __loconet->loconetID = (unsigned char) atoi((char *) txt);
                 xmlFree(txt);
             }
         }
-        if (xmlStrcmp(child->name, BAD_CAST "ms100") == 0) {
+        
+        else if (xmlStrcmp(child->name, BAD_CAST "ms100") == 0) {
 #ifdef HAVE_LINUX_SERIAL_H
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
@@ -79,6 +81,11 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
 #endif
         }
 
+        else
+            DBG(busnumber, DBG_WARN,
+                    "WARNING, unknown tag found: \"%s\"!\n",
+                    child->name);;
+        
         child = child->next;
     }                           // while
 
@@ -271,8 +278,8 @@ static int ln_read(long int busnumber, unsigned char *cmd, int len)
         DisplayMessage(busnumber, cmd, pktlen);
         if (ln_isecho(busnumber, cmd, pktlen)) {
             __loconet->ln_msglen = 0;
-            DBG(busnumber, DBG_DEBUG,
-                "this is the echo of the last packet sent, clear to sent next command!");
+            DBG(busnumber, DBG_DEBUG, "this is the echo of the last "
+                    "packet sent, clear to sent next command!");
             retval = 0;         /* we ignore echos */
         }
         else {
@@ -1824,9 +1831,8 @@ static void DisplayMessage(long int busnumber,
         }
         else {
             /* Hmmmm... */
-            sprintf(logString,
-                    "Weird Send Packet Immediate, 3rd byte id 0x%02x not 0x7f\n",
-                    sendPkt->val7f);
+            sprintf(logString, "Weird Send Packet Immediate, 3rd byte "
+                    "id 0x%02x not 0x7f\n", sendPkt->val7f);
             forceHex = TRUE;
         }
 
@@ -1845,8 +1851,8 @@ static void DisplayMessage(long int busnumber,
                     "This is a six byte message and is RESERVED!\n");
         }
         else {
-            sprintf(logString,
-                    "Command is not defined in Loconet Personal Use Edition 1.0\n");
+            sprintf(logString, "Command is not defined in Loconet "
+                    "Personal Use Edition 1.0\n");
         }
 
         break;
