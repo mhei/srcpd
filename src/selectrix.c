@@ -59,6 +59,7 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node,
     busses[busnumber].init_ga_func = &init_ga_Selectrix;
     busses[busnumber].init_fb_func = &init_fb_Selectrix;
     busses[busnumber].driverdata = malloc(sizeof(struct _SELECTRIX_DATA));
+    /*TODO: what happens if malloc returns NULL?*/
     __selectrix->number_gl = 1;
     __selectrix->number_ga = 1;
     __selectrix->number_fb = 1;

@@ -72,6 +72,7 @@ int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
     busses[busnumber].term_func = &term_bus_zimo;
     busses[busnumber].thr_func = &thr_sendrec_zimo;
     busses[busnumber].driverdata = malloc(sizeof(struct _zimo_DATA));
+    /*TODO: what happens if malloc returns NULL?*/
     strcpy(busses[busnumber].description, "SM GL POWER LOCK DESCRIPTION");
 
     __zimo->number_fb = 0;      /* max 31 */
@@ -81,20 +82,20 @@ int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
     xmlNodePtr child = node->children;
     xmlChar *txt = NULL;
 
-    while (child) {
+    while (child != NULL) {
         if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) {
-            child = child->next;
-            continue;
+            /* just do nothing, it is only a comment */
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "number_fb") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "number_fb") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __zimo->number_fb = atoi((char *) txt);
                 xmlFree(txt);
             }
         }
-        if (xmlStrcmp(child->name, BAD_CAST "p_time") == 0) {
+        
+        else if (xmlStrcmp(child->name, BAD_CAST "p_time") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 set_min_time(busnumber, atoi((char *) txt));
@@ -102,20 +103,26 @@ int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "number_gl") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "number_gl") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __zimo->number_gl = atoi((char *) txt);
                 xmlFree(txt);
             }
         }
-        if (xmlStrcmp(child->name, BAD_CAST "number_ga") == 0) {
+        
+        else if (xmlStrcmp(child->name, BAD_CAST "number_ga") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __zimo->number_ga = atoi((char *) txt);
                 xmlFree(txt);
             }
         }
+
+        else
+            DBG(busnumber, DBG_WARN,
+                    "WARNING, unknown tag found: \"%s\"!\n",
+                    child->name);;
 
         child = child->next;
     }                           // while
