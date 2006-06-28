@@ -277,6 +277,11 @@ int readConfig(char *filename)
         rc = walk_config_xml(doc);
         DBG(0, DBG_DEBUG, " done %s; found %d busses", filename, rc);
         xmlFreeDoc(doc);
+        /*
+         *Free the global variables that may
+         *have been allocated by the parser.
+         */
+        xmlCleanupParser();
     }
     else {
         DBG(0, DBG_ERROR, "Error, no XML document tree found parsing %s.\n",
