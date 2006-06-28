@@ -246,7 +246,7 @@ static int walk_config_xml(xmlDocPtr doc)
 
     root = xmlDocGetRootElement(doc);
     if (root == NULL) {
-        DBG(0, 0, "Error, no XML document root found.\n");
+        DBG(0, DBG_ERROR, "Error, no XML document root found.\n");
         return bus;
     }
     child = root->children;
@@ -270,16 +270,16 @@ int readConfig(char *filename)
     num_busses = -1;
 
     /* some defaults */
-    DBG(0, 0, "parsing %s", filename);
+    DBG(0, DBG_DEBUG, "parsing %s", filename);
     doc = xmlParseFile(filename);
     if (doc != NULL) {             /* always show a message */
-        DBG(0, 0, "walking %s", filename);
+        DBG(0, DBG_DEBUG, "walking %s", filename);
         rc = walk_config_xml(doc);
-        DBG(0, 0, " done %s; found %d busses", filename, rc);
+        DBG(0, DBG_DEBUG, " done %s; found %d busses", filename, rc);
         xmlFreeDoc(doc);
     }
     else {
-        DBG(0, 0, "Error, no XML document tree found parsing %s.\n",
+        DBG(0, DBG_ERROR, "Error, no XML document tree found parsing %s.\n",
                 filename);
         exit(1);
     }
