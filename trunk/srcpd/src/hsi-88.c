@@ -35,6 +35,7 @@ int readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
     busses[busnumber].term_func = &term_bus_HSI_88;
     busses[busnumber].thr_func = &thr_sendrec_HSI_88;
     busses[busnumber].driverdata = malloc(sizeof(struct _HSI_88_DATA));
+    /*TODO: what happens if malloc returns NULL?*/
     busses[busnumber].flags |= FB_ORDER_0;
     busses[busnumber].flags |= FB_16_PORTS;
     strcpy(busses[busnumber].description, "FB POWER");
@@ -46,13 +47,12 @@ int readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
     xmlNodePtr child = node->children;
     xmlChar *txt = NULL;
 
-    while (child) {
+    while (child != NULL) {
         if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) {
-            child = child->next;
-            continue;
+            /* just do nothing, it is only a comment */
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "refresh") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "refresh") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __hsi->refresh = atoi((char *) txt);
@@ -60,7 +60,7 @@ int readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "p_time") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "p_time") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 set_min_time(busnumber, atoi((char *) txt));
@@ -68,7 +68,7 @@ int readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "number_fb_left") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "number_fb_left") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __hsi->number_fb[0] = atoi((char *) txt);
@@ -76,7 +76,7 @@ int readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "number_fb_center") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "number_fb_center") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __hsi->number_fb[1] = atoi((char *) txt);
@@ -84,7 +84,7 @@ int readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "number_fb_right") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "number_fb_right") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __hsi->number_fb[2] = atoi((char *) txt);
@@ -92,6 +92,11 @@ int readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
+        else
+            DBG(busnumber, DBG_WARN,
+                    "WARNING, unknown tag found: \"%s\"!\n",
+                    child->name);;
+        
         child = child->next;
     }
 
@@ -359,9 +364,9 @@ void *thr_sendrec_HSI_88(void *v)
         if (busses[busnumber].debuglevel <= DBG_DEBUG) {
             rr = 0;
             while (rr != 'i') {
-                // first check here for reset of feedbacks
-                // (do this check at the end, we will not run, until
-                //  get new changes from HSI)
+                /* first check here for reset of feedbacks
+                   (do this check at the end, we will not run, until
+                   get new changes from HSI) */
                 check_reset_fb(busnumber);
                 usleep(refresh_time);
                 readByte(busnumber, 0, &rr);
