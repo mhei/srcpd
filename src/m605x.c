@@ -48,6 +48,7 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
     busses[busnumber].init_gl_func = &init_gl_M6051;
     busses[busnumber].init_ga_func = &init_ga_M6051;
     busses[busnumber].driverdata = malloc(sizeof(struct _M6051_DATA));
+    /*TODO: what happens if malloc returns NULL? */
     busses[busnumber].flags |= FB_16_PORTS;
     __m6051->number_fb = 0;     /* max 31 */
     __m6051->number_ga = 256;
@@ -61,13 +62,12 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
     xmlNodePtr child = node->children;
     xmlChar *txt = NULL;
 
-    while (child) {
+    while (child != NULL) {
         if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) {
-            child = child->next;
-            continue;
+            /* just do nothing, it is only a comment */
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "number_fb") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "number_fb") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __m6051->number_fb = atoi((char *) txt);
@@ -75,7 +75,7 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "number_gl") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "number_gl") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __m6051->number_gl = atoi((char *) txt);
@@ -83,7 +83,7 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "number_ga") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "number_ga") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __m6051->number_ga = atoi((char *) txt);
@@ -91,7 +91,7 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "mode_m6020") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "mode_m6020") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 if (xmlStrcmp(txt, BAD_CAST "yes") == 0)
@@ -100,7 +100,7 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "p_time") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "p_time") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 set_min_time(busnumber, atoi((char *) txt));
@@ -108,7 +108,7 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "ga_min_activetime") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "ga_min_activetime") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __m6051->ga_min_active_time = atoi((char *) txt);
@@ -116,7 +116,8 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "pause_between_commands") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "pause_between_commands")
+                 == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __m6051->pause_between_cmd = atoi((char *) txt);
@@ -124,13 +125,18 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "pause_between_bytes") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "pause_between_bytes") ==
+                 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __m6051->pause_between_bytes = atoi((char *) txt);
                 xmlFree(txt);
             }
         }
+
+        else
+            DBG(busnumber, DBG_WARN,
+                "WARNING, unknown tag found: \"%s\"!\n", child->name);;
 
         child = child->next;
     }
@@ -278,6 +284,7 @@ void *thr_sendrec_M6051(void *v)
         ioctl(busses[bus].fd, FIONREAD, &temp);
         DBG(bus, DBG_INFO, "Ignoring unread byte: %d ", rr);
     }
+
     while (1) {
         busses[bus].watchdog = 2;
 
