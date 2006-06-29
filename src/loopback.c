@@ -27,8 +27,8 @@ int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
     busses[busnumber].thr_func = &thr_sendrec_LOOPBACK;
     busses[busnumber].init_gl_func = &init_gl_LOOPBACK;
     busses[busnumber].init_ga_func = &init_ga_LOOPBACK;
-
     busses[busnumber].driverdata = malloc(sizeof(struct _LOOPBACK_DATA));
+    /*TODO: what happens if malloc returns NULL?*/
     strcpy(busses[busnumber].description,
            "GA GL FB POWER LOCK DESCRIPTION");
 
@@ -39,27 +39,28 @@ int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
     xmlNodePtr child = node->children;
     xmlChar *txt = NULL;
 
-    while (child) {
+    while (child != NULL) {
         if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) {
-            child = child->next;
-            continue;
+            /* just do nothing, it is only a comment */
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "number_fb") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "number_fb") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __loopback->number_fb = atoi((char *) txt);
                 xmlFree(txt);
             }
         }
-        if (xmlStrcmp(child->name, BAD_CAST "number_gl") == 0) {
+        
+        else if (xmlStrcmp(child->name, BAD_CAST "number_gl") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __loopback->number_gl = atoi((char *) txt);
                 xmlFree(txt);
             }
         }
-        if (xmlStrcmp(child->name, BAD_CAST "number_ga") == 0) {
+        
+        else if (xmlStrcmp(child->name, BAD_CAST "number_ga") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __loopback->number_ga = atoi((char *) txt);
@@ -67,6 +68,11 @@ int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
+        else
+            DBG(busnumber, DBG_WARN,
+                    "WARNING, unknown tag found: \"%s\"!\n",
+                    child->name);;
+        
         child = child->next;
     }
 
