@@ -26,8 +26,8 @@
    new data. Each and every of these threads maintains its own readerposition
    (parameter current) to unqueue the recently added messages.
 
-   When a new INFO sessions starts, it will send all status data and after that
-   will enter the reader cycle.
+   When a new INFO sessions starts, it will send all status data and
+   after that will enter the reader cycle.
  */
 #include "stdincludes.h"
 
@@ -49,166 +49,180 @@
 static char *info_queue[QUEUELENGTH_INFO];
 static pthread_mutex_t queue_mutex_info;
 
-static int  in=0;
+static int in = 0;
 
 /* queue a pre-formatted message */
-int queueInfoMessage(char *msg) {
+int queueInfoMessage(char *msg)
+{
     pthread_mutex_lock(&queue_mutex_info);
     /* Queue macht Kopien der Werte */
     free(info_queue[in]);
-    info_queue[in]=calloc(strlen(msg)+1, 1);
+    info_queue[in] = calloc(strlen(msg) + 1, 1);
     strcpy(info_queue[in], msg);
     /* now increase the in value, the readers may see new data! */
     in++;
     if (in == QUEUELENGTH_INFO)
-      in = 0;
+        in = 0;
     pthread_mutex_unlock(&queue_mutex_info);
-  return SRCP_OK;
+    return SRCP_OK;
 }
 
 
 int queueIsEmptyInfo(int current)
 {
-  return (in == current);
+    return (in == current);
 }
 
 /** liefert n�hsten Eintrag oder -1, setzt fifo pointer neu! */
 int unqueueNextInfo(int current, char *info)
 {
-  if (in == current)
-    return -1;
+    if (in == current)
+        return -1;
 
-  pthread_mutex_lock(&queue_mutex_info);
-  strcpy(info, info_queue[current++]);
-  if (current == QUEUELENGTH_INFO)
-    current = 0;
-  pthread_mutex_unlock(&queue_mutex_info);
-  return current;
+    pthread_mutex_lock(&queue_mutex_info);
+    strcpy(info, info_queue[current++]);
+    if (current == QUEUELENGTH_INFO)
+        current = 0;
+    pthread_mutex_unlock(&queue_mutex_info);
+    return current;
 }
 
 int startup_INFO(void)
 {
-  int i;
-  pthread_mutex_init(&queue_mutex_info, NULL);
-  in = 0;
-  for (i=0; i<QUEUELENGTH_INFO;i++) {
-    info_queue[i] = NULL;
-  }
-  return SRCP_OK;
+    int i;
+    pthread_mutex_init(&queue_mutex_info, NULL);
+    in = 0;
+    for (i = 0; i < QUEUELENGTH_INFO; i++) {
+        info_queue[i] = NULL;
+    }
+    return SRCP_OK;
 }
 
-
 /**
-  * Endless loop for new infomode client
-  * terminates on write failure
-  */
-
+ * Endless loop for new infomode client
+ * terminates on write failure
+ **/
 int doInfoClient(int Socket, int sessionid)
 {
-  int status, i, current, number, value;
-  char reply[1000], description[1000];
+    int status, i, current, number, value;
+    char reply[1000], description[1000];
 
-// send startup-infos to a new client
-struct timeval cmp_time;
-long int busnumber;
-current = in;
-DBG(0, DBG_DEBUG, "new Info-client requested %ld", sessionid);
-for (busnumber = 0; busnumber <= num_busses; busnumber++)
-{
-  DBG(busnumber, DBG_DEBUG, "send all data for busnumber %d to new client", busnumber);
-  // first some global bus data
-  // send Descriptions for busses
-  describeBus(busnumber, reply);
-  socket_writereply(Socket, reply);
-  strcpy(description, reply);
-  *reply = 0x00;
-  if(strstr(description, "POWER")) {
-    infoPower(busnumber, reply);
-    socket_writereply(Socket, reply);*reply = 0x00;
-  }
-  if(strstr(description, "TIME")) {
-    describeTIME(reply);
-    socket_writereply(Socket, reply);*reply = 0x00;
-    infoTIME(reply);
-    socket_writereply(Socket, reply);*reply = 0x00;
-  }
-
-  // send all needed generic locomotivs
-
-  if(strstr(description, "GL")) {
-    number = getMaxAddrGL(busnumber);
-    for (i = 1; i <= number; i++)
-    {
-      if(isInitializedGL(busnumber, i))
-      {
-        long int lockid;
-        describeGL(busnumber, i, reply);
-        socket_writereply(Socket, reply);*reply = 0x00;
-        infoGL(busnumber, i, reply);
-        socket_writereply(Socket, reply);*reply = 0x00;
-        getlockGL(busnumber, i, &lockid);
-        if(lockid != 0) {
-          describeLOCKGL(busnumber,  i, reply);
-          socket_writereply(Socket, reply);*reply = 0x00;
+    // send startup-infos to a new client
+    struct timeval cmp_time;
+    long int busnumber;
+    current = in;
+    DBG(0, DBG_DEBUG, "new Info-client requested %ld", sessionid);
+    for (busnumber = 0; busnumber <= num_busses; busnumber++) {
+        DBG(busnumber, DBG_DEBUG,
+            "send all data for busnumber %d to new client", busnumber);
+        // first some global bus data
+        // send Descriptions for busses
+        describeBus(busnumber, reply);
+        socket_writereply(Socket, reply);
+        strcpy(description, reply);
+        *reply = 0x00;
+        
+        if (strstr(description, "POWER")) {
+            infoPower(busnumber, reply);
+            socket_writereply(Socket, reply);
+            *reply = 0x00;
         }
-      }
-    }
-  }
-  // send all needed generic assesoires
-  if(strstr(description, "GA")) {
-    number = get_number_ga(busnumber);
-    for (i = 1; i <= number; i++)
-    {
-      if(isInitializedGA(busnumber, i))
-      {
-        long int lockid;
-        int rc, port;
-        describeGA(busnumber, i, reply);
-        socket_writereply(Socket, reply);*reply = 0x00;
-        for (port = 0; port <=1; port++) {
-          rc = infoGA(busnumber, i, port, reply);
-          if ( (rc == SRCP_INFO) ) {
-        socket_writereply(Socket, reply);*reply = 0x00;
-          }
-      }
-      getlockGA(busnumber, i, &lockid);
-      if(lockid != 0) {
-          describeLOCKGA(busnumber,  i, reply);
-          socket_writereply(Socket, reply);*reply = 0x00;
-      }
-
-      }
-    }
-  }
-  if(strstr(description, "FB")) {
-    // send all needed feedbacks
-    number = get_number_fb(busnumber);
-      for (i = 1; i <= number; i++)
-      {
-        int rc = getFB(busnumber, i, &cmp_time, &value);
-        if (rc == SRCP_OK && value!=0) {
-          infoFB(busnumber, i, reply);
-          socket_writereply(Socket, reply);*reply = 0x00;
+        
+        if (strstr(description, "TIME")) {
+            describeTIME(reply);
+            socket_writereply(Socket, reply);
+            *reply = 0x00;
+            infoTIME(reply);
+            socket_writereply(Socket, reply);
+            *reply = 0x00;
         }
-      }
+
+        // send all needed generic locomotivs
+        if (strstr(description, "GL")) {
+            number = getMaxAddrGL(busnumber);
+            for (i = 1; i <= number; i++) {
+                if (isInitializedGL(busnumber, i)) {
+                    long int lockid;
+                    describeGL(busnumber, i, reply);
+                    socket_writereply(Socket, reply);
+                    *reply = 0x00;
+                    infoGL(busnumber, i, reply);
+                    socket_writereply(Socket, reply);
+                    *reply = 0x00;
+                    getlockGL(busnumber, i, &lockid);
+                    if (lockid != 0) {
+                        describeLOCKGL(busnumber, i, reply);
+                        socket_writereply(Socket, reply);
+                        *reply = 0x00;
+                    }
+                }
+            }
+        }
+        
+        // send all needed generic assesoires
+        if (strstr(description, "GA")) {
+            number = get_number_ga(busnumber);
+            for (i = 1; i <= number; i++) {
+                if (isInitializedGA(busnumber, i)) {
+                    long int lockid;
+                    int rc, port;
+                    describeGA(busnumber, i, reply);
+                    socket_writereply(Socket, reply);
+                    *reply = 0x00;
+                    for (port = 0; port <= 1; port++) {
+                        rc = infoGA(busnumber, i, port, reply);
+                        if ((rc == SRCP_INFO)) {
+                            socket_writereply(Socket, reply);
+                            *reply = 0x00;
+                        }
+                    }
+                    getlockGA(busnumber, i, &lockid);
+                    if (lockid != 0) {
+                        describeLOCKGA(busnumber, i, reply);
+                        socket_writereply(Socket, reply);
+                        *reply = 0x00;
+                    }
+
+                }
+            }
+        }
+
+        // send all needed feedbacks
+        if (strstr(description, "FB")) {
+            number = get_number_fb(busnumber);
+            for (i = 1; i <= number; i++) {
+                int rc = getFB(busnumber, i, &cmp_time, &value);
+                if (rc == SRCP_OK && value != 0) {
+                    infoFB(busnumber, i, reply);
+                    socket_writereply(Socket, reply);
+                    *reply = 0x00;
+                }
+            }
+        }
     }
-  }
-  DBG(0, DBG_DEBUG, "all data to new Info-Client (%ld) sent", sessionid);
-  /* this is a racing condition: we should stop
-      queing new messages until we reach this this point, it
-      is possible to miss some data changed since we started this thread */
-  if(in != current) {
-    DBG(0, DBG_WARN, "INFO queue dropped some information (%d elements). Sorry", abs(in - current));
-  }
-  current = in;
-  while (1)   {
-    while(queueIsEmptyInfo(current)) usleep(2000); // busy waiting, anyone with better code out there?
-    current = unqueueNextInfo(current, reply);
-    DBG(0, DBG_DEBUG, "reply-length = %d", strlen(reply));
-    status = socket_writereply(Socket, reply);
-    if (status < 0) {
-      break;
+    DBG(0, DBG_DEBUG, "all data to new Info-Client (%ld) sent", sessionid);
+
+    /* This is a racing condition: we should stop queing new
+       messages until we reach this this point, it is possible to
+       miss some data changed since we started this thread */
+    if (in != current) {
+        DBG(0, DBG_WARN,
+            "INFO queue dropped some information (%d elements). Sorry",
+            abs(in - current));
     }
-  }
-  return 0;
+    current = in;
+    
+    while (1) {
+        // busy waiting, anyone with better code out there?
+        while (queueIsEmptyInfo(current))
+            usleep(2000);
+
+        current = unqueueNextInfo(current, reply);
+        DBG(0, DBG_DEBUG, "reply-length = %d", strlen(reply));
+        status = socket_writereply(Socket, reply);
+        if (status < 0) {
+            break;
+        }
+    }
+    return 0;
 }

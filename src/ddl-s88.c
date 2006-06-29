@@ -96,6 +96,7 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
     busses[busnumber].term_func = &term_bus_S88;
     busses[busnumber].thr_func = &thr_sendrec_S88;
     busses[busnumber].driverdata = malloc(sizeof(struct _DDL_S88_DATA));
+    /*TODO: what happens if malloc returns NULL?*/
 
     __ddl_s88->port = 0x0378;
 #ifdef __FreeBSD__

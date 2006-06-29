@@ -20,7 +20,7 @@ int setPower(long int bus, int state, char *msg)
     strcpy(busses[bus].power_msg, msg);
 //  busses[bus].power_changed = (state == -1) ? 0 : 1;
     busses[bus].power_changed = 1;
-    char reply[1000];
+    char reply[200];
     infoPower(bus, reply);
     queueInfoMessage(reply);
     return SRCP_OK;
