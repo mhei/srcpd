@@ -26,8 +26,9 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
     busses[0].init_func = &init_bus_server;
     busses[0].term_func = &term_bus_server;
     strcpy(busses[0].description, "SESSION SERVER TIME");
-
     busses[0].driverdata = malloc(sizeof(struct _SERVER_DATA));
+    /*TODO: what happens if malloc returns NULL?*/
+
     // initialize _SERVER_DATA with defaults
     __srv->TCPPORT = 12345;
     strcpy(__srv->PIDFILE, "/var/run/srcpd.pid");
@@ -40,11 +41,10 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
 
     while (child != NULL) {
         if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) {
-            child = child->next;
-            continue;
+            /* just do nothing, it is only a comment */
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "tcp-port") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "tcp-port") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __srv->TCPPORT = atoi((char *) txt);
@@ -52,7 +52,7 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "listen-ip") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "listen-ip") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 xmlFree(__srv->listenip);
@@ -63,7 +63,7 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "pid-file") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "pid-file") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 strncpy(__srv->PIDFILE, (char *) txt, MAXPATHLEN - 2);
@@ -72,7 +72,7 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "username") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "username") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 xmlFree(__srv->username);
@@ -86,7 +86,7 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "groupname") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "groupname") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 xmlFree(__srv->groupname);
@@ -100,6 +100,11 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
+        else
+            DBG(busnumber, DBG_WARN,
+                    "WARNING, unknown tag found: \"%s\"!\n",
+                    child->name);;
+        
         child = child->next;
     }
 
