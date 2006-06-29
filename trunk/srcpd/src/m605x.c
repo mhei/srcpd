@@ -33,8 +33,11 @@
 
 #define __m6051 ((M6051_DATA*)busses[busnumber].driverdata)
 
-/** readconfig_m605x: liest den Teilbaum der xml Configuration und parametriert
-     den busspezifischen Datenteil, wird von register_bus() aufgerufen */
+/**
+ * readconfig_m605x: Liest den Teilbaum der xml Configuration und
+ * parametriert den busspezifischen Datenteil, wird von register_bus()
+ * aufgerufen.
+ **/
 
 int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
 {
@@ -153,8 +156,7 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
 
 /*******************************************************
  *     SERIELLE SCHNITTSTELLE KONFIGURIEREN
- *******************************************************
- */
+ *******************************************************/
 static int init_lineM6051(long int bus)
 {
     int FD;
@@ -215,29 +217,27 @@ long int term_bus_M6051(long int bus)
 
 /**
  * initGL: modifies the gl data used to initialize the device
- *
- */
+ **/
 long int init_gl_M6051(struct _GLSTATE *gl)
 {
     if (gl->protocol != 'M')
         return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
     switch (gl->protocolversion) {
-    case 1:
-        return (gl->n_fs == 14) ? SRCP_OK : SRCP_WRONGVALUE;
-        break;
-    case 2:
-        return ((gl->n_fs == 14) ||
-                (gl->n_fs == 27) ||
-                (gl->n_fs == 28)) ? SRCP_OK : SRCP_WRONGVALUE;
-        break;
+        case 1:
+            return (gl->n_fs == 14) ? SRCP_OK : SRCP_WRONGVALUE;
+            break;
+        case 2:
+            return ((gl->n_fs == 14) ||
+                    (gl->n_fs == 27) ||
+                    (gl->n_fs == 28)) ? SRCP_OK : SRCP_WRONGVALUE;
+            break;
     }
     return SRCP_WRONGVALUE;
 }
 
 /**
  * initGA: modifies the ga data used to initialize the device
-
- */
+ **/
 long int init_ga_M6051(struct _GASTATE *ga)
 {
     if ((ga->protocol != 'M') || (ga->protocol != 'P'))
@@ -280,22 +280,26 @@ void *thr_sendrec_M6051(void *v)
     }
     while (1) {
         busses[bus].watchdog = 2;
+
         /* Start/Stop */
         if (busses[bus].power_changed) {
             char msg[1000];
             SendByte = (busses[bus].power_state) ? 96 : 97;
+            /* zweimal, wir sind paranoid */
             writeByte(bus, SendByte, pause_between_cmd);
-            writeByte(bus, SendByte, pause_between_cmd);        /* zweimal, wir sind paranoid */
+            writeByte(bus, SendByte, pause_between_cmd);
             busses[bus].power_changed = 0;
             infoPower(bus, msg);
             queueInfoMessage(msg);
         }
+
         /* do nothing, if power off */
         if (busses[bus].power_state == 0) {
             usleep(1000);
             continue;
         }
         busses[bus].watchdog = 3;
+
         /* Lokdecoder */
         if (!((M6051_DATA *) busses[bus].driverdata)->cmd32_pending) {
             if (!queue_GL_isempty(bus)) {
@@ -314,17 +318,18 @@ void *thr_sendrec_M6051(void *v)
                     SendByte = addr;
                     writeByte(bus, SendByte, pause_between_cmd);
                 }
-                /* Geschwindigkeit und Licht setzen, erst recht nach Richtungswechsel  */
+                /* Geschwindigkeit und Licht setzen, erst recht nach
+                   Richtungswechsel */
                 c = gltmp.speed + 16 * ((gltmp.funcs & 0x01) ? 1 : 0);
-                /* jetzt aufpassen: n_fs erzwingt ggf. mehrfache Ansteuerungen des Dekoders */
-                /* das Protokoll ist da wirklich eigenwillig, vorerst ignoriert!            */
+                /* jetzt aufpassen: n_fs erzwingt ggf. mehrfache
+                   Ansteuerungen des Dekoders, das Protokoll ist da
+                   wirklich eigenwillig, vorerst ignoriert! */
                 writeByte(bus, c, pause_between_bytes);
                 SendByte = addr;
                 writeByte(bus, SendByte, pause_between_cmd);
                 /* Erweiterte Funktionen des 6021 senden, manchmal */
-                if (!
-                    ((((M6051_DATA *) busses[bus].driverdata)->
-                      flags & M6020_MODE) == M6020_MODE)
+                if (!((((M6051_DATA *) busses[bus].driverdata)->
+                       flags & M6020_MODE) == M6020_MODE)
                     && (gltmp.funcs != glakt.funcs)) {
                     c = ((gltmp.funcs >> 1) & 0x0f) + 64;
                     writeByte(bus, c, pause_between_bytes);
@@ -336,7 +341,9 @@ void *thr_sendrec_M6051(void *v)
             busses[bus].watchdog = 4;
         }
         busses[bus].watchdog = 5;
-        /* Magnetantriebe, die muessen irgendwann sehr bald abgeschaltet werden */
+
+        /* Magnetantriebe, die muessen irgendwann sehr bald
+           abgeschaltet werden */
         if (!queue_GA_isempty(bus)) {
             unqueueNextGA(bus, &gatmp);
             addr = gatmp.id;
@@ -345,13 +352,14 @@ void *thr_sendrec_M6051(void *v)
                 setGA(bus, addr, gatmp);
                 if (gatmp.activetime >= 0) {
                     gatmp.activetime =
-                        (gatmp.activetime >
-                         ga_min_active_time) ? ga_min_active_time : gatmp.
-                        activetime;
-                    gatmp.action = 0;   // n�chste Aktion ist automatisches Aus
+                        (gatmp.activetime > ga_min_active_time) ?
+                        ga_min_active_time : gatmp.activetime;
+                    // n�chste Aktion ist automatisches Aus
+                    gatmp.action = 0;
                 }
                 else {
-                    gatmp.activetime = ga_min_active_time;      // egal wieviel, mind. 75m ein
+                    // egal wieviel, mind. 75m ein
+                    gatmp.activetime = ga_min_active_time;
                 }
                 c = 33 + (gatmp.port ? 0 : 1);
                 SendByte = gatmp.id;
@@ -361,8 +369,7 @@ void *thr_sendrec_M6051(void *v)
                 ((M6051_DATA *) busses[bus].driverdata)->cmd32_pending = 1;
             }
             if ((gatmp.action == 0)
-                && ((M6051_DATA *) busses[bus].driverdata)->
-                cmd32_pending) {
+                && ((M6051_DATA *) busses[bus].driverdata)->cmd32_pending) {
                 SendByte = 32;
                 writeByte(bus, SendByte, pause_between_cmd);
                 ((M6051_DATA *) busses[bus].driverdata)->cmd32_pending = 0;
@@ -372,6 +379,7 @@ void *thr_sendrec_M6051(void *v)
             busses[bus].watchdog = 6;
         }
         busses[bus].watchdog = 7;
+
         /* S88 Status einlesen, einen nach dem anderen */
         if ((number_fb > 0)
             && !((M6051_DATA *) busses[bus].driverdata)->cmd32_pending) {
