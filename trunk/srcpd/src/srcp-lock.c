@@ -8,8 +8,7 @@
 #include "srcp-lock.h"
 
 
-int
-startup_LOCK(void)
+int startup_LOCK(void)
 {
     return 0;
 }

@@ -38,26 +38,26 @@ int num_busses;
 int bus_has_devicegroup(long int bus, int dg)
 {
     switch (dg) {
-    case DG_SESSION:
-        return strstr(busses[bus].description, "SESSION") != NULL;
-    case DG_POWER:
-        return strstr(busses[bus].description, "POWER") != NULL;
-    case DG_GA:
-        return strstr(busses[bus].description, "GA") != NULL;
-    case DG_GL:
-        return strstr(busses[bus].description, "GL") != NULL;
-    case DG_FB:
-        return strstr(busses[bus].description, "FB") != NULL;
-    case DG_SM:
-        return strstr(busses[bus].description, "SM") != NULL;
-    case DG_SERVER:
-        return strstr(busses[bus].description, "SERVER") != NULL;
-    case DG_TIME:
-        return strstr(busses[bus].description, "TIME") != NULL;
-    case DG_LOCK:
-        return strstr(busses[bus].description, "LOCK") != NULL;
-    case DG_DESCRIPTION:
-        return strstr(busses[bus].description, "DESCRIPTION") != NULL;
+        case DG_SESSION:
+            return strstr(busses[bus].description, "SESSION") != NULL;
+        case DG_POWER:
+            return strstr(busses[bus].description, "POWER") != NULL;
+        case DG_GA:
+            return strstr(busses[bus].description, "GA") != NULL;
+        case DG_GL:
+            return strstr(busses[bus].description, "GL") != NULL;
+        case DG_FB:
+            return strstr(busses[bus].description, "FB") != NULL;
+        case DG_SM:
+            return strstr(busses[bus].description, "SM") != NULL;
+        case DG_SERVER:
+            return strstr(busses[bus].description, "SERVER") != NULL;
+        case DG_TIME:
+            return strstr(busses[bus].description, "TIME") != NULL;
+        case DG_LOCK:
+            return strstr(busses[bus].description, "LOCK") != NULL;
+        case DG_DESCRIPTION:
+            return strstr(busses[bus].description, "DESCRIPTION") != NULL;
 
     }
     return 0;
@@ -94,12 +94,6 @@ static long int register_bus(long int busnumber, xmlDocPtr doc,
     xmlChar *txt = NULL;
 
     while (child != NULL) {
-        if ((xmlStrcmp(child->name, BAD_CAST "text") == 0) ||
-            (xmlStrcmp(child->name, BAD_CAST "comment") == 0)) {
-            child = child->next;
-            continue;
-        }
-
         txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
         if (txt == NULL) {
             printf("WARNING, no value found for tag \"%s\" (bus %d)!\n",
@@ -107,8 +101,13 @@ static long int register_bus(long int busnumber, xmlDocPtr doc,
             child = child->next;
             continue;
         }
-        
-        if (xmlStrncmp(child->name, BAD_CAST "server", 6) == 0) {
+
+        if ((xmlStrcmp(child->name, BAD_CAST "text") == 0) ||
+            (xmlStrcmp(child->name, BAD_CAST "comment") == 0)) {
+            /* just do nothing, it is only a comment */
+        }
+
+        else if (xmlStrncmp(child->name, BAD_CAST "server", 6) == 0) {
             if (busnumber == 0) {
                 busnumber += readconfig_server(doc, child, busnumber);
             }
@@ -189,8 +188,8 @@ static long int register_bus(long int busnumber, xmlDocPtr doc,
                 busses[current_bus].flags |= USE_WATCHDOG;
         }
 
-        else if (xmlStrcmp(child->name, BAD_CAST "restore_device_settings") ==
-            0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "restore_device_settings")
+                 == 0) {
             if (xmlStrcmp(txt, BAD_CAST "yes") == 0)
                 busses[current_bus].flags |= RESTORE_COM_SETTINGS;
         }
@@ -204,27 +203,27 @@ static long int register_bus(long int busnumber, xmlDocPtr doc,
             int speed = atoi((char *) txt);
 
             switch (speed) {
-            case 2400:
-                busses[current_bus].baudrate = B2400;
-                break;
-            case 4800:
-                busses[current_bus].baudrate = B4800;
-                break;
-            case 9600:
-                busses[current_bus].baudrate = B9600;
-                break;
-            case 19200:
-                busses[current_bus].baudrate = B19200;
-                break;
-            case 38400:
-                busses[current_bus].baudrate = B38400;
-                break;
-            case 57600:
-                busses[current_bus].baudrate = B57600;
-                break;
-            default:
-                busses[current_bus].baudrate = B2400;
-                break;
+                case 2400:
+                    busses[current_bus].baudrate = B2400;
+                    break;
+                case 4800:
+                    busses[current_bus].baudrate = B4800;
+                    break;
+                case 9600:
+                    busses[current_bus].baudrate = B9600;
+                    break;
+                case 19200:
+                    busses[current_bus].baudrate = B19200;
+                    break;
+                case 38400:
+                    busses[current_bus].baudrate = B38400;
+                    break;
+                case 57600:
+                    busses[current_bus].baudrate = B57600;
+                    break;
+                default:
+                    busses[current_bus].baudrate = B2400;
+                    break;
             }
         }
 
@@ -272,7 +271,7 @@ int readConfig(char *filename)
     /* some defaults */
     DBG(0, DBG_DEBUG, "parsing %s", filename);
     doc = xmlParseFile(filename);
-    if (doc != NULL) {             /* always show a message */
+    if (doc != NULL) {          /* always show a message */
         DBG(0, DBG_DEBUG, "walking %s", filename);
         rc = walk_config_xml(doc);
         DBG(0, DBG_DEBUG, " done %s; found %d busses", filename, rc);
@@ -284,8 +283,8 @@ int readConfig(char *filename)
         xmlCleanupParser();
     }
     else {
-        DBG(0, DBG_ERROR, "Error, no XML document tree found parsing %s.\n",
-                filename);
+        DBG(0, DBG_ERROR,
+            "Error, no XML document tree found parsing %s.\n", filename);
         exit(1);
     }
     return rc;
