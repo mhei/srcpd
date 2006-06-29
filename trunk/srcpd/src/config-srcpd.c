@@ -251,7 +251,7 @@ static int walk_config_xml(xmlDocPtr doc)
     }
     child = root->children;
 
-    while (child) {
+    while (child != NULL) {
         bus = register_bus(bus, doc, child);
         child = child->next;
     }
