@@ -214,6 +214,7 @@ int readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
     busses[busnumber].term_func = &term_bus_I2C_DEV;
     busses[busnumber].thr_func = &thr_sendrec_I2C_DEV;
     busses[busnumber].driverdata = malloc(sizeof(I2CDEV_DATA));
+    /*TODO: what happens if malloc returns NULL? */
     strcpy(busses[busnumber].description, "GA POWER DESCRIPTION");
 
     __i2cdev->number_ga = 0;
@@ -225,15 +226,14 @@ int readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
     xmlNodePtr child = node->children;
     xmlChar *txt = NULL;
 
-    while (child) {
+    while (child != NULL) {
 
         if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) {
-            child = child->next;
-            continue;
+            /* just do nothing, it is only a comment */
         }
 
         /*
-           if (xmlStrcmp(child->name, BAD_CAST "number_gl") == 0) {
+           else if (xmlStrcmp(child->name, BAD_CAST "number_gl") == 0) {
            txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
            if (txt != NULL) {
            __i2cdev->number_gl = atoi((char*) txt);
@@ -242,7 +242,7 @@ int readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
            }
          */
 
-        if (xmlStrcmp(child->name, BAD_CAST "multiplex_busses") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "multiplex_busses") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __i2cdev->multiplex_busses = atoi((char *) txt);
@@ -250,7 +250,8 @@ int readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "ga_hardware_inverters") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "ga_hardware_inverters")
+                 == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __i2cdev->ga_hardware_inverters = atoi((char *) txt);
@@ -258,13 +259,17 @@ int readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
             }
         }
 
-        if (xmlStrcmp(child->name, BAD_CAST "ga_reset_device") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "ga_reset_device") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __i2cdev->ga_reset_devices = atoi((char *) txt);
                 xmlFree(txt);
             }
         }
+
+        else
+            DBG(busnumber, DBG_WARN,
+                "WARNING, unknown tag found: \"%s\"!\n", child->name);;
 
         child = child->next;
     }
@@ -362,7 +367,7 @@ void select_bus(int mult_busnum, int busfd, long int busnumber)
     value = value | (mult_busnum % 9);
     write_PCF8574(busnumber, (addr >> 1), value);
     /*  ioctl(busfd, I2C_SLAVE, (addr >> 1));
-    writeByte(busnumber, value, 1);*/
+       writeByte(busnumber, value, 1); */
 }
 
 long int term_bus_I2C_DEV(long int bus)
