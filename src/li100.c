@@ -1042,7 +1042,7 @@ static int readAnswer_LI100(long int busnumber, unsigned char *str)
         }
     }
 
-    if ((str[0] == 0x83) || (str[0] = 0xa3)) {
+    if ((str[0] == 0x83) || (str[0] == 0xa3)) {
         if (str[0] & 0x20)
             add_extern_engine(busnumber, str[1]);
         else
