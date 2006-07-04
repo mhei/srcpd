@@ -237,6 +237,7 @@ static int handle_setcheck(int sessionid, long int bus, char *device,
         char *ctype;
 
         ctype = malloc(MAXSRCPLINELEN);
+        /* TODO: check malloc returns NULL*/
         sscanf(parameter, "%ld %s %ld %ld %ld", &addr, ctype, &value1,
                &value2, &value3);
         type = -1;
@@ -404,6 +405,7 @@ int handleGET(int sessionid, long int bus, char *device, char *parameter,
         char *ctype;
 
         ctype = malloc(MAXSRCPLINELEN);
+        /* TODO: check malloc returns NULL*/
         sscanf(parameter, "%ld %s %ld %ld", &addr, ctype, &value1,
                &value2);
         type = CV;
@@ -546,7 +548,7 @@ int handleWAIT(int sessionid, long int bus, char *device, char *parameter,
         }
     }
 
-    if (bus_has_devicegroup(bus, DG_TIME)
+    else if (bus_has_devicegroup(bus, DG_TIME)
         && strncasecmp(device, "TIME", 4) == 0) {
         long d, h, m, s;
         int nelem;
