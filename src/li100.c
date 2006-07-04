@@ -61,6 +61,7 @@ int readConfig_LI100(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
     busses[busnumber].init_gl_func = &init_gl_LI100;
     busses[busnumber].init_ga_func = &init_ga_LI100;
     busses[busnumber].driverdata = malloc(sizeof(struct _LI100_DATA));
+    /*TODO: what happens if malloc returns NULL?*/
     busses[busnumber].flags |= FB_4_PORTS;
     busses[busnumber].baudrate = B9600;
     busses[busnumber].numberOfSM = 0;
@@ -934,8 +935,9 @@ int send_command_LI100(long int busnumber, unsigned char *str)
     str[19] = 0x00;             // control-byte for xor
     ctr = str[0] & 0x0f;        // generate length of command
     ctr++;
-    for (i = 0; i < ctr; i++)   // send command
-    {
+
+    // send command
+    for (i = 0; i < ctr; i++) {
         str[19] ^= str[i];
         writeByte(busnumber, str[i], 0);
     }
@@ -961,8 +963,8 @@ static int readAnswer_LI100(long int busnumber, unsigned char *str)
     }
     ctr = str[0] & 0x0f;        // generate length of answer
     ctr += 2;
-    for (i = 1; i < ctr; i++)   // read answer
-    {
+    // read answer
+    for (i = 1; i < ctr; i++) {
         readByte(busnumber, 1, &str[i]);
     }
 
@@ -982,8 +984,8 @@ static int readAnswer_LI100(long int busnumber, unsigned char *str)
     //9230 IF IST$ = "KA" THEN GOSUB 9280                     'keine antwort
     //9232 RETURN
 
-    if (str[0] == 0x02)         // version-number of interface
-    {
+    // version-number of interface
+    if (str[0] == 0x02) {
         __li100->version_interface =
             ((str[1] & 0xf0) << 4) + (str[1] & 0x0f);
         __li100->code_interface = (int) str[2];
@@ -1015,29 +1017,29 @@ static int readAnswer_LI100(long int busnumber, unsigned char *str)
         // power on
         if (str[1] == 0x01) {
             DBG(busnumber, DBG_DEBUG,
-                "on bus %i power detected; old-state is %i", busnumber,
-                getPower(busnumber));
+                    "on bus %i power detected; old-state is %i", busnumber,
+                    getPower(busnumber));
             if ((__li100->emergency_on_LI100 == 1)
-                || (!getPower(busnumber))) {
+                    || (!getPower(busnumber))) {
                 char msg[500];
                 setPower(busnumber, 1, "No Emergency Stop");
                 infoPower(busnumber, msg);
                 queueInfoMessage(msg);
                 __li100->emergency_on_LI100 = 0;
             }
-            // power off
-            if (str[1] == 0x00) {
-                DBG(busnumber, DBG_DEBUG,
+        }
+        // power off
+        if (str[1] == 0x00) {
+            DBG(busnumber, DBG_DEBUG,
                     "on bus %i no power detected; old-state is %i",
                     busnumber, getPower(busnumber));
-                if ((__li100->emergency_on_LI100 == 0)
+            if ((__li100->emergency_on_LI100 == 0)
                     && (getPower(busnumber))) {
-                    char msg[500];
-                    setPower(busnumber, 0, "Emergency Stop");
-                    infoPower(busnumber, msg);
-                    queueInfoMessage(msg);
-                    __li100->emergency_on_LI100 = 1;
-                }
+                char msg[500];
+                setPower(busnumber, 0, "Emergency Stop");
+                infoPower(busnumber, msg);
+                queueInfoMessage(msg);
+                __li100->emergency_on_LI100 = 1;
             }
         }
     }
