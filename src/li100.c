@@ -963,6 +963,7 @@ static int readAnswer_LI100(long int busnumber, unsigned char *str)
     }
     ctr = str[0] & 0x0f;        // generate length of answer
     ctr += 2;
+
     // read answer
     for (i = 1; i < ctr; i++) {
         readByte(busnumber, 1, &str[i]);
@@ -984,6 +985,11 @@ static int readAnswer_LI100(long int busnumber, unsigned char *str)
     //9230 IF IST$ = "KA" THEN GOSUB 9280                     'keine antwort
     //9232 RETURN
 
+    /*
+     * TODO: The following compare section should be solved using a
+     * switch/case construction or even using "else if".
+     */
+    
     // version-number of interface
     if (str[0] == 0x02) {
         __li100->version_interface =
@@ -1029,7 +1035,7 @@ static int readAnswer_LI100(long int busnumber, unsigned char *str)
             }
         }
         // power off
-        if (str[1] == 0x00) {
+        else if (str[1] == 0x00) {
             DBG(busnumber, DBG_DEBUG,
                     "on bus %i no power detected; old-state is %i",
                     busnumber, getPower(busnumber));
@@ -1056,10 +1062,9 @@ static int readAnswer_LI100(long int busnumber, unsigned char *str)
             gltmp.speed = 0;
             gltmp.direction = 2;
         }
-        else {
-            if (gltmp.speed > 0)
-                gltmp.speed--;
-        }
+        else if (gltmp.speed > 0)
+            gltmp.speed--;
+
         gltmp.funcs = ((str[3] & 0x0f) << 1);
         if (str[2] & 0x20)
             gltmp.funcs |= 0x01;        // light is on
@@ -1133,35 +1138,37 @@ static int readAnswer_LI100(long int busnumber, unsigned char *str)
         ctr += 2;
         for (i = 1; i < ctr; i += 2) {
             switch (str[i + 1] & 0x60) {
-                /*        case 0x00:          // switch-decoder without feedback
-                   case 0x20:                 //switch-decoder with feedback
-                   tmp_addr=str[i];
-                   tmp_addr<<=2;
-                   if(str[i+1]&0x80)tmp_addr+=2;
-                   if ( xevnt1 & 0x20 )              // mindestens eine Weiche wurde von Hand geschaltet
-                   {
-                   byte2send = 0xCA;
-                   writeByte( busnumber, byte2send, 0 );
-                   readByte_IB( busnumber, 1, &rr );
-                   temp = rr;
-                   for ( i = 0;i < temp;i++ )
-                   {
-                   readByte_IB( busnumber, 1, &rr );
-                   gatmp.id = rr;
-                   readByte_IB( busnumber, 1, &rr );
-                   gatmp.id |= ( rr & 0x07 ) << 8;
-                   gatmp.port = ( rr & 0x80 ) ? 1 : 0;
-                   gatmp.action = ( rr & 0x40 ) ? 1 : 0;
-                   setGA( busnumber, gatmp.id, gatmp );
-                   }
-                   }
+                /*
+                case 0x00:          // switch-decoder without feedback
+                case 0x20:          // switch-decoder with feedback
+                    tmp_addr=str[i];
+                    tmp_addr <<= 2;
+                    if (str[i+1] & 0x80)
+                        tmp_addr+=2;
+                    // mindestens eine Weiche wurde von Hand geschaltet
+                    if (xevnt1 & 0x20) {
+                        byte2send = 0xCA;
+                        writeByte(busnumber, byte2send, 0);
+                        readByte_IB(busnumber, 1, &rr);
+                        temp = rr;
+                        for (i = 0;i < temp; i++) {
+                            readByte_IB( busnumber, 1, &rr);
+                            gatmp.id = rr;
+                            readByte_IB(busnumber, 1, &rr);
+                            gatmp.id |= (rr & 0x07 ) << 8;
+                            gatmp.port = (rr & 0x80 ) ? 1 : 0;
+                            gatmp.action = (rr & 0x40 ) ? 1 : 0;
+                            setGA(busnumber, gatmp.id, gatmp);
+                        }
+                    }
 
-                   break; */
-            case 0x40:         // feedback-decoder
-                setFBmodul(busnumber,
-                           (str[i] * 2) + ((str[i + 1] & 0x80) ? 1 : 0),
-                           str[i + 1] & 0x0f);
-                break;
+                    break;
+                */
+                case 0x40:         // feedback-decoder
+                    setFBmodul(busnumber, (str[i] * 2) +
+                            ((str[i + 1] & 0x80) ? 1 : 0),
+                            str[i + 1] & 0x0f);
+                    break;
             }
         }
     }
@@ -1175,6 +1182,7 @@ static int readAnswer_LI100(long int busnumber, unsigned char *str)
             __li100->last_type = -1;
         }
     }
+    
     if ((str[0] == 0x61)
         && (str[1] == 0x13)) {
         if (__li100->last_type != -1) {
@@ -1184,6 +1192,8 @@ static int readAnswer_LI100(long int busnumber, unsigned char *str)
             __li100->last_type = -1;
         }
     }
+    /* end of switch/case construct */
+    
     return status;
 }
 
