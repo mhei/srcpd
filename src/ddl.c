@@ -16,6 +16,7 @@
 #include "srcp-srv.h"
 #include "srcp-info.h"
 #include "srcp-error.h"
+#include <sys/utsname.h>
 
 #define __DDL ((DDL_DATA*)busses[busnumber].driverdata)
 
@@ -498,7 +499,7 @@ void waitUARTempty_CLEANNMRADCC(long int busnumber)
         sleeptime.tv_nsec =
             (outbytes % SLEEPFACTOR) * (1000000000l / SLEEPFACTOR);
 
-        nanosleep(&sleeptime, NULL);
+        nanosleep_DDL(&sleeptime, NULL);
     }
 }
 
@@ -788,6 +789,11 @@ void set_SerialLine(long int busnumber, int line, int mode)
 
 /* ************************************************ */
 
+void set_lines_on(long int busnumber)
+{
+    set_SerialLine(busnumber, SL_DTR, ON);
+}
+
 void set_lines_off(long int busnumber)
 {
     /* set interface lines to the off state */
@@ -801,6 +807,7 @@ int check_lines(long int busnumber)
     char msg[110];
     if (__DDL->CHECKSHORT)
         if (checkShortcut(busnumber) == 1) {
+	    busses[busnumber].power_state = 0;
             busses[busnumber].power_changed = 1;
             strcpy(busses[busnumber].power_msg, "SHORTCUT DETECTED");
             infoPower(busnumber, msg);
@@ -808,6 +815,7 @@ int check_lines(long int busnumber)
         }
     if (__DDL->RI_CHECK)
         if (checkRingIndicator(busnumber) == 1) {
+	    busses[busnumber].power_state = 0;
             busses[busnumber].power_changed = 1;
             strcpy(busses[busnumber].power_msg, "RINGINDICATOR DETECTED");
             infoPower(busnumber, msg);
@@ -820,7 +828,7 @@ int check_lines(long int busnumber)
             DBG(busnumber, DBG_INFO, "refresh cycle stopped.");
         }
         if (busses[busnumber].power_state == 1) {
-            set_SerialLine(busnumber, SL_DTR, ON);
+	    set_lines_on(busnumber);
             DBG(busnumber, DBG_INFO, "refresh cycle restarted.");
         }
         busses[busnumber].power_changed = 0;
@@ -862,7 +870,6 @@ int krnl26_nanosleep(const struct timespec *req, struct timespec *rem) {
 
 void *thr_refresh_cycle(void *v)
 {
-    int l;
     struct sched_param sparam;
     int policy;
     int packet_size;
@@ -909,7 +916,6 @@ void *thr_refresh_cycle(void *v)
     tcflow(busses[busnumber].fd, TCOON);
     set_SerialLine(busnumber, SL_DTR, ON);
 
-    l = 0;
     gettimeofday(&tv1, &tz);
     for (;;) {
         if (check_lines(busnumber))
@@ -941,7 +947,7 @@ void *thr_refresh_cycle(void *v)
                 gettimeofday(&tv1, &tz);
             }
             else
-                nanosleep(&rqtp_sleep, &__DDL->rmtp);
+                nanosleep_DDL(&rqtp_sleep, &__DDL->rmtp);
         }
     }
 
@@ -979,6 +985,8 @@ long int init_ga_DDL(struct _GASTATE *ga)
 
 int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
 {
+    struct utsname utsBuffer;
+    char buf[3];
     busses[busnumber].type = SERVER_DDL;
     busses[busnumber].init_func = &init_bus_DDL;
     busses[busnumber].term_func = &term_bus_DDL;
@@ -990,6 +998,16 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
     busses[busnumber].driverdata = malloc(sizeof(struct _DDL_DATA));
     strcpy(busses[busnumber].description, "GA GL POWER LOCK DESCRIPTION");
     __DDL->oslevel = 1; // kernel 2.6
+
+    /* we need to check for kernel version below 2.6 or below */
+    /* the following code breaks if a kernel version 2.10 will ever occur */
+    uname(&utsBuffer);
+    sprintf(buf, "%c%c",utsBuffer.release[0], utsBuffer.release[2]);
+    if(atoi(buf)>25) {
+        __DDL->oslevel = 1; // kernel 2.6 or later
+    } else {
+	__DDL->oslevel = 0; // kernel 2.5 or earlier
+    }
 
     __DDL->number_gl = 81;
     __DDL->number_ga = 324;
@@ -1173,7 +1191,7 @@ long int init_bus_DDL(long int busnumber)
 {
     DBG(busnumber, DBG_INFO, "DDL init with debug level %d",
         busses[busnumber].debuglevel);
-    int i, error;
+    int i;
 
     busses[busnumber].fd = init_lineDDL(busnumber);
 
@@ -1213,8 +1231,7 @@ long int init_bus_DDL(long int busnumber)
     if (__DDL->ENABLED_PROTOCOLS & EP_NMRADCC) {
         init_NMRAPacketPool(busnumber);
     }
-    
-    DBG(busnumber, DBG_INFO, "DDL init done (%lu)", __DDL->refresh_ptid);
+    DBG(busnumber, DBG_INFO, "DDL init done");
     return 0;
 }
 
@@ -1238,9 +1255,8 @@ void *thr_sendrec_DDL(void *v)
                        (void *) &(__DDL->refresh_param) );
 
     if (error) {
-        DBG(busnumber, DBG_FATAL,
-            "cannot create thread: refresh_cycle. Abort!");
-        exit(1);
+        DBG(busnumber, DBG_ERROR,
+            "cannot create thread: refresh_cycle. Abort! %d", error);
     }
 
     while (1) {
