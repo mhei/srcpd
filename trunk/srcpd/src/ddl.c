@@ -5,7 +5,7 @@
  */
 
 #include "stdincludes.h"
-
+#include "threads.h"
 #include "config-srcpd.h"
 #include "io.h"
 #include "ddl.h"
@@ -49,6 +49,8 @@
 #ifdef __CYGWIN__
 #define TIOCOUTQ 0x5411
 #endif
+
+static int (*nanosleep_DDL)(const struct timespec *req, struct timespec *rem);
 
 /********* Q U E U E *****************/
 
@@ -579,10 +581,10 @@ void send_packet(long int busnumber, int addr, char *packet,
         else
             laps = 4;           /* YYTV 9 */
         for (i = 0; i < laps; i++) {
-            nanosleep(&rqtp_end19K, &__DDL->rmtp);
+            nanosleep_DDL(&rqtp_end19K, &__DDL->rmtp);
             write(busses[busnumber].fd, packet, 18);
             waitUARTempty(busnumber);
-            nanosleep(&rqtp_btw19K, &__DDL->rmtp);
+            nanosleep_DDL(&rqtp_btw19K, &__DDL->rmtp);
             write(busses[busnumber].fd, packet, 18);
             waitUARTempty(busnumber);
         }
@@ -595,10 +597,10 @@ void send_packet(long int busnumber, int addr, char *packet,
         else
             laps = 3;           /* YYTV 6 */
         for (i = 0; i < laps; i++) {
-            nanosleep(&rqtp_end19K, &__DDL->rmtp);
+            nanosleep_DDL(&rqtp_end19K, &__DDL->rmtp);
             write(busses[busnumber].fd, packet, 18);
             waitUARTempty(busnumber);
-            nanosleep(&rqtp_btw19K, &__DDL->rmtp);
+            nanosleep_DDL(&rqtp_btw19K, &__DDL->rmtp);
             write(busses[busnumber].fd, packet, 18);
             waitUARTempty(busnumber);
         }
@@ -608,10 +610,10 @@ void send_packet(long int busnumber, int addr, char *packet,
         if (setSerialMode(busnumber, SDM_MAERKLIN) < 0)
             return;
         for (i = 0; i < 2; i++) {
-            nanosleep(&rqtp_end38K, &__DDL->rmtp);
+            nanosleep_DDL(&rqtp_end38K, &__DDL->rmtp);
             write(busses[busnumber].fd, packet, 9);
             waitUARTempty(busnumber);
-            nanosleep(&rqtp_btw38K, &__DDL->rmtp);
+            nanosleep_DDL(&rqtp_btw38K, &__DDL->rmtp);
             write(busses[busnumber].fd, packet, 9);
             waitUARTempty(busnumber);
         }
@@ -640,7 +642,7 @@ void send_packet(long int busnumber, int addr, char *packet,
         break;
     }
     if (__DDL->ENABLED_PROTOCOLS & EP_MAERKLIN)
-        nanosleep(&rqtp_end38K, &__DDL->rmtp);
+        nanosleep_DDL(&rqtp_end38K, &__DDL->rmtp);
     if (setSerialMode(busnumber, SDM_DEFAULT) < 0)
         return;
 }
@@ -648,7 +650,7 @@ void send_packet(long int busnumber, int addr, char *packet,
 void improve_nmradcc_write(long int busnumber, char *packet,
                            int packet_size)
 {
-    // Idee: NMRA läuft mit 17000 Baud
+    // Idee: NMRA lauuft mit 17000 Baud
     // 115200 Baud / 7 = 16457 Baud
     // -> jedes Bit 7 mal senden
     char improve_nmradcc_packet[packet_size * 7];
@@ -833,6 +835,31 @@ int check_lines(long int busnumber)
     return (0);
 }
 
+// tvo 2005-12-03
+int krnl26_nanosleep(const struct timespec *req, struct timespec *rem) {
+   struct   timeval start_tv, stop_tv;
+   struct   timezone start_tz, stop_tz;
+   long int sleep_usec;
+   double   slept;
+
+   // Falls "Schlafwerte" zu groÃŸ, soll ein normales nanosleep gemacht werden
+   if ((*req).tv_sec > 0 || (*req).tv_nsec > 2000000) {
+      return nanosleep(req, rem); // non-busy waiting
+   }
+
+   // here begins the busy waiting section
+
+   sleep_usec = (*req).tv_nsec / 1000; // Genauigkeit nur im usec-Bereich!!!
+   gettimeofday(&start_tv, &start_tz);
+   do {
+     gettimeofday(&stop_tv, &stop_tz);
+     slept = ((stop_tv.tv_sec + (stop_tv.tv_usec / 1000000.) -
+              (start_tv.tv_sec + (start_tv.tv_usec / 1000000.))) * 1000000.);
+   } while (slept < sleep_usec);
+   return 0;
+} 
+
+
 void *thr_refresh_cycle(void *v)
 {
     int l;
@@ -842,10 +869,10 @@ void *thr_refresh_cycle(void *v)
     int packet_type;
     char packet[PKTSIZE];
     int addr;
-    long int busnumber = (long int) v;
+    struct _thr_param *tp = v;
+    long int busnumber = tp -> busnumber;
     struct timeval tv1, tv2;
     struct timezone tz;
-
     /* argument for nanosleep to do non-busy waiting */
     struct timespec rqtp_sleep = {0, 2500000};    /* ==> non-busy waiting */
 
@@ -856,6 +883,12 @@ void *thr_refresh_cycle(void *v)
     if ((__DDL->ENABLED_PROTOCOLS & EP_NMRADCC)
         && !(__DDL->ENABLED_PROTOCOLS & EP_MAERKLIN))
         waitUARTempty = waitUARTempty_CLEANNMRADCC;
+
+    nanosleep_DDL = nanosleep;
+    if (__DDL->oslevel==1) {
+	nanosleep_DDL = krnl26_nanosleep;
+    }
+
 
     pthread_getschedparam(pthread_self(), &policy, &sparam);
     sparam.sched_priority = 10;
@@ -956,6 +989,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
 
     busses[busnumber].driverdata = malloc(sizeof(struct _DDL_DATA));
     strcpy(busses[busnumber].description, "GA GL POWER LOCK DESCRIPTION");
+    __DDL->oslevel = 1; // kernel 2.6
 
     __DDL->number_gl = 81;
     __DDL->number_ga = 324;
@@ -1121,9 +1155,9 @@ long int term_bus_DDL(long int busnumber)
     /* store thread return value here */
     void *pThreadReturn;
     /* send cancel to refresh cycle */
-    pthread_cancel(__DDL->ptid);
+    pthread_cancel(__DDL->refresh_ptid);
     /* wait until the refresh cycle has terminated */
-    pthread_join(__DDL->ptid, &pThreadReturn);
+    pthread_join(__DDL->refresh_ptid, &pThreadReturn);
 
     set_lines_off(busnumber);
 
@@ -1173,25 +1207,14 @@ long int init_bus_DDL(long int busnumber)
         init_MaerklinPacketPool(busnumber);
         __DDL->maerklin_refresh = 1;
     }
-    else
+    else {
         __DDL->maerklin_refresh = 0;
-    if (__DDL->ENABLED_PROTOCOLS & EP_NMRADCC)
-        init_NMRAPacketPool(busnumber);
-
-    /*
-     * Starting the thread that is responsible for the signals on 
-     * serial port.
-     */
-    error =
-        pthread_create(&(__DDL->ptid), NULL, thr_refresh_cycle,
-                       (void *) busnumber);
-    if (error) {
-        DBG(busnumber, DBG_FATAL,
-            "cannot create thread: refresh_cycle. Abort!");
-        exit(1);
     }
-
-    DBG(busnumber, DBG_INFO, "DDL init done");
+    if (__DDL->ENABLED_PROTOCOLS & EP_NMRADCC) {
+        init_NMRAPacketPool(busnumber);
+    }
+    
+    DBG(busnumber, DBG_INFO, "DDL init done (%lu)", __DDL->refresh_ptid);
     return 0;
 }
 
@@ -1199,13 +1222,26 @@ void *thr_sendrec_DDL(void *v)
 {
     struct _GLSTATE gltmp;
     struct _GASTATE gatmp;
-    int addr;
+    int addr, error;
     long int busnumber = (long int) v;
 
     DBG(busnumber, DBG_INFO, "DDL started on device %s",
         busses[busnumber].device);
 
     busses[busnumber].watchdog = 1;
+    /*
+     * Starting the thread that is responsible for the signals on 
+     * serial port.
+     */
+    __DDL->refresh_param.busnumber = busnumber;
+    error = pthread_create(&(__DDL->refresh_ptid), NULL, thr_refresh_cycle,
+                       (void *) &(__DDL->refresh_param) );
+
+    if (error) {
+        DBG(busnumber, DBG_FATAL,
+            "cannot create thread: refresh_cycle. Abort!");
+        exit(1);
+    }
 
     while (1) {
         if (!queue_GL_isempty(busnumber)) {

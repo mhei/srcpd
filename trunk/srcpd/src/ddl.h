@@ -31,6 +31,7 @@
 #include <libxml/tree.h>
 
 #include "config-srcpd.h"
+#include "threads.h"
 
 #define QSIZE       2000
 #define PKTSIZE     40
@@ -104,7 +105,8 @@ typedef struct _DDL_DATA {
 
     time_t short_detected;
 
-    pthread_t ptid;
+    pthread_t refresh_ptid;
+    struct _thr_param refresh_param;
 
     char idle_data[MAXDATA];
     char NMRA_idle_data[PKTSIZE];
@@ -122,6 +124,8 @@ typedef struct _DDL_DATA {
 
     pthread_mutex_t maerklin_pktpool_mutex;
     tMaerklinPacketPool MaerklinPacketPool;
+    int oslevel; // 0: ancient linux 2.4, 1 linux 2.6
+
 } DDL_DATA;
 
 int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, long int busnumber);
