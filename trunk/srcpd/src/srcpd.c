@@ -189,13 +189,6 @@ int main(int argc, char **argv)
 
     CreatePIDFile(getpid());
 
-    /* Netzwerkverbindungen */
-    error = pthread_create(&ttid_cmd, NULL, thr_handlePort, &cmds);
-    if (error) {
-        syslog(LOG_INFO, "cannot start Command Thread #%ld: %d", i, error);
-        exit(1);
-    }
-    pthread_detach(ttid_cmd);
 
     /* Modellzeitgeber starten, der ist aber zun�hst idle */
     error = pthread_create(&ttid_clock, NULL, thr_clock, NULL);
@@ -230,6 +223,14 @@ int main(int argc, char **argv)
             setPower(i, 0, "AUTO POWER OFF");
         }
     }
+    /* Netzwerkverbindungen */
+    error = pthread_create(&ttid_cmd, NULL, thr_handlePort, &cmds);
+    if (error) {
+        syslog(LOG_INFO, "cannot start Command Thread #%ld: %d", i, error);
+        exit(1);
+    }
+    pthread_detach(ttid_cmd);
+
     syslog(LOG_INFO, "All Threads started");
     server_shutdown_state = 0;
     sleep_ctr = 10;
