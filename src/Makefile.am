@@ -39,7 +39,7 @@ srcpd_SOURCES = config-srcpd.c config-srcpd.h \
 EXTRA_DIST = systemtest
 
 # set the include path found by configure
-INCLUDES = $(all_includes) $(XML_CPPFLAGS)
+INCLUDES = $(all_includes)
 
 DEFS = -D_REENTRANT -DSYSCONFDIR=\"$(sysconfdir)\" @DEFS@
 
