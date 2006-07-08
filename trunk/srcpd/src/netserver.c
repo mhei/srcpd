@@ -97,12 +97,12 @@ void *thr_doClient(void *v)
                 }
                 start_session(sessionid, mode);
                 switch (mode) {
-                case COMMAND:
-                    rc = doCmdClient(Socket, sessionid);
-                    break;
-                case INFO:
-                    rc = doInfoClient(Socket, sessionid);
-                    break;
+                    case COMMAND:
+                        rc = doCmdClient(Socket, sessionid);
+                        break;
+                    case INFO:
+                        rc = doInfoClient(Socket, sessionid);
+                        break;
                 }
                 stop_session(sessionid);
                 return NULL;
@@ -111,11 +111,9 @@ void *thr_doClient(void *v)
             else if (strncasecmp(cmd, "SET", 3) == 0) {
                 char p[MAXSRCPLINELEN], setcmd[MAXSRCPLINELEN];
                 int n = sscanf(parameter, "%s %1000c", setcmd, p);
-                rc = SRCP_UNKNOWNCOMMAND;
 
                 if (n == 2
                     && strncasecmp(setcmd, "CONNECTIONMODE", 14) == 0) {
-                    rc = SRCP_HS_WRONGCONNMODE;
                     if (strncasecmp(p, "SRCP INFO", 9) == 0) {
                         mode = INFO;
                         rc = SRCP_OK_CONNMODE;
@@ -124,13 +122,15 @@ void *thr_doClient(void *v)
                         mode = COMMAND;
                         rc = SRCP_OK_CONNMODE;
                     }
+                    else
+                        rc = SRCP_HS_WRONGCONNMODE;
                 }
 
                 if (nelem == 2 && strncasecmp(setcmd, "PROTOCOL", 3) == 0) {
-                    rc = SRCP_HS_WRONGPROTOCOL;
-                    if (strncasecmp(p, "SRCP 0.8.2", 10) == 0) {
+                    if (strncasecmp(p, "SRCP 0.8.2", 10) == 0)
                         rc = SRCP_OK_PROTOCOL;
-                    }
+                    else
+                        rc = SRCP_HS_WRONGPROTOCOL;
                 }
             }
         }
