@@ -108,7 +108,7 @@ void *thr_doClient(void *v)
                 return NULL;
             }
             
-            if (strncasecmp(cmd, "SET", 3) == 0) {
+            else if (strncasecmp(cmd, "SET", 3) == 0) {
                 char p[MAXSRCPLINELEN], setcmd[MAXSRCPLINELEN];
                 int n = sscanf(parameter, "%s %1000c", setcmd, p);
                 rc = SRCP_UNKNOWNCOMMAND;
