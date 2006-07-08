@@ -33,7 +33,7 @@ static int queue_isfull(long int busnumber);
  */
 int isValidGL(long int busnumber, int addr)
 {
-    DBG(busnumber, DBG_INFO, "GL VALID: %d %d (from %d to %d)", busnumber,
+    DBG(busnumber, DBG_DEBUG+1, "GL VALID: %d %d (from %d to %d)", busnumber,
         addr, num_busses, gl[busnumber].numberOfGl - 1);
     
     /* in bus 0 GL are not allowed */
@@ -211,7 +211,7 @@ int setGL(long int busnumber, int addr, struct _GLSTATE l)
         gl[busnumber].glstate[addr].funcs = l.funcs;
         gettimeofday(&gl[busnumber].glstate[addr].tv, NULL);
         if (gl[busnumber].glstate[addr].state == 2) {
-            sprintf(msg, "%lu.%.3lu 102 INFO %ld GL %d",
+            sprintf(msg, "%lu.%.3lu 102 INFO %ld GL %d\n",
                     gl[busnumber].glstate[addr].tv.tv_sec,
                     gl[busnumber].glstate[addr].tv.tv_usec / 1000,
                     busnumber, addr);
