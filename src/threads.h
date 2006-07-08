@@ -10,6 +10,11 @@
 #ifndef _THREADS_H
 #define _THREADS_H
 
+typedef struct _thr_param
+{
+    long int busnumber;
+} thr_param;
+
 typedef struct _THREADS
 {
   int socket;
