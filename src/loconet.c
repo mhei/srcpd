@@ -359,6 +359,8 @@ void *thr_sendrec_LOCONET(void *v)
                 infoPower(busnumber, msg);
                 queueInfoMessage(msg);
                 break;
+	    case OPC_SW_REP:
+		break;
             case OPC_INPUT_REP:
                 addr =
                     ((unsigned int) ln_packet[1] & 0x007f) |
@@ -368,7 +370,7 @@ void *thr_sendrec_LOCONET(void *v)
                 value = (ln_packet[2] & 0x10) >> 4;
                 updateFB(busnumber, addr, value);
                 break;
-            case 0xe5:         /* OPC_PEER_XFER */
+            case OPC_PEER_XFER:
                 /* this one is difficult */
                 ln_opc_peer_xfer_read(busnumber, ln_packet);
                 break;
@@ -393,7 +395,7 @@ void *thr_sendrec_LOCONET(void *v)
                 unqueueNextGA(busnumber, &gatmp);
                 addr = gatmp.id;
 		ln_packetlen = 4;
-		ln_packet[0] = OPC_INPUT_REP;
+		ln_packet[0] = OPC_SW_REQ;
 		ln_packet[1] = (unsigned short int) addr & 0x0007f;
 		ln_packet[2] = (unsigned short int) ( addr >> 7) & 0x000f;
 		ln_packet[2] |= (unsigned short int) gatmp.port;
