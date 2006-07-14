@@ -109,11 +109,10 @@ int getFB(long int bus, int port, struct timeval *time, int *value)
 
 int setFB(long int bus, int port, int value)
 {
-    updateFB(bus, port, value);
-    return SRCP_OK;
+    return updateFB(bus, port, value);
 }
 
-void updateFB(long int bus, int port, int value)
+int updateFB(long int bus, int port, int value)
 {
     struct timezone dummy;
     struct timeval akt_time;
@@ -122,7 +121,7 @@ void updateFB(long int bus, int port, int value)
 
     // check range to disallow segmentation fault
     if ((port > get_number_fb(bus)) || (port < 1))
-        return;
+        return SRCP_WRONGVALUE;
 
     port_t = port - 1;
     // we read 8 or 16 ports at once, but we will only change those ports,
@@ -164,6 +163,7 @@ void updateFB(long int bus, int port, int value)
             }
         }
     }
+    return SRCP_OK;
 }
 
 /* all moduls with 8 or 16 ports */
@@ -175,6 +175,8 @@ int setFBmodul(long int bus, int modul, int values)
     int ports;
     int dir;
     int mask;
+    int rc;
+    rc = SRCP_OK;
 
     ports = ((busses[bus].flags & FB_16_PORTS) == FB_16_PORTS) ? 16 : 8;
     if (busses[bus].flags & FB_4_PORTS)
@@ -194,13 +196,13 @@ int setFBmodul(long int bus, int modul, int values)
 
     for (i = 0; i < ports; i++) {
         c = (values & mask) ? 1 : 0;
-        updateFB(bus, fb_contact++, c);
+        rc = updateFB(bus, fb_contact++, c);
         if (dir)
             mask >>= 1;
         else
             mask <<= 1;
     }
-    return SRCP_OK;
+    return rc;
 }
 
 int infoFB(long int bus, int port, char *msg)
