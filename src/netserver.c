@@ -224,7 +224,7 @@ static int handle_setcheck(int sessionid, long int bus, char *device,
         long fbport, value;
         int anzparms;
         anzparms = sscanf(parameter, "%ld %ld", &fbport, &value);
-        if (anzparms >= 3) {
+        if (anzparms >= 2) {
             if (setorcheck == 1)
                 rc = setFB(bus, fbport, value);
         }
