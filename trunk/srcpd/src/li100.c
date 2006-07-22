@@ -64,7 +64,6 @@ int readConfig_LI100(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
     /*TODO: what happens if malloc returns NULL?*/
     busses[busnumber].flags |= FB_4_PORTS;
     busses[busnumber].baudrate = B9600;
-    busses[busnumber].numberOfSM = 0;
 
     strcpy(busses[busnumber].description,
            "GA GL FB SM POWER LOCK DESCRIPTION");
@@ -103,7 +102,7 @@ int readConfig_LI100(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
         else if (xmlStrcmp(child->name, BAD_CAST "number_sm") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
-                busses[busnumber].numberOfSM = atoi((char *) txt);
+                __li100->number_fb = atoi((char *) txt);
                 xmlFree(txt);
             }
         }
@@ -1010,8 +1009,8 @@ static int readAnswer_LI100(long int busnumber, unsigned char *str)
             if (__li100->version_zentrale < 0x0300) {
                 if (__li100->number_gl > 99)
                     __li100->number_gl = 99;
-                if (busses[busnumber].numberOfSM > 99)
-                    busses[busnumber].numberOfSM = 99;
+                if (__li100->number_fb > 99)
+                    __li100->number_fb = 99;
                 if (__li100->number_ga > 256)
                     __li100->number_ga = 256;
             }
