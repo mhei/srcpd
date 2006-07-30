@@ -102,11 +102,11 @@ Konfiguration
     
     	number_ga: Größte GA Adresse (256)
 	number_gl: Größte GL Adresse (80)
-	number_fb: Anzahl S88 Module (0)
+	number_fb: Anzahl FB Kontakte (0)
 	
-    Die FB werden zwar angebenen, werden jedoch nie
-    Daten generieren. Die GA und GL werden eingehende
-    Befehle als ausgeführt markieren.
+    Die FB koennen jeden numerischen Wert annehmen.
+    Die GA und GL werden eingehende Befehle sofort 
+    als ausgeführt markieren.
     
     DDL S88
     ~~~~~~~
