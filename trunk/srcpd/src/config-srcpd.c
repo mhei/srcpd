@@ -94,23 +94,15 @@ static long int register_bus(long int busnumber, xmlDocPtr doc,
     xmlChar *txt = NULL;
 
     while (child != NULL) {
-        txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
-        if (txt == NULL) {
-            printf("WARNING, no value found for tag \"%s\" (bus %d)!\n",
-                   child->name, current_bus);
-            child = child->next;
-            continue;
-        }
 
         if ((xmlStrcmp(child->name, BAD_CAST "text") == 0) ||
             (xmlStrcmp(child->name, BAD_CAST "comment") == 0)) {
-            /* just do nothing, it is only a comment */
+            /* just do nothing, it is only formating text or a comment */
         }
 
         else if (xmlStrncmp(child->name, BAD_CAST "server", 6) == 0) {
-            if (busnumber == 0) {
+            if (busnumber == 0)
                 busnumber += readconfig_server(doc, child, busnumber);
-            }
             else
                 printf("Sorry, type=server is only allowed at bus 0!\n");
         }
@@ -170,60 +162,84 @@ static long int register_bus(long int busnumber, xmlDocPtr doc,
 
         /* some attributes are common for all (real) busses */
         else if (xmlStrcmp(child->name, BAD_CAST "device") == 0) {
-            free(busses[current_bus].device);
-            busses[current_bus].device = malloc(strlen((char *) txt) + 1);
-            if (busses[current_bus].device == NULL) {
-                printf("cannot allocate memory\n");
-                exit(1);
+            txt = xmlNodeListGetString(doc, child->children, 1);
+            if (txt != NULL) {
+                free(busses[current_bus].device);
+                busses[current_bus].device = malloc(strlen((char *) txt) + 1);
+                if (busses[current_bus].device == NULL) {
+                    printf("cannot allocate memory\n");
+                    exit(1);
+                }
+                strcpy(busses[current_bus].device, (char *) txt);
+                xmlFree(txt);
             }
-            strcpy(busses[current_bus].device, (char *) txt);
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "verbosity") == 0) {
-            busses[current_bus].debuglevel = atoi((char *) txt);
+            txt = xmlNodeListGetString(doc, child->children, 1);
+            if (txt != NULL) {
+                busses[current_bus].debuglevel = atoi((char *) txt);
+                xmlFree(txt);
+            }
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "use_watchdog") == 0) {
-            if (xmlStrcmp(txt, BAD_CAST "yes") == 0)
-                busses[current_bus].flags |= USE_WATCHDOG;
+            txt = xmlNodeListGetString(doc, child->children, 1);
+            if (txt != NULL) {
+                if (xmlStrcmp(txt, BAD_CAST "yes") == 0)
+                    busses[current_bus].flags |= USE_WATCHDOG;
+                xmlFree(txt);
+            }
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "restore_device_settings")
                  == 0) {
-            if (xmlStrcmp(txt, BAD_CAST "yes") == 0)
-                busses[current_bus].flags |= RESTORE_COM_SETTINGS;
+            txt = xmlNodeListGetString(doc, child->children, 1);
+            if (txt != NULL) {
+                if (xmlStrcmp(txt, BAD_CAST "yes") == 0)
+                    busses[current_bus].flags |= RESTORE_COM_SETTINGS;
+                xmlFree(txt);
+            }
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "auto_power_on") == 0) {
-            if (xmlStrcmp(txt, BAD_CAST "yes") == 0)
-                busses[current_bus].flags |= AUTO_POWER_ON;
+            txt = xmlNodeListGetString(doc, child->children, 1);
+            if (txt != NULL) {
+                if (xmlStrcmp(txt, BAD_CAST "yes") == 0)
+                    busses[current_bus].flags |= AUTO_POWER_ON;
+                xmlFree(txt);
+            }
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "speed") == 0) {
-            int speed = atoi((char *) txt);
+            txt = xmlNodeListGetString(doc, child->children, 1);
+            if (txt != NULL) {
+                int speed = atoi((char *) txt);
 
-            switch (speed) {
-                case 2400:
-                    busses[current_bus].baudrate = B2400;
-                    break;
-                case 4800:
-                    busses[current_bus].baudrate = B4800;
-                    break;
-                case 9600:
-                    busses[current_bus].baudrate = B9600;
-                    break;
-                case 19200:
-                    busses[current_bus].baudrate = B19200;
-                    break;
-                case 38400:
-                    busses[current_bus].baudrate = B38400;
-                    break;
-                case 57600:
-                    busses[current_bus].baudrate = B57600;
-                    break;
-                default:
-                    busses[current_bus].baudrate = B2400;
-                    break;
+                switch (speed) {
+                    case 2400:
+                        busses[current_bus].baudrate = B2400;
+                        break;
+                    case 4800:
+                        busses[current_bus].baudrate = B4800;
+                        break;
+                    case 9600:
+                        busses[current_bus].baudrate = B9600;
+                        break;
+                    case 19200:
+                        busses[current_bus].baudrate = B19200;
+                        break;
+                    case 38400:
+                        busses[current_bus].baudrate = B38400;
+                        break;
+                    case 57600:
+                        busses[current_bus].baudrate = B57600;
+                        break;
+                    default:
+                        busses[current_bus].baudrate = B2400;
+                        break;
+                }
+                xmlFree(txt);
             }
         }
 
@@ -231,7 +247,6 @@ static long int register_bus(long int busnumber, xmlDocPtr doc,
             printf("WARNING, \"%s\" (bus %d) is an unknown tag!\n",
                    child->name, current_bus);
 
-        xmlFree(txt);
         child = child->next;
     }
 
