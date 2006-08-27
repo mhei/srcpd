@@ -984,11 +984,6 @@ static int readAnswer_LI100(long int busnumber, unsigned char *str)
     //9230 IF IST$ = "KA" THEN GOSUB 9280                     'keine antwort
     //9232 RETURN
 
-    /*
-     * TODO: The following compare section should be solved using a
-     * switch/case construction or even using "else if".
-     */
-    
     // version-number of interface
     if (str[0] == 0x02) {
         __li100->version_interface =
@@ -997,7 +992,7 @@ static int readAnswer_LI100(long int busnumber, unsigned char *str)
     }
 
     // version-number of zentrale
-    if ((str[0] == 0x62) || (str[0] == 0x63)) {
+    else if ((str[0] == 0x62) || (str[0] == 0x63)) {
         if (str[1] == 0x21) {
             __li100->version_zentrale =
                 ((str[2] & 0xf0) << 4) + (str[2] & 0x0f);
@@ -1018,7 +1013,7 @@ static int readAnswer_LI100(long int busnumber, unsigned char *str)
     }
 
     // power on/off
-    if (str[0] == 0x61) {
+    else if (str[0] == 0x61) {
         // power on
         if (str[1] == 0x01) {
             DBG(busnumber, DBG_DEBUG,
@@ -1049,7 +1044,7 @@ static int readAnswer_LI100(long int busnumber, unsigned char *str)
         }
     }
 
-    if ((str[0] == 0x83) || (str[0] == 0xa3)) {
+    else if ((str[0] == 0x83) || (str[0] == 0xa3)) {
         if (str[0] & 0x20)
             add_extern_engine(busnumber, str[1]);
         else
@@ -1075,7 +1070,7 @@ static int readAnswer_LI100(long int busnumber, unsigned char *str)
             setGL(busnumber, gltmp.id, gltmp);
     }
 
-    if (str[0] == 0xe3) {
+    else if (str[0] == 0xe3) {
         if (str[1] == 0x40) {
             tmp_addr = str[3];
             tmp_addr |= str[2] << 8;
@@ -1084,7 +1079,7 @@ static int readAnswer_LI100(long int busnumber, unsigned char *str)
     }
 
     // information about an engine (single traction)
-    if (str[0] == 0xe4) {
+    else if (str[0] == 0xe4) {
         gltmp.id = __li100->last_value & 0x3fff;
         //is engine alway allocated by an external device?
         if (!(str[1] & 0x08)) {
@@ -1132,7 +1127,7 @@ static int readAnswer_LI100(long int busnumber, unsigned char *str)
     }
 
     // information about feedback
-    if ((str[0] & 0xf0) == 0x40) {
+    else if ((str[0] & 0xf0) == 0x40) {
         ctr = str[0] & 0xf;
         ctr += 2;
         for (i = 1; i < ctr; i += 2) {
@@ -1173,7 +1168,7 @@ static int readAnswer_LI100(long int busnumber, unsigned char *str)
     }
 
     // answer of programming
-    if ((str[0] == 0x63) && ((str[1] & 0xf0) == 0x10)) {
+    else if ((str[0] == 0x63) && ((str[1] & 0xf0) == 0x10)) {
         if (__li100->last_type != -1) {
             setSM(busnumber, __li100->last_type, -1,
                   __li100->last_typeaddr, __li100->last_bit, (int) str[3],
@@ -1182,7 +1177,7 @@ static int readAnswer_LI100(long int busnumber, unsigned char *str)
         }
     }
     
-    if ((str[0] == 0x61)
+    else if ((str[0] == 0x61)
         && (str[1] == 0x13)) {
         if (__li100->last_type != -1) {
             setSM(busnumber, __li100->last_type, -1,
@@ -1191,7 +1186,14 @@ static int readAnswer_LI100(long int busnumber, unsigned char *str)
             __li100->last_type = -1;
         }
     }
-    /* end of switch/case construct */
+
+    /* at last catch all unknown command keys and show a warning message */
+    else {
+        /*
+        DBG(busnumber, DBG_WARN,
+                "Unknown command key received: %d", str[0]);
+                */
+    }
     
     return status;
 }
