@@ -940,7 +940,7 @@ int send_command_LI100(long int busnumber, unsigned char *str)
         str[19] ^= str[i];
         writeByte(busnumber, str[i], 0);
     }
-    writeByte(busnumber, str[19], 250); // send X-Or-Byte
+    writeByte(busnumber, str[19], 0); // send X-Or-Byte
 
     status = readAnswer_LI100(busnumber, str);
     return status;
