@@ -68,8 +68,14 @@ void writeByte(long int bus, unsigned char b, unsigned long msecs)
         i = write(busses[bus].fd, &byte, 1);
         tcdrain(busses[bus].fd);
     }
+    if (i < 0) {
+    DBG(bus, DBG_ERROR, "(FD: %d) Extrernal error: errno %d",
+        busses[bus].fd, errno); // , str_errno(errno));
+    }
+    else {
     DBG(bus, DBG_DEBUG, "(FD: %d) %i byte sent: 0x%02x (%d)",
         busses[bus].fd, i, b, b);
+    }
     usleep(msecs * 1000);
 }
 
