@@ -125,7 +125,7 @@ static long int init_lineLOCONET(long int busnumber)
 	tios.c_oflag = 0;
         tios.c_cflag = CS8 | CREAD | CLOCAL;
 	tios.c_lflag = 0;
-        cfsetospeed(&tios, B38400);
+        cfsetospeed(&tios, busses[busnumber].baudrate);
 	tcsetattr(fd, TCSANOW, &tios);
 
         tcflow(fd, TCOON);

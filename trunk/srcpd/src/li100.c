@@ -1228,7 +1228,7 @@ static int initLine_LI100(long int busnumber)
     printf("try opening serial line %s for %s baud\n", name, byte2send);
     fd = open(name, O_RDWR);
     if (fd == -1) {
-        printf("dammit, couldn't open device.\n");
+        printf("Sorry, couldn't open device.\n");
         return 1;
     }
     busses[busnumber].fd = fd;

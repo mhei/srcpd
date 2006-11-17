@@ -123,7 +123,7 @@ static int open_lineHSI88(char *name)
     printf("try opening serial line %s for 9600 baud\n", name);
     fd = open(name, O_RDWR);
     if (fd == -1) {
-        printf("dammit, couldn't open device.\n");
+        printf("Sorry, couldn't open device.\n");
     }
     else {
         tcgetattr(fd, &interface);
