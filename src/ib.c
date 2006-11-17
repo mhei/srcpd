@@ -1025,7 +1025,7 @@ static int open_comport(long int busnumber, speed_t baud)
     DBG(busnumber, DBG_DEBUG, "fd after open(...) = %d", fd);
     busses[busnumber].fd = fd;
     if (fd < 0) {
-        DBG(busnumber, DBG_ERROR, "dammit, couldn't open device.\n");
+        DBG(busnumber, DBG_ERROR, "Sorry, couldn't open device.\n");
     }
     else {
 #ifdef linux
@@ -1075,8 +1075,8 @@ static int initLine_IB(long int busnumber)
     fd = open(name, O_RDWR);
     DBG(busnumber, DBG_INFO, "fd = %d", fd);
     if (fd == -1) {
-        DBG(busnumber, DBG_ERROR, "dammit, couldn't open device.\n");
-        //printf("dammit, couldn't open device.\n");
+        DBG(busnumber, DBG_ERROR, "Sorry, couldn't open device.\n");
+        //printf("Sorry, couldn't open device.\n");
         return 1;
     }
     busses[busnumber].fd = fd;
