@@ -4,44 +4,23 @@
 
 sbin_PROGRAMS = srcpd
 
-srcpd_SOURCES = config-srcpd.c config-srcpd.h \
-	ddl-s88.c ddl-s88.h \
-	ddl.c ddl.h \
-	ddl_maerklin.c ddl_maerklin.h \
-	ddl_nmra.c ddl_nmra.h \
-	hsi-88.c hsi-88.h \
-	i2c-dev.c i2c-dev.h \
-	ib.c ib.h \
-	io.c io.h \
-	li100.c li100.h \
-	loconet.c loconet.h \
-	loopback.c loopback.h \
-	m605x.c m605x.h \
-	netserver.c netserver.h \
-	selectrix.c selectrix.h \
-	srcp-descr.c srcp-descr.h \
-	srcp-error.c srcp-error.h \
-	srcp-fb.c srcp-fb.h \
-	srcp-ga.c srcp-ga.h \
-	srcp-gl.c srcp-gl.h \
-	srcp-info.c srcp-info.h \
-	srcp-lock.c srcp-lock.h \
-	srcp-power.c srcp-power.h \
-	srcp-session.c srcp-session.h \
-	srcp-sm.c srcp-sm.h \
-	srcp-srv.c srcp-srv.h \
-	srcp-time.c srcp-time.h \
-	srcpd.c stdincludes.h \
-	threads.c threads.h \
-        ttycygwin.c ttycygwin.h \
-	zimo.c zimo.h
+srcpd_SOURCES = config-srcpd.c ddl-s88.c ddl.c ddl_maerklin.c ddl_nmra.c \
+	hsi-88.c i2c-dev.c ib.c io.c loconet.c loopback.c m605x.c netserver.c \
+	selectrix.c srcp-descr.c srcp-error.c srcp-fb.c srcp-ga.c srcp-gl.c srcp-info.c \
+	srcp-lock.c srcp-power.c srcp-session.c srcp-sm.c srcp-srv.c srcp-time.c srcpd.c \
+	threads.c ttycygwin.c zimo.c li100-main.c
 
 EXTRA_DIST = systemtest
 
 # set the include path found by configure
-INCLUDES = $(all_includes)
+INCLUDES = $(all_includes) $(XML_CPPFLAGS)
 
 DEFS = -D_REENTRANT -DSYSCONFDIR=\"$(sysconfdir)\" @DEFS@
 
 # the library search path.
 srcpd_LDFLAGS = $(all_libraries) `./systemtest` $(XML_LIBS)
+noinst_HEADERS = config-srcpd.h ddl.h ddl_maerklin.h ddl-s88.h hsi-88.h\
+	i2c-dev.h ib.h io.h li100.c li100.h loopback.h m605x.h netserver.h\
+	srcp-descr.h srcp-error.h srcp-fb.h srcp-info.h srcp-lock.h srcp-power.h\
+	srcp-session.h srcp-sm.h srcp-srv.h srcp-time.h stdincludes.h threads.h\
+	ttycygwin.h zimo.h

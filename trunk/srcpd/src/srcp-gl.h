@@ -61,4 +61,6 @@ void unlock_gl_bysessionid(long int sessionid);
 void unlock_gl_bytime(void);
 int describeLOCKGL(long int bus, int addr, char *reply);
 
+void debugGL(long int busnumber, int start, int end);
+
 #endif

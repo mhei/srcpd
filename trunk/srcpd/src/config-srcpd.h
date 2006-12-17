@@ -14,6 +14,15 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
+
+/***************************************************************************
+ *                                                                         *
+ *  Changes:                                                               *
+ *    26.10.2006 Frank Schmischke                                          *
+ *               split LI100 to LI100-SERIAL and LI100-USB                 *
+ *                                                                         *
+ *                                                                         *
+ ***************************************************************************/
 #ifndef _CONFIG_SRCPD_H
 #define _CONFIG_SRCPD_H
 
@@ -31,14 +40,15 @@
 #define SERVER_DDL              1         // srcpd-bus works as DDL-server
 #define SERVER_M605X            2         // srcpd-bus works as M605X-server
 #define SERVER_IB               3         // srcpd-bus works as IB-server
-#define SERVER_LI100            4         // srcpd-bus works as Lenz-server
-#define SERVER_LOOPBACK         5         // srcpd-bus is dummy driver, no real hardware
-#define SERVER_S88              6         // srcpd-bus works as S88 at parallelport
-#define SERVER_HSI_88           7         // srcpd-bus works as HSI88-server
-#define SERVER_I2C_DEV          8         // srcpd-bus works as I2C-DEV-server
-#define SERVER_ZIMO             9         // srcpd-bus works as Zimo MX1
-#define SERVER_SELECTRIX       10   // srcpd-bus works as Selectrix-server
-#define SERVER_LOCONET         11   // srcpd-bus works as Loconet Gateway
+#define SERVER_LI100_SERIAL     4         // srcpd-bus works as Lenz-server with serial interface
+#define SERVER_LI100_USB        5         // srcpd-bus works as Lenz-server with usb-interface
+#define SERVER_LOOPBACK         6         // srcpd-bus is dummy driver, no real hardware
+#define SERVER_S88              7         // srcpd-bus works as S88 at parallelport
+#define SERVER_HSI_88           8         // srcpd-bus works as HSI88-server
+#define SERVER_I2C_DEV          9         // srcpd-bus works as I2C-DEV-server
+#define SERVER_ZIMO            10         // srcpd-bus works as Zimo MX1
+#define SERVER_SELECTRIX       11         // srcpd-bus works as Selectrix-server
+#define SERVER_LOCONET         12         // srcpd-bus works as Loconet Gateway
 
 /* generic flags */
 #define USE_WATCHDOG          0x0001      // use watchdog

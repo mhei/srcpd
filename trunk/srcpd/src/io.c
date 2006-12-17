@@ -162,6 +162,7 @@ int socket_readline(int Socket, char *line, int len)
         }
     }
     line[i++] = 0x00;
+    DBG(0, DBG_INFO, "socket %d, read %s", Socket, line);
     return 0;
 }
 
@@ -178,7 +179,7 @@ int socket_writereply(int Socket, const char *line)
     if (linelen <= 0)
         return 0;
 
-    DBG(0, DBG_DEBUG, "socket %d, write %s", Socket, line);
+    DBG(0, DBG_INFO, "socket %d, write %s", Socket, line);
     
     while (i <= linelen - MAXSRCPLINELEN - 1 && status >= 0) {
         memset(tmp, 0, sizeof(tmp));
@@ -192,6 +193,6 @@ int socket_writereply(int Socket, const char *line)
         status = write(Socket, line + i, linelen - i);
     }
 
-    DBG(0, DBG_DEBUG, "Status from write: %d", status);
+    DBG(0, DBG_INFO, "Status from write: %d", status);
     return status;
 }
