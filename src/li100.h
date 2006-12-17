@@ -28,6 +28,7 @@ typedef struct _LI100_DATA
     int last_type;
     int last_typeaddr;
     int last_value;
+    int get_addr;
     struct _GASTATE tga[50];
     int working_LI100;
     int emergency_on_LI100;
@@ -39,22 +40,33 @@ typedef struct _LI100_DATA
     int extern_engine_ctr;
 } LI100_DATA;
 
-int readConfig_LI100(xmlDocPtr doc, xmlNodePtr node,  long int busnumber);
+int readConfig_LI100_USB(xmlDocPtr doc, xmlNodePtr node,  long int busnumber);
+long int init_bus_LI100_USB( long int busnumber );
+long int term_bus_LI100_USB( long int busnumber );
+void send_command_ga_LI100_USB( long int busnumber );
+void send_command_gl_LI100_USB( long int busnumber );
+void send_command_sm_LI100_USB( long int busnumber );
+void check_status_LI100_USB( long int busnumber );
+int send_command_LI100_USB( long int busnumber, unsigned char *str );
+void get_status_sm_LI100_USB( long int busnumber );
 
-long int init_bus_LI100(long int busnumber);
-long int term_bus_LI100(long int busnumber);
+int readConfig_LI100_SERIAL(xmlDocPtr doc, xmlNodePtr node,  long int busnumber);
+long int init_bus_LI100_SERIAL( long int busnumber );
+long int term_bus_LI100_SERIAL( long int busnumber );
+void send_command_ga_LI100_SERIAL( long int busnumber );
+void send_command_gl_LI100_SERIAL( long int busnumber );
+void send_command_sm_LI100_SERIAL( long int busnumber );
+void check_status_LI100_SERIAL( long int busnumber );
+int send_command_LI100_SERIAL( long int busnumber, unsigned char *str );
+void get_status_sm_LI100_SERIAL( long int busnumber );
 
-long int init_gl_LI100(struct _GLSTATE *gl);
-long int init_ga_LI100(struct _GASTATE *ga);
-
-void* thr_sendrec_LI100(void*);
-void send_command_ga_LI100(long int busnumber);
-void send_command_gl_LI100(long int busnumber);
-void send_command_sm_LI100(long int busnumber);
-void check_status_LI100(long int busnumber);
-int send_command_LI100(long int busnumber, unsigned char *str);
-
-void add_extern_engine(long int busnumber, int address);
-void remove_extern_engine(long int busnumber, int address);
+long int init_gl_LI100( struct _GLSTATE *gl );
+long int init_ga_LI100( struct _GASTATE *ga );
+void* thr_sendrec_LI100_USB( void* );
+void* thr_sendrec_LI100_SERIAL( void* );
+void add_extern_engine( long int busnumber, int address );
+void remove_extern_engine( long int busnumber, int address );
+void check_extern_engines_USB( long int busnumber );
+void check_extern_engines_SERIAL( long int busnumber );
 
 #endif

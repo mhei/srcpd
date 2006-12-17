@@ -144,8 +144,12 @@ static long int register_bus(long int busnumber, xmlDocPtr doc,
             busnumber += readConfig_HSI_88(doc, child, busnumber);
         }
 
+        else if (xmlStrcmp(child->name, BAD_CAST "li100usb") == 0) {
+            busnumber += readConfig_LI100_USB(doc, child, busnumber);
+        }
+
         else if (xmlStrcmp(child->name, BAD_CAST "li100") == 0) {
-            busnumber += readConfig_LI100(doc, child, busnumber);
+            busnumber += readConfig_LI100_SERIAL(doc, child, busnumber);
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "selectrix") == 0) {
