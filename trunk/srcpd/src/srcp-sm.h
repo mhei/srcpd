@@ -25,6 +25,7 @@ enum COMMAND {
     SET = 0,
     GET,
     VERIFY,
+    INIT,
     TERM
 };
 

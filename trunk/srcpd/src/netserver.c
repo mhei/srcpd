@@ -69,7 +69,7 @@ void *thr_doClient(void *v)
         rc = SRCP_HS_NODATA;
         reply[0] = 0x00;
         memset(line, 0, sizeof(line));
-        
+
         if (socket_readline(Socket, line, sizeof(line) - 1) < 0) {
             shutdown(Socket, 0);
             close(Socket);
@@ -79,10 +79,10 @@ void *thr_doClient(void *v)
         memset(cmd, 0, sizeof(cmd));
         memset(parameter, 0, sizeof(parameter));
         nelem = sscanf(line, "%s %1000c", cmd, parameter);
-        
+
         if (nelem > 0) {
             rc = SRCP_UNKNOWNCOMMAND;
-            
+
             if (strncasecmp(cmd, "GO", 2) == 0) {
                 pthread_mutex_lock(&SessionID_mut);
                 sessionid = SessionID++;
@@ -107,7 +107,7 @@ void *thr_doClient(void *v)
                 stop_session(sessionid);
                 return NULL;
             }
-            
+
             else if (strncasecmp(cmd, "SET", 3) == 0) {
                 char p[MAXSRCPLINELEN], setcmd[MAXSRCPLINELEN];
                 int n = sscanf(parameter, "%s %1000c", setcmd, p);
@@ -725,6 +725,11 @@ int handleINIT(int sessionid, long int bus, char *device, char *parameter,
         else {
             rc = SRCP_LISTTOOSHORT;
         }
+    }
+
+    else if (bus_has_devicegroup(bus, DG_SM)
+        && strncasecmp(device, "SM", 2) == 0) {
+        rc = infoSM(bus, INIT, 0, -1, 0, 0, 0, reply);
     }
 
     gettimeofday(&time, NULL);
