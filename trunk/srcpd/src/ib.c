@@ -1,6 +1,6 @@
 /***************************************************************************
-                        ib.c  -  description
-                         -------------------
+                      ib.c  -  description
+                       -------------------
 begin                : Don Apr 19 17:35:13 MEST 2001
 copyright            : (C) 2001 by Dipl.-Ing. Frank Schmischke
 email                : frank.schmischke@t-online.de
@@ -324,11 +324,11 @@ void *thr_sendrec_IB( void *v )
           usleep( 100000 );
           status = readByte_IB( busnumber, 1, &rr );
         }
-        if ( rr == 0x00 )  // war alles OK ?
+        if ( rr == 0x00 )    // war alles OK ?
         {
           busses[ busnumber ].power_changed = 0;
         }
-        if ( rr == 0x06 )  // power on not possible - overheating
+        if ( rr == 0x06 )    // power on not possible - overheating
         {
           busses[ busnumber ].power_changed = 0;
           busses[ busnumber ].power_state = 0;
@@ -377,7 +377,7 @@ void send_command_ga_IB( long int busnumber )
       DBG( busnumber, DBG_DEBUG, "Zeit %i,%i", ( int ) akt_time.tv_sec,
            ( int ) akt_time.tv_usec );
       cmp_time = __ib->tga[ i ].t;
-      if ( cmpTime( &cmp_time, &akt_time ) )   // Ausschaltzeitpunkt erreicht ?
+      if ( cmpTime( &cmp_time, &akt_time ) )     // Ausschaltzeitpunkt erreicht ?
       {
         gatmp = __ib->tga[ i ];
         addr = gatmp.id;
@@ -494,7 +494,7 @@ void send_command_gl_IB( long int busnumber )
       temp >>= 8;
       byte2send = temp;
       writeByte( busnumber, byte2send, 0 );
-      if ( gltmp.direction == 2 )    // Nothalt ausgel�t ?
+      if ( gltmp.direction == 2 )      // Nothalt ausgel�t ?
       {
         byte2send = 1;  // Nothalt setzen
       }
@@ -1038,7 +1038,7 @@ void check_status_IB( long int busnumber )
   }
 
 
-  if ( xevnt3 & 0x01 )           // we should send an XPT_event-command
+  if ( xevnt3 & 0x01 )             // we should send an XPT_event-command
     check_status_pt_IB( busnumber );
 }
 
@@ -1087,6 +1087,7 @@ void check_status_pt_IB( long int busnumber )
 
   if ( __ib->last_type != -1 )
   {
+    session_endwait( busnumber, ( int ) rr[ 2 ] );
     setSM( busnumber, __ib->last_type, -1, __ib->last_typeaddr,
            __ib->last_bit, ( int ) rr[ 2 ], ( int ) rr[ 1 ] );
     __ib->last_type = -1;
