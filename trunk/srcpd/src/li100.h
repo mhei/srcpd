@@ -38,6 +38,7 @@ typedef struct _LI100_DATA
     int code_zentrale;
     int extern_engine[100];
     int extern_engine_ctr;
+    int pgm_mode;
 } LI100_DATA;
 
 int readConfig_LI100_USB(xmlDocPtr doc, xmlNodePtr node,  long int busnumber);

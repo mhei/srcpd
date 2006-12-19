@@ -122,6 +122,7 @@ int session_wait(long int busnumber, unsigned int timeout, int *result)
     DBG(busnumber, DBG_DEBUG, "SESSION start wait2 for bus %d", busnumber);
     return rc;
 }
+
 int session_endwait(long int busnumber, int returnvalue)
 {
     DBG(busnumber, DBG_DEBUG, "SESSION end wait1 for bus %d", busnumber);
