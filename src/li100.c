@@ -272,6 +272,7 @@ long int init_bus_LI100_SERIAL( long int busnumber )
   __li100->extern_engine_ctr = 0;
   for ( i = 0; i < 100; i++ )
     __li100->extern_engine[ i ] = -1;
+  __li100->pgm_mode = 0;
 
   return status;
 }
@@ -347,7 +348,7 @@ void *thr_sendrec_LI100_SERIAL( void *v )
       status = send_command_LI100_SERIAL( busnumber, byte2send );
 #endif
 
-      if ( status == 0 )                        // war alles OK ?
+      if ( status == 0 )                                    // war alles OK ?
         busses[ busnumber ].power_changed = 0;
     }
 
@@ -1220,14 +1221,20 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
         case INIT:
           break;
         case TERM:
+          DBG( busnumber, DBG_DEBUG,
+               "on bus %i pgm_mode is %i", busnumber, __li100->pgm_mode );
+
+          if ( __li100->pgm_mode == 1 )
+          {
 #ifdef LI100_USB
 
-          term_pgm_LI100_USB( busnumber );
+            term_pgm_LI100_USB( busnumber );
 #else
 
-          term_pgm_LI100_SERIAL( busnumber );
+            term_pgm_LI100_SERIAL( busnumber );
 #endif
 
+          }
           break;
       }
     }
@@ -1315,12 +1322,12 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
     str[ 19 ] = 0x00;             // control-byte for xor
     ctr = str[ 0 ] & 0x0f;        // generate length of command
     ctr++;
-    for ( i = 0; i < ctr; i++ )                      // send command
+    for ( i = 0; i < ctr; i++ )                                  // send command
     {
       str[ 19 ] ^= str[ i ];
       writeByte( busnumber, str[ i ], 0 );
     }
-    writeByte( busnumber, str[ 19 ], 250 ); // send X-Or-Byte
+    writeByte( busnumber, str[ 19 ], 0 ); // send X-Or-Byte
 
 #ifdef LI100_USB
 
@@ -1342,10 +1349,12 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
     int status;
     int i, ctr;
     int tmp_addr;
+    int message_processed;
     unsigned char cXor;
     struct _GLSTATE gltmp, glakt;
     struct _GASTATE gatmp /*, gaakt*/;
 
+    message_processed = 0;
     status = -1;                // wait for answer
     while ( status == -1 )
     {
@@ -1360,7 +1369,7 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
 
     ctr = str[ 0 ] & 0x0f;         // generate length of answer
     ctr += 2;
-    for ( i = 1; i < ctr; i++ )                       // read answer
+    for ( i = 1; i < ctr; i++ )                                   // read answer
     {
       readByte( busnumber, 1, &str[ i ] );
     }
@@ -1370,27 +1379,19 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
     {
       cXor ^= str[ i ];
     }
-    if ( cXor != 0x00 )                               // must be 0x00
+    if ( cXor != 0x00 )                                           // must be 0x00
       status = -1;            // error
-    //9216 PRINT #2, SEND$; : IST$ = "--": GOSUB 9000         'senden
-    //9218 '
-    //9220 IF IST$ = "OK" THEN RETURN                         'alles klar
-    //9222 IF IST$ = "TA" THEN GOSUB 9240                     'fehler timeout
-    //9224 IF IST$ = "PC" THEN GOSUB 9250                     'fehler PC -> LI
-    //9226 IF IST$ = "LZ" THEN GOSUB 9260                     'fehler LI -> LZ
-    //9228 IF IST$ = "??" THEN GOSUB 9270                     'befehl unbekannt
-    //9230 IF IST$ = "KA" THEN GOSUB 9280                     'keine antwort
-    //9232 RETURN
 
-    if ( str[ 0 ] == 0x02 )                             // version-number of interface
+    if ( str[ 0 ] == 0x02 )                                       // version-number of interface
     {
       __li100->version_interface =
         ( ( str[ 1 ] & 0xf0 ) << 4 ) + ( str[ 1 ] & 0x0f );
       __li100->code_interface = ( int ) str[ 2 ];
+      message_processed = 1;
     }
 
     // version-number of zentrale
-    else if ( ( str[ 0 ] == 0x62 ) || ( str[ 0 ] == 0x63 ) )
+    if ( ( str[ 0 ] == 0x62 ) || ( str[ 0 ] == 0x63 ) )
     {
       if ( str[ 1 ] == 0x21 )
       {
@@ -1412,12 +1413,13 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
             __li100->number_ga = 256;
         }
 #endif
+        message_processed = 1;
 
       }
     }
 
     // power on/off
-    else if ( str[ 0 ] == 0x61 )
+    if ( str[ 0 ] == 0x61 )
     {
       // power on
       if ( str[ 1 ] == 0x01 )
@@ -1434,26 +1436,54 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
           queueInfoMessage( msg );
           __li100->emergency_on_LI100 = 0;
         }
-        // power off
-        if ( str[ 1 ] == 0x00 )
+        else if ( __li100->pgm_mode == 1 )
         {
-          DBG( busnumber, DBG_DEBUG,
-               "on bus %i no power detected; old-state is %i",
-               busnumber, getPower( busnumber ) );
-          if ( ( __li100->emergency_on_LI100 == 0 )
-               && ( getPower( busnumber ) ) )
-          {
-            char msg[ 500 ];
-            setPower( busnumber, 0, "Emergency Stop" );
-            infoPower( busnumber, msg );
-            queueInfoMessage( msg );
-            __li100->emergency_on_LI100 = 1;
-          }
+          char msg[ 500 ];
+          session_endwait( busnumber, -1 );
+          setPower( busnumber, 1, "Program mode end" );
+          infoPower( busnumber, msg );
+          queueInfoMessage( msg );
+          __li100->pgm_mode = 0;
         }
+        message_processed = 1;
+      }
+      // power off
+      if ( str[ 1 ] == 0x00 )
+      {
+        DBG( busnumber, DBG_DEBUG,
+             "on bus %i no power detected; old-state is %i",
+             busnumber, getPower( busnumber ) );
+        if ( ( __li100->emergency_on_LI100 == 0 )
+             && ( getPower( busnumber ) ) )
+        {
+          char msg[ 500 ];
+          setPower( busnumber, 0, "Emergency Stop" );
+          infoPower( busnumber, msg );
+          queueInfoMessage( msg );
+          __li100->emergency_on_LI100 = 1;
+        }
+        message_processed = 1;
+      }
+      // program mode on
+      if ( str[ 1 ] == 0x02 )
+      {
+        if ( __li100->pgm_mode == 0 )
+        {
+          __li100->pgm_mode = 1;
+          DBG( busnumber, DBG_DEBUG,
+               "on bus %i program mode was activated",
+               busnumber );
+          char msg[ 500 ];
+          setPower( busnumber, -1, "Program mode start" );
+          infoPower( busnumber, msg );
+          queueInfoMessage( msg );
+        }
+        message_processed = 1;
       }
     }
 
-    else if ( ( str[ 0 ] == 0x83 ) || ( str[ 0 ] == 0xa3 ) )
+
+    if ( ( str[ 0 ] == 0x83 ) || ( str[ 0 ] == 0xa3 ) )
     {
       if ( str[ 0 ] & 0x20 )
         add_extern_engine( busnumber, str[ 1 ] );
@@ -1481,25 +1511,28 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
            ( glakt.direction != gltmp.direction ) ||
            ( glakt.funcs != gltmp.funcs ) )
         setGL( busnumber, gltmp.id, gltmp );
+      message_processed = 1;
     }
 
-    else if ( str[ 0 ] == 0xe3 )
+    if ( str[ 0 ] == 0xe3 )
     {
       if ( ( str[ 1 ] & 0x30 ) == 0x30 )
       {
         __li100->get_addr = 256 * ( int ) str[ 2 ];
         __li100->get_addr += ( int ) str[ 3 ];
+        message_processed = 1;
       }
       if ( str[ 1 ] == 0x40 )
       {
         tmp_addr = str[ 3 ];
         tmp_addr |= str[ 2 ] << 8;
         add_extern_engine( busnumber, tmp_addr );
+        message_processed = 1;
       }
     }
 
     // information about an engine (single traction)
-    else if ( str[ 0 ] == 0xe4 )
+    if ( str[ 0 ] == 0xe4 )
     {
       gltmp.id = __li100->last_value & 0x3fff;
       //is engine alway allocated by an external device?
@@ -1551,10 +1584,11 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
            ( glakt.direction != gltmp.direction ) ||
            ( glakt.funcs != gltmp.funcs ) )
         setGL( busnumber, gltmp.id, gltmp );
+      message_processed = 1;
     }
 
     // information about feedback
-    else if ( ( str[ 0 ] & 0xf0 ) == 0x40 )
+    if ( ( str[ 0 ] & 0xf0 ) == 0x40 )
     {
       ctr = str[ 0 ] & 0xf;
       ctr += 2;
@@ -1562,8 +1596,8 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
       {
         switch ( str[ i + 1 ] & 0x60 )
         {
-          case 0x00:                             // switch-decoder without feedback
-          case 0x20:                             // switch-decoder with feedback
+          case 0x00:                                         // switch-decoder without feedback
+          case 0x20:                                         // switch-decoder with feedback
             gatmp.id = str[ i ];
             gatmp.id <<= 2;
             if ( str[ i + 1 ] & 0x20 )
@@ -1596,45 +1630,50 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
               setGA( busnumber, gatmp.id, gatmp );
             }
             break;
-          case 0x40:                             // feedback-decoder
+          case 0x40:                                         // feedback-decoder
             setFBmodul( busnumber,
                         ( str[ i ] * 2 ) + ( ( str[ i + 1 ] & 0x20 ) ? 1 : 0 ),
                         str[ i + 1 ] & 0x0f );
             break;
         }
       }
+      message_processed = 1;
     }
 
     // answer of programming
-    else if ( ( str[ 0 ] == 0x63 ) && ( ( str[ 1 ] & 0xf0 ) == 0x10 ) )
+    if ( ( str[ 0 ] == 0x63 ) && ( ( str[ 1 ] & 0xf0 ) == 0x10 ) )
     {
       if ( __li100->last_type != -1 )
       {
+        session_endwait( busnumber, ( int ) str[ 3 ] );
         setSM( busnumber, __li100->last_type, -1,
                __li100->last_typeaddr, __li100->last_bit, ( int ) str[ 3 ],
                0 );
         __li100->last_type = -1;
       }
+      message_processed = 1;
     }
+
     if ( ( str[ 0 ] == 0x61 ) && ( str[ 1 ] == 0x13 ) )
     {
       if ( __li100->last_type != -1 )
       {
+        session_endwait( busnumber, -1 );
         setSM( busnumber, __li100->last_type, -1,
                __li100->last_typeaddr, __li100->last_bit,
                __li100->last_value, -1 );
         __li100->last_type = -1;
       }
+      message_processed = 1;
     }
 
     /* at last catch all unknown command keys and show a warning message */
-    else {
-        /*
-        DBG(busnumber, DBG_WARN,
-                "Unknown command key received: %d", str[0]);
-                */
+    if ( message_processed == 0 )
+    {
+      DBG( busnumber, DBG_WARN,
+           "Unknown command key received: 0x%02x 0x%02x", str[ 0 ], str[ 1 ] );
     }
-    
+
     return status;
   }
 
