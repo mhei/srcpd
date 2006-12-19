@@ -39,6 +39,7 @@ email                : frank.schmischke@t-online.de
 #include "srcp-power.h"
 #include "srcp-info.h"
 #include "srcp-error.h"
+#include "srcp-session.h"
 
 #define __li100 ((LI100_DATA*)busses[busnumber].driverdata)
 
