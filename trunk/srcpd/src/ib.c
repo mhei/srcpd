@@ -43,6 +43,7 @@ email                : frank.schmischke@t-online.de
 #include "srcp-power.h"
 #include "srcp-info.h"
 #include "srcp-error.h"
+#include "srcp-session.h"
 #include "ttycygwin.h"
 
 #define __ib ((IB_DATA*)busses[busnumber].driverdata)
