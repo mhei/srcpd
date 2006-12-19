@@ -1430,19 +1430,13 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
         if ( ( __li100->emergency_on_LI100 == 1 )
              || ( !getPower( busnumber ) ) )
         {
-          char msg[ 500 ];
           setPower( busnumber, 1, "No Emergency Stop" );
-          infoPower( busnumber, msg );
-          queueInfoMessage( msg );
           __li100->emergency_on_LI100 = 0;
         }
         else if ( __li100->pgm_mode == 1 )
         {
-          char msg[ 500 ];
           session_endwait( busnumber, -1 );
           setPower( busnumber, 1, "Program mode end" );
-          infoPower( busnumber, msg );
-          queueInfoMessage( msg );
           __li100->pgm_mode = 0;
         }
         message_processed = 1;
@@ -1456,10 +1450,7 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
         if ( ( __li100->emergency_on_LI100 == 0 )
              && ( getPower( busnumber ) ) )
         {
-          char msg[ 500 ];
           setPower( busnumber, 0, "Emergency Stop" );
-          infoPower( busnumber, msg );
-          queueInfoMessage( msg );
           __li100->emergency_on_LI100 = 1;
         }
         message_processed = 1;
@@ -1473,10 +1464,7 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
           DBG( busnumber, DBG_DEBUG,
                "on bus %i program mode was activated",
                busnumber );
-          char msg[ 500 ];
           setPower( busnumber, -1, "Program mode start" );
-          infoPower( busnumber, msg );
-          queueInfoMessage( msg );
         }
         message_processed = 1;
       }
