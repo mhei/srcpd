@@ -320,8 +320,8 @@ int describeGL( long int busnumber, int addr, char *msg )
              gl[ busnumber ].glstate[ addr ].inittime.tv_usec / 1000,
              busnumber, addr, gl[ busnumber ].glstate[ addr ].protocol,
              gl[ busnumber ].glstate[ addr ].protocolversion,
-             gl[ busnumber ].glstate[ addr ].n_func,
-             gl[ busnumber ].glstate[ addr ].n_fs );
+             gl[ busnumber ].glstate[ addr ].n_fs,
+             gl[ busnumber ].glstate[ addr ].n_func );
   }
   else
   {
