@@ -792,6 +792,7 @@ void set_SerialLine(long int busnumber, int line, int mode)
 void set_lines_on(long int busnumber)
 {
     set_SerialLine(busnumber, SL_DTR, ON);
+    tcflow(busses[busnumber].fd, TCOON);
 }
 
 void set_lines_off(long int busnumber)
