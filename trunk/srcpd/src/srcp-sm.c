@@ -224,8 +224,6 @@ int setSM( long int busnumber, int type, int addr, int typeaddr, int bit,
   int number_sm = get_number_sm( busnumber );
   DBG( busnumber, DBG_DEBUG, "in setSM with number_sm=%i", number_sm );
   struct timeval tv;
-  if ( number_sm == 0 )
-    return SRCP_UNSUPPORTEDDEVICEGROUP;
 
   DBG( busnumber, DBG_DEBUG,
        "CV: %d         BIT: %d         VALUE: 0x%02x", typeaddr, bit,
