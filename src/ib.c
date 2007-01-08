@@ -73,7 +73,6 @@ int readConfig_IB( xmlDocPtr doc, xmlNodePtr node, long int busnumber )
   busses[ busnumber ].driverdata = malloc( sizeof( struct _IB_DATA ) );
   busses[ busnumber ].flags |= FB_16_PORTS;
   busses[ busnumber ].baudrate = B38400;
-  busses[ busnumber ].numberOfSM = 0;
 
   strcpy( busses[ busnumber ].description,
           "GA GL FB SM POWER LOCK DESCRIPTION" );
@@ -112,16 +111,6 @@ int readConfig_IB( xmlDocPtr doc, xmlNodePtr node, long int busnumber )
       if ( txt != NULL )
       {
         __ib->number_ga = atoi( ( char * ) txt );
-        xmlFree( txt );
-      }
-    }
-
-    else if ( xmlStrcmp( child->name, BAD_CAST "number_sm" ) == 0 )
-    {
-      txt = xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
-      if ( txt != NULL )
-      {
-        busses[ busnumber ].numberOfSM = atoi( ( char * ) txt );
         xmlFree( txt );
       }
     }

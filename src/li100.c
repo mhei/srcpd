@@ -63,7 +63,6 @@ int readConfig_LI100_SERIAL( xmlDocPtr doc, xmlNodePtr node, long int busnumber 
   busses[ busnumber ].init_ga_func = &init_ga_LI100;
   busses[ busnumber ].driverdata = malloc( sizeof( struct _LI100_DATA ) );
   busses[ busnumber ].flags |= FB_4_PORTS;
-  busses[ busnumber ].numberOfSM = 0;
 
   strcpy( busses[ busnumber ].description,
           "GA GL FB SM POWER LOCK DESCRIPTION" );
@@ -110,16 +109,6 @@ int readConfig_LI100_SERIAL( xmlDocPtr doc, xmlNodePtr node, long int busnumber 
       if ( txt != NULL )
       {
         __li100->number_ga = atoi( ( char * ) txt );
-        xmlFree( txt );
-      }
-    }
-
-    else if ( xmlStrcmp( child->name, BAD_CAST "number_sm" ) == 0 )
-    {
-      txt = xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
-      if ( txt != NULL )
-      {
-        busses[ busnumber ].numberOfSM = atoi( ( char * ) txt );
         xmlFree( txt );
       }
     }
@@ -1407,8 +1396,6 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
         {
           if ( __li100->number_gl > 99 )
             __li100->number_gl = 99;
-          if ( busses[ busnumber ].numberOfSM > 99 )
-            busses[ busnumber ].numberOfSM = 99;
           if ( __li100->number_ga > 256 )
             __li100->number_ga = 256;
         }
