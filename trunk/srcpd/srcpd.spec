@@ -1,7 +1,7 @@
 Summary: srcpd is a SRCP server daemon to control digital model railroads
 Summary(de): srcpd ist ein SRCP-Server zur Steuerung von digitalen Modelleisenbahnen
 Name: srcpd
-Version: 2.0.10-cvs
+Version: 2.0.11
 Release: 1%{?dist}
 Source0: %{name}-%{version}.tar.bz2
 License: GPL
