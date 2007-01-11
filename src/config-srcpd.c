@@ -83,12 +83,30 @@ static long int register_bus(long int busnumber, xmlDocPtr doc,
 
     /* some default values */
     busses[current_bus].debuglevel = 1;
+    busses[current_bus].flags = 0;
+
+    /* Functionpointers to NULL */
+    busses[current_bus].thr_func = NULL;
+    busses[current_bus].thr_reader = NULL;
+    busses[current_bus].thr_timer = NULL;
+    busses[current_bus].init_func = NULL;
+    busses[current_bus].term_func = NULL;
+    busses[current_bus].init_gl_func = NULL;
+    busses[current_bus].init_ga_func = NULL;
+    busses[current_bus].init_fb_func = NULL;
+
+    /* Communicationport to default values */
     free(busses[current_bus].device);
     busses[current_bus].device = malloc(strlen("/dev/null") + 1);
     /*TODO: what happens if malloc returns NULL? */
     strcpy(busses[current_bus].device, "/dev/null");
-    busses[current_bus].flags = 0;
+    busses[current_bus].fd = -1;
     busses[current_bus].baudrate = B2400;
+
+
+    /* Definition of thread synchronisation  */
+    pthread_mutex_init(&busses[current_bus].transmit_mutex, NULL);
+    pthread_cond_init(&busses[current_bus].transmit_cond, NULL);
 
     xmlNodePtr child = node->children;
     xmlChar *txt = NULL;
@@ -307,6 +325,32 @@ int readConfig(char *filename)
         exit(1);
     }
     return rc;
+}
+
+/**
+ * suspendThread: Holds the thread until a resume command is given.
+        The thread waits in this routines
+ * @param busnumber
+       long integer given the bus wich thread has to be stoped.
+ */
+void suspendThread(long int busnumber)
+{
+    /* Lock thread till new data to process arrives */
+    pthread_mutex_lock(&busses[busnumber].transmit_mutex);
+    pthread_cond_wait(&busses[busnumber].transmit_cond, &busses[busnumber].transmit_mutex);     /* mutex released.       */
+}
+
+/**
+ * resumeThread: continue a stoppped thread
+ * @param busnumber
+       long integer given the bus wich thread has to be stoped.
+ */
+void resumeThread(long int busnumber)
+{
+    /* Let thread process a feedback */
+    pthread_mutex_lock(&busses[busnumber].transmit_mutex);
+    pthread_cond_signal(&busses[busnumber].transmit_cond);
+    pthread_mutex_unlock(&busses[busnumber].transmit_mutex);
 }
 
 /**
