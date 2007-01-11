@@ -87,18 +87,27 @@ typedef struct _BUS
   int fd;                                    //! file descriptor of device
 
   pthread_t pid;                             //! PID of the thread
+  pthread_t pidreader;                       //! PID of the reader thread
+  pthread_t pidtimer;                        //! PID of the timer thread
   void *thr_func;                            //! addr of the thread function
+  void *thr_reader;                          //! addr of the reader thread
+  void *thr_timer;                           //! addr of the timer thread
+  /* Definition of thread synchronisation                                              */
+  pthread_mutex_t transmit_mutex;
+  pthread_cond_t transmit_cond;
+
   long int (*init_func)(long int);           //! addr of init function
   long int (*term_func)(long int);           //! addr of init function
   long int (*init_gl_func) ( struct _GLSTATE *);  //! called to check default init
   long int (*init_ga_func) ( struct _GASTATE *);  //! called to check default init
   long int (*init_fb_func) (long int busnumber, int addr, const char protocolb, int index);  //! called to check default init
+
   int watchdog;                              //! used to monitor the thread
+  /* Power management on the track */
   int power_state;
   int power_changed;
   struct timeval power_change_time;
   char power_msg[100];
-
   /* driver specific */
   void *driverdata;       //! pointer to driverspecific data
   int flags;              //! Watchdog flag
@@ -108,6 +117,9 @@ extern struct _BUS busses[];
 extern int num_busses;
 
 int readConfig(char *filename);
+
+void suspendThread(long int busnumber);
+void resumeThread(long int busnumber);
 
 #define DG_SESSION 1
 #define DG_TIME 2
