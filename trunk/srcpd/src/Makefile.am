@@ -5,7 +5,7 @@
 sbin_PROGRAMS = srcpd
 
 srcpd_SOURCES = config-srcpd.c ddl-s88.c ddl.c ddl_maerklin.c ddl_nmra.c \
-	hsi-88.c i2c-dev.c ib.c io.c loconet.c loopback.c m605x.c netserver.c \
+	hsi-88.c i2c-dev.c ib.c io.c portio.c loconet.c loopback.c m605x.c netserver.c \
 	selectrix.c srcp-descr.c srcp-error.c srcp-fb.c srcp-ga.c srcp-gl.c srcp-info.c \
 	srcp-lock.c srcp-power.c srcp-session.c srcp-sm.c srcp-srv.c srcp-time.c srcpd.c \
 	threads.c ttycygwin.c zimo.c li100-main.c
