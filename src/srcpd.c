@@ -204,15 +204,36 @@ int main(int argc, char **argv)
     for (i = 1; i <= num_busses; i++) {
         syslog(LOG_INFO, "going to start Interface Thread  #%ld type(%d)",
                i, busses[i].type);
-        error =
-            pthread_create(&ttid_pid, NULL, busses[i].thr_func,
-                           (void *) i);
-        if (error) {
-            syslog(LOG_INFO, "cannot start Interface Thread #%ld", i);
-            exit(1);
+        if (busses[i].thr_reader != NULL) {
+               error = pthread_create(&ttid_pid, NULL, busses[i].thr_reader,
+                                        (void *) i);
+               if (error) {
+                    syslog(LOG_INFO, "cannot start Reader Thread #%ld", i);
+                    exit(1);
+               }
+               pthread_detach(ttid_pid);
+               busses[i].pidreader = ttid_pid;
         }
-        pthread_detach(ttid_pid);
-        busses[i].pid = ttid_pid;
+        if (busses[i].thr_timer != NULL) {
+               error = pthread_create(&ttid_pid, NULL, busses[i].thr_timer,
+                                        (void *) i);
+               if (error) {
+                    syslog(LOG_INFO, "cannot start Timer Thread #%ld", i);
+                    exit(1);
+               }
+               pthread_detach(ttid_pid);
+               busses[i].pidtimer = ttid_pid;
+        }
+        if (busses[i].thr_func != NULL) {
+               error = pthread_create(&ttid_pid, NULL, busses[i].thr_func,
+                                        (void *) i);
+               if (error) {
+                    syslog(LOG_INFO, "cannot start Interface Thread #%ld", i);
+                    exit(1);
+               }
+               pthread_detach(ttid_pid);
+               busses[i].pid = ttid_pid;
+        }
         syslog(LOG_INFO,
                "Interface Thread #%ld started successfully type(%d): pid %ld",
                i, busses[i].type, (long) (busses[i].pid));
@@ -248,10 +269,12 @@ int main(int argc, char **argv)
             /* LOCKs aufraeumen */
             unlock_gl_bytime();
             unlock_ga_bytime();
-            
+
             /* Jetzt Wachhund spielen, falls gewnscht */
             for (i = 1; i <= num_busses; i++) {
                 if (busses[i].watchdog == 0
+                    && !queue_GL_isempty(i)
+                    && !queue_GA_isempty(i)
                     && (busses[i].flags & USE_WATCHDOG)) {
                     syslog(LOG_INFO, "Oops: Interface Thread #%ld "
                             "hangs, restarting it: (old pid: %ld, %d)",
@@ -278,12 +301,12 @@ int main(int argc, char **argv)
     /* hierher kommen wir nur nach einem break */
     pthread_cancel(ttid_cmd);
     pthread_cancel(ttid_clock);
-    
+
     /* und jetzt die ganzen Busse */
     for (i = 1; i <= num_busses; i++) {
         pthread_cancel(busses[i].pid);
     }
-    
+ 
     DeletePIDFile();
     // der Server als letzter
     for (i = num_busses; i >= 0; i--) {
