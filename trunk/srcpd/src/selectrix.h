@@ -25,8 +25,9 @@
 #define SXprog2     105   /* Program parameter 2 (CC-2000) */
 #define SXporg1     104   /* Program parameter 1 (CC-2000) */
 
-/* Central is a CC-2000 */
+/* Central is a special */
 #define CC2000_MODE   0x0001    /* CC2000 has restricted bus space and can program decoders */
+#define Rautenhause_MODE   0x0002    /* Rautenhaus has special feedback support */
 
 /* Array with the size of an SX-bus */
 typedef int SX_BUS[SXmax];
@@ -40,6 +41,9 @@ typedef struct _SELECTRIX_DATA {
     int flags;
     SX_BUS fb_adresses;
     SX_BUS bus_data;
+    /* Counter for adres of feedback */
+    int startFB;
+    int currentFB;                             //! holds current number of the feedback
 } SELECTRIX_DATA;
 
 /* Initialisation of the structure */
@@ -52,6 +56,8 @@ long int term_bus_Selectrix(long int bus);
 long int init_gl_Selectrix(struct _GLSTATE *gl);
 long int init_ga_Selectrix(struct _GASTATE *ga);
 long int init_fb_Selectrix(long int busnumber, int addr, const char protocol, int index);
-void *thr_sendrec_Selectrix(void *);
+void *thr_commandSelectrix(void *);
+void *thr_processSelectrix(void *);
+void *thr_feedbackSelectrix(void *);
 
 #endif

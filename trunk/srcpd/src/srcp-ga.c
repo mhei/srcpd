@@ -72,7 +72,8 @@ int queueGA(long int busnumber, int addr, int port, int action,
         if (in[busnumber] == QUEUELEN)
             in[busnumber] = 0;
 
-        pthread_mutex_unlock(&queue_mutex[busnumber]);
+        /* Restart thread to send GL command */
+        resumeThread(busnumber);
     }
     else {
         return SRCP_WRONGVALUE;
@@ -210,7 +211,7 @@ int initGA(long int busnumber, int addr, const char protocol)
         ga[busnumber].gastate[addr].tv[0].tv_sec = 0;
         ga[busnumber].gastate[addr].tv[1].tv_sec = 0;
 
-        if (busses[busnumber].init_ga_func)
+        if (busses[busnumber].init_ga_func != NULL)
             rc = (*busses[busnumber].init_ga_func) (&ga[busnumber].
                                                     gastate[addr]);
         if (rc == SRCP_OK) {

@@ -275,7 +275,7 @@ int initFB(long int busnumber, int adres, const char protocol, int index)
     int number_fb = get_number_fb(busnumber);
     DBG(busnumber, DBG_DEBUG, "init FB: %d %c %d", adres, protocol, index);
     if ((adres > 0) && (adres <= number_fb)) {
-        if (busses[busnumber].init_fb_func)
+        if (busses[busnumber].init_fb_func != NULL)
             rc = (*busses[busnumber].init_fb_func) (busnumber, adres,
                                                     protocol, index);
     }
