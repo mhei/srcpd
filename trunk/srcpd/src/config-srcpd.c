@@ -28,7 +28,7 @@
 #include "loconet.h"
 
 /* Willkommensmeldung */
-const char *WELCOME_MSG = "srcpd V" VERSION "; SRCP 0.8.2\n";
+const char *WELCOME_MSG = "srcpd V" VERSION "; SRCP 0.8.3\n";
 
 struct _BUS busses[MAX_BUSSES];
 int num_busses;
