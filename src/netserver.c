@@ -127,7 +127,7 @@ void *thr_doClient(void *v)
                 }
 
                 if (nelem == 2 && strncasecmp(setcmd, "PROTOCOL", 3) == 0) {
-                    if (strncasecmp(p, "SRCP 0.8.2", 10) == 0)
+                    if (strncasecmp(p, "SRCP 0.8", 8) == 0)
                         rc = SRCP_OK_PROTOCOL;
                     else
                         rc = SRCP_HS_WRONGPROTOCOL;
