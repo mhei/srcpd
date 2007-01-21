@@ -33,6 +33,11 @@
 void hup_handler(int);
 void term_handler(int);
 void install_signal_handler(void);
+void *processSignal(int);
+
+/* structures to determine which port needs to be served */
+fd_set rfds;
+int maxfd;
 
 extern int server_shutdown_state;
 extern int server_reset_state;
@@ -97,6 +102,7 @@ int main(int argc, char **argv)
     char c, conffile[MAXPATHLEN];
     pthread_t ttid_cmd, ttid_clock, ttid_pid;
     struct _THREADS cmds;
+    struct sigaction saio;
 
     install_signal_handler();
 
@@ -165,10 +171,19 @@ int main(int argc, char **argv)
 
     /* Now we have to initialize all busses */
     /* this function should open the device */
+    maxfd = 0;
+    FD_ZERO(&rfds);
     for (i = 0; i <= num_busses; i++) {
         if (busses[i].init_func) {
             if ((*busses[i].init_func) (i) != 0)
                 exit(1);        // error while initialize
+            if (busses[i].fd != -1) {
+                FD_SET(busses[i].fd, &rfds);
+                maxfd = (maxfd > busses[i].fd ? maxfd : busses[i].fd);
+                /* Configure port to throw read signal */
+                fcntl(busses[i].fd, F_SETOWN, getpid());
+                fcntl(busses[i].fd, F_SETFL, FASYNC);
+            }
         }
     }
 
@@ -204,16 +219,6 @@ int main(int argc, char **argv)
     for (i = 1; i <= num_busses; i++) {
         syslog(LOG_INFO, "going to start Interface Thread  #%ld type(%d)",
                i, busses[i].type);
-        if (busses[i].thr_reader != NULL) {
-               error = pthread_create(&ttid_pid, NULL, busses[i].thr_reader,
-                                        (void *) i);
-               if (error) {
-                    syslog(LOG_INFO, "cannot start Reader Thread #%ld", i);
-                    exit(1);
-               }
-               pthread_detach(ttid_pid);
-               busses[i].pidreader = ttid_pid;
-        }
         if (busses[i].thr_timer != NULL) {
                error = pthread_create(&ttid_pid, NULL, busses[i].thr_timer,
                                         (void *) i);
@@ -253,6 +258,14 @@ int main(int argc, char **argv)
     pthread_detach(ttid_cmd);
 
     syslog(LOG_INFO, "All Threads started");
+    /* Setup serial interrupt processing */
+    saio.sa_restorer = NULL;
+    saio.sa_flags = 0;
+    saio.sa_handler = &processSignal;
+    sigemptyset(&saio.sa_mask);
+    /* Apply interrupt handling for this proces */
+    sigaction(SIGIO, &saio, NULL);
+
     server_shutdown_state = 0;
     sleep_ctr = 10;
     /* And now: Wait for _real_ tasks: shutdown, reset, watch for
@@ -316,3 +329,33 @@ int main(int argc, char **argv)
     syslog(LOG_INFO, "bye bye... ;=)");
     exit(0);
 }
+
+
+/** processSignal
+ * Signal handler
+ */
+void *processSignal(int status)
+{
+    struct timeval tv;
+    int retval;
+    long int i;
+
+    /* Don't wait */
+    tv.tv_sec = 0;
+    tv.tv_usec = 0;
+    /* Search for the bus that needs to be servered */
+    retval = select(maxfd + 1, &rfds, NULL, NULL, &tv);
+    if (retval < 0) {
+        /* Error from select */
+    }
+    else {
+        for (i = 1; i <= num_busses; i++) {
+            if ((busses[i].fd != -1) && (FD_ISSET(busses[i].fd, &rfds))) {
+                if (busses[i].sig_reader != NULL) {
+                   (*busses[i].sig_reader) (i);
+                }
+            }
+        }
+    }
+}
+
