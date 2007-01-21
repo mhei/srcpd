@@ -72,6 +72,7 @@ int queueGA(long int busnumber, int addr, int port, int action,
         if (in[busnumber] == QUEUELEN)
             in[busnumber] = 0;
 
+        pthread_mutex_unlock(&queue_mutex[busnumber]);
         /* Restart thread to send GL command */
         resumeThread(busnumber);
     }
