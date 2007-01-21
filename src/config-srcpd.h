@@ -87,11 +87,10 @@ typedef struct _BUS
   int fd;                                    //! file descriptor of device
 
   pthread_t pid;                             //! PID of the thread
-  pthread_t pidreader;                       //! PID of the reader thread
   pthread_t pidtimer;                        //! PID of the timer thread
   void *thr_func;                            //! addr of the thread function
-  void *thr_reader;                          //! addr of the reader thread
   void *thr_timer;                           //! addr of the timer thread
+  void *sig_reader;                          //! addr of the reader (signal based)
   /* Definition of thread synchronisation                                              */
   pthread_mutex_t transmit_mutex;
   pthread_cond_t transmit_cond;
