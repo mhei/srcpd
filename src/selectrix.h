@@ -57,7 +57,7 @@ long int init_gl_Selectrix(struct _GLSTATE *gl);
 long int init_ga_Selectrix(struct _GASTATE *ga);
 long int init_fb_Selectrix(long int busnumber, int addr, const char protocol, int index);
 void *thr_commandSelectrix(void *);
-void *thr_processSelectrix(void *);
 void *thr_feedbackSelectrix(void *);
+void *sig_processSelectrix(long int busnumber);
 
 #endif
