@@ -155,6 +155,8 @@ int queueGL( long int busnumber, int addr, int dir, int speed, int maxspeed,
       in[ busnumber ] = 0;
 
     pthread_mutex_unlock( &queue_mutex[ busnumber ] );
+    /* Restart thread to send GL command */
+    resumeThread(busnumber);
     return SRCP_OK;
   }
   else
