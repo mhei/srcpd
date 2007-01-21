@@ -87,8 +87,8 @@ static long int register_bus(long int busnumber, xmlDocPtr doc,
 
     /* Functionpointers to NULL */
     busses[current_bus].thr_func = NULL;
-    busses[current_bus].thr_reader = NULL;
     busses[current_bus].thr_timer = NULL;
+    busses[current_bus].sig_reader = NULL;
     busses[current_bus].init_func = NULL;
     busses[current_bus].term_func = NULL;
     busses[current_bus].init_gl_func = NULL;
