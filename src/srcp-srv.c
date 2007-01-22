@@ -30,7 +30,7 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
     /*TODO: what happens if malloc returns NULL?*/
 
     // initialize _SERVER_DATA with defaults
-    __srv->TCPPORT = 12345;
+    __srv->TCPPORT = 4303;
     strcpy(__srv->PIDFILE, "/var/run/srcpd.pid");
     __srv->groupname = NULL;
     __srv->username = NULL;
