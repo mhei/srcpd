@@ -90,7 +90,7 @@ typedef struct _BUS
   pthread_t pidtimer;                        //! PID of the timer thread
   void *thr_func;                            //! addr of the thread function
   void *thr_timer;                           //! addr of the timer thread
-  void (*sig_reader) (long int);             //! addr of the reader (signal based)
+  void (*sig_reader)(long int);              //! addr of the reader (signal based)
   /* Definition of thread synchronisation                                              */
   pthread_mutex_t transmit_mutex;
   pthread_cond_t transmit_cond;
