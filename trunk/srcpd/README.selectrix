@@ -117,7 +117,7 @@ Configuration file for SRCPD:
 <srcpd version="2.0">
   <bus number="0">
     <server>
-      <tcp-port>12345</tcp-port>
+      <tcp-port>4030</tcp-port>
       <pid-file>/var/run/srcpd.pid</pid-file>
       <username>nobody</username>
       <groupname>nogroup</groupname>
