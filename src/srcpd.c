@@ -92,6 +92,33 @@ void install_signal_handler()
     /* important, because write() on sockets should return errors */
 }
 
+/** processSignal
+ * Signal handler
+ */
+void *processSignal(int status)
+{
+    struct timeval tv;
+    int retval;
+    long int i;
+
+    /* Don't wait */
+    tv.tv_sec = 0;
+    tv.tv_usec = 0;
+    /* Search for the bus that needs to be servered */
+    retval = select(maxfd + 1, &rfds, NULL, NULL, &tv);
+    if (retval < 0) {
+        /* Error from select */
+    }
+    else {
+        for (i = 1; i <= num_busses; i++) {
+            if ((busses[i].fd != -1) && (FD_ISSET(busses[i].fd, &rfds))) {
+                if (busses[i].sig_reader != NULL) {
+                   (*busses[i].sig_reader) (i);
+                }
+            }
+        }
+    }
+}
 
 int main(int argc, char **argv)
 {
@@ -331,31 +358,4 @@ int main(int argc, char **argv)
 }
 
 
-/** processSignal
- * Signal handler
- */
-void *processSignal(int status)
-{
-    struct timeval tv;
-    int retval;
-    long int i;
-
-    /* Don't wait */
-    tv.tv_sec = 0;
-    tv.tv_usec = 0;
-    /* Search for the bus that needs to be servered */
-    retval = select(maxfd + 1, &rfds, NULL, NULL, &tv);
-    if (retval < 0) {
-        /* Error from select */
-    }
-    else {
-        for (i = 1; i <= num_busses; i++) {
-            if ((busses[i].fd != -1) && (FD_ISSET(busses[i].fd, &rfds))) {
-                if (busses[i].sig_reader != NULL) {
-                   (*busses[i].sig_reader) (i);
-                }
-            }
-        }
-    }
-}
 
