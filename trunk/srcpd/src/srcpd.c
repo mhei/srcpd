@@ -93,7 +93,7 @@ void install_signal_handler()
 }
 
 /** processSignal
- * Signal handler
+ * Signal handler for comport signal
  */
 void *processSignal(int status)
 {
