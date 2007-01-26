@@ -191,7 +191,7 @@ int main(int argc, char **argv)
             }
         }
     }
-    cmds.socket = ((SERVER_DATA *) busses[0].driverdata)->TCPPORT;
+    cmds.port = ((SERVER_DATA *) busses[0].driverdata)->TCPPORT;
     cmds.func = thr_doClient;
     openlog("srcpd", LOG_CONS, LOG_USER);
     syslog(LOG_INFO, "%s", WELCOME_MSG);

@@ -18,7 +18,7 @@
 #include <sys/param.h>
 
 typedef struct _SERVER_DATA {
-    int TCPPORT;
+    unsigned short int TCPPORT;
     char *listenip;
     char PIDFILE[MAXPATHLEN];
     char *username;

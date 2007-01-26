@@ -90,7 +90,7 @@ void *thr_handlePort(void *v)
 
         sin6.sin6_family = AF_INET6;    /* Address family is AF_INET6 */
 
-        sin6.sin6_port = htons(ti.socket);
+        sin6.sin6_port = htons(ti.port);
         sin6.sin6_addr = in6addr_any;   /* Specify any address */
         /* Addresses of IPv4 nodes would be specified
            as IPv4-mapped addresses */
@@ -111,7 +111,7 @@ void *thr_handlePort(void *v)
         /* Here would be the original IPv4 code as usual */
         memset(&sin, 0, sizeof(sin));
         sin.sin_family = AF_INET;       /* IPv4 address family */
-        sin.sin_port = htons(ti.socket);
+        sin.sin_port = htons(ti.port);
         sin.sin_addr.s_addr = INADDR_ANY;
 
         /* Create the socket */
