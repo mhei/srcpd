@@ -17,7 +17,7 @@ typedef struct _thr_param
 
 typedef struct _THREADS
 {
-  int socket;
+  unsigned short int port;
   void *func;
 } THREADS;
 
