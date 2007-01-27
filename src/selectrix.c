@@ -638,7 +638,7 @@ void *thr_feedbackSelectrix(void *v)
 /*******************************************************
 *     Command processing (Selectrix)
 ********************************************************/
-void *sig_processSelectrix(long int busnumber)
+void sig_processSelectrix(long int busnumber)
 {
 	int data, addr;
 
