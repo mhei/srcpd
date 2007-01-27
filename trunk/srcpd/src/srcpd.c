@@ -33,7 +33,6 @@
 void hup_handler(int);
 void term_handler(int);
 void install_signal_handler(void);
-void *processSignal(int);
 
 /* structures to determine which port needs to be served */
 fd_set rfds;
@@ -95,7 +94,7 @@ void install_signal_handler()
 /** processSignal
  * Signal handler for comport signal
  */
-void *processSignal(int status)
+void processSignal(int status)
 {
     struct timeval tv;
     int retval;

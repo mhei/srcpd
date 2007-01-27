@@ -1342,6 +1342,8 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
     unsigned char cXor;
     struct _GLSTATE gltmp, glakt;
     struct _GASTATE gatmp /*, gaakt*/;
+    gltmp.speed = 0;
+    gltmp.funcs = 0;
 
     message_processed = 0;
     status = -1;                // wait for answer

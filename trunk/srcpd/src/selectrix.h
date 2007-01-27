@@ -58,6 +58,6 @@ long int init_ga_Selectrix(struct _GASTATE *ga);
 long int init_fb_Selectrix(long int busnumber, int addr, const char protocol, int index);
 void *thr_commandSelectrix(void *);
 void *thr_feedbackSelectrix(void *);
-void *sig_processSelectrix(long int busnumber);
+void sig_processSelectrix(long int busnumber);
 
 #endif
