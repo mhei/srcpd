@@ -13,6 +13,8 @@
 #include "srcp-error.h"
 #include "srcp-info.h"
 
+#include <netdb.h>
+
 int server_reset_state;
 int server_shutdown_state;
 
@@ -20,6 +22,8 @@ int server_shutdown_state;
 
 int readconfig_server(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
 {
+    struct servent *serviceentry;
+    
     DBG(busnumber, DBG_INFO, "bus %d starting configuration child %s",
         busnumber, node->name);
     busses[0].type = SERVER_SERVER;
@@ -30,7 +34,12 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
     /*TODO: what happens if malloc returns NULL?*/
 
     // initialize _SERVER_DATA with defaults
-    __srv->TCPPORT = 4303;
+    serviceentry = getservbyname("srcp","tcp");
+    if(!serviceentry) {
+	__srv->TCPPORT = 4303;
+    } else {
+	__srv->TCPPORT = ntohs(serviceentry->s_port);
+    }
     strcpy(__srv->PIDFILE, "/var/run/srcpd.pid");
     __srv->groupname = NULL;
     __srv->username = NULL;
