@@ -29,7 +29,7 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
     busses[0].type = SERVER_SERVER;
     busses[0].init_func = &init_bus_server;
     busses[0].term_func = &term_bus_server;
-    strcpy(busses[0].description, "SESSION SERVER TIME");
+    strcpy(busses[0].description, "SESSION SERVER TIME GM");
     busses[0].driverdata = malloc(sizeof(struct _SERVER_DATA));
     /*TODO: what happens if malloc returns NULL?*/
 

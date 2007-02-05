@@ -28,7 +28,7 @@
 #include "loconet.h"
 
 /* Willkommensmeldung */
-const char *WELCOME_MSG = "srcpd V" VERSION "; SRCP 0.8.3\n";
+const char *WELCOME_MSG = "srcpd V" VERSION "; SRCP 0.8.3; SRCPOTHER 0.8.4-wip\n";
 
 struct _BUS busses[MAX_BUSSES];
 int num_busses;
@@ -46,6 +46,8 @@ int bus_has_devicegroup(long int bus, int dg)
             return strstr(busses[bus].description, "GA") != NULL;
         case DG_GL:
             return strstr(busses[bus].description, "GL") != NULL;
+        case DG_GM:
+            return strstr(busses[bus].description, "GM") != NULL;
         case DG_FB:
             return strstr(busses[bus].description, "FB") != NULL;
         case DG_SM:

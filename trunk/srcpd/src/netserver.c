@@ -23,12 +23,14 @@
 #include "srcp-time.h"
 #include "srcp-ga.h"
 #include "srcp-gl.h"
+#include "srcp-gm.h"
 #include "srcp-power.h"
 #include "srcp-sm.h"
 #include "srcp-srv.h"
 #include "srcp-session.h"
 #include "srcp-descr.h"
 #include "srcp-time.h"
+
 #include "srcp-info.h"
 #include "netserver.h"
 #include "threads.h"
@@ -228,6 +230,15 @@ static int handle_setcheck(int sessionid, long int bus, char *device,
             if (setorcheck == 1)
                 rc = setFB(bus, fbport, value);
         }
+    }
+
+    else if (bus_has_devicegroup(bus, DG_GM)
+        && strncasecmp(device, "GM", 2) == 0) {
+	
+        char  msg[MAXSRCPLINELEN];
+        memset(msg, 0, sizeof(msg));
+        sscanf(parameter, "%990c",  msg);
+        rc = setGM(bus, msg);
     }
 
     else if (bus_has_devicegroup(bus, DG_SM)

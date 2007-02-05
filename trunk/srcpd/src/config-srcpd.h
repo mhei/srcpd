@@ -130,6 +130,8 @@ void resumeThread(long int busnumber);
 #define DG_DESCRIPTION 8
 #define DG_SERVER 9
 #define DG_POWER 10
+#define DG_GM 11
+
 int bus_has_devicegroup(long int bus, int dg);
 
 #define DBG_NONE 0
