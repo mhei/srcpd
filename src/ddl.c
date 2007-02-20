@@ -219,11 +219,11 @@ int init_lineDDL(long int busnumber)
 
     int dev;
 
-    dev = open(busses[busnumber].device, O_WRONLY);     /* open comport                 */
+    dev = open(busses[busnumber].filename.path, O_WRONLY);     /* open comport                 */
     if (dev < 0) {
         DBG(busnumber, DBG_FATAL,
             "device %s can not be opened for writing. Abort!",
-            busses[busnumber].device);
+            busses[busnumber].filename.path);
         exit(1);                /* theres no chance to continue */
     }
 
@@ -240,12 +240,12 @@ int init_lineDDL(long int busnumber)
 
     if (tcgetattr(dev, &__DDL->maerklin_dev_termios) != 0) {
         DBG(busnumber, DBG_FATAL, "error initializing device %s. Abort!",
-            busses[busnumber].device);
+            busses[busnumber].filename.path);
         exit(1);
     }
     if (tcgetattr(dev, &__DDL->nmra_dev_termios) != 0) {
         DBG(busnumber, DBG_FATAL, "error initializing device %s. Abort!",
-            busses[busnumber].device);
+            busses[busnumber].filename.path);
         exit(1);
     }
 
@@ -297,7 +297,7 @@ int init_lineDDL(long int busnumber)
     /* setting serial device to default mode */
     if (!setSerialMode(busnumber, SDM_DEFAULT) == 0) {
         DBG(busnumber, DBG_FATAL, "error initializing device %s. Abort!",
-            busses[busnumber].device);
+            busses[busnumber].filename.path);
         exit(1);
     }
 
@@ -1244,7 +1244,7 @@ void *thr_sendrec_DDL(void *v)
     long int busnumber = (long int) v;
 
     DBG(busnumber, DBG_INFO, "DDL started on device %s",
-        busses[busnumber].device);
+        busses[busnumber].filename.path);
 
     busses[busnumber].watchdog = 1;
     /*

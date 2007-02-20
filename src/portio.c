@@ -36,11 +36,11 @@ int open_port(long int bus)
 	int serial;
 	struct termios settings;
 
-	serial  = open(busses[bus].device, O_RDWR | O_NOCTTY);
+	serial  = open(busses[bus].filename.path, O_RDWR | O_NOCTTY);
 	if (serial < 0)
 	{
 		DBG(bus, DBG_ERROR, "Error, could not open %s.\n Reported error number: %d.\n",
-			busses[bus].device, errno); // , str_errno(errno));
+			busses[bus].filename.path, errno); // , str_errno(errno));
 		busses[bus].fd = -1;
 		return -errno;
 	}
@@ -77,7 +77,7 @@ void close_port(long int bus)
 {
 	tcsetattr(busses[bus].fd, TCSANOW, &busses[bus].devicesettings);
 	close(busses[bus].fd);
-	DBG(bus, DBG_ERROR, "Port %s is closed.\n", busses[bus].device);
+	DBG(bus, DBG_ERROR, "Port %s is closed.\n", busses[bus].filename.path);
 }
 
 /**

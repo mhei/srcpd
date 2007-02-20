@@ -1665,7 +1665,7 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
     unsigned char byte2send[ 20 ];
     struct termios interface;
 
-    char *name = busses[ busnumber ].device;
+    char *name = busses[ busnumber ].filename.path;
     printf( "Begining to detect LI100 on serial line: %s\n", name );
 
     switch ( busses[ busnumber ].baudrate )

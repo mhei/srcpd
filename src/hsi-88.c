@@ -286,7 +286,7 @@ long int init_bus_HSI_88( long int busnumber )
   {
     if ( status == 0 )
     {
-      fd = open_lineHSI88( busses[ busnumber ].device );
+      fd = open_lineHSI88( busses[ busnumber ].filename.path );
       if ( fd > 0 )
       {
         busses[ busnumber ].fd = fd;

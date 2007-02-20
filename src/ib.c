@@ -1087,7 +1087,7 @@ void check_status_pt_IB( long int busnumber )
 static int open_comport( long int busnumber, speed_t baud )
 {
   int fd;
-  char *name = busses[ busnumber ].device;
+  char *name = busses[ busnumber ].filename.path;
 #ifdef linux
 
   unsigned char rr;
@@ -1144,7 +1144,7 @@ static int initLine_IB( long int busnumber )
   unsigned char byte2send;
   struct termios interface;
 
-  char *name = busses[ busnumber ].device;
+  char *name = busses[ busnumber ].filename.path;
   DBG( busnumber, DBG_INFO, "Begining to detect IB on serial line: %s\n",
        name );
   //printf("Begining to detect IB on serial line: %s\n", name);
