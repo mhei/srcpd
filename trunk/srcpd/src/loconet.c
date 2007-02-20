@@ -102,7 +102,7 @@ static long int init_lineLOCONET(long int busnumber)
     int fd;
     struct termios interface;
 
-    fd = open(busses[busnumber].device, O_RDWR | O_NDELAY | O_NOCTTY);
+    fd = open(busses[busnumber].filename.path, O_RDWR | O_NDELAY | O_NOCTTY);
     if (fd == -1) {
         DBG(busnumber, DBG_ERROR, "Sorry, couldn't open device.\n");
         return 1;
@@ -192,7 +192,7 @@ long int init_bus_LOCONET(long int busnumber)
         busses[busnumber].debuglevel);
     if (busses[busnumber].debuglevel <= 5) {
         DBG(busnumber, DBG_INFO, "loconet bus %d open device %s",
-            busnumber, busses[busnumber].device);
+            busnumber, busses[busnumber].filename.path);
         init_lineLOCONET(busnumber);
     }
     else {
@@ -333,7 +333,7 @@ void *thr_sendrec_LOCONET(void *v)
     int value;
     char msg[110];
     DBG(busnumber, DBG_INFO, "loconet started, bus #%d, %s", busnumber,
-        busses[busnumber].device);
+        busses[busnumber].filename.path);
     timeoutcnt = 0;
     while (1) {
         busses[busnumber].watchdog = 1;

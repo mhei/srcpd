@@ -64,6 +64,9 @@
 #define TRUE (1==1)
 #define FALSE (1==0)
 
+#define HW_UNDEFINED 0
+#define HW_FILENAME  1
+#define HW_NETWORK   2
 
 /* Busstruktur */
 typedef struct _BUS
@@ -73,7 +76,17 @@ typedef struct _BUS
   int type;        //! which bustype
   char description[100]; //! bus description
 
-  char *device;    //! Path to device, if not null
+  int devicetype;  //! file, network, constants start with HW_
+  union {
+      struct {
+        char *path;    //! Path to device, if not null
+      } filename;
+      struct {
+        char *hostname;  //! DNS resolvable hostname
+        int protocol;    //! Values are taken from /etc/protocols: 6==tcp
+        int port;    //! if using tcp or udp: portnumber to connect to.
+      } net;
+  };
   /** statistics */
   unsigned int bytes_recevied;
   unsigned int bytes_sent;

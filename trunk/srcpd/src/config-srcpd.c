@@ -98,13 +98,12 @@ static long int register_bus(long int busnumber, xmlDocPtr doc,
     busses[current_bus].init_fb_func = NULL;
 
     /* Communicationport to default values */
-    free(busses[current_bus].device);
-    busses[current_bus].device = malloc(strlen("/dev/null") + 1);
+    busses[current_bus].devicetype = HW_FILENAME;
     /*TODO: what happens if malloc returns NULL? */
-    strcpy(busses[current_bus].device, "/dev/null");
+    busses[current_bus].filename.path = malloc(strlen("/dev/null") + 1);
+    strcpy(busses[current_bus].filename.path, "/dev/null");
     busses[current_bus].fd = -1;
     busses[current_bus].baudrate = B2400;
-
 
     /* Definition of thread synchronisation  */
     pthread_mutex_init(&busses[current_bus].transmit_mutex, NULL);
@@ -112,6 +111,7 @@ static long int register_bus(long int busnumber, xmlDocPtr doc,
 
     xmlNodePtr child = node->children;
     xmlChar *txt = NULL;
+    xmlChar *txt2 = NULL;
 
     while (child != NULL) {
 
@@ -186,15 +186,30 @@ static long int register_bus(long int busnumber, xmlDocPtr doc,
 
         /* some attributes are common for all (real) busses */
         else if (xmlStrcmp(child->name, BAD_CAST "device") == 0) {
-            txt = xmlNodeListGetString(doc, child->children, 1);
+	    txt2 = xmlGetProp(child, BAD_CAST "type");
+	    if(txt2 == NULL  || xmlStrcmp(txt2, BAD_CAST "filename")) {
+		busses[current_bus].devicetype = HW_FILENAME;
+	    } else if (xmlStrcmp(txt2, BAD_CAST "network")) {
+		busses[current_bus].devicetype = HW_NETWORK;
+	    } else {
+                printf("WARNING, \"%s\" (bus %d) is an unknown device specifier!\n",
+                   child->name, current_bus);
+	    }
+	    free(txt2);
+            txt  = xmlNodeListGetString(doc, child->children, 1);
             if (txt != NULL) {
-                free(busses[current_bus].device);
-                busses[current_bus].device = malloc(strlen((char *) txt) + 1);
-                if (busses[current_bus].device == NULL) {
-                    printf("cannot allocate memory\n");
-                    exit(1);
-                }
-                strcpy(busses[current_bus].device, (char *) txt);
+		switch (busses[current_bus].devicetype) {
+		    case HW_FILENAME:
+	                 free(busses[current_bus].filename.path);
+	                 busses[current_bus].filename.path = malloc(strlen((char *) txt) + 1);
+			 strcpy(busses[current_bus].filename.path,  (char *) txt);
+			 break;
+		    case HW_NETWORK:
+	                 busses[current_bus].net.hostname = malloc(strlen((char *) txt) + 1);
+			 strcpy(busses[current_bus].net.hostname,  (char *) txt);
+			 // check for optional attributes
+			 break;
+		}
                 xmlFree(txt);
             }
         }
