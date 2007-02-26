@@ -25,17 +25,16 @@ typedef struct _SERVER_DATA {
     char *groupname;
 } SERVER_DATA;
 
-int readconfig_server(xmlDocPtr doc, xmlNodePtr node, long int busnumber);
+int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber);
 
 int startup_SERVER(void);
 
-long int init_bus_server(long int);
-long int term_bus_server(long int);
-
+int init_bus_server(bus_t);
+int term_bus_server(bus_t);
 void server_reset(void);
 void server_shutdown(void);
 
-int describeSERVER(long int bus, int addr, char *reply);
+int describeSERVER(bus_t bus, int addr, char *reply);
 int infoSERVER( char *msg);
 #endif
 

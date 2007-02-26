@@ -26,7 +26,7 @@
 
 static int working_HSI88;
 
-int readConfig_HSI_88( xmlDocPtr doc, xmlNodePtr node, long int busnumber )
+int readConfig_HSI_88( xmlDocPtr doc, xmlNodePtr node, bus_t busnumber )
 {
   int number;
 
@@ -157,7 +157,7 @@ static int open_lineHSI88( char *name )
   return fd;
 }
 
-static int init_lineHSI88( long int busnumber, int modules_left,
+static int init_lineHSI88( bus_t busnumber, int modules_left,
                            int modules_center, int modules_right )
 {
   int status;
@@ -249,7 +249,7 @@ static int init_lineHSI88( long int busnumber, int modules_left,
   return 0;
 }
 
-long int init_bus_HSI_88( long int busnumber )
+int init_bus_HSI_88(bus_t busnumber )
 {
   int fd;
   int status;
@@ -307,7 +307,7 @@ long int init_bus_HSI_88( long int busnumber )
   return status;
 }
 
-long int term_bus_HSI_88( long int busnumber )
+int term_bus_HSI_88(bus_t busnumber )
 {
   if ( busses[ busnumber ].type != SERVER_HSI_88 )
     return 1;
@@ -325,7 +325,7 @@ long int term_bus_HSI_88( long int busnumber )
 
 void *thr_sendrec_HSI_88( void *v )
 {
-  long int busnumber;
+  bus_t busnumber;
   int refresh_time;
   int anzahl, i, temp;
   unsigned char byte2send;
@@ -333,7 +333,7 @@ void *thr_sendrec_HSI_88( void *v )
   int status;
   int zaehler1, fb_zaehler1, fb_zaehler2;
 
-  busnumber = ( long int ) v;
+  busnumber = ( bus_t ) v;
   refresh_time = __hsi->refresh;
   DBG( busnumber, DBG_INFO, "thr_sendrec_HSI_88 is started" );
 

@@ -31,6 +31,7 @@
  */
 #include "stdincludes.h"
 
+#include "config-srcpd.h"
 #include "srcp-gl.h"
 #include "srcp-ga.h"
 #include "srcp-fb.h"
@@ -40,7 +41,7 @@
 #include "srcp-error.h"
 #include "srcp-descr.h"
 #include "srcp-time.h"
-#include "config-srcpd.h"
+
 #include "netserver.h"
 #include "io.h"
 
@@ -102,14 +103,14 @@ int startup_INFO(void)
  * Endless loop for new infomode client
  * terminates on write failure
  **/
-int doInfoClient(int Socket, int sessionid)
+int doInfoClient(int Socket, sessionid_t sessionid)
 {
     int status, i, current, number, value;
     char reply[1000], description[1000];
 
     // send startup-infos to a new client
     struct timeval cmp_time;
-    long int busnumber;
+    bus_t busnumber;
     current = in;
     DBG(0, DBG_DEBUG, "new Info-client requested %ld", sessionid);
     for (busnumber = 0; busnumber <= num_busses; busnumber++) {
@@ -142,7 +143,7 @@ int doInfoClient(int Socket, int sessionid)
             number = getMaxAddrGL(busnumber);
             for (i = 1; i <= number; i++) {
                 if (isInitializedGL(busnumber, i)) {
-                    long int lockid;
+                    sessionid_t lockid;
                     describeGL(busnumber, i, reply);
                     socket_writereply(Socket, reply);
                     *reply = 0x00;
@@ -164,7 +165,7 @@ int doInfoClient(int Socket, int sessionid)
             number = get_number_ga(busnumber);
             for (i = 1; i <= number; i++) {
                 if (isInitializedGA(busnumber, i)) {
-                    long int lockid;
+                    sessionid_t lockid;
                     int rc, port;
                     describeGA(busnumber, i, reply);
                     socket_writereply(Socket, reply);

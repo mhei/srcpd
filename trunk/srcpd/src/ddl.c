@@ -5,8 +5,9 @@
  */
 
 #include "stdincludes.h"
-#include "threads.h"
 #include "config-srcpd.h"
+#include "threads.h"
+
 #include "io.h"
 #include "ddl.h"
 #include "srcp-fb.h"
@@ -55,7 +56,7 @@ static int (*nanosleep_DDL)(const struct timespec *req, struct timespec *rem);
 
 /********* Q U E U E *****************/
 
-void queue_init(long int busnumber)
+void queue_init(bus_t busnumber)
 {
     int error, i;
 
@@ -78,12 +79,12 @@ void queue_init(long int busnumber)
     pthread_mutex_unlock(&__DDL->queue_mutex);
 }
 
-int queue_empty(long int busnumber)
+int queue_empty(bus_t busnumber)
 {
     return (__DDL->queue_in == __DDL->queue_out);
 }
 
-void queue_add(long int busnumber, int addr, char *const packet,
+void queue_add(bus_t busnumber, int addr, char *const packet,
                int packet_type, int packet_size)
 {
     pthread_mutex_lock(&__DDL->queue_mutex);
@@ -98,7 +99,7 @@ void queue_add(long int busnumber, int addr, char *const packet,
     pthread_mutex_unlock(&__DDL->queue_mutex);
 }
 
-int queue_get(long int busnumber, int *addr, char *packet,
+int queue_get(bus_t busnumber, int *addr, char *packet,
               int *packet_size)
 {
     int rtc;
@@ -157,7 +158,7 @@ int queue_get(long int busnumber, int *addr, char *packet,
 //}
 //#endif
 
-int setSerialMode(long int busnumber, int mode)
+int setSerialMode(bus_t busnumber, int mode)
 {
     switch (mode) {
     case SDM_MAERKLIN:
@@ -212,7 +213,7 @@ int setSerialMode(long int busnumber, int mode)
     return 0;
 }
 
-int init_lineDDL(long int busnumber)
+int init_lineDDL(bus_t busnumber)
 {
     /* opens and initializes the selected comport */
     /* returns a file handle                      */
@@ -307,7 +308,7 @@ int init_lineDDL(long int busnumber)
 
 /****** routines for maerklin packet pool *********************/
 
-void init_MaerklinPacketPool(long int busnumber)
+void init_MaerklinPacketPool(bus_t busnumber)
 {
     int i, j;
 
@@ -348,12 +349,12 @@ void init_MaerklinPacketPool(long int busnumber)
     pthread_mutex_unlock(&__DDL->maerklin_pktpool_mutex);
 }
 
-char *get_maerklin_packet(long int busnumber, int adr, int fx)
+char *get_maerklin_packet(bus_t busnumber, int adr, int fx)
 {
     return __DDL->MaerklinPacketPool.packets[adr].f_packets[fx];
 }
 
-void update_MaerklinPacketPool(long int busnumber, int adr,
+void update_MaerklinPacketPool(bus_t busnumber, int adr,
                                char const *const sd_packet,
                                char const *const f1, char const *const f2,
                                char const *const f3, char const *const f4)
@@ -390,7 +391,7 @@ void update_MaerklinPacketPool(long int busnumber, int adr,
 
 /****** routines for NMRA packet pool *********************/
 
-void init_NMRAPacketPool(long int busnumber)
+void init_NMRAPacketPool(bus_t busnumber)
 {
     int i, j;
     char idle_packet[] = "11111111111111101111111100000000001111111110";
@@ -423,7 +424,7 @@ void init_NMRAPacketPool(long int busnumber)
     memcpy(__DDL->NMRA_idle_data, idle_pktstr, j);
 }
 
-void update_NMRAPacketPool(long int busnumber, int adr,
+void update_NMRAPacketPool(bus_t busnumber, int adr,
                            char const *const packet, int packet_size,
                            char const *const fx_packet, int fx_packet_size)
 {
@@ -455,7 +456,7 @@ void update_NMRAPacketPool(long int busnumber, int adr,
 }
 
 
-void waitUARTempty_COMMON(long int busnumber)
+void waitUARTempty_COMMON(bus_t busnumber)
 {
     int result;
     do {                        /* wait until UART is empty */
@@ -467,7 +468,7 @@ void waitUARTempty_COMMON(long int busnumber)
     } while (!result);
 }
 
-void waitUARTempty_COMMON_USLEEPPATCH(long int busnumber)
+void waitUARTempty_COMMON_USLEEPPATCH(bus_t busnumber)
 {
     int result;
     do {                        /* wait until UART is empty */
@@ -485,7 +486,7 @@ void waitUARTempty_COMMON_USLEEPPATCH(long int busnumber)
 #define SLEEPFACTOR 48000l      /* used in waitUARTempty() */
 #define NUMBUFFERBYTES 1024     /* used in waitUARTempty() */
 
-void waitUARTempty_CLEANNMRADCC(long int busnumber)
+void waitUARTempty_CLEANNMRADCC(bus_t busnumber)
 {
     int outbytes;
 
@@ -503,7 +504,7 @@ void waitUARTempty_CLEANNMRADCC(long int busnumber)
     }
 }
 
-int checkRingIndicator(long int busnumber)
+int checkRingIndicator(bus_t busnumber)
 {
     int result, arg;
     result = ioctl(busses[busnumber].fd, TIOCMGET, &arg);
@@ -522,7 +523,7 @@ int checkRingIndicator(long int busnumber)
     }
 }
 
-int checkShortcut(long int busnumber)
+int checkShortcut(bus_t busnumber)
 {
     int result, arg;
     time_t short_now = 0;
@@ -559,7 +560,7 @@ int checkShortcut(long int busnumber)
     return 0;
 }
 
-void send_packet(long int busnumber, int addr, char *packet,
+void send_packet(bus_t busnumber, int addr, char *packet,
                  int packet_size, int packet_type, int refresh)
 {
     int i, laps;
@@ -648,7 +649,7 @@ void send_packet(long int busnumber, int addr, char *packet,
         return;
 }
 
-void improve_nmradcc_write(long int busnumber, char *packet,
+void improve_nmradcc_write(bus_t busnumber, char *packet,
                            int packet_size)
 {
     // Idee: NMRA lauuft mit 17000 Baud
@@ -664,7 +665,7 @@ void improve_nmradcc_write(long int busnumber, char *packet,
     write(busses[busnumber].fd, improve_nmradcc_packet, (packet_size * 7));
 }
 
-void refresh_loco(long int busnumber)
+void refresh_loco(bus_t busnumber)
 {
     int adr;
 
@@ -742,7 +743,7 @@ long int compute_delta(struct timeval tv1, struct timeval tv2)
     return delta_usec;
 }
 
-void set_SerialLine(long int busnumber, int line, int mode)
+void set_SerialLine(bus_t busnumber, int line, int mode)
 {
     int result, arg;
     result = ioctl(busses[busnumber].fd, TIOCMGET, &arg);
@@ -789,13 +790,13 @@ void set_SerialLine(long int busnumber, int line, int mode)
 
 /* ************************************************ */
 
-void set_lines_on(long int busnumber)
+void set_lines_on(bus_t busnumber)
 {
     set_SerialLine(busnumber, SL_DTR, ON);
     tcflow(busses[busnumber].fd, TCOON);
 }
 
-void set_lines_off(long int busnumber)
+void set_lines_off(bus_t busnumber)
 {
     /* set interface lines to the off state */
     tcflush(busses[busnumber].fd, TCOFLUSH);
@@ -803,7 +804,7 @@ void set_lines_off(long int busnumber)
     set_SerialLine(busnumber, SL_DTR, OFF);
 }
 
-int check_lines(long int busnumber)
+int check_lines(bus_t busnumber)
 {
     char msg[110];
     if (__DDL->CHECKSHORT)
@@ -878,7 +879,7 @@ void *thr_refresh_cycle(void *v)
     char packet[PKTSIZE];
     int addr;
     struct _thr_param *tp = v;
-    long int busnumber = tp -> busnumber;
+    bus_t busnumber = tp -> busnumber;
     struct timeval tv1, tv2;
     struct timezone tz;
     /* argument for nanosleep to do non-busy waiting */
@@ -955,7 +956,7 @@ void *thr_refresh_cycle(void *v)
     return NULL;
 }
 
-long int init_gl_DDL(struct _GLSTATE *gl)
+int init_gl_DDL(struct _GLSTATE *gl)
 {
     switch (gl->protocol) {
     case 'M':                  /* Motorola Codes */
@@ -970,7 +971,7 @@ long int init_gl_DDL(struct _GLSTATE *gl)
     return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
 }
 
-long int init_ga_DDL(struct _GASTATE *ga)
+int init_ga_DDL(struct _GASTATE *ga)
 {
     switch (ga->protocol) {
     case 'M':                  /* Motorola Codes */
@@ -984,7 +985,7 @@ long int init_ga_DDL(struct _GASTATE *ga)
 }
 
 
-int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
+int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
     struct utsname utsBuffer;
     char buf[3];
@@ -1169,7 +1170,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
     return (1);
 }
 
-long int term_bus_DDL(long int busnumber)
+int term_bus_DDL(bus_t busnumber)
 {
     /* store thread return value here */
     void *pThreadReturn;
@@ -1188,7 +1189,7 @@ long int term_bus_DDL(long int busnumber)
 /* Initialisiere den Bus, signalisiere Fehler */
 /* Einmal aufgerufen mit busnummer als einzigem Parameter */
 /* return code wird ignoriert (vorerst) */
-long int init_bus_DDL(long int busnumber)
+int init_bus_DDL(bus_t busnumber)
 {
     DBG(busnumber, DBG_INFO, "DDL init with debug level %d",
         busses[busnumber].debuglevel);
@@ -1241,7 +1242,7 @@ void *thr_sendrec_DDL(void *v)
     struct _GLSTATE gltmp;
     struct _GASTATE gatmp;
     int addr, error;
-    long int busnumber = (long int) v;
+    bus_t busnumber = (bus_t) v;
 
     DBG(busnumber, DBG_INFO, "DDL started on device %s",
         busses[busnumber].filename.path);

@@ -878,7 +878,7 @@ void xor_two_bytes(char *byte, char *byte1, char *byte2)
 
 /*** functions to generate NMRA-DCC data packets ***/
 
-int comp_nmra_accessory(long int busnumber, int nr, int output,
+int comp_nmra_accessory(bus_t busnumber, int nr, int output,
                         int activate)
 {
     /* command: NA <nr [0001-4096]> <outp [0,1]> <activate [0,1]>
@@ -947,7 +947,7 @@ int comp_nmra_accessory(long int busnumber, int nr, int output,
     return 1;
 }
 
-int comp_nmra_baseline(long int busnumber, int address, int direction,
+int comp_nmra_baseline(bus_t busnumber, int address, int direction,
                        int speed)
 {
 
@@ -999,7 +999,7 @@ int comp_nmra_baseline(long int busnumber, int address, int direction,
     return 1;
 }
 
-int comp_nmra_f4b7s28(long int busnumber, int address, int direction,
+int comp_nmra_f4b7s28(bus_t busnumber, int address, int direction,
                       int speed, int func, int f1, int f2, int f3, int f4)
 {
     /* 4-function-decoder with 7-bit address and 28 speed steps */
@@ -1082,7 +1082,7 @@ int comp_nmra_f4b7s28(long int busnumber, int address, int direction,
     return 1;
 }
 
-int comp_nmra_f4b7s128(long int busnumber, int address, int direction,
+int comp_nmra_f4b7s128(bus_t busnumber, int address, int direction,
                        int speed, int func, int f1, int f2, int f3, int f4)
 {
     /* 4-function-decoder with 7-bit address and 128 speed steps */
@@ -1170,7 +1170,7 @@ int comp_nmra_f4b7s128(long int busnumber, int address, int direction,
     return 1;
 }
 
-int comp_nmra_f4b14s28(long int busnumber, int address, int direction,
+int comp_nmra_f4b14s28(bus_t busnumber, int address, int direction,
                        int speed, int func, int f1, int f2, int f3, int f4)
 {
     /* 4-function-decoder with 14-bit address and 28 speed steps */
@@ -1264,7 +1264,7 @@ int comp_nmra_f4b14s28(long int busnumber, int address, int direction,
     return 1;
 }
 
-int comp_nmra_f4b14s128(long int busnumber, int address, int direction,
+int comp_nmra_f4b14s128(bus_t busnumber, int address, int direction,
                         int speed, int func, int f1, int f2, int f3,
                         int f4)
 {
@@ -1387,7 +1387,7 @@ static char page_preset_packet[] =
 static char idle_packet[] =
     "11111111111111111111111111111101111111100000000001111111110";
 
-void sm_init(long int busnumber)
+void sm_init(bus_t busnumber)
 {
     memset(resetstream, 0, PKTSIZE);
     rs_size =
@@ -1404,7 +1404,7 @@ void sm_init(long int busnumber)
     sm_initialized = TRUE;
 }
 
-int scanACK(long int busnumber)
+int scanACK(bus_t busnumber)
 {
     int result, arg;
     result = ioctl(busses[busnumber].fd, TIOCMGET, &arg);
@@ -1413,7 +1413,7 @@ int scanACK(long int busnumber)
     return 0;
 }
 
-int waitUARTempty_scanACK(long int busnumber)
+int waitUARTempty_scanACK(bus_t busnumber)
 {
     int result;
     int ack = 0;
@@ -1429,7 +1429,7 @@ int waitUARTempty_scanACK(long int busnumber)
     return ack;
 }
 
-void handleACK(long int busnumber, int sckt, int ack)
+void handleACK(bus_t busnumber, int sckt, int ack)
 {
 
     char buf[80];
@@ -1444,7 +1444,7 @@ void handleACK(long int busnumber, int sckt, int ack)
     write(sckt, buf, strlen(buf));
 }
 
-void protocol_nmra_sm_direct_cvbyte(long int busnumber, int sckt, int cv,
+void protocol_nmra_sm_direct_cvbyte(bus_t busnumber, int sckt, int cv,
                                     int value, int verify)
 {
     /* direct cv access */
@@ -1578,19 +1578,19 @@ void protocol_nmra_sm_direct_cvbyte(long int busnumber, int sckt, int cv,
     handleACK(busnumber, sckt, ack);
 }
 
-void protocol_nmra_sm_write_cvbyte(long int bus, int sckt, int cv,
+void protocol_nmra_sm_write_cvbyte(bus_t bus, int sckt, int cv,
                                    int value)
 {
     protocol_nmra_sm_direct_cvbyte(bus, sckt, cv, value, FALSE);
 }
 
-void protocol_nmra_sm_verify_cvbyte(long int bus, int sckt, int cv,
+void protocol_nmra_sm_verify_cvbyte(bus_t bus, int sckt, int cv,
                                     int value)
 {
     protocol_nmra_sm_direct_cvbyte(bus, sckt, cv, value, TRUE);
 }
 
-void protocol_nmra_sm_write_cvbit(long int bus, int sckt, int cv, int bit,
+void protocol_nmra_sm_write_cvbit(bus_t bus, int sckt, int cv, int bit,
                                   int value)
 {
     /* direct cv access */
@@ -1715,7 +1715,7 @@ void protocol_nmra_sm_write_cvbit(long int bus, int sckt, int cv, int bit,
     handleACK(bus, sckt, ack);
 }
 
-void protocol_nmra_sm_phregister(long int bus, int sckt, int reg,
+void protocol_nmra_sm_phregister(bus_t bus, int sckt, int reg,
                                  int value, int verify)
 {
     /* physical register addressing */
@@ -1858,13 +1858,13 @@ void protocol_nmra_sm_phregister(long int bus, int sckt, int reg,
     handleACK(bus, sckt, ack);
 }
 
-void protocol_nmra_sm_write_phregister(long int bus, int sckt, int reg,
+void protocol_nmra_sm_write_phregister(bus_t bus, int sckt, int reg,
                                        int value)
 {
     protocol_nmra_sm_phregister(bus, sckt, reg, value, FALSE);
 }
 
-void protocol_nmra_sm_verify_phregister(long int bus, int sckt, int reg,
+void protocol_nmra_sm_verify_phregister(bus_t bus, int sckt, int reg,
                                         int value)
 {
     protocol_nmra_sm_phregister(bus, sckt, reg, value, TRUE);

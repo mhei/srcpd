@@ -12,7 +12,7 @@
 #include "srcp-info.h"
 #include "srcp-power.h"
 
-int setPower( long int bus, int state, char *msg )
+int setPower( bus_t bus, int state, char *msg )
 {
   gettimeofday( &busses[ bus ].power_change_time, NULL );
   busses[ bus ].power_state = ( state == -1 ) ? 0 : state;
@@ -28,12 +28,12 @@ int setPower( long int bus, int state, char *msg )
   return SRCP_OK;
 }
 
-int getPower( long int bus )
+int getPower( bus_t bus )
 {
   return busses[ bus ].power_state;
 }
 
-int infoPower( long int bus, char *msg )
+int infoPower(bus_t bus, char *msg )
 {
   sprintf( msg, "%lu.%.3lu 100 INFO %ld POWER %s %s\n",
            busses[ bus ].power_change_time.tv_sec,
@@ -42,7 +42,7 @@ int infoPower( long int bus, char *msg )
   return SRCP_INFO;
 }
 
-int initPower( long int bus )
+int initPower(bus_t bus )
 {
   return SRCP_OK;
 }

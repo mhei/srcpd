@@ -7,12 +7,11 @@
  */
 
 #include "stdincludes.h"
-
-#include "threads.h"
 #include "config-srcpd.h"
+#include "threads.h"
 #include "srcp-srv.h"
 
-void change_privileges(long int bus)
+void change_privileges(bus_t bus)
 {
     struct group *group;
     struct passwd *passwd;
@@ -72,7 +71,7 @@ void *thr_handlePort(void *v)
     struct _THREADS ti = *((THREADS *) v);
 /* ******** */
     int lsock;
-    long int newsock;           /* The listen socket */
+    int newsock;           /* The listen socket */
 
 #if defined (ENABLE_IPV6)
     struct sockaddr_in6 sin6;

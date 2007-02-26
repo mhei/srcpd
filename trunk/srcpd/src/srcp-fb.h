@@ -9,7 +9,7 @@
 
 #ifndef _SRCP_FB_H
 #define _SRCP_FB_H
-
+#include "config-srcpd.h"
 #include <sys/time.h>
 
 typedef struct _FBSTATE
@@ -32,16 +32,16 @@ typedef struct _RESET_FB
 } reset_FB;
 
 int startup_FB(void);
-int init_FB(long int bus, int number);
-int get_number_fb(long int bus);
-int initFB(long int busnumber, int addr, const char protocol, int index);
+int init_FB(bus_t bus, int number);
+int get_number_fb(bus_t bus);
+int initFB(bus_t busnumber, int addr, const char protocol, int index);
 
-int getFB(long int bus, int port, struct timeval *time, int *value);
-int setFB( long int bus, int port,  int value );
-int updateFB(long int bus, int port, int value);
-int setFBmodul(long int bus, int mod, int values);
-int infoFB(long int bus, int port, char *msg);
-int describeFB(long int bus, int addr, char *reply);
-void check_reset_fb(long int busnumber);
-void set_min_time(long int busnumber, int mt);
+int getFB(bus_t bus, int port, struct timeval *time, int *value);
+int setFB( bus_t bus, int port,  int value );
+int updateFB(bus_t bus, int port, int value);
+int setFBmodul(bus_t bus, int mod, int values);
+int infoFB(bus_t bus, int port, char *msg);
+int describeFB(bus_t bus, int addr, char *reply);
+void check_reset_fb(bus_t busnumber);
+void set_min_time(bus_t busnumber, int mt);
 #endif

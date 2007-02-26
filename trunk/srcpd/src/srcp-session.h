@@ -20,15 +20,17 @@
 
 int startup_SESSION(void);
 
-int start_session(long int sessionid, int mode);
-int stop_session(long int sessionid);
-int describeSESSION(long int bus, int sessionid, char *reply);
-int termSESSION(long int bus, int sessionid, int termsessionid, char *reply);
+sessionid_t session_getnextID();
 
-int session_preparewait(long int busnumber);
-int session_wait(long int busnumber, unsigned int timeout, int *result);
-int session_endwait(long int busnumber, int returnvalue);
-int session_cleanupwait(long int busnumber);
+int start_session(sessionid_t, int);
+int stop_session(sessionid_t);
+int describeSESSION(bus_t, sessionid_t, char *);
+int termSESSION(bus_t, sessionid_t, sessionid_t, char *);
 
-int session_processwait(long int busnumber);
+int session_preparewait(bus_t);
+int session_wait(bus_t, unsigned int timeout, int *result);
+int session_endwait(bus_t, int returnvalue);
+int session_cleanupwait(bus_t);
+
+int session_processwait(bus_t);
 #endif

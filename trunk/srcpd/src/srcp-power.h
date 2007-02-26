@@ -10,9 +10,9 @@
 #ifndef _SRCP_POWER_H
 #define _SRCP_POWER_H
 
-int initPower(long);
-int infoPower(long int bus, char *msg);
-int setPower(long int bus, int state, char *msg);
-int getPower(long int bus);
+int initPower(bus_t);
+int infoPower(bus_t bus, char *msg);
+int setPower(bus_t bus, int state, char *msg);
+int getPower(bus_t bus);
 
 #endif

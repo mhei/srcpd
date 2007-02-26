@@ -9,6 +9,8 @@
 #ifndef _SRCP_DESCR_H
 #define _SRCP_DESCR_H
 
+#include "config-srcpd.h"
+
 int startup_DESCRIPTION(void);
-int describeBus(long int bus, char *reply);
+int describeBus(bus_t bus, char *reply);
 #endif

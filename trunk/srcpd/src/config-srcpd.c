@@ -35,7 +35,7 @@ int num_busses;
 
 // check that a bus has a devicegroup or not
 
-int bus_has_devicegroup(long int bus, int dg)
+int bus_has_devicegroup(bus_t bus, int dg)
 {
     switch (dg) {
         case DG_SESSION:
@@ -65,10 +65,10 @@ int bus_has_devicegroup(long int bus, int dg)
     return 0;
 }
 
-static long int register_bus(long int busnumber, xmlDocPtr doc,
+static bus_t register_bus(bus_t busnumber, xmlDocPtr doc,
                              xmlNodePtr node)
 {
-    int current_bus = busnumber;
+    bus_t current_bus = busnumber;
 
     if (xmlStrcmp(node->name, BAD_CAST "bus"))
         return busnumber;
@@ -192,7 +192,7 @@ static long int register_bus(long int busnumber, xmlDocPtr doc,
 	    } else if (xmlStrcmp(txt2, BAD_CAST "network")) {
 		busses[current_bus].devicetype = HW_NETWORK;
 	    } else {
-                printf("WARNING, \"%s\" (bus %d) is an unknown device specifier!\n",
+                printf("WARNING, \"%s\" (bus %ld) is an unknown device specifier!\n",
                    child->name, current_bus);
 	    }
 	    free(txt2);
@@ -283,7 +283,7 @@ static long int register_bus(long int busnumber, xmlDocPtr doc,
         }
 
         else
-            printf("WARNING, \"%s\" (bus %d) is an unknown tag!\n",
+            printf("WARNING, \"%s\" (bus %ld) is an unknown tag!\n",
                    child->name, current_bus);
 
         child = child->next;
@@ -294,7 +294,7 @@ static long int register_bus(long int busnumber, xmlDocPtr doc,
 
 static int walk_config_xml(xmlDocPtr doc)
 {
-    long int bus = 0;
+    bus_t bus = 0;
     xmlNodePtr root, child;
 
     root = xmlDocGetRootElement(doc);
@@ -348,9 +348,9 @@ int readConfig(char *filename)
  * suspendThread: Holds the thread until a resume command is given.
         The thread waits in this routines
  * @param busnumber
-       long integer given the bus wich thread has to be stoped.
+       bus_t given the bus wich thread has to be stoped.
  */
-void suspendThread(long int busnumber)
+void suspendThread(bus_t busnumber)
 {
     /* Lock thread till new data to process arrives */
     pthread_mutex_lock(&busses[busnumber].transmit_mutex);
@@ -360,9 +360,9 @@ void suspendThread(long int busnumber)
 /**
  * resumeThread: continue a stoppped thread
  * @param busnumber
-       long integer given the bus wich thread has to be stoped.
+       bus_t given the bus wich thread has to be stoped.
  */
-void resumeThread(long int busnumber)
+void resumeThread(bus_t busnumber)
 {
     /* Let thread process a feedback */
     pthread_mutex_lock(&busses[busnumber].transmit_mutex);
@@ -384,7 +384,7 @@ void resumeThread(long int busnumber)
   * @param ...
     remaining parameters according to formatstring
   */
-void DBG(long int busnumber, int dbglevel, const char *fmt, ...)
+void DBG(bus_t busnumber, int dbglevel, const char *fmt, ...)
 {
     va_list parm;
     va_start(parm, fmt);

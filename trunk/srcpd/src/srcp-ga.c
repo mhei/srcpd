@@ -23,6 +23,7 @@
 #include "stdincludes.h"
 
 #include "config-srcpd.h"
+#include "srcp-session.h"
 #include "srcp-ga.h"
 #include "srcp-error.h"
 #include "srcp-info.h"
@@ -38,16 +39,16 @@ static pthread_mutex_t queue_mutex[MAX_BUSSES];
 static int out[MAX_BUSSES], in[MAX_BUSSES];
 
 /* internal functions */
-static int queue_len(long int busnumber);
-static int queue_isfull(long int busnumber);
+static int queue_len(bus_t busnumber);
+static int queue_isfull(bus_t busnumber);
 
-int get_number_ga(long int busnumber)
+int get_number_ga(bus_t busnumber)
 {
     return ga[busnumber].numberOfGa;
 }
 
 /* Uebernehme die neuen Angaben fuer die Weiche, einige wenige Pruefungen */
-int queueGA(long int busnumber, int addr, int port, int action,
+int queueGA(bus_t busnumber, int addr, int port, int action,
             long int activetime)
 {
     struct timeval akt_time;
@@ -82,12 +83,12 @@ int queueGA(long int busnumber, int addr, int port, int action,
     return SRCP_OK;
 }
 
-int queue_GA_isempty(long int busnumber)
+int queue_GA_isempty(bus_t busnumber)
 {
     return (in[busnumber] == out[busnumber]);
 }
 
-static int queue_len(long int busnumber)
+static int queue_len(bus_t busnumber)
 {
     if (in[busnumber] >= out[busnumber])
         return in[busnumber] - out[busnumber];
@@ -96,13 +97,13 @@ static int queue_len(long int busnumber)
 }
 
 /* maybe, 1 element in the queue cannot be used.. */
-static int queue_isfull(long int busnumber)
+static int queue_isfull(bus_t busnumber)
 {
     return queue_len(busnumber) >= QUEUELEN - 1;
 }
 
 /** liefert naechsten Eintrag oder -1, setzt fifo pointer neu! */
-int unqueueNextGA(long int busnumber, struct _GASTATE *a)
+int unqueueNextGA(bus_t busnumber, struct _GASTATE *a)
 {
     if (in[busnumber] == out[busnumber])
         return -1;
@@ -114,7 +115,7 @@ int unqueueNextGA(long int busnumber, struct _GASTATE *a)
     return out[busnumber];
 }
 
-int getGA(long int busnumber, int addr, struct _GASTATE *a)
+int getGA(bus_t busnumber, int addr, struct _GASTATE *a)
 {
     int number_ga = get_number_ga(busnumber);
 
@@ -127,7 +128,7 @@ int getGA(long int busnumber, int addr, struct _GASTATE *a)
     }
 }
 
-int isInitializedGA(long int busnumber, int addr)
+int isInitializedGA(bus_t busnumber, int addr)
 {
     return ga[busnumber].gastate[addr].protocol != 0x00;
 }
@@ -135,7 +136,7 @@ int isInitializedGA(long int busnumber, int addr)
 /* ********************
  *   SRCP Kommandos
  */
-int setGA(long int busnumber, int addr, struct _GASTATE a)
+int setGA(bus_t busnumber, int addr, struct _GASTATE a)
 {
     int number_ga = get_number_ga(busnumber);
 
@@ -157,7 +158,7 @@ int setGA(long int busnumber, int addr, struct _GASTATE a)
     }
 }
 
-int describeGA(long int busnumber, int addr, char *msg)
+int describeGA(bus_t busnumber, int addr, char *msg)
 {
     int number_ga = get_number_ga(busnumber);
 
@@ -178,7 +179,7 @@ int describeGA(long int busnumber, int addr, char *msg)
     return SRCP_INFO;
 }
 
-int infoGA(long int busnumber, int addr, int port, char *msg)
+int infoGA(bus_t busnumber, int addr, int port, char *msg)
 {
     int number_ga = get_number_ga(busnumber);
 
@@ -198,7 +199,7 @@ int infoGA(long int busnumber, int addr, int port, char *msg)
     return SRCP_INFO;
 }
 
-int initGA(long int busnumber, int addr, const char protocol)
+int initGA(bus_t busnumber, int addr, const char protocol)
 {
     int rc = SRCP_OK;
     int number_ga = get_number_ga(busnumber);
@@ -227,8 +228,8 @@ int initGA(long int busnumber, int addr, const char protocol)
     }
 }
 
-int lockGA(long int busnumber, int addr, long int duration,
-           long int sessionid)
+int lockGA(bus_t busnumber, int addr, long int duration,
+           sessionid_t sessionid)
 {
     char msg[256];
     if (ga[busnumber].gastate[addr].locked_by == sessionid ||
@@ -247,14 +248,14 @@ int lockGA(long int busnumber, int addr, long int duration,
     return SRCP_UNSUPPORTEDOPERATION;
 }
 
-int getlockGA(long int busnumber, int addr, long int *sessionid)
+int getlockGA(bus_t busnumber, int addr, sessionid_t *sessionid)
 {
     *sessionid = ga[busnumber].gastate[addr].locked_by;
     return SRCP_OK;
 
 }
 
-int describeLOCKGA(long int bus, int addr, char *reply)
+int describeLOCKGA(bus_t bus, int addr, char *reply)
 {
     sprintf(reply, "%lu.%.3lu 100 INFO %ld LOCK GA %d %ld %ld\n",
             ga[bus].gastate[addr].locktime.tv_sec,
@@ -264,7 +265,7 @@ int describeLOCKGA(long int bus, int addr, char *reply)
     return SRCP_OK;
 }
 
-int unlockGA(long int busnumber, int addr, long int sessionid)
+int unlockGA(bus_t busnumber, int addr, sessionid_t sessionid)
 {
     if (ga[busnumber].gastate[addr].locked_by == sessionid
         || ga[busnumber].gastate[addr].locked_by == 0) {
@@ -283,7 +284,7 @@ int unlockGA(long int busnumber, int addr, long int sessionid)
     }
 }
 
-void unlock_ga_bysessionid(long int sessionid)
+void unlock_ga_bysessionid(sessionid_t sessionid)
 {
     int i, j;
     int number;
@@ -333,7 +334,7 @@ int startup_GA(void)
     return 0;
 }
 
-int init_GA(long int busnumber, int number)
+int init_GA(bus_t busnumber, int number)
 {
     int i;
 

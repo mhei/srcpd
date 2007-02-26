@@ -28,7 +28,7 @@ struct _GLSTATE
   struct timeval inittime;
   struct timeval locktime;
   long int lockduration;
-  long int locked_by;
+  sessionid_t locked_by;
 };
 
 typedef struct _GL
@@ -38,29 +38,29 @@ typedef struct _GL
 } GL;
 
 int startup_GL(void);
-int init_GL(long int busnumber, int number);
-int getMaxAddrGL(long int busnumber);
-int isInitializedGL(long int busnumber, int addr);
-int isValidGL(long int busnumber, int addr);
+int init_GL(bus_t busnumber, int number);
+int getMaxAddrGL(bus_t busnumber);
+int isInitializedGL(bus_t busnumber, int addr);
+int isValidGL(bus_t busnumber, int addr);
 
-int queueGL(long int busnumber, int addr, int dir, int speed, int maxspeed, int f);
-int queue_GL_isempty(long int busnumber);
-int unqueueNextGL(long int busnumber, struct _GLSTATE *l);
+int queueGL(bus_t busnumber, int addr, int dir, int speed, int maxspeed, int f);
+int queue_GL_isempty(bus_t busnumber);
+int unqueueNextGL(bus_t busnumber, struct _GLSTATE *l);
 
-int getGL(long int busnumber, int addr, struct _GLSTATE *l);
-int setGL(long int busnumber, int addr, struct _GLSTATE l);
-int infoGL(long int busnumber, int addr, char* info);
-int describeGL(long int busnumber, int addr, char *msg);
-int initGL(long int busnumber, int addr, const char protocol, int protoversion, int n_fs, int n_func);
-int termGL(long int busnumber, int addr);
+int getGL(bus_t busnumber, int addr, struct _GLSTATE *l);
+int setGL(bus_t busnumber, int addr, struct _GLSTATE l);
+int infoGL(bus_t busnumber, int addr, char* info);
+int describeGL(bus_t busnumber, int addr, char *msg);
+int initGL(bus_t busnumber, int addr, const char protocol, int protoversion, int n_fs, int n_func);
+int termGL(bus_t busnumber, int addr);
 
-int lockGL(long int busnumber, int addr, long int duration, long int sessionid);
-int getlockGL(long int busnumber, int addr, long int *sessionid);
-int unlockGL(long int busnumber, int addr, long int sessionid);
-void unlock_gl_bysessionid(long int sessionid);
+int lockGL(bus_t busnumber, int addr, long int duration, sessionid_t sessionid);
+int getlockGL(bus_t busnumber, int addr, sessionid_t *sessionid);
+int unlockGL(bus_t busnumber, int addr, sessionid_t sessionid);
+void unlock_gl_bysessionid(sessionid_t sessionid);
 void unlock_gl_bytime(void);
-int describeLOCKGL(long int bus, int addr, char *reply);
+int describeLOCKGL(bus_t bus, int addr, char *reply);
 
-void debugGL(long int busnumber, int start, int end);
+void debugGL(bus_t busnumber, int start, int end);
 
 #endif

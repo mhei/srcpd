@@ -19,7 +19,7 @@
 
 #define __loopback ((LOOPBACK_DATA*)busses[busnumber].driverdata)
 
-int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
+int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
     busses[busnumber].type = SERVER_LOOPBACK;
     busses[busnumber].init_func = &init_bus_LOOPBACK;
@@ -93,14 +93,14 @@ int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
     return (1);
 }
 
-static int init_lineLoopback(long int bus)
+static int init_lineLoopback(bus_t bus)
 {
     int FD;
     FD = -1;
     return FD;
 }
 
-long int term_bus_LOOPBACK(long int bus)
+int term_bus_LOOPBACK(bus_t bus)
 {
     DBG(bus, DBG_INFO, "loopback bus #%ld terminating", bus);
     return 0;
@@ -109,7 +109,7 @@ long int term_bus_LOOPBACK(long int bus)
 /**
  * initGL: modifies the gl data used to initialize the device
  **/
-long int init_gl_LOOPBACK(struct _GLSTATE *gl)
+int init_gl_LOOPBACK(struct _GLSTATE *gl)
 {
     switch (gl->protocol) {
         case 'L':
@@ -149,7 +149,7 @@ long int init_gl_LOOPBACK(struct _GLSTATE *gl)
 /**
  * initGA: modifies the ga data used to initialize the device
  **/
-long int init_ga_LOOPBACK(struct _GASTATE *ga)
+int init_ga_LOOPBACK(struct _GASTATE *ga)
 {
     if ((ga->protocol == 'M') || (ga->protocol == 'N')
         || (ga->protocol == 'P'))
@@ -161,7 +161,7 @@ long int init_ga_LOOPBACK(struct _GASTATE *ga)
  * Einmal aufgerufen mit busnummer als einzigem Parameter
  * return code wird ignoriert (vorerst)
  */
-long int init_bus_LOOPBACK(long int i)
+int init_bus_LOOPBACK(bus_t i)
 {
     DBG(i, DBG_INFO, "loopback init: bus #%ld, debug %d", i,
         busses[i].debuglevel);
@@ -182,7 +182,7 @@ void *thr_sendrec_LOOPBACK(void *v)
     struct _GLSTATE gltmp, glakt;
     struct _GASTATE gatmp;
     int addr;
-    long int bus = (long int) v;
+    bus_t bus = (bus_t) v;
 
     DBG(bus, DBG_INFO, "loopback started, bus #%d, %s", bus,
         busses[bus].filename.path);

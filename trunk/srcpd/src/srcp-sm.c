@@ -49,10 +49,10 @@ static pthread_mutex_t queue_mutex[ MAX_BUSSES ];
 static volatile int out[ MAX_BUSSES ], in[ MAX_BUSSES ];
 
 /* internal functions */
-static int queue_len( long int busnumber );
-static int queue_isfull( long int busnumber );
+static int queue_len( bus_t busnumber );
+static int queue_isfull( bus_t busnumber );
 
-int queueInfoSM( long int busnumber, int addr, int type, int typeaddr,
+int queueInfoSM( bus_t busnumber, int addr, int type, int typeaddr,
                  int bit, int value, int return_code,
                  struct timeval *akt_time )
 {
@@ -138,7 +138,7 @@ int queueInfoSM( long int busnumber, int addr, int type, int typeaddr,
 }
 
 /* queue SM after some checks */
-int queueSM( long int busnumber, int command, int type, int addr,
+int queueSM( bus_t busnumber, int command, int type, int addr,
              int typeaddr, int bit, int value )
 {
   struct timeval akt_time;
@@ -172,12 +172,12 @@ int queueSM( long int busnumber, int command, int type, int addr,
   return SRCP_OK;
 }
 
-int queue_SM_isempty( long int busnumber )
+int queue_SM_isempty( bus_t busnumber )
 {
   return ( in[ busnumber ] == out[ busnumber ] );
 }
 
-static int queue_len( long int busnumber )
+static int queue_len( bus_t busnumber )
 {
   if ( in[ busnumber ] >= out[ busnumber ] )
     return in[ busnumber ] - out[ busnumber ];
@@ -186,13 +186,13 @@ static int queue_len( long int busnumber )
 }
 
 /* maybe, 1 element in the queue cannot be used.. */
-static int queue_isfull( long int busnumber )
+static int queue_isfull( bus_t busnumber )
 {
   return queue_len( busnumber ) >= QUEUELEN - 1;
 }
 
 /** return next entry with rc >=0, or return -1, if no more entries */
-int getNextSM( long int busnumber, struct _SM *l )
+int getNextSM( bus_t busnumber, struct _SM *l )
 {
   if ( in[ busnumber ] == out[ busnumber ] )
     return -1;
@@ -201,7 +201,7 @@ int getNextSM( long int busnumber, struct _SM *l )
 }
 
 /** return next entry or -1, set fifo pointer to new position! */
-int unqueueNextSM( long int busnumber, struct _SM *l )
+int unqueueNextSM( bus_t busnumber, struct _SM *l )
 {
   if ( in[ busnumber ] == out[ busnumber ] )
     return -1;
@@ -213,7 +213,7 @@ int unqueueNextSM( long int busnumber, struct _SM *l )
   return out[ busnumber ];
 }
 
-int setSM( long int busnumber, int type, int addr, int typeaddr, int bit,
+int setSM( bus_t busnumber, int type, int addr, int typeaddr, int bit,
            int value, int return_code )
 {
   struct timeval tv;
@@ -236,7 +236,7 @@ int setSM( long int busnumber, int type, int addr, int typeaddr, int bit,
   }
 }
 
-int infoSM( long int busnumber, int command, int type, int addr,
+int infoSM( bus_t busnumber, int command, int type, int addr,
             int typeaddr, int bit, int value, char *info )
 {
   int status, result;

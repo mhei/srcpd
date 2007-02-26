@@ -57,7 +57,7 @@ int cmpTime( struct timeval *t1, struct timeval *t2 );
  * initGL: modifies the gl data used to initialize the device
  * this is called whenever a new loco comes in town...
  */
-long int init_gl_LI100( struct _GLSTATE *gl )
+int init_gl_LI100( struct _GLSTATE *gl )
 {
   gl->protocol = 'N';
   return SRCP_OK;
@@ -67,13 +67,13 @@ long int init_gl_LI100( struct _GLSTATE *gl )
  * initGA: modifies the ga data used to initialize the device
 
  */
-long int init_ga_LI100( struct _GASTATE *ga )
+int init_ga_LI100( struct _GASTATE *ga )
 {
   ga->protocol = 'N';
   return SRCP_OK;
 }
 
-void add_extern_engine( long int busnumber, int address )
+void add_extern_engine( bus_t busnumber, int address )
 {
   int i;
   int ctr;
@@ -106,7 +106,7 @@ void add_extern_engine( long int busnumber, int address )
   }
 }
 
-void remove_extern_engine( long int busnumber, int address )
+void remove_extern_engine( bus_t busnumber, int address )
 {
   int ctr;
 

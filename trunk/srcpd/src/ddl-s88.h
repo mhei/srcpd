@@ -41,10 +41,10 @@ typedef struct _DDL_S88_DATA {
 
 } DDL_S88_DATA;
 
-int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, long int busnumber);
+int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber);
 
-long int init_bus_S88(long int);
-long int term_bus_S88(long int);
+int init_bus_S88(bus_t);
+int term_bus_S88(bus_t);
 void *thr_sendrec_S88(void *);
 void *thr_sendrec_dummy(void *v);
 
@@ -54,7 +54,7 @@ void *thr_sendrec_dummy(void *v);
 #define inb(a) FBSD_inb(a,busnumber)
 #define outb(a,b) FBSD_outb(a,b,busnumber)
 int FBSD_ioperm(int,int,int,long int);
-unsigned char FBSD_inb(int,long int);
+unsigned char FBSD_inb(int, bus_t);
 unsigned char FBSD_outb(unsigned char, int,long int);
 #endif
 

@@ -39,7 +39,7 @@
  * aufgerufen.
  **/
 
-int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
+int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
     busses[busnumber].type = SERVER_M605X;
     busses[busnumber].init_func = &init_bus_M6051;
@@ -163,7 +163,7 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
 /*******************************************************
  *     SERIELLE SCHNITTSTELLE KONFIGURIEREN
  *******************************************************/
-static int init_lineM6051(long int bus)
+static int init_lineM6051(bus_t bus)
 {
     int FD;
     struct termios interface;
@@ -198,7 +198,7 @@ static int init_lineM6051(long int bus)
     return FD;
 }
 
-long int init_bus_M6051(long int bus)
+int init_bus_M6051(bus_t bus)
 {
 
     DBG(bus, DBG_INFO, "M605x  init: debug %d", busses[bus].debuglevel);
@@ -215,7 +215,7 @@ long int init_bus_M6051(long int bus)
     return 0;
 }
 
-long int term_bus_M6051(long int bus)
+int term_bus_M6051(bus_t bus)
 {
     DBG(bus, DBG_INFO, "M605x bus term done, fd=%d", busses[bus].fd);
     return 0;
@@ -224,7 +224,7 @@ long int term_bus_M6051(long int bus)
 /**
  * initGL: modifies the gl data used to initialize the device
  **/
-long int init_gl_M6051(struct _GLSTATE *gl)
+int init_gl_M6051(struct _GLSTATE *gl)
 {
     if (gl->protocol != 'M')
         return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
@@ -244,7 +244,7 @@ long int init_gl_M6051(struct _GLSTATE *gl)
 /**
  * initGA: modifies the ga data used to initialize the device
  **/
-long int init_ga_M6051(struct _GASTATE *ga)
+int init_ga_M6051(struct _GASTATE *ga)
 {
     if ((ga->protocol != 'M') || (ga->protocol != 'P'))
         return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
@@ -259,7 +259,7 @@ void *thr_sendrec_M6051(void *v)
     unsigned char rr;
     struct _GLSTATE gltmp, glakt;
     struct _GASTATE gatmp;
-    long int bus = (long int) v;
+    bus_t bus = (bus_t) v;
     int ga_min_active_time =
         ((M6051_DATA *) busses[bus].driverdata)->ga_min_active_time;
     int pause_between_cmd =
