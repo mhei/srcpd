@@ -24,7 +24,7 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
     struct servent *serviceentry;
     
-    DBG(busnumber, DBG_INFO, "bus %d starting configuration child %s",
+    DBG(busnumber, DBG_INFO, "bus %ld starting configuration child %s",
         busnumber, node->name);
     busses[0].type = SERVER_SERVER;
     busses[0].init_func = &init_bus_server;
@@ -134,13 +134,13 @@ int describeSERVER(bus_t bus, int addr, char *reply)
 int init_bus_server(bus_t bus)
 {
     gettimeofday(&busses[0].power_change_time, NULL);
-    DBG(bus, DBG_INFO, "init_bus %d", bus);
+    DBG(bus, DBG_INFO, "init_bus %ld", bus);
     return 0;
 }
 
 int term_bus_server(bus_t bus)
 {
-    DBG(bus, DBG_INFO, "term_bus %d", bus);
+    DBG(bus, DBG_INFO, "term_bus %ld", bus);
     return 0;
 }
 

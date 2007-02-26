@@ -271,7 +271,7 @@ void *thr_sendrec_M6051(void *v)
     akt_S88 = 1;
     busses[bus].watchdog = 1;
 
-    DBG(bus, DBG_INFO, "M605x on bus %d thread started, fd=%d", bus,
+    DBG(bus, DBG_INFO, "M605x on bus %ld thread started, fd=%d", bus,
         busses[bus].fd);
     ioctl(busses[bus].fd, FIONREAD, &temp);
     if (((M6051_DATA *) busses[bus].driverdata)->cmd32_pending) {

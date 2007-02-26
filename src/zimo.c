@@ -172,7 +172,7 @@ int init_linezimo(char *name)
 
 int term_bus_zimo(bus_t bus)
 {
-    DBG(bus, DBG_INFO, "zimo bus %d terminating", bus);
+    DBG(bus, DBG_INFO, "zimo bus %ld terminating", bus);
     return 0;
 }
 

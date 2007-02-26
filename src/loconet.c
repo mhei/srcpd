@@ -160,9 +160,9 @@ static int init_lineLOCONET(bus_t busnumber)
 
 int term_bus_LOCONET(bus_t busnumber)
 {
-    DBG(busnumber, DBG_INFO, "loconet bus %d terminating", busnumber);
+    DBG(busnumber, DBG_INFO, "loconet bus %lu terminating", busnumber);
     DBG(busnumber, DBG_INFO,
-        "loconet bus %d: %u packets sent, %u packets received", busnumber,
+        "loconet bus %ld: %u packets sent, %u packets received", busnumber,
         __loconet->sent_packets, __loconet->recv_packets);
     return 0;
 }
@@ -191,14 +191,14 @@ int init_bus_LOCONET(bus_t busnumber)
     DBG(busnumber, DBG_INFO, "loconet init: bus #%d, debug %d", busnumber,
         busses[busnumber].debuglevel);
     if (busses[busnumber].debuglevel <= 5) {
-        DBG(busnumber, DBG_INFO, "loconet bus %d open device %s",
+        DBG(busnumber, DBG_INFO, "loconet bus %ld open device %s",
             busnumber, busses[busnumber].filename.path);
         init_lineLOCONET(busnumber);
     }
     else {
         busses[busnumber].fd = -1;
     }
-    DBG(busnumber, DBG_INFO, "loconet bus %d init done", busnumber);
+    DBG(busnumber, DBG_INFO, "loconet bus %ld init done", busnumber);
     return 0;
 }
 
