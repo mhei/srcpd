@@ -84,7 +84,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc,
     num_busses = busnumber;
 
     /* some default values */
-    busses[current_bus].debuglevel = 1;
+    busses[current_bus].debuglevel = DBG_INFO;
     busses[current_bus].flags = 0;
 
     /* Functionpointers to NULL */
@@ -187,9 +187,9 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc,
         /* some attributes are common for all (real) busses */
         else if (xmlStrcmp(child->name, BAD_CAST "device") == 0) {
 	    txt2 = xmlGetProp(child, BAD_CAST "type");
-	    if(txt2 == NULL  || xmlStrcmp(txt2, BAD_CAST "filename")) {
+	    if(txt2 == NULL  || xmlStrcmp(txt2, BAD_CAST "filename")==0) {
 		busses[current_bus].devicetype = HW_FILENAME;
-	    } else if (xmlStrcmp(txt2, BAD_CAST "network")) {
+	    } else if (xmlStrcmp(txt2, BAD_CAST "network")==0) {
 		busses[current_bus].devicetype = HW_NETWORK;
 	    } else {
                 printf("WARNING, \"%s\" (bus %ld) is an unknown device specifier!\n",
@@ -207,11 +207,40 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc,
 		    case HW_NETWORK:
 	                 busses[current_bus].net.hostname = malloc(strlen((char *) txt) + 1);
 			 strcpy(busses[current_bus].net.hostname,  (char *) txt);
-			 // check for optional attributes
+			 txt2 = xmlGetProp(child, BAD_CAST "port");
+			 if(txt2!=NULL) {
+			     busses[current_bus].net.port = atoi((char *) txt2);
+			     free(txt2);
+			 } else {
+			    busses[current_bus].net.port = 0;
+			 }
+			 txt2 = xmlGetProp(child, BAD_CAST "protocol");
+			 if(txt2!=NULL) {
+			    struct protoent *p;
+			    p = getprotobyname((char *) txt2);
+			    busses[current_bus].net.protocol = p->p_proto;
+			    free(txt2);
+			 } else {
+			    busses[current_bus].net.protocol = 6; /* TCP */
+			 }
 			 break;
 		}
                 xmlFree(txt);
             }
+    	    switch (busses[current_bus].devicetype) {
+	        case HW_FILENAME:
+		    DBG(current_bus, DBG_INFO, "** Filename='%s'", 
+			current_bus,
+			busses[current_bus].filename.path);
+		     break;
+		case HW_NETWORK:
+		    DBG(current_bus, DBG_DEBUG, "** Network Host='%s', Protocol=%d Port=%d", 
+			current_bus,
+			busses[current_bus].net.hostname, 
+			busses[current_bus].net.protocol,
+			busses[current_bus].net.port);
+		     break;
+		}
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "verbosity") == 0) {
