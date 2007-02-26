@@ -45,7 +45,7 @@
 * Called by register_bus().
 ********************************************************************/
 int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node,
-                         long int busnumber)
+                         bus_t busnumber)
 {
 	int i;
 	int portindex;
@@ -218,7 +218,7 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node,
  *
  *
  */
-long int init_bus_Selectrix(long int busnumber)
+int init_bus_Selectrix(bus_t busnumber)
 {
 	DBG(busnumber, DBG_INFO, "Selectrix init: debug %d",
 		busses[busnumber].debuglevel);
@@ -243,7 +243,7 @@ long int init_bus_Selectrix(long int busnumber)
  *
  *
  */
-long int term_bus_Selectrix(long int busnumber)
+int term_bus_Selectrix(bus_t busnumber)
 {
 	if (!(busses[busnumber].fd != -1))
 	{
@@ -259,7 +259,7 @@ long int term_bus_Selectrix(long int busnumber)
 ********************************************************/
 /* Engines */
 /* INIT <bus> GL <adr> S 1 31 2 */
-long int init_gl_Selectrix(struct _GLSTATE *gl)
+int init_gl_Selectrix(struct _GLSTATE *gl)
 {
 	if (gl->protocol != 'S')
 	{
@@ -271,7 +271,7 @@ long int init_gl_Selectrix(struct _GLSTATE *gl)
 
 /* Switches, signals, ... */
 /* INIT <bus> GA <adr> S */
-long int init_ga_Selectrix(struct _GASTATE *ga)
+int init_ga_Selectrix(struct _GASTATE *ga)
 {
 	return (ga->protocol ==
 			'S') ? SRCP_OK : SRCP_UNSUPPORTEDDEVICEPROTOCOL;
@@ -279,7 +279,7 @@ long int init_ga_Selectrix(struct _GASTATE *ga)
 
 /* Feedbacks */
 /* INIT <bus> FB <adr> S <index> */
-long int init_fb_Selectrix(long int busnumber, int adres,
+int init_fb_Selectrix(bus_t busnumber, int adres,
 						   const char protocol, int index)
 {
 	if (protocol == 'S')
@@ -302,7 +302,7 @@ long int init_fb_Selectrix(long int busnumber, int adres,
 *     Base communication with the interface (Selectrix)
 ********************************************************/
 /* Read data from the SX-bus (8 bits) */
-int readSXbus(long int busnumber)
+int readSXbus(bus_t busnumber)
 {
 	unsigned char rr;
 	
@@ -324,7 +324,7 @@ int readSXbus(long int busnumber)
 	}
 }
 
-void commandreadSXbus(long int busnumber, int SXadres)
+void commandreadSXbus(bus_t busnumber, int SXadres)
 {
 	if (busses[busnumber].fd != -1 )
 	{
@@ -343,7 +343,7 @@ void commandreadSXbus(long int busnumber, int SXadres)
 }
 
 /* Write data to the SX-bus (8bits) */
-void writeSXbus(long int busnumber, int SXadres, int SXdata)
+void writeSXbus(bus_t busnumber, int SXadres, int SXdata)
 {
 	if (busses[busnumber].fd != -1)
 	{
@@ -371,7 +371,7 @@ void *thr_commandSelectrix(void *v)
 	int addr, data, power, state;
 	struct _GLSTATE gltmp;
 	struct _GASTATE gatmp;
-	long int busnumber = (long int) v;
+	bus_t busnumber = (bus_t) v;
 	
 	state = 0;
 	busses[busnumber].watchdog = 0;
@@ -587,7 +587,7 @@ void *thr_feedbackSelectrix(void *v)
 {
 	int addr;
 
-	long int busnumber = (long int) v;
+	bus_t busnumber = (bus_t) v;
 	DBG(busnumber, DBG_INFO, "Selectrix on bus #%ld feedbackthread started.",
 		busnumber);
 	__selectrix->currentFB = __selectrix->number_fb;
@@ -638,7 +638,7 @@ void *thr_feedbackSelectrix(void *v)
 /*******************************************************
 *     Command processing (Selectrix)
 ********************************************************/
-void sig_processSelectrix(long int busnumber)
+void sig_processSelectrix(bus_t busnumber)
 {
 	int data, addr;
 

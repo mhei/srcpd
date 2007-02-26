@@ -51,15 +51,15 @@ struct _SM {
     struct timeval tv;          // time of change
 } SM;
 
-int queueSM(long int busnumber, int command, int type, int addr, int typeaddr,
+int queueSM(bus_t busnumber, int command, int type, int addr, int typeaddr,
             int bit, int value);
-int queue_SM_isempty(long int busnumber);
-int unqueueNextSM(long int busnumber, struct _SM *l);
+int queue_SM_isempty(bus_t busnumber);
+int unqueueNextSM(bus_t busnumber, struct _SM *l);
 
-int getSM(long int busnumber, int addr, struct _SM *l);
-int setSM(long int busnumber, int type, int addr, int typeaddr, int bit,
+int getSM(bus_t busnumber, int addr, struct _SM *l);
+int setSM(bus_t busnumber, int type, int addr, int typeaddr, int bit,
           int value, int return_value);
-int infoSM(long int busnumber, int command, int type, int addr, int typeaddr,
+int infoSM(bus_t busnumber, int command, int type, int addr, int typeaddr,
            int bit, int value, char *info);
 
 #endif

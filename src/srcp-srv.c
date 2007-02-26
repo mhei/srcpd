@@ -8,8 +8,8 @@
 
 #include "stdincludes.h"
 
-#include "srcp-srv.h"
 #include "config-srcpd.h"
+#include "srcp-srv.h"
 #include "srcp-error.h"
 #include "srcp-info.h"
 
@@ -20,7 +20,7 @@ int server_shutdown_state;
 
 #define __srv ((SERVER_DATA*)busses[busnumber].driverdata)
 
-int readconfig_server(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
+int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
     struct servent *serviceentry;
     
@@ -126,19 +126,19 @@ int startup_SERVER(void)
     return 0;
 }
 
-int describeSERVER(long int bus, int addr, char *reply)
+int describeSERVER(bus_t bus, int addr, char *reply)
 {
     return SRCP_UNSUPPORTEDOPERATION;
 }
 
-long int init_bus_server(long int bus)
+int init_bus_server(bus_t bus)
 {
     gettimeofday(&busses[0].power_change_time, NULL);
     DBG(bus, DBG_INFO, "init_bus %d", bus);
     return 0;
 }
 
-long int term_bus_server(long int bus)
+int term_bus_server(bus_t bus)
 {
     DBG(bus, DBG_INFO, "term_bus %d", bus);
     return 0;

@@ -28,7 +28,7 @@ static int out[MAX_BUSSES], in[MAX_BUSSES];
 
 /* internal functions */
 
-static int queueInfoFB(long int busnumber, int port)
+static int queueInfoFB(bus_t busnumber, int port)
 {
     char msg[1000];
     infoFB(busnumber, port, msg);
@@ -36,7 +36,7 @@ static int queueInfoFB(long int busnumber, int port)
     return SRCP_OK;
 }
 
-static int queueLengthFB(long int busnumber)
+static int queueLengthFB(bus_t busnumber)
 {
     if (in[busnumber] >= out[busnumber])
         return in[busnumber] - out[busnumber];
@@ -44,7 +44,7 @@ static int queueLengthFB(long int busnumber)
         return QUEUELENGTH_FB + in[busnumber] - out[busnumber];
 }
 
-static int queueIsFullFB(long int busnumber)
+static int queueIsFullFB(bus_t busnumber)
 {
     return queueLengthFB(busnumber) >= QUEUELENGTH_FB - 1;
 }
@@ -55,7 +55,7 @@ int queueIsEmptyFB(busnumber)
 }
 
 /** liefert n�hsten Eintrag und >=0, oder -1 */
-static int getNextFB(long int busnumber, struct _RESET_FB *info)
+static int getNextFB(bus_t busnumber, struct _RESET_FB *info)
 {
     if (in[busnumber] == out[busnumber])
         return -1;
@@ -67,7 +67,7 @@ static int getNextFB(long int busnumber, struct _RESET_FB *info)
 }
 
 /** liefert n�hsten Eintrag oder -1, setzt fifo pointer neu! */
-static void unqueueNextFB(long int busnumber)
+static void unqueueNextFB(bus_t busnumber)
 {
     pthread_mutex_lock(&queue_mutex_reset[busnumber]);
     out[busnumber]++;
@@ -76,7 +76,7 @@ static void unqueueNextFB(long int busnumber)
     pthread_mutex_unlock(&queue_mutex_reset[busnumber]);
 }
 
-static void queue_reset_fb(long int busnumber, int port,
+static void queue_reset_fb(bus_t busnumber, int port,
                            struct timeval *ctime)
 {
     while (queueIsFullFB(busnumber)) {
@@ -94,7 +94,7 @@ static void queue_reset_fb(long int busnumber, int port,
     pthread_mutex_unlock(&queue_mutex_reset[busnumber]);
 }
 
-int getFB(long int bus, int port, struct timeval *time, int *value)
+int getFB(bus_t bus, int port, struct timeval *time, int *value)
 {
     port--;
     if (get_number_fb(bus) <= 0 || (port < 0)
@@ -107,12 +107,12 @@ int getFB(long int bus, int port, struct timeval *time, int *value)
     return SRCP_OK;
 }
 
-int setFB(long int bus, int port, int value)
+int setFB(bus_t bus, int port, int value)
 {
     return updateFB(bus, port, value);
 }
 
-int updateFB(long int bus, int port, int value)
+int updateFB(bus_t bus, int port, int value)
 {
     struct timezone dummy;
     struct timeval akt_time;
@@ -167,7 +167,7 @@ int updateFB(long int bus, int port, int value)
 }
 
 /* all moduls with 8 or 16 ports */
-int setFBmodul(long int bus, int modul, int values)
+int setFBmodul(bus_t bus, int modul, int values)
 {
     int i;
     int c;
@@ -205,7 +205,7 @@ int setFBmodul(long int bus, int modul, int values)
     return rc;
 }
 
-int infoFB(long int bus, int port, char *msg)
+int infoFB(bus_t bus, int port, char *msg)
 {
     struct timeval time;
     int state;
@@ -221,7 +221,7 @@ int infoFB(long int bus, int port, char *msg)
     }
 }
 
-int describeFB(long int bus, int addr, char *reply)
+int describeFB(bus_t bus, int addr, char *reply)
 {
     return SRCP_UNSUPPORTEDOPERATION;
 }
@@ -239,13 +239,13 @@ int startup_FB()
     return 0;
 }
 
-void set_min_time(long int busnumber, int mt)
+void set_min_time(bus_t busnumber, int mt)
 {
     if ((busnumber >= 0) && (busnumber < MAX_BUSSES))
         min_time[busnumber] = mt * 1000;
 }
 
-int init_FB(long int bus, int number)
+int init_FB(bus_t bus, int number)
 {
     struct timeval akt_time;
     int i;
@@ -269,7 +269,7 @@ int init_FB(long int bus, int number)
     return 0;
 }
 
-int initFB(long int busnumber, int adres, const char protocol, int index)
+int initFB(bus_t busnumber, int adres, const char protocol, int index)
 {
     int rc = SRCP_OK;
     int number_fb = get_number_fb(busnumber);
@@ -282,12 +282,12 @@ int initFB(long int busnumber, int adres, const char protocol, int index)
     return rc;
 }
 
-int get_number_fb(long int bus)
+int get_number_fb(bus_t bus)
 {
     return fb[bus].numberOfFb;
 }
 
-void check_reset_fb(long int busnumber)
+void check_reset_fb(bus_t busnumber)
 {
     struct _RESET_FB reset_fb;
     struct timeval cmp_time, diff_time;

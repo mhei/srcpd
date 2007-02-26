@@ -12,7 +12,7 @@
 
 typedef struct _thr_param
 {
-    long int busnumber;
+    bus_t busnumber;
 } thr_param;
 
 typedef struct _THREADS
@@ -22,6 +22,6 @@ typedef struct _THREADS
 } THREADS;
 
 void* thr_handlePort(void *);
-void change_privileges(long int bus);
+void change_privileges(bus_t bus);
 
 #endif

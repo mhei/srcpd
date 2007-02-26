@@ -77,17 +77,17 @@
 #define S88_WRITE(x) for (i = 0; i < S88CLOCK_SCALE; i++) outb(x, S88PORT)
 
 // possible io-addresses for the parallel port
-const unsigned long int LPT_BASE[] = { 0x378, 0x278, 0x3BC };
+static const unsigned long int LPT_BASE[] = { 0x378, 0x278, 0x3BC };
 
 // number of possible parallel ports
-const unsigned int LPT_NUM = 3;
+static const unsigned int LPT_NUM = 3;
 // values of the bits in a byte
-const char BIT_VALUES[] =
+static const char BIT_VALUES[] =
     { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
 
 #define __ddl_s88 ((DDL_S88_DATA *) busses[busnumber].driverdata)
 
-int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
+int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
     int i;
 
@@ -244,7 +244,7 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
 * bit ordering is changed from erddcd code! (MT)     *
 *                                                               *
 ****************************************************************/
-long int init_bus_S88(long int busnumber)
+int init_bus_S88(bus_t busnumber)
 {
     unsigned int i;             // loop counter
     int isin = 0;               // reminder for checking
@@ -321,7 +321,7 @@ long int init_bus_S88(long int busnumber)
 * remarks: tested MW, 20.11.2000                                *
 *                                                               *
 ****************************************************************/
-void s88load(long int busnumber)
+void s88load(bus_t busnumber)
 {
     int i, j, k, inbyte;
     struct timeval nowtime;
@@ -386,14 +386,14 @@ void s88load(long int busnumber)
     }
 }
 
-long int term_bus_S88(long int bus)
+int term_bus_S88(bus_t bus)
 {
     return 0;
 }
 
 void *thr_sendrec_S88(void *v)
 {
-    long int busnumber = (long int) v;
+    bus_t busnumber = (bus_t) v;
     unsigned long int sleepusec = 100000;
 
     int S88REFRESH = __ddl_s88->refresh;
@@ -433,7 +433,7 @@ void *thr_sendrec_dummy(void *v)
  *---------------------------------------------------------------------------*/
 
 int FBSD_ioperm(int Port, int KeineAhnung, int DesiredAccess,
-                long int busnumber)
+                bus_t busnumber)
 {
     int i;
     int found = 0;
@@ -498,7 +498,7 @@ int FBSD_ioperm(int Port, int KeineAhnung, int DesiredAccess,
 }
 
 
-unsigned char FBSD_inb(int Woher, long int busnumber)
+unsigned char FBSD_inb(int Woher, bus_t busnumber)
 {
     // Aufpassen! Manchmal wird das Datenport, manchmal die Steuer
     // leitungen angesprochen !
@@ -536,7 +536,7 @@ unsigned char FBSD_inb(int Woher, long int busnumber)
     return i;
 }
 
-unsigned char FBSD_outb(unsigned char Data, int Wohin, long int busnumber)
+unsigned char FBSD_outb(unsigned char Data, int Wohin, bus_t busnumber)
 {
     // suchen wir uns den richtigen ioctl zur richtigen Adresse...
 

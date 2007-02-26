@@ -30,8 +30,15 @@
 #include <sys/param.h>
 #include <stdarg.h>
 
+
+typedef unsigned long int bus_t;
+typedef unsigned long int sessionid_t ;
+
+
+#include "srcp-session.h"
 #include "srcp-gl.h"
 #include "srcp-ga.h"
+
 
 #define MAX_BUSSES             20         //! max number of integrated busses in srcpd
 #define MAXSRCPLINELEN       1001         //! max number of bytes per line plus 0x00
@@ -103,16 +110,16 @@ typedef struct _BUS
   pthread_t pidtimer;                        //! PID of the timer thread
   void *thr_func;                            //! addr of the thread function
   void *thr_timer;                           //! addr of the timer thread
-  void (*sig_reader)(long int);              //! addr of the reader (signal based)
+  void (*sig_reader)(bus_t);              //! addr of the reader (signal based)
   /* Definition of thread synchronisation                                              */
   pthread_mutex_t transmit_mutex;
   pthread_cond_t transmit_cond;
 
-  long int (*init_func)(long int);           //! addr of init function
-  long int (*term_func)(long int);           //! addr of init function
-  long int (*init_gl_func) ( struct _GLSTATE *);  //! called to check default init
-  long int (*init_ga_func) ( struct _GASTATE *);  //! called to check default init
-  long int (*init_fb_func) (long int busnumber, int addr, const char protocolb, int index);  //! called to check default init
+  int (*init_func)(bus_t);           //! addr of init function
+  int (*term_func)(bus_t);           //! addr of init function
+  int (*init_gl_func) ( struct _GLSTATE *);  //! called to check default init
+  int (*init_ga_func) ( struct _GASTATE *);  //! called to check default init
+  int (*init_fb_func) (bus_t busnumber, int addr, const char protocolb, int index);  //! called to check default init
 
   int watchdog;                              //! used to monitor the thread
   /* Power management on the track */
@@ -130,8 +137,8 @@ extern int num_busses;
 
 int readConfig(char *filename);
 
-void suspendThread(long int busnumber);
-void resumeThread(long int busnumber);
+void suspendThread(bus_t busnumber);
+void resumeThread(bus_t busnumber);
 
 #define DG_SESSION 1
 #define DG_TIME 2
@@ -145,7 +152,7 @@ void resumeThread(long int busnumber);
 #define DG_POWER 10
 #define DG_GM 11
 
-int bus_has_devicegroup(long int bus, int dg);
+int bus_has_devicegroup(bus_t bus, int dg);
 
 #define DBG_NONE 0
 #define DBG_FATAL 1
@@ -154,5 +161,5 @@ int bus_has_devicegroup(long int bus, int dg);
 #define DBG_INFO 4
 #define DBG_DEBUG 5
 
-void DBG(long int busnumber, int dbglevel, const char *fmt, ...);
+void DBG(bus_t busnumber, int dbglevel, const char *fmt, ...);
 #endif

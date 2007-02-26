@@ -10,7 +10,7 @@
 #include "srcp-info.h"
 #include "srcp-gm.h"
 
-int setGM( long int bus, char *msg )
+int setGM( bus_t bus, char *msg )
 {
     struct timeval akt_time;
     char *msgtmp;

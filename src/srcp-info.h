@@ -18,7 +18,9 @@
 #ifndef _SRCP_INFO_H
 #define _SRCP_INFO_H
 
-int doInfoClient(int Socket, int sessionid);
+#include "srcp-session.h"
+
+int doInfoClient(int Socket, sessionid_t sessionid);
 int startup_INFO(void);
 
 int queueIsEmptyInfo();

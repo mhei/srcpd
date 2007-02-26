@@ -27,10 +27,10 @@
 
 #define __loconet ((LOCONET_DATA*)busses[busnumber].driverdata)
 
-static long int init_gl_LOCONET(struct _GLSTATE *);
-static long int init_ga_LOCONET(struct _GASTATE *);
+static int init_gl_LOCONET(struct _GLSTATE *);
+static int init_ga_LOCONET(struct _GASTATE *);
 
-int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
+int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
     xmlNodePtr child = node->children;
     xmlChar *txt;
@@ -97,7 +97,7 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
     return (1);
 }
 
-static long int init_lineLOCONET(long int busnumber)
+static int init_lineLOCONET(bus_t busnumber)
 {
     int fd;
     struct termios interface;
@@ -158,7 +158,7 @@ static long int init_lineLOCONET(long int busnumber)
     return 1;
 }
 
-long int term_bus_LOCONET(long int busnumber)
+int term_bus_LOCONET(bus_t busnumber)
 {
     DBG(busnumber, DBG_INFO, "loconet bus %d terminating", busnumber);
     DBG(busnumber, DBG_INFO,
@@ -171,7 +171,7 @@ long int term_bus_LOCONET(long int busnumber)
  * initGL: modifies the gl data used to initialize the device
 
  */
-static long int init_gl_LOCONET(struct _GLSTATE *gl)
+static int init_gl_LOCONET(struct _GLSTATE *gl)
 {
     return SRCP_OK;
 }
@@ -180,12 +180,12 @@ static long int init_gl_LOCONET(struct _GLSTATE *gl)
  * initGA: modifies the ga data used to initialize the device
 
  */
-static long int init_ga_LOCONET(struct _GASTATE *ga)
+static int init_ga_LOCONET(struct _GASTATE *ga)
 {
     return SRCP_OK;
 }
 
-long int init_bus_LOCONET(long int busnumber)
+int init_bus_LOCONET(bus_t busnumber)
 {
     __loconet->sent_packets = __loconet->recv_packets = 0;
     DBG(busnumber, DBG_INFO, "loconet init: bus #%d, debug %d", busnumber,
@@ -212,7 +212,7 @@ static unsigned char ln_checksum(const unsigned char *cmd, int len)
     return chksum;
 }
 
-static int ln_isecho(long int busnumber, const unsigned char *ln_packet,
+static int ln_isecho(bus_t busnumber, const unsigned char *ln_packet,
                      unsigned char ln_packetlen)
 {
     int i;
@@ -231,7 +231,7 @@ static int ln_isecho(long int busnumber, const unsigned char *ln_packet,
     return TRUE;
 }
 
-static int ln_read(long int busnumber, unsigned char *cmd, int len)
+static int ln_read(bus_t busnumber, unsigned char *cmd, int len)
 {
     int fd = busses[busnumber].fd;
     int index = 1;
@@ -287,7 +287,7 @@ static int ln_read(long int busnumber, unsigned char *cmd, int len)
 }
 
 
-static int ln_write(long int busnumber, const unsigned char *cmd,
+static int ln_write(bus_t busnumber, const unsigned char *cmd,
                     unsigned char len)
 {
     unsigned char i;
@@ -303,7 +303,7 @@ static int ln_write(long int busnumber, const unsigned char *cmd,
 }
 
 
-static int ln_opc_peer_xfer_read(long int busnumber,
+static int ln_opc_peer_xfer_read(bus_t busnumber,
                                  const unsigned char *ln_packet)
 {
     DBG(busnumber, DBG_DEBUG,
@@ -326,7 +326,7 @@ static int ln_opc_peer_xfer_read(long int busnumber,
 
 void *thr_sendrec_LOCONET(void *v)
 {
-    long int busnumber = (long int) v;
+    bus_t busnumber = (bus_t) v;
     unsigned char ln_packet[128];       /* max length is coded with 7 bit */
     unsigned char ln_packetlen = 2;
     unsigned int addr, timeoutcnt;

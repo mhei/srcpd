@@ -47,17 +47,17 @@ typedef struct _SELECTRIX_DATA {
 } SELECTRIX_DATA;
 
 /* Initialisation of the structure */
-int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, long int busnumber);
+int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber);
 
 /* Methods for Selectrix */
-int init_lineSelectrix(long int bus);
-long int init_bus_Selectrix(long int bus);
-long int term_bus_Selectrix(long int bus);
-long int init_gl_Selectrix(struct _GLSTATE *gl);
-long int init_ga_Selectrix(struct _GASTATE *ga);
-long int init_fb_Selectrix(long int busnumber, int addr, const char protocol, int index);
+int init_lineSelectrix(bus_t bus);
+int init_bus_Selectrix(bus_t bus);
+int term_bus_Selectrix(bus_t bus);
+int init_gl_Selectrix(struct _GLSTATE *gl);
+int init_ga_Selectrix(struct _GASTATE *ga);
+int init_fb_Selectrix(bus_t busnumber, int addr, const char protocol, int index);
 void *thr_commandSelectrix(void *);
 void *thr_feedbackSelectrix(void *);
-void sig_processSelectrix(long int busnumber);
+void sig_processSelectrix(bus_t busnumber);
 
 #endif

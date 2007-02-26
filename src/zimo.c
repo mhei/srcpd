@@ -28,7 +28,7 @@ static long tdiff(struct timeval t1, struct timeval t2)
             t1.tv_usec / 1000);
 }
 
-int readanswer(long int bus, char cmd, char *buf, int maxbuflen,
+int readanswer(bus_t bus, char cmd, char *buf, int maxbuflen,
                long timeout_ms)
 {
     int i, status, cnt = 0;
@@ -65,7 +65,7 @@ int readanswer(long int bus, char cmd, char *buf, int maxbuflen,
     }
 }
 
-int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, long int busnumber)
+int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
     busses[busnumber].type = SERVER_ZIMO;
     busses[busnumber].init_func = &init_bus_zimo;
@@ -170,7 +170,7 @@ int init_linezimo(char *name)
     return fd;
 }
 
-long int term_bus_zimo(long int bus)
+int term_bus_zimo(bus_t bus)
 {
     DBG(bus, DBG_INFO, "zimo bus %d terminating", bus);
     return 0;
@@ -179,9 +179,9 @@ long int term_bus_zimo(long int bus)
 /* Initialisiere den Bus, signalisiere Fehler */
 /* Einmal aufgerufen mit busnummer als einzigem Parameter */
 /* return code wird ignoriert (vorerst) */
-long int init_bus_zimo(long int i)
+int init_bus_zimo(bus_t i)
 {
-    DBG(i, DBG_INFO, "zimo init: bus #%d, debug %d, device %s", i,
+    DBG(i, DBG_INFO, "zimo init: bus #%ld, debug %d, device %s", i,
         busses[i].debuglevel, busses[i].filename.path);
     busses[i].fd = init_linezimo(busses[i].filename.path);
     DBG(i, DBG_INFO, "zimo init done");
@@ -194,7 +194,7 @@ void *thr_sendrec_zimo(void *v)
     struct _SM smtmp;
     // TODO: struct _GASTATE gatmp, gaakt;
     int addr, temp, i;
-    long int bus = (long int) v;
+    bus_t bus = (bus_t) v;
     char msg[20];
     char rr;
     char databyte1, databyte2, databyte3;

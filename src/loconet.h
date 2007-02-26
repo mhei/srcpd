@@ -21,9 +21,9 @@ typedef struct _LOCONET_DATA {
     unsigned char ln_message[128]; /* last message sent */
 } LOCONET_DATA;
 
-int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, long int busnumber);
-long int init_bus_LOCONET(long int);
-long int term_bus_LOCONET(long int);
+int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber);
+int init_bus_LOCONET(bus_t);
+int term_bus_LOCONET(bus_t);
 int getDescription_LOCONET(char *reply);
 void *thr_sendrec_LOCONET(void *);
 
@@ -60,6 +60,18 @@ void *thr_sendrec_LOCONET(void *);
  *
  * Version Control:
  * $Log$
+ * Revision 1.6  2007/02/26 13:27:34  mtrute
+ * Internal cleanups only
+ *
+ * Changed the long int for busnumbers and sessionids to bus_t and
+ * sessionid_t respectivly (and found a few occurances where these
+ * parameters were or were used as int)
+ *
+ * whoever uses long ints for flags in function return values should
+ * piiip
+ *
+ * deleted the sa_restorer line (hello Gerard!)
+ *
  * Revision 1.5  2006/01/25 19:37:42  mtrute
  * added ms100 code and GA support for LocoIO
  *

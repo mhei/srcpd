@@ -17,13 +17,13 @@
 #ifndef _IO_H
 #define _IO_H
 
-int  readByte(long int bus, int wait, unsigned char *the_byte);
-void writeByte(long int bus, unsigned char the_byte, unsigned long msec);
-void writeString(long int bus, unsigned char *the_string, unsigned long msecs);
+int  readByte(bus_t bus, int wait, unsigned char *the_byte);
+void writeByte(bus_t bus, unsigned char the_byte, unsigned long msec);
+void writeString(bus_t bus, unsigned char *the_string, unsigned long msecs);
 
-void restore_comport(long int bus);
-void save_comport(long int bus);
-void close_comport(long int bus);
+void restore_comport(bus_t bus);
+void save_comport(bus_t bus);
+void close_comport(bus_t bus);
 
 int socket_readline(int Socket, char *line, int len);
 int socket_writereply(int Socket, const char *line);

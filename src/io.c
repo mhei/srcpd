@@ -16,11 +16,11 @@
  ***************************************************************************/
 #include <stdincludes.h>
 
-#include "io.h"
 #include "config-srcpd.h"
+#include "io.h"
 #include "ttycygwin.h"
 
-int readByte(long int bus, int wait, unsigned char *the_byte)
+int readByte(bus_t bus, int wait, unsigned char *the_byte)
 {
     int i;
     int status;
@@ -60,7 +60,7 @@ int readByte(long int bus, int wait, unsigned char *the_byte)
     return (i > 0 ? 0 : -1);
 }
 
-void writeByte(long int bus, unsigned char b, unsigned long msecs)
+void writeByte(bus_t bus, unsigned char b, unsigned long msecs)
 {
     int i = 0;
     char byte = b;
@@ -79,16 +79,16 @@ void writeByte(long int bus, unsigned char b, unsigned long msecs)
     usleep(msecs * 1000);
 }
 
-void writeString(long int bus, unsigned char *s, unsigned long msecs)
+void writeString(bus_t bus, unsigned char *s, unsigned long msecs)
 {
-    int l = strlen((char *) s);
+    size_t l = strlen((char *) s);
     int i;
     for (i = 0; i < l; i++) {
         writeByte(bus, s[i], msecs);
     }
 }
 
-void save_comport(long int businfo)
+void save_comport(bus_t businfo)
 {
     int fd;
 
@@ -102,7 +102,7 @@ void save_comport(long int businfo)
     }
 }
 
-void restore_comport(long int bus)
+void restore_comport(bus_t bus)
 {
     int fd;
 
@@ -120,7 +120,7 @@ void restore_comport(long int bus)
     }
 }
 
-void close_comport(long int bus)
+void close_comport(bus_t bus)
 {
     struct termios interface;
     DBG(bus, DBG_INFO, "Closing serial line");
@@ -172,7 +172,7 @@ int socket_readline(int Socket, char *line, int len)
 int socket_writereply(int Socket, const char *line)
 {
     int status = 0;
-    long int linelen = strlen(line);
+    size_t linelen = strlen(line);
     char chunk[MAXSRCPLINELEN], tmp[MAXSRCPLINELEN];
     int i = 0;
 

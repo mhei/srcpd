@@ -24,14 +24,14 @@ static pthread_mutex_t queue_mutex[ MAX_BUSSES ];
 static int out[ MAX_BUSSES ], in[ MAX_BUSSES ];
 
 /* internal functions */
-static int queue_len( long int busnumber );
-static int queue_isfull( long int busnumber );
+static int queue_len( bus_t busnumber );
+static int queue_isfull( bus_t busnumber );
 
 /**
  * isValidGL: checks if a given address could be a valid GL.
  * returns true or false. false, if not all requierements are met.
  */
-int isValidGL( long int busnumber, int addr )
+int isValidGL( bus_t busnumber, int addr )
 {
   DBG( busnumber, DBG_INFO, "GL VALID: %d %d (from %d to %d)", busnumber,
        addr, /*num_busses*/ 1, gl[ busnumber ].numberOfGl /*- 1*/ );
@@ -59,7 +59,7 @@ int isValidGL( long int busnumber, int addr )
             =0: no GL on that bus
       >0: maximum address
  */
-int getMaxAddrGL( long int busnumber )
+int getMaxAddrGL( bus_t busnumber )
 {
   if ( busnumber > 0 && busnumber <= num_busses )
   {
@@ -99,7 +99,7 @@ static int calcspeed( int vs, int vmax, int n_fs )
 /* checks whether a GL is already initialized or not
  * returns false even, if it is an invalid address!
  */
-int isInitializedGL( long int busnumber, int addr )
+int isInitializedGL( bus_t busnumber, int addr )
 {
   if ( isValidGL( busnumber, addr ) )
   {
@@ -116,7 +116,7 @@ int isInitializedGL( long int busnumber, int addr )
    ist das nicht angebracht (Notstop)
 */
 
-int queueGL( long int busnumber, int addr, int dir, int speed, int maxspeed,
+int queueGL( bus_t busnumber, int addr, int dir, int speed, int maxspeed,
              const int f )
 {
   struct timeval akt_time;
@@ -165,12 +165,12 @@ int queueGL( long int busnumber, int addr, int dir, int speed, int maxspeed,
   }
 }
 
-int queue_GL_isempty( long int busnumber )
+int queue_GL_isempty( bus_t busnumber )
 {
   return ( in[ busnumber ] == out[ busnumber ] );
 }
 
-static int queue_len( long int busnumber )
+static int queue_len( bus_t busnumber )
 {
   if ( in[ busnumber ] >= out[ busnumber ] )
     return in[ busnumber ] - out[ busnumber ];
@@ -179,13 +179,13 @@ static int queue_len( long int busnumber )
 }
 
 /* maybe, 1 element in the queue cannot be used.. */
-static int queue_isfull( long int busnumber )
+static int queue_isfull( bus_t busnumber )
 {
   return queue_len( busnumber ) >= QUEUELEN - 1;
 }
 
 /** liefert n�hsten Eintrag oder -1, setzt fifo pointer neu! */
-int unqueueNextGL( long int busnumber, struct _GLSTATE *l )
+int unqueueNextGL( bus_t busnumber, struct _GLSTATE *l )
 {
   if ( in[ busnumber ] == out[ busnumber ] )
     return -1;
@@ -197,7 +197,7 @@ int unqueueNextGL( long int busnumber, struct _GLSTATE *l )
   return out[ busnumber ];
 }
 
-int getGL( long int busnumber, int addr, struct _GLSTATE *l )
+int getGL( bus_t busnumber, int addr, struct _GLSTATE *l )
 {
   if ( isInitializedGL( busnumber, addr ) )
   {
@@ -216,7 +216,7 @@ int getGL( long int busnumber, int addr, struct _GLSTATE *l )
  * within the SRCP SET Command code.
  * It respects the TERM function.
 */
-int setGL( long int busnumber, int addr, struct _GLSTATE l )
+int setGL( bus_t busnumber, int addr, struct _GLSTATE l )
 {
   if ( isValidGL( busnumber, addr ) )
   {
@@ -246,7 +246,7 @@ int setGL( long int busnumber, int addr, struct _GLSTATE l )
   }
 }
 
-int initGL( long int busnumber, int addr, const char protocol,
+int initGL( bus_t busnumber, int addr, const char protocol,
             int protoversion, int n_fs, int n_func )
 {
   int rc = SRCP_WRONGVALUE;
@@ -282,7 +282,7 @@ int initGL( long int busnumber, int addr, const char protocol,
 }
 
 
-int termGL( long int busnumber, int addr )
+int termGL( bus_t busnumber, int addr )
 {
   if ( isInitializedGL( busnumber, addr ) )
   {
@@ -300,7 +300,7 @@ int termGL( long int busnumber, int addr )
 /*
  * RESET a GL to its defaults
  */
-int resetGL( long int busnumber, int addr )
+int resetGL( bus_t busnumber, int addr )
 {
   if (isInitializedGL( busnumber, addr ) )
   {
@@ -313,7 +313,7 @@ int resetGL( long int busnumber, int addr )
   }
 }
 
-int describeGL( long int busnumber, int addr, char *msg )
+int describeGL( bus_t busnumber, int addr, char *msg )
 {
   if (isInitializedGL( busnumber, addr ) )
   {
@@ -333,7 +333,7 @@ int describeGL( long int busnumber, int addr, char *msg )
   return SRCP_INFO;
 }
 
-int infoGL( long int busnumber, int addr, char *msg )
+int infoGL( bus_t busnumber, int addr, char *msg )
 {
   int i;
   char *tmp;
@@ -370,8 +370,8 @@ int infoGL( long int busnumber, int addr, char *msg )
 }
 
 /* has to use a semaphore, must be atomare! */
-int lockGL( long int busnumber, int addr, long int duration,
-            long int sessionid )
+int lockGL( bus_t busnumber, int addr, long int duration,
+            sessionid_t sessionid )
 {
   char msg[ 256 ];
   if (isInitializedGL( busnumber, addr ) )
@@ -397,7 +397,7 @@ int lockGL( long int busnumber, int addr, long int duration,
   }
 }
 
-int getlockGL( long int busnumber, int addr, long int *session_id )
+int getlockGL( bus_t busnumber, int addr, sessionid_t *session_id )
 {
   if (isInitializedGL( busnumber, addr ) )
   {
@@ -411,7 +411,7 @@ int getlockGL( long int busnumber, int addr, long int *session_id )
   }
 }
 
-int describeLOCKGL( long int bus, int addr, char *reply )
+int describeLOCKGL( bus_t bus, int addr, char *reply )
 {
   if (isInitializedGL( bus, addr ) )
   {
@@ -429,7 +429,7 @@ int describeLOCKGL( long int bus, int addr, char *reply )
   }
 }
 
-int unlockGL( long int busnumber, int addr, long int sessionid )
+int unlockGL( bus_t busnumber, int addr, sessionid_t sessionid )
 {
   if (isInitializedGL( busnumber, addr ) )
   {
@@ -461,7 +461,7 @@ int unlockGL( long int busnumber, int addr, long int sessionid )
 /**
  * called when a session is terminating
  */
-void unlock_gl_bysessionid( long int sessionid )
+void unlock_gl_bysessionid( sessionid_t sessionid )
 {
   int i, j;
   int number;
@@ -521,7 +521,7 @@ int startup_GL( void )
  * allocates memory to hold all the data
  * called from the configuration routines
  */
-int init_GL( long int busnumber, int number )
+int init_GL( bus_t busnumber, int number )
 {
   int i;
   DBG( busnumber, DBG_WARN, "INIT GL: %d", number );
@@ -543,7 +543,7 @@ int init_GL( long int busnumber, int number )
   return 0;
 }
 
-void debugGL( long int busnumber, int start, int end )
+void debugGL( bus_t busnumber, int start, int end )
 {
   struct _GLSTATE * gls;
   int i;

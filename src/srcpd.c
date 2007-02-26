@@ -16,6 +16,7 @@
 #include "stdincludes.h"
 
 #include "config-srcpd.h"
+#include "srcp-session.h"
 #include "io.h"
 #include "netserver.h"
 #include "srcp-descr.h"
@@ -24,7 +25,7 @@
 #include "srcp-gl.h"
 #include "srcp-lock.h"
 #include "srcp-power.h"
-#include "srcp-session.h"
+
 #include "srcp-srv.h"
 #include "srcp-time.h"
 #include "srcp-info.h"
@@ -285,7 +286,7 @@ int main(int argc, char **argv)
 
     syslog(LOG_INFO, "All Threads started");
     /* Setup serial interrupt processing */
-    saio.sa_restorer = NULL;
+    // not needed anymore: saio.sa_restorer = NULL;
     saio.sa_flags = 0;
     saio.sa_handler = &processSignal;
     sigemptyset(&saio.sa_mask);

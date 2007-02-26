@@ -17,6 +17,7 @@
 #include "stdincludes.h"
 
 #include "config-srcpd.h"
+#include "srcp-session.h"
 #include "io.h"
 #include "srcp-error.h"
 #include "srcp-fb.h"
@@ -27,7 +28,7 @@
 #include "srcp-power.h"
 #include "srcp-sm.h"
 #include "srcp-srv.h"
-#include "srcp-session.h"
+
 #include "srcp-descr.h"
 #include "srcp-time.h"
 
@@ -47,16 +48,14 @@ extern char *WELCOME_MSG;
  *
  */
 
-long int SessionID = MAX_BUSSES + 1;
-pthread_mutex_t SessionID_mut = PTHREAD_MUTEX_INITIALIZER;
 
 void *thr_doClient(void *v)
 {
-    long int Socket = (long int) v;
+    int Socket = (int) v;
     char line[MAXSRCPLINELEN], cmd[MAXSRCPLINELEN],
         parameter[MAXSRCPLINELEN], reply[MAXSRCPLINELEN];
     int mode = COMMAND;
-    long int sessionid, rc, nelem;
+    sessionid_t sessionid, rc, nelem;
     struct timeval time;
     /* drop root permission for this thread */
     change_privileges(0);
@@ -86,9 +85,7 @@ void *thr_doClient(void *v)
             rc = SRCP_UNKNOWNCOMMAND;
 
             if (strncasecmp(cmd, "GO", 2) == 0) {
-                pthread_mutex_lock(&SessionID_mut);
-                sessionid = SessionID++;
-                pthread_mutex_unlock(&SessionID_mut);
+		sessionid = session_getnextID();
                 gettimeofday(&time, NULL);
                 sprintf(reply, "%lu.%.3lu 200 OK GO %ld\n", time.tv_sec,
                         time.tv_usec / 1000, sessionid);
@@ -153,7 +150,7 @@ void *thr_doClient(void *v)
  * handle all aspects of the command for all commands
  */
 
-static int handle_setcheck(int sessionid, long int bus, char *device,
+static int handle_setcheck(int sessionid, bus_t bus, char *device,
                            char *parameter, char *reply, int setorcheck)
 {
     struct timeval time;
@@ -177,7 +174,7 @@ static int handle_setcheck(int sessionid, long int bus, char *device,
             func += (f[i] ? 1 : 0) << i;
         }
         if (anzparms >= 4) {
-            long int lockid;
+            sessionid_t lockid;
             /* Only if not locked or emergency stop !! */
             getlockGL(bus, laddr, &lockid);
             if (lockid == 0 || lockid == sessionid || direction == 2) {
@@ -198,7 +195,7 @@ static int handle_setcheck(int sessionid, long int bus, char *device,
     else if (bus_has_devicegroup(bus, DG_GA)
         && strncasecmp(device, "GA", 2) == 0) {
         long gaddr, port, aktion, delay;
-        long int lockid;
+        sessionid_t lockid;
         int anzparms;
         anzparms =
             sscanf(parameter, "%ld %ld %ld %ld", &gaddr, &port, &aktion,
@@ -346,7 +343,7 @@ static int handle_setcheck(int sessionid, long int bus, char *device,
 /**
  * SET
  */
-int handleSET(int sessionid, long int bus, char *device, char *parameter,
+int handleSET(int sessionid, bus_t bus, char *device, char *parameter,
               char *reply)
 {
     return handle_setcheck(sessionid, bus, device, parameter, reply, 1);
@@ -355,7 +352,7 @@ int handleSET(int sessionid, long int bus, char *device, char *parameter,
 /***
  * CHECK -- like SET but no command must be sent
  */
-int handleCHECK(int sessionid, long int bus, char *device, char *parameter,
+int handleCHECK(int sessionid, bus_t bus, char *device, char *parameter,
                 char *reply)
 {
     return handle_setcheck(sessionid, bus, device, parameter, reply, 0);
@@ -364,7 +361,7 @@ int handleCHECK(int sessionid, long int bus, char *device, char *parameter,
 /**
  * GET
  */
-int handleGET(int sessionid, long int bus, char *device, char *parameter,
+int handleGET(int sessionid, bus_t bus, char *device, char *parameter,
               char *reply)
 {
     struct timeval akt_time;
@@ -514,7 +511,7 @@ int handleGET(int sessionid, long int bus, char *device, char *parameter,
 /**
  * WAIT
  */
-int handleWAIT(int sessionid, long int bus, char *device, char *parameter,
+int handleWAIT(int sessionid, bus_t bus, char *device, char *parameter,
                char *reply)
 {
     struct timeval time;
@@ -588,7 +585,7 @@ int handleWAIT(int sessionid, long int bus, char *device, char *parameter,
 /**
  * VERIFY
  */
-int handleVERIFY(int sessionid, long int bus, char *device,
+int handleVERIFY(int sessionid, bus_t bus, char *device,
                  char *parameter, char *reply)
 {
     int rc = SRCP_UNSUPPORTEDOPERATION;
@@ -601,7 +598,7 @@ int handleVERIFY(int sessionid, long int bus, char *device,
 /**
  * TERM
  * negative return code will terminate current session! */
-int handleTERM(int sessionid, long int bus, char *device, char *parameter,
+int handleTERM(int sessionid, bus_t bus, char *device, char *parameter,
                char *reply)
 {
     struct timeval akt_time;
@@ -615,7 +612,7 @@ int handleTERM(int sessionid, long int bus, char *device, char *parameter,
         if (strlen(parameter) > 0)
             nelem = sscanf(parameter, "%ld", &addr);
         if (nelem == 1) {
-            long int lockid;
+            sessionid_t lockid;
             getlockGL(bus, addr, &lockid);
             if (lockid == 0 || lockid == sessionid) {
                 rc = unlockGL(bus, addr, sessionid);
@@ -657,7 +654,7 @@ int handleTERM(int sessionid, long int bus, char *device, char *parameter,
 
     else if (bus_has_devicegroup(bus, DG_SESSION)
         && strncasecmp(device, "SESSION", 7) == 0) {
-        long int termsession = 0;
+        sessionid_t termsession = 0;
         int nelem = 0;
         if (strlen(parameter) > 0)
             nelem = sscanf(parameter, "%ld", &termsession);
@@ -679,7 +676,7 @@ int handleTERM(int sessionid, long int bus, char *device, char *parameter,
 /**
  * INIT
  */
-int handleINIT(int sessionid, long int bus, char *device, char *parameter,
+int handleINIT(int sessionid, bus_t bus, char *device, char *parameter,
                char *reply)
 {
     struct timeval time;
@@ -751,7 +748,7 @@ int handleINIT(int sessionid, long int bus, char *device, char *parameter,
 /**
  * RESET
  */
-int handleRESET(int sessionid, long int bus, char *device, char *parameter,
+int handleRESET(int sessionid, bus_t bus, char *device, char *parameter,
                 char *reply)
 {
     struct timeval time;
@@ -768,16 +765,16 @@ int handleRESET(int sessionid, long int bus, char *device, char *parameter,
  * Command mode
  */
 
-int doCmdClient(int Socket, int sessionid)
+int doCmdClient(int Socket, sessionid_t sessionid)
 {
     char line[MAXSRCPLINELEN], reply[MAXSRCPLINELEN];
     char cbus[MAXSRCPLINELEN], command[MAXSRCPLINELEN],
         devicegroup[MAXSRCPLINELEN], parameter[MAXSRCPLINELEN];
-    long int bus;
+    bus_t bus;
     long int rc, nelem;
     struct timeval akt_time;
 
-    DBG(0, DBG_INFO, "Command mode just starting for session", sessionid);
+    DBG(0, DBG_INFO, "Command mode just starting for session %ld", sessionid);
     while (1) {
         memset(line, 0, sizeof(line));
         if (socket_readline(Socket, line, sizeof(line) - 1) < 0) {

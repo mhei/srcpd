@@ -17,10 +17,9 @@
 
 #include <stdincludes.h>
 
-#include "portio.h"
 #include "config-srcpd.h"
 #include "ttycygwin.h"
-
+#include "portio.h"
 /**
  * open_port:
  * Open and initialise the serail port
@@ -31,7 +30,7 @@
  * Output: >=0 a divice is succesfully attached
  *          <0 a errror is reported.
  */
-int open_port(long int bus)
+int open_port(bus_t bus)
 {
 	int serial;
 	struct termios settings;
@@ -73,7 +72,7 @@ int open_port(long int bus)
  * close_port:
  * closes a comport and restores its old settings
  */
-void close_port(long int bus)
+void close_port(bus_t bus)
 {
 	tcsetattr(busses[bus].fd, TCSANOW, &busses[bus].devicesettings);
 	close(busses[bus].fd);
@@ -83,7 +82,7 @@ void close_port(long int bus)
 /**
  * write_port
  */
-void write_port(long int bus, unsigned char b)
+void write_port(bus_t bus, unsigned char b)
 {
 	int i;
 
@@ -111,7 +110,7 @@ void write_port(long int bus, unsigned char b)
 /**
  * read_port
  */
-int read_port(long int bus,  unsigned char *rr)
+int read_port(bus_t bus,  unsigned char *rr)
 {
 	int i;
 
@@ -146,7 +145,7 @@ int read_port(long int bus,  unsigned char *rr)
 /**
  * check_port
  */
-int check_port(long int bus)
+int check_port(bus_t bus)
 {
 	int temp;
 

@@ -12,6 +12,6 @@
 
 
 void* thr_doClient(void* v);
-int doCmdClient(int, int);
+int doCmdClient(int, sessionid_t);
 
 #endif

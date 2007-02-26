@@ -23,17 +23,17 @@ email                : frank.schmischke@t-online.de
  ***************************************************************************/
 
 #ifdef LI100_USB
-static int readAnswer_LI100_USB( long int busnumber, unsigned char *str );
-static int initLine_LI100_USB( long int busnumber );
+static int readAnswer_LI100_USB( bus_t busnumber, unsigned char *str );
+static int initLine_LI100_USB( bus_t busnumber );
 #else
-static int readAnswer_LI100_SERIAL( long int busnumber, unsigned char *str );
-static int initLine_LI100_SERIAL( long int busnumber );
+static int readAnswer_LI100_SERIAL( bus_t busnumber, unsigned char *str );
+static int initLine_LI100_SERIAL(  bus_t busnumber );
 #endif
 
 #ifdef LI100_USB
-int readConfig_LI100_USB( xmlDocPtr doc, xmlNodePtr node, long int busnumber )
+int readConfig_LI100_USB( xmlDocPtr doc, xmlNodePtr node,  bus_t busnumber )
 #else
-int readConfig_LI100_SERIAL( xmlDocPtr doc, xmlNodePtr node, long int busnumber )
+int readConfig_LI100_SERIAL( xmlDocPtr doc, xmlNodePtr node,  bus_t busnumber )
 #endif
 {
 #ifdef LI100_USB
@@ -135,9 +135,9 @@ int readConfig_LI100_SERIAL( xmlDocPtr doc, xmlNodePtr node, long int busnumber 
 }
 
 #ifdef LI100_USB
-long int init_bus_LI100_USB( long int busnumber )
+int init_bus_LI100_USB(  bus_t busnumber )
 #else
-long int init_bus_LI100_SERIAL( long int busnumber )
+int init_bus_LI100_SERIAL(  bus_t busnumber )
 #endif
 {
   int status;
@@ -267,9 +267,9 @@ long int init_bus_LI100_SERIAL( long int busnumber )
 }
 
 #ifdef LI100_USB
-long int term_bus_LI100_USB( long int busnumber )
+int term_bus_LI100_USB(  bus_t busnumber )
 #else
-long int term_bus_LI100_SERIAL( long int busnumber )
+int term_bus_LI100_SERIAL(  bus_t busnumber )
 #endif
 {
 #ifdef LI100_USB
@@ -298,13 +298,13 @@ void *thr_sendrec_LI100_USB( void *v )
 void *thr_sendrec_LI100_SERIAL( void *v )
 #endif
 {
-  long int busnumber;
+  bus_t busnumber;
   unsigned char byte2send[ 20 ];
   int status;
 
   int zaehler1, fb_zaehler1, fb_zaehler2;
 
-  busnumber = ( long int ) v;
+  busnumber = ( bus_t) v;
 #ifdef LI100_USB
 
   DBG( busnumber, DBG_INFO, "thr_sendrec_LI100 (usb) is startet as bus #%ld", busnumber );
@@ -363,9 +363,9 @@ void *thr_sendrec_LI100_SERIAL( void *v )
 }
 
 #ifdef LI100_USB
-void send_command_ga_LI100_USB( long int busnumber )
+void send_command_ga_LI100_USB(  bus_t busnumber )
 #else
-void send_command_ga_LI100_SERIAL( long int busnumber )
+void send_command_ga_LI100_SERIAL(  bus_t busnumber )
 #endif
 {
   int i, i1;
@@ -478,9 +478,9 @@ void send_command_ga_LI100_SERIAL( long int busnumber )
 }
 
 #ifdef LI100_USB
-void send_command_gl_LI100_USB( long int busnumber )
+void send_command_gl_LI100_USB(  bus_t busnumber )
 #else
-void send_command_gl_LI100_SERIAL( long int busnumber )
+void send_command_gl_LI100_SERIAL( bus_t busnumber )
 #endif
 {
   int temp;
@@ -726,9 +726,9 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
   }
 
 #ifdef LI100_USB
-  void check_extern_engines_USB( long int busnumber )
+  void check_extern_engines_USB(  bus_t busnumber )
 #else
-  void check_extern_engines_SERIAL( long int busnumber )
+  void check_extern_engines_SERIAL( bus_t busnumber )
 #endif
   {
     int i;
@@ -814,9 +814,9 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
   }
 
 #ifdef LI100_USB
-  int read_register_LI100_USB( long int busnumber, int reg )
+  int read_register_LI100_USB(  bus_t busnumber, int reg )
 #else
-  int read_register_LI100_SERIAL( long int busnumber, int reg )
+  int read_register_LI100_SERIAL( bus_t busnumber, int reg )
 #endif
   {
     unsigned char byte2send[ 20 ];
@@ -840,9 +840,9 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
   }
 
 #ifdef LI100_USB
-  int write_register_LI100_USB( long int busnumber, int reg, int value )
+  int write_register_LI100_USB(  bus_t busnumber, int reg, int value )
 #else
-  int write_register_LI100_SERIAL( long int busnumber, int reg, int value )
+  int write_register_LI100_SERIAL( bus_t busnumber, int reg, int value )
 #endif
   {
     unsigned char byte2send[ 20 ];
@@ -865,9 +865,9 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
   }
 
 #ifdef LI100_USB
-  int read_page_LI100_USB( long int busnumber, int cv )
+  int read_page_LI100_USB(  bus_t busnumber, int cv )
 #else
-  int read_page_LI100_SERIAL( long int busnumber, int cv )
+  int read_page_LI100_SERIAL( bus_t busnumber, int cv )
 #endif
   {
     unsigned char byte2send[ 20 ];
@@ -891,9 +891,9 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
   }
 
 #ifdef LI100_USB
-  int write_page_LI100_USB( long int busnumber, int cv, int value )
+  int write_page_LI100_USB(  bus_t busnumber, int cv, int value )
 #else
-  int write_page_LI100_SERIAL( long int busnumber, int cv, int value )
+  int write_page_LI100_SERIAL( bus_t busnumber, int cv, int value )
 #endif
   {
     unsigned char byte2send[ 20 ];
@@ -916,9 +916,9 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
   }
 
 #ifdef LI100_USB
-  int read_cv_LI100_USB( long int busnumber, int cv )
+  int read_cv_LI100_USB(  bus_t busnumber, int cv )
 #else
-  int read_cv_LI100_SERIAL( long int busnumber, int cv )
+  int read_cv_LI100_SERIAL( bus_t busnumber, int cv )
 #endif
   {
     unsigned char byte2send[ 20 ];
@@ -942,9 +942,9 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
   }
 
 #ifdef LI100_USB
-  int write_cv_LI100_USB( long int busnumber, int cv, int value )
+  int write_cv_LI100_USB(  bus_t busnumber, int cv, int value )
 #else
-  int write_cv_LI100_SERIAL( long int busnumber, int cv, int value )
+  int write_cv_LI100_SERIAL( bus_t busnumber, int cv, int value )
 #endif
   {
     unsigned char byte2send[ 20 ];
@@ -968,9 +968,9 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
 
   // program decoder on the main
 #ifdef LI100_USB
-  int send_pom_cv_LI100_USB( long int busnumber, int addr, int cv, int value )
+  int send_pom_cv_LI100_USB(  bus_t busnumber, int addr, int cv, int value )
 #else
-  int send_pom_cv_LI100_SERIAL( long int busnumber, int addr, int cv, int value )
+  int send_pom_cv_LI100_SERIAL( bus_t busnumber, int addr, int cv, int value )
 #endif
   {
     unsigned char byte2send[ 20 ];
@@ -1010,9 +1010,9 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
 
   // program decoder on the main
 #ifdef LI100_USB
-  int send_pom_cvbit_LI100_USB( long int busnumber, int addr, int cv, int cvbit, int value )
+  int send_pom_cvbit_LI100_USB(  bus_t busnumber, int addr, int cv, int cvbit, int value )
 #else
-  int send_pom_cvbit_LI100_SERIAL( long int busnumber, int addr, int cv, int cvbit, int value )
+  int send_pom_cvbit_LI100_SERIAL( bus_t busnumber, int addr, int cv, int cvbit, int value )
 #endif
   {
     unsigned char byte2send[ 20 ];
@@ -1053,9 +1053,9 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
   }
 
 #ifdef LI100_USB
-  int term_pgm_LI100_USB( long int busnumber )
+  int term_pgm_LI100_USB(  bus_t busnumber )
 #else
-  int term_pgm_LI100_SERIAL( long int busnumber )
+  int term_pgm_LI100_SERIAL( bus_t busnumber )
 #endif
   {
     unsigned char byte2send[ 20 ];
@@ -1077,9 +1077,9 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
   }
 
 #ifdef LI100_USB
-  void send_command_sm_LI100_USB( long int busnumber )
+  void send_command_sm_LI100_USB(  bus_t busnumber )
 #else
-  void send_command_sm_LI100_SERIAL( long int busnumber )
+  void send_command_sm_LI100_SERIAL( bus_t busnumber )
 #endif
   {
     //unsigned char byte2send;
@@ -1230,9 +1230,9 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
   }
 
 #ifdef LI100_USB
-  void get_status_sm_LI100_USB( long int busnumber )
+  void get_status_sm_LI100_USB(  bus_t busnumber )
 #else
-  void get_status_sm_LI100_SERIAL( long int busnumber )
+  void get_status_sm_LI100_SERIAL( bus_t busnumber )
 #endif
   {
     unsigned char byte2send[ 20 ];
@@ -1251,9 +1251,9 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
   }
 
 #ifdef LI100_USB
-  void check_status_LI100_USB( long int busnumber )
+  void check_status_LI100_USB(  bus_t busnumber )
 #else
-  void check_status_LI100_SERIAL( long int busnumber )
+  void check_status_LI100_SERIAL( bus_t busnumber )
 #endif
   {
     int i;
@@ -1294,9 +1294,9 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
   }
 
 #ifdef LI100_USB
-  int send_command_LI100_USB( long int busnumber, unsigned char *str )
+  int send_command_LI100_USB(  bus_t busnumber, unsigned char *str )
 #else
-  int send_command_LI100_SERIAL( long int busnumber, unsigned char *str )
+  int send_command_LI100_SERIAL( bus_t busnumber, unsigned char *str )
 #endif
   {
     int ctr, i;
@@ -1330,9 +1330,9 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
   }
 
 #ifdef LI100_USB
-  int readAnswer_LI100_USB( long int busnumber, unsigned char *str )
+  int readAnswer_LI100_USB(  bus_t busnumber, unsigned char *str )
 #else
-  int readAnswer_LI100_SERIAL( long int busnumber, unsigned char *str )
+  int readAnswer_LI100_SERIAL(  bus_t busnumber, unsigned char *str )
 #endif
   {
     int status;
@@ -1655,9 +1655,9 @@ void send_command_gl_LI100_SERIAL( long int busnumber )
   }
 
 #ifdef LI100_USB
-  int initLine_LI100_USB( long int busnumber )
+  int initLine_LI100_USB(  bus_t busnumber )
 #else
-  int initLine_LI100_SERIAL( long int busnumber )
+  int initLine_LI100_SERIAL(  bus_t busnumber )
 #endif
   {
     int status;

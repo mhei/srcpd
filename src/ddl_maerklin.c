@@ -321,7 +321,7 @@ static tMotorolaCodes MotorolaCodes[256] = {
 };
 
 
-int comp_maerklin_1(long int busnumber, int address, int direction,
+int comp_maerklin_1(bus_t busnumber, int address, int direction,
                     int speed, int func)
 {
 
@@ -388,7 +388,7 @@ int comp_maerklin_1(long int busnumber, int address, int direction,
     return 0;
 }
 
-int comp_maerklin_2(long int busnumber, int address, int direction,
+int comp_maerklin_2(bus_t busnumber, int address, int direction,
                     int speed, int func, int f1, int f2, int f3, int f4)
 {
 
@@ -557,7 +557,7 @@ int comp_maerklin_2(long int busnumber, int address, int direction,
     return 0;
 }
 
-int comp_maerklin_3(long int busnumber, int address, int direction,
+int comp_maerklin_3(bus_t busnumber, int address, int direction,
                     int speed, int func, int f1, int f2, int f3, int f4)
 {
 
@@ -737,7 +737,7 @@ int comp_maerklin_3(long int busnumber, int address, int direction,
     return 0;
 }
 
-int comp_maerklin_4(long int busnumber, int address, int direction,
+int comp_maerklin_4(bus_t busnumber, int address, int direction,
                     int speed, int func, int f1, int f2, int f3, int f4)
 {
 
@@ -904,7 +904,7 @@ int comp_maerklin_4(long int busnumber, int address, int direction,
     return 0;
 }
 
-int comp_maerklin_5(long int busnumber, int address, int direction,
+int comp_maerklin_5(bus_t busnumber, int address, int direction,
                     int speed, int func, int f1, int f2, int f3, int f4)
 {
 
@@ -993,7 +993,7 @@ int comp_maerklin_5(long int busnumber, int address, int direction,
     return rtc;
 }
 
-int comp_maerklin_ms(long int busnumber, int address, int port, int action)
+int comp_maerklin_ms(bus_t busnumber, int address, int port, int action)
 {
 
     char trits[9];
@@ -1076,7 +1076,7 @@ int comp_maerklin_ms(long int busnumber, int address, int port, int action)
     return 0;
 }
 
-int comp_maerklin_mf(long int busnumber, int address, int f1, int f2,
+int comp_maerklin_mf(bus_t busnumber, int address, int f1, int f2,
                      int f3, int f4)
 {
 
