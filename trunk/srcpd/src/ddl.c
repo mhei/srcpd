@@ -1182,7 +1182,7 @@ int term_bus_DDL(bus_t busnumber)
     set_lines_off(busnumber);
 
     //pthread_cond_destroy(&(__DDL->refresh_cond));
-    DBG(busnumber, DBG_INFO, "DDL bus %d terminating", busnumber);
+    DBG(busnumber, DBG_INFO, "DDL bus %ld terminating", busnumber);
     return 0;
 }
 
