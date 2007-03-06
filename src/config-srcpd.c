@@ -205,6 +205,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc,
 			 strcpy(busses[current_bus].filename.path,  (char *) txt);
 			 break;
 		    case HW_NETWORK:
+			 free(busses[current_bus].filename.path);
 	                 busses[current_bus].net.hostname = malloc(strlen((char *) txt) + 1);
 			 strcpy(busses[current_bus].net.hostname,  (char *) txt);
 			 txt2 = xmlGetProp(child, BAD_CAST "port");
@@ -230,12 +231,10 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc,
     	    switch (busses[current_bus].devicetype) {
 	        case HW_FILENAME:
 		    DBG(current_bus, DBG_INFO, "** Filename='%s'", 
-			current_bus,
 			busses[current_bus].filename.path);
 		     break;
 		case HW_NETWORK:
 		    DBG(current_bus, DBG_DEBUG, "** Network Host='%s', Protocol=%d Port=%d", 
-			current_bus,
 			busses[current_bus].net.hostname, 
 			busses[current_bus].net.protocol,
 			busses[current_bus].net.port);
@@ -343,13 +342,11 @@ static int walk_config_xml(xmlDocPtr doc)
 int readConfig(char *filename)
 {
     xmlDocPtr doc;
-    int i, rc;
+    int rc;
 
     // something to initialize
     memset(busses, 0, sizeof(busses));
-    for (i = 0; i < MAX_BUSSES; i++)
-        busses[i].number = -1;
-    num_busses = -1;
+    num_busses = 0;
 
     /* some defaults */
     DBG(0, DBG_DEBUG, "parsing %s", filename);

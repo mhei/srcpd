@@ -11,7 +11,7 @@
 #define _NETSERVER_H
 
 
-void* thr_doClient(void* v);
+void* thr_doClient(void *v);
 int doCmdClient(int, sessionid_t);
 
 #endif
