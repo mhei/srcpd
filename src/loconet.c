@@ -45,6 +45,7 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     __loconet->number_fb = 2048;        /* max addr for OPC_INPUT_REP (10+1 bit) */
     __loconet->number_ga = 2048;        /* max addr for OPC_SW_REQ */
+    __loconet->number_gl = 9999;        /* DCC address range */
     __loconet->loconetID = 0x50;        /* Loconet ID */
     __loconet->flags = LN_FLAG_ECHO;
 
@@ -94,13 +95,17 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         DBG(busnumber, DBG_ERROR, "Can't create array for GA");
     }
 
+    if (init_GL(busnumber, __loconet->number_gl)) {
+        DBG(busnumber, DBG_ERROR, "Can't create array for GL");
+    }
+
     return (1);
 }
 
-static int init_lineLOCONET(bus_t busnumber)
-{
+static int init_lineLOCONET_serial(bus_t busnumber) {
     int fd;
     struct termios interface;
+
 
     fd = open(busses[busnumber].filename.path, O_RDWR | O_NDELAY | O_NOCTTY);
     if (fd == -1) {
@@ -156,11 +161,60 @@ static int init_lineLOCONET(bus_t busnumber)
     }
 #endif
     return 1;
+
+}
+
+static int init_lineLOCONET_lbserver(bus_t busnumber) {
+    int sockfd;
+    struct sockaddr_in serv_addr;
+    struct hostent *server;
+
+    char msg[256];
+    server = gethostbyname (busses[busnumber].net.hostname);
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0)
+	DBG(busnumber, DBG_ERROR, "ERROR opening socket");
+    bzero((char *) &serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    bcopy((char *) server->h_addr,
+	  (char *) &serv_addr.sin_addr.s_addr, server->h_length);
+    serv_addr.sin_port = htons(busses[busnumber].net.port);
+    alarm(30);
+    if ( connect(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
+	DBG(busnumber, DBG_ERROR, "ERROR connecting: %d", errno);
+    alarm(0);
+    socket_readline(sockfd, msg, sizeof(msg)-1);
+    DBG(busnumber, DBG_INFO, "connected to %s", msg);
+    busses[busnumber].fd = sockfd;
+    return 1;
+
+}
+
+static int init_lineLOCONET(bus_t busnumber) {
+    switch (busses[busnumber].devicetype) {
+        case HW_FILENAME:
+	    return init_lineLOCONET_serial(busnumber);
+	     break;
+	case HW_NETWORK:
+	    return init_lineLOCONET_lbserver(busnumber);
+	     break;
+	}
+    return 0;
 }
 
 int term_bus_LOCONET(bus_t busnumber)
 {
     DBG(busnumber, DBG_INFO, "loconet bus %lu terminating", busnumber);
+    switch (busses[busnumber].devicetype) {
+        case HW_FILENAME:
+	    close(busses[busnumber].fd);
+	     break;
+	case HW_NETWORK:
+	    shutdown(busses[busnumber].fd, SHUT_RDWR);
+	    close(busses[busnumber].fd);
+	     break;
+	}
+
     DBG(busnumber, DBG_INFO,
         "loconet bus %ld: %u packets sent, %u packets received", busnumber,
         __loconet->sent_packets, __loconet->recv_packets);
@@ -231,7 +285,7 @@ static int ln_isecho(bus_t busnumber, const unsigned char *ln_packet,
     return TRUE;
 }
 
-static int ln_read(bus_t busnumber, unsigned char *cmd, int len)
+static int ln_read_serial(bus_t busnumber, unsigned char *cmd, int len)
 {
     int fd = busses[busnumber].fd;
     int index = 1;
@@ -287,7 +341,74 @@ static int ln_read(bus_t busnumber, unsigned char *cmd, int len)
 }
 
 
-static int ln_write(bus_t busnumber, const unsigned char *cmd,
+static int ln_read_lbserver(bus_t busnumber, unsigned char *cmd, int len) {
+    int fd = busses[busnumber].fd;
+    fd_set fds;
+    struct timeval t = { 0, 0 };
+    int retval = 0;
+    char line[256];
+    
+    FD_ZERO(&fds);
+    FD_SET(fd, &fds);
+    retval = select(fd + 1, &fds, NULL, NULL, &t);
+    if (retval > 0 && FD_ISSET(fd, &fds)) {
+	socket_readline(fd, line, sizeof(line)-1);
+	/* line may begin with 
+	    SENT message: last command was sent (or not)
+	    RECEIVE message: new message from loconet
+	    VERSION text: VERSION information about the server */
+	if(strstr(line, "RECEIVE ")) {
+	    /* we have a fixed format */
+	    int len = strlen(line) - 7;
+	    int pktlen = len / 3;
+	    int i;
+	    char *d;
+	    DBG(busnumber, DBG_DEBUG, " * message '%s' %d bytes", line+7, pktlen);
+	    for(i=0; i<pktlen; i++) {
+		cmd[i] = strtol(line+7+3*i, &d, 16);
+		// DBG(busnumber, DBG_DEBUG, " * %d %d ", i, cmd[i]);
+	    }
+	    retval = pktlen;
+	}
+        __loconet->recv_packets++;
+    }
+    return retval;
+}
+
+static int ln_read(bus_t busnumber, unsigned char *cmd, int len) {
+    switch (busses[busnumber].devicetype) {
+        case HW_FILENAME:
+	    return ln_read_serial(busnumber, cmd, len);
+	     break;
+	case HW_NETWORK:
+	    return ln_read_lbserver(busnumber, cmd, len);
+	     break;
+	}
+    return 0;
+}
+
+
+static int ln_write_lbserver(long int busnumber, const unsigned char *cmd,
+		    unsigned char len)
+{
+    unsigned char i;
+    char msg[256], tmp[10];
+    sprintf(msg, "SEND");
+    for (i = 0; i < len; i++) {
+	sprintf(tmp, " %02X", cmd[i]);
+	strcat(msg, tmp);
+    }
+    strcat(msg, "\r\n");
+    socket_writereply(busses[busnumber].fd, msg);
+    DBG(busnumber, DBG_DEBUG,
+	"sent loconet packet with OPC 0x%02x, %d bytes (%s)", cmd[0], len, msg);
+    __loconet->sent_packets++;
+    __loconet->ln_msglen = 0;
+    return 0;
+}
+
+
+static int ln_write_serial(bus_t busnumber, const unsigned char *cmd,
                     unsigned char len)
 {
     unsigned char i;
@@ -299,6 +420,19 @@ static int ln_write(bus_t busnumber, const unsigned char *cmd,
     __loconet->sent_packets++;
     __loconet->ln_msglen = len;
     memcpy(__loconet->ln_message, cmd, len);
+    return 0;
+}
+
+static int ln_write(bus_t busnumber, const unsigned char *cmd,
+                    unsigned char len) {
+    switch (busses[busnumber].devicetype) {
+        case HW_FILENAME:
+	    return ln_write_serial(busnumber, cmd, len);
+	     break;
+	case HW_NETWORK:
+	    return ln_write_lbserver(busnumber, cmd, len);
+	     break;
+	}
     return 0;
 }
 
@@ -330,8 +464,10 @@ void *thr_sendrec_LOCONET(void *v)
     unsigned char ln_packet[128];       /* max length is coded with 7 bit */
     unsigned char ln_packetlen = 2;
     unsigned int addr, timeoutcnt;
-    int value;
+    int value, port;
     char msg[110];
+    struct _GASTATE gatmp;
+    
     DBG(busnumber, DBG_INFO, "loconet started, bus #%d, %s", busnumber,
         busses[busnumber].filename.path);
     timeoutcnt = 0;
@@ -355,9 +491,20 @@ void *thr_sendrec_LOCONET(void *v)
                 infoPower(busnumber, msg);
                 queueInfoMessage(msg);
                 break;
-	    case OPC_SW_REP:
+            case OPC_SW_REQ: // B0
+                addr = (((unsigned int) ln_packet[1] & 0x007f) |
+                       (((unsigned int) ln_packet[2] & 0x000f) << 7) ) + 1;
+                value = (ln_packet[2] & 0x10) >> 4;
+		port  = (ln_packet[2] & 0x20) >> 5;
+		getGA(busnumber, addr, &gatmp);
+		gatmp.action = value;
+		gatmp.port   = port;
+		setGA(busnumber, addr, gatmp);
+                break;
+
+	    case OPC_SW_REP:    // B1
 		break;
-            case OPC_INPUT_REP:
+            case OPC_INPUT_REP: // B2
                 addr =
                     ((unsigned int) ln_packet[1] & 0x007f) |
                     (((unsigned int) ln_packet[2] & 0x000f) << 7);
@@ -389,13 +536,14 @@ void *thr_sendrec_LOCONET(void *v)
             else if (!queue_GA_isempty(busnumber)) {
                 struct _GASTATE gatmp;
                 unqueueNextGA(busnumber, &gatmp);
-                addr = gatmp.id;
+                addr = gatmp.id-1;
 		ln_packetlen = 4;
 		ln_packet[0] = OPC_SW_REQ;
-		ln_packet[1] = (unsigned short int) addr & 0x0007f;
-		ln_packet[2] = (unsigned short int) ( addr >> 7) & 0x000f;
-		ln_packet[2] |= (unsigned short int) gatmp.port;
-		ln_packet[2] |= ((unsigned short int) gatmp.action) << 4;
+
+		ln_packet[1] = (unsigned short int) (addr & 0x0007f);
+		ln_packet[2] = (unsigned short int) (( addr >> 7) & 0x000f);
+		ln_packet[2] |= (unsigned short int) ( (gatmp.port & 0x0001) << 5);
+		ln_packet[2] |= (unsigned short int) ( (gatmp.action & 0x0001) << 4);
 		
 		if(gatmp.action == 1) {
         	    gettimeofday(&gatmp.tv[gatmp.port], NULL);
