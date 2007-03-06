@@ -81,7 +81,7 @@ void writeByte(bus_t bus, unsigned char b, unsigned long msecs)
 
 void writeString(bus_t bus, unsigned char *s, unsigned long msecs)
 {
-    size_t l = strlen((char *) s);
+    int l = strlen((char *) s);
     int i;
     for (i = 0; i < l; i++) {
         writeByte(bus, s[i], msecs);
@@ -172,7 +172,7 @@ int socket_readline(int Socket, char *line, int len)
 int socket_writereply(int Socket, const char *line)
 {
     int status = 0;
-    size_t linelen = strlen(line);
+    int linelen = strlen(line);
     char chunk[MAXSRCPLINELEN], tmp[MAXSRCPLINELEN];
     int i = 0;
 
