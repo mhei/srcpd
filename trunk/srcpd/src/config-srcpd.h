@@ -78,7 +78,7 @@ typedef unsigned long int sessionid_t ;
 /* Busstruktur */
 typedef struct _BUS
 {
-  int number;      //! busnumber
+//  int number;      //! busnumber
   int debuglevel;  //! verbosity level of syslog
   int type;        //! which bustype
   char description[100]; //! bus description

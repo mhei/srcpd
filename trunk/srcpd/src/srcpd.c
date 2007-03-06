@@ -183,12 +183,10 @@ int main(int argc, char **argv)
 
     // check for resolv all needed malloc's
     for (i = 0; i <= num_busses; i++) {
-        if (busses[i].number > -1) {
-            if (busses[i].driverdata == NULL) {
+        if (busses[i].driverdata == NULL) {
                 printf ("Sorry, there is an error in your srcpd.conf "
                         "for bus %ld !\n", i);
                 exit(1);
-            }
         }
     }
     cmds.port = ((SERVER_DATA *) busses[0].driverdata)->TCPPORT;

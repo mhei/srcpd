@@ -162,7 +162,7 @@ int socket_readline(int Socket, char *line, int len)
         }
     }
     line[i++] = 0x00;
-    DBG(0, DBG_INFO, "socket %d, read %s", Socket, line);
+    DBG(0, DBG_DEBUG, "socket %d, read %s", Socket, line);
     return 0;
 }
 

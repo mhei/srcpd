@@ -49,19 +49,20 @@ extern char *WELCOME_MSG;
  */
 
 
-void *thr_doClient(void *v)
+void* thr_doClient(void *v)
 {
     int Socket = (int) v;
     char line[MAXSRCPLINELEN], cmd[MAXSRCPLINELEN],
         parameter[MAXSRCPLINELEN], reply[MAXSRCPLINELEN];
     int mode = COMMAND;
-    sessionid_t sessionid, rc, nelem;
+    sessionid_t sessionid;
+    int rc, nelem;
     struct timeval time;
     /* drop root permission for this thread */
     change_privileges(0);
 
     if (socket_writereply(Socket, WELCOME_MSG) < 0) {
-        shutdown(Socket, 2);
+        shutdown(Socket, SHUT_RDWR);
         close(Socket);
         return NULL;
     }
@@ -72,7 +73,7 @@ void *thr_doClient(void *v)
         memset(line, 0, sizeof(line));
 
         if (socket_readline(Socket, line, sizeof(line) - 1) < 0) {
-            shutdown(Socket, 0);
+            shutdown(Socket, SHUT_RDWR);
             close(Socket);
             return NULL;
         }
@@ -90,7 +91,7 @@ void *thr_doClient(void *v)
                 sprintf(reply, "%lu.%.3lu 200 OK GO %ld\n", time.tv_sec,
                         time.tv_usec / 1000, sessionid);
                 if (socket_writereply(Socket, reply) < 0) {
-                    shutdown(Socket, 2);
+                    shutdown(Socket, SHUT_RDWR);
                     close(Socket);
                     return NULL;
                 }
@@ -138,7 +139,7 @@ void *thr_doClient(void *v)
         srcp_fmt_msg(rc, reply, time);
 
         if (socket_writereply(Socket, reply) < 0) {
-            shutdown(Socket, 2);
+            shutdown(Socket, SHUT_RDWR);
             close(Socket);
             return NULL;
         }
