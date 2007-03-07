@@ -291,8 +291,6 @@ void unlock_ga_bysessionid(sessionid_t sessionid)
     DBG(0, DBG_DEBUG, "unlock GA by session-ID %ld", sessionid);
     for (i = 0; i < num_busses; i++) {
         number = get_number_ga(i);
-        DBG(i, DBG_DEBUG, "number of GA for busnumber %d is %d", i,
-            number);
         for (j = 1; j <= number; j++) {
             if (ga[i].gastate[j].locked_by == sessionid) {
                 unlockGA(i, j, sessionid);
@@ -306,11 +304,8 @@ void unlock_ga_bytime(void)
 {
     int i, j;
     int number;
-    DBG(0, DBG_DEBUG, "unlock GA by time");
     for (i = 0; i < num_busses; i++) {
         number = get_number_ga(i);
-        DBG(i, DBG_DEBUG, "number of GA for busnumber %d is %d", i,
-            number);
         for (j = 1; j <= number; j++) {
             if (ga[i].gastate[j].lockduration-- == 1) {
                 unlockGA(i, j, ga[i].gastate[j].locked_by);
