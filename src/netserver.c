@@ -151,7 +151,7 @@ void* thr_doClient(void *v)
  * handle all aspects of the command for all commands
  */
 
-static int handle_setcheck(int sessionid, bus_t bus, char *device,
+static int handle_setcheck(sessionid_t sessionid, bus_t bus, char *device,
                            char *parameter, char *reply, int setorcheck)
 {
     struct timeval time;
@@ -344,7 +344,7 @@ static int handle_setcheck(int sessionid, bus_t bus, char *device,
 /**
  * SET
  */
-int handleSET(int sessionid, bus_t bus, char *device, char *parameter,
+int handleSET(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
               char *reply)
 {
     return handle_setcheck(sessionid, bus, device, parameter, reply, 1);
@@ -353,7 +353,7 @@ int handleSET(int sessionid, bus_t bus, char *device, char *parameter,
 /***
  * CHECK -- like SET but no command must be sent
  */
-int handleCHECK(int sessionid, bus_t bus, char *device, char *parameter,
+int handleCHECK(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
                 char *reply)
 {
     return handle_setcheck(sessionid, bus, device, parameter, reply, 0);
@@ -362,7 +362,7 @@ int handleCHECK(int sessionid, bus_t bus, char *device, char *parameter,
 /**
  * GET
  */
-int handleGET(int sessionid, bus_t bus, char *device, char *parameter,
+int handleGET(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
               char *reply)
 {
     struct timeval akt_time;
@@ -512,7 +512,7 @@ int handleGET(int sessionid, bus_t bus, char *device, char *parameter,
 /**
  * WAIT
  */
-int handleWAIT(int sessionid, bus_t bus, char *device, char *parameter,
+int handleWAIT(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
                char *reply)
 {
     struct timeval time;
@@ -586,7 +586,7 @@ int handleWAIT(int sessionid, bus_t bus, char *device, char *parameter,
 /**
  * VERIFY
  */
-int handleVERIFY(int sessionid, bus_t bus, char *device,
+int handleVERIFY(sessionid_t sessionid, bus_t bus, char *device,
                  char *parameter, char *reply)
 {
     int rc = SRCP_UNSUPPORTEDOPERATION;
@@ -599,7 +599,7 @@ int handleVERIFY(int sessionid, bus_t bus, char *device,
 /**
  * TERM
  * negative return code will terminate current session! */
-int handleTERM(int sessionid, bus_t bus, char *device, char *parameter,
+int handleTERM(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
                char *reply)
 {
     struct timeval akt_time;
@@ -677,7 +677,7 @@ int handleTERM(int sessionid, bus_t bus, char *device, char *parameter,
 /**
  * INIT
  */
-int handleINIT(int sessionid, bus_t bus, char *device, char *parameter,
+int handleINIT(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
                char *reply)
 {
     struct timeval time;
@@ -749,7 +749,7 @@ int handleINIT(int sessionid, bus_t bus, char *device, char *parameter,
 /**
  * RESET
  */
-int handleRESET(int sessionid, bus_t bus, char *device, char *parameter,
+int handleRESET(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
                 char *reply)
 {
     struct timeval time;
