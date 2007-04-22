@@ -1,13 +1,13 @@
 Source: srcpd
 Section: electronics
 Priority: optional
-Maintainer: Kai-Cheung Leung (梁啟昌) <kcleung@users.sourceforge.net>
+Maintainer: Guido Scholz (privat) <guido.scholz@bayernline.de>
 Build-Depends: debhelper (>= 4.0.0), autotools-dev, libxml2-dev (>=2.4.0)
 Standards-Version: 3.6.1
 
 Package: srcpd
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, libxml2 (>=2.4.0)
 Description: SRCP 0.8.2 server daemon
  srcpd is a Simple Railroad Command Protocol server (SRCP Version 0.8.2)
  transmitting commands from and to SRCP clients or connected digital
