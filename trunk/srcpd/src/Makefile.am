@@ -19,8 +19,11 @@ DEFS = -D_REENTRANT -DSYSCONFDIR=\"$(sysconfdir)\" @DEFS@
 
 # the library search path.
 srcpd_LDFLAGS = $(all_libraries) `./systemtest` $(XML_LIBS)
-noinst_HEADERS = config-srcpd.h ddl.h ddl_maerklin.h ddl-s88.h hsi-88.h\
-	i2c-dev.h ib.h io.h li100.c li100.h loopback.h m605x.h netserver.h\
-	srcp-descr.h srcp-error.h srcp-fb.h srcp-info.h srcp-lock.h srcp-power.h\
-	srcp-session.h srcp-sm.h srcp-srv.h srcp-time.h stdincludes.h threads.h\
-	ttycygwin.h zimo.h srcp-gm.h
+
+noinst_HEADERS = config-srcpd.h ddl.h ddl_maerklin.h ddl_nmra.h ddl-s88.h \
+	hsi-88.h i2c-dev.h ib.h io.h li100.c li100.h loopback.h \
+       	loconet.h m605x.h netserver.h selectrix.h srcp-descr.h \
+	srcp-error.h srcp-fb.h \
+       	srcp-ga.h srcp-gl.h srcp-info.h srcp-lock.h srcp-power.h \
+	srcp-session.h srcp-sm.h srcp-srv.h srcp-time.h stdincludes.h \
+       	portio.h threads.h ttycygwin.h zimo.h srcp-gm.h
