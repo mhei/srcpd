@@ -1,12 +1,11 @@
-
 /*
-* Vorliegende Software unterliegt der General Public License,
-* Version 2, 1991. (c) Matthias Trute, 2000-2001.
+* This software is published under the terms of the GNU General Public
+* License, Version 2, 1991. (c) Matthias Trute, 2000-2001.
 *
 * 04.07.2001 Frank Schmischke
-*            Einfhrung der Konfigurationsdatei
+*            Introducing configuration file
 * 05.08.2001 Matthias Trute
-*            Umstellung auf XML Format
+*            changed to XML format
 * 16.05.2005 Gerard van der Sel
 *            addition of Selectrix
 */
@@ -27,13 +26,15 @@
 #include "li100.h"
 #include "loconet.h"
 
-/* Willkommensmeldung */
-const char *WELCOME_MSG = "srcpd V" VERSION "; SRCP 0.8.3; SRCPOTHER 0.8.4-wip\n";
+
+/* SRCP server welcome message */
+const char *WELCOME_MSG =
+    "srcpd V" VERSION "; SRCP 0.8.3; SRCPOTHER 0.8.4-wip\n";
 
 struct _BUS busses[MAX_BUSSES];
 int num_busses;
 
-// check that a bus has a devicegroup or not
+// check that a bus has a device group or not
 
 int bus_has_devicegroup(bus_t bus, int dg)
 {
@@ -65,8 +66,7 @@ int bus_has_devicegroup(bus_t bus, int dg)
     return 0;
 }
 
-static bus_t register_bus(bus_t busnumber, xmlDocPtr doc,
-                             xmlNodePtr node)
+static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
 {
     bus_t current_bus = busnumber;
 
@@ -74,7 +74,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc,
         return busnumber;
 
     if (busnumber >= MAX_BUSSES || busnumber < 0) {
-        printf("Sorry, you have used an invalid busnumber (%ld). "
+        printf("Sorry, you have used an invalid bus number (%ld). "
                "If this is greater than or equal to %d,\n"
                "you need to recompile the sources. Exiting now.\n",
                busnumber, MAX_BUSSES);
@@ -87,7 +87,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc,
     busses[current_bus].debuglevel = DBG_INFO;
     busses[current_bus].flags = 0;
 
-    /* Functionpointers to NULL */
+    /* Function pointers to NULL */
     busses[current_bus].thr_func = NULL;
     busses[current_bus].thr_timer = NULL;
     busses[current_bus].sig_reader = NULL;
@@ -97,7 +97,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc,
     busses[current_bus].init_ga_func = NULL;
     busses[current_bus].init_fb_func = NULL;
 
-    /* Communicationport to default values */
+    /* Communication port to default values */
     busses[current_bus].devicetype = HW_FILENAME;
     /*TODO: what happens if malloc returns NULL? */
     busses[current_bus].filename.path = malloc(strlen("/dev/null") + 1);
@@ -117,7 +117,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc,
 
         if ((xmlStrcmp(child->name, BAD_CAST "text") == 0) ||
             (xmlStrcmp(child->name, BAD_CAST "comment") == 0)) {
-            /* just do nothing, it is only formating text or a comment */
+            /* just do nothing, it is only formatting text or a comment */
         }
 
         else if (xmlStrncmp(child->name, BAD_CAST "server", 6) == 0) {
@@ -156,7 +156,8 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc,
 #if defined(linux) || defined(__CYGWIN__) || defined(__FreeBSD__)
             busnumber += readconfig_DDL_S88(doc, child, busnumber);
 #else
-            printf("Sorry, DDL-S88 not (yet) available on MacOS X\n");
+            printf
+                ("Sorry, DDL-S88 not (yet) available on this system.\n");
 #endif
         }
 
@@ -184,62 +185,73 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc,
 #endif
         }
 
-        /* some attributes are common for all (real) busses */
+        /* some attributes are common for all (real) buses */
         else if (xmlStrcmp(child->name, BAD_CAST "device") == 0) {
-	    txt2 = xmlGetProp(child, BAD_CAST "type");
-	    if(txt2 == NULL  || xmlStrcmp(txt2, BAD_CAST "filename")==0) {
-		busses[current_bus].devicetype = HW_FILENAME;
-	    } else if (xmlStrcmp(txt2, BAD_CAST "network")==0) {
-		busses[current_bus].devicetype = HW_NETWORK;
-	    } else {
-                printf("WARNING, \"%s\" (bus %ld) is an unknown device specifier!\n",
-                   child->name, current_bus);
-	    }
-	    free(txt2);
-            txt  = xmlNodeListGetString(doc, child->children, 1);
+            txt2 = xmlGetProp(child, BAD_CAST "type");
+            if (txt2 == NULL || xmlStrcmp(txt2, BAD_CAST "filename") == 0) {
+                busses[current_bus].devicetype = HW_FILENAME;
+            }
+            else if (xmlStrcmp(txt2, BAD_CAST "network") == 0) {
+                busses[current_bus].devicetype = HW_NETWORK;
+            }
+            else {
+                printf
+                    ("WARNING, \"%s\" (bus %ld) is an unknown device specifier!\n",
+                     child->name, current_bus);
+            }
+            free(txt2);
+            txt = xmlNodeListGetString(doc, child->children, 1);
             if (txt != NULL) {
-		switch (busses[current_bus].devicetype) {
-		    case HW_FILENAME:
-	                 free(busses[current_bus].filename.path);
-	                 busses[current_bus].filename.path = malloc(strlen((char *) txt) + 1);
-			 strcpy(busses[current_bus].filename.path,  (char *) txt);
-			 break;
-		    case HW_NETWORK:
-			 free(busses[current_bus].filename.path);
-	                 busses[current_bus].net.hostname = malloc(strlen((char *) txt) + 1);
-			 strcpy(busses[current_bus].net.hostname,  (char *) txt);
-			 txt2 = xmlGetProp(child, BAD_CAST "port");
-			 if(txt2!=NULL) {
-			     busses[current_bus].net.port = atoi((char *) txt2);
-			     free(txt2);
-			 } else {
-			    busses[current_bus].net.port = 0;
-			 }
-			 txt2 = xmlGetProp(child, BAD_CAST "protocol");
-			 if(txt2!=NULL) {
-			    struct protoent *p;
-			    p = getprotobyname((char *) txt2);
-			    busses[current_bus].net.protocol = p->p_proto;
-			    free(txt2);
-			 } else {
-			    busses[current_bus].net.protocol = 6; /* TCP */
-			 }
-			 break;
-		}
+                switch (busses[current_bus].devicetype) {
+                    case HW_FILENAME:
+                        free(busses[current_bus].filename.path);
+                        busses[current_bus].filename.path =
+                            malloc(strlen((char *) txt) + 1);
+                        strcpy(busses[current_bus].filename.path,
+                               (char *) txt);
+                        break;
+                    case HW_NETWORK:
+                        free(busses[current_bus].filename.path);
+                        busses[current_bus].net.hostname =
+                            malloc(strlen((char *) txt) + 1);
+                        strcpy(busses[current_bus].net.hostname,
+                               (char *) txt);
+                        txt2 = xmlGetProp(child, BAD_CAST "port");
+                        if (txt2 != NULL) {
+                            busses[current_bus].net.port =
+                                atoi((char *) txt2);
+                            free(txt2);
+                        }
+                        else {
+                            busses[current_bus].net.port = 0;
+                        }
+                        txt2 = xmlGetProp(child, BAD_CAST "protocol");
+                        if (txt2 != NULL) {
+                            struct protoent *p;
+                            p = getprotobyname((char *) txt2);
+                            busses[current_bus].net.protocol = p->p_proto;
+                            free(txt2);
+                        }
+                        else {
+                            busses[current_bus].net.protocol = 6;       /* TCP */
+                        }
+                        break;
+                }
                 xmlFree(txt);
             }
-    	    switch (busses[current_bus].devicetype) {
-	        case HW_FILENAME:
-		    DBG(current_bus, DBG_INFO, "** Filename='%s'", 
-			busses[current_bus].filename.path);
-		     break;
-		case HW_NETWORK:
-		    DBG(current_bus, DBG_DEBUG, "** Network Host='%s', Protocol=%d Port=%d", 
-			busses[current_bus].net.hostname, 
-			busses[current_bus].net.protocol,
-			busses[current_bus].net.port);
-		     break;
-		}
+            switch (busses[current_bus].devicetype) {
+                case HW_FILENAME:
+                    DBG(current_bus, DBG_INFO, "** Filename='%s'",
+                        busses[current_bus].filename.path);
+                    break;
+                case HW_NETWORK:
+                    DBG(current_bus, DBG_DEBUG,
+                        "** Network Host='%s', Protocol=%d Port=%d",
+                        busses[current_bus].net.hostname,
+                        busses[current_bus].net.protocol,
+                        busses[current_bus].net.port);
+                    break;
+            }
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "verbosity") == 0) {
@@ -351,10 +363,11 @@ int readConfig(char *filename)
     /* some defaults */
     DBG(0, DBG_DEBUG, "parsing %s", filename);
     doc = xmlParseFile(filename);
-    if (doc != NULL) {          /* always show a message */
+    /* always show a message */
+    if (doc != NULL) {
         DBG(0, DBG_DEBUG, "walking %s", filename);
         rc = walk_config_xml(doc);
-        DBG(0, DBG_DEBUG, " done %s; found %d busses", filename, rc);
+        DBG(0, DBG_DEBUG, " done %s; found %d buses", filename, rc);
         xmlFreeDoc(doc);
         /*
          *Free the global variables that may
@@ -374,19 +387,20 @@ int readConfig(char *filename)
  * suspendThread: Holds the thread until a resume command is given.
         The thread waits in this routines
  * @param busnumber
-       bus_t given the bus wich thread has to be stoped.
+       bus_t given the bus which thread has to be stopped.
  */
 void suspendThread(bus_t busnumber)
 {
     /* Lock thread till new data to process arrives */
     pthread_mutex_lock(&busses[busnumber].transmit_mutex);
-    pthread_cond_wait(&busses[busnumber].transmit_cond, &busses[busnumber].transmit_mutex);     /* mutex released.       */
+     /* mutex released.       */
+    pthread_cond_wait(&busses[busnumber].transmit_cond, &busses[busnumber].transmit_mutex);
 }
 
 /**
- * resumeThread: continue a stoppped thread
+ * resumeThread: continue a stopped thread
  * @param busnumber
-       bus_t given the bus wich thread has to be stoped.
+       bus_t given the bus which thread has to be stopped.
  */
 void resumeThread(bus_t busnumber)
 {
@@ -397,7 +411,7 @@ void resumeThread(bus_t busnumber)
 }
 
 /**
-  * DBG: write some syslog information is current debuglevel of the
+  * DBG: write some syslog information is current debug level of the
          bus is greater then the the debug level of the message. e.g.
          if a debug message is deb_info and the bus is configured
          to inform only about deb_error, no message will be generated.
@@ -406,9 +420,9 @@ void resumeThread(bus_t busnumber)
   * @param dbglevel
     one of the constants DBG_FATAL, DBG_ERROR, DBG_WARN, DBG_INFO, DBG_DEBUG
   * @param fmt
-    const char *: standard c formatstring
+    const char *: standard c format string
   * @param ...
-    remaining parameters according to formatstring
+    remaining parameters according to format string
   */
 void DBG(bus_t busnumber, int dbglevel, const char *fmt, ...)
 {
@@ -420,7 +434,7 @@ void DBG(bus_t busnumber, int dbglevel, const char *fmt, ...)
         char *msg;
         msg = (char *) malloc(sizeof(char) * (strlen(fmt) + 10));
         if (msg == NULL)
-            return;             // MAM: Wat solls? Ist eh am Ende
+            return;
         sprintf(msg, "[bus %ld] %s", busnumber, fmt);
         vsyslog(LOG_INFO, msg, parm);
         free(msg);

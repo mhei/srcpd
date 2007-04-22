@@ -1,14 +1,16 @@
 /* cvs: $Id$ */
 
 /*
-* Vorliegende Software unterliegt der General Public License,
+* This software is published under the terms of the GNU General Public
+* License, Version ?
+*
 * Version 2.0 20070418: Release of SLX852
 * Version 1.4 20070315: Communication with the SLX852
-* Version 1.3 20070213: Communiation with events
-* Version 1.2 20060526: Text reformatting and error checkking
-' Version 1.1 20060505: Configuration of fb adresses from srcpd.conf
+* Version 1.3 20070213: Communication with events
+* Version 1.2 20060526: Text reformatting and error checking
+' Version 1.1 20060505: Configuration of fb addresses from srcpd.conf
 * Version 1, 2005. (c) Gerard van der Sel, 2005-2006.
-* Version 0.4: 20050521: Feedback responce
+* Version 0.4: 20050521: Feedback response
 * Version 0.3: 20050521: Controlling a switch/signal
 * Version 0.2: 20050514: Controlling a engine
 * Version 0.1: 20050508: Connection with CC-2000 and power on/off
@@ -16,8 +18,8 @@
 */
 
 /*
- * This software does the translation for a selectrix centrol centre
- * An old centrol centre is the default selection
+ * This software does the translation for a selectrix central centre
+ * An old Central centre is the default selection
  * In the xml-file the control centre can be changed to the new CC-2000
  *   A CC-2000 can program a engine
  *   (Control centre of MUT and Uwe Magnus are CC-2000 compatible)
@@ -72,7 +74,7 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 	for (i = 0; i < SXmax; i++)
 	{
 		__selectrix->bus_data[i] = 0;         /* Set all outputs to 0 */
-		__selectrix->fb_adresses[i] = 255;    /* Set invalid adresses */
+		__selectrix->fb_adresses[i] = 255;    /* Set invalid addresses */
 	}
 
 	strcpy(busses[busnumber].description,
@@ -134,7 +136,7 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 			{
 				if (xmlStrcmp(txt, BAD_CAST "RTHS_0") == 0)
 				{
-					/* Set interface accoording selectrix interface */
+					/* Set interface according selectrix interface */
 					__selectrix->flags |= Rautenhaus_MODE;
 					/* rest of the flags are zero */
 				}
@@ -178,16 +180,16 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 						if (atoi((char *) pOffset) == 1)
 							offset = 128;
 					free(pOffset);
-					/* Get adres */
+					/* Get address */
 					subtxt = xmlNodeListGetString(doc,
 						subchild->xmlChildrenNode, 1);
 					if (subtxt != NULL)
 					{
-						/* Strore adres plus SXbus number */
+						/* Store address plus SXbus number */
 						__selectrix->fb_adresses[portindex] =
 						atoi((char *) subtxt) + offset;
 						DBG(busnumber, DBG_WARN,
-							"Adding feedbackport number %d with adres %s.",
+							"Adding feedback port number %d with address %s.",
 							portindex, subtxt + offset);
 						xmlFree(subtxt);
 						if (__selectrix->number_fb > portindex)
@@ -198,7 +200,7 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 				}
 				else
 					DBG(busnumber, DBG_WARN,
-						"WARNING, unknown subtag found: \"%s\"!\n",
+						"WARNING, unknown sub tag found: \"%s\"!\n",
 						subchild->name);
 				subchild = subchild->next;
 			}
@@ -216,7 +218,7 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 		if (init_GL(busnumber, __selectrix->number_gl))
 		{
 		     __selectrix->number_gl = 0;
-			DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
+			DBG(busnumber, DBG_ERROR, "Can't create array for locomotives");
 		}
 
 		if (init_GA(busnumber, __selectrix->number_ga))
@@ -242,12 +244,12 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 	DBG(busnumber, DBG_WARN,
 		"found number of switches %d", __selectrix->number_ga);
 	DBG(busnumber, DBG_WARN,
-		"found number of feedbacks %d", __selectrix->number_fb);
+		"found number of feedback modules %d", __selectrix->number_fb);
 	if (portindex!= 0)
 	{
 		for (i=1; i<= portindex; i++) {
 			DBG(busnumber, DBG_WARN,
-				"found feedbackport number %d with adres %d.",
+				"found feedback port number %d with address %d.",
 				i, __selectrix->fb_adresses[i]);
 		}
 	}
@@ -256,8 +258,8 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
 
 /*********************************************************************************
- * Opens a serialport for communication with a selectrix interface
- * On succes the porthandle is changed to a value <> -1
+ * Opens a serial port for communication with a selectrix interface
+ * On success the port handle is changed to a value <> -1
  *********************************************************************************/
 int init_bus_Selectrix(bus_t busnumber)
 {
@@ -281,7 +283,7 @@ int init_bus_Selectrix(bus_t busnumber)
 }
 
 /********************************************************************************
- * Closes a serialport. Restores old OS values
+ * Closes a serial port. Restores old OS values
  *
  ********************************************************************************/
 int term_bus_Selectrix(bus_t busnumber)
@@ -318,7 +320,7 @@ int init_ga_Selectrix(struct _GASTATE *ga)
 			'S') ? SRCP_OK : SRCP_UNSUPPORTEDDEVICEPROTOCOL;
 }
 
-/* Feedbacks */
+/* Feedback modules */
 /* INIT <bus> FB <adr> S <index> */
 int init_fb_Selectrix(bus_t busnumber, int adres,
 						   const char protocol, int index)
@@ -352,7 +354,7 @@ int readSXbus(bus_t busnumber)
 		/* Wait until a character arrives */
 		if (!read_port(busses[busnumber].fd, &rr))
 		{
-			rr= 0xff;			// If nothig receved all set
+			rr= 0xff;			// If nothing received all set
 		}
 		DBG(busnumber, DBG_DEBUG,
 			"Selectrix on bus %ld, read byte %d .",
@@ -369,7 +371,7 @@ void commandreadSXbus(bus_t busnumber, int SXadres)
 {
 	if (busses[busnumber].fd != -1 )
 	{
-		/* write SXadres and the read command */
+		/* write SX-address and the read command */
 		write_port(busnumber, SXread + SXadres);
 		/* extra byte for power to receive data */
 		write_port(busnumber, 0xaa);
@@ -378,7 +380,7 @@ void commandreadSXbus(bus_t busnumber, int SXadres)
 	else
 	{
 		DBG(busnumber, DBG_DEBUG,
-			"Selectrix on bus %ld, adres %d not read.",
+			"Selectrix on bus %ld, address %d not read.",
 			busnumber, SXadres);
 	}
 }
@@ -389,9 +391,9 @@ void writeSXbus(bus_t busnumber, int SXadres, int SXdata)
 	if (busses[busnumber].fd != -1)
 	{
 		DBG(busnumber, DBG_DEBUG,
-			"Selectrix on bus %ld, send byte %d to adres %d.",
+			"Selectrix on bus %ld, send byte %d to address %d.",
 			busnumber, SXdata, SXadres);
-		/* write SXadres and the write command */
+		/* write SX-address and the write command */
 		write_port(busnumber, SXwrite + SXadres);
 		/* write data to the SX-bus */
 		write_port(busnumber, SXdata);
@@ -399,7 +401,7 @@ void writeSXbus(bus_t busnumber, int SXadres, int SXdata)
 	else
 	{
 		DBG(busnumber, DBG_DEBUG,
-			"Selectrix on bus %ld, byte %d to adres %d not send.",
+			"Selectrix on bus %ld, byte %d to address %d not send.",
 			busnumber, SXdata, SXadres);
 	}
 }
@@ -407,7 +409,7 @@ void writeSXbus(bus_t busnumber, int SXadres, int SXdata)
 /*******************************************************
 *     Rautenhaus setup
 ********************************************************/
-/* Make configuration byte for adres 126 */
+/* Make configuration byte for address 126 */
 void confRautenhaus(bus_t busnumber)
 {
 	int configuration;
@@ -418,7 +420,7 @@ void confRautenhaus(bus_t busnumber)
 		configuration |= (cntrlON + fdbckON);
 		if ((__selectrix->flags && CC2000_MODE) == CC2000_MODE)
 		{
-			/* Selectrix centrale, don't check adres 111 */
+			/* Selectrix central unit, don't check address 111 */
 			/* Don't check bus 0 */
 			configuration |= clkOFF0;
 			if ((__selectrix->flags && Rautenhaus_DBL) == Rautenhaus_DBL)
@@ -444,7 +446,7 @@ void *thr_commandSelectrix(void *v)
 	
 	state = 0;
 	busses[busnumber].watchdog = 0;
-	DBG(busnumber, DBG_INFO, "Selectrix on bus #%ld commandthread started.",
+	DBG(busnumber, DBG_INFO, "Selectrix on bus #%ld command thread started.",
 		busnumber);
 	while (1)
 	{
@@ -481,7 +483,7 @@ void *thr_commandSelectrix(void *v)
 			state = 2;
 			busses[busnumber].watchdog = 6;
 			unqueueNextGL(busnumber, &gltmp);
-			/* Adres of the engine */
+			/* Address of the engine */
 			addr = gltmp.id;
 			/* Check if valid address */
 			if (__selectrix->number_adres > addr)
@@ -518,7 +520,7 @@ void *thr_commandSelectrix(void *v)
 			}
 		}
 		busses[busnumber].watchdog = 7;
-		/* Antriebe (solenoids and signals) */
+		/* drives (solenoids and signals) */
 		if (!queue_GA_isempty(busnumber))
 		{
 			state = 3;
@@ -563,7 +565,7 @@ void *thr_commandSelectrix(void *v)
 							break;
 						default:
 							DBG(busnumber, DBG_DEBUG,
-							"Selectrix on bus %ld, invalid portnumber "
+							"Selectrix on bus %ld, invalid port number "
 							"%d with switch/signal or ...",
 							busnumber,  gatmp.port);
 							break;
@@ -600,7 +602,7 @@ void *thr_commandSelectrix(void *v)
 							break;
 						default:
 							DBG(busnumber, DBG_DEBUG,
-							"Selectrix on bus %ld, invalid portnumber "
+							"Selectrix on bus %ld, invalid port number "
 							"%d with switch/signal or ...",
 							busnumber, gatmp.port);
 							break;
@@ -625,13 +627,13 @@ void *thr_commandSelectrix(void *v)
 		{
 			state = 4;
 			busses[busnumber].watchdog = 10;
-			/* Fetch the modul address */
+			/* Fetch the module address */
 			addr = __selectrix->fb_adresses[__selectrix->currentFB];
 			//DBG(busnumber, DBG_DEBUG,
-			//	 "Selectrix on bus %ld, feedbackaddress %d.",
+			//	 "Selectrix on bus %ld, feedback address %d.",
 			//	 busnumber, addr);
 			if (__selectrix->number_adres > addr) {
-				/* Read the SXbus */
+				/* Read the SX-bus */
 				commandreadSXbus(busnumber, addr);
 				 __selectrix->startFB = 2;
 			}
@@ -659,7 +661,7 @@ void *thr_feedbackSelectrix(void *v)
 	int addr;
 
 	bus_t busnumber = (bus_t) v;
-	DBG(busnumber, DBG_INFO, "Selectrix on bus #%ld feedbackthread started.",
+	DBG(busnumber, DBG_INFO, "Selectrix on bus #%ld feedback thread started.",
 		busnumber);
 	__selectrix->currentFB = __selectrix->number_fb;
 	while (1)
@@ -678,12 +680,12 @@ void *thr_feedbackSelectrix(void *v)
 				{
 					__selectrix->currentFB++;    // Next
 				}
-				/* Fetch the modul address */
+				/* Fetch the module address */
 				addr = __selectrix->fb_adresses[__selectrix->currentFB];
 				if (__selectrix->number_adres > addr)
 				{
 					//DBG(busnumber, DBG_DEBUG,
-					//	 "Selectrix on bus %ld, feedbackaddress %d.",
+					//	 "Selectrix on bus %ld, feedback address %d.",
 					//	 busnumber, addr);
 					/* Let thread process a feedback */
 					__selectrix->startFB = 1;
@@ -716,7 +718,7 @@ void sig_processSelectrix(bus_t busnumber)
 
 	DBG(busnumber, DBG_INFO, "Selectrix on bus #%ld signal processed.",
 		busnumber);
-	/* Read the SXbus */
+	/* Read the SX-bus */
 	data = readSXbus(busnumber);
 	if ((__selectrix->flags && Rautenhaus_FDBCK) == Rautenhaus_FDBCK)
 	{
@@ -741,10 +743,10 @@ void sig_processSelectrix(bus_t busnumber)
 		{ /* 0: data represents received data*/
 			addr = __selectrix->fb_adresses[__selectrix->currentFB];
 			__selectrix->bus_data[addr] = data;
-			/* Set the deamon global data */
-			/* Use 1, 2, ... as adres for feedback */
+			/* Set the daemon global data */
+			/* Use 1, 2, ... as address for feedback */
 			setFBmodul(busnumber, __selectrix->currentFB, data);
-			/* Use real adres for feedback */
+			/* Use real address for feedback */
 			//setFBmodul(busnumber, addr, data);
 			DBG(busnumber, DBG_INFO,
 				"Selectrix on bus %ld, address %d has feedback data %X.",
@@ -758,10 +760,10 @@ void sig_processSelectrix(bus_t busnumber)
 		{
 			addr = __selectrix->fb_adresses[__selectrix->currentFB];
 			__selectrix->bus_data[addr] = data;
-			/* Set the deamon global data */
-			/* Use 1, 2, ... as adres for feedback */
+			/* Set the daemon global data */
+			/* Use 1, 2, ... as address for feedback */
 			setFBmodul(busnumber, __selectrix->currentFB, data);
-			/* Use real adres for feedback */
+			/* Use real address for feedback */
 			//setFBmodul(busnumber, addr, data);
 			DBG(busnumber, DBG_INFO,
 				"Selectrix on bus %ld, address %d has feedback data %X.",
