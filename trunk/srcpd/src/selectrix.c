@@ -85,7 +85,11 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
 	while (child != NULL)
 	{
-		if (xmlStrcmp(child->name, BAD_CAST "number_fb") == 0)
+            if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) {
+                /* just do nothing, it is only a comment */
+            }
+
+            else if (xmlStrcmp(child->name, BAD_CAST "number_fb") == 0)
 		{
 			txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
 			if (txt != NULL)
@@ -171,7 +175,10 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 			xmlChar *subtxt = NULL;
 			while (subchild != NULL)
 			{
-				if (xmlStrcmp(subchild->name, BAD_CAST "port") == 0)
+                            if (xmlStrncmp(subchild->name, BAD_CAST "text", 4) == 0) {
+                                /* just do nothing, it is only a comment */
+                            }
+                            else if (xmlStrcmp(subchild->name, BAD_CAST "port") == 0)
 				{
 					/* Check if on the second SX-bus */
 					offset = 0;

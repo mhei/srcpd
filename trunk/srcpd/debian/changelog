@@ -1,3 +1,9 @@
+srcpd (2.0.10-0dapper0.1) dapper; urgency=low
+
+  * Update to version 2.0.10.cvs
+
+ -- Guido Scholz <guido.scholz@bayernline.de>  Thu, 24 Aug 2006 18:16:04 +0100
+
 srcpd (2.0.9-1) unstable; urgency=low
 
   * Update to version 2.0.9.

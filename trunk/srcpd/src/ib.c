@@ -85,7 +85,11 @@ int readConfig_IB( xmlDocPtr doc, xmlNodePtr node, bus_t busnumber )
 
   while ( child != NULL )
   {
-    if ( xmlStrcmp( child->name, BAD_CAST "number_fb" ) == 0 )
+    if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) {
+          /* just do nothing, it is only a comment */
+    }
+
+    else if ( xmlStrcmp( child->name, BAD_CAST "number_fb" ) == 0 )
     {
       txt = xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
       if ( txt != NULL )
