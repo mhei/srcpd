@@ -180,15 +180,6 @@ int main(int argc, char **argv)
     DBG(0, DBG_INFO, "conffile = \"%s\"\n", conffile);
     readConfig(conffile);
 
-
-    // check for resolv all needed malloc's
-    for (i = 0; i <= num_busses; i++) {
-        if (busses[i].driverdata == NULL) {
-                printf ("Sorry, there is an error in your srcpd.conf "
-                        "for bus %ld !\n", i);
-                exit(1);
-        }
-    }
     cmds.port = ((SERVER_DATA *) busses[0].driverdata)->TCPPORT;
     cmds.func = thr_doClient;
     openlog("srcpd", LOG_CONS, LOG_USER);

@@ -989,6 +989,15 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
     struct utsname utsBuffer;
     char buf[3];
+
+    busses[busnumber].driverdata = malloc(sizeof(struct _DDL_DATA));
+
+    if (busses[busnumber].driverdata == NULL) {
+        DBG(busnumber, DBG_ERROR,
+                "Memory allocation error in module '%s'.", node->name);
+        return 0;
+    }
+
     busses[busnumber].type = SERVER_DDL;
     busses[busnumber].init_func = &init_bus_DDL;
     busses[busnumber].term_func = &term_bus_DDL;
@@ -997,7 +1006,6 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     busses[busnumber].thr_func = &thr_sendrec_DDL;
 
-    busses[busnumber].driverdata = malloc(sizeof(struct _DDL_DATA));
     strcpy(busses[busnumber].description, "GA GL POWER LOCK DESCRIPTION");
     __DDL->oslevel = 1; // kernel 2.6
 

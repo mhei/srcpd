@@ -211,12 +211,18 @@ static int handle_i2c_set_ga(bus_t bus, struct _GASTATE *gatmp)
 
 int readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
+    busses[busnumber].driverdata = malloc(sizeof(I2CDEV_DATA));
+
+    if (busses[busnumber].driverdata == NULL) {
+        DBG(busnumber, DBG_ERROR,
+                "Memory allocation error in module '%s'.", node->name);
+        return 0;
+    }
+
     busses[busnumber].type = SERVER_I2C_DEV;
     busses[busnumber].init_func = &init_bus_I2C_DEV;
     busses[busnumber].term_func = &term_bus_I2C_DEV;
     busses[busnumber].thr_func = &thr_sendrec_I2C_DEV;
-    busses[busnumber].driverdata = malloc(sizeof(I2CDEV_DATA));
-    /*TODO: what happens if malloc returns NULL? */
     strcpy(busses[busnumber].description, "GA POWER DESCRIPTION");
 
     __i2cdev->number_ga = 0;

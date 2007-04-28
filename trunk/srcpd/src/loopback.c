@@ -21,14 +21,20 @@
 
 int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
+    busses[busnumber].driverdata = malloc(sizeof(struct _LOOPBACK_DATA));
+
+    if (busses[busnumber].driverdata == NULL) {
+        DBG(busnumber, DBG_ERROR,
+                "Memory allocation error in module '%s'.", node->name);
+        return 0;
+    }
+
     busses[busnumber].type = SERVER_LOOPBACK;
     busses[busnumber].init_func = &init_bus_LOOPBACK;
     busses[busnumber].term_func = &term_bus_LOOPBACK;
     busses[busnumber].thr_func = &thr_sendrec_LOOPBACK;
     busses[busnumber].init_gl_func = &init_gl_LOOPBACK;
     busses[busnumber].init_ga_func = &init_ga_LOOPBACK;
-    busses[busnumber].driverdata = malloc(sizeof(struct _LOOPBACK_DATA));
-    /*TODO: what happens if malloc returns NULL?*/
     strcpy(busses[busnumber].description,
            "GA GL FB POWER LOCK DESCRIPTION");
 

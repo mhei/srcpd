@@ -34,14 +34,21 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
     xmlNodePtr child = node->children;
     xmlChar *txt;
+
+    busses[busnumber].driverdata = malloc(sizeof(struct _LOCONET_DATA));
+
+    if (busses[busnumber].driverdata == NULL) {
+        DBG(busnumber, DBG_ERROR,
+                "Memory allocation error in module '%s'.", node->name);
+        return 0;
+    }
+
     busses[busnumber].type = SERVER_LOCONET;
     busses[busnumber].init_func = &init_bus_LOCONET;
     busses[busnumber].term_func = &term_bus_LOCONET;
     busses[busnumber].thr_func = &thr_sendrec_LOCONET;
     busses[busnumber].init_gl_func = &init_gl_LOCONET;
     busses[busnumber].init_ga_func = &init_ga_LOCONET;
-    busses[busnumber].driverdata = malloc(sizeof(struct _LOCONET_DATA));
-    /*TODO: what happens if malloc returns NULL?*/
 
     __loconet->number_fb = 2048;        /* max addr for OPC_INPUT_REP (10+1 bit) */
     __loconet->number_ga = 2048;        /* max addr for OPC_SW_REQ */

@@ -49,10 +49,18 @@
 int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
 	int i, offset;
-	int portindex;
+	int portindex = 0;
 
-	DBG(busnumber, DBG_ERROR, "Entering selectrix specific data for bus: %d", busnumber);
-	portindex = 0;
+	DBG(busnumber, DBG_ERROR, "Entering selectrix specific data "
+                "for bus: %d", busnumber);
+
+	busses[busnumber].driverdata = malloc(sizeof(struct _SELECTRIX_DATA));
+        if (busses[busnumber].driverdata == NULL) {
+            DBG(busnumber, DBG_ERROR,
+                    "Memory allocation error in module '%s'.", node->name);
+            return 0;
+        }
+
 	busses[busnumber].type = SERVER_SELECTRIX;
 	busses[busnumber].baudrate = B9600;
 	busses[busnumber].init_func = &init_bus_Selectrix;
@@ -63,8 +71,6 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 	busses[busnumber].init_gl_func = &init_gl_Selectrix;
 	busses[busnumber].init_ga_func = &init_ga_Selectrix;
 	busses[busnumber].init_fb_func = &init_fb_Selectrix;
-	busses[busnumber].driverdata = malloc(sizeof(struct _SELECTRIX_DATA));
-	/* TODO: what happens if malloc returns NULL?  */
 	__selectrix->number_gl = 0;
 	__selectrix->number_ga = 0;
 	__selectrix->number_fb = 0;

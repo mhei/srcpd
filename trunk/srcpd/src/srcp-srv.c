@@ -26,12 +26,19 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     
     DBG(busnumber, DBG_INFO, "bus %ld starting configuration child %s",
         busnumber, node->name);
+
+    busses[0].driverdata = malloc(sizeof(struct _SERVER_DATA));
+
+    if (busses[busnumber].driverdata == NULL) {
+        DBG(busnumber, DBG_ERROR,
+                "Memory allocation error in module '%s'.", node->name);
+        return 0;
+    }
+
     busses[0].type = SERVER_SERVER;
     busses[0].init_func = &init_bus_server;
     busses[0].term_func = &term_bus_server;
     strcpy(busses[0].description, "SESSION SERVER TIME GM");
-    busses[0].driverdata = malloc(sizeof(struct _SERVER_DATA));
-    /*TODO: what happens if malloc returns NULL?*/
 
     // initialize _SERVER_DATA with defaults
     serviceentry = getservbyname("srcp","tcp");

@@ -67,12 +67,18 @@ int readanswer(bus_t bus, char cmd, char *buf, int maxbuflen,
 
 int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
+    busses[busnumber].driverdata = malloc(sizeof(struct _zimo_DATA));
+
+    if (busses[busnumber].driverdata == NULL) {
+        DBG(busnumber, DBG_ERROR,
+                "Memory allocation error in module '%s'.", node->name);
+        return 0;
+    }
+
     busses[busnumber].type = SERVER_ZIMO;
     busses[busnumber].init_func = &init_bus_zimo;
     busses[busnumber].term_func = &term_bus_zimo;
     busses[busnumber].thr_func = &thr_sendrec_zimo;
-    busses[busnumber].driverdata = malloc(sizeof(struct _zimo_DATA));
-    /*TODO: what happens if malloc returns NULL?*/
     strcpy(busses[busnumber].description, "SM GL POWER LOCK DESCRIPTION");
 
     __zimo->number_fb = 0;      /* max 31 */

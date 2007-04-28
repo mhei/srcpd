@@ -30,12 +30,18 @@ int readConfig_HSI_88( xmlDocPtr doc, xmlNodePtr node, bus_t busnumber )
 {
   int number;
 
+  busses[ busnumber ].driverdata = malloc( sizeof( struct _HSI_88_DATA ) );
+
+    if (busses[busnumber].driverdata == NULL) {
+        DBG(busnumber, DBG_ERROR,
+                "Memory allocation error in module '%s'.", node->name);
+        return 0;
+    }
+
   busses[ busnumber ].type = SERVER_HSI_88;
   busses[ busnumber ].init_func = &init_bus_HSI_88;
   busses[ busnumber ].term_func = &term_bus_HSI_88;
   busses[ busnumber ].thr_func = &thr_sendrec_HSI_88;
-  busses[ busnumber ].driverdata = malloc( sizeof( struct _HSI_88_DATA ) );
-  /*TODO: what happens if malloc returns NULL?*/
   busses[ busnumber ].flags |= FB_ORDER_0;
   busses[ busnumber ].flags |= FB_16_PORTS;
   strcpy( busses[ busnumber ].description, "FB POWER" );
