@@ -99,8 +99,13 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
 
     /* Communication port to default values */
     busses[current_bus].devicetype = HW_FILENAME;
-    /*TODO: what happens if malloc returns NULL? */
+
+    /* FIXME: this will lead to a memory leak if initialization of
+     * (busnumber - 1) failed */
     busses[current_bus].filename.path = malloc(strlen("/dev/null") + 1);
+    if (busses[current_bus].filename.path == NULL)
+        return current_bus;
+
     strcpy(busses[current_bus].filename.path, "/dev/null");
     busses[current_bus].fd = -1;
     busses[current_bus].baudrate = B2400;
@@ -195,9 +200,8 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
                 busses[current_bus].devicetype = HW_NETWORK;
             }
             else {
-                printf
-                    ("WARNING, \"%s\" (bus %ld) is an unknown device specifier!\n",
-                     child->name, current_bus);
+                printf("WARNING, \"%s\" (bus %ld) is an unknown "
+                       "device specifier!\n", child->name, current_bus);
             }
             free(txt2);
             txt = xmlNodeListGetString(doc, child->children, 1);

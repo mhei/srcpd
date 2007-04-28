@@ -64,13 +64,20 @@ int readConfig_IB( xmlDocPtr doc, xmlNodePtr node, bus_t busnumber )
   DBG( busnumber, DBG_INFO,
        "reading configuration for intellibox at bus %ld", busnumber );
 
+  busses[ busnumber ].driverdata = malloc( sizeof( struct _IB_DATA ) );
+
+    if (busses[busnumber].driverdata == NULL) {
+        DBG(busnumber, DBG_ERROR,
+                "Memory allocation error in module '%s'.", node->name);
+        return 0;
+    }
+
   busses[ busnumber ].type = SERVER_IB;
   busses[ busnumber ].init_func = &init_bus_IB;
   busses[ busnumber ].term_func = &term_bus_IB;
   busses[ busnumber ].thr_func = &thr_sendrec_IB;
   busses[ busnumber ].init_gl_func = &init_gl_IB;
   busses[ busnumber ].init_ga_func = &init_ga_IB;
-  busses[ busnumber ].driverdata = malloc( sizeof( struct _IB_DATA ) );
   busses[ busnumber ].flags |= FB_16_PORTS;
   busses[ busnumber ].baudrate = B38400;
 

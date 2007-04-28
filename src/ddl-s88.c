@@ -5,7 +5,7 @@
     copyright            : (C) 2001 by Dipl.-Ing. Frank Schmischke
     email                : frank.schmischke@t-online.de
 
-    This source based on errdcd-sourcecode by Torsten Vogt.
+    This source based on errdcd-source code by Torsten Vogt.
     full header statement below!
  ***************************************************************************/
 
@@ -53,13 +53,13 @@
 /* file: maerklin_s88.c                                        */
 /* job : some routines to read s88 data from the printer-port  */
 /*                                                             */
-/* Torsten Vogt, Dieter Schaefer, october 1999                 */
-/* Martin Wolf, november 2000                                  */
+/* Torsten Vogt, Dieter Schaefer, October 1999                 */
+/* Martin Wolf, November 2000                                  */
 /*                                                             */
 /* last changes: Torsten Vogt, march 2000                      */
-/*               Martin Wolf, november 2000                    */
+/*               Martin Wolf, November 2000                    */
 /* modified for srcpd: Matthias Trute, may 2002 */
-/* modified for FreeBSD: Michael Meiszl, jan 2003              */
+/* modified for FreeBSD: Michael Meiszl, January 2003              */
 /*                                                             */
 /***************************************************************/
 
@@ -91,12 +91,18 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
     int i;
 
+    busses[busnumber].driverdata = malloc(sizeof(struct _DDL_S88_DATA));
+
+    if (busses[busnumber].driverdata == NULL) {
+        DBG(busnumber, DBG_ERROR,
+                "Memory allocation error in module '%s'.", node->name);
+        return 0;
+    }
+
     busses[busnumber].type = SERVER_S88;
     busses[busnumber].init_func = &init_bus_S88;
     busses[busnumber].term_func = &term_bus_S88;
     busses[busnumber].thr_func = &thr_sendrec_S88;
-    busses[busnumber].driverdata = malloc(sizeof(struct _DDL_S88_DATA));
-    /*TODO: what happens if malloc returns NULL?*/
 
     __ddl_s88->port = 0x0378;
 #ifdef __FreeBSD__
@@ -111,7 +117,7 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     __ddl_s88->refresh = 100;
 
 #ifdef __FreeBSD__
-    __ddl_s88->Fd = -1;         // signalisiere gechlossenes Port
+    __ddl_s88->Fd = -1;         // signal closed Port
 #endif
 
     strcpy(busses[busnumber].description, "FB POWER");
@@ -231,14 +237,14 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 /****************************************************************
 * function s88init                                              *
 *                                                               *
-* purpose: test the parralel port for the s88bus and initializes*
-*          the bus. The portadress must be one of LPT_BASE, the *
-*          port must be accessable through ioperm and there must*
-*          be an real device at the adress.                     *
+* purpose: test the parallel port for the s88bus and initializes*
+*          the bus. The port address must be one of LPT_BASE, the *
+*          port must be accessible through ioperm and there must*
+*          be an real device at the address.                     *
 *                                                               *
 * in:      ---                                                  *
 * out:     return value: 1 if testing and initializing was      *
-*                        successfull, otherwise 0               *
+*                        successful, otherwise 0               *
 *                                                               *
 * remarks: tested MW, 20.11.2000                                *
 * bit ordering is changed from erddcd code! (MT)     *
@@ -278,7 +284,7 @@ int init_bus_S88(bus_t busnumber)
             isin = (inb(S88PORT) == 0xFF) && isin;
             if (isin) {
                 // initialize the S88 by doing a reset
-                // for ELEKTOR-Modul the reset must be on the load line
+                // for ELEKTOR-Module the reset must be on the load line
                 S88_WRITE(S88_QUIET);
                 S88_WRITE(S88_RESET & S88_LOAD);
                 S88_WRITE(S88_QUIET);
@@ -298,11 +304,11 @@ int init_bus_S88(bus_t busnumber)
     }
     else {
         DBG(busnumber, DBG_WARN,
-            "warning: 0x%X is not valid port adress for s88 device.",
+            "warning: 0x%X is not valid port address for s88 device.",
             S88PORT);
         return 1;
     }
-    DBG(busnumber, DBG_INFO, "s88 port sucsessfully initialized at 0x%X.",
+    DBG(busnumber, DBG_INFO, "s88 port successfully initialized at 0x%X.",
         S88PORT);
     return 0;
 }
@@ -311,7 +317,7 @@ int init_bus_S88(bus_t busnumber)
 * function s88load                                              *
 *                                                               *
 * purpose: Loads the data from the bus in s88data if the valid- *
-*          timespace S88REFRESH is over. Then also the new      *
+*          time space S88REFRESH is over. Then also the new      *
 *          validity-timeout is set to s88valid.                 *
 *          If port is disabled or data is valid does nothing.      *
 *                                                               *
@@ -353,7 +359,7 @@ void s88load(bus_t busnumber)
                 for (k = 0; k < 8; k++) {
                     // reading from port
                     inbyte = inb(S88PORT + 1);
-                    // interpreting the four busses
+                    // interpreting the four buses
                     if (inbyte & S88_DATA1)
                         s88data[j] += BIT_VALUES[k];
                     if (!(inbyte & S88_DATA2))
@@ -441,7 +447,7 @@ int FBSD_ioperm(int Port, int KeineAhnung, int DesiredAccess,
     int Fd;
 
 
-    // Simpel: soll geschlossen werden?
+    // Simple: should be closed  ?
     if (DesiredAccess == 0) {
         if (__ddl_s88->Fd != -1) {
             close(__ddl_s88->Fd);
@@ -456,11 +462,11 @@ int FBSD_ioperm(int Port, int KeineAhnung, int DesiredAccess,
         return 0;
     }
 
-    // ist schon offen???
+    // is already open???
     if (__ddl_s88->Fd != -1) {
         // DBG(busnumber, DBG_INFO,  "FBSD DDL-S88 trying to re-open port %04X (ignored)",Port);
 
-        return 0;               // gnaedig ignorieren
+        return 0;               // gracious ignoring
     }
 
     // Also oeffnen, das ist schon trickreicher :-)

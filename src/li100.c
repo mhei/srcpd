@@ -43,6 +43,14 @@ int readConfig_LI100_SERIAL( xmlDocPtr doc, xmlNodePtr node,  bus_t busnumber )
   DBG( busnumber, DBG_INFO, "reading configuration for LI100 (serial) at bus #%ld", busnumber );
 #endif
 
+  busses[ busnumber ].driverdata = malloc(sizeof(struct _LI100_DATA));
+  if (busses[busnumber].driverdata == NULL) {
+      DBG(busnumber, DBG_ERROR,
+              "Memory allocation error in module '%s'.", node->name);
+      return 0;
+  }
+
+
 #ifdef LI100_USB
 
   busses[ busnumber ].type = SERVER_LI100_USB;
@@ -61,7 +69,6 @@ int readConfig_LI100_SERIAL( xmlDocPtr doc, xmlNodePtr node,  bus_t busnumber )
 
   busses[ busnumber ].init_gl_func = &init_gl_LI100;
   busses[ busnumber ].init_ga_func = &init_ga_LI100;
-  busses[ busnumber ].driverdata = malloc( sizeof( struct _LI100_DATA ) );
   busses[ busnumber ].flags |= FB_4_PORTS;
 
   strcpy( busses[ busnumber ].description,

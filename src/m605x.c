@@ -41,13 +41,20 @@
 
 int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
+    busses[busnumber].driverdata = malloc(sizeof(struct _M6051_DATA));
+
+    if (busses[busnumber].driverdata == NULL) {
+        DBG(busnumber, DBG_ERROR,
+                "Memory allocation error in module '%s'.", node->name);
+        return 0;
+    }
+
     busses[busnumber].type = SERVER_M605X;
     busses[busnumber].init_func = &init_bus_M6051;
     busses[busnumber].term_func = &term_bus_M6051;
     busses[busnumber].thr_func = &thr_sendrec_M6051;
     busses[busnumber].init_gl_func = &init_gl_M6051;
     busses[busnumber].init_ga_func = &init_ga_M6051;
-    busses[busnumber].driverdata = malloc(sizeof(struct _M6051_DATA));
     /*TODO: what happens if malloc returns NULL? */
     busses[busnumber].flags |= FB_16_PORTS;
     __m6051->number_fb = 0;     /* max 31 */
