@@ -29,10 +29,11 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     busses[0].driverdata = malloc(sizeof(struct _SERVER_DATA));
 
-    if (busses[busnumber].driverdata == NULL) {
+    /* if there is too less memory for server data -> exit process */
+    if (busses[0].driverdata == NULL) {
         DBG(busnumber, DBG_ERROR,
                 "Memory allocation error in module '%s'.", node->name);
-        return 0;
+        exit(1);
     }
 
     busses[0].type = SERVER_SERVER;
