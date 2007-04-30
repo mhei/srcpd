@@ -1,66 +1,66 @@
-Autor: Gerard van der Sel, et al 
+Author: Gerard van der Sel, et al 
 Datum: Mai 2005 
 Version: SRCP 2.0.8 (pre version), Selectrix 1.0.0
-Lizenz: GPL v2 for the whole package 
+Licence: GPL v2 for the whole package 
 
 Purpose:
 In this document the differences between a Maerklin/Intellibox and
-Selectrix controlcenter is explained and the consequences for the SRCP
-implementation with the selectrix protocol (SX_bus only).
+Selectrix control center is explained and the consequences for the SRCP
+implementation with the Selectrix protocol (SX_bus only).
 In the sources selectrix.c and selectrix.h is a translation module
-programmed that the bit command normal with Marklin and Intellibox
+programmed that the bit command normal with Maerklin and Intellibox
 translates to a byte transport. Different elements are treated
 different. But an implementation of the GL, GA and FB commands of SRCP
 is done.
 
 GL (controlling an engine) translation:
-A GL on SCRP is on a Marklin/Intellibox system the same as on a
-selectrix system. It is on all systems a multiple bit command. A
-selectrix decoder accepts the following command:
+A GL on SCRP is on a Maerklin/Intellibox system the same as on a
+Selectrix system. It is on all systems a multiple bit command. A
+Selectrix decoder accepts the following command:
 
 - Bit 4 – bit 0:	Speed of the engine (0 = stop, 31 = max speed)
 - Bit 5:		Direction of the engine (0 = forward, 1 = backward)
-- Bit 6:		Licht on/off (0 = off, 1 = on)
+- Bit 6:		Light on/off (0 = off, 1 = on)
 - Bit 7:		Function on/off (0 = off, 1 = on) 
 
 With the SRCP the command for an engine would be:
 SET busnumber GL engineaddress direction speed light function where:
 
-busnumber		Number of de selectrixbus
-engineaddress		Adres of the engine on the SX-bus
+busnumber		Number of the Selectrix bus
+engineaddress		Address of the engine on the SX-bus
 direction		Direction of the engine (2= emergency stop)
 speed			Speed of the engine
-licht			State of the engine lights
+light			State of the engine lights
 function 		State of the engine function
 
 GA (controlling switches and signals) translation:
 A GA on SCRP is on a Maerklin/Intellibox system a one bit instruction.
-Every switch or signal can be addressed individualy. After a predefined
+Every switch or signal can be addressed individually. After a predefined
 time the switch must be turned off. On the SX-bus (Selectrix)
 8 switches are controlled in one action. The switch controller turns
 the switch command off.
 
-In de SCRP server the switch turn off command is generated from
+In the SCRP server the switch turn off command is generated from
 software. The client doesn't have to turn off the switches. This makes
 the implementation of the switches as follows:
 
 SET busnumber GA switchcontroller switchport switchvalue, where:
 
-busnumber	     Number of de selectrixbus
-switchcontroller     Adres of switch controller on the SX-bus
+busnumber	     Number of the Selectrix bus
+switchcontroller     Address of switch controller on the SX-bus
 switchport	     Number from 1 to 8 (giving the number of port the
                      switch is connected to)
 switchvalue          0 Normal, <>0 Thrown
 
 FB (Feedback contacts from track) translation:
 A FB on SCRP is on a Maerklin/Intellibox system a bitstream
-(packeds of 16 bits), which is read from the controller with a byte
+(packets of 16 bits), which is read from the controller with a byte
 instruction. This is in SCRP converted to a one bit instruction. On a
 Selectrix system it is also a byte which is located on the SX-bus. A
 'bitstream' of 8 bits is read from the SX-bus. An other 'bitstream'
 is read from the SX-bus at a different address.
 
-In the SRCP serveral FB contacts are translated to single
+In the SRCP several FB contacts are translated to single
 contacts. They are located in a big row. To let the Selectrix
 implementation make such a stream there has to be a further
 initialization to be done. The SX-bus addresses of the feedback contacts
@@ -85,7 +85,7 @@ of the target address. The byte send to the SX-bus is also placed in the
 array, so the array is up to date. This is done inside the IO thread,
 to make the data in the array thread-save.
 In a second array the addresses of the feedback modules are stored.
-In a seperate counter the number of feedback modules is counted.
+In a separate counter the number of feedback modules is counted.
 The thread will process the data to and from the message queue.
 
 Example:
@@ -112,7 +112,7 @@ Used hardware:
 
 Two trains on the layout with decoders at addresses 5 and 10.
 
-Configuration file for SRCPD:
+Configuration file for srcpd:
 <?xml version="1.0"?>
 <srcpd version="2.0">
   <bus number="0">
@@ -140,7 +140,7 @@ Configuration file for SRCPD:
 </srcpd>
 
 
-Initialisation (SRCPD):
+Initialisation (srcpd):
 
 GL:
 SRCPD command: INIT 1 GL 5 S 1 31 2
@@ -154,7 +154,7 @@ FB:
 SRCPD command: INIT 1 FB 100 S 1
 SRCPD command: INIT 1 FB 101 S 2
 
-Driving (SCRPD):
+Driving (srcpd):
 
 GL:
 Engine with address 5 is set to:

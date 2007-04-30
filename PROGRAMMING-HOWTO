@@ -8,27 +8,26 @@ Stand: 2005-10-29
 
 All modules can be used multiply and in parallel. 
 
-All modules are included at compile time. An option
-to select them (e.g. via configure) is not available at
-this time.
+All modules are included at compile time. An option to select them
+(e.g. via configure) is not available at this time.
 
-All configuration is done with the srcpd config file. The XML
-based format needs some discipline, e.g. with respect to spaces
-within busnames (developer task) and file/device names (user task).
+All configuration is done with the srcpd configuration file. The XML
+based format needs some discipline, e.g. with respect to spaces within
+bus names (developer task) and file/device names (user task).
 
-1. Startup
+1. Start up
 
-During the startup _the_ config file (compile time build in name or
-configurable with the -f option) is read. In the file config-srcpd.c
+During the start up _the_ configuration file (compile time build in name
+or configurable with the -f option) is read. In the file config-srcpd.c
 the function register_bus() calls the hard coded functions from the
-respective busses with there DOM subtree and there effective bus number.
+respective buses with there DOM sub tree and there effective bus number.
 
-This parsing route must initialize all data fields it's global
-busses array entry and analyse the XML DOM subtree. It should 
-provide useful default values.
+This parsing route must initialize all data fields it's global buses
+array entry and analyse the XML DOM sub tree. It should provide useful
+default values.
 
-The framework expects the following call back function pointers to
-be set:
+The framework expects the following call back function pointers to be
+set:
 
 - init_bus: called as "SRCP INIT <bus>"
 - term_bus: called as "SRCP TERM <bus>"
@@ -49,7 +48,7 @@ Is called after canceling the (send_rec)() thread to cleanup
 
 4. send_rec
 
-endless loop to process the device queries to comminucate with
+Endless loop to process the device queries to communicate with
 hardware and read back information. It gets a single parameter:
 the bus number. The return type should be void*, it will be ignored
 by now.
@@ -59,23 +58,23 @@ void* thr_sendrec_LOOPBACK (void *v)
   int bus = (int) v;
 
 
-Can be supervised by a watchdog to detect blocks. In this case
-the thread is canceled and restarted. Note that the init_bus/term_bus
+Can be supervised by a watchdog to detect blocks. In this case the
+thread is canceled and restarted. Note that the init_bus/term_bus
 function are _not_ called.
 
 5. Watchdog
 
-Not every module may need it. If active, the master process checks
-the variable watchdog in the busses-array and sets it to 0 (zero).
-If the value found _is_ already 0 (zero) the rend_rec thread is restarted.
-A syslog message is generated.
+Not every module may need it. If active, the master process checks the
+variable watchdog in the buses-array and sets it to 0 (zero). If the
+value found _is_ already 0 (zero) the rend_rec thread is restarted. A
+syslog message is generated.
 
 The send_rec thread has to set this watchdog variable constantly to
 a value greater than 0.
 
 6. Debugging
 
-Debugging within the srcpd may be tricky dou the potentially many
+Debugging within the srcpd may be tricky due the potentially many
 threads and the lack of a console. To assist _please_ do not use
 even temporarily such constructs. Use the function DBG() instead.
 
@@ -120,27 +119,29 @@ the information to all INFORMATION sessions.
 
 9.1 Function Names
 
-The thread function have names prefixed with thr_. Functions with relation with
-SRCP have the command name and the device group in there names (GA, TERM).
-Functions used internally by a module have to be declared static. Exported functions
-(those in the header file) have to contain the module name in uppercase.
-(e.g. readconfig_LOOPBACK for the loopback module)
+The thread function have names prefixed with thr_. Functions with
+relation with SRCP have the command name and the device group in there
+names (GA, TERM).  Functions used internally by a module have to be
+declared static. Exported functions (those in the header file) have
+to contain the module name in uppercase.  (e.g. readconfig_LOOPBACK
+for the loopback module)
 
 9.2 Bus parameter
 
 All functions are called with the current bus number. Any remaining
-data can be found in the array busses.
+data can be found in the array buses.
 
-9.3 busses-Array
+9.3 buses-Array
 
-The array busses contains all configuration and working data for the configured
-busses. It is currently declared as a static array with 20 entries (0..19).
+The array buses contains all configuration and working data for the
+configured buses. It is currently declared as a static array with 20
+entries (0..19).
 
-The data structure reflects the XML configuration structure. Commonly used
-data  such as pointer to the functions, watchdog, description string etc and
-the bus type is provided. Module specific data (such as data from the XML
-subtree) is provided as the (void*) pointer driverdata. This pointer _can_
-be NULL.
+The data structure reflects the XML configuration structure. Commonly
+used data  such as pointer to the functions, watchdog, description
+string etc and the bus type is provided. Module specific data (such as
+data from the XML sub tree) is provided as the (void*) pointer driver
+data. This pointer _can_ be NULL.
 
 
 10. SRCP Hacking
@@ -150,12 +151,12 @@ extensions.
 
 11. Other Operating Systems
 
-Currently the srcpd is very linux specific. Some modules can be used on
-other unixoid systems (FreeBSD is known to work). 
+Currently the srcpd is very Linux specific. Some modules can be used on
+other UNIX like systems (FreeBSD is known to work). 
 
-OSs which are very different from unix can be supported, but this
-will need the respective developer(s). Cygwin is currently on the
-way..
+Operating systems which are very different from UNIX can be supported,
+but this will need the respective developer(s). Cygwin is currently on
+the way.
 
 12. Use of CVS
 
