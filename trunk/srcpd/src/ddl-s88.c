@@ -506,8 +506,8 @@ int FBSD_ioperm(int Port, int KeineAhnung, int DesiredAccess,
 
 unsigned char FBSD_inb(int Woher, bus_t busnumber)
 {
-    // Aufpassen! Manchmal wird das Datenport, manchmal die Steuer
-    // leitungen angesprochen !
+    // Look out! Manchmal wird das Datenport, manchmal die Steuer
+    // leitungen angesprochen!
 
     unsigned char i = 0;
     int WelchesPort;

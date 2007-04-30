@@ -8,7 +8,7 @@
 ***************************************************************************/
 
 /*
-* i2c-dev: Busdriver for i2c-dev-Interface of the Linux-Kernel
+* i2c-dev: Bus driver for i2c-dev-Interface of the Linux-Kernel
 *           can be used to access hardware found on
 *         http://www.matronix.de/
 *
@@ -80,25 +80,25 @@ static int read_PCF8574(bus_t bus, int addr, __u8 *byte)
 
     ret = ioctl(busfd, I2C_SLAVE, addr);
     if (ret < 0) {
-      DBG(bus, DBG_INFO, "Can't access adress %d (%s)",
+      DBG(bus, DBG_INFO, "Can't access address %d (%s)",
           addr, strerror(errno));
       return (ret);
     }
 
     ret = i2c_smbus_read_byte(busfd);
     if (ret < 0) {
-      DBG(bus, DBG_INFO, "Can't read byte from adress %d (%s)",
+      DBG(bus, DBG_INFO, "Can't read byte from address %d (%s)",
           addr, strerror(errno));
       return (ret);
     }
     *byte = 0xFF & (ret);
-    DBG(bus, DBG_DEBUG, "Read byte %d from adress %d",
+    DBG(bus, DBG_DEBUG, "Read byte %d from address %d",
         *byte, addr);
     return (ret);
 }
 */
 
-/* Write value to a i2c device, determine i2c device by adress */
+/* Write value to a i2c device, determine i2c device by address */
 
 static int write_i2c_dev(bus_t bus, int addr, I2C_VALUE value)
 {
@@ -149,7 +149,7 @@ static int handle_i2c_set_ga(bus_t bus, struct _GASTATE *gatmp)
     DBG(bus, DBG_DEBUG, "i2c_addr = %d on multiplexed bus #%d",
         i2c_addr, mult_busnum);
     // port: 0     - direct write of value to device
-    //       other - select portpins directly, value = {0,1}
+    //       other - select port pins directly, value = {0,1}
 
     if (port == 0) {
 
@@ -294,7 +294,7 @@ int readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     /*
        if (init_GL(busnumber, __i2cdev->number_gl)) {
        __i2cdev->number_gl = 0;
-       DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
+       DBG(busnumber, DBG_ERROR, "Can't create array for locomotives");
        }
      */
     /*
@@ -388,7 +388,7 @@ int term_bus_I2C_DEV(bus_t bus)
 /*
 *
 * Initializes the I2C-Bus and sets fd for the bus
-* If bus unavailible, fd = -1
+* If bus unavailable, fd = -1
 *
 */
 int init_bus_I2C_DEV(bus_t i)

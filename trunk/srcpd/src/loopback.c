@@ -1,7 +1,7 @@
 /* $Id$ */
 
 /**
- * loopback: simple Busdriver without any hardware.
+ * loopback: simple Bus driver without any hardware.
  **/
 
 #include "stdincludes.h"
@@ -84,7 +84,7 @@ int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     if (init_GL(busnumber, __loopback->number_gl)) {
         __loopback->number_gl = 0;
-        DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
+        DBG(busnumber, DBG_ERROR, "Can't create array for locomotives");
     }
 
     if (init_GA(busnumber, __loopback->number_ga)) {

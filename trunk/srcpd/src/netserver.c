@@ -44,7 +44,7 @@ extern char *WELCOME_MSG;
 
 
 /**
- * Shakehand phase.
+ * Shake hand phase.
  *
  */
 
@@ -202,7 +202,7 @@ static int handle_setcheck(sessionid_t sessionid, bus_t bus, char *device,
             sscanf(parameter, "%ld %ld %ld %ld", &gaddr, &port, &aktion,
                    &delay);
         if (anzparms >= 4) {
-            /* Port 0,1; Aktion 0,1 */
+            /* Port 0,1; Action 0,1 */
             /* Only if not locked!! */
             getlockGA(bus, gaddr, &lockid);
             if (lockid == 0 || lockid == sessionid) {
@@ -450,7 +450,7 @@ int handleGET(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
 
     else if (strncasecmp(device, "DESCRIPTION", 11) == 0) {
 
-        /* Beschreibungen gibt es deren 2 */
+        /* there are two descriptions */
         long int addr;
         char devgrp[10];
         int nelem = 0;
@@ -534,7 +534,7 @@ int handleWAIT(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
                 rc = infoFB(bus, port, reply);
             }
             else {
-                /* wir warten 1/20 Sekunden genau */
+                /* we exactly wait for 1/20 seconds */
                 timeout *= 20;
                 do {
                     usleep(50000);
@@ -564,11 +564,11 @@ int handleWAIT(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
         nelem = sscanf(parameter, "%ld %ld %ld %ld", &d, &h, &m, &s);
         if (vtime.ratio_x != 0 && vtime.ratio_y != 0) {
             if (nelem >= 4) {
-                /* es wird nicht gerechnet!, der Zeitflu�ist nicht gleichm�ig! */
+                /* es wird nicht gerechnet, der Zeitfluss ist nicht gleichmaessig! */
                 while ((((d * 24 + h) * 60 + m) * 60 + s) >=
                        (((vtime.day * 24 + vtime.hour) * 60 +
                          vtime.min) * 60 + vtime.sec)) {
-                    usleep(10000);      /* wir warten 10ms realzeit.. */
+                    usleep(10000);      /* we wait 10ms real time.. */
                 }
                 rc = infoTIME(reply);
             }
@@ -729,7 +729,7 @@ int handleINIT(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
         long rx, ry, nelem;
         nelem = sscanf(parameter, "%ld %ld", &rx, &ry);
         if (nelem >= 2) {
-            rc = initTIME(rx, ry);      /* prft auch die Werte! */
+            rc = initTIME(rx, ry);      /* checks also values! */
         }
         else {
             rc = SRCP_LISTTOOSHORT;
@@ -853,4 +853,5 @@ int doCmdClient(int Socket, sessionid_t sessionid)
     close(Socket);
     return 0;
 }
+
 

@@ -55,7 +55,6 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     busses[busnumber].thr_func = &thr_sendrec_M6051;
     busses[busnumber].init_gl_func = &init_gl_M6051;
     busses[busnumber].init_ga_func = &init_ga_M6051;
-    /*TODO: what happens if malloc returns NULL? */
     busses[busnumber].flags |= FB_16_PORTS;
     __m6051->number_fb = 0;     /* max 31 */
     __m6051->number_ga = 256;
@@ -155,7 +154,7 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     if (init_GL(busnumber, __m6051->number_gl)) {
         __m6051->number_gl = 0;
-        DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
+        DBG(busnumber, DBG_ERROR, "Can't create array for locomotives");
     }
 
     if (init_FB(busnumber, __m6051->number_fb * 16)) {
@@ -168,7 +167,7 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
 
 /*******************************************************
- *     SERIELLE SCHNITTSTELLE KONFIGURIEREN
+ *     configure serial line
  *******************************************************/
 static int init_lineM6051(bus_t bus)
 {
@@ -314,7 +313,7 @@ void *thr_sendrec_M6051(void *v)
         }
         busses[bus].watchdog = 3;
 
-        /* Lokdecoder */
+        /* locomotive decoder */
         if (!((M6051_DATA *) busses[bus].driverdata)->cmd32_pending) {
             if (!queue_GL_isempty(bus)) {
                 unqueueNextGL(bus, &gltmp);

@@ -205,7 +205,7 @@ int init_bus_IB( bus_t busnumber )
   if ( init_GL( busnumber, __ib->number_gl ) )
   {
     __ib->number_gl = 0;
-    DBG( busnumber, DBG_ERROR, "Can't create array for locomotivs" );
+    DBG( busnumber, DBG_ERROR, "Can't create array for locomotives" );
   }
   if ( init_FB( busnumber, __ib->number_fb * 16 ) )
   {
@@ -325,7 +325,7 @@ void *thr_sendrec_IB( void *v )
           usleep( 100000 );
           status = readByte_IB( busnumber, 1, &rr );
         }
-        if ( rr == 0x00 )    // war alles OK ?
+        if ( rr == 0x00 )    // war alles OK?
         {
           busses[ busnumber ].power_changed = 0;
         }
@@ -355,7 +355,7 @@ void *thr_sendrec_IB( void *v )
     check_reset_fb( busnumber );
     busses[ busnumber ].watchdog = 1;
     usleep( 50000 );
-  }                           // Ende WHILE(1)
+  }                           // End WHILE(1)
 }
 
 void send_command_ga_IB( bus_t busnumber )
@@ -375,10 +375,10 @@ void send_command_ga_IB( bus_t busnumber )
   {
     if ( __ib->tga[ i ].id )
     {
-      DBG( busnumber, DBG_DEBUG, "Zeit %i,%i", ( int ) akt_time.tv_sec,
+      DBG( busnumber, DBG_DEBUG, "Time %i,%i", ( int ) akt_time.tv_sec,
            ( int ) akt_time.tv_usec );
       cmp_time = __ib->tga[ i ].t;
-      if ( cmpTime( &cmp_time, &akt_time ) )     // Ausschaltzeitpunkt erreicht ?
+      if ( cmpTime( &cmp_time, &akt_time ) )     // switch off time reached?
       {
         gatmp = __ib->tga[ i ];
         addr = gatmp.id;
@@ -404,7 +404,7 @@ void send_command_ga_IB( bus_t busnumber )
     }
   }
 
-  // Decoder einschalten
+  // Decoder switch on
   if ( !queue_GA_isempty( busnumber ) )
   {
     unqueueNextGA( busnumber, &gatmp );
@@ -428,7 +428,7 @@ void send_command_ga_IB( bus_t busnumber )
     }
     writeByte( busnumber, byte2send, 0 );
     status = 0;
-    // reschedule event: turn off --tobedone--
+    // reschedule event: turn off --to be done--
     if ( gatmp.action && ( gatmp.activetime > 0 ) )
     {
       status = 1;
@@ -469,7 +469,7 @@ void send_command_gl_IB( bus_t busnumber )
   unsigned char status;
   struct _GLSTATE gltmp, glakt;
 
-  /* Lokdecoder */
+  /* locomotive decoder */
   //fprintf(stderr, "LOK's... ");
   /* nur senden, wenn wirklich etwas vorliegt */
   if ( !queue_GL_isempty( busnumber ) )
@@ -478,26 +478,26 @@ void send_command_gl_IB( bus_t busnumber )
     addr = gltmp.id;
     getGL( busnumber, addr, &glakt );
 
-    // speed, direction or function changed ?
+    // speed, direction or function changed?
     if ( ( gltmp.direction != glakt.direction ) ||
          ( gltmp.speed != glakt.speed ) || ( gltmp.funcs != glakt.funcs ) )
     {
       // Lokkommando soll gesendet werden
       byte2send = 0x80;
       writeByte( busnumber, byte2send, 0 );
-      // send lowbyte of adress
+      // send low byte of address
       temp = gltmp.id;
       temp &= 0x00FF;
       byte2send = temp;
       writeByte( busnumber, byte2send, 0 );
-      // send highbyte of adress
+      // send high byte of address
       temp = gltmp.id;
       temp >>= 8;
       byte2send = temp;
       writeByte( busnumber, byte2send, 0 );
-      if ( gltmp.direction == 2 )      // Nothalt ausgel�t ?
+      if ( gltmp.direction == 2 )      // emergency stop activated?
       {
-        byte2send = 1;  // Nothalt setzen
+        byte2send = 1;  // set emergency stop
       }
       else
       {
@@ -721,11 +721,11 @@ int send_pom_IB( bus_t busnumber, int addr, int cv, int value )
   // send pom-command
   byte2send = 0xDE;
   writeByte( busnumber, byte2send, 0 );
-  // low-byte of decoder-adress
+  // low-byte of decoder-address
   tmp = addr & 0xFF;
   byte2send = tmp;
   writeByte( busnumber, byte2send, 0 );
-  // high-byte of decoder-adress
+  // high-byte of decoder-address
   tmp = addr >> 8;
   byte2send = tmp;
   writeByte( busnumber, byte2send, 0 );
@@ -772,7 +772,7 @@ void send_command_sm_IB( bus_t busnumber )
   //unsigned char status;
   struct _SM smakt;
 
-  /* Lokdecoder */
+  /* locomotive decoder */
   //fprintf(stderr, "LOK's... ");
   /* nur senden, wenn wirklich etwas vorliegt */
   if ( !queue_SM_isempty( busnumber ) )
@@ -849,7 +849,7 @@ void check_status_IB( bus_t busnumber )
   struct _GLSTATE gltmp, glakt;
   struct _GASTATE gatmp;
 
-  /* Abfrage auf Status�derungen :
+  /* request for Status�changes :
      1. �derungen an S88-Modulen
      2. manuelle Lokbefehle
      3. manuelle Weichenbefehle */
@@ -894,10 +894,10 @@ void check_status_IB( bus_t busnumber )
       readByte_IB( busnumber, 1, &rr );
       //gltmp.funcs = rr & 0xf0;
       gltmp.funcs = ( rr << 1 );
-      // 3. byte adress (low-part A7..A0)
+      // 3. byte address (low-part A7..A0)
       readByte_IB( busnumber, 1, &rr );
       gltmp.id = rr;
-      // 4. byte adress (high-part A13..A8), direction, light
+      // 4. byte address (high-part A13..A8), direction, light
       readByte_IB( busnumber, 1, &rr );
       if ( ( rr & 0x80 ) && ( gltmp.direction == 0 ) )
         gltmp.direction = 1;    // Richtung ist vorw�ts
@@ -914,17 +914,17 @@ void check_status_IB( bus_t busnumber )
       //  gltmp.id, gltmp.speed, gltmp.direction);
 
       // initialize the GL if not done by user,
-      // because IB can report uninited GLs...
+      // because IB can report uninitialized GLs...
       if ( !isInitializedGL( busnumber, gltmp.id ) )
       {
         DBG( busnumber, DBG_INFO,
-             "IB reported unintialized GL. Performing default init for %d",
+             "IB reported uninitialized GL. Performing default init for %d",
              gltmp.id );
         initGL( busnumber, gltmp.id, 'P', 1, 126, 5 );
       }
       // get old data, to know which FS the user wants to have...
       getGL( busnumber, gltmp.id, &glakt );
-      // recalc speed
+      // recalculate speed
       gltmp.speed = ( gltmp.speed * glakt.n_fs ) / 126;
       setGL( busnumber, gltmp.id, gltmp );
 
@@ -999,7 +999,7 @@ void check_status_IB( bus_t busnumber )
     }
   }
 
-  // power off ?
+  // power off?
   // we should send an XStatus-command
   if ( ( xevnt1 & 0x08 ) || ( xevnt2 & 0x40 ) )
   {
@@ -1071,7 +1071,7 @@ void check_status_pt_IB( bus_t busnumber )
       // wait for an answer of our programming
       if ( rr[ 0 ] == 0xF5 )
       {
-        // sleep for one second, if answer is not avalible yet
+        // sleep for one second, if answer is not available yet
         i = -1;
         sleep( 1 );
       }
@@ -1156,9 +1156,9 @@ static int initLine_IB( bus_t busnumber )
   struct termios interface;
 
   char *name = busses[ busnumber ].filename.path;
-  DBG( busnumber, DBG_INFO, "Begining to detect IB on serial line: %s\n",
+  DBG( busnumber, DBG_INFO, "Beginning to detect IB on serial line: %s\n",
        name );
-  //printf("Begining to detect IB on serial line: %s\n", name);
+  //printf("Beginning to detect IB on serial line: %s\n", name);
 
   DBG( busnumber, DBG_INFO, "Opening serial line %s for 2400 baud\n",
        name );
@@ -1206,7 +1206,7 @@ static int initLine_IB( bus_t busnumber )
     DBG( busnumber, DBG_INFO, "successful.\n" );
   }
 
-  /* open the comport in 2400, to get buadrate from IB and turn off
+  /* open the comport in 2400, to get baud rate from IB and turn off
      P50 commands*/
   baud = B2400;
   fd = open_comport( busnumber, baud );
@@ -1279,7 +1279,7 @@ static int sendBreak( const int fd, bus_t busnumber )
 
 
 /**
- * checks the baudrate of the intellibox;
+ * checks the baud rate of the intellibox;
  * see interface description of intellibox
  *
  * @param file descriptor of the port
@@ -1300,7 +1300,7 @@ speed_t checkBaudrate( const int fd, const bus_t busnumber )
   char msg[ 200 ];
 
   DBG( busnumber, DBG_INFO,
-       "Checking baudrate inside IB, see special option S1 in IB-Handbook\n" );
+       "Checking baud rate inside IB, see special option S1 in IB-Handbook\n" );
   for ( i = 0; i < 10; i++ )
     input[ i ] = 0;
   while ( ( found == 0 ) && ( baudrate <= 38400 ) )
@@ -1406,7 +1406,7 @@ speed_t checkBaudrate( const int fd, const bus_t busnumber )
 }
 
 /**
- * reset the baudrate inside ib depending on par 1
+ * reset the baud rate inside ib depending on par 1
  * @param requested baudrate
  * @return: 0 if successfull
  **/
@@ -1418,27 +1418,27 @@ static int resetBaudrate( const speed_t speed, const bus_t busnumber )
   switch ( speed )
   {
     case B2400:
-      DBG( busnumber, DBG_INFO, "Changing baudrate to 2400 bps\n" );
+      DBG( busnumber, DBG_INFO, "Changing baud rate to 2400 bps\n" );
       sendString = "B2400";
       writeString( busnumber, ( unsigned char * ) sendString, 0 );
       break;
     case B4800:
-      DBG( busnumber, DBG_INFO, "Changing baudrate to 4800 bps\n" );
+      DBG( busnumber, DBG_INFO, "Changing baud rate to 4800 bps\n" );
       sendString = "B4800";
       writeString( busnumber, ( unsigned char * ) sendString, 0 );
       break;
     case B9600:
-      DBG( busnumber, DBG_INFO, "Changing baudrate to 9600 bps\n" );
+      DBG( busnumber, DBG_INFO, "Changing baud rate to 9600 bps\n" );
       sendString = "B9600";
       writeString( busnumber, ( unsigned char * ) sendString, 0 );
       break;
     case B19200:
-      DBG( busnumber, DBG_INFO, "Changing baudrate to 19200 bps\n" );
+      DBG( busnumber, DBG_INFO, "Changing baud rate to 19200 bps\n" );
       sendString = "B19200";
       writeString( busnumber, ( unsigned char * ) sendString, 0 );
       break;
     case B38400:
-      DBG( busnumber, DBG_INFO, "Changing baudrate to 38400 bps\n" );
+      DBG( busnumber, DBG_INFO, "Changing baud rate to 38400 bps\n" );
       sendString = "B38400";
       writeString( busnumber, ( unsigned char * ) sendString, 0 );
       break;
@@ -1458,10 +1458,10 @@ static int resetBaudrate( const speed_t speed, const bus_t busnumber )
  * sends the command to switch of P50 commands off, see interface
  * description of intellibox
  *
- * the answer of the intellibox is shwon with printf
+ * the answer of the intellibox is shown with printf
  *
  * @param  busnumber inside srcpd
- * @return 0 if ok
+ * @return 0 if OK
  **/
 static int switchOffP50Command( const bus_t busnumber )
 {
@@ -1492,7 +1492,7 @@ static int switchOffP50Command( const bus_t busnumber )
  *
  * @param  busnumber inside srcp
  * @param if > 0 the answer is printed
- * @return 0 if ok
+ * @return 0 if OK
  **/
 static int readAnswer_IB( const bus_t busnumber,
                           const int generatePrintf )
@@ -1548,7 +1548,7 @@ static int readByte_IB( bus_t bus, int wait, unsigned char *the_byte )
     status = readByte( bus, wait, the_byte );
     if ( status == 0 )
       return 0;
-    //    printf("readByte() unsuccesfull; status = %d\n", status);
+    //    printf("readByte() unsuccessfully; status = %d\n", status);
     usleep( 10000 );
   }
   return -1;

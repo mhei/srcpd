@@ -16,14 +16,14 @@
  ***************************************************************************/
 
 /*
-   Manages the INFO SESSIONs. Every Hardwaredriver must call (directly or
+   Manages the INFO SESSIONs. Every Hardware driver must call (directly or
    via set<devicegroup> functions the queueInfoMessage. This function will
-   copy the preformatted string into internal buffer (allocated) and sets
+   copy the preformated string into internal buffer (allocated) and sets
    the current writer position (variable in). To avoid confusion, a semaphore
    protects this process.
 
    On the other end of the pipe are numerous threads waiting for
-   new data. Each and every of these threads maintains its own readerposition
+   new data. Each and every of these threads maintains its own reader position
    (parameter current) to unqueue the recently added messages.
 
    When a new INFO sessions starts, it will send all status data and
@@ -100,7 +100,7 @@ int startup_INFO(void)
 }
 
 /**
- * Endless loop for new infomode client
+ * Endless loop for new info mode client
  * terminates on write failure
  **/
 int doInfoClient(int Socket, sessionid_t sessionid)
@@ -108,16 +108,16 @@ int doInfoClient(int Socket, sessionid_t sessionid)
     int status, i, current, number, value;
     char reply[1000], description[1000];
 
-    // send startup-infos to a new client
+    // send start up-information to a new client
     struct timeval cmp_time;
     bus_t busnumber;
     current = in;
     DBG(0, DBG_DEBUG, "new Info-client requested %ld", sessionid);
     for (busnumber = 0; busnumber <= num_busses; busnumber++) {
         DBG(busnumber, DBG_DEBUG,
-            "send all data for busnumber %d to new client", busnumber);
+            "send all data for bus number %d to new client", busnumber);
         // first some global bus data
-        // send Descriptions for busses
+        // send Descriptions for buses
         describeBus(busnumber, reply);
         socket_writereply(Socket, reply);
         strcpy(description, reply);
@@ -138,7 +138,7 @@ int doInfoClient(int Socket, sessionid_t sessionid)
             *reply = 0x00;
         }
 
-        // send all needed generic locomotivs
+        // send all needed generic locomotives
         if (strstr(description, "GL")) {
             number = getMaxAddrGL(busnumber);
             for (i = 1; i <= number; i++) {
@@ -203,7 +203,7 @@ int doInfoClient(int Socket, sessionid_t sessionid)
     }
     DBG(0, DBG_DEBUG, "all data to new Info-Client (%ld) sent", sessionid);
 
-    /* This is a racing condition: we should stop queing new
+    /* This is a racing condition: we should stop queuing new
        messages until we reach this this point, it is possible to
        miss some data changed since we started this thread */
     if (in != current) {

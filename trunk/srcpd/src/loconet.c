@@ -22,7 +22,7 @@
 #ifdef HAVE_LINUX_SERIAL_H
 #include "linux/serial.h"
 #else
-#warning "MS100 support for linux only!"
+#warning "MS100 support for Linux only!"
 #endif
 
 #define __loconet ((LOCONET_DATA*)busses[busnumber].driverdata)
@@ -50,8 +50,8 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     busses[busnumber].init_gl_func = &init_gl_LOCONET;
     busses[busnumber].init_ga_func = &init_ga_LOCONET;
 
-    __loconet->number_fb = 2048;        /* max addr for OPC_INPUT_REP (10+1 bit) */
-    __loconet->number_ga = 2048;        /* max addr for OPC_SW_REQ */
+    __loconet->number_fb = 2048;        /* max address for OPC_INPUT_REP (10+1 bit) */
+    __loconet->number_ga = 2048;        /* max address for OPC_SW_REQ */
     __loconet->number_gl = 9999;        /* DCC address range */
     __loconet->loconetID = 0x50;        /* Loconet ID */
     __loconet->flags = LN_FLAG_ECHO;
@@ -211,7 +211,7 @@ static int init_lineLOCONET(bus_t busnumber) {
 
 int term_bus_LOCONET(bus_t busnumber)
 {
-    DBG(busnumber, DBG_INFO, "loconet bus %lu terminating", busnumber);
+    DBG(busnumber, DBG_INFO, "Loconet bus %lu terminating", busnumber);
     switch (busses[busnumber].devicetype) {
         case HW_FILENAME:
 	    close(busses[busnumber].fd);
@@ -223,7 +223,7 @@ int term_bus_LOCONET(bus_t busnumber)
 	}
 
     DBG(busnumber, DBG_INFO,
-        "loconet bus %ld: %u packets sent, %u packets received", busnumber,
+        "Loconet bus %ld: %u packets sent, %u packets received", busnumber,
         __loconet->sent_packets, __loconet->recv_packets);
     return 0;
 }
@@ -249,17 +249,17 @@ static int init_ga_LOCONET(struct _GASTATE *ga)
 int init_bus_LOCONET(bus_t busnumber)
 {
     __loconet->sent_packets = __loconet->recv_packets = 0;
-    DBG(busnumber, DBG_INFO, "loconet init: bus #%d, debug %d", busnumber,
+    DBG(busnumber, DBG_INFO, "Loconet init: bus #%d, debug %d", busnumber,
         busses[busnumber].debuglevel);
     if (busses[busnumber].debuglevel <= 5) {
-        DBG(busnumber, DBG_INFO, "loconet bus %ld open device %s",
+        DBG(busnumber, DBG_INFO, "Loconet bus %ld open device %s",
             busnumber, busses[busnumber].filename.path);
         init_lineLOCONET(busnumber);
     }
     else {
         busses[busnumber].fd = -1;
     }
-    DBG(busnumber, DBG_INFO, "loconet bus %ld init done", busnumber);
+    DBG(busnumber, DBG_INFO, "Loconet bus %ld init done", busnumber);
     return 0;
 }
 
@@ -306,9 +306,9 @@ static int ln_read_serial(bus_t busnumber, unsigned char *cmd, int len)
         /* read data from locobuffer */
         int pktlen;
         unsigned char c;
-        /* read exactly one loconet packet; there must be at least one
+        /* read exactly one Loconet packet; there must be at least one
            character due to select call result */
-        /* a valid loconet packet starts with a byte >= 0x080
+        /* a valid Loconet packet starts with a byte >= 0x080
            and contains one or more bytes <0x80.
          */
         do {
@@ -362,7 +362,7 @@ static int ln_read_lbserver(bus_t busnumber, unsigned char *cmd, int len) {
 	socket_readline(fd, line, sizeof(line)-1);
 	/* line may begin with 
 	    SENT message: last command was sent (or not)
-	    RECEIVE message: new message from loconet
+	    RECEIVE message: new message from Loconet
 	    VERSION text: VERSION information about the server */
 	if(strstr(line, "RECEIVE ")) {
 	    /* we have a fixed format */
@@ -408,7 +408,7 @@ static int ln_write_lbserver(long int busnumber, const unsigned char *cmd,
     strcat(msg, "\r\n");
     socket_writereply(busses[busnumber].fd, msg);
     DBG(busnumber, DBG_DEBUG,
-	"sent loconet packet with OPC 0x%02x, %d bytes (%s)", cmd[0], len, msg);
+	"sent Loconet packet with OPC 0x%02x, %d bytes (%s)", cmd[0], len, msg);
     __loconet->sent_packets++;
     __loconet->ln_msglen = 0;
     return 0;
@@ -423,7 +423,7 @@ static int ln_write_serial(bus_t busnumber, const unsigned char *cmd,
         writeByte(busnumber, cmd[i], 0);
     }
     DBG(busnumber, DBG_DEBUG,
-        "sent loconet packet with OPC 0x%02x, %d bytes", cmd[0], len);
+        "sent Loconet packet with OPC 0x%02x, %d bytes", cmd[0], len);
     __loconet->sent_packets++;
     __loconet->ln_msglen = len;
     memcpy(__loconet->ln_message, cmd, len);
@@ -475,26 +475,26 @@ void *thr_sendrec_LOCONET(void *v)
     char msg[110];
     struct _GASTATE gatmp;
     
-    DBG(busnumber, DBG_INFO, "loconet started, bus #%d, %s", busnumber,
+    DBG(busnumber, DBG_INFO, "Loconet started, bus #%d, %s", busnumber,
         busses[busnumber].filename.path);
     timeoutcnt = 0;
     while (1) {
         busses[busnumber].watchdog = 1;
         memset(ln_packet, 0, sizeof(ln_packet));
-        /* first is always to read _from_ loconet */
+        /* first is always to read _from_ Loconet */
         if (((ln_packetlen =
               ln_read(busnumber, ln_packet, sizeof(ln_packet))) > 0)) {
 
             switch (ln_packet[0]) {
             case OPC_GPOFF:
                 busses[busnumber].power_state = 0;
-                strcpy(busses[busnumber].power_msg, "from loconet");
+                strcpy(busses[busnumber].power_msg, "from Loconet");
                 infoPower(busnumber, msg);
                 queueInfoMessage(msg);
                 break;
             case OPC_GPON:
                 busses[busnumber].power_state = 1;
-                strcpy(busses[busnumber].power_msg, "from loconet");
+                strcpy(busses[busnumber].power_msg, "from Loconet");
                 infoPower(busnumber, msg);
                 queueInfoMessage(msg);
                 break;
@@ -525,12 +525,12 @@ void *thr_sendrec_LOCONET(void *v)
                 ln_opc_peer_xfer_read(busnumber, ln_packet);
                 break;
             default:
-                /* unkown loconet packet received, ignored */
+                /* unknown Loconet packet received, ignored */
                 break;
             }
         }
         if (__loconet->ln_msglen == 0) {
-            /* now we process the way back _to_ loconet */
+            /* now we process the way back _to_ Loconet */
             ln_packet[0] = OPC_IDLE;
             ln_packetlen = 2;
             if (busses[busnumber].power_changed == 1) {
@@ -556,7 +556,7 @@ void *thr_sendrec_LOCONET(void *v)
         	    gettimeofday(&gatmp.tv[gatmp.port], NULL);
         	}
         	setGA(busnumber, addr, gatmp);
-                DBG(busnumber, DBG_DEBUG, "loconet: GA SET #%d %02X",
+                DBG(busnumber, DBG_DEBUG, "Loconet: GA SET #%d %02X",
                         gatmp.id, gatmp.action);
             }
 
@@ -567,17 +567,17 @@ void *thr_sendrec_LOCONET(void *v)
                 addr = smtmp.addr;
                 switch (smtmp.command) {
                 case SET:
-                    DBG(busnumber, DBG_DEBUG, "loconet: SM SET #%d %02X",
+                    DBG(busnumber, DBG_DEBUG, "Loconet: SM SET #%d %02X",
                         smtmp.addr, smtmp.value);
                     break;
                 case GET:
-                    DBG(busnumber, DBG_DEBUG, "loconet SM GET #%d[%d]",
+                    DBG(busnumber, DBG_DEBUG, "Loconet SM GET #%d[%d]",
                         smtmp.addr, smtmp.typeaddr);
                     ln_packetlen = 16;
                     ln_packet[0] = 0xe5;        /* OPC_PEER_XFER, old fashioned */
                     ln_packet[1] = ln_packetlen;
                     ln_packet[2] = __loconet->loconetID;        /* sender ID */
-                    ln_packet[3] = (unsigned char) smtmp.addr;  /* dest addr */
+                    ln_packet[3] = (unsigned char) smtmp.addr;  /* dest address */
                     ln_packet[4] = 0x01;
                     ln_packet[5] = 0x10;
                     ln_packet[6] = 0x02;

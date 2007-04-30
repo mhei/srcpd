@@ -27,9 +27,9 @@
 /*                                                             */
 /* Torsten Vogt, may 1999                                      */
 /*                                                             */
-/* last changes: Torsten Vogt, september 2000                  */
-/*               Torsten Vogt, january 2001                    */
-/*               Torsten Vogt, april 2001                      */
+/* last changes: Torsten Vogt, September 2000                  */
+/*               Torsten Vogt, January 2001                    */
+/*               Torsten Vogt, April 2001                      */
 /*                                                             */
 /***************************************************************/
 
@@ -62,7 +62,7 @@
  (verify cv, write cv, cv bit manipulation)
  (implemented)
 
- service mode instruction packets for adress-only mode
+ service mode instruction packets for address-only mode
  (verify address contents, write address contents)
  (NOT implemented)
 
@@ -78,10 +78,10 @@
 
    configuration of the serial port:
 
-      startbit: 1
-      stopbit : 1
-      databits: 8
-      baudrate: 19200
+      start bit: 1
+      stop bit : 1
+      data bits: 8
+      baud rate: 19200
 
       ==> one serial bit takes 52.08 usec.
 
@@ -115,10 +115,10 @@
                           start-   stop-
                           bit      bit
 
-   known bugs (of version 1 of the nmra dcc translation routine):
+   known bugs (of version 1 of the NMRA dcc translation routine):
    (i hope version 2 don't have these bugs ;-) )
 
-      following packets are not translateable:
+      following packets are not translatable:
 
         N1 031 1 06 0 0 0 0 0
         N1 047 0 07 0 0 0 0 0
@@ -141,13 +141,13 @@
         N2 062 1 118 0 0 0 0 0
 
      I think, that these are not really problems. The only consequence is
-     e.g. that some addresses has 127 speed steps instead of 128. Thats
+     e.g. that some addresses has 127 speed steps instead of 128. That's
      life, don't worry.
 
-     New: completely new algorithm to generate the nmra packet stream
+     New: completely new algorithm to generate the NMRA packet stream
      (i call it 'version 3' of the translate routines)
 
-     The idea in this approach to generate nmra patterns is, to split the
+     The idea in this approach to generate NMRA patterns is, to split the
      starting and ending bit in each pattern and share it with the next
      pattern. Therefore the patterns, which could be generated, are coded with
      h, H, l and L, lowercase describing the half bits. The longest possible
@@ -162,13 +162,13 @@
      contain an l or an L, which could be enlarged, to get rid of at least on
      bit in this pattern and don't have our problem in the next pattern. With
      the only exception of hHHHHh, but this pattern simply moves our problem
-     into one byte before or upto the beginning of the sequence. And there, we
+     into one byte before or up to the beginning of the sequence. And there, we
      could always add a bit. So we are sure, to be able, to translate any
      given sequence of bits.
 
-    Because only the case of hHHHHh realy requires 6 bits, the translationtable
+    Because only the case of hHHHHh really requires 6 bits, the translation table
     could be left at 32 entries. The other case, which has the same first five
-    bits is our problem, so we have to handle it seperatly anyway.
+    bits is our problem, so we have to handle it separately anyway.
 
     Of course the resulting sequence is not dc free. But if this is required,
     one could replace the bytes in the TranslateData by an index in another
@@ -238,7 +238,7 @@
 
     #define hHHHl       0xd5  _-_-_-_---      111100  111101
 
-    not directly translatetable     111110
+    not directly translatable     111110
 
 ****************************************************************/
 
@@ -447,7 +447,7 @@ int translateBitstream2Packetstream_v1(char *Bitstream, char *Packetstream,
         Packetstream[j] = (unsigned char) 0x99; /* Now the handling of the */
         j++;                    /* final '1'. See above.          */
     }
-    return j + 1;               /* return nr of bytes in packetstream */
+    return j + 1;               /* return number of bytes in packetstream */
 }
 
 int translateBitstream2Packetstream_v2(char *Bitstream, char *Packetstream)
@@ -508,7 +508,7 @@ int translateBitstream2Packetstream_v2(char *Bitstream, char *Packetstream)
             return 0;
         }
     }
-    return j + 1;               /* return nr of bytes in packetstream */
+    return j + 1;               /* return number of bytes in packetstream */
 }
 
 int translateBitstream2Packetstream_v3(char *Bitstream, char *Packetstream)
@@ -549,9 +549,9 @@ int translateBitstream2Packetstream_v3(char *Bitstream, char *Packetstream)
     while (generate_packet < PKTSIZE && read_ptr < buf_end) {
         act_six = read_next_six_bits(read_ptr);
         if (act_six == 0x3e /* 111110 */ ) {
-            /*did we reach an untranslateble value */
+            /*did we reach an untranslatable value */
             /* try again from last position, where a shorter translation */
-            /* could be choosen                                          */
+            /* could be chosen                                          */
             second_try = TRUE;
             generate_packet = restart_packet;
             if (restart_read == last_restart)
@@ -566,7 +566,7 @@ int translateBitstream2Packetstream_v3(char *Bitstream, char *Packetstream)
             TranslateData_v3[act_six >> 1][second_try ? 1 : 0].value;
 
         if (act_six < 0x3e /* 111110 */ ) {
-            /* is translation fixed upto here ? */
+            /* is translation fixed up to here ? */
             restart_packet = generate_packet;
             restart_read = read_ptr;
         }
@@ -577,7 +577,7 @@ int translateBitstream2Packetstream_v3(char *Bitstream, char *Packetstream)
         second_try = FALSE;
     }
 
-    return generate_packet;     /* return nr of bytes in packetstream */
+    return generate_packet;     /* return number of bytes in packetstream */
 }
 
 
@@ -639,7 +639,7 @@ void calc_14bit_address_byte(char *byte1, char *byte2, int address)
         j = address % 2;
         address = address / 2;
         if (i >= 6) {
-            switch (j) {        // set bit 7 to bit 0 of addr-byte 2
+            switch (j) {        // set bit 7 to bit 0 of address-byte 2
                 case 0:
                     byte2[i - 6] = '0';
                     break;
@@ -649,7 +649,7 @@ void calc_14bit_address_byte(char *byte1, char *byte2, int address)
             }
         }
         else {
-            switch (j) {        // set bit 7 to bit 2 of addr-byte 1
+            switch (j) {        // set bit 7 to bit 2 of address-byte 1
                 case 0:
                     byte1[2 + i] = '0';
                     break;
@@ -912,7 +912,7 @@ int comp_nmra_accessory(bus_t busnumber, int nr, int output,
         /* packet is not available */
         p_packetstream = packetstream;
 
-        /*calculate the real address of the decoder and the pairnr of the switch */
+        /*calculate the real address of the decoder and the pair number of the switch */
         address = ((nr - 1) / 4) + 1;   /* valid decoder addresses: 1..1023 */
         pairnr = (nr - 1) % 4;
 
@@ -1365,9 +1365,9 @@ int comp_nmra_f4b14s128(bus_t busnumber, int address, int direction,
 /**
  * The following function(s) supports the implementation of NMRA-
  * programmers. It is recommended to use a programming track to  
- * programm your locos. In every case it is useful to stop the   
+ * program your locos. In every case it is useful to stop the   
  * refresh-cycle on the track when using one of the following    
- * servicemode functions.
+ * service mode functions.
  **/
 
 static int sm_initialized = FALSE;
@@ -1739,7 +1739,7 @@ void protocol_nmra_sm_phregister(bus_t bus, int sckt, int reg,
     if (!sm_initialized)
         sm_init(bus);
 
-    /* calculating byte1: 0111CRRR (instruction and nr of register) */
+    /* calculating byte1: 0111CRRR (instruction and number of register) */
     memset(byte1, 0, 9);
     if (verify)
         strcpy(byte1, "01110");

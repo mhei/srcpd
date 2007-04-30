@@ -22,13 +22,13 @@
 #include "portio.h"
 /**
  * open_port:
- * Open and initialise the serail port
- * Port is openend for read/write
- *         8 bits and 1 stopbit, no parity.
+ * Open and initialise the serial port
+ * Port is opened for read/write
+ *         8 bits and 1 stop bit, no parity.
  *         No timeout at reading the port
  * Input: Number of the bus
- * Output: >=0 a divice is succesfully attached
- *          <0 a errror is reported.
+ * Output: >=0 a device is successfully attached
+ *          <0 a error is reported.
  */
 int open_port(bus_t bus)
 {
@@ -43,12 +43,12 @@ int open_port(bus_t bus)
 		busses[bus].fd = -1;
 		return -errno;
 	}
-	/* Get defaultsettings from OS */
+	/* Get default settings from OS */
 	tcgetattr(serial, &busses[bus].devicesettings);
 	/* Ignore default setting from the OS */
 	bzero(&settings, sizeof(struct termios));
-	/* Setup settings for serialport */
-	/* Baudrate, enable reading, local mode, 8 bits, 1 stopbit and no parity */
+	/* Setup settings for serial port */
+	/* Baud rate, enable reading, local mode, 8 bits, 1 stop bit and no parity */
 	settings.c_cflag = busses[bus].baudrate | CREAD | CLOCAL | CS8;
 	/* No parity control or generation */
 	settings.c_iflag = IGNPAR;
@@ -56,10 +56,10 @@ int open_port(bus_t bus)
 	settings.c_lflag = 0;
 	settings.c_cc[VMIN] = 1;      /* Block terminates with reception of 1 character */
 	settings.c_cc[VTIME] = 0;     /* never a timeout */
-	/* Apply baudrate (new style)*/
+	/* Apply baud rate (new style)*/
 	cfsetospeed(&settings, busses[bus].baudrate);
 	cfsetispeed(&settings, busses[bus].baudrate);
-	/* Apply settings for serialport */
+	/* Apply settings for serial port */
 	tcsetattr(serial, TCSANOW, &settings);
 	/* Flush serial buffers                                                          */
 	tcflush(serial, TCIFLUSH);
@@ -89,14 +89,14 @@ void write_port(bus_t bus, unsigned char b)
 	i = 0;
 	if (busses[bus].debuglevel <= DBG_DEBUG)
 	{
-		/* Wait for transmit que to go empty */
+		/* Wait for transmit queue to go empty */
 		tcdrain(busses[bus].fd);
 		i = write(busses[bus].fd, &b, 1);
 	}
 	if (i < 0)
 	{
 		/* Error reported from write */
-		DBG(bus, DBG_ERROR, "(FD: %d) Extrernal error: errno %d",
+		DBG(bus, DBG_ERROR, "(FD: %d) External error: errno %d",
 			busses[bus].fd, errno); // , str_errno(errno));
 	}
 	else
@@ -114,7 +114,7 @@ int read_port(bus_t bus,  unsigned char *rr)
 {
 	int i;
 
-	// with debuglevel beyond DBG_DEBUG, we will not really work on hardware
+	// with debug level beyond DBG_DEBUG, we will not really work on hardware
 	if (busses[bus].debuglevel > DBG_DEBUG)
 	{
 		i = 1;

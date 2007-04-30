@@ -13,7 +13,7 @@
 
 #include "srcp-fb.h"
 
-/* one array for all busses             */
+/* one array for all buses             */
 /* not visible outside of this module   */
 static struct _FB fb[MAX_BUSSES];
 static int min_time[MAX_BUSSES];
@@ -54,7 +54,7 @@ int queueIsEmptyFB(busnumber)
     return (in[busnumber] == out[busnumber]);
 }
 
-/** liefert n�hsten Eintrag und >=0, oder -1 */
+/** returns next entry and >=0, or -1 */
 static int getNextFB(bus_t busnumber, struct _RESET_FB *info)
 {
     if (in[busnumber] == out[busnumber])
@@ -66,7 +66,7 @@ static int getNextFB(bus_t busnumber, struct _RESET_FB *info)
     return out[busnumber];
 }
 
-/** liefert n�hsten Eintrag oder -1, setzt fifo pointer neu! */
+/** returns next entry or -1, resets fifo pointer  ! */
 static void unqueueNextFB(bus_t busnumber)
 {
     pthread_mutex_lock(&queue_mutex_reset[busnumber]);
@@ -127,8 +127,8 @@ int updateFB(bus_t bus, int port, int value)
     // we read 8 or 16 ports at once, but we will only change those ports,
     // which are really changed
     //
-    // if changed contact ist resetet, we will wait 'min_time[bus]' seconds to
-    // minimalize problems from contacts bitween track and train
+    // if changed contact is reset, we will wait 'min_time[bus]' seconds to
+    // minimize problems from contacts between track and train
     if (fb[bus].fbstate[port_t].state != value) {
         DBG(bus, DBG_DEBUG, "FB %02i/%04i is set to \"%i\"", bus, port,
             value);
@@ -166,7 +166,7 @@ int updateFB(bus_t bus, int port, int value)
     return SRCP_OK;
 }
 
-/* all moduls with 8 or 16 ports */
+/* all modules with 8 or 16 ports */
 int setFBmodul(bus_t bus, int modul, int values)
 {
     int i;
@@ -189,7 +189,7 @@ int setFBmodul(bus_t bus, int modul, int values)
         dir = 1;
         mask = 1 << (ports - 1);
     }
-    // compute startcontact ( (modul - 1) * ports + 1 )
+    // compute start contact ( (module - 1) * ports + 1 )
     fb_contact = modul - 1;
     fb_contact *= ports;
     fb_contact++;
@@ -328,3 +328,4 @@ void check_reset_fb(bus_t busnumber)
         }
     }
 }
+
