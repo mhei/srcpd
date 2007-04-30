@@ -1,6 +1,6 @@
 /* $Id$ */
 
-/* DDL:  Busdriver connected with a booster only without any special hardware.
+/* DDL:  Bus driver connected with a booster only without any special hardware.
  *
  */
 
@@ -167,7 +167,7 @@ int setSerialMode(bus_t busnumber, int mode)
                 (busses[busnumber].fd, TCSANOW,
                  &__DDL->maerklin_dev_termios) != 0) {
                 DBG(busnumber, DBG_ERROR,
-                    "error setting serial device mode to marklin!");
+                    "error setting serial device mode to Maerklin!");
                 return -1;
             }
 //#if linux
@@ -225,7 +225,7 @@ int init_lineDDL(bus_t busnumber)
         DBG(busnumber, DBG_FATAL,
             "device %s can not be opened for writing. Abort!",
             busses[busnumber].filename.path);
-        exit(1);                /* theres no chance to continue */
+        exit(1);                /* there is no chance to continue */
     }
 
 //#if linux
@@ -250,7 +250,7 @@ int init_lineDDL(bus_t busnumber)
         exit(1);
     }
 
-    /* init termios structur for maerklin mode */
+    /* init termios structure for Maerklin mode */
     __DDL->maerklin_dev_termios.c_lflag &=
         ~(ECHO | ICANON | IEXTEN | ISIG);
     __DDL->maerklin_dev_termios.c_oflag &= ~(OPOST);
@@ -261,7 +261,7 @@ int init_lineDDL(bus_t busnumber)
     cfsetospeed(&__DDL->maerklin_dev_termios, B38400);  /* baud rate: 38400 */
     cfsetispeed(&__DDL->maerklin_dev_termios, B38400);  /* baud rate: 38400 */
 
-    /* init termios structur for nmra mode */
+    /* init termios structure for NMRA mode */
     __DDL->nmra_dev_termios.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
     __DDL->nmra_dev_termios.c_oflag &= ~(OPOST);
     __DDL->nmra_dev_termios.c_iflag &=
@@ -306,7 +306,7 @@ int init_lineDDL(bus_t busnumber)
 }
 
 
-/****** routines for maerklin packet pool *********************/
+/****** routines for Maerklin packet pool *********************/
 
 void init_MaerklinPacketPool(bus_t busnumber)
 {
@@ -314,7 +314,7 @@ void init_MaerklinPacketPool(bus_t busnumber)
 
     if (pthread_mutex_init(&__DDL->maerklin_pktpool_mutex, NULL)) {
         DBG(busnumber, DBG_ERROR,
-            "cannot create mutex (maerklin packet pool). Abort!");
+            "cannot create mutex (Maerklin packet pool). Abort!");
         exit(1);
     }
 
@@ -399,7 +399,7 @@ void init_NMRAPacketPool(bus_t busnumber)
 
     if (pthread_mutex_init(&__DDL->nmra_pktpool_mutex, NULL)) {
         DBG(busnumber, DBG_ERROR,
-            "cannot create mutex (nmra packet pool). Abort!");
+            "cannot create mutex (NMRA packet pool). Abort!");
         exit(1);
     }
 
@@ -490,12 +490,12 @@ void waitUARTempty_CLEANNMRADCC(bus_t busnumber)
 {
     int outbytes;
 
-    /* look how many bytes are in UART's outbuffer */
+    /* look how many bytes are in UART's out buffer */
     ioctl(busses[busnumber].fd, TIOCOUTQ, &outbytes);
 
     if (outbytes > NUMBUFFERBYTES) {
         struct timespec sleeptime;
-        /* calculate sleeptime */
+        /* calculate sleep time */
         sleeptime.tv_sec = outbytes / SLEEPFACTOR;
         sleeptime.tv_nsec =
             (outbytes % SLEEPFACTOR) * (1000000000l / SLEEPFACTOR);
@@ -564,10 +564,10 @@ void send_packet(bus_t busnumber, int addr, char *packet,
                  int packet_size, int packet_type, int refresh)
 {
     int i, laps;
-    /* arguments for nanosleep and marklin loco decoders (19KHz) */
+    /* arguments for nanosleep and Maerklin loco decoders (19KHz) */
     struct timespec rqtp_btw19K = { 0, 1250000 };     /* ==> busy waiting */
     struct timespec rqtp_end19K = { 0, 1700000 };     /* ==> busy waiting */
-    /* arguments for nanosleep and marklin solenoids/func decoders (38KHz) */
+    /* arguments for nanosleep and Maerklin solenoids/function decoders (38KHz) */
     struct timespec rqtp_btw38K = { 0, 625000 };      /* ==> busy waiting */
     struct timespec rqtp_end38K = { 0, 850000 };      /* ==> busy waiting */
 
@@ -652,9 +652,9 @@ void send_packet(bus_t busnumber, int addr, char *packet,
 void improve_nmradcc_write(bus_t busnumber, char *packet,
                            int packet_size)
 {
-    // Idee: NMRA lauuft mit 17000 Baud
+    // Idea: NMRA runs with 17000 Baud
     // 115200 Baud / 7 = 16457 Baud
-    // -> jedes Bit 7 mal senden
+    // -> every Bit 7 times send
     char improve_nmradcc_packet[packet_size * 7];
     int i, j;
     for (i = 0; i < packet_size; i++) {
@@ -1027,12 +1027,12 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     __DDL->DSR_INVERSE = FALSE; /* controls how DSR is used to  */
     /* check shorts                 */
     __DDL->SHORTCUTDELAY = 0;   /* usecs shortcut delay         */
-    __DDL->NMRADCC_TR_V = 3;    /* version of the nmra dcc      */
+    __DDL->NMRADCC_TR_V = 3;    /* version of the NMRA dcc      */
     /* translation routine (1 or 2) */
     __DDL->ENABLED_PROTOCOLS = (EP_MAERKLIN | EP_NMRADCC);      /* enabled p's */
     __DDL->IMPROVE_NMRADCC_TIMING = 0;  /* NMRA DCC: improve timing     */
 
-    __DDL->WAITUART_USLEEP_PATCH = 0;   /* enable/disbable usleep patch */
+    __DDL->WAITUART_USLEEP_PATCH = 0;   /* enable/disable usleep patch */
     __DDL->WAITUART_USLEEP_USEC = 0;    /* usecs for usleep patch       */
 
     __DDL->SERIAL_DEVICE_MODE = SDM_NOTINITIALIZED;
@@ -1172,7 +1172,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     if (init_GL(busnumber, __DDL->number_gl)) {
         __DDL->number_gl = 0;
-        DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
+        DBG(busnumber, DBG_ERROR, "Can't create array for locomotives");
     }
 
     return (1);
@@ -1220,8 +1220,8 @@ int init_bus_DDL(bus_t busnumber)
 
     /*
      * ATTENTION:
-     *   If nmra dcc mode is activated __DDL->idle_data[] and
-     *   __DDL->NMRA_idle_data must be overidden from init_NMRAPacketPool().
+     *   If NMRA dcc mode is activated __DDL->idle_data[] and
+     *   __DDL->NMRA_idle_data must be overridden from init_NMRAPacketPool().
      *   This means, that init_NMRAPacketPool()
      *   must be called after init_MaerklinPacketPool().
      */

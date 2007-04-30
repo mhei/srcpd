@@ -29,7 +29,7 @@ static int queue_isfull( bus_t busnumber );
 
 /**
  * isValidGL: checks if a given address could be a valid GL.
- * returns true or false. false, if not all requierements are met.
+ * returns true or false. false, if not all requirements are met.
  */
 int isValidGL( bus_t busnumber, int addr )
 {
@@ -55,7 +55,7 @@ int isValidGL( bus_t busnumber, int addr )
 
 /**
  * getMaxAddrGL: returns the maximum Address for GL on the given bus
- * returns: <0: invalid busnumber
+ * returns: <0: invalid bus number
             =0: no GL on that bus
       >0: maximum address
  */
@@ -369,7 +369,7 @@ int infoGL( bus_t busnumber, int addr, char *msg )
   return SRCP_INFO;
 }
 
-/* has to use a semaphore, must be atomare! */
+/* has to use a semaphore, must be atomized! */
 int lockGL( bus_t busnumber, int addr, long int duration,
             sessionid_t sessionid )
 {
@@ -501,7 +501,7 @@ void unlock_gl_bytime( void )
 }
 
 /**
- * First initialisation after program startup
+ * First initialisation after program start up
  */
 int startup_GL( void )
 {

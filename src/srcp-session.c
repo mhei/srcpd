@@ -41,7 +41,7 @@ sessionid_t session_getnextID()
 
 
 /**
- * First initialisation after program startup
+ * First initialisation after program start up
  */
 int startup_SESSION(void)
 {

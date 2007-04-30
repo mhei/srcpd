@@ -45,11 +45,11 @@ int srcp_fmt_msg(int errorcode, char *msg, struct timeval time)
                     time.tv_sec, time.tv_usec / 1000, errorcode);
             break;
         case 401:
-            sprintf(msg, "%lu.%.3lu %d ERROR unsupported connectionmode\n",
+            sprintf(msg, "%lu.%.3lu %d ERROR unsupported connection mode\n",
                     time.tv_sec, time.tv_usec / 1000, errorcode);
             break;
         case 402:
-            sprintf(msg, "%lu.%.3lu %d ERROR unsufficient data\n",
+            sprintf(msg, "%lu.%.3lu %d ERROR insufficient data\n",
                     time.tv_sec, time.tv_usec / 1000, errorcode);
             break;
         case 410:

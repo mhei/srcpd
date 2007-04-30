@@ -25,10 +25,10 @@
 /*       various Maerklin protocols and send this data to      */
 /*       the serial device.                                    */
 /*                                                             */
-/* Torsten Vogt, january 1999                                  */
+/* Torsten Vogt, January 1999                                  */
 /*                                                             */
-/* last changes: june 2000                                     */
-/*               january 2001                                  */
+/* last changes: June 2000                                     */
+/*               January 2001                                  */
 /*                                                             */
 /*
    thanks to Dieter Schaefer for testing and correcting the
@@ -44,7 +44,7 @@
  M2: maerklin protocol type 2 (new)
  M3: maerklin protocol type 2 (new) with 28 speed steps (Wikinger decoder)
  M4: maerklin protocol type 2 (new) with 256 addresses (Uhlenbrock)
- M5: maerklin protocol type 2 (new) with 27 speed steps (newer marklin decoders)
+ M5: maerklin protocol type 2 (new) with 27 speed steps (newer Maerklin decoders)
  MS: maerklin protocol for solenoids (type 1 and type 2)
  MF: maerklin_protocol for function decoders (old)
 
@@ -429,7 +429,7 @@ int comp_maerklin_2(bus_t busnumber, int address, int direction,
     else
         trits[4] = 'L';
 
-    /* so far the same procedure as by marklin type 1, but now ... */
+    /* so far the same procedure as by Maerklin type 1, but now ... */
     /* compute speed trits   */
     if (speed < -7)
         strcpy(mask, "HLHL");
@@ -458,7 +458,7 @@ int comp_maerklin_2(bus_t busnumber, int address, int direction,
         if (trits[i] == 'H' && mask[i - 5] == 'L')
             trits[i] = 'O';
         if (trits[i] == 'L' && mask[i - 5] == 'H')
-            trits[i] = 'U';     /* Ooops, whats */
+            trits[i] = 'U';     /* Oops, whats */
     }                           /* this? :-)    */
 
     for (i = 0; i < 9; i++) {
@@ -593,7 +593,7 @@ int comp_maerklin_3(bus_t busnumber, int address, int direction,
     for (i = 0; i < 4; i++)
         trits[i] = MotorolaCodes[address].Code[i];
 
-    /* so far the same procedure as by marklin type 1, but now ... */
+    /* so far the same procedure as by Maerklin type 1, but now ... */
 
     speed_halfstep = !(abs(speed) % 2);
     if (speed > 0)
@@ -601,7 +601,7 @@ int comp_maerklin_3(bus_t busnumber, int address, int direction,
     else
         speed = ((speed - 1) / 2) - 1;
 
-    /* compute func trit and speed halfstep */
+    /* compute func trit and speed half step */
     if (!speed_halfstep)
         if (func)
             trits[4] = 'H';
@@ -640,7 +640,7 @@ int comp_maerklin_3(bus_t busnumber, int address, int direction,
         if (trits[i] == 'H' && mask[i - 5] == 'L')
             trits[i] = 'O';
         if (trits[i] == 'L' && mask[i - 5] == 'H')
-            trits[i] = 'U';     /* Ooops, whats */
+            trits[i] = 'U';     /* Oops, whats */
     }                           /* this? :-)    */
 
     for (i = 0; i < 9; i++) {
@@ -778,7 +778,7 @@ int comp_maerklin_4(bus_t busnumber, int address, int direction,
     else
         trits[4] = 'L';
 
-    /* so far the same procedure as by marklin type 1, but now ... */
+    /* so far the same procedure as by Maerklin type 1, but now ... */
 
     /* compute speed trits   */
     if (speed < -7)
@@ -807,7 +807,7 @@ int comp_maerklin_4(bus_t busnumber, int address, int direction,
         if (trits[i] == 'H' && mask[i - 5] == 'L')
             trits[i] = 'O';
         if (trits[i] == 'L' && mask[i - 5] == 'H')
-            trits[i] = 'U';     /* Ooops, whats */
+            trits[i] = 'U';     /* Oops, whats */
     }                           /* this? :-)    */
 
     for (i = 0; i < 9; i++) {

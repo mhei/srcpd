@@ -134,7 +134,7 @@ int isInitializedGA(bus_t busnumber, int addr)
 }
 
 /* ********************
- *   SRCP Kommandos
+ *   SRCP commands
  */
 int setGA(bus_t busnumber, int addr, struct _GASTATE a)
 {

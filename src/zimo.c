@@ -135,7 +135,7 @@ int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     if (init_GL(busnumber, __zimo->number_gl)) {
         __zimo->number_gl = 0;
-        DBG(busnumber, DBG_ERROR, "Can't create array for locomotivs");
+        DBG(busnumber, DBG_ERROR, "Can't create array for locomotives");
     }
 
     if (init_GA(busnumber, __zimo->number_ga)) {

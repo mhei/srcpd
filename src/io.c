@@ -25,7 +25,7 @@ int readByte(bus_t bus, int wait, unsigned char *the_byte)
     int i;
     int status;
 
-    // with debuglevel beyond DBG_DEBUG, we will not really work on hardware
+    // with debug level beyond DBG_DEBUG, we will not really work on hardware
     if (busses[bus].debuglevel > DBG_DEBUG) {
         i = 1;
         *the_byte = 0;
@@ -69,7 +69,7 @@ void writeByte(bus_t bus, unsigned char b, unsigned long msecs)
         tcdrain(busses[bus].fd);
     }
     if (i < 0) {
-    DBG(bus, DBG_ERROR, "(FD: %d) Extrernal error: errno %d",
+    DBG(bus, DBG_ERROR, "(FD: %d) External error: errno %d",
         busses[bus].fd, errno); // , str_errno(errno));
     }
     else {
@@ -116,7 +116,7 @@ void restore_comport(bus_t bus)
         DBG(bus, DBG_INFO, "Restoring old values...");
         tcsetattr(fd, TCSANOW, &busses[bus].devicesettings);
         close(fd);
-        DBG(bus, DBG_INFO, "Old values succesfully restored");
+        DBG(bus, DBG_INFO, "Old values successfully restored");
     }
 }
 

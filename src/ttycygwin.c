@@ -13,7 +13,7 @@
 
 #include "config.h"
 
-// cfmakeraw() support for cygwin
+/* cfmakeraw() support for cygwin */
 #ifdef NO_CFMAKERAW
 int cfmakeraw(struct termios *termios_p) {
   termios_p->c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);

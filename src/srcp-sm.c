@@ -26,11 +26,11 @@
 #define QUEUELEN 2
 
 /*  Important:
-    - only NMRA is supportet at this time
-    - set adress of decoder only availible at programming track
-    - every GET/VERIFY only avalible at programming track
+    - only NMRA is supported at this time
+    - set address of decoder only available at programming track
+    - every GET/VERIFY only available at programming track
     - address = -1, means to use program-track
-    - address > 0, means to use pom (only availible with CV)
+    - address > 0, means to use pom (only available with CV)
 
     for instance:
       SET 1 SM -1 CV 29 2         - write 2 into CV 29 at program-track
@@ -39,11 +39,11 @@
       SET 1 SM -1 CVBIT 29 1 1    - set the 2-nd bit of CV 29 at program-track
       SET 1 SM -1 REG 5 2         - same as first, but using register-mode
 
-    - the answer of GET is delivert via INFO-port!
+    - the answer of GET is delivered via INFO-port!
 */
 
 
-/* Kommandoqueues pro Bus */
+/* Command queues pro Bus */
 static struct _SM queue[ MAX_BUSSES ][ QUEUELEN ];
 static pthread_mutex_t queue_mutex[ MAX_BUSSES ];
 static volatile int out[ MAX_BUSSES ], in[ MAX_BUSSES ];
@@ -97,11 +97,11 @@ int queueInfoSM( bus_t busnumber, int addr, int type, int typeaddr,
         sprintf( tmp, "Task terminated" );
         break;
       case 0xF6:
-        sprintf( tmp, "XPT_DCCQD: Not Ok (direkt bit read mode "
+        sprintf( tmp, "XPT_DCCQD: Not Ok (direct bit read mode "
                  "is (probably) not supported)" );
         break;
       case 0xF7:
-        sprintf( tmp, "XPT_DCCQD: Ok (direkt bit read mode is "
+        sprintf( tmp, "XPT_DCCQD: Ok (direct bit read mode is "
                  "(probably) supported)" );
         break;
       case 0xF8:
@@ -144,8 +144,8 @@ int queueSM( bus_t busnumber, int command, int type, int addr,
   struct timeval akt_time;
   DBG( busnumber, DBG_INFO, "queueSM for %i (in=%d out=%d)", addr,
        in[ busnumber ], out[ busnumber ] );
-  // addr == -1 means using separate progrm-track
-  // addr != -1 means programming on the main (only availible with CV)
+  // addr == -1 means using separate program-track
+  // addr != -1 means programming on the main (only available with CV)
   //if ( (addr == -1) || ((addr > 0) && (addr <= number_sm) && (type == CV)) )
   if ( queue_isfull( busnumber ) )
   {

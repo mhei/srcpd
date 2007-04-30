@@ -20,7 +20,7 @@ int setPower( bus_t bus, int state, char *msg )
   strcpy( busses[ bus ].power_msg, msg );
   busses[ bus ].power_changed = ( state == -1 ) ? 0 : 1;
   //    busses[bus].power_changed = 1;
-  /* Resume thread to transmit powerchange */
+  /* Resume thread to transmit power change */
   resumeThread(bus);
   char reply[ 200 ];
   infoPower( bus, reply );
