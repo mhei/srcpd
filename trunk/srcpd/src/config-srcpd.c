@@ -398,7 +398,8 @@ void suspendThread(bus_t busnumber)
     /* Lock thread till new data to process arrives */
     pthread_mutex_lock(&busses[busnumber].transmit_mutex);
      /* mutex released.       */
-    pthread_cond_wait(&busses[busnumber].transmit_cond, &busses[busnumber].transmit_mutex);
+    pthread_cond_wait(&busses[busnumber].transmit_cond, 
+            &busses[busnumber].transmit_mutex);
 }
 
 /**
