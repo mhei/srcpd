@@ -1,7 +1,7 @@
 /***************************************************************************
 li100.c  -  description
 -------------------
-begin                : Tue Jan 22 11:35:13 MEST 2002
+begin                : Tue Jan 22 11:35:13 CEST 2002
 copyright            : (C) 2002 by Dipl.-Ing. Frank Schmischke
 email                : frank.schmischke@t-online.de
 ***************************************************************************/
@@ -162,9 +162,9 @@ int init_bus_LI100_SERIAL(  bus_t busnumber )
   if ( init_GL( busnumber, __li100->number_gl ) )
   {
     __li100->number_gl = 0;
-    DBG( busnumber, DBG_ERROR, "Can't create array for locomotivs" );
+    DBG( busnumber, DBG_ERROR, "Can't create array for locomotives" );
   }
-  DBG( busnumber, DBG_WARN, "debug array for locomotivs" );
+  DBG( busnumber, DBG_WARN, "debug array for locomotives" );
   if ( init_FB( busnumber, __li100->number_fb * 16 ) )
   {
     __li100->number_fb = 0;
@@ -172,7 +172,7 @@ int init_bus_LI100_SERIAL(  bus_t busnumber )
   }
 
   status = 0;
-  printf( "Bus #%ld with debuglevel %d\n", busnumber,
+  printf( "Bus #%ld with debug level %d\n", busnumber,
           busses[ busnumber ].debuglevel );
 #ifdef LI100_USB
 
@@ -215,11 +215,11 @@ int init_bus_LI100_SERIAL(  bus_t busnumber )
     __li100->working_LI100 = 1;
     printf( "Version LENZ-Interface : %d.%d\n", __li100->version_interface / 256, __li100->version_interface % 256 );
     printf( "Code LENZ-Interface    : %d%d\n", __li100->code_interface / 16, __li100->code_interface % 16 );
-    printf( "Version LENZ-Centrale  : %d.%d\n", __li100->version_zentrale / 256, __li100->version_zentrale % 256 );
-    //     printf("Code LENZ-Centrale     : %d",__li100->code_zentrale);
+    printf( "Version LENZ-Central unit  : %d.%d\n", __li100->version_zentrale / 256, __li100->version_zentrale % 256 );
+    //     printf("Code LENZ-Central unit     : %d",__li100->code_zentrale);
 
     __li100->get_addr = 0;
-    // if version of centrale is greather than 3.0, cleanup stack
+    // if version of central unit is greater than 3.0, cleanup stack
     if ( __li100->version_zentrale >= 0x0300 )
     {
       unsigned char byte2send[ 20 ];
@@ -259,10 +259,10 @@ int init_bus_LI100_SERIAL(  bus_t busnumber )
 
 #ifdef LI100_USB
 
-  printf( "INIT_BUS_LI100 (usb) exited with code: %d\n", status );
+  printf( "INIT_BUS_LI100 (usb) finished with code: %d\n", status );
 #else
 
-  printf( "INIT_BUS_LI100 (serial) exited with code: %d\n", status );
+  printf( "INIT_BUS_LI100 (serial) finished with code: %d\n", status );
 #endif
 
   __li100->last_type = -1;
@@ -317,10 +317,10 @@ void *thr_sendrec_LI100_SERIAL( void *v )
   busnumber = ( bus_t) v;
 #ifdef LI100_USB
 
-  DBG( busnumber, DBG_INFO, "thr_sendrec_LI100 (usb) is startet as bus #%ld", busnumber );
+  DBG( busnumber, DBG_INFO, "thr_sendrec_LI100 (usb) is started as bus #%ld", busnumber );
 #else
 
-  DBG( busnumber, DBG_INFO, "thr_sendrec_LI100 (serial) is startet as bus #%ld", busnumber );
+  DBG( busnumber, DBG_INFO, "thr_sendrec_LI100 (serial) is started as bus #%ld", busnumber );
 #endif
 
   // initialize tga-structure
@@ -332,7 +332,7 @@ void *thr_sendrec_LI100_SERIAL( void *v )
 
   while ( 1 )
   {
-    //  syslog(LOG_INFO, "thr_sendrec_LI100 Start in Schleife");
+    //  syslog(LOG_INFO, "thr_sendrec_LI100 Start in loop");
     /* Start/Stop */
     //fprintf(stderr, "START/STOP... ");
     if ( busses[ busnumber ].power_changed )
@@ -347,7 +347,7 @@ void *thr_sendrec_LI100_SERIAL( void *v )
       status = send_command_LI100_SERIAL( busnumber, byte2send );
 #endif
 
-      if ( status == 0 )                                    // war alles OK ?
+      if ( status == 0 )                                    // war all OK ?
         busses[ busnumber ].power_changed = 0;
     }
 
@@ -369,7 +369,7 @@ void *thr_sendrec_LI100_SERIAL( void *v )
     check_reset_fb( busnumber );
     busses[ busnumber ].watchdog = 1;
     usleep( 50000 );
-  }                           // Ende WHILE(1)
+  }                           // End WHILE(1)
 }
 
 #ifdef LI100_USB
@@ -387,7 +387,7 @@ void send_command_ga_LI100_SERIAL(  bus_t busnumber )
   struct timeval akt_time, cmp_time;
 
   gettimeofday( &akt_time, NULL );
-  // zuerst eventuell Decoder abschalten
+  // first eventually Decoder switch off
   for ( i = 0; i < 50; i++ )
   {
     if ( __li100->tga[ i ].id )
@@ -395,7 +395,7 @@ void send_command_ga_LI100_SERIAL(  bus_t busnumber )
       syslog( LOG_INFO, "time %i,%i", ( int ) akt_time.tv_sec,
               ( int ) akt_time.tv_usec );
       cmp_time = __li100->tga[ i ].t;
-      // Ausschaltzeitpunkt erreicht?
+      // switch of time reached?
       if ( cmpTime( &cmp_time, &akt_time ) )
       {
         gatmp = __li100->tga[ i ];
@@ -426,7 +426,7 @@ void send_command_ga_LI100_SERIAL(  bus_t busnumber )
     }
   }
 
-  // Decoder einschalten
+  // Decoder switch on
   if ( !queue_GA_isempty( busnumber ) )
   {
     unqueueNextGA( busnumber, &gatmp );
@@ -499,7 +499,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
   int status = -1;
   struct _GLSTATE gltmp, glakt;
 
-  /* Lokdecoder */
+  /* Locomotive decoder */
   //fprintf(stderr, "LOK's... ");
   /* nur senden, wenn wirklich etwas vorliegt */
   if ( !queue_GL_isempty( busnumber ) )
@@ -662,13 +662,13 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
             default:
               byte2send[ 1 ] = 0x12;
           }
-          // highbyte of adress
+          // high byte of address
           temp = gltmp.id;
           temp >>= 8;
           byte2send[ 2 ] = temp;
           if ( addr > 99 )
             byte2send[ 2 ] |= 0xc0;
-          // lowbyte of adress
+          // low byte of address
           temp = gltmp.id;
           temp &= 0x00FF;
           byte2send[ 3 ] = temp;
@@ -702,13 +702,13 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
           byte2send[ 0 ] = 0xe4;
           // mode
           byte2send[ 1 ] = 0x20;
-          // highbyte of adress
+          // high byte of address
           temp = gltmp.id;
           temp >>= 8;
           byte2send[ 2 ] = temp;
           if ( addr > 99 )
             byte2send[ 2 ] |= 0xc0;
-          // lowbyte of adress
+          // low byte of address
           temp = gltmp.id;
           temp &= 0x00FF;
           byte2send[ 3 ] = temp;
@@ -993,10 +993,10 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
     // send pom-command
     byte2send[ 0 ] = 0xE6;
     byte2send[ 1 ] = 0x30;
-    // high-byte of decoder-adress
+    // high-byte of decoder-address
     tmp = addr >> 8;
     byte2send[ 2 ] = tmp;
-    // low-byte of decoder-adress
+    // low-byte of decoder-address
     tmp = addr & 0xFF;
     byte2send[ 3 ] = tmp;
     tmp = 0x7C | ( ( cv >> 8 ) & 0x03 );
@@ -1035,10 +1035,10 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
     // send pom-command
     byte2send[ 0 ] = 0xE6;
     byte2send[ 1 ] = 0x30;
-    // high-byte of decoder-adress
+    // high-byte of decoder-address
     tmp = addr >> 8;
     byte2send[ 2 ] = tmp;
-    // low-byte of decoder-adress
+    // low-byte of decoder-address
     tmp = addr & 0xFF;
     byte2send[ 3 ] = tmp;
     tmp = 0x7C | ( ( cv >> 8 ) & 0x03 );
@@ -1096,7 +1096,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
     //unsigned char status;
     struct _SM smakt;
 
-    /* Lokdecoder */
+    /* Locomotive decoder */
     //fprintf(stderr, "LOK's... ");
     /* nur senden, wenn wirklich etwas vorliegt */
     if ( !queue_SM_isempty( busnumber ) )
@@ -1271,7 +1271,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
     unsigned char str[ 20 ];
 
 
-    // with debuglevel beyond DBG_DEBUG, we will not really work on hardware
+    // with debug level beyond DBG_DEBUG, we will not really work on hardware
     if ( busses[ busnumber ].debuglevel <= DBG_DEBUG )
     {
       i = 1;
@@ -1391,7 +1391,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
       message_processed = 1;
     }
 
-    // version-number of zentrale
+    // version-number of central unit
     if ( ( str[ 0 ] == 0x62 ) || ( str[ 0 ] == 0x63 ) )
     {
       if ( str[ 1 ] == 0x21 )
@@ -1522,7 +1522,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
     if ( str[ 0 ] == 0xe4 )
     {
       gltmp.id = __li100->last_value & 0x3fff;
-      //is engine alway allocated by an external device?
+      //is engine always allocated by an external device?
       if ( !( str[ 1 ] & 0x08 ) )
       {
         remove_extern_engine( busnumber, __li100->last_value );
@@ -1676,7 +1676,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
     struct termios interface;
 
     char *name = busses[ busnumber ].filename.path;
-    printf( "Begining to detect LI100 on serial line: %s\n", name );
+    printf( "Beginning to detect LI100 on serial line: %s\n", name );
 
     switch ( busses[ busnumber ].baudrate )
     {
@@ -1732,7 +1732,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
 
     status = send_command_LI100_SERIAL( busnumber, byte2send );
 #endif
-    // get version of zentrale
+    // get version of central unit
     byte2send[ 0 ] = 0x21;
     byte2send[ 1 ] = 0x21;
 #ifdef LI100_USB
@@ -1742,7 +1742,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
 
     status = send_command_LI100_SERIAL( busnumber, byte2send );
 #endif
-    // get status of zentrale
+    // get status of central unit
     byte2send[ 0 ] = 0x21;
     byte2send[ 1 ] = 0x24;
 #ifdef LI100_USB
