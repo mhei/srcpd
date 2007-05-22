@@ -77,6 +77,7 @@ void close_port(bus_t bus)
 	tcsetattr(busses[bus].fd, TCSANOW, &busses[bus].devicesettings);
 	close(busses[bus].fd);
 	DBG(bus, DBG_ERROR, "Port %s is closed.\n", busses[bus].filename.path);
+	busses[bus].fd = -1;
 }
 
 /**
