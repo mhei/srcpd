@@ -1,3 +1,6 @@
+2007-05-23 Guido Scholz <guido.scholz@bayernline.de>
+	* srcp-ga.c: fixed microsecond value for GA initialization
+
 2006-02-08 Guido Scholz <guido.scholz@bayernline.de>
 	* srcp-power.c: added info message for power change
 

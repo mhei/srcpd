@@ -183,7 +183,8 @@ int infoGA(bus_t busnumber, int addr, int port, char *msg)
 {
     int number_ga = get_number_ga(busnumber);
 
-    if ((addr > 0) && (addr <= number_ga) && (port >= 0) && (port < MAXGAPORT)) // && (ga[busnumber].gastate[addr].tv[port].tv_sec>0) )
+    if ((addr > 0) && (addr <= number_ga) && (port >= 0) && (port < MAXGAPORT))
+        // && (ga[busnumber].gastate[addr].tv[port].tv_sec>0) )
     {
         sprintf(msg, "%ld.%ld 100 INFO %ld GA %d %d %d\n",
                 ga[busnumber].gastate[addr].tv[port].tv_sec,
@@ -210,8 +211,11 @@ int initGA(bus_t busnumber, int addr, const char protocol)
         gettimeofday(&ga[busnumber].gastate[addr].inittime, NULL);
         ga[busnumber].gastate[addr].activetime = 0;
         ga[busnumber].gastate[addr].action = 0;
+        /*TODO: change to loop over port count if MAXGAPORT > 2 */
         ga[busnumber].gastate[addr].tv[0].tv_sec = 0;
+        ga[busnumber].gastate[addr].tv[0].tv_usec = 0;
         ga[busnumber].gastate[addr].tv[1].tv_sec = 0;
+        ga[busnumber].gastate[addr].tv[1].tv_usec = 0;
 
         if (busses[busnumber].init_ga_func != NULL)
             rc = (*busses[busnumber].init_ga_func) (&ga[busnumber].
