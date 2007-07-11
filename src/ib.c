@@ -1311,7 +1311,7 @@ speed_t checkBaudrate( const int fd, const bus_t busnumber )
     {
       strcpy( msg, strerror( errno ) );
       DBG( busnumber, DBG_INFO,
-           "CheckBaudrate: Error in tcgettattr, error #%d: %s\n",
+           "checkBaudrate(): Error in tcgetattr, error #%d: %s\n",
            error, msg );
       return B0;
     }
