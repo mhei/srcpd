@@ -36,8 +36,9 @@ int readByte(bus_t bus, int wait, unsigned char *the_byte)
             char msg[200];
             strcpy(msg, strerror(errno));
             DBG(bus, DBG_ERROR,
-                "readbyte(): IOCTL   status: %d with errno = %d: %s",
+                "readbyte(): IOCTL status: %d with errno = %d: %s",
                 status, errno, msg);
+            return -1;
         }
         DBG(bus, DBG_DEBUG,
             "readbyte(): (fd = %d), there are %d bytes to read.",
