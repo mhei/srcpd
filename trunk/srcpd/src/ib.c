@@ -1203,7 +1203,7 @@ static int initLine_IB( bus_t busnumber )
   }
   else
   {
-    DBG( busnumber, DBG_INFO, "successful.\n" );
+    DBG( busnumber, DBG_INFO, "not successful.\n" );
   }
 
   /* open the comport in 2400, to get baud rate from IB and turn off
