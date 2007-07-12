@@ -1478,9 +1478,8 @@ static int switchOffP50Command( const bus_t busnumber )
   // use following line, to see some debugging
   //status = readAnswer_ib(busnumber, 1);
   status = readAnswer_IB( busnumber, 0 );
-  if ( status != 0 )
-    return 1;
-  return 0;
+
+  return (status != 0) ? 1: 0;
 }
 
 /**
@@ -1501,8 +1500,10 @@ static int readAnswer_IB( const bus_t busnumber,
   int counter = 0;
   int found = 0;
   int i;
+
   for ( i = 0; i < 80; i++ )
     input[ i ] = 0;
+  
   while ( ( found == 0 ) && ( counter < 80 ) )
   {
     if ( readByte_IB( busnumber, 1, &input[ counter ] ) == 0 )
@@ -1517,8 +1518,10 @@ static int readAnswer_IB( const bus_t busnumber,
     }
     counter++;
   }
+  
   if ( found == 0 )
     return -1;
+  
   if ( generatePrintf > 0 )
   {
     DBG( busnumber, DBG_INFO, "IBox returned: %s\n", input );
