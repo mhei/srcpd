@@ -978,7 +978,6 @@ void check_status_IB( bus_t busnumber )
          getPower( busnumber ) );
     if ( ( __ib->emergency_on_ib == 0 ) && ( getPower( busnumber ) ) )
     {
-      char msg[ 500 ];
       if ( xevnt2 & 0x20 )
         setPower( busnumber, 0, "Overheating condition detected" );
       if ( xevnt2 & 0x10 )
@@ -993,8 +992,7 @@ void check_status_IB( bus_t busnumber )
         setPower( busnumber, 0, "Overload on Lokmaus-bus" );
       if ( xevnt2 & 0x01 )
         setPower( busnumber, 0, "Short on external booster" );
-      infoPower( busnumber, msg );
-      queueInfoMessage( msg );
+
       __ib->emergency_on_ib = 1;
     }
   }
@@ -1013,10 +1011,7 @@ void check_status_IB( bus_t busnumber )
            getPower( busnumber ) );
       if ( ( __ib->emergency_on_ib == 0 ) && ( getPower( busnumber ) ) )
       {
-        char msg[ 500 ];
         setPower( busnumber, 0, "Emergency Stop" );
-        infoPower( busnumber, msg );
-        queueInfoMessage( msg );
         __ib->emergency_on_ib = 1;
       }
     }
@@ -1027,10 +1022,7 @@ void check_status_IB( bus_t busnumber )
            getPower( busnumber ) );
       if ( ( __ib->emergency_on_ib == 1 ) || ( !getPower( busnumber ) ) )
       {
-        char msg[ 500 ];
         setPower( busnumber, 1, "No Emergency Stop" );
-        infoPower( busnumber, msg );
-        queueInfoMessage( msg );
         __ib->emergency_on_ib = 0;
       }
     }
