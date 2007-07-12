@@ -85,7 +85,7 @@ void close_port(bus_t bus)
  */
 void write_port(bus_t bus, unsigned char b)
 {
-	int i;
+	ssize_t i;
 
 	i = 0;
 	if (busses[bus].debuglevel <= DBG_DEBUG)
@@ -113,7 +113,7 @@ void write_port(bus_t bus, unsigned char b)
  */
 int read_port(bus_t bus,  unsigned char *rr)
 {
-	int i;
+	ssize_t i;
 
 	// with debug level beyond DBG_DEBUG, we will not really work on hardware
 	if (busses[bus].debuglevel > DBG_DEBUG)

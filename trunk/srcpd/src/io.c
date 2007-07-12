@@ -22,7 +22,7 @@
 
 int readByte(bus_t bus, int wait, unsigned char *the_byte)
 {
-    int i;
+    ssize_t i;
     int status;
 
     // with debug level beyond DBG_DEBUG, we will not really work on hardware
@@ -63,7 +63,7 @@ int readByte(bus_t bus, int wait, unsigned char *the_byte)
 
 void writeByte(bus_t bus, unsigned char b, unsigned long msecs)
 {
-    int i = 0;
+    ssize_t i = 0;
     char byte = b;
     if (busses[bus].debuglevel <= DBG_DEBUG) {
         i = write(busses[bus].fd, &byte, 1);
@@ -146,7 +146,7 @@ int socket_readline(int Socket, char *line, int len)
 {
     char c;
     int i = 0;
-    int bytes_read = read(Socket, &c, 1);
+    ssize_t bytes_read = read(Socket, &c, 1);
     if (bytes_read <= 0) {
         return -1;
     }
@@ -172,7 +172,7 @@ int socket_readline(int Socket, char *line, int len)
  **/
 int socket_writereply(int Socket, const char *line)
 {
-    int status = 0;
+    ssize_t status = 0;
     int linelen = strlen(line);
     char chunk[MAXSRCPLINELEN], tmp[MAXSRCPLINELEN];
     int i = 0;
