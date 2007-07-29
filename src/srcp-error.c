@@ -33,7 +33,7 @@ int srcp_fmt_msg(int errorcode, char *msg, struct timeval time)
                     time.tv_usec / 1000, errorcode);
             break;
         case 202:
-            sprintf(msg, "%lu.%.3lu %d OK CONNECTION MODE\n", time.tv_sec,
+            sprintf(msg, "%lu.%.3lu %d OK CONNECTIONMODE\n", time.tv_sec,
                     time.tv_usec / 1000, errorcode);
             break;
         case 201:
