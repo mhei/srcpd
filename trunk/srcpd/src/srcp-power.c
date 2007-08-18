@@ -12,37 +12,37 @@
 #include "srcp-info.h"
 #include "srcp-power.h"
 
-int setPower( bus_t bus, int state, char *msg )
+int setPower(bus_t bus, int state, char *msg)
 {
-  gettimeofday( &busses[ bus ].power_change_time, NULL );
-  busses[ bus ].power_state = ( state == -1 ) ? 0 : state;
-  //    busses[bus].power_state = state;
-  strcpy( busses[ bus ].power_msg, msg );
-  busses[ bus ].power_changed = ( state == -1 ) ? 0 : 1;
-  //    busses[bus].power_changed = 1;
-  /* Resume thread to transmit power change */
-  resumeThread(bus);
-  char reply[ 200 ];
-  infoPower( bus, reply );
-  queueInfoMessage( reply );
-  return SRCP_OK;
+    gettimeofday(&busses[bus].power_change_time, NULL);
+    busses[bus].power_state = (state == -1) ? 0 : state;
+    //    busses[bus].power_state = state;
+    strcpy(busses[bus].power_msg, msg);
+    busses[bus].power_changed = (state == -1) ? 0 : 1;
+    //    busses[bus].power_changed = 1;
+    /* Resume thread to transmit power change */
+    resumeThread(bus);
+    char reply[200];
+    infoPower(bus, reply);
+    queueInfoMessage(reply);
+    return SRCP_OK;
 }
 
-int getPower( bus_t bus )
+int getPower(bus_t bus)
 {
-  return busses[ bus ].power_state;
+    return busses[bus].power_state;
 }
 
-int infoPower(bus_t bus, char *msg )
+int infoPower(bus_t bus, char *msg)
 {
-  sprintf( msg, "%lu.%.3lu 100 INFO %ld POWER %s %s\n",
-           busses[ bus ].power_change_time.tv_sec,
-           busses[ bus ].power_change_time.tv_usec / 1000, bus,
-           busses[ bus ].power_state ? "ON" : "OFF", busses[ bus ].power_msg );
-  return SRCP_INFO;
+    sprintf(msg, "%lu.%.3lu 100 INFO %ld POWER %s %s\n",
+            busses[bus].power_change_time.tv_sec,
+            busses[bus].power_change_time.tv_usec / 1000, bus,
+            busses[bus].power_state ? "ON" : "OFF", busses[bus].power_msg);
+    return SRCP_INFO;
 }
 
-int initPower(bus_t bus )
+int initPower(bus_t bus)
 {
-  return SRCP_OK;
+    return SRCP_OK;
 }
