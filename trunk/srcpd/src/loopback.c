@@ -197,10 +197,12 @@ void *thr_sendrec_LOOPBACK(void *v)
 
     while (1) {
         if (busses[bus].power_changed == 1) {
+            /*
             char msg[110];
             busses[bus].power_changed = 0;
             infoPower(bus, msg);
             queueInfoMessage(msg);
+            */
         }
         if (busses[bus].power_state == 0) {
             usleep(1000);
