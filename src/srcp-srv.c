@@ -43,7 +43,7 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     // initialize _SERVER_DATA with defaults
     serviceentry = getservbyname("srcp","tcp");
-    if(!serviceentry) {
+    if (serviceentry == NULL) {
 	__srv->TCPPORT = 4303;
     } else {
 	__srv->TCPPORT = ntohs(serviceentry->s_port);
