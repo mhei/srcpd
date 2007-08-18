@@ -443,6 +443,11 @@ void DBG(bus_t busnumber, int dbglevel, const char *fmt, ...)
         sprintf(msg, "[bus %ld] %s", busnumber, fmt);
         vsyslog(LOG_INFO, msg, parm);
         free(msg);
+
+        /* 
+         * warning:
+         *   writing to stderr can confuse init start/stop scripts
+        */
         if (busses[busnumber].debuglevel > DBG_WARN) {
             fprintf(stderr, "[bus %ld] ", busnumber);
             vfprintf(stderr, fmt, parm2);
