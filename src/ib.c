@@ -290,7 +290,7 @@ void *thr_sendrec_IB( void *v )
   status = readByte( busnumber, 1, &rr );
   while ( 1 )
   {
-    if ( busses[ busnumber ].power_changed )
+    if (busses[busnumber].power_changed == 1)
     {
       if ( __ib->emergency_on_ib == 1 )
       {

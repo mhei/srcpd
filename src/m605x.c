@@ -295,7 +295,7 @@ void *thr_sendrec_M6051(void *v)
         busses[bus].watchdog = 2;
 
         /* Start/Stop */
-        if (busses[bus].power_changed) {
+        if (busses[bus].power_changed == 1) {
             char msg[1000];
             SendByte = (busses[bus].power_state) ? 96 : 97;
             /* zweimal, wir sind paranoid */
