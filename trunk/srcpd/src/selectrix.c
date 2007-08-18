@@ -465,7 +465,7 @@ void *thr_commandSelectrix(void *v)
 	{
 		busses[busnumber].watchdog = 1;
 		/* Start/Stop */
-		if (busses[busnumber].power_changed != 0)
+		if (busses[busnumber].power_changed == 1)
 		{
 			state = 1;
 			char msg[1000];

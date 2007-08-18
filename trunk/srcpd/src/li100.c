@@ -335,7 +335,7 @@ void *thr_sendrec_LI100_SERIAL( void *v )
     //  syslog(LOG_INFO, "thr_sendrec_LI100 Start in loop");
     /* Start/Stop */
     //fprintf(stderr, "START/STOP... ");
-    if ( busses[ busnumber ].power_changed )
+    if (busses[busnumber].power_changed == 1)
     {
       byte2send[ 0 ] = 0x21;
       byte2send[ 1 ] = busses[ busnumber ].power_state ? 0x81 : 0x80;
