@@ -448,12 +448,14 @@ void DBG(bus_t busnumber, int dbglevel, const char *fmt, ...)
          * warning:
          *   writing to stderr can confuse init start/stop scripts
         */
+        /*
         if (busses[busnumber].debuglevel > DBG_WARN) {
             fprintf(stderr, "[bus %ld] ", busnumber);
             vfprintf(stderr, fmt, parm2);
             if (strchr(fmt, '\n') == NULL)
                 fprintf(stderr, "\n");
         }
+        */
         va_end(parm2);
     }
     va_end(parm);
