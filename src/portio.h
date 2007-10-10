@@ -1,14 +1,14 @@
-//
-// C++ Interface: portio
-//
-// Description: 
-//
-//
-// Author: Ing. Geard van der Sel
-//
-// Copyright: See COPYING file that comes with this distribution
-//
-//
+/**
+ * C++ Interface: portio
+ *
+ * Description: 
+ *
+ *
+ * Author: Ing. Gerard van der Sel
+ *
+ * Copyright: See COPYING file that comes with this distribution
+ *
+ */
 #ifndef _PORTIO_H
 #define _PORTIO_H
 
@@ -18,7 +18,7 @@ int open_port(bus_t bus);
 void close_port(bus_t bus);
 void write_port(bus_t bus, unsigned char b);
 int check_port(bus_t bus);
-int read_port(bus_t bus,  unsigned char *rr);
+unsigned int read_port(bus_t bus);
 
 
 #endif
