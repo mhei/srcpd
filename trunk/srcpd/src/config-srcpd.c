@@ -190,7 +190,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
 #endif
         }
 
-        /* some attributes are common for all (real) buses */
+        /* some attributes are common for all (real) busses */
         else if (xmlStrcmp(child->name, BAD_CAST "device") == 0) {
             txt2 = xmlGetProp(child, BAD_CAST "type");
             if (txt2 == NULL || xmlStrcmp(txt2, BAD_CAST "filename") == 0) {
@@ -371,7 +371,7 @@ int readConfig(char *filename)
     if (doc != NULL) {
         DBG(0, DBG_DEBUG, "walking %s", filename);
         rc = walk_config_xml(doc);
-        DBG(0, DBG_DEBUG, " done %s; found %d buses", filename, rc);
+        DBG(0, DBG_DEBUG, " done %s; found %d busses", filename, rc);
         xmlFreeDoc(doc);
         /*
          *Free the global variables that may
@@ -395,11 +395,14 @@ int readConfig(char *filename)
  */
 void suspendThread(bus_t busnumber)
 {
+    DBG(0, DBG_DEBUG, "Thread on bus %d is going to stop.", busnumber);
     /* Lock thread till new data to process arrives */
     pthread_mutex_lock(&busses[busnumber].transmit_mutex);
-     /* mutex released.       */
     pthread_cond_wait(&busses[busnumber].transmit_cond, 
             &busses[busnumber].transmit_mutex);
+     /* mutex released.       */
+    pthread_mutex_unlock(&busses[busnumber].transmit_mutex);
+    DBG(0, DBG_DEBUG, "Thread on bus %d is working again.", busnumber);
 }
 
 /**
@@ -413,6 +416,7 @@ void resumeThread(bus_t busnumber)
     pthread_mutex_lock(&busses[busnumber].transmit_mutex);
     pthread_cond_signal(&busses[busnumber].transmit_cond);
     pthread_mutex_unlock(&busses[busnumber].transmit_mutex);
+    DBG(0, DBG_DEBUG, "Thread on bus %d is wooken up", busnumber);
 }
 
 /**
