@@ -47,9 +47,10 @@ void CreatePIDFile(int pid)
 {
     FILE *f;
     f = fopen(((SERVER_DATA *) busses[0].driverdata)->PIDFILE, "wb");
-    if (!f)
-        syslog(LOG_INFO, "   cannot open %s. Ignoring.",
-               ((SERVER_DATA *) busses[0].driverdata)->PIDFILE);
+    if (f == NULL)
+        syslog(LOG_INFO, "Opening pid file '%s' failed: %s (errno = %d)\n",
+               ((SERVER_DATA *) busses[0].driverdata)->PIDFILE,
+               strerror(errno), errno);
     else {
         fprintf(f, "%d\n", pid);
         fflush(f);
@@ -63,7 +64,7 @@ void DeletePIDFile()
     result = unlink(((SERVER_DATA *) busses[0].driverdata)->PIDFILE);
     if (result != 0)
         syslog(LOG_INFO, "Unlinking pid file failed: %s (errno = %d)\n",
-               strerror(errno),  errno);
+               strerror(errno), errno);
 }
 
 void hup_handler(int s)
