@@ -82,7 +82,6 @@ void term_handler(int s)
     // signal SIGTERM(15) caught
     syslog(LOG_INFO, "SIGTERM(15) received! Terminating ...");
     server_shutdown_state = 1;
-    DeletePIDFile();
 }
 
 void install_signal_handler()
