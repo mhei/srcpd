@@ -31,6 +31,9 @@
 #include "srcp-info.h"
 #include "threads.h"
 
+#define	MAXFD	64 /* for daemon_init */
+
+
 void hup_handler(int);
 void term_handler(int);
 void install_signal_handler(void);
@@ -124,18 +127,64 @@ void processSignal(int status)
     }
 }
 
+/*
+ * daemonize process
+ * this is from "UNIX Network Programming, W. R. Stevens et al."
+ */
+int daemon_init(const char *pname)
+{
+    int i;
+    pid_t pid;
+
+    if ( (pid = fork()) < 0)
+        return (-1);
+    else if (pid)
+        /* parent terminates */
+        _exit(0);
+
+    /* child 1 continues... */
+
+    /* become session leader */
+    if (setsid() < 0)
+        return (-1);
+
+    signal(SIGHUP, SIG_IGN);
+    if ( (pid = fork()) < 0)
+        return (-1);
+    else if (pid)
+        /* child 1 terminates */
+        _exit(0);
+
+    /* child 2 continues... */
+
+    /* change working directory */
+    chdir("/");
+
+    /* close off file descriptors */
+    for (i = 0; i < MAXFD; i++)
+        close(i);
+
+    /* redirect stdin, stdout, and stderr to /dev/null */
+    open("/dev/null", O_RDONLY);
+    open("/dev/null", O_RDWR);
+    open("/dev/null", O_RDWR);
+
+    openlog(pname, LOG_PID, LOG_USER);
+
+    /* success */
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     int error;
     long int i;
     int sleep_ctr;
-    pid_t pid;
     char c, conffile[MAXPATHLEN];
     pthread_t ttid_cmd, ttid_clock, ttid_pid;
     struct _THREADS cmds;
     struct sigaction saio;
 
-    install_signal_handler();
 
     /* First: Init the device data used internally */
     startup_GL();
@@ -150,7 +199,7 @@ int main(int argc, char **argv)
 
     sprintf(conffile, "%s/srcpd.conf", SYSCONFDIR);
 
-    /* Parameter auswerten */
+    /* read command line parameters */
     opterr = 0;
     while ((c = getopt(argc, argv, "f:hv")) != EOF) {
         switch (c) {
@@ -186,8 +235,17 @@ int main(int argc, char **argv)
 
     cmds.port = ((SERVER_DATA *) busses[0].driverdata)->TCPPORT;
     cmds.func = thr_doClient;
-    openlog("srcpd", LOG_CONS, LOG_USER);
+
+    /*now daemonize process and open syslog*/
+    if (0 != daemon_init(argv[0])) {
+        printf("Daemonization failed!\n");
+        exit(1);
+    }
+
+    //openlog("srcpd", LOG_CONS, LOG_USER);
     syslog(LOG_INFO, "%s", WELCOME_MSG);
+
+    install_signal_handler();
 
     /* Now we have to initialize all busses */
     /* this function should open the device */
@@ -207,30 +265,15 @@ int main(int argc, char **argv)
         }
     }
 
-    // a little help for debugging the threads
-    if (busses[0].debuglevel < DBG_DEBUG) {
-        /* forken */
-        if ((pid = fork()) < 0) {
-            return -1;
-        }
-        else {
-            if (pid != 0) {
-                exit(0);
-            }
-        }
-        // ab hier keine Konsole mehr... Wir sind ein D�on geworden!
-        chdir("/");
-    }
-
     CreatePIDFile(getpid());
 
-
-    /* Modellzeitgeber starten, der ist aber zun�hst idle */
+    /* Modellzeitgeber starten, der ist aber zunaechst idle */
     error = pthread_create(&ttid_clock, NULL, thr_clock, NULL);
     if (error) {
         syslog(LOG_INFO, "cannot start Clock Thread!");
     }
     pthread_detach(ttid_clock);
+
     /* und jetzt die Bustreiber selbst starten. Das Device ist offen,
        die Datenstrukturen initialisiert */
     syslog(LOG_INFO, "Going to start %d Interface Threads for the busses",
@@ -288,12 +331,14 @@ int main(int argc, char **argv)
 
     server_shutdown_state = 0;
     sleep_ctr = 10;
+
     /* And now: Wait for _real_ tasks: shutdown, reset, watch for
        hanging processes */
     while (1) {
         if (server_shutdown_state == 1) {
-            sleep(2);           /* Protokollforderung */
-            break;              /* leave the while() loop */
+            /* wait 2 seconds, according to protocol specification */
+            sleep(2);
+            break;
         }
         usleep(100000);
 
@@ -331,17 +376,18 @@ int main(int argc, char **argv)
     }
 
     syslog(LOG_INFO, "Shutting down server...");
-    /* hierher kommen wir nur nach einem break */
     pthread_cancel(ttid_cmd);
     pthread_cancel(ttid_clock);
 
-    /* und jetzt die ganzen Busse */
+    /* now terminate all bus threads */
     for (i = 1; i <= num_busses; i++) {
         pthread_cancel(busses[i].pid);
     }
- 
+
+    /*FIXME: this operation fails due to missing access rights*/ 
     DeletePIDFile();
-    // der Server als letzter
+
+    /* server thread is last to terminate */
     for (i = num_busses; i >= 0; i--) {
         (*busses[i].term_func) (i);
     }
