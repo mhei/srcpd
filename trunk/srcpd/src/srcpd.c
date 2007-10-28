@@ -59,7 +59,10 @@ void CreatePIDFile(int pid)
 
 void DeletePIDFile()
 {
-    unlink(((SERVER_DATA *) busses[0].driverdata)->PIDFILE);
+    int result = 0;
+    result = unlink(((SERVER_DATA *) busses[0].driverdata)->PIDFILE);
+    if (result != 0)
+        syslog(LOG_INFO, "Error removing pid file: %d\n", errno);
 }
 
 void hup_handler(int s)
