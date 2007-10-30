@@ -1,8 +1,8 @@
 /***************************************************************************
                           srcpd.c  -  description
-                             -------------------
+                          -----------------------
     begin                : Wed Jul 4 2001
-    copyright            : (C) 2001,2002 by the srcpd team
+    copyright            : (C) 2001, 2002 by the srcpd team
  ***************************************************************************/
 
 /***************************************************************************
@@ -70,21 +70,18 @@ void DeletePIDFile()
                strerror(errno), errno);
 }
 
+/* signal SIGHUP(1) caught */
 void hup_handler(int s)
 {
-    /* signal SIGHUP(1) caught */
+    signal(s, hup_handler);
     server_reset_state = 1;
     syslog(LOG_INFO,
            "SIGHUP(1) received! Reset done. Working in initial state.");
-
-    signal(s, hup_handler);
-
-    return;
 }
 
+/* signal SIGTERM(15) caught */
 void term_handler(int s)
 {
-    // signal SIGTERM(15) caught
     syslog(LOG_INFO, "SIGTERM(15) received! Terminating ...");
     server_shutdown_state = 1;
 }
@@ -131,12 +128,12 @@ void processSignal(int status)
  * daemonize process
  * this is from "UNIX Network Programming, W. R. Stevens et al."
  */
-int daemon_init(const char *pname)
+int daemon_init()
 {
     int i;
     pid_t pid;
 
-    if ( (pid = fork()) < 0)
+    if ((pid = fork()) < 0)
         return (-1);
     else if (pid)
         /* parent terminates */
@@ -149,7 +146,7 @@ int daemon_init(const char *pname)
         return (-1);
 
     signal(SIGHUP, SIG_IGN);
-    if ( (pid = fork()) < 0)
+    if ((pid = fork()) < 0)
         return (-1);
     else if (pid)
         /* child 1 terminates */
@@ -168,8 +165,6 @@ int daemon_init(const char *pname)
     open("/dev/null", O_RDONLY);
     open("/dev/null", O_RDWR);
     open("/dev/null", O_RDWR);
-
-    openlog(pname, LOG_PID, LOG_USER);
 
     /* success */
     return 0;
@@ -236,18 +231,18 @@ int main(int argc, char **argv)
     cmds.port = ((SERVER_DATA *) busses[0].driverdata)->TCPPORT;
     cmds.func = thr_doClient;
 
-    /*now daemonize process and open syslog*/
-    if (0 != daemon_init(argv[0])) {
+    /*now daemonize process*/
+    if (0 != daemon_init()) {
         printf("Daemonization failed!\n");
         exit(1);
     }
 
-    //openlog("srcpd", LOG_CONS, LOG_USER);
+    openlog("srcpd", LOG_PID, LOG_USER);
     syslog(LOG_INFO, "%s", WELCOME_MSG);
 
     install_signal_handler();
 
-    /* Now we have to initialize all busses */
+    /* Now we have to initialize all buses */
     /* this function should open the device */
     maxfd = 0;
     FD_ZERO(&rfds);
@@ -270,23 +265,23 @@ int main(int argc, char **argv)
     /* Modellzeitgeber starten, der ist aber zunaechst idle */
     error = pthread_create(&ttid_clock, NULL, thr_clock, NULL);
     if (error) {
-        syslog(LOG_INFO, "cannot start Clock Thread!");
+        syslog(LOG_INFO, "Cannot start clock thread!");
     }
     pthread_detach(ttid_clock);
 
     /* und jetzt die Bustreiber selbst starten. Das Device ist offen,
        die Datenstrukturen initialisiert */
-    syslog(LOG_INFO, "Going to start %d Interface Threads for the busses",
+    syslog(LOG_INFO, "Going to start %d interface threads for the buses",
            num_busses);
     /* Jetzt die Threads fr die Busse */
     for (i = 1; i <= num_busses; i++) {
-        syslog(LOG_INFO, "going to start Interface Thread  #%ld type(%d)",
+        syslog(LOG_INFO, "Going to start interface thread #%ld type(%d)",
                i, busses[i].type);
         if (busses[i].thr_timer != NULL) {
                error = pthread_create(&ttid_pid, NULL, busses[i].thr_timer,
                                         (void *) i);
                if (error) {
-                    syslog(LOG_INFO, "cannot start Timer Thread #%ld", i);
+                    syslog(LOG_INFO, "Cannot start timer thread #%ld", i);
                     exit(1);
                }
                pthread_detach(ttid_pid);
@@ -296,14 +291,14 @@ int main(int argc, char **argv)
                error = pthread_create(&ttid_pid, NULL, busses[i].thr_func,
                                         (void *) i);
                if (error) {
-                    syslog(LOG_INFO, "cannot start Interface Thread #%ld", i);
+                    syslog(LOG_INFO, "Cannot start interface thread #%ld", i);
                     exit(1);
                }
                pthread_detach(ttid_pid);
                busses[i].pid = ttid_pid;
         }
         syslog(LOG_INFO,
-               "Interface Thread #%ld started successfully type(%d): pid %ld",
+               "Interface thread #%ld started successfully, type(%d): pid %ld",
                i, busses[i].type, (long) (busses[i].pid));
         if (((busses[i].flags & AUTO_POWER_ON) == AUTO_POWER_ON)) {
             setPower(i, 1, "AUTO POWER ON");
@@ -312,15 +307,17 @@ int main(int argc, char **argv)
             setPower(i, 0, "AUTO POWER OFF");
         }
     }
-    /* Netzwerkverbindungen */
+
+    /* network connection thread */
     error = pthread_create(&ttid_cmd, NULL, thr_handlePort, &cmds);
     if (error) {
-        syslog(LOG_INFO, "cannot start Command Thread #%ld: %d", i, error);
+        syslog(LOG_INFO, "Cannot start command thread #%ld: %d", i, error);
         exit(1);
     }
     pthread_detach(ttid_cmd);
 
-    syslog(LOG_INFO, "All Threads started");
+    syslog(LOG_INFO, "All threads started");
+
     /* Setup serial interrupt processing */
     // not needed anymore: saio.sa_restorer = NULL;
     saio.sa_flags = 0;
@@ -340,22 +337,23 @@ int main(int argc, char **argv)
             sleep(2);
             break;
         }
-        usleep(100000);
 
+        usleep(100000);
         sleep_ctr--;
+
         if (sleep_ctr == 0) {
-            /* LOCKs aufraeumen */
+            /* clean LOCKs */
             unlock_gl_bytime();
             unlock_ga_bytime();
 
-            /* Jetzt Wachhund spielen, falls gewnscht */
+            /* activate watchdog if necessary */
             for (i = 1; i <= num_busses; i++) {
                 if (busses[i].watchdog == 0
                     && !queue_GL_isempty(i)
                     && !queue_GA_isempty(i)
                     && (busses[i].flags & USE_WATCHDOG)) {
-                    syslog(LOG_INFO, "Oops: Interface Thread #%ld "
-                            "hangs, restarting it: (old pid: %ld, %d)",
+                    syslog(LOG_INFO, "Oops: Interface thread #%ld "
+                            "hangs, restarting: (old pid: %ld, %d)",
                             i, (long) busses[i].pid, busses[i].watchdog);
                     pthread_cancel(busses[i].pid);
                     waitpid((long) busses[i].pid, NULL, 0);
@@ -363,8 +361,8 @@ int main(int argc, char **argv)
                         pthread_create(&ttid_pid, NULL, busses[i].thr_func,
                                        (void *) i);
                     if (error) {
-                        perror("Cannot restart Interface Thread!");
-                        break;  /* erm�licht aufr�men am Ende */
+                        perror("Cannot restart interface thread!");
+                        break;
                     }
                     busses[i].pid = ttid_pid;
                     pthread_detach(busses[i].pid);
@@ -375,7 +373,7 @@ int main(int argc, char **argv)
         }
     }
 
-    syslog(LOG_INFO, "Shutting down server...");
+    syslog(LOG_INFO, "Terminating SRCP service...");
     pthread_cancel(ttid_cmd);
     pthread_cancel(ttid_clock);
 
@@ -392,9 +390,8 @@ int main(int argc, char **argv)
         (*busses[i].term_func) (i);
     }
     wait(0);
-    syslog(LOG_INFO, "bye bye... ;=)");
+    syslog(LOG_INFO, "SRCP service terminated.");
+    closelog();
     exit(0);
 }
-
-
 
