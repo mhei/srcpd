@@ -13,7 +13,7 @@
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/sbin/srcpd
 NAME=srcpd
-DESC=srcpd
+DESC="SRCP server"
 
 test -x $DAEMON || exit 0
 

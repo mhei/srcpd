@@ -7,7 +7,7 @@ Standards-Version: 3.7.2
 
 Package: srcpd
 Architecture: any
-Depends: libxml2 (>=2.4.0), udev
+Depends: ${shlibs:Depends}, udev
 Description: SRCP 0.8.3 server daemon
  srcpd is a Simple Railroad Command Protocol server (SRCP Version 0.8.3)
  transmitting commands from and to SRCP clients or connected digital
