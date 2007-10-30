@@ -108,11 +108,20 @@ void processSignal(int status)
     /* Don't wait */
     tv.tv_sec = 0;
     tv.tv_usec = 0;
-    /* Search for the bus that needs to be servered */
+
+    /* Search for the bus that needs to be served */
     retval = select(maxfd + 1, &rfds, NULL, NULL, &tv);
-    if (retval < 0) {
-        /* Error from select */
+    if (retval == -1) {
+        syslog(LOG_INFO, "Select failed: %s (errno = %d)\n",
+               strerror(errno), errno);
     }
+
+    /* nothing changed */
+    else if (retval == 0) {
+        return;
+    }
+
+    /* some descriptor changed */
     else {
         for (i = 1; i <= num_busses; i++) {
             if ((busses[i].fd != -1) && (FD_ISSET(busses[i].fd, &rfds))) {
@@ -172,7 +181,7 @@ int daemon_init()
 
 int main(int argc, char **argv)
 {
-    int error;
+    int result;
     long int i;
     int sleep_ctr;
     char c, conffile[MAXPATHLEN];
@@ -218,7 +227,7 @@ int main(int argc, char **argv)
                 exit(1);
                 break;
             default:
-                printf("unknown Parameter\n");
+                printf("unknown parameter\n");
                 printf("use: \"srcpd -h\" for help, exiting\n");
                 exit(1);
                 break;
@@ -231,10 +240,15 @@ int main(int argc, char **argv)
     cmds.port = ((SERVER_DATA *) busses[0].driverdata)->TCPPORT;
     cmds.func = thr_doClient;
 
-    /*now daemonize process*/
-    if (0 != daemon_init()) {
-        printf("Daemonization failed!\n");
-        exit(1);
+    /* do not daemonize if in debug mode */
+    if (busses[0].debuglevel < DBG_DEBUG) {
+
+        /*daemonize process*/
+        if (0 != daemon_init()) {
+            printf("Daemonization failed!\n");
+            exit(1);
+        }
+
     }
 
     openlog("srcpd", LOG_PID, LOG_USER);
@@ -242,14 +256,21 @@ int main(int argc, char **argv)
 
     install_signal_handler();
 
-    /* Now we have to initialize all buses */
-    /* this function should open the device */
+    /*
+     * Now we have to initialize all buses,
+     * this function should open the devices
+     */
     maxfd = 0;
     FD_ZERO(&rfds);
     for (i = 0; i <= num_busses; i++) {
-        if (busses[i].init_func) {
-            if ((*busses[i].init_func) (i) != 0)
-                exit(1);        // error while initialize
+        if (busses[i].init_func != NULL) {
+
+            /* error during initialization */
+            if ((*busses[i].init_func) (i) != 0) {
+                syslog(LOG_INFO, "Initialization of bus %ld failed.", i);
+                exit(1);
+            }
+
             if (busses[i].fd != -1) {
                 FD_SET(busses[i].fd, &rfds);
                 maxfd = (maxfd > busses[i].fd ? maxfd : busses[i].fd);
@@ -263,9 +284,10 @@ int main(int argc, char **argv)
     CreatePIDFile(getpid());
 
     /* Modellzeitgeber starten, der ist aber zunaechst idle */
-    error = pthread_create(&ttid_clock, NULL, thr_clock, NULL);
-    if (error) {
-        syslog(LOG_INFO, "Cannot start clock thread!");
+    result = pthread_create(&ttid_clock, NULL, thr_clock, NULL);
+    if (result != 0) {
+        syslog(LOG_INFO, "Create clock thread failed: %s (errno = %d)\n",
+               strerror(errno), errno);
     }
     pthread_detach(ttid_clock);
 
@@ -273,33 +295,42 @@ int main(int argc, char **argv)
        die Datenstrukturen initialisiert */
     syslog(LOG_INFO, "Going to start %d interface threads for the buses",
            num_busses);
-    /* Jetzt die Threads fr die Busse */
+
+    /* start threads for all buses */
     for (i = 1; i <= num_busses; i++) {
         syslog(LOG_INFO, "Going to start interface thread #%ld type(%d)",
                i, busses[i].type);
+
         if (busses[i].thr_timer != NULL) {
-               error = pthread_create(&ttid_pid, NULL, busses[i].thr_timer,
+               result = pthread_create(&ttid_pid, NULL, busses[i].thr_timer,
                                         (void *) i);
-               if (error) {
-                    syslog(LOG_INFO, "Cannot start timer thread #%ld", i);
-                    exit(1);
+               if (result != 0) {
+                   syslog(LOG_INFO, "Create timer thread for bus %ld "
+                           "failed: %s (errno = %d)\n", i,
+                           strerror(errno), errno);
+                   exit(1);
                }
                pthread_detach(ttid_pid);
                busses[i].pidtimer = ttid_pid;
         }
+
         if (busses[i].thr_func != NULL) {
-               error = pthread_create(&ttid_pid, NULL, busses[i].thr_func,
+               result = pthread_create(&ttid_pid, NULL, busses[i].thr_func,
                                         (void *) i);
-               if (error) {
-                    syslog(LOG_INFO, "Cannot start interface thread #%ld", i);
+               if (result != 0) {
+                   syslog(LOG_INFO, "Create interface thread for bus %ld "
+                           "failed: %s (errno = %d)\n", i,
+                           strerror(errno), errno);
                     exit(1);
                }
                pthread_detach(ttid_pid);
                busses[i].pid = ttid_pid;
         }
-        syslog(LOG_INFO,
-               "Interface thread #%ld started successfully, type(%d): pid %ld",
-               i, busses[i].type, (long) (busses[i].pid));
+
+        syslog(LOG_INFO, "Interface thread #%ld started successfully, "
+                "type(%d): pid %ld", i, busses[i].type,
+                (long) (busses[i].pid));
+
         if (((busses[i].flags & AUTO_POWER_ON) == AUTO_POWER_ON)) {
             setPower(i, 1, "AUTO POWER ON");
         }
@@ -309,9 +340,10 @@ int main(int argc, char **argv)
     }
 
     /* network connection thread */
-    error = pthread_create(&ttid_cmd, NULL, thr_handlePort, &cmds);
-    if (error) {
-        syslog(LOG_INFO, "Cannot start command thread #%ld: %d", i, error);
+    result = pthread_create(&ttid_cmd, NULL, thr_handlePort, &cmds);
+    if (result != 0) {
+        syslog(LOG_INFO, "Create command thread failed: %s (errno = %d)\n",
+                strerror(errno), errno);
         exit(1);
     }
     pthread_detach(ttid_cmd);
@@ -323,14 +355,16 @@ int main(int argc, char **argv)
     saio.sa_flags = 0;
     saio.sa_handler = &processSignal;
     sigemptyset(&saio.sa_mask);
-    /* Apply interrupt handling for this proces */
+    /* Apply interrupt handling for this process */
     sigaction(SIGIO, &saio, NULL);
 
     server_shutdown_state = 0;
     sleep_ctr = 10;
 
-    /* And now: Wait for _real_ tasks: shutdown, reset, watch for
-       hanging processes */
+    /*
+     * Main loop: Wait for _real_ tasks: shutdown, reset and watch for
+     * hanging processes
+     */
     while (1) {
         if (server_shutdown_state == 1) {
             /* wait 2 seconds, according to protocol specification */
@@ -342,7 +376,7 @@ int main(int argc, char **argv)
         sleep_ctr--;
 
         if (sleep_ctr == 0) {
-            /* clean LOCKs */
+            /* clear LOCKs */
             unlock_gl_bytime();
             unlock_ga_bytime();
 
@@ -357,11 +391,12 @@ int main(int argc, char **argv)
                             i, (long) busses[i].pid, busses[i].watchdog);
                     pthread_cancel(busses[i].pid);
                     waitpid((long) busses[i].pid, NULL, 0);
-                    error =
-                        pthread_create(&ttid_pid, NULL, busses[i].thr_func,
-                                       (void *) i);
-                    if (error) {
-                        perror("Cannot restart interface thread!");
+                    result = pthread_create(&ttid_pid, NULL,
+                            busses[i].thr_func, (void *) i);
+                    if (result != 0) {
+                        syslog(LOG_INFO, "Recreate interface thread "
+                                "failed: %s (errno = %d)\n",
+                                strerror(errno), errno);
                         break;
                     }
                     busses[i].pid = ttid_pid;
