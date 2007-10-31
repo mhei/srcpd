@@ -265,16 +265,22 @@ int main(int argc, char **argv)
     for (i = 0; i <= num_buses; i++) {
         if (buses[i].init_func != NULL) {
 
-            /* error during initialization */
+            /* initialize each bus and report error on failure */
             if ((*buses[i].init_func) (i) != 0) {
                 syslog(LOG_INFO, "Initialization of bus %ld failed.", i);
                 exit(1);
             }
 
+            /* Configure _all_ open file descriptors to throw SIGIO */
+            /* 
+             * CHECK: May be this is a too generous setup because only
+             * the Selectrix module uses signal driven I/O. An option
+             * may be to select this feature by bus type:
+             *   (buses[i].fd != -1) && (buses[i].type == SERVER_SELECTRIX)
+             */
             if (buses[i].fd != -1) {
                 FD_SET(buses[i].fd, &rfds);
                 maxfd = (maxfd > buses[i].fd ? maxfd : buses[i].fd);
-                /* Configure port to throw read signal */
                 fcntl(buses[i].fd, F_SETOWN, getpid());
                 fcntl(buses[i].fd, F_SETFL, FASYNC);
             }
@@ -283,7 +289,7 @@ int main(int argc, char **argv)
 
     CreatePIDFile(getpid());
 
-    /* Modellzeitgeber starten, der ist aber zunaechst idle */
+    /* start clock thread */
     result = pthread_create(&ttid_clock, NULL, thr_clock, NULL);
     if (result != 0) {
         syslog(LOG_INFO, "Create clock thread failed: %s (errno = %d)\n",
@@ -291,8 +297,6 @@ int main(int argc, char **argv)
     }
     pthread_detach(ttid_clock);
 
-    /* und jetzt die Bustreiber selbst starten. Das Device ist offen,
-       die Datenstrukturen initialisiert */
     syslog(LOG_INFO, "Going to start %d interface threads for the buses",
            num_buses);
 
@@ -350,12 +354,10 @@ int main(int argc, char **argv)
 
     syslog(LOG_INFO, "All threads started");
 
-    /* Setup serial interrupt processing */
-    // not needed anymore: saio.sa_restorer = NULL;
+    /* Register signal handler for I/O interrupt handling */
     saio.sa_flags = 0;
     saio.sa_handler = &processSignal;
     sigemptyset(&saio.sa_mask);
-    /* Apply interrupt handling for this process */
     sigaction(SIGIO, &saio, NULL);
 
     server_shutdown_state = 0;
