@@ -34,8 +34,8 @@ const char *WELCOME_MSG =
 struct _BUS busses[MAX_BUSSES];
 int num_busses;
 
-// check that a bus has a device group or not
 
+/* check if a bus has a device group or not */
 int bus_has_devicegroup(bus_t bus, int dg)
 {
     switch (dg) {
@@ -99,6 +99,8 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
 
     /* Communication port to default values */
     busses[current_bus].devicetype = HW_FILENAME;
+    busses[current_bus].fd = -1;
+    busses[current_bus].baudrate = B2400;
 
     /* FIXME: this will lead to a memory leak if initialization of
      * (busnumber - 1) failed */
@@ -107,8 +109,6 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
         return current_bus;
 
     strcpy(busses[current_bus].filename.path, "/dev/null");
-    busses[current_bus].fd = -1;
-    busses[current_bus].baudrate = B2400;
 
     /* Definition of thread synchronisation  */
     pthread_mutex_init(&busses[current_bus].transmit_mutex, NULL);
@@ -416,7 +416,7 @@ void resumeThread(bus_t busnumber)
     pthread_mutex_lock(&busses[busnumber].transmit_mutex);
     pthread_cond_signal(&busses[busnumber].transmit_cond);
     pthread_mutex_unlock(&busses[busnumber].transmit_mutex);
-    DBG(0, DBG_DEBUG, "Thread on bus %d is wooken up", busnumber);
+    DBG(0, DBG_DEBUG, "Thread on bus %d is woken up", busnumber);
 }
 
 /**
@@ -437,6 +437,7 @@ void DBG(bus_t busnumber, int dbglevel, const char *fmt, ...)
 {
     va_list parm;
     va_start(parm, fmt);
+
     if (dbglevel <= busses[busnumber].debuglevel) {
         va_list parm2;
         va_start(parm2, fmt);
@@ -448,18 +449,6 @@ void DBG(bus_t busnumber, int dbglevel, const char *fmt, ...)
         vsyslog(LOG_INFO, msg, parm);
         free(msg);
 
-        /* 
-         * warning:
-         *   writing to stderr can confuse init start/stop scripts
-        */
-        /*
-        if (busses[busnumber].debuglevel > DBG_WARN) {
-            fprintf(stderr, "[bus %ld] ", busnumber);
-            vfprintf(stderr, fmt, parm2);
-            if (strchr(fmt, '\n') == NULL)
-                fprintf(stderr, "\n");
-        }
-        */
         va_end(parm2);
     }
     va_end(parm);
