@@ -49,10 +49,10 @@ extern const char *WELCOME_MSG;
 void CreatePIDFile(int pid)
 {
     FILE *f;
-    f = fopen(((SERVER_DATA *) busses[0].driverdata)->PIDFILE, "wb");
+    f = fopen(((SERVER_DATA *) buses[0].driverdata)->PIDFILE, "wb");
     if (f == NULL)
         syslog(LOG_INFO, "Opening pid file '%s' failed: %s (errno = %d)\n",
-               ((SERVER_DATA *) busses[0].driverdata)->PIDFILE,
+               ((SERVER_DATA *) buses[0].driverdata)->PIDFILE,
                strerror(errno), errno);
     else {
         fprintf(f, "%d\n", pid);
@@ -64,7 +64,7 @@ void CreatePIDFile(int pid)
 void DeletePIDFile()
 {
     int result;
-    result = unlink(((SERVER_DATA *) busses[0].driverdata)->PIDFILE);
+    result = unlink(((SERVER_DATA *) buses[0].driverdata)->PIDFILE);
     if (result != 0)
         syslog(LOG_INFO, "Unlinking pid file failed: %s (errno = %d)\n",
                strerror(errno), errno);
@@ -123,10 +123,10 @@ void processSignal(int status)
 
     /* some descriptor changed */
     else {
-        for (i = 1; i <= num_busses; i++) {
-            if ((busses[i].fd != -1) && (FD_ISSET(busses[i].fd, &rfds))) {
-                if (busses[i].sig_reader != NULL) {
-                   (*busses[i].sig_reader) (i);
+        for (i = 1; i <= num_buses; i++) {
+            if ((buses[i].fd != -1) && (FD_ISSET(buses[i].fd, &rfds))) {
+                if (buses[i].sig_reader != NULL) {
+                   (*buses[i].sig_reader) (i);
                 }
             }
         }
@@ -237,11 +237,11 @@ int main(int argc, char **argv)
     DBG(0, DBG_INFO, "conffile = \"%s\"\n", conffile);
     readConfig(conffile);
 
-    cmds.port = ((SERVER_DATA *) busses[0].driverdata)->TCPPORT;
+    cmds.port = ((SERVER_DATA *) buses[0].driverdata)->TCPPORT;
     cmds.func = thr_doClient;
 
     /* do not daemonize if in debug mode */
-    if (busses[0].debuglevel < DBG_DEBUG) {
+    if (buses[0].debuglevel < DBG_DEBUG) {
 
         /*daemonize process*/
         if (0 != daemon_init()) {
@@ -262,21 +262,21 @@ int main(int argc, char **argv)
      */
     maxfd = 0;
     FD_ZERO(&rfds);
-    for (i = 0; i <= num_busses; i++) {
-        if (busses[i].init_func != NULL) {
+    for (i = 0; i <= num_buses; i++) {
+        if (buses[i].init_func != NULL) {
 
             /* error during initialization */
-            if ((*busses[i].init_func) (i) != 0) {
+            if ((*buses[i].init_func) (i) != 0) {
                 syslog(LOG_INFO, "Initialization of bus %ld failed.", i);
                 exit(1);
             }
 
-            if (busses[i].fd != -1) {
-                FD_SET(busses[i].fd, &rfds);
-                maxfd = (maxfd > busses[i].fd ? maxfd : busses[i].fd);
+            if (buses[i].fd != -1) {
+                FD_SET(buses[i].fd, &rfds);
+                maxfd = (maxfd > buses[i].fd ? maxfd : buses[i].fd);
                 /* Configure port to throw read signal */
-                fcntl(busses[i].fd, F_SETOWN, getpid());
-                fcntl(busses[i].fd, F_SETFL, FASYNC);
+                fcntl(buses[i].fd, F_SETOWN, getpid());
+                fcntl(buses[i].fd, F_SETFL, FASYNC);
             }
         }
     }
@@ -294,15 +294,15 @@ int main(int argc, char **argv)
     /* und jetzt die Bustreiber selbst starten. Das Device ist offen,
        die Datenstrukturen initialisiert */
     syslog(LOG_INFO, "Going to start %d interface threads for the buses",
-           num_busses);
+           num_buses);
 
     /* start threads for all buses */
-    for (i = 1; i <= num_busses; i++) {
+    for (i = 1; i <= num_buses; i++) {
         syslog(LOG_INFO, "Going to start interface thread #%ld type(%d)",
-               i, busses[i].type);
+               i, buses[i].type);
 
-        if (busses[i].thr_timer != NULL) {
-               result = pthread_create(&ttid_pid, NULL, busses[i].thr_timer,
+        if (buses[i].thr_timer != NULL) {
+               result = pthread_create(&ttid_pid, NULL, buses[i].thr_timer,
                                         (void *) i);
                if (result != 0) {
                    syslog(LOG_INFO, "Create timer thread for bus %ld "
@@ -311,11 +311,11 @@ int main(int argc, char **argv)
                    exit(1);
                }
                pthread_detach(ttid_pid);
-               busses[i].pidtimer = ttid_pid;
+               buses[i].pidtimer = ttid_pid;
         }
 
-        if (busses[i].thr_func != NULL) {
-               result = pthread_create(&ttid_pid, NULL, busses[i].thr_func,
+        if (buses[i].thr_func != NULL) {
+               result = pthread_create(&ttid_pid, NULL, buses[i].thr_func,
                                         (void *) i);
                if (result != 0) {
                    syslog(LOG_INFO, "Create interface thread for bus %ld "
@@ -324,14 +324,14 @@ int main(int argc, char **argv)
                     exit(1);
                }
                pthread_detach(ttid_pid);
-               busses[i].pid = ttid_pid;
+               buses[i].pid = ttid_pid;
         }
 
         syslog(LOG_INFO, "Interface thread #%ld started successfully, "
-                "type(%d): pid %ld", i, busses[i].type,
-                (long) (busses[i].pid));
+                "type(%d): pid %ld", i, buses[i].type,
+                (long) (buses[i].pid));
 
-        if (((busses[i].flags & AUTO_POWER_ON) == AUTO_POWER_ON)) {
+        if (((buses[i].flags & AUTO_POWER_ON) == AUTO_POWER_ON)) {
             setPower(i, 1, "AUTO POWER ON");
         }
         else {
@@ -381,28 +381,28 @@ int main(int argc, char **argv)
             unlock_ga_bytime();
 
             /* activate watchdog if necessary */
-            for (i = 1; i <= num_busses; i++) {
-                if (busses[i].watchdog == 0
+            for (i = 1; i <= num_buses; i++) {
+                if (buses[i].watchdog == 0
                     && !queue_GL_isempty(i)
                     && !queue_GA_isempty(i)
-                    && (busses[i].flags & USE_WATCHDOG)) {
+                    && (buses[i].flags & USE_WATCHDOG)) {
                     syslog(LOG_INFO, "Oops: Interface thread #%ld "
                             "hangs, restarting: (old pid: %ld, %d)",
-                            i, (long) busses[i].pid, busses[i].watchdog);
-                    pthread_cancel(busses[i].pid);
-                    waitpid((long) busses[i].pid, NULL, 0);
+                            i, (long) buses[i].pid, buses[i].watchdog);
+                    pthread_cancel(buses[i].pid);
+                    waitpid((long) buses[i].pid, NULL, 0);
                     result = pthread_create(&ttid_pid, NULL,
-                            busses[i].thr_func, (void *) i);
+                            buses[i].thr_func, (void *) i);
                     if (result != 0) {
                         syslog(LOG_INFO, "Recreate interface thread "
                                 "failed: %s (errno = %d)\n",
                                 strerror(errno), errno);
                         break;
                     }
-                    busses[i].pid = ttid_pid;
-                    pthread_detach(busses[i].pid);
+                    buses[i].pid = ttid_pid;
+                    pthread_detach(buses[i].pid);
                 }
-                busses[i].watchdog = 0;
+                buses[i].watchdog = 0;
             }
             sleep_ctr = 10;
         }
@@ -413,16 +413,16 @@ int main(int argc, char **argv)
     pthread_cancel(ttid_clock);
 
     /* now terminate all bus threads */
-    for (i = 1; i <= num_busses; i++) {
-        pthread_cancel(busses[i].pid);
+    for (i = 1; i <= num_buses; i++) {
+        pthread_cancel(buses[i].pid);
     }
 
     /*FIXME: this operation fails due to missing access rights*/ 
     DeletePIDFile();
 
     /* server thread is last to terminate */
-    for (i = num_busses; i >= 0; i--) {
-        (*busses[i].term_func) (i);
+    for (i = num_buses; i >= 0; i--) {
+        (*buses[i].term_func) (i);
     }
     wait(0);
     syslog(LOG_INFO, "SRCP service terminated.");

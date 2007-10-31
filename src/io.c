@@ -26,12 +26,12 @@ int readByte(bus_t bus, int wait, unsigned char *the_byte)
     int status;
 
     // with debug level beyond DBG_DEBUG, we will not really work on hardware
-    if (busses[bus].debuglevel > DBG_DEBUG) {
+    if (buses[bus].debuglevel > DBG_DEBUG) {
         i = 1;
         *the_byte = 0;
     }
     else {
-        status = ioctl(busses[bus].fd, FIONREAD, &i);
+        status = ioctl(buses[bus].fd, FIONREAD, &i);
         if (status < 0) {
             char msg[200];
             strcpy(msg, strerror(errno));
@@ -42,10 +42,10 @@ int readByte(bus_t bus, int wait, unsigned char *the_byte)
         }
         DBG(bus, DBG_DEBUG,
             "readbyte(): (fd = %d), there are %d bytes to read.",
-            busses[bus].fd, i);
+            buses[bus].fd, i);
         // read only, if there is really an input
         if ((i > 0) || (wait == 1)) {
-            i = read(busses[bus].fd, the_byte, 1);
+            i = read(buses[bus].fd, the_byte, 1);
             if (i < 0) {
                 char emsg[200];
                 strerror_r(errno, emsg, sizeof(emsg));
@@ -65,17 +65,17 @@ void writeByte(bus_t bus, unsigned char b, unsigned long msecs)
 {
     ssize_t i = 0;
     char byte = b;
-    if (busses[bus].debuglevel <= DBG_DEBUG) {
-        i = write(busses[bus].fd, &byte, 1);
-        tcdrain(busses[bus].fd);
+    if (buses[bus].debuglevel <= DBG_DEBUG) {
+        i = write(buses[bus].fd, &byte, 1);
+        tcdrain(buses[bus].fd);
     }
     if (i < 0) {
     DBG(bus, DBG_ERROR, "(FD: %d) External error: errno %d",
-        busses[bus].fd, errno); // , str_errno(errno));
+        buses[bus].fd, errno); // , str_errno(errno));
     }
     else {
     DBG(bus, DBG_DEBUG, "(FD: %d) %i byte sent: 0x%02x (%d)",
-        busses[bus].fd, i, b, b);
+        buses[bus].fd, i, b, b);
     }
     usleep(msecs * 1000);
 }
@@ -93,12 +93,12 @@ void save_comport(bus_t businfo)
 {
     int fd;
 
-    fd = open(busses[businfo].filename.path, O_RDWR);
+    fd = open(buses[businfo].filename.path, O_RDWR);
     if (fd == -1) {
         printf("Error, couldn't open device.\n");
     }
     else {
-        tcgetattr(fd, &busses[businfo].devicesettings);
+        tcgetattr(fd, &buses[businfo].devicesettings);
         close(fd);
     }
 }
@@ -108,14 +108,14 @@ void restore_comport(bus_t bus)
     int fd;
 
     DBG(bus, DBG_INFO, "Restoring attributes for serial line %s",
-        busses[bus].filename.path);
-    fd = open(busses[bus].filename.path, O_RDWR);
+        buses[bus].filename.path);
+    fd = open(buses[bus].filename.path, O_RDWR);
     if (fd == -1) {
         DBG(bus, DBG_ERROR, "Error, couldn't open device.");
     }
     else {
         DBG(bus, DBG_INFO, "Restoring old values...");
-        tcsetattr(fd, TCSANOW, &busses[bus].devicesettings);
+        tcsetattr(fd, TCSANOW, &buses[bus].devicesettings);
         close(fd);
         DBG(bus, DBG_INFO, "Old values successfully restored");
     }
@@ -126,11 +126,11 @@ void close_comport(bus_t bus)
     struct termios interface;
     DBG(bus, DBG_INFO, "Closing serial line");
 
-    tcgetattr(busses[bus].fd, &interface);
+    tcgetattr(buses[bus].fd, &interface);
     cfsetispeed(&interface, B0);
     cfsetospeed(&interface, B0);
-    tcsetattr(busses[bus].fd, TCSANOW, &interface);
-    close(busses[bus].fd);
+    tcsetattr(buses[bus].fd, TCSANOW, &interface);
+    close(buses[bus].fd);
 }
 
 /* Zeilenweises Lesen vom Socket      */

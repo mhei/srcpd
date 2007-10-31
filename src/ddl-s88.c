@@ -85,24 +85,24 @@ static const unsigned int LPT_NUM = 3;
 static const char BIT_VALUES[] =
     { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
 
-#define __ddl_s88 ((DDL_S88_DATA *) busses[busnumber].driverdata)
+#define __ddl_s88 ((DDL_S88_DATA *) buses[busnumber].driverdata)
 
 int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
     int i;
 
-    busses[busnumber].driverdata = malloc(sizeof(struct _DDL_S88_DATA));
+    buses[busnumber].driverdata = malloc(sizeof(struct _DDL_S88_DATA));
 
-    if (busses[busnumber].driverdata == NULL) {
+    if (buses[busnumber].driverdata == NULL) {
         DBG(busnumber, DBG_ERROR,
                 "Memory allocation error in module '%s'.", node->name);
         return 0;
     }
 
-    busses[busnumber].type = SERVER_S88;
-    busses[busnumber].init_func = &init_bus_S88;
-    busses[busnumber].term_func = &term_bus_S88;
-    busses[busnumber].thr_func = &thr_sendrec_S88;
+    buses[busnumber].type = SERVER_S88;
+    buses[busnumber].init_func = &init_bus_S88;
+    buses[busnumber].term_func = &term_bus_S88;
+    buses[busnumber].thr_func = &thr_sendrec_S88;
 
     __ddl_s88->port = 0x0378;
 #ifdef __FreeBSD__
@@ -120,18 +120,18 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     __ddl_s88->Fd = -1;         // signal closed Port
 #endif
 
-    strcpy(busses[busnumber].description, "FB POWER");
+    strcpy(buses[busnumber].description, "FB POWER");
     __ddl_s88->number_fb[0] = 1;
     __ddl_s88->number_fb[1] = 1;
     __ddl_s88->number_fb[2] = 1;
     __ddl_s88->number_fb[3] = 1;
 
     for (i = 1; i < 4; i++) {
-        busses[busnumber + i].type = SERVER_S88;
-        busses[busnumber + i].init_func = NULL;
-        busses[busnumber + i].term_func = NULL;
-        busses[busnumber + i].thr_func = &thr_sendrec_dummy;
-        busses[busnumber + i].driverdata = NULL;
+        buses[busnumber + i].type = SERVER_S88;
+        buses[busnumber + i].init_func = NULL;
+        buses[busnumber + i].term_func = NULL;
+        buses[busnumber + i].thr_func = &thr_sendrec_dummy;
+        buses[busnumber + i].driverdata = NULL;
     }
 
     xmlNodePtr child = node->children;
@@ -407,13 +407,13 @@ void *thr_sendrec_S88(void *v)
     if (sleepusec < S88REFRESH * 1000)
         sleepusec = S88REFRESH * 1000;
     while (1) {
-        if (busses[busnumber].power_changed == 1) {
+        if (buses[busnumber].power_changed == 1) {
             char msg[110];
-            busses[busnumber].power_changed = 0;
+            buses[busnumber].power_changed = 0;
             infoPower(busnumber, msg);
             queueInfoMessage(msg);
         }
-        if (busses[busnumber].power_state == 0) {
+        if (buses[busnumber].power_state == 0) {
             usleep(1000);
             continue;
         }

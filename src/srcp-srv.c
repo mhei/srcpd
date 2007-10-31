@@ -18,7 +18,7 @@
 int server_reset_state;
 int server_shutdown_state;
 
-#define __srv ((SERVER_DATA*)busses[busnumber].driverdata)
+#define __srv ((SERVER_DATA*)buses[busnumber].driverdata)
 
 int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
@@ -27,19 +27,19 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     DBG(busnumber, DBG_INFO, "bus %ld starting configuration child %s",
         busnumber, node->name);
 
-    busses[0].driverdata = malloc(sizeof(struct _SERVER_DATA));
+    buses[0].driverdata = malloc(sizeof(struct _SERVER_DATA));
 
     /* if there is too less memory for server data -> exit process */
-    if (busses[0].driverdata == NULL) {
+    if (buses[0].driverdata == NULL) {
         DBG(busnumber, DBG_ERROR,
                 "Memory allocation error in module '%s'.", node->name);
         exit(1);
     }
 
-    busses[0].type = SERVER_SERVER;
-    busses[0].init_func = &init_bus_server;
-    busses[0].term_func = &term_bus_server;
-    strcpy(busses[0].description, "SESSION SERVER TIME GM");
+    buses[0].type = SERVER_SERVER;
+    buses[0].init_func = &init_bus_server;
+    buses[0].term_func = &term_bus_server;
+    strcpy(buses[0].description, "SESSION SERVER TIME GM");
 
     // initialize _SERVER_DATA with defaults
     serviceentry = getservbyname("srcp","tcp");
@@ -141,7 +141,7 @@ int describeSERVER(bus_t bus, int addr, char *reply)
 
 int init_bus_server(bus_t bus)
 {
-    gettimeofday(&busses[0].power_change_time, NULL);
+    gettimeofday(&buses[0].power_change_time, NULL);
     DBG(bus, DBG_INFO, "init_bus %ld", bus);
     return 0;
 }

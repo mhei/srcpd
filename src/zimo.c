@@ -20,7 +20,7 @@
 #include <sys/time.h>
 #include <time.h>
 
-#define __zimo ((zimo_DATA*)busses[busnumber].driverdata)
+#define __zimo ((zimo_DATA*)buses[busnumber].driverdata)
 
 static long tdiff(struct timeval t1, struct timeval t2)
 {
@@ -37,7 +37,7 @@ int readanswer(bus_t bus, char cmd, char *buf, int maxbuflen,
 
     gettimeofday(&ts, NULL);
     while (1) {
-        status = ioctl(busses[bus].fd, FIONREAD, &i);
+        status = ioctl(buses[bus].fd, FIONREAD, &i);
         if (status < 0)
             return -1;
         if (i) {
@@ -67,19 +67,19 @@ int readanswer(bus_t bus, char cmd, char *buf, int maxbuflen,
 
 int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
-    busses[busnumber].driverdata = malloc(sizeof(struct _zimo_DATA));
+    buses[busnumber].driverdata = malloc(sizeof(struct _zimo_DATA));
 
-    if (busses[busnumber].driverdata == NULL) {
+    if (buses[busnumber].driverdata == NULL) {
         DBG(busnumber, DBG_ERROR,
                 "Memory allocation error in module '%s'.", node->name);
         return 0;
     }
 
-    busses[busnumber].type = SERVER_ZIMO;
-    busses[busnumber].init_func = &init_bus_zimo;
-    busses[busnumber].term_func = &term_bus_zimo;
-    busses[busnumber].thr_func = &thr_sendrec_zimo;
-    strcpy(busses[busnumber].description, "SM GL POWER LOCK DESCRIPTION");
+    buses[busnumber].type = SERVER_ZIMO;
+    buses[busnumber].init_func = &init_bus_zimo;
+    buses[busnumber].term_func = &term_bus_zimo;
+    buses[busnumber].thr_func = &thr_sendrec_zimo;
+    strcpy(buses[busnumber].description, "SM GL POWER LOCK DESCRIPTION");
 
     __zimo->number_fb = 0;      /* max 31 */
     __zimo->number_ga = 256;
@@ -188,8 +188,8 @@ int term_bus_zimo(bus_t bus)
 int init_bus_zimo(bus_t i)
 {
     DBG(i, DBG_INFO, "zimo init: bus #%ld, debug %d, device %s", i,
-        busses[i].debuglevel, busses[i].filename.path);
-    busses[i].fd = init_linezimo(busses[i].filename.path);
+        buses[i].debuglevel, buses[i].filename.path);
+    buses[i].fd = init_linezimo(buses[i].filename.path);
     DBG(i, DBG_INFO, "zimo init done");
     return 0;
 }
@@ -207,15 +207,15 @@ void *thr_sendrec_zimo(void *v)
     unsigned int error, cv, val;
     // TODO: unsigned char databyte, address;
     DBG(bus, DBG_INFO, "zimo started, bus #%d, %s", bus,
-        busses[bus].filename.path);
+        buses[bus].filename.path);
 
-    busses[bus].watchdog = 1;
+    buses[bus].watchdog = 1;
     while (1) {
-        if (busses[bus].power_changed == 1) {
-            sprintf(msg, "S%c%c", (busses[bus].power_state) ? 'E' : 'A',
+        if (buses[bus].power_changed == 1) {
+            sprintf(msg, "S%c%c", (buses[bus].power_state) ? 'E' : 'A',
                     13);
             writeString(bus, (unsigned char *) msg, 0);
-            busses[bus].power_changed = 0;
+            buses[bus].power_changed = 0;
             infoPower(bus, msg);
             queueInfoMessage(msg);
         }
@@ -255,10 +255,10 @@ void *thr_sendrec_zimo(void *v)
                         13);
                 DBG(bus, DBG_INFO, "%s", msg);
                 writeString(bus, (unsigned char *) msg, 0);
-                ioctl(busses[bus].fd, FIONREAD, &temp);
+                ioctl(buses[bus].fd, FIONREAD, &temp);
                 while (temp > 0) {
                     readByte(bus, 0, (unsigned char *) &rr);
-                    ioctl(busses[bus].fd, FIONREAD, &temp);
+                    ioctl(buses[bus].fd, FIONREAD, &temp);
                     DBG(bus, DBG_INFO, "ignoring unread byte: %d (%c)", rr,
                         rr);
                 }
@@ -310,7 +310,7 @@ void *thr_sendrec_zimo(void *v)
                 }
             }
 
-            busses[bus].watchdog = 4;
+            buses[bus].watchdog = 4;
             usleep(10);
         }
     }

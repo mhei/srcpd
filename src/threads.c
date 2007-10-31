@@ -15,8 +15,8 @@ void change_privileges(bus_t bus)
 {
     struct group *group;
     struct passwd *passwd;
-    char *grp = ((SERVER_DATA *) busses[0].driverdata)->groupname;
-    char *uid = ((SERVER_DATA *) busses[0].driverdata)->username;
+    char *grp = ((SERVER_DATA *) buses[0].driverdata)->groupname;
+    char *uid = ((SERVER_DATA *) buses[0].driverdata)->username;
 
 
     if (grp != NULL) {

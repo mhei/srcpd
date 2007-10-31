@@ -52,9 +52,9 @@ int readConfig_LI100_SERIAL( xmlDocPtr doc, xmlNodePtr node,  bus_t busnumber )
   DBG( busnumber, DBG_INFO, "reading configuration for LI100 (serial) at bus #%ld", busnumber );
 #endif
 
-  busses[ busnumber ].driverdata = malloc( sizeof( struct _LI100_DATA ) );
+  buses[ busnumber ].driverdata = malloc( sizeof( struct _LI100_DATA ) );
 
-  if ( busses[busnumber].driverdata == NULL )
+  if ( buses[busnumber].driverdata == NULL )
   {
     DBG( busnumber, DBG_ERROR,
          "Memory allocation error in module '%s'.", node->name );
@@ -64,39 +64,39 @@ int readConfig_LI100_SERIAL( xmlDocPtr doc, xmlNodePtr node,  bus_t busnumber )
 
 #ifdef LI100_USB
 
-  busses[ busnumber ].type = SERVER_LI100_USB;
+  buses[ busnumber ].type = SERVER_LI100_USB;
 
-  busses[ busnumber ].init_func = &init_bus_LI100_USB;
+  buses[ busnumber ].init_func = &init_bus_LI100_USB;
 
-  busses[ busnumber ].term_func = &term_bus_LI100_USB;
+  buses[ busnumber ].term_func = &term_bus_LI100_USB;
 
-  busses[ busnumber ].thr_func = &thr_sendrec_LI100_USB;
+  buses[ busnumber ].thr_func = &thr_sendrec_LI100_USB;
 
-  busses[ busnumber ].baudrate = B57600;
+  buses[ busnumber ].baudrate = B57600;
 
 #else
 
-  busses[ busnumber ].type = SERVER_LI100_SERIAL;
+  buses[ busnumber ].type = SERVER_LI100_SERIAL;
 
-  busses[ busnumber ].init_func = &init_bus_LI100_SERIAL;
+  buses[ busnumber ].init_func = &init_bus_LI100_SERIAL;
 
-  busses[ busnumber ].term_func = &term_bus_LI100_SERIAL;
+  buses[ busnumber ].term_func = &term_bus_LI100_SERIAL;
 
-  busses[ busnumber ].thr_func = &thr_sendrec_LI100_SERIAL;
+  buses[ busnumber ].thr_func = &thr_sendrec_LI100_SERIAL;
 
-  busses[ busnumber ].baudrate = B9600;
+  buses[ busnumber ].baudrate = B9600;
 
 #endif
 
-  busses[ busnumber ].init_gl_func = &init_gl_LI100;
+  buses[ busnumber ].init_gl_func = &init_gl_LI100;
 
-  busses[ busnumber ].init_ga_func = &init_ga_LI100;
+  buses[ busnumber ].init_ga_func = &init_ga_LI100;
 
-  busses[ busnumber ].flags |= FB_4_PORTS;
+  buses[ busnumber ].flags |= FB_4_PORTS;
 
-  busses[ busnumber ].flags |= FB_ORDER_0;
+  buses[ busnumber ].flags |= FB_ORDER_0;
 
-  strcpy( busses[ busnumber ].description,
+  strcpy( buses[ busnumber ].description,
           "GA GL FB SM POWER LOCK DESCRIPTION" );
 
 #ifdef LI100_USB
@@ -214,18 +214,18 @@ int init_bus_LI100_SERIAL( bus_t busnumber )
 
   status = 0;
   printf( "Bus #%ld with debug level %d\n", busnumber,
-          busses[ busnumber ].debuglevel );
+          buses[ busnumber ].debuglevel );
 #ifdef LI100_USB
-  if ( busses[ busnumber ].type != SERVER_LI100_USB )
+  if ( buses[ busnumber ].type != SERVER_LI100_USB )
 #else
-  if ( busses[ busnumber ].type != SERVER_LI100_SERIAL )
+  if ( buses[ busnumber ].type != SERVER_LI100_SERIAL )
 #endif
   {
     status = -2;
   }
   else
   {
-    if ( busses[ busnumber ].fd > 0 )
+    if ( buses[ busnumber ].fd > 0 )
       status = -3;        // bus is already in use
   }
 
@@ -234,7 +234,7 @@ int init_bus_LI100_SERIAL( bus_t busnumber )
     __li100->working_LI100 = 0;
   }
 
-  if ( busses[ busnumber ].debuglevel < 7 )
+  if ( buses[ busnumber ].debuglevel < 7 )
   {
     if ( status == 0 )
 #ifdef LI100_USB
@@ -244,7 +244,7 @@ int init_bus_LI100_SERIAL( bus_t busnumber )
 #endif
   }
   else
-    busses[ busnumber ].fd = 9999;
+    buses[ busnumber ].fd = 9999;
 
   if ( status == 0 )
   {
@@ -329,18 +329,18 @@ int term_bus_LI100_SERIAL( bus_t busnumber )
 #endif
 {
 #ifdef LI100_USB
-  if ( busses[ busnumber ].type != SERVER_LI100_USB )
+  if ( buses[ busnumber ].type != SERVER_LI100_USB )
 #else
-  if ( busses[ busnumber ].type != SERVER_LI100_SERIAL )
+  if ( buses[ busnumber ].type != SERVER_LI100_SERIAL )
 #endif
     return 1;
 
-  if ( busses[ busnumber ].pid == 0 )
+  if ( buses[ busnumber ].pid == 0 )
     return 0;
 
   __li100->working_LI100 = 0;
-  pthread_cancel( busses[ busnumber ].pid );
-  busses[ busnumber ].pid = 0;
+  pthread_cancel( buses[ busnumber ].pid );
+  buses[ busnumber ].pid = 0;
   close_comport( busnumber );
   return 0;
 }
@@ -378,17 +378,17 @@ void *thr_sendrec_LI100_SERIAL( void *v )
     /* Start/Stop */
     //fprintf(stderr, "START/STOP... ");
 
-    if ( busses[busnumber].power_changed == 1 )
+    if ( buses[busnumber].power_changed == 1 )
     {
       byte2send[ 0 ] = 0x21;
-      byte2send[ 1 ] = busses[ busnumber ].power_state ? 0x81 : 0x80;
+      byte2send[ 1 ] = buses[ busnumber ].power_state ? 0x81 : 0x80;
 #ifdef LI100_USB
       status = send_command_LI100_USB( busnumber, byte2send );
 #else
       status = send_command_LI100_SERIAL( busnumber, byte2send );
 #endif
       if ( status == 0 )                                    // all was OK ?
-        busses[ busnumber ].power_changed = 0;
+        buses[ busnumber ].power_changed = 0;
     }
 
 #ifdef LI100_USB
@@ -406,7 +406,7 @@ void *thr_sendrec_LI100_SERIAL( void *v )
 #endif
 
     check_reset_fb( busnumber );
-    busses[ busnumber ].watchdog = 1;
+    buses[ busnumber ].watchdog = 1;
     usleep( 50000 );
   }                           // End WHILE(1)
 }
@@ -1508,13 +1508,13 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
 
     // with debug level beyond DBG_DEBUG, we will not really work on hardware
 
-    if ( busses[ busnumber ].debuglevel <= DBG_DEBUG )
+    if ( buses[ busnumber ].debuglevel <= DBG_DEBUG )
     {
       i = 1;
 
       while ( i > 0 )
       {
-        status = ioctl( busses[ busnumber ].fd, FIONREAD, &i );
+        status = ioctl( buses[ busnumber ].fd, FIONREAD, &i );
 
         if ( status < 0 )
         {
@@ -1528,7 +1528,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
         DBG( busnumber, DBG_DEBUG,
 
              "readbyte(): (fd = %d), there are %d bytes to read.",
-             busses[ busnumber ].fd, i );
+             buses[ busnumber ].fd, i );
         // read only, if there is really an input
 
         if ( i > 0 )
@@ -2003,11 +2003,11 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
 
     struct termios interface;
 
-    char *name = busses[ busnumber ].filename.path;
+    char *name = buses[ busnumber ].filename.path;
     printf( "Beginning to detect LI100 on serial line: %s\n", name );
     status = -4;
 
-    switch ( busses[ busnumber ].baudrate )
+    switch ( buses[ busnumber ].baudrate )
     {
       case
 
@@ -2055,7 +2055,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
       return status;
     }
 
-    busses[ busnumber ].fd = fd;
+    buses[ busnumber ].fd = fd;
 
     tcgetattr( fd, &interface );
     interface.c_oflag = ONOCR;
@@ -2070,9 +2070,9 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
     interface.c_iflag = IGNBRK;
     interface.c_lflag = IEXTEN;
 
-    cfsetispeed( &interface, busses[ busnumber ].baudrate );
+    cfsetispeed( &interface, buses[ busnumber ].baudrate );
 
-    cfsetospeed( &interface, busses[ busnumber ].baudrate );
+    cfsetospeed( &interface, buses[ busnumber ].baudrate );
     interface.c_cc[ VMIN ] = 0;
     interface.c_cc[ VTIME ] = 1;
 

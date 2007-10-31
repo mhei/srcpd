@@ -14,12 +14,12 @@
 
 int setPower(bus_t bus, int state, char *msg)
 {
-    gettimeofday(&busses[bus].power_change_time, NULL);
-    busses[bus].power_state = (state == -1) ? 0 : state;
-    //    busses[bus].power_state = state;
-    strcpy(busses[bus].power_msg, msg);
-    busses[bus].power_changed = (state == -1) ? 0 : 1;
-    //    busses[bus].power_changed = 1;
+    gettimeofday(&buses[bus].power_change_time, NULL);
+    buses[bus].power_state = (state == -1) ? 0 : state;
+    //    buses[bus].power_state = state;
+    strcpy(buses[bus].power_msg, msg);
+    buses[bus].power_changed = (state == -1) ? 0 : 1;
+    //    buses[bus].power_changed = 1;
     /* Resume thread to transmit power change */
     resumeThread(bus);
     char reply[200];
@@ -30,15 +30,15 @@ int setPower(bus_t bus, int state, char *msg)
 
 int getPower(bus_t bus)
 {
-    return busses[bus].power_state;
+    return buses[bus].power_state;
 }
 
 int infoPower(bus_t bus, char *msg)
 {
     sprintf(msg, "%lu.%.3lu 100 INFO %ld POWER %s %s\n",
-            busses[bus].power_change_time.tv_sec,
-            busses[bus].power_change_time.tv_usec / 1000, bus,
-            busses[bus].power_state ? "ON" : "OFF", busses[bus].power_msg);
+            buses[bus].power_change_time.tv_sec,
+            buses[bus].power_change_time.tv_usec / 1000, bus,
+            buses[bus].power_state ? "ON" : "OFF", buses[bus].power_msg);
     return SRCP_INFO;
 }
 

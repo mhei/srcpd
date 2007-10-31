@@ -31,8 +31,8 @@
 const char *WELCOME_MSG =
     "srcpd V" VERSION "; SRCP 0.8.3; SRCPOTHER 0.8.4-wip\n";
 
-struct _BUS busses[MAX_BUSSES];
-int num_busses;
+struct _BUS buses[MAX_BUSES];
+int num_buses;
 
 
 /* check if a bus has a device group or not */
@@ -40,27 +40,27 @@ int bus_has_devicegroup(bus_t bus, int dg)
 {
     switch (dg) {
         case DG_SESSION:
-            return strstr(busses[bus].description, "SESSION") != NULL;
+            return strstr(buses[bus].description, "SESSION") != NULL;
         case DG_POWER:
-            return strstr(busses[bus].description, "POWER") != NULL;
+            return strstr(buses[bus].description, "POWER") != NULL;
         case DG_GA:
-            return strstr(busses[bus].description, "GA") != NULL;
+            return strstr(buses[bus].description, "GA") != NULL;
         case DG_GL:
-            return strstr(busses[bus].description, "GL") != NULL;
+            return strstr(buses[bus].description, "GL") != NULL;
         case DG_GM:
-            return strstr(busses[bus].description, "GM") != NULL;
+            return strstr(buses[bus].description, "GM") != NULL;
         case DG_FB:
-            return strstr(busses[bus].description, "FB") != NULL;
+            return strstr(buses[bus].description, "FB") != NULL;
         case DG_SM:
-            return strstr(busses[bus].description, "SM") != NULL;
+            return strstr(buses[bus].description, "SM") != NULL;
         case DG_SERVER:
-            return strstr(busses[bus].description, "SERVER") != NULL;
+            return strstr(buses[bus].description, "SERVER") != NULL;
         case DG_TIME:
-            return strstr(busses[bus].description, "TIME") != NULL;
+            return strstr(buses[bus].description, "TIME") != NULL;
         case DG_LOCK:
-            return strstr(busses[bus].description, "LOCK") != NULL;
+            return strstr(buses[bus].description, "LOCK") != NULL;
         case DG_DESCRIPTION:
-            return strstr(busses[bus].description, "DESCRIPTION") != NULL;
+            return strstr(buses[bus].description, "DESCRIPTION") != NULL;
 
     }
     return 0;
@@ -73,46 +73,46 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
     if (xmlStrcmp(node->name, BAD_CAST "bus"))
         return busnumber;
 
-    if (busnumber >= MAX_BUSSES || busnumber < 0) {
+    if (busnumber >= MAX_BUSES || busnumber < 0) {
         printf("Sorry, you have used an invalid bus number (%ld). "
                "If this is greater than or equal to %d,\n"
                "you need to recompile the sources. Exiting now.\n",
-               busnumber, MAX_BUSSES);
+               busnumber, MAX_BUSES);
         return busnumber;
     }
 
-    num_busses = busnumber;
+    num_buses = busnumber;
 
     /* some default values */
-    busses[current_bus].debuglevel = DBG_INFO;
-    busses[current_bus].flags = 0;
+    buses[current_bus].debuglevel = DBG_INFO;
+    buses[current_bus].flags = 0;
 
     /* Function pointers to NULL */
-    busses[current_bus].thr_func = NULL;
-    busses[current_bus].thr_timer = NULL;
-    busses[current_bus].sig_reader = NULL;
-    busses[current_bus].init_func = NULL;
-    busses[current_bus].term_func = NULL;
-    busses[current_bus].init_gl_func = NULL;
-    busses[current_bus].init_ga_func = NULL;
-    busses[current_bus].init_fb_func = NULL;
+    buses[current_bus].thr_func = NULL;
+    buses[current_bus].thr_timer = NULL;
+    buses[current_bus].sig_reader = NULL;
+    buses[current_bus].init_func = NULL;
+    buses[current_bus].term_func = NULL;
+    buses[current_bus].init_gl_func = NULL;
+    buses[current_bus].init_ga_func = NULL;
+    buses[current_bus].init_fb_func = NULL;
 
     /* Communication port to default values */
-    busses[current_bus].devicetype = HW_FILENAME;
-    busses[current_bus].fd = -1;
-    busses[current_bus].baudrate = B2400;
+    buses[current_bus].devicetype = HW_FILENAME;
+    buses[current_bus].fd = -1;
+    buses[current_bus].baudrate = B2400;
 
     /* FIXME: this will lead to a memory leak if initialization of
      * (busnumber - 1) failed */
-    busses[current_bus].filename.path = malloc(strlen("/dev/null") + 1);
-    if (busses[current_bus].filename.path == NULL)
+    buses[current_bus].filename.path = malloc(strlen("/dev/null") + 1);
+    if (buses[current_bus].filename.path == NULL)
         return current_bus;
 
-    strcpy(busses[current_bus].filename.path, "/dev/null");
+    strcpy(buses[current_bus].filename.path, "/dev/null");
 
     /* Definition of thread synchronisation  */
-    pthread_mutex_init(&busses[current_bus].transmit_mutex, NULL);
-    pthread_cond_init(&busses[current_bus].transmit_cond, NULL);
+    pthread_mutex_init(&buses[current_bus].transmit_mutex, NULL);
+    pthread_cond_init(&buses[current_bus].transmit_cond, NULL);
 
     xmlNodePtr child = node->children;
     xmlChar *txt = NULL;
@@ -190,14 +190,14 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
 #endif
         }
 
-        /* some attributes are common for all (real) busses */
+        /* some attributes are common for all (real) buses */
         else if (xmlStrcmp(child->name, BAD_CAST "device") == 0) {
             txt2 = xmlGetProp(child, BAD_CAST "type");
             if (txt2 == NULL || xmlStrcmp(txt2, BAD_CAST "filename") == 0) {
-                busses[current_bus].devicetype = HW_FILENAME;
+                buses[current_bus].devicetype = HW_FILENAME;
             }
             else if (xmlStrcmp(txt2, BAD_CAST "network") == 0) {
-                busses[current_bus].devicetype = HW_NETWORK;
+                buses[current_bus].devicetype = HW_NETWORK;
             }
             else {
                 printf("WARNING, \"%s\" (bus %ld) is an unknown "
@@ -206,54 +206,54 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
             free(txt2);
             txt = xmlNodeListGetString(doc, child->children, 1);
             if (txt != NULL) {
-                switch (busses[current_bus].devicetype) {
+                switch (buses[current_bus].devicetype) {
                     case HW_FILENAME:
-                        free(busses[current_bus].filename.path);
-                        busses[current_bus].filename.path =
+                        free(buses[current_bus].filename.path);
+                        buses[current_bus].filename.path =
                             malloc(strlen((char *) txt) + 1);
-                        strcpy(busses[current_bus].filename.path,
+                        strcpy(buses[current_bus].filename.path,
                                (char *) txt);
                         break;
                     case HW_NETWORK:
-                        free(busses[current_bus].filename.path);
-                        busses[current_bus].net.hostname =
+                        free(buses[current_bus].filename.path);
+                        buses[current_bus].net.hostname =
                             malloc(strlen((char *) txt) + 1);
-                        strcpy(busses[current_bus].net.hostname,
+                        strcpy(buses[current_bus].net.hostname,
                                (char *) txt);
                         txt2 = xmlGetProp(child, BAD_CAST "port");
                         if (txt2 != NULL) {
-                            busses[current_bus].net.port =
+                            buses[current_bus].net.port =
                                 atoi((char *) txt2);
                             free(txt2);
                         }
                         else {
-                            busses[current_bus].net.port = 0;
+                            buses[current_bus].net.port = 0;
                         }
                         txt2 = xmlGetProp(child, BAD_CAST "protocol");
                         if (txt2 != NULL) {
                             struct protoent *p;
                             p = getprotobyname((char *) txt2);
-                            busses[current_bus].net.protocol = p->p_proto;
+                            buses[current_bus].net.protocol = p->p_proto;
                             free(txt2);
                         }
                         else {
-                            busses[current_bus].net.protocol = 6;       /* TCP */
+                            buses[current_bus].net.protocol = 6;       /* TCP */
                         }
                         break;
                 }
                 xmlFree(txt);
             }
-            switch (busses[current_bus].devicetype) {
+            switch (buses[current_bus].devicetype) {
                 case HW_FILENAME:
                     DBG(current_bus, DBG_INFO, "** Filename='%s'",
-                        busses[current_bus].filename.path);
+                        buses[current_bus].filename.path);
                     break;
                 case HW_NETWORK:
                     DBG(current_bus, DBG_DEBUG,
                         "** Network Host='%s', Protocol=%d Port=%d",
-                        busses[current_bus].net.hostname,
-                        busses[current_bus].net.protocol,
-                        busses[current_bus].net.port);
+                        buses[current_bus].net.hostname,
+                        buses[current_bus].net.protocol,
+                        buses[current_bus].net.port);
                     break;
             }
         }
@@ -261,7 +261,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
         else if (xmlStrcmp(child->name, BAD_CAST "verbosity") == 0) {
             txt = xmlNodeListGetString(doc, child->children, 1);
             if (txt != NULL) {
-                busses[current_bus].debuglevel = atoi((char *) txt);
+                buses[current_bus].debuglevel = atoi((char *) txt);
                 xmlFree(txt);
             }
         }
@@ -270,7 +270,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
             txt = xmlNodeListGetString(doc, child->children, 1);
             if (txt != NULL) {
                 if (xmlStrcmp(txt, BAD_CAST "yes") == 0)
-                    busses[current_bus].flags |= USE_WATCHDOG;
+                    buses[current_bus].flags |= USE_WATCHDOG;
                 xmlFree(txt);
             }
         }
@@ -280,7 +280,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
             txt = xmlNodeListGetString(doc, child->children, 1);
             if (txt != NULL) {
                 if (xmlStrcmp(txt, BAD_CAST "yes") == 0)
-                    busses[current_bus].flags |= RESTORE_COM_SETTINGS;
+                    buses[current_bus].flags |= RESTORE_COM_SETTINGS;
                 xmlFree(txt);
             }
         }
@@ -289,7 +289,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
             txt = xmlNodeListGetString(doc, child->children, 1);
             if (txt != NULL) {
                 if (xmlStrcmp(txt, BAD_CAST "yes") == 0)
-                    busses[current_bus].flags |= AUTO_POWER_ON;
+                    buses[current_bus].flags |= AUTO_POWER_ON;
                 xmlFree(txt);
             }
         }
@@ -301,25 +301,25 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
 
                 switch (speed) {
                     case 2400:
-                        busses[current_bus].baudrate = B2400;
+                        buses[current_bus].baudrate = B2400;
                         break;
                     case 4800:
-                        busses[current_bus].baudrate = B4800;
+                        buses[current_bus].baudrate = B4800;
                         break;
                     case 9600:
-                        busses[current_bus].baudrate = B9600;
+                        buses[current_bus].baudrate = B9600;
                         break;
                     case 19200:
-                        busses[current_bus].baudrate = B19200;
+                        buses[current_bus].baudrate = B19200;
                         break;
                     case 38400:
-                        busses[current_bus].baudrate = B38400;
+                        buses[current_bus].baudrate = B38400;
                         break;
                     case 57600:
-                        busses[current_bus].baudrate = B57600;
+                        buses[current_bus].baudrate = B57600;
                         break;
                     default:
-                        busses[current_bus].baudrate = B2400;
+                        buses[current_bus].baudrate = B2400;
                         break;
                 }
                 xmlFree(txt);
@@ -361,8 +361,8 @@ int readConfig(char *filename)
     int rc;
 
     // something to initialize
-    memset(busses, 0, sizeof(busses));
-    num_busses = 0;
+    memset(buses, 0, sizeof(buses));
+    num_buses = 0;
 
     /* some defaults */
     DBG(0, DBG_DEBUG, "parsing %s", filename);
@@ -371,7 +371,7 @@ int readConfig(char *filename)
     if (doc != NULL) {
         DBG(0, DBG_DEBUG, "walking %s", filename);
         rc = walk_config_xml(doc);
-        DBG(0, DBG_DEBUG, " done %s; found %d busses", filename, rc);
+        DBG(0, DBG_DEBUG, " done %s; found %d buses", filename, rc);
         xmlFreeDoc(doc);
         /*
          *Free the global variables that may
@@ -397,11 +397,11 @@ void suspendThread(bus_t busnumber)
 {
     DBG(0, DBG_DEBUG, "Thread on bus %d is going to stop.", busnumber);
     /* Lock thread till new data to process arrives */
-    pthread_mutex_lock(&busses[busnumber].transmit_mutex);
-    pthread_cond_wait(&busses[busnumber].transmit_cond, 
-            &busses[busnumber].transmit_mutex);
+    pthread_mutex_lock(&buses[busnumber].transmit_mutex);
+    pthread_cond_wait(&buses[busnumber].transmit_cond, 
+            &buses[busnumber].transmit_mutex);
      /* mutex released.       */
-    pthread_mutex_unlock(&busses[busnumber].transmit_mutex);
+    pthread_mutex_unlock(&buses[busnumber].transmit_mutex);
     DBG(0, DBG_DEBUG, "Thread on bus %d is working again.", busnumber);
 }
 
@@ -413,9 +413,9 @@ void suspendThread(bus_t busnumber)
 void resumeThread(bus_t busnumber)
 {
     /* Let thread process a feedback */
-    pthread_mutex_lock(&busses[busnumber].transmit_mutex);
-    pthread_cond_signal(&busses[busnumber].transmit_cond);
-    pthread_mutex_unlock(&busses[busnumber].transmit_mutex);
+    pthread_mutex_lock(&buses[busnumber].transmit_mutex);
+    pthread_cond_signal(&buses[busnumber].transmit_cond);
+    pthread_mutex_unlock(&buses[busnumber].transmit_mutex);
     DBG(0, DBG_DEBUG, "Thread on bus %d is woken up", busnumber);
 }
 
@@ -438,7 +438,7 @@ void DBG(bus_t busnumber, int dbglevel, const char *fmt, ...)
     va_list parm;
     va_start(parm, fmt);
 
-    if (dbglevel <= busses[busnumber].debuglevel) {
+    if (dbglevel <= buses[busnumber].debuglevel) {
         va_list parm2;
         va_start(parm2, fmt);
         char *msg;

@@ -44,9 +44,9 @@
 
 
 /* Command queues pro Bus */
-static struct _SM queue[ MAX_BUSSES ][ QUEUELEN ];
-static pthread_mutex_t queue_mutex[ MAX_BUSSES ];
-static volatile int out[ MAX_BUSSES ], in[ MAX_BUSSES ];
+static struct _SM queue[MAX_BUSES][QUEUELEN];
+static pthread_mutex_t queue_mutex[MAX_BUSES];
+static volatile int out[MAX_BUSES], in[MAX_BUSES];
 
 /* internal functions */
 static int queue_len( bus_t busnumber );

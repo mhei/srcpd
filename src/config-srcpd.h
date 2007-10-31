@@ -40,32 +40,32 @@ typedef unsigned long int sessionid_t ;
 #include "srcp-ga.h"
 
 
-#define MAX_BUSSES             20         //! max number of integrated busses in srcpd
-#define MAXSRCPLINELEN       1001         //! max number of bytes per line plus 0x00
+#define MAX_BUSES              20    //! max number of integrated buses in srcpd
+#define MAXSRCPLINELEN       1001    //! max number of bytes per line plus 0x00
 
 #define SERVER_SERVER           0
-#define SERVER_DDL              1         // srcpd-bus works as DDL-server
-#define SERVER_M605X            2         // srcpd-bus works as M605X-server
-#define SERVER_IB               3         // srcpd-bus works as IB-server
-#define SERVER_LI100_SERIAL     4         // srcpd-bus works as Lenz-server with serial interface
-#define SERVER_LI100_USB        5         // srcpd-bus works as Lenz-server with usb-interface
-#define SERVER_LOOPBACK         6         // srcpd-bus is dummy driver, no real hardware
-#define SERVER_S88              7         // srcpd-bus works as S88 at parallelport
-#define SERVER_HSI_88           8         // srcpd-bus works as HSI88-server
-#define SERVER_I2C_DEV          9         // srcpd-bus works as I2C-DEV-server
-#define SERVER_ZIMO            10         // srcpd-bus works as Zimo MX1
-#define SERVER_SELECTRIX       11         // srcpd-bus works as Selectrix-server
-#define SERVER_LOCONET         12         // srcpd-bus works as Loconet Gateway
+#define SERVER_DDL              1    // srcpd-bus works as DDL-server
+#define SERVER_M605X            2    // srcpd-bus works as M605X-server
+#define SERVER_IB               3    // srcpd-bus works as IB-server
+#define SERVER_LI100_SERIAL     4    // srcpd-bus works as Lenz-server with serial interface
+#define SERVER_LI100_USB        5    // srcpd-bus works as Lenz-server with usb-interface
+#define SERVER_LOOPBACK         6    // srcpd-bus is dummy driver, no real hardware
+#define SERVER_S88              7    // srcpd-bus works as S88 at parallelport
+#define SERVER_HSI_88           8    // srcpd-bus works as HSI88-server
+#define SERVER_I2C_DEV          9    // srcpd-bus works as I2C-DEV-server
+#define SERVER_ZIMO            10    // srcpd-bus works as Zimo MX1
+#define SERVER_SELECTRIX       11    // srcpd-bus works as Selectrix-server
+#define SERVER_LOCONET         12    // srcpd-bus works as Loconet Gateway
 
 /* generic flags */
-#define USE_WATCHDOG          0x0001      // use watchdog
-#define AUTO_POWER_ON         0x0002      // start Power on startup
-#define RESTORE_COM_SETTINGS  0x0004      // restore com-port settings after close
+#define USE_WATCHDOG          0x0001 // use watchdog
+#define AUTO_POWER_ON         0x0002 // start Power on startup
+#define RESTORE_COM_SETTINGS  0x0004 // restore com-port settings after close
 
 /* driver specific flags */
-#define FB_ORDER_0            0x0200      // feedback port 0 is bit 0
-#define FB_16_PORTS           0x0400      // feedback-modul has 16 ports
-#define FB_4_PORTS            0x0800      // used for Lenz, sening 2x4 ports instead 8 at once
+#define FB_ORDER_0            0x0200 // feedback port 0 is bit 0
+#define FB_16_PORTS           0x0400 // feedback-modul has 16 ports
+#define FB_4_PORTS            0x0800 // used for Lenz, sening 2x4 ports instead 8 at once
 
 /* useful constants */
 #define TRUE (1==1)
@@ -132,8 +132,8 @@ typedef struct _BUS
   int flags;              //! Watchdog flag
 } BUS;
 
-extern struct _BUS busses[];
-extern int num_busses;
+extern struct _BUS buses[];
+extern int num_buses;
 
 int readConfig(char *filename);
 

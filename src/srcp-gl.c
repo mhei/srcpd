@@ -14,13 +14,13 @@
 #define QUEUELEN 50
 
 /* aktueller Stand */
-static struct _GL gl[MAX_BUSSES];
+static struct _GL gl[MAX_BUSES];
 
 /* Kommandoqueues pro Bus */
-static struct _GLSTATE queue[MAX_BUSSES][QUEUELEN];
-static pthread_mutex_t queue_mutex[MAX_BUSSES];
+static struct _GLSTATE queue[MAX_BUSES][QUEUELEN];
+static pthread_mutex_t queue_mutex[MAX_BUSES];
 /* Schreibposition fr die Writer der Queue */
-static int out[MAX_BUSSES], in[MAX_BUSSES];
+static int out[MAX_BUSES], in[MAX_BUSES];
 
 /* internal functions */
 static int queue_len(bus_t busnumber);
@@ -33,14 +33,14 @@ static int queue_isfull(bus_t busnumber);
 int isValidGL(bus_t busnumber, int addr)
 {
     DBG(busnumber, DBG_INFO, "GL VALID: %d %d (from %d to %d)", busnumber,
-        addr, /*num_busses */ 1, gl[busnumber].numberOfGl /*- 1*/ );
+        addr, /*num_buses */ 1, gl[busnumber].numberOfGl /*- 1*/ );
 
     /* in bus 0 GL are not allowed */
-    /* only num_busses are configured */
+    /* only num_buses are configured */
     /* number of GL is set */
     /* address must be greater 0 */
     /* but not more than the maximum address on that bus */
-    if (busnumber > 0 && busnumber <= num_busses &&
+    if (busnumber > 0 && busnumber <= num_buses &&
         gl[busnumber].numberOfGl > 0 && addr > 0 &&
         addr <= gl[busnumber].numberOfGl) {
         return 1 == 1;
@@ -58,7 +58,7 @@ int isValidGL(bus_t busnumber, int addr)
  */
 int getMaxAddrGL(bus_t busnumber)
 {
-    if (busnumber > 0 && busnumber <= num_busses) {
+    if (busnumber > 0 && busnumber <= num_buses) {
         return gl[busnumber].numberOfGl;
     }
     else {
@@ -245,8 +245,8 @@ int initGL(bus_t busnumber, int addr, const char protocol,
         tgl.protocolversion = protoversion;
         tgl.protocol = protocol;
         tgl.id = addr;
-        if (busses[busnumber].init_gl_func)
-            rc = (*busses[busnumber].init_gl_func) (&tgl);
+        if (buses[busnumber].init_gl_func)
+            rc = (*buses[busnumber].init_gl_func) (&tgl);
         if (rc == SRCP_OK) {
             gl[busnumber].glstate[addr] = tgl;
             gl[busnumber].glstate[addr].state = 1;
@@ -425,7 +425,7 @@ void unlock_gl_bysessionid(sessionid_t sessionid)
     int i, j;
     int number;
     DBG(0, DBG_INFO, "unlock GL by session-ID %ld", sessionid);
-    for (i = 0; i <= num_busses; i++) {
+    for (i = 0; i <= num_buses; i++) {
         number = getMaxAddrGL(i);
         for (j = 1; j <= number; j++) {
             if (gl[i].glstate[j].locked_by == sessionid) {
@@ -442,7 +442,7 @@ void unlock_gl_bytime(void)
 {
     int i, j;
     int number;
-    for (i = 0; i <= num_busses; i++) {
+    for (i = 0; i <= num_buses; i++) {
         number = getMaxAddrGL(i);
         for (j = 1; j <= number; j++) {
             if (gl[i].glstate[j].lockduration > 0
@@ -459,7 +459,7 @@ void unlock_gl_bytime(void)
 int startup_GL(void)
 {
     int i;
-    for (i = 0; i < MAX_BUSSES; i++) {
+    for (i = 0; i < MAX_BUSES; i++) {
         in[i] = 0;
         out[i] = 0;
         gl[i].numberOfGl = 0;
@@ -477,7 +477,7 @@ int init_GL(bus_t busnumber, int number)
 {
     int i;
     DBG(busnumber, DBG_WARN, "INIT GL: %d", number);
-    if (busnumber >= MAX_BUSSES)
+    if (busnumber >= MAX_BUSES)
         return 1;
 
     if (number > 0) {

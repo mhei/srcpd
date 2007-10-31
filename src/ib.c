@@ -46,7 +46,7 @@ email                : frank.schmischke@t-online.de
 #include "srcp-session.h"
 #include "ttycygwin.h"
 
-#define __ib ((IB_DATA*)busses[busnumber].driverdata)
+#define __ib ((IB_DATA*)buses[busnumber].driverdata)
 
 static int initLine_IB( bus_t busnumber );
 
@@ -64,24 +64,24 @@ int readConfig_IB( xmlDocPtr doc, xmlNodePtr node, bus_t busnumber )
   DBG( busnumber, DBG_INFO,
        "reading configuration for intellibox at bus %ld", busnumber );
 
-  busses[ busnumber ].driverdata = malloc( sizeof( struct _IB_DATA ) );
+  buses[ busnumber ].driverdata = malloc( sizeof( struct _IB_DATA ) );
 
-    if (busses[busnumber].driverdata == NULL) {
+    if (buses[busnumber].driverdata == NULL) {
         DBG(busnumber, DBG_ERROR,
                 "Memory allocation error in module '%s'.", node->name);
         return 0;
     }
 
-  busses[ busnumber ].type = SERVER_IB;
-  busses[ busnumber ].init_func = &init_bus_IB;
-  busses[ busnumber ].term_func = &term_bus_IB;
-  busses[ busnumber ].thr_func = &thr_sendrec_IB;
-  busses[ busnumber ].init_gl_func = &init_gl_IB;
-  busses[ busnumber ].init_ga_func = &init_ga_IB;
-  busses[ busnumber ].flags |= FB_16_PORTS;
-  busses[ busnumber ].baudrate = B38400;
+  buses[ busnumber ].type = SERVER_IB;
+  buses[ busnumber ].init_func = &init_bus_IB;
+  buses[ busnumber ].term_func = &term_bus_IB;
+  buses[ busnumber ].thr_func = &thr_sendrec_IB;
+  buses[ busnumber ].init_gl_func = &init_gl_IB;
+  buses[ busnumber ].init_ga_func = &init_ga_IB;
+  buses[ busnumber ].flags |= FB_16_PORTS;
+  buses[ busnumber ].baudrate = B38400;
 
-  strcpy( busses[ busnumber ].description,
+  strcpy( buses[ busnumber ].description,
           "GA GL FB SM POWER LOCK DESCRIPTION" );
   __ib->number_fb = 0;        // max. 31 for S88; Loconet is missing this time
   __ib->number_ga = 256;
@@ -214,16 +214,16 @@ int init_bus_IB( bus_t busnumber )
   }
 
   status = 0;
-  //printf("Bus %d with debuglevel %d\n", busnumber, busses[ busnumber ].debuglevel);
+  //printf("Bus %d with debuglevel %d\n", busnumber, buses[ busnumber ].debuglevel);
   DBG( busnumber, DBG_INFO, "Bus %d with debuglevel %d\n", busnumber,
-       busses[ busnumber ].debuglevel );
-  if ( busses[ busnumber ].type != SERVER_IB )
+       buses[ busnumber ].debuglevel );
+  if ( buses[ busnumber ].type != SERVER_IB )
   {
     status = -2;
   }
   else
   {
-    if ( busses[ busnumber ].fd > 0 )
+    if ( buses[ busnumber ].fd > 0 )
       status = -3;        // bus is already in use
   }
 
@@ -232,13 +232,13 @@ int init_bus_IB( bus_t busnumber )
     __ib->working_IB = 0;
   }
 
-  if ( busses[ busnumber ].debuglevel < 7 )
+  if ( buses[ busnumber ].debuglevel < 7 )
   {
     if ( status == 0 )
       status = initLine_IB( busnumber );
   }
   else
-    busses[ busnumber ].fd = 9999;
+    buses[ busnumber ].fd = 9999;
   if ( status == 0 )
     __ib->working_IB = 1;
 
@@ -253,16 +253,16 @@ int init_bus_IB( bus_t busnumber )
 
 int term_bus_IB( bus_t busnumber )
 {
-  if ( busses[ busnumber ].type != SERVER_IB )
+  if ( buses[ busnumber ].type != SERVER_IB )
     return 1;
 
-  if ( busses[ busnumber ].pid == 0 )
+  if ( buses[ busnumber ].pid == 0 )
     return 0;
 
   __ib->working_IB = 0;
 
-  pthread_cancel( busses[ busnumber ].pid );
-  busses[ busnumber ].pid = 0;
+  pthread_cancel( buses[ busnumber ].pid );
+  buses[ busnumber ].pid = 0;
   close_comport( busnumber );
   return 0;
 }
@@ -290,7 +290,7 @@ void *thr_sendrec_IB( void *v )
   status = readByte( busnumber, 1, &rr );
   while ( 1 )
   {
-    if (busses[busnumber].power_changed == 1)
+    if (buses[busnumber].power_changed == 1)
     {
       if ( __ib->emergency_on_ib == 1 )
       {
@@ -310,14 +310,14 @@ void *thr_sendrec_IB( void *v )
       else
       {
         if ( ( __ib->emergency_on_ib == 2 )
-             && ( busses[ busnumber ].power_state == 0 ) )
+             && ( buses[ busnumber ].power_state == 0 ) )
         {
           check_status_IB( busnumber );
           usleep( 50000 );
           continue;
         }
         char msg[ 110 ];
-        byte2send = busses[ busnumber ].power_state ? 0xA7 : 0xA6;
+        byte2send = buses[ busnumber ].power_state ? 0xA7 : 0xA6;
         writeByte( busnumber, byte2send, 250 );
         status = readByte_IB( busnumber, 1, &rr );
         while ( status == -1 )
@@ -327,21 +327,21 @@ void *thr_sendrec_IB( void *v )
         }
         if ( rr == 0x00 )    // war alles OK?
         {
-          busses[ busnumber ].power_changed = 0;
+          buses[ busnumber ].power_changed = 0;
         }
         if ( rr == 0x06 )    // power on not possible - overheating
         {
-          busses[ busnumber ].power_changed = 0;
-          busses[ busnumber ].power_state = 0;
+          buses[ busnumber ].power_changed = 0;
+          buses[ busnumber ].power_state = 0;
         }
-        if ( busses[ busnumber ].power_state == 1 )
+        if ( buses[ busnumber ].power_state == 1 )
           __ib->emergency_on_ib = 0;
         infoPower( busnumber, msg );
         queueInfoMessage( msg );
       }
     }
 
-    if ( busses[ busnumber ].power_state == 0 )
+    if ( buses[ busnumber ].power_state == 0 )
     {
       check_status_IB( busnumber );
       usleep( 50000 );
@@ -353,7 +353,7 @@ void *thr_sendrec_IB( void *v )
     check_status_IB( busnumber );
     send_command_sm_IB( busnumber );
     check_reset_fb( busnumber );
-    busses[ busnumber ].watchdog = 1;
+    buses[ busnumber ].watchdog = 1;
     usleep( 50000 );
   }                           // End WHILE(1)
 }
@@ -1090,7 +1090,7 @@ void check_status_pt_IB( bus_t busnumber )
 static int open_comport( bus_t busnumber, speed_t baud )
 {
   int fd;
-  char *name = busses[ busnumber ].filename.path;
+  char *name = buses[ busnumber ].filename.path;
 #ifdef linux
 
   unsigned char rr;
@@ -1103,7 +1103,7 @@ static int open_comport( bus_t busnumber, speed_t baud )
        name, ( 2400 * ( 1 << ( baud - 11 ) ) ) );
   fd = open( name, O_RDWR );
   DBG( busnumber, DBG_DEBUG, "fd after open(...) = %d", fd );
-  busses[ busnumber ].fd = fd;
+  buses[ busnumber ].fd = fd;
   if ( fd < 0 )
   {
     DBG( busnumber, DBG_ERROR, "Sorry, couldn't open device.\n" );
@@ -1147,7 +1147,7 @@ static int initLine_IB( bus_t busnumber )
   unsigned char byte2send;
   struct termios interface;
 
-  char *name = busses[ busnumber ].filename.path;
+  char *name = buses[ busnumber ].filename.path;
   DBG( busnumber, DBG_INFO, "Beginning to detect IB on serial line: %s\n",
        name );
   //printf("Beginning to detect IB on serial line: %s\n", name);
@@ -1162,7 +1162,7 @@ static int initLine_IB( bus_t busnumber )
     //printf("dammit, couldn't open device.\n");
     return 1;
   }
-  busses[ busnumber ].fd = fd;
+  buses[ busnumber ].fd = fd;
   tcgetattr( fd, &interface );
   interface.c_oflag = ONOCR;
   interface.c_cflag = CS8 | CRTSCTS | CSTOPB | CLOCAL | CREAD | HUPCL;
@@ -1216,17 +1216,17 @@ static int initLine_IB( bus_t busnumber )
     return -1;
   }
 
-  busses[ busnumber ].baudrate = baud;
+  buses[ busnumber ].baudrate = baud;
 
   status = switchOffP50Command( busnumber );
-  status = resetBaudrate( busses[ busnumber ].baudrate, busnumber );
+  status = resetBaudrate( buses[ busnumber ].baudrate, busnumber );
   close_comport( fd );
 
   sleep( 1 );
 
   // now open the comport for the communication
 
-  fd = open_comport( busnumber, busses[ busnumber ].baudrate );
+  fd = open_comport( busnumber, buses[ busnumber ].baudrate );
   DBG( busnumber, DBG_DEBUG, "fd after open_comport = %d", fd );
   if ( fd < 0 )
   {

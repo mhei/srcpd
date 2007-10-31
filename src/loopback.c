@@ -17,25 +17,25 @@
 #include "srcp-info.h"
 #include "srcp-error.h"
 
-#define __loopback ((LOOPBACK_DATA*)busses[busnumber].driverdata)
+#define __loopback ((LOOPBACK_DATA*)buses[busnumber].driverdata)
 
 int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
-    busses[busnumber].driverdata = malloc(sizeof(struct _LOOPBACK_DATA));
+    buses[busnumber].driverdata = malloc(sizeof(struct _LOOPBACK_DATA));
 
-    if (busses[busnumber].driverdata == NULL) {
+    if (buses[busnumber].driverdata == NULL) {
         DBG(busnumber, DBG_ERROR,
                 "Memory allocation error in module '%s'.", node->name);
         return 0;
     }
 
-    busses[busnumber].type = SERVER_LOOPBACK;
-    busses[busnumber].init_func = &init_bus_LOOPBACK;
-    busses[busnumber].term_func = &term_bus_LOOPBACK;
-    busses[busnumber].thr_func = &thr_sendrec_LOOPBACK;
-    busses[busnumber].init_gl_func = &init_gl_LOOPBACK;
-    busses[busnumber].init_ga_func = &init_ga_LOOPBACK;
-    strcpy(busses[busnumber].description,
+    buses[busnumber].type = SERVER_LOOPBACK;
+    buses[busnumber].init_func = &init_bus_LOOPBACK;
+    buses[busnumber].term_func = &term_bus_LOOPBACK;
+    buses[busnumber].thr_func = &thr_sendrec_LOOPBACK;
+    buses[busnumber].init_gl_func = &init_gl_LOOPBACK;
+    buses[busnumber].init_ga_func = &init_ga_LOOPBACK;
+    strcpy(buses[busnumber].description,
            "GA GL FB POWER LOCK DESCRIPTION");
 
     __loopback->number_fb = 0;  /* max 31 */
@@ -170,14 +170,14 @@ int init_ga_LOOPBACK(struct _GASTATE *ga)
 int init_bus_LOOPBACK(bus_t i)
 {
     DBG(i, DBG_INFO, "loopback init: bus #%ld, debug %d", i,
-        busses[i].debuglevel);
-    if (busses[i].debuglevel == 0) {
+        buses[i].debuglevel);
+    if (buses[i].debuglevel == 0) {
         DBG(i, DBG_INFO, "loopback bus #%ld open device %s (not really!)",
-            i, busses[i].filename.path);
-        busses[i].fd = init_lineLoopback(i);
+            i, buses[i].filename.path);
+        buses[i].fd = init_lineLoopback(i);
     }
     else {
-        busses[i].fd = -1;
+        buses[i].fd = -1;
     }
     DBG(i, DBG_INFO, "loopback init done");
     return 0;
@@ -191,20 +191,20 @@ void *thr_sendrec_LOOPBACK(void *v)
     bus_t bus = (bus_t) v;
 
     DBG(bus, DBG_INFO, "loopback started, bus #%d, %s", bus,
-        busses[bus].filename.path);
+        buses[bus].filename.path);
 
-    busses[bus].watchdog = 1;
+    buses[bus].watchdog = 1;
 
     while (1) {
-        if (busses[bus].power_changed == 1) {
-            busses[bus].power_changed = 0;
+        if (buses[bus].power_changed == 1) {
+            buses[bus].power_changed = 0;
             /*
             char msg[110];
             infoPower(bus, msg);
             queueInfoMessage(msg);
             */
         }
-        if (busses[bus].power_state == 0) {
+        if (buses[bus].power_state == 0) {
             usleep(1000);
             continue;
         }
@@ -220,7 +220,7 @@ void *thr_sendrec_LOOPBACK(void *v)
             }
             setGL(bus, addr, gltmp);
         }
-        busses[bus].watchdog = 4;
+        buses[bus].watchdog = 4;
         if (!queue_GA_isempty(bus)) {
             unqueueNextGA(bus, &gatmp);
             addr = gatmp.id;
@@ -228,7 +228,7 @@ void *thr_sendrec_LOOPBACK(void *v)
                 gettimeofday(&gatmp.tv[gatmp.port], NULL);
             }
             setGA(bus, addr, gatmp);
-            busses[bus].watchdog = 6;
+            buses[bus].watchdog = 6;
         }
         usleep(1000);
     }

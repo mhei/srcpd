@@ -15,15 +15,15 @@
 
 /* one array for all buses             */
 /* not visible outside of this module   */
-static struct _FB fb[MAX_BUSSES];
-static int min_time[MAX_BUSSES];
+static struct _FB fb[MAX_BUSES];
+static int min_time[MAX_BUSES];
 
 #define QUEUELENGTH_FB 1000
 
 /* reset fb queue */
-static struct _RESET_FB reset_queue[MAX_BUSSES][QUEUELENGTH_FB];
-static pthread_mutex_t queue_mutex_fb, queue_mutex_reset[MAX_BUSSES];
-static int out[MAX_BUSSES], in[MAX_BUSSES];
+static struct _RESET_FB reset_queue[MAX_BUSES][QUEUELENGTH_FB];
+static pthread_mutex_t queue_mutex_fb, queue_mutex_reset[MAX_BUSES];
+static int out[MAX_BUSES], in[MAX_BUSES];
 
 
 /* internal functions */
@@ -178,10 +178,10 @@ int setFBmodul(bus_t bus, int modul, int values)
     int rc;
     rc = SRCP_OK;
 
-    ports = ((busses[bus].flags & FB_16_PORTS) == FB_16_PORTS) ? 16 : 8;
-    if (busses[bus].flags & FB_4_PORTS)
+    ports = ((buses[bus].flags & FB_16_PORTS) == FB_16_PORTS) ? 16 : 8;
+    if (buses[bus].flags & FB_4_PORTS)
         ports = 4;
-    if ((busses[bus].flags & FB_ORDER_0) == FB_ORDER_0) {
+    if ((buses[bus].flags & FB_ORDER_0) == FB_ORDER_0) {
         dir = 0;
         mask = 1;
     }
@@ -229,7 +229,7 @@ int describeFB(bus_t bus, int addr, char *reply)
 int startup_FB()
 {
     int i;
-    for (i = 0; i < MAX_BUSSES; i++) {
+    for (i = 0; i < MAX_BUSES; i++) {
         fb[i].numberOfFb = 0;
         fb[i].fbstate = NULL;
         out[i] = 0;
@@ -241,7 +241,7 @@ int startup_FB()
 
 void set_min_time(bus_t busnumber, int mt)
 {
-    if ((busnumber >= 0) && (busnumber < MAX_BUSSES))
+    if ((busnumber >= 0) && (busnumber < MAX_BUSES))
         min_time[busnumber] = mt * 1000;
 }
 
@@ -250,7 +250,7 @@ int init_FB(bus_t bus, int number)
     struct timeval akt_time;
     int i;
 
-    if (bus >= MAX_BUSSES)
+    if (bus >= MAX_BUSES)
         return 1;
 
     if (number > 0) {
@@ -275,8 +275,8 @@ int initFB(bus_t busnumber, int adres, const char protocol, int index)
     int number_fb = get_number_fb(busnumber);
     DBG(busnumber, DBG_DEBUG, "init FB: %d %c %d", adres, protocol, index);
     if ((adres > 0) && (adres <= number_fb)) {
-        if (busses[busnumber].init_fb_func != NULL)
-            rc = (*busses[busnumber].init_fb_func) (busnumber, adres,
+        if (buses[busnumber].init_fb_func != NULL)
+            rc = (*buses[busnumber].init_fb_func) (busnumber, adres,
                                                     protocol, index);
     }
     return rc;

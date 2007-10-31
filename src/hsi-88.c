@@ -22,7 +22,7 @@
 #include "io.h"
 #include "srcp-fb.h"
 
-#define __hsi ((HSI_88_DATA*)busses[busnumber].driverdata)
+#define __hsi ((HSI_88_DATA*)buses[busnumber].driverdata)
 
 static int working_HSI88;
 
@@ -30,21 +30,21 @@ int readConfig_HSI_88( xmlDocPtr doc, xmlNodePtr node, bus_t busnumber )
 {
   int number;
 
-  busses[ busnumber ].driverdata = malloc( sizeof( struct _HSI_88_DATA ) );
+  buses[ busnumber ].driverdata = malloc( sizeof( struct _HSI_88_DATA ) );
 
-    if (busses[busnumber].driverdata == NULL) {
+    if (buses[busnumber].driverdata == NULL) {
         DBG(busnumber, DBG_ERROR,
                 "Memory allocation error in module '%s'.", node->name);
         return 0;
     }
 
-  busses[ busnumber ].type = SERVER_HSI_88;
-  busses[ busnumber ].init_func = &init_bus_HSI_88;
-  busses[ busnumber ].term_func = &term_bus_HSI_88;
-  busses[ busnumber ].thr_func = &thr_sendrec_HSI_88;
-  busses[ busnumber ].flags |= FB_ORDER_0;
-  busses[ busnumber ].flags |= FB_16_PORTS;
-  strcpy( busses[ busnumber ].description, "FB POWER" );
+  buses[ busnumber ].type = SERVER_HSI_88;
+  buses[ busnumber ].init_func = &init_bus_HSI_88;
+  buses[ busnumber ].term_func = &term_bus_HSI_88;
+  buses[ busnumber ].thr_func = &thr_sendrec_HSI_88;
+  buses[ busnumber ].flags |= FB_ORDER_0;
+  buses[ busnumber ].flags |= FB_16_PORTS;
+  strcpy( buses[ busnumber ].description, "FB POWER" );
   __hsi->refresh = 10000;
   __hsi->number_fb[ 0 ] = 0;
   __hsi->number_fb[ 1 ] = 0;
@@ -263,14 +263,14 @@ int init_bus_HSI_88(bus_t busnumber )
 
   status = 0;
   printf( "Bus %ld with debuglevel %d\n", busnumber,
-          busses[ busnumber ].debuglevel );
-  if ( busses[ busnumber ].type != SERVER_HSI_88 )
+          buses[ busnumber ].debuglevel );
+  if ( buses[ busnumber ].type != SERVER_HSI_88 )
   {
     status = -2;
   }
   else
   {
-    if ( busses[ busnumber ].fd > 0 )
+    if ( buses[ busnumber ].fd > 0 )
       status = -3;        // bus is already in use
   }
 
@@ -288,14 +288,14 @@ int init_bus_HSI_88(bus_t busnumber )
     }
   }
 
-  if ( busses[ busnumber ].debuglevel < 7 )
+  if ( buses[ busnumber ].debuglevel < 7 )
   {
     if ( status == 0 )
     {
-      fd = open_lineHSI88( busses[ busnumber ].filename.path );
+      fd = open_lineHSI88( buses[ busnumber ].filename.path );
       if ( fd > 0 )
       {
-        busses[ busnumber ].fd = fd;
+        buses[ busnumber ].fd = fd;
         status = init_lineHSI88( busnumber, __hsi->number_fb[ 0 ],
                                  __hsi->number_fb[ 1 ],
                                  __hsi->number_fb[ 2 ] );
@@ -305,7 +305,7 @@ int init_bus_HSI_88(bus_t busnumber )
     }
   }
   else
-    busses[ busnumber ].fd = 9999;
+    buses[ busnumber ].fd = 9999;
   if ( status == 0 )
     working_HSI88 = 1;
 
@@ -315,16 +315,16 @@ int init_bus_HSI_88(bus_t busnumber )
 
 int term_bus_HSI_88(bus_t busnumber )
 {
-  if ( busses[ busnumber ].type != SERVER_HSI_88 )
+  if ( buses[ busnumber ].type != SERVER_HSI_88 )
     return 1;
 
-  if ( busses[ busnumber ].pid == 0 )
+  if ( buses[ busnumber ].pid == 0 )
     return 0;
 
   working_HSI88 = 0;
 
-  pthread_cancel( busses[ busnumber ].pid );
-  busses[ busnumber ].pid = 0;
+  pthread_cancel( buses[ busnumber ].pid );
+  buses[ busnumber ].pid = 0;
   close_comport( busnumber );
   return 0;
 }
@@ -348,7 +348,7 @@ void *thr_sendrec_HSI_88( void *v )
   fb_zaehler2 = 1;
   i = 0;
   temp = 1;
-  if ( busses[ busnumber ].debuglevel <= DBG_DEBUG )
+  if ( buses[ busnumber ].debuglevel <= DBG_DEBUG )
   {
     status = 1;
     while ( status )
@@ -400,7 +400,7 @@ void *thr_sendrec_HSI_88( void *v )
 
   while ( 1 )
   {
-    if ( busses[ busnumber ].debuglevel <= DBG_DEBUG )
+    if ( buses[ busnumber ].debuglevel <= DBG_DEBUG )
     {
       rr = 0;
       while ( rr != 'i' )

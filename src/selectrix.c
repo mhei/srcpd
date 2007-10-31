@@ -41,7 +41,7 @@
 #include "ttycygwin.h"
 
 // Macro definition
-#define __selectrix ((SELECTRIX_DATA *)busses[busnumber].driverdata)
+#define __selectrix ((SELECTRIX_DATA *)buses[busnumber].driverdata)
 #define __checkSXflag(flag) ((__selectrix->SXflags & (flag)) == (flag))
 
 /*******************************************************************
@@ -58,8 +58,8 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                 "Entering selectrix specific data for bus: %d",
                 busnumber);
 
-        busses[busnumber].driverdata = malloc(sizeof(struct _SELECTRIX_DATA));
-        if (busses[busnumber].driverdata == NULL) {
+        buses[busnumber].driverdata = malloc(sizeof(struct _SELECTRIX_DATA));
+        if (buses[busnumber].driverdata == NULL) {
                 DBG(busnumber, DBG_ERROR,
                         "Memory allocation error in module '%s'.",
                         node->name);
@@ -67,16 +67,16 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         }
 
         // Selectrix specific data to the global data
-        busses[busnumber].type = SERVER_SELECTRIX;
-        busses[busnumber].baudrate = B9600;
-        busses[busnumber].init_func = &init_bus_Selectrix;
-        busses[busnumber].term_func = &term_bus_Selectrix;
-        busses[busnumber].thr_func = &thr_commandSelectrix;
-        busses[busnumber].thr_timer = &thr_feedbackSelectrix;
-        busses[busnumber].sig_reader = &sig_processSelectrix;
-        busses[busnumber].init_gl_func = &init_gl_Selectrix;
-        busses[busnumber].init_ga_func = &init_ga_Selectrix;
-        busses[busnumber].init_fb_func = &init_fb_Selectrix;
+        buses[busnumber].type = SERVER_SELECTRIX;
+        buses[busnumber].baudrate = B9600;
+        buses[busnumber].init_func = &init_bus_Selectrix;
+        buses[busnumber].term_func = &term_bus_Selectrix;
+        buses[busnumber].thr_func = &thr_commandSelectrix;
+        buses[busnumber].thr_timer = &thr_feedbackSelectrix;
+        buses[busnumber].sig_reader = &sig_processSelectrix;
+        buses[busnumber].init_gl_func = &init_gl_Selectrix;
+        buses[busnumber].init_ga_func = &init_ga_Selectrix;
+        buses[busnumber].init_fb_func = &init_fb_Selectrix;
         // Initialise Selectrix part
         __selectrix->number_gl = 0;
         __selectrix->number_ga = 0;
@@ -89,7 +89,7 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                 __selectrix->bus_data[i] = 0;         // Set all outputs to 0
                 __selectrix->fb_adresses[i] = 255;    // Set invalid addresses
         }
-        strcpy(busses[busnumber].description,
+        strcpy(buses[busnumber].description,
                 "GA GL FB POWER LOCK DESCRIPTION");
 
         xmlNodePtr child = node->children;
@@ -123,7 +123,7 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                                         __selectrix->SXflags |= CC2000_MODE;
                                         // Last 8 addresses for the CC2000
                                         //__selectrix->max_address = SXcc2000;
-                                        strcpy(busses[busnumber].description,
+                                        strcpy(buses[busnumber].description,
                                                "GA GL FB SM POWER LOCK DESCRIPTION");
                                 }
                         }
@@ -134,7 +134,7 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                                         // Select  Selectrix mode
                                         __selectrix->SXflags |= Rautenhaus_MODE;
                                 } else if (xmlStrcmp(txt, BAD_CAST "RTHS_1") == 0) {
-                                        // Select  Selectrix mode and two busses
+                                        // Select  Selectrix mode and two buses
                                         __selectrix->SXflags |= Rautenhaus_MODE;
                                         __selectrix->SXflags |= Rautenhaus_DBL;
                                 } else if (xmlStrcmp(txt, BAD_CAST "RTHS_2") == 0) {
@@ -143,7 +143,7 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                                         __selectrix->SXflags |= Rautenhaus_FDBCK;
                                         __selectrix->SXflags |= Rautenhaus_ADR;
                                 } else if (xmlStrcmp(txt, BAD_CAST "RTHS_3") == 0) {
-                                        // Select Rautenhaus mode and two busses
+                                        // Select Rautenhaus mode and two buses
                                         __selectrix->SXflags |= Rautenhaus_MODE;
                                         __selectrix->SXflags |= Rautenhaus_DBL;
                                         __selectrix->SXflags |= Rautenhaus_FDBCK;
@@ -251,16 +251,16 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 int init_bus_Selectrix(bus_t busnumber)
 {
         DBG(busnumber, DBG_INFO, "Selectrix init: debuglevel %d",
-                busses[busnumber].debuglevel);
-        if (busses[busnumber].debuglevel <= DBG_DEBUG) {
+                buses[busnumber].debuglevel);
+        if (buses[busnumber].debuglevel <= DBG_DEBUG) {
                 open_port(busnumber);
         } else {
-                busses[busnumber].fd = -1;
+                buses[busnumber].fd = -1;
         }
         DBG(busnumber, DBG_INFO, "Selectrix init done, fd=%d",
-                busses[busnumber].fd);
+                buses[busnumber].fd);
         DBG(busnumber, DBG_INFO, "Selectrix description: %s",
-                busses[busnumber].description);
+                buses[busnumber].description);
         DBG(busnumber, DBG_INFO, "Selectrix flags: %04X (hex)",
                 __selectrix->SXflags);
         return 0;
@@ -269,11 +269,11 @@ int init_bus_Selectrix(bus_t busnumber)
 // Close serial port
 int term_bus_Selectrix(bus_t busnumber)
 {
-        if (busses[busnumber].fd != -1) {
+        if (buses[busnumber].fd != -1) {
                 close_port(busnumber);
         }
         DBG(busnumber, DBG_INFO, "Selectrix bus term done, "
-        "fd=%d", busses[busnumber].fd);
+        "fd=%d", buses[busnumber].fd);
         return 0;
 }
 
@@ -404,7 +404,7 @@ int readSXbus(bus_t busnumber)
 {
         unsigned int rr;
 
-        if (busses[busnumber].fd != -1 ) {
+        if (buses[busnumber].fd != -1 ) {
                 // Wait until a character arrives
                 rr = read_port(busnumber);
                 DBG(busnumber, DBG_DEBUG,
@@ -419,7 +419,7 @@ int readSXbus(bus_t busnumber)
 
 void commandreadSXbus(bus_t busnumber, int SXadres)
 {
-        if (busses[busnumber].fd != -1 ) {
+        if (buses[busnumber].fd != -1 ) {
                 // Select Rautenhaus bus
                 selRautenhaus(busnumber, SXadres);
                 SXadres &= 0x7F;
@@ -438,7 +438,7 @@ void commandreadSXbus(bus_t busnumber, int SXadres)
 /* Write data to the SX-bus (8bits) */
 void writeSXbus(bus_t busnumber, int SXadres, int SXdata)
 {
-        if (busses[busnumber].fd != -1) {
+        if (buses[busnumber].fd != -1) {
                 // Select Rautenhaus bus
                 selRautenhaus(busnumber, SXadres);
                 SXadres &= 0x7F;
@@ -464,18 +464,18 @@ void *thr_commandSelectrix(void *v)
 
         bus_t busnumber = (bus_t) v;
         state = 0;
-        busses[busnumber].watchdog = 0;
+        buses[busnumber].watchdog = 0;
         DBG(busnumber, DBG_INFO,
                 "Selectrix on bus #%ld command thread started.",
                 busnumber);
         while (1) {
-                busses[busnumber].watchdog = 1;
+                buses[busnumber].watchdog = 1;
                 // Start/Stop
-                if (busses[busnumber].power_changed != 0) {
+                if (buses[busnumber].power_changed != 0) {
                         state = 1;
                         char msg[1000];
-                        busses[busnumber].watchdog = 2;
-                        if ((busses[busnumber].power_state)) {
+                        buses[busnumber].watchdog = 2;
+                        if ((buses[busnumber].power_state)) {
                                 // Turn power on
                                 writeSXbus(busnumber, SXcontrol, 0x80);
                                 confRautenhaus(busnumber);
@@ -488,20 +488,20 @@ void *thr_commandSelectrix(void *v)
                         DBG(busnumber, DBG_DEBUG,
                                 "Selectrix on bus %ld had a power change.",
                                 busnumber);
-                        busses[busnumber].power_changed = 0;
+                        buses[busnumber].power_changed = 0;
                 }
-                busses[busnumber].watchdog = 3;
+                buses[busnumber].watchdog = 3;
                 // Do nothing, if power off (maybe programming)
-                if (busses[busnumber].power_state == 0) {
-                        busses[busnumber].watchdog = 4;
+                if (buses[busnumber].power_state == 0) {
+                        buses[busnumber].watchdog = 4;
                         usleep(100000);
                         continue;
                 }
                 // Loco decoders
-                busses[busnumber].watchdog = 5;
+                buses[busnumber].watchdog = 5;
                 if (!queue_GL_isempty(busnumber)) {
                         state = 2;
-                        busses[busnumber].watchdog = 6;
+                        buses[busnumber].watchdog = 6;
                         unqueueNextGL(busnumber, &gltmp);
                         // Address of the engine
                         addr = gltmp.id;
@@ -552,11 +552,11 @@ void *thr_commandSelectrix(void *v)
                                         busnumber, addr);
                         }
                 }
-                busses[busnumber].watchdog = 7;
+                buses[busnumber].watchdog = 7;
                 // drives solenoids and signals
                 if (!queue_GA_isempty(busnumber)) {
                         state = 3;
-                        busses[busnumber].watchdog = 8;
+                        buses[busnumber].watchdog = 8;
                         unqueueNextGA(busnumber, &gatmp);
                         addr = gatmp.id;
                         if (__selectrix->max_address > addr) {
@@ -648,12 +648,12 @@ void *thr_commandSelectrix(void *v)
                                         busnumber, addr);
                         }
                 }
-                busses[busnumber].watchdog = 9;
+                buses[busnumber].watchdog = 9;
                 // Feed back contacts
                 if ((__selectrix->number_fb > 0) &&
                      (__selectrix->startFB == 1)) {
                         state = 4;
-                        busses[busnumber].watchdog = 10;
+                        buses[busnumber].watchdog = 10;
                         // Fetch the module address
                         addr = __selectrix->fb_adresses[__selectrix->currentFB];
                         if (__selectrix->max_address > addr) {
