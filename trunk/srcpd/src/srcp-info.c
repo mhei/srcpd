@@ -113,7 +113,7 @@ int doInfoClient(int Socket, sessionid_t sessionid)
     bus_t busnumber;
     current = in;
     DBG(0, DBG_DEBUG, "new Info-client requested %ld", sessionid);
-    for (busnumber = 0; busnumber <= num_busses; busnumber++) {
+    for (busnumber = 0; busnumber <= num_buses; busnumber++) {
         DBG(busnumber, DBG_DEBUG,
             "send all data for bus number %d to new client", busnumber);
         // first some global bus data

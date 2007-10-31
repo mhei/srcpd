@@ -23,11 +23,11 @@
 #include "srcp-error.h"
 #include "srcp-info.h"
 
-static pthread_mutex_t cb_mutex[MAX_BUSSES];
-static pthread_cond_t cb_cond[MAX_BUSSES];
-static int cb_data[MAX_BUSSES];
+static pthread_mutex_t cb_mutex[MAX_BUSES];
+static pthread_cond_t cb_cond[MAX_BUSES];
+static int cb_data[MAX_BUSES];
 
-static sessionid_t SessionID = MAX_BUSSES + 1;
+static sessionid_t SessionID = MAX_BUSES + 1;
 static pthread_mutex_t SessionID_mut = PTHREAD_MUTEX_INITIALIZER;
 
 sessionid_t session_getnextID()
@@ -46,7 +46,7 @@ sessionid_t session_getnextID()
 int startup_SESSION(void)
 {
     int i;
-    for (i = 0; i < MAX_BUSSES; i++) {
+    for (i = 0; i < MAX_BUSES; i++) {
         pthread_mutex_init(&cb_mutex[i], NULL);
         pthread_cond_init(&cb_cond[i], NULL);
     }

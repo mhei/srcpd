@@ -793,7 +793,7 @@ int doCmdClient(int Socket, sessionid_t sessionid)
         bus = atoi(cbus);
         reply[0] = 0x00;
         if (nelem >= 3) {
-            if ((bus >= 0) && (bus <= num_busses)) {
+            if ((bus >= 0) && (bus <= num_buses)) {
                 rc = SRCP_UNKNOWNCOMMAND;
                 if (strncasecmp(command, "SET", 3) == 0) {
                     rc = handleSET(sessionid, bus, devicegroup, parameter,

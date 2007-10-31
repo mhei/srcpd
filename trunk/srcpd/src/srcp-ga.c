@@ -31,12 +31,12 @@
 #define QUEUELEN 50
 
 /* aktueller Stand */
-static volatile struct _GA ga[MAX_BUSSES];
+static volatile struct _GA ga[MAX_BUSES];
 
 /* Kommandoqueues pro Bus */
-static struct _GASTATE queue[MAX_BUSSES][QUEUELEN];
-static pthread_mutex_t queue_mutex[MAX_BUSSES];
-static int out[MAX_BUSSES], in[MAX_BUSSES];
+static struct _GASTATE queue[MAX_BUSES][QUEUELEN];
+static pthread_mutex_t queue_mutex[MAX_BUSES];
+static int out[MAX_BUSES], in[MAX_BUSES];
 
 /* internal functions */
 static int queue_len(bus_t busnumber);
@@ -217,8 +217,8 @@ int initGA(bus_t busnumber, int addr, const char protocol)
         ga[busnumber].gastate[addr].tv[1].tv_sec = 0;
         ga[busnumber].gastate[addr].tv[1].tv_usec = 0;
 
-        if (busses[busnumber].init_ga_func != NULL)
-            rc = (*busses[busnumber].init_ga_func) (&ga[busnumber].
+        if (buses[busnumber].init_ga_func != NULL)
+            rc = (*buses[busnumber].init_ga_func) (&ga[busnumber].
                                                     gastate[addr]);
         if (rc == SRCP_OK) {
             ga[busnumber].gastate[addr].state = 1;
@@ -293,7 +293,7 @@ void unlock_ga_bysessionid(sessionid_t sessionid)
     int i, j;
     int number;
     DBG(0, DBG_DEBUG, "unlock GA by session-ID %ld", sessionid);
-    for (i = 0; i < num_busses; i++) {
+    for (i = 0; i < num_buses; i++) {
         number = get_number_ga(i);
         for (j = 1; j <= number; j++) {
             if (ga[i].gastate[j].locked_by == sessionid) {
@@ -308,7 +308,7 @@ void unlock_ga_bytime(void)
 {
     int i, j;
     int number;
-    for (i = 0; i < num_busses; i++) {
+    for (i = 0; i < num_buses; i++) {
         number = get_number_ga(i);
         for (j = 1; j <= number; j++) {
             if (ga[i].gastate[j].lockduration-- == 1) {
@@ -323,7 +323,7 @@ void unlock_ga_bytime(void)
 int startup_GA(void)
 {
     int i;
-    for (i = 0; i < MAX_BUSSES; i++) {
+    for (i = 0; i < MAX_BUSES; i++) {
         in[i] = 0;
         out[i] = 0;
         ga[i].numberOfGa = 0;
@@ -337,7 +337,7 @@ int init_GA(bus_t busnumber, int number)
 {
     int i;
 
-    if (busnumber >= MAX_BUSSES)
+    if (busnumber >= MAX_BUSES)
         return 1;
 
     if (number > 0) {

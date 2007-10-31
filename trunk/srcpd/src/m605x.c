@@ -31,7 +31,7 @@
 #include "srcp-error.h"
 #include "ttycygwin.h"
 
-#define __m6051 ((M6051_DATA*)busses[busnumber].driverdata)
+#define __m6051 ((M6051_DATA*)buses[busnumber].driverdata)
 
 /**
  * readconfig_m605x: Liest den Teilbaum der xml Configuration und
@@ -41,28 +41,28 @@
 
 int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
-    busses[busnumber].driverdata = malloc(sizeof(struct _M6051_DATA));
+    buses[busnumber].driverdata = malloc(sizeof(struct _M6051_DATA));
 
-    if (busses[busnumber].driverdata == NULL) {
+    if (buses[busnumber].driverdata == NULL) {
         DBG(busnumber, DBG_ERROR,
                 "Memory allocation error in module '%s'.", node->name);
         return 0;
     }
 
-    busses[busnumber].type = SERVER_M605X;
-    busses[busnumber].init_func = &init_bus_M6051;
-    busses[busnumber].term_func = &term_bus_M6051;
-    busses[busnumber].thr_func = &thr_sendrec_M6051;
-    busses[busnumber].init_gl_func = &init_gl_M6051;
-    busses[busnumber].init_ga_func = &init_ga_M6051;
-    busses[busnumber].flags |= FB_16_PORTS;
+    buses[busnumber].type = SERVER_M605X;
+    buses[busnumber].init_func = &init_bus_M6051;
+    buses[busnumber].term_func = &term_bus_M6051;
+    buses[busnumber].thr_func = &thr_sendrec_M6051;
+    buses[busnumber].init_gl_func = &init_gl_M6051;
+    buses[busnumber].init_ga_func = &init_ga_M6051;
+    buses[busnumber].flags |= FB_16_PORTS;
     __m6051->number_fb = 0;     /* max 31 */
     __m6051->number_ga = 256;
     __m6051->number_gl = 80;
     __m6051->ga_min_active_time = 75;
     __m6051->pause_between_cmd = 200;
     __m6051->pause_between_bytes = 2;
-    strcpy(busses[busnumber].description,
+    strcpy(buses[busnumber].description,
            "GA GL FB POWER LOCK DESCRIPTION");
 
     xmlNodePtr child = node->children;
@@ -174,12 +174,12 @@ static int init_lineM6051(bus_t bus)
     int FD;
     struct termios interface;
 
-    if (busses[bus].debuglevel > 0) {
-        DBG(bus, DBG_INFO, "Opening 605x: %s", busses[bus].filename.path);
+    if (buses[bus].debuglevel > 0) {
+        DBG(bus, DBG_INFO, "Opening 605x: %s", buses[bus].filename.path);
     }
-    if ((FD = open(busses[bus].filename.path, O_RDWR | O_NONBLOCK)) == -1) {
+    if ((FD = open(buses[bus].filename.path, O_RDWR | O_NONBLOCK)) == -1) {
         DBG(bus, DBG_FATAL, "Couldn't open device %s.",
-            busses[bus].filename.path);
+            buses[bus].filename.path);
         return -1;
     }
     tcgetattr(FD, &interface);
@@ -207,23 +207,23 @@ static int init_lineM6051(bus_t bus)
 int init_bus_M6051(bus_t bus)
 {
 
-    DBG(bus, DBG_INFO, "M605x  init: debug %d", busses[bus].debuglevel);
-    if (busses[bus].debuglevel <= DBG_DEBUG) {
-        busses[bus].fd = init_lineM6051(bus);
+    DBG(bus, DBG_INFO, "M605x  init: debug %d", buses[bus].debuglevel);
+    if (buses[bus].debuglevel <= DBG_DEBUG) {
+        buses[bus].fd = init_lineM6051(bus);
     }
     else {
-        busses[bus].fd = -1;
+        buses[bus].fd = -1;
     }
-    DBG(bus, DBG_INFO, "M605x init done, fd=%d", busses[bus].fd);
-    DBG(bus, DBG_INFO, "M605x: %s", busses[bus].description);
+    DBG(bus, DBG_INFO, "M605x init done, fd=%d", buses[bus].fd);
+    DBG(bus, DBG_INFO, "M605x: %s", buses[bus].description);
     DBG(bus, DBG_INFO, "M605x flags: %d",
-        busses[bus].flags & AUTO_POWER_ON);
+        buses[bus].flags & AUTO_POWER_ON);
     return 0;
 }
 
 int term_bus_M6051(bus_t bus)
 {
-    DBG(bus, DBG_INFO, "M605x bus term done, fd=%d", busses[bus].fd);
+    DBG(bus, DBG_INFO, "M605x bus term done, fd=%d", buses[bus].fd);
     return 0;
 }
 
@@ -267,54 +267,54 @@ void *thr_sendrec_M6051(void *v)
     struct _GASTATE gatmp;
     bus_t bus = (bus_t) v;
     int ga_min_active_time =
-        ((M6051_DATA *) busses[bus].driverdata)->ga_min_active_time;
+        ((M6051_DATA *) buses[bus].driverdata)->ga_min_active_time;
     int pause_between_cmd =
-        ((M6051_DATA *) busses[bus].driverdata)->pause_between_cmd;
+        ((M6051_DATA *) buses[bus].driverdata)->pause_between_cmd;
     int pause_between_bytes =
-        ((M6051_DATA *) busses[bus].driverdata)->pause_between_bytes;
-    number_fb = ((M6051_DATA *) busses[bus].driverdata)->number_fb;
+        ((M6051_DATA *) buses[bus].driverdata)->pause_between_bytes;
+    number_fb = ((M6051_DATA *) buses[bus].driverdata)->number_fb;
 
     akt_S88 = 1;
-    busses[bus].watchdog = 1;
+    buses[bus].watchdog = 1;
 
     DBG(bus, DBG_INFO, "M605x on bus %ld thread started, fd=%d", bus,
-        busses[bus].fd);
-    ioctl(busses[bus].fd, FIONREAD, &temp);
-    if (((M6051_DATA *) busses[bus].driverdata)->cmd32_pending) {
+        buses[bus].fd);
+    ioctl(buses[bus].fd, FIONREAD, &temp);
+    if (((M6051_DATA *) buses[bus].driverdata)->cmd32_pending) {
         SendByte = 32;
         writeByte(bus, SendByte, pause_between_cmd);
-        ((M6051_DATA *) busses[bus].driverdata)->cmd32_pending = 0;
+        ((M6051_DATA *) buses[bus].driverdata)->cmd32_pending = 0;
     }
     while (temp > 0) {
         readByte(bus, 0, &rr);
-        ioctl(busses[bus].fd, FIONREAD, &temp);
+        ioctl(buses[bus].fd, FIONREAD, &temp);
         DBG(bus, DBG_INFO, "Ignoring unread byte: %d ", rr);
     }
 
     while (1) {
-        busses[bus].watchdog = 2;
+        buses[bus].watchdog = 2;
 
         /* Start/Stop */
-        if (busses[bus].power_changed == 1) {
+        if (buses[bus].power_changed == 1) {
             char msg[1000];
-            SendByte = (busses[bus].power_state) ? 96 : 97;
+            SendByte = (buses[bus].power_state) ? 96 : 97;
             /* zweimal, wir sind paranoid */
             writeByte(bus, SendByte, pause_between_cmd);
             writeByte(bus, SendByte, pause_between_cmd);
-            busses[bus].power_changed = 0;
+            buses[bus].power_changed = 0;
             infoPower(bus, msg);
             queueInfoMessage(msg);
         }
 
         /* do nothing, if power off */
-        if (busses[bus].power_state == 0) {
+        if (buses[bus].power_state == 0) {
             usleep(1000);
             continue;
         }
-        busses[bus].watchdog = 3;
+        buses[bus].watchdog = 3;
 
         /* locomotive decoder */
-        if (!((M6051_DATA *) busses[bus].driverdata)->cmd32_pending) {
+        if (!((M6051_DATA *) buses[bus].driverdata)->cmd32_pending) {
             if (!queue_GL_isempty(bus)) {
                 unqueueNextGL(bus, &gltmp);
                 addr = gltmp.id;
@@ -341,7 +341,7 @@ void *thr_sendrec_M6051(void *v)
                 SendByte = addr;
                 writeByte(bus, SendByte, pause_between_cmd);
                 /* Erweiterte Funktionen des 6021 senden, manchmal */
-                if (!((((M6051_DATA *) busses[bus].driverdata)->
+                if (!((((M6051_DATA *) buses[bus].driverdata)->
                        flags & M6020_MODE) == M6020_MODE)
                     && (gltmp.funcs != glakt.funcs)) {
                     c = ((gltmp.funcs >> 1) & 0x0f) + 64;
@@ -351,9 +351,9 @@ void *thr_sendrec_M6051(void *v)
                 }
                 setGL(bus, addr, gltmp);
             }
-            busses[bus].watchdog = 4;
+            buses[bus].watchdog = 4;
         }
-        busses[bus].watchdog = 5;
+        buses[bus].watchdog = 5;
 
         /* Magnetantriebe, die muessen irgendwann sehr bald
            abgeschaltet werden */
@@ -379,44 +379,44 @@ void *thr_sendrec_M6051(void *v)
                 writeByte(bus, c, pause_between_bytes);
                 writeByte(bus, SendByte, pause_between_bytes);
                 usleep(1000L * (unsigned long) gatmp.activetime);
-                ((M6051_DATA *) busses[bus].driverdata)->cmd32_pending = 1;
+                ((M6051_DATA *) buses[bus].driverdata)->cmd32_pending = 1;
             }
             if ((gatmp.action == 0)
-                && ((M6051_DATA *) busses[bus].driverdata)->cmd32_pending) {
+                && ((M6051_DATA *) buses[bus].driverdata)->cmd32_pending) {
                 SendByte = 32;
                 writeByte(bus, SendByte, pause_between_cmd);
-                ((M6051_DATA *) busses[bus].driverdata)->cmd32_pending = 0;
+                ((M6051_DATA *) buses[bus].driverdata)->cmd32_pending = 0;
                 setGA(bus, addr, gatmp);
             }
 
-            busses[bus].watchdog = 6;
+            buses[bus].watchdog = 6;
         }
-        busses[bus].watchdog = 7;
+        buses[bus].watchdog = 7;
 
         /* S88 Status einlesen, einen nach dem anderen */
         if ((number_fb > 0)
-            && !((M6051_DATA *) busses[bus].driverdata)->cmd32_pending) {
-            ioctl(busses[bus].fd, FIONREAD, &temp);
+            && !((M6051_DATA *) buses[bus].driverdata)->cmd32_pending) {
+            ioctl(buses[bus].fd, FIONREAD, &temp);
             while (temp > 0) {
                 readByte(bus, 0, &rr);
-                ioctl(busses[bus].fd, FIONREAD, &temp);
+                ioctl(buses[bus].fd, FIONREAD, &temp);
                 DBG(bus, DBG_INFO,
                     "FB M6051: oops; ignoring unread byte: %d ", rr);
             }
             SendByte = 192 + akt_S88;
             writeByte(bus, SendByte, pause_between_cmd);
-            busses[bus].watchdog = 8;
+            buses[bus].watchdog = 8;
             readByte(bus, 0, &rr);
             temp = rr;
             temp <<= 8;
-            busses[bus].watchdog = 9;
+            buses[bus].watchdog = 9;
             readByte(bus, 0, &rr);
             setFBmodul(bus, akt_S88, temp | rr);
             akt_S88++;
             if (akt_S88 > number_fb)
                 akt_S88 = 1;
         }
-        busses[bus].watchdog = 10;
+        buses[bus].watchdog = 10;
         check_reset_fb(bus);
         // fprintf(stderr, " ende\n");
     }

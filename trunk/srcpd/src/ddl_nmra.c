@@ -1407,7 +1407,7 @@ void sm_init(bus_t busnumber)
 int scanACK(bus_t busnumber)
 {
     int result, arg;
-    result = ioctl(busses[busnumber].fd, TIOCMGET, &arg);
+    result = ioctl(buses[busnumber].fd, TIOCMGET, &arg);
     if ((result >= 0) && (!(arg & TIOCM_RI)))
         return 1;
     return 0;
@@ -1421,9 +1421,9 @@ int waitUARTempty_scanACK(bus_t busnumber)
         if (scanACK(busnumber))
             ack = 1;            /* scan ACK */
 #if linux
-        ioctl(busses[busnumber].fd, TIOCSERGETLSR, &result);
+        ioctl(buses[busnumber].fd, TIOCSERGETLSR, &result);
 #else
-        ioctl(busses[busnumber].fd, TCSADRAIN, &result);
+        ioctl(buses[busnumber].fd, TCSADRAIN, &result);
 #endif
     } while (!result);
     return ack;
@@ -1569,10 +1569,10 @@ void protocol_nmra_sm_direct_cvbyte(bus_t busnumber, int sckt, int cv,
     }
 
     setSerialMode(busnumber, SDM_NMRA);
-    tcflow(busses[busnumber].fd, TCOON);
-    write(busses[busnumber].fd, SendStream, l);
+    tcflow(buses[busnumber].fd, TCOON);
+    write(buses[busnumber].fd, SendStream, l);
     ack = waitUARTempty_scanACK(busnumber);
-    tcflow(busses[busnumber].fd, TCOOFF);
+    tcflow(buses[busnumber].fd, TCOOFF);
     setSerialMode(busnumber, SDM_DEFAULT);
 
     handleACK(busnumber, sckt, ack);
@@ -1706,10 +1706,10 @@ void protocol_nmra_sm_write_cvbit(bus_t bus, int sckt, int cv, int bit,
     l = 50 * is_size + 15 * rs_size + 20 * j;
 
     setSerialMode(bus, SDM_NMRA);
-    tcflow(busses[bus].fd, TCOON);
-    write(busses[bus].fd, SendStream, l);
+    tcflow(buses[bus].fd, TCOON);
+    write(buses[bus].fd, SendStream, l);
     ack = waitUARTempty_scanACK(bus);
-    tcflow(busses[bus].fd, TCOOFF);
+    tcflow(buses[bus].fd, TCOOFF);
     setSerialMode(bus, SDM_DEFAULT);
 
     handleACK(bus, sckt, ack);
@@ -1849,10 +1849,10 @@ void protocol_nmra_sm_phregister(bus_t bus, int sckt, int reg,
     }
 
     setSerialMode(bus, SDM_NMRA);
-    tcflow(busses[bus].fd, TCOON);
-    l = write(busses[bus].fd, SendStream, y);
+    tcflow(buses[bus].fd, TCOON);
+    l = write(buses[bus].fd, SendStream, y);
     ack = waitUARTempty_scanACK(bus);
-    tcflow(busses[bus].fd, TCOOFF);
+    tcflow(buses[bus].fd, TCOOFF);
     setSerialMode(bus, SDM_DEFAULT);
 
     handleACK(bus, sckt, ack);

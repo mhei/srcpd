@@ -15,12 +15,6 @@ email                : frank.schmischke@t-online.de
  *                                                                         *
  ***************************************************************************/
 
-/***************************************************************************
- *                                                                         *
- *  Changes:                                                               *
- *                                                                         *
- *                                                                         *
- ***************************************************************************/
 #include "stdincludes.h"
 
 #ifdef linux
@@ -41,7 +35,7 @@ email                : frank.schmischke@t-online.de
 #include "srcp-error.h"
 #include "srcp-session.h"
 
-#define __li100 ((LI100_DATA*)busses[busnumber].driverdata)
+#define __li100 ((LI100_DATA*)buses[busnumber].driverdata)
 
 int cmpTime( struct timeval *t1, struct timeval *t2 );
 
@@ -65,7 +59,6 @@ int init_gl_LI100( struct _GLSTATE *gl )
 
 /**
  * initGA: modifies the ga data used to initialize the device
-
  */
 int init_ga_LI100( struct _GASTATE *ga )
 {
