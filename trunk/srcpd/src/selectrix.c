@@ -73,7 +73,7 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         buses[busnumber].term_func = &term_bus_Selectrix;
         buses[busnumber].thr_func = &thr_commandSelectrix;
         buses[busnumber].thr_timer = &thr_feedbackSelectrix;
-        buses[busnumber].sig_reader = &sig_processSelectrix;
+        buses[busnumber].sigio_reader = &sig_processSelectrix;
         buses[busnumber].init_gl_func = &init_gl_Selectrix;
         buses[busnumber].init_ga_func = &init_ga_Selectrix;
         buses[busnumber].init_fb_func = &init_fb_Selectrix;
