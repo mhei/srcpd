@@ -90,7 +90,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
     /* Function pointers to NULL */
     buses[current_bus].thr_func = NULL;
     buses[current_bus].thr_timer = NULL;
-    buses[current_bus].sig_reader = NULL;
+    buses[current_bus].sigio_reader = NULL;
     buses[current_bus].init_func = NULL;
     buses[current_bus].term_func = NULL;
     buses[current_bus].init_gl_func = NULL;

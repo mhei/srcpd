@@ -121,8 +121,8 @@ void sigio_handler(int status)
     else {
         for (i = 1; i <= num_buses; i++) {
             if ((buses[i].fd != -1) && (FD_ISSET(buses[i].fd, &rfds))) {
-                if (buses[i].sig_reader != NULL) {
-                   (*buses[i].sig_reader) (i);
+                if (buses[i].sigio_reader != NULL) {
+                   (*buses[i].sigio_reader) (i);
                 }
             }
         }

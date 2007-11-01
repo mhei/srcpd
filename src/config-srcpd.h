@@ -101,27 +101,30 @@ typedef struct _BUS
 
   /* serial device parameters */
   speed_t baudrate; //!
-  struct termios devicesettings; //! save Device Settings, if used
+  struct termios devicesettings; //! save device settings, if used
 
   /** Now internally used data */
-  int fd;                                    //! file descriptor of device
+  int fd;                      //! file descriptor of device
 
-  pthread_t pid;                             //! PID of the thread
-  pthread_t pidtimer;                        //! PID of the timer thread
-  void *thr_func;                            //! addr of the thread function
-  void *thr_timer;                           //! addr of the timer thread
-  void (*sig_reader)(bus_t);              //! addr of the reader (signal based)
-  /* Definition of thread synchronisation                                              */
+  pthread_t pid;               //! PID of the thread
+  pthread_t pidtimer;          //! PID of the timer thread
+  void *thr_func;              //! address of the thread function
+  void *thr_timer;             //! address of the timer thread
+  void (*sigio_reader)(bus_t); //! address of the SIGIO based device reader
+
+  /* Definition of thread synchronisation */
   pthread_mutex_t transmit_mutex;
   pthread_cond_t transmit_cond;
 
-  int (*init_func)(bus_t);           //! addr of init function
-  int (*term_func)(bus_t);           //! addr of init function
+  int (*init_func)(bus_t);           //! address of init function
+  int (*term_func)(bus_t);           //! address of term function
   int (*init_gl_func) ( struct _GLSTATE *);  //! called to check default init
   int (*init_ga_func) ( struct _GASTATE *);  //! called to check default init
-  int (*init_fb_func) (bus_t busnumber, int addr, const char protocolb, int index);  //! called to check default init
+  int (*init_fb_func) (bus_t busnumber, int addr,
+          const char protocolb, int index);  //! called to check default init
 
   int watchdog;                              //! used to monitor the thread
+
   /* Power management on the track */
   int power_state;
   int power_changed;
