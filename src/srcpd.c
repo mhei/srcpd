@@ -34,10 +34,6 @@
 #define	MAXFD	64 /* for daemon_init */
 
 
-void hup_handler(int);
-void term_handler(int);
-void install_signal_handler(void);
-
 /* structures to determine which port needs to be served */
 fd_set rfds;
 int maxfd;
@@ -71,35 +67,35 @@ void DeletePIDFile()
 }
 
 /* signal SIGHUP(1) caught */
-void hup_handler(int s)
+void sighup_handler(int s)
 {
-    signal(s, hup_handler);
+    signal(s, sighup_handler);
     server_reset_state = 1;
     syslog(LOG_INFO,
            "SIGHUP(1) received! Reset done. Working in initial state.");
 }
 
-/* signal SIGTERM(15) caught */
-void term_handler(int s)
+/* signal SIGTERM(15)/SIGABRT/SIGINT caught */
+void sigterm_handler(int s)
 {
     syslog(LOG_INFO, "SIGTERM(15) received! Terminating ...");
     server_shutdown_state = 1;
 }
 
-void install_signal_handler()
+void install_signal_handlers()
 {
-    signal(SIGTERM, term_handler);
-    signal(SIGABRT, term_handler);
-    signal(SIGINT, term_handler);
-    signal(SIGHUP, hup_handler);
+    signal(SIGTERM, sigterm_handler);
+    signal(SIGABRT, sigterm_handler);
+    signal(SIGINT, sigterm_handler);
+    signal(SIGHUP, sighup_handler);
     signal(SIGPIPE, SIG_IGN);
     /* important, because write() on sockets should return errors */
 }
 
-/** processSignal
- * Signal handler for comport signal
+/** sigio_handler
+ * Signal handler for I/O interrupt signal (SIGIO)
  */
-void processSignal(int status)
+void sigio_handler(int status)
 {
     struct timeval tv;
     int retval;
@@ -254,7 +250,7 @@ int main(int argc, char **argv)
     openlog("srcpd", LOG_PID, LOG_USER);
     syslog(LOG_INFO, "%s", WELCOME_MSG);
 
-    install_signal_handler();
+    install_signal_handlers();
 
     /*
      * Now we have to initialize all buses,
@@ -356,7 +352,7 @@ int main(int argc, char **argv)
 
     /* Register signal handler for I/O interrupt handling */
     saio.sa_flags = 0;
-    saio.sa_handler = &processSignal;
+    saio.sa_handler = &sigio_handler;
     sigemptyset(&saio.sa_mask);
     sigaction(SIGIO, &saio, NULL);
 
