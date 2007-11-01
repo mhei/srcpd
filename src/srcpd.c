@@ -267,14 +267,8 @@ int main(int argc, char **argv)
                 exit(1);
             }
 
-            /* Configure _all_ open file descriptors to throw SIGIO */
-            /* 
-             * CHECK: May be this is a too generous setup because only
-             * the Selectrix module uses signal driven I/O. An option
-             * may be to select this feature by bus type:
-             *   (buses[i].fd != -1) && (buses[i].type == SERVER_SELECTRIX)
-             */
-            if (buses[i].fd != -1) {
+            /* Configure descriptors for Selectrix module to throw SIGIO */
+            if ((buses[i].fd != -1) && (buses[i].type == SERVER_SELECTRIX)) {
                 FD_SET(buses[i].fd, &rfds);
                 maxfd = (maxfd > buses[i].fd ? maxfd : buses[i].fd);
                 fcntl(buses[i].fd, F_SETOWN, getpid());
