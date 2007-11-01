@@ -43,19 +43,20 @@ typedef unsigned long int sessionid_t ;
 #define MAX_BUSES              20    //! max number of integrated buses in srcpd
 #define MAXSRCPLINELEN       1001    //! max number of bytes per line plus 0x00
 
-#define SERVER_SERVER           0
-#define SERVER_DDL              1    // srcpd-bus works as DDL-server
-#define SERVER_M605X            2    // srcpd-bus works as M605X-server
-#define SERVER_IB               3    // srcpd-bus works as IB-server
-#define SERVER_LI100_SERIAL     4    // srcpd-bus works as Lenz-server with serial interface
-#define SERVER_LI100_USB        5    // srcpd-bus works as Lenz-server with usb-interface
-#define SERVER_LOOPBACK         6    // srcpd-bus is dummy driver, no real hardware
-#define SERVER_S88              7    // srcpd-bus works as S88 at parallelport
-#define SERVER_HSI_88           8    // srcpd-bus works as HSI88-server
-#define SERVER_I2C_DEV          9    // srcpd-bus works as I2C-DEV-server
-#define SERVER_ZIMO            10    // srcpd-bus works as Zimo MX1
-#define SERVER_SELECTRIX       11    // srcpd-bus works as Selectrix-server
-#define SERVER_LOCONET         12    // srcpd-bus works as Loconet Gateway
+/* srcp bus types */
+#define SERVER_SERVER           0    // server
+#define SERVER_DDL              1    // DDL-server
+#define SERVER_M605X            2    // M605X-server
+#define SERVER_IB               3    // IB-server
+#define SERVER_LI100_SERIAL     4    // Lenz-server with serial interface
+#define SERVER_LI100_USB        5    // Lenz-server with usb-interface
+#define SERVER_LOOPBACK         6    // dummy driver, no real hardware
+#define SERVER_S88              7    // S88 at parallelport
+#define SERVER_HSI_88           8    // HSI88-server
+#define SERVER_I2C_DEV          9    // I2C-DEV-server
+#define SERVER_ZIMO            10    // Zimo MX1
+#define SERVER_SELECTRIX       11    // Selectrix-server
+#define SERVER_LOCONET         12    // Loconet Gateway
 
 /* generic flags */
 #define USE_WATCHDOG          0x0001 // use watchdog
