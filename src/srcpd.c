@@ -105,8 +105,10 @@ void sigio_handler(int status)
     tv.tv_sec = 0;
     tv.tv_usec = 0;
 
-    /* Search for the bus that needs to be served */
+    /* select descriptor that triggered SIGIO */
     retval = select(maxfd + 1, &rfds, NULL, NULL, &tv);
+
+    /* something strange happened, report error */
     if (retval == -1) {
         syslog(LOG_INFO, "Select failed: %s (errno = %d)\n",
                strerror(errno), errno);
@@ -117,7 +119,7 @@ void sigio_handler(int status)
         return;
     }
 
-    /* some descriptor changed */
+    /* find bus matching the triggering descriptor */
     else {
         for (i = 1; i <= num_buses; i++) {
             if ((buses[i].fd != -1) && (FD_ISSET(buses[i].fd, &rfds))) {
