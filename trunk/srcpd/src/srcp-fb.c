@@ -49,7 +49,7 @@ static int queueIsFullFB(bus_t busnumber)
     return queueLengthFB(busnumber) >= QUEUELENGTH_FB - 1;
 }
 
-int queueIsEmptyFB(busnumber)
+int queueIsEmptyFB(bus_t busnumber)
 {
     return (in[busnumber] == out[busnumber]);
 }
