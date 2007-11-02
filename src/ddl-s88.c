@@ -82,7 +82,7 @@ static const unsigned long int LPT_BASE[] = { 0x378, 0x278, 0x3BC };
 // number of possible parallel ports
 static const unsigned int LPT_NUM = 3;
 // values of the bits in a byte
-static const char BIT_VALUES[] =
+static const unsigned char BIT_VALUES[] =
     { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
 
 #define __ddl_s88 ((DDL_S88_DATA *) buses[busnumber].driverdata)
