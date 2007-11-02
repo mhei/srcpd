@@ -135,7 +135,7 @@ void close_comport(bus_t bus)
 
 /* Zeilenweises Lesen vom Socket      */
 /* nicht eben trivial!                */
-int isvalidchar(c)
+int isvalidchar(char c)
 {
     if ((c >= 0x20 && c <= 127) || c == 0x09 || c == '\n')
         return 1;
