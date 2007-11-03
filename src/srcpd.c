@@ -289,7 +289,7 @@ int main(int argc, char **argv)
     }
     pthread_detach(ttid_clock);
 
-    syslog(LOG_INFO, "Going to start %d interface threads for the buses",
+    syslog(LOG_INFO, "Going to start %ld interface threads for the buses",
            num_buses);
 
     /* start threads for all buses */
