@@ -15,7 +15,7 @@
  * http://www.easysw.com/~mike/serial
  */
 
-#include <stdincludes.h>
+#include "stdincludes.h"
 
 #include "config-srcpd.h"
 #include "ttycygwin.h"

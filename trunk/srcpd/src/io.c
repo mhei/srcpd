@@ -14,7 +14,7 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-#include <stdincludes.h>
+#include "stdincludes.h"
 
 #include "config-srcpd.h"
 #include "io.h"
