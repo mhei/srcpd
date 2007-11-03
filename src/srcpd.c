@@ -180,7 +180,7 @@ int daemon_init()
 int main(int argc, char **argv)
 {
     int result;
-    long int i;
+    bus_t i;
     int sleep_ctr;
     char c, conffile[MAXPATHLEN];
     pthread_t ttid_cmd, ttid_clock, ttid_pid;
