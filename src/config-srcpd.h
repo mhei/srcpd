@@ -136,8 +136,8 @@ typedef struct _BUS
   int flags;              //! Watchdog flag
 } BUS;
 
-extern struct _BUS buses[];
-extern int num_buses;
+struct _BUS buses[MAX_BUSES];
+bus_t num_buses;
 
 int readConfig(char *filename);
 
