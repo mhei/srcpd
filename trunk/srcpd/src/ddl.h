@@ -23,10 +23,10 @@
 #include <pthread.h>
 #include <sched.h>
 
-//#if linux
-//#include <sys/io.h>
-//#include <linux/serial.h>
-//#endif
+#if linux
+#include <sys/io.h>
+#include <linux/serial.h>
+#endif
 
 #include <libxml/tree.h>
 
@@ -94,10 +94,10 @@ typedef struct _DDL_DATA {
     struct termios maerklin_dev_termios;
     struct termios nmra_dev_termios;
 
-//#if linux
-//    struct serial_struct *serinfo_marklin;
-//    struct serial_struct *serinfo_nmradcc;
-//#endif
+#if linux
+    struct serial_struct *serinfo_marklin;
+    struct serial_struct *serinfo_nmradcc;
+#endif
     pthread_mutex_t queue_mutex;   /* mutex to synchronize queue inserts */
     int queue_initialized;
     int queue_out, queue_in;
