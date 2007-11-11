@@ -173,8 +173,8 @@ int init_bus_LI100_SERIAL( bus_t busnumber )
   }
 
   status = 0;
-  printf( "Bus #%ld with debug level %d\n", busnumber,
-          buses[ busnumber ].debuglevel );
+  DBG(busnumber, DBG_DEBUG, "Lenz interface with debug level %d\n",
+          buses[ busnumber ].debuglevel);
 
 #ifdef LI100_USB
   if ( buses[ busnumber ].type != SERVER_LI100_USB )
@@ -210,13 +210,13 @@ int init_bus_LI100_SERIAL( bus_t busnumber )
   if ( status == 0 )
   {
     __li100->working_LI100 = 1;
-    printf( "Version LENZ-Interface : %d.%d\n",
+    DBG(busnumber, DBG_INFO, "Version LENZ-Interface : %d.%d\n",
                     __li100->version_interface / 256,
                     __li100->version_interface % 256 );
-    printf( "Code LENZ-Interface    : %d%d\n",
+    DBG(busnumber, DBG_INFO, "Code LENZ-Interface    : %d%d\n",
                     __li100->code_interface / 16,
                     __li100->code_interface % 16 );
-    printf( "Version LENZ-Central unit  : %d.%d\n",
+    DBG(busnumber, DBG_INFO, "Version LENZ-Central unit  : %d.%d\n",
                     __li100->version_zentrale / 256,
                     __li100->version_zentrale % 256 );
     /* printf("Code LENZ-Central unit     : %d",__li100->code_zentrale); */
@@ -239,7 +239,7 @@ int init_bus_LI100_SERIAL( bus_t busnumber )
 #endif
         if ( __li100->get_addr == 0 )
           break;
-        printf( "remove engine with address %d from stack\n",
+        DBG(busnumber, DBG_DEBUG, "Remove engine with address %d from stack\n",
                         __li100->get_addr & 0x3fff );
         byte2send[ 0 ] = 0xe3;
         byte2send[ 1 ] = 0x44;
@@ -277,9 +277,11 @@ int init_bus_LI100_SERIAL( bus_t busnumber )
   }
 
 #ifdef LI100_USB
-  printf( "INIT_BUS_LI100 (usb) finished with code: %d\n", status );
+  DBG(busnumber, DBG_DEBUG, "INIT_BUS_LI100 (usb) finished with "
+          "code: %d\n", status);
 #else
-  printf( "INIT_BUS_LI100 (serial) finished with code: %d\n", status );
+  DBG(busnumber, DBG_DEBUG, "INIT_BUS_LI100 (serial) finished with "
+          "code: %d\n", status);
 #endif
   __li100->last_type = -1;
   __li100->last_value = -1;
@@ -1792,9 +1794,9 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
   }
 
 #ifdef LI100_USB
-  int initLine_LI100_USB( bus_t busnumber )
+int initLine_LI100_USB( bus_t busnumber )
 #else
-  int initLine_LI100_SERIAL( bus_t busnumber )
+int initLine_LI100_SERIAL( bus_t busnumber )
 #endif
   {
     int status, status2;
@@ -1804,7 +1806,8 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
     struct termios interface;
 
     char *name = buses[ busnumber ].device.filename.path;
-    printf( "Beginning to detect LI100 on serial line: %s\n", name );
+    DBG(busnumber, DBG_INFO, "Beginning to detect LI100 on serial "
+                    "line: %s\n", name );
     status = -4;
 
     switch ( buses[ busnumber ].baudrate )
@@ -1830,13 +1833,14 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
         break;
     }
 
-    printf( "try opening serial line %s for %s baud\n", name, byte2send );
+    DBG(busnumber, DBG_INFO, "Try to open serial line %s for %s baud\n",
+                    name, byte2send );
 
     fd = open( name, O_RDWR );
 
     if ( fd == -1 )
     {
-      printf( "Sorry, couldn't open device.\n" );
+      DBG(busnumber, DBG_ERROR, "Sorry, could not open device '%s'.\n", name);
       return status;
     }
 

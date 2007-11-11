@@ -95,7 +95,7 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                 xmlFree(__srv->username);
                 __srv->username = malloc(strlen((char *) txt) + 1);
                 if (__srv->username == NULL) {
-                    printf("Cannot allocate memory\n");
+                    DBG(busnumber, DBG_ERROR, "Cannot allocate memory\n");
                     exit(1);
                 }
                 strcpy(__srv->username, (char *) txt);
@@ -109,7 +109,7 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                 xmlFree(__srv->groupname);
                 __srv->groupname = malloc(strlen((char *) txt) + 1);
                 if (__srv->groupname == NULL) {
-                    printf("Cannot allocate memory\n");
+                    DBG(busnumber, DBG_ERROR, "Cannot allocate memory\n");
                     exit(1);
                 }
                 strcpy(__srv->groupname, (char *) txt);
