@@ -220,17 +220,17 @@ int init_lineDDL(bus_t busnumber)
 
     int dev;
     int rc;
-    dev = open(buses[busnumber].filename.path, O_WRONLY);     /* open comport                 */
+    dev = open(buses[busnumber].device.filename.path, O_WRONLY);     /* open comport                 */
     if (dev < 0) {
         DBG(busnumber, DBG_FATAL,
             "device %s can not be opened for writing. Abort!",
-            buses[busnumber].filename.path);
+            buses[busnumber].device.filename.path);
         exit(1);                /* there is no chance to continue */
     }
 #if linux
   if ((rc=reset_customdivisor(dev))!=0)
   {
-    DBG(busnumber, DBG_FATAL, "error initializing device %s (reset custom divisor %d). Abort!", buses[busnumber].filename.path, rc);
+    DBG(busnumber, DBG_FATAL, "error initializing device %s (reset custom divisor %d). Abort!", buses[busnumber].device.filename.path, rc);
     exit(1);
   }
 #endif
@@ -240,12 +240,12 @@ int init_lineDDL(bus_t busnumber)
 
     if (tcgetattr(dev, &__DDL->maerklin_dev_termios) != 0) {
         DBG(busnumber, DBG_FATAL, "error initializing device %s. Abort!",
-            buses[busnumber].filename.path);
+            buses[busnumber].device.filename.path);
         exit(1);
     }
     if (tcgetattr(dev, &__DDL->nmra_dev_termios) != 0) {
         DBG(busnumber, DBG_FATAL, "error initializing device %s. Abort!",
-            buses[busnumber].filename.path);
+            buses[busnumber].device.filename.path);
         exit(1);
     }
 
@@ -283,12 +283,12 @@ int init_lineDDL(bus_t busnumber)
   {
     if (init_serinfo(dev,3,&__DDL->serinfo_marklin)!=0)
     {
-      DBG(busnumber, DBG_FATAL, "error initializing device %s (init_serinfo mm). Abort!", buses[busnumber].filename.path);
+      DBG(busnumber, DBG_FATAL, "error initializing device %s (init_serinfo mm). Abort!", buses[busnumber].device.filename.path);
       exit(1);
     }
     if (init_serinfo(dev,7,&__DDL->serinfo_nmradcc)!=0)
     {
-      DBG(busnumber, DBG_FATAL, "error initializing device %s (init_serinfo dcc). Abort!",  buses[busnumber].filename.path);
+      DBG(busnumber, DBG_FATAL, "error initializing device %s (init_serinfo dcc). Abort!",  buses[busnumber].device.filename.path);
       exit(1);
     }
   }
@@ -297,7 +297,7 @@ int init_lineDDL(bus_t busnumber)
     /* setting serial device to default mode */
     if (!setSerialMode(busnumber, SDM_DEFAULT) == 0) {
         DBG(busnumber, DBG_FATAL, "error initializing device %s. Abort!",
-            buses[busnumber].filename.path);
+            buses[busnumber].device.filename.path);
         exit(1);
     }
 
@@ -1252,7 +1252,7 @@ void *thr_sendrec_DDL(void *v)
     bus_t busnumber = (bus_t) v;
 
     DBG(busnumber, DBG_INFO, "DDL started on device %s",
-        buses[busnumber].filename.path);
+        buses[busnumber].device.filename.path);
 
     buses[busnumber].watchdog = 1;
     /*

@@ -175,11 +175,11 @@ static int init_lineM6051(bus_t bus)
     struct termios interface;
 
     if (buses[bus].debuglevel > 0) {
-        DBG(bus, DBG_INFO, "Opening 605x: %s", buses[bus].filename.path);
+        DBG(bus, DBG_INFO, "Opening 605x: %s", buses[bus].device.filename.path);
     }
-    if ((FD = open(buses[bus].filename.path, O_RDWR | O_NONBLOCK)) == -1) {
+    if ((FD = open(buses[bus].device.filename.path, O_RDWR | O_NONBLOCK)) == -1) {
         DBG(bus, DBG_FATAL, "Couldn't open device %s.",
-            buses[bus].filename.path);
+            buses[bus].device.filename.path);
         return -1;
     }
     tcgetattr(FD, &interface);
