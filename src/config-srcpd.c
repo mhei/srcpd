@@ -70,10 +70,11 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
     if (xmlStrcmp(node->name, BAD_CAST "bus"))
         return busnumber;
 
-    if (busnumber >= MAX_BUSES || busnumber < 0) {
-        printf("Sorry, you have used an invalid bus number (%ld). "
+    if (busnumber >= MAX_BUSES) {
+            DBG(0, DBG_ERROR,
+               "Sorry, you have used an invalid bus number (%ld). "
                "If this is greater than or equal to %d,\n"
-               "you need to recompile the sources. Exiting now.\n",
+               "you need to recompile the sources.\n",
                busnumber, MAX_BUSES);
         return busnumber;
     }
@@ -126,7 +127,8 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
             if (busnumber == 0)
                 busnumber += readconfig_server(doc, child, busnumber);
             else
-                printf("Sorry, type=server is only allowed at bus 0!\n");
+                DBG(0, DBG_ERROR, "Sorry, type=server is not allowed "
+                                "at bus %ld!\n", busnumber);
         }
 
         /* but the most important are not ;=)  */
@@ -158,8 +160,8 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
 #if defined(linux) || defined(__CYGWIN__) || defined(__FreeBSD__)
             busnumber += readconfig_DDL_S88(doc, child, busnumber);
 #else
-            printf
-                ("Sorry, DDL-S88 not (yet) available on this system.\n");
+            DBG(0, DBG_ERROR, "Sorry, DDL-S88 not (yet) available on "
+                            "this system.\n");
 #endif
         }
 
@@ -183,7 +185,8 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
 #ifdef linux
             busnumber += readconfig_I2C_DEV(doc, child, busnumber);
 #else
-            printf("Sorry, I2C-DEV only available on Linux (yet)\n");
+            DBG(0, DBG_ERROR, "Sorry, I2C-DEV only available on Linux "
+                            "(yet)\n");
 #endif
         }
 
@@ -197,8 +200,8 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
                 buses[current_bus].devicetype = HW_NETWORK;
             }
             else {
-                printf("WARNING, \"%s\" (bus %ld) is an unknown "
-                       "device specifier!\n", child->name, current_bus);
+                DBG(0, DBG_ERROR, "WARNING, \"%s\" (bus %ld) is an "
+                     "unknown device specifier!\n", child->name, current_bus);
             }
             free(txt2);
             txt = xmlNodeListGetString(doc, child->children, 1);
@@ -324,7 +327,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
         }
 
         else
-            printf("WARNING, \"%s\" (bus %ld) is an unknown tag!\n",
+            DBG(0, DBG_ERROR,"WARNING, \"%s\" (bus %ld) is an unknown tag!\n",
                    child->name, current_bus);
 
         child = child->next;
