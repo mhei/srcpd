@@ -333,7 +333,8 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
     return busnumber;
 }
 
-static int walk_config_xml(xmlDocPtr doc)
+/*walk through xml tree and return number of found buses*/
+static bus_t walk_config_xml(xmlDocPtr doc)
 {
     bus_t bus = 0;
     xmlNodePtr root, child;
@@ -352,10 +353,11 @@ static int walk_config_xml(xmlDocPtr doc)
     return bus;
 }
 
+/*read configuration file and return success value if some bus was found*/
 int readConfig(char *filename)
 {
     xmlDocPtr doc;
-    int rc;
+    bus_t rb = 0;
 
     /*  something to initialize */
     memset(buses, 0, sizeof(buses));
@@ -364,11 +366,12 @@ int readConfig(char *filename)
     /* some defaults */
     DBG(0, DBG_DEBUG, "parsing %s", filename);
     doc = xmlParseFile(filename);
+
     /* always show a message */
     if (doc != NULL) {
         DBG(0, DBG_DEBUG, "walking %s", filename);
-        rc = walk_config_xml(doc);
-        DBG(0, DBG_DEBUG, " done %s; found %d buses", filename, rc);
+        rb = walk_config_xml(doc);
+        DBG(0, DBG_DEBUG, " done %s; found %ld buses", filename, rb);
         xmlFreeDoc(doc);
         /*
          *Free the global variables that may
@@ -379,9 +382,8 @@ int readConfig(char *filename)
     else {
         DBG(0, DBG_ERROR,
             "Error, no XML document tree found parsing %s.\n", filename);
-        exit(1);
     }
-    return rc;
+    return (rb > 0);
 }
 
 /**

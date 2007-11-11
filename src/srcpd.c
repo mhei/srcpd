@@ -232,8 +232,14 @@ int main(int argc, char **argv)
         }
     }
 
+    openlog("srcpd", LOG_PID, LOG_USER);
     DBG(0, DBG_INFO, "conffile = \"%s\"\n", conffile);
-    readConfig(conffile);
+
+    if (0 == readConfig(conffile)) {
+        DBG(0, DBG_ERROR, "Error, no valid bus setup found in "
+                        "configuration file '%s'.\n", conffile);
+        exit(1);
+    }
 
     cmds.port = ((SERVER_DATA *) buses[0].driverdata)->TCPPORT;
     cmds.func = thr_doClient;
@@ -243,15 +249,13 @@ int main(int argc, char **argv)
 
         /*daemonize process*/
         if (0 != daemon_init()) {
-            printf("Daemonization failed!\n");
+            DBG(0, DBG_ERROR,"Daemonization failed!\n");
             exit(1);
         }
 
     }
 
-    openlog("srcpd", LOG_PID, LOG_USER);
     syslog(LOG_INFO, "%s", WELCOME_MSG);
-
     install_signal_handlers();
 
     /*
