@@ -93,7 +93,7 @@ void save_comport(bus_t businfo)
 {
     int fd;
 
-    fd = open(buses[businfo].filename.path, O_RDWR);
+    fd = open(buses[businfo].device.filename.path, O_RDWR);
     if (fd == -1) {
         printf("Error, couldn't open device.\n");
     }
@@ -108,8 +108,8 @@ void restore_comport(bus_t bus)
     int fd;
 
     DBG(bus, DBG_INFO, "Restoring attributes for serial line %s",
-        buses[bus].filename.path);
-    fd = open(buses[bus].filename.path, O_RDWR);
+        buses[bus].device.filename.path);
+    fd = open(buses[bus].device.filename.path, O_RDWR);
     if (fd == -1) {
         DBG(bus, DBG_ERROR, "Error, couldn't open device.");
     }

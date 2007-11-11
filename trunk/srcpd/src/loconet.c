@@ -114,7 +114,7 @@ static int init_lineLOCONET_serial(bus_t busnumber) {
     struct termios interface;
 
 
-    fd = open(buses[busnumber].filename.path, O_RDWR | O_NDELAY | O_NOCTTY);
+    fd = open(buses[busnumber].device.filename.path, O_RDWR | O_NDELAY | O_NOCTTY);
     if (fd == -1) {
         DBG(busnumber, DBG_ERROR, "Sorry, couldn't open device.\n");
         return 1;
@@ -177,7 +177,7 @@ static int init_lineLOCONET_lbserver(bus_t busnumber) {
     struct hostent *server;
 
     char msg[256];
-    server = gethostbyname (buses[busnumber].net.hostname);
+    server = gethostbyname (buses[busnumber].device.net.hostname);
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0)
 	DBG(busnumber, DBG_ERROR, "ERROR opening socket");
@@ -185,7 +185,7 @@ static int init_lineLOCONET_lbserver(bus_t busnumber) {
     serv_addr.sin_family = AF_INET;
     bcopy((char *) server->h_addr,
 	  (char *) &serv_addr.sin_addr.s_addr, server->h_length);
-    serv_addr.sin_port = htons(buses[busnumber].net.port);
+    serv_addr.sin_port = htons(buses[busnumber].device.net.port);
     alarm(30);
     if ( connect(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
 	DBG(busnumber, DBG_ERROR, "ERROR connecting: %d", errno);
@@ -253,7 +253,7 @@ int init_bus_LOCONET(bus_t busnumber)
         buses[busnumber].debuglevel);
     if (buses[busnumber].debuglevel <= 5) {
         DBG(busnumber, DBG_INFO, "Loconet bus %ld open device %s",
-            busnumber, buses[busnumber].filename.path);
+            busnumber, buses[busnumber].device.filename.path);
         init_lineLOCONET(busnumber);
     }
     else {
@@ -476,7 +476,7 @@ void *thr_sendrec_LOCONET(void *v)
     struct _GASTATE gatmp;
     
     DBG(busnumber, DBG_INFO, "Loconet started, bus #%d, %s", busnumber,
-        buses[busnumber].filename.path);
+        buses[busnumber].device.filename.path);
     timeoutcnt = 0;
     while (1) {
         buses[busnumber].watchdog = 1;

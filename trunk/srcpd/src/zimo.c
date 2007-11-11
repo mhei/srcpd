@@ -188,8 +188,8 @@ int term_bus_zimo(bus_t bus)
 int init_bus_zimo(bus_t i)
 {
     DBG(i, DBG_INFO, "zimo init: bus #%ld, debug %d, device %s", i,
-        buses[i].debuglevel, buses[i].filename.path);
-    buses[i].fd = init_linezimo(buses[i].filename.path);
+        buses[i].debuglevel, buses[i].device.filename.path);
+    buses[i].fd = init_linezimo(buses[i].device.filename.path);
     DBG(i, DBG_INFO, "zimo init done");
     return 0;
 }
@@ -207,7 +207,7 @@ void *thr_sendrec_zimo(void *v)
     unsigned int error, cv, val;
     /* TODO: unsigned char databyte, address; */
     DBG(bus, DBG_INFO, "zimo started, bus #%d, %s", bus,
-        buses[bus].filename.path);
+        buses[bus].device.filename.path);
 
     buses[bus].watchdog = 1;
     while (1) {

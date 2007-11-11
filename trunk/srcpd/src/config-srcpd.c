@@ -101,11 +101,11 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
 
     /* FIXME: this will lead to a memory leak if initialization of
      * (busnumber - 1) failed */
-    buses[current_bus].filename.path = malloc(strlen("/dev/null") + 1);
-    if (buses[current_bus].filename.path == NULL)
+    buses[current_bus].device.filename.path = malloc(strlen("/dev/null") + 1);
+    if (buses[current_bus].device.filename.path == NULL)
         return current_bus;
 
-    strcpy(buses[current_bus].filename.path, "/dev/null");
+    strcpy(buses[current_bus].device.filename.path, "/dev/null");
 
     /* Definition of thread synchronisation  */
     pthread_mutex_init(&buses[current_bus].transmit_mutex, NULL);
@@ -205,36 +205,36 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
             if (txt != NULL) {
                 switch (buses[current_bus].devicetype) {
                     case HW_FILENAME:
-                        free(buses[current_bus].filename.path);
-                        buses[current_bus].filename.path =
+                        free(buses[current_bus].device.filename.path);
+                        buses[current_bus].device.filename.path =
                             malloc(strlen((char *) txt) + 1);
-                        strcpy(buses[current_bus].filename.path,
+                        strcpy(buses[current_bus].device.filename.path,
                                (char *) txt);
                         break;
                     case HW_NETWORK:
-                        free(buses[current_bus].filename.path);
-                        buses[current_bus].net.hostname =
+                        free(buses[current_bus].device.filename.path);
+                        buses[current_bus].device.net.hostname =
                             malloc(strlen((char *) txt) + 1);
-                        strcpy(buses[current_bus].net.hostname,
+                        strcpy(buses[current_bus].device.net.hostname,
                                (char *) txt);
                         txt2 = xmlGetProp(child, BAD_CAST "port");
                         if (txt2 != NULL) {
-                            buses[current_bus].net.port =
+                            buses[current_bus].device.net.port =
                                 atoi((char *) txt2);
                             free(txt2);
                         }
                         else {
-                            buses[current_bus].net.port = 0;
+                            buses[current_bus].device.net.port = 0;
                         }
                         txt2 = xmlGetProp(child, BAD_CAST "protocol");
                         if (txt2 != NULL) {
                             struct protoent *p;
                             p = getprotobyname((char *) txt2);
-                            buses[current_bus].net.protocol = p->p_proto;
+                            buses[current_bus].device.net.protocol = p->p_proto;
                             free(txt2);
                         }
                         else {
-                            buses[current_bus].net.protocol = 6;       /* TCP */
+                            buses[current_bus].device.net.protocol = 6;       /* TCP */
                         }
                         break;
                 }
@@ -243,14 +243,14 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
             switch (buses[current_bus].devicetype) {
                 case HW_FILENAME:
                     DBG(current_bus, DBG_INFO, "** Filename='%s'",
-                        buses[current_bus].filename.path);
+                        buses[current_bus].device.filename.path);
                     break;
                 case HW_NETWORK:
                     DBG(current_bus, DBG_DEBUG,
                         "** Network Host='%s', Protocol=%d Port=%d",
-                        buses[current_bus].net.hostname,
-                        buses[current_bus].net.protocol,
-                        buses[current_bus].net.port);
+                        buses[current_bus].device.net.hostname,
+                        buses[current_bus].device.net.protocol,
+                        buses[current_bus].device.net.port);
                     break;
             }
         }

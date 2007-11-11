@@ -312,14 +312,14 @@ int init_lineI2C_DEV(bus_t bus)
     int FD;
 
     if (buses[bus].debuglevel > 0) {
-        DBG(bus, DBG_INFO, "Opening i2c-dev: %s", buses[bus].filename.path);
+        DBG(bus, DBG_INFO, "Opening i2c-dev: %s", buses[bus].device.filename.path);
     }
 
-    FD = open(buses[bus].filename.path, O_RDWR);
+    FD = open(buses[bus].device.filename.path, O_RDWR);
 
     if (FD <= 0) {
         DBG(bus, DBG_FATAL, "Couldn't open device %s.",
-            buses[bus].filename.path);
+            buses[bus].device.filename.path);
         FD = -1;
     }
 
@@ -469,7 +469,7 @@ void *thr_sendrec_I2C_DEV(void *v)
     int ga_reset_devices = data->ga_reset_devices;
 
     DBG(bus, DBG_INFO, "i2c-dev started, bus #%ld, %s", bus,
-        buses[bus].filename.path);
+        buses[bus].device.filename.path);
 
     buses[bus].watchdog = 1;
 

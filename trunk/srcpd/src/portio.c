@@ -36,11 +36,11 @@ int open_port(bus_t bus)
         int serial;
         struct termios settings;
 
-        serial  = open(buses[bus].filename.path, O_RDWR | O_NOCTTY);
+        serial  = open(buses[bus].device.filename.path, O_RDWR | O_NOCTTY);
         if (serial < 0) {
-                DBG(bus, DBG_ERROR, 
-					"Error, could not open %s.\nReported error number: %d.\n",
-                    buses[bus].filename.path, errno); /* , str_errno(errno)); */
+                DBG(bus, DBG_ERROR, "Error, could not open %s.\n"
+                                "Reported error number: %d.\n",
+                    buses[bus].device.filename.path, errno); /* , str_errno(errno)); */
                 buses[bus].fd = -1;
                 return -errno;
         }

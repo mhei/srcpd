@@ -94,7 +94,7 @@ typedef struct _BUS
         int protocol;    /* Values are taken from /etc/protocols: 6==tcp */
         int port;    /* if using tcp or udp: portnumber to connect to. */
       } net;
-  };
+  } device;
   /** statistics */
   unsigned int bytes_recevied;
   unsigned int bytes_sent;

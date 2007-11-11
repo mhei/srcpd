@@ -173,7 +173,7 @@ int init_bus_LOOPBACK(bus_t i)
         buses[i].debuglevel);
     if (buses[i].debuglevel == 0) {
         DBG(i, DBG_INFO, "loopback bus #%ld open device %s (not really!)",
-            i, buses[i].filename.path);
+            i, buses[i].device.filename.path);
         buses[i].fd = init_lineLoopback(i);
     }
     else {
@@ -191,7 +191,7 @@ void *thr_sendrec_LOOPBACK(void *v)
     bus_t bus = (bus_t) v;
 
     DBG(bus, DBG_INFO, "loopback started, bus #%d, %s", bus,
-        buses[bus].filename.path);
+        buses[bus].device.filename.path);
 
     buses[bus].watchdog = 1;
 
