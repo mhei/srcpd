@@ -89,16 +89,16 @@ void writeString(bus_t bus, unsigned char *s, unsigned long msecs)
     }
 }
 
-void save_comport(bus_t businfo)
+void save_comport(bus_t bus)
 {
     int fd;
 
-    fd = open(buses[businfo].device.filename.path, O_RDWR);
+    fd = open(buses[bus].device.filename.path, O_RDWR);
     if (fd == -1) {
-        printf("Error, couldn't open device.\n");
+       DBG(bus, DBG_ERROR, "Error, could not open device.\n");
     }
     else {
-        tcgetattr(fd, &buses[businfo].devicesettings);
+        tcgetattr(fd, &buses[bus].devicesettings);
         close(fd);
     }
 }
@@ -111,7 +111,7 @@ void restore_comport(bus_t bus)
         buses[bus].device.filename.path);
     fd = open(buses[bus].device.filename.path, O_RDWR);
     if (fd == -1) {
-        DBG(bus, DBG_ERROR, "Error, couldn't open device.");
+        DBG(bus, DBG_ERROR, "Error, could not open device.");
     }
     else {
         DBG(bus, DBG_INFO, "Restoring old values...");
@@ -137,9 +137,7 @@ void close_comport(bus_t bus)
 /* nicht eben trivial!                */
 int isvalidchar(char c)
 {
-    if ((c >= 0x20 && c <= 127) || c == 0x09 || c == '\n')
-        return 1;
-    return 0;
+    return ((c >= 0x20 && c <= 127) || c == 0x09 || c == '\n');
 }
 
 int socket_readline(int Socket, char *line, int len)

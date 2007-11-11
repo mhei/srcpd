@@ -10,7 +10,6 @@ typedef struct _zimo_DATA {
 } zimo_DATA;
 
 int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber);
-int init_linezimo(char *);
 int init_bus_zimo(bus_t);
 int term_bus_zimo(bus_t);
 int getDescription_zimo(char *reply);

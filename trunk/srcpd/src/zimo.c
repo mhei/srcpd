@@ -150,15 +150,15 @@ int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     return (1);
 }
 
-int init_linezimo(char *name)
+int init_linezimo(bus_t bus, char *name)
 {
     int fd;
     struct termios interface;
 
-    printf("Try opening serial line %s for 9600 baud\n", name);
+    DBG(bus, DBG_INFO, "Try opening serial line %s for 9600 baud\n", name);
     fd = open(name, O_RDWR);
     if (fd == -1) {
-        printf("Sorry, couldn't open device.\n");
+        DBG(bus, DBG_ERROR, "Sorry, couldn't open device.\n");
     }
     else {
         tcgetattr(fd, &interface);
@@ -189,7 +189,7 @@ int init_bus_zimo(bus_t i)
 {
     DBG(i, DBG_INFO, "zimo init: bus #%ld, debug %d, device %s", i,
         buses[i].debuglevel, buses[i].device.filename.path);
-    buses[i].fd = init_linezimo(buses[i].device.filename.path);
+    buses[i].fd = init_linezimo(i, buses[i].device.filename.path);
     DBG(i, DBG_INFO, "zimo init done");
     return 0;
 }

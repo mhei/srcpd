@@ -135,16 +135,16 @@ int readConfig_HSI_88( xmlDocPtr doc, xmlNodePtr node, bus_t busnumber )
   return ( 1 );
 }
 
-static int open_lineHSI88( char *name )
+static int open_lineHSI88(bus_t bus, char *name )
 {
   int fd;
   struct termios interface;
 
-  printf( "try opening serial line %s for 9600 baud\n", name );
-  fd = open( name, O_RDWR );
-  if ( fd == -1 )
+  DBG(bus, DBG_DEBUG, "try opening serial line %s for 9600 baud\n", name );
+  fd = open(name, O_RDWR);
+  if (fd == -1)
   {
-    printf( "Sorry, couldn't open device.\n" );
+    DBG(bus, DBG_ERROR, "Sorry, couldn't open device.\n" );
   }
   else
   {
@@ -220,7 +220,7 @@ static int init_lineHSI88( bus_t busnumber, int modules_left,
     __hsi->v_text[ i ] = ( char ) rr;
   }
   __hsi->v_text[ i ] = 0x00;
-  printf( "%s\n", __hsi->v_text );
+  DBG(busnumber, DBG_DEBUG, "HSI version: %s\n", __hsi->v_text);
 
   status = 1;
   while ( status )
@@ -249,7 +249,7 @@ static int init_lineHSI88( bus_t busnumber, int modules_left,
       usleep( 100000 );
       readByte( busnumber, 0, &rr );
     }
-    readByte( busnumber, 0, &rr );    /*  number of given modules */
+    readByte( busnumber, 0, &rr );    /* number of given modules */
     status = 0;
   }
   return 0;
@@ -262,8 +262,8 @@ int init_bus_HSI_88(bus_t busnumber )
   int anzahl;
 
   status = 0;
-  printf( "Bus %ld with debuglevel %d\n", busnumber,
-          buses[ busnumber ].debuglevel );
+  DBG(busnumber, DBG_DEBUG, "HSI-88 with debuglevel %d\n",
+          buses[ busnumber ].debuglevel);
   if ( buses[ busnumber ].type != SERVER_HSI_88 )
   {
     status = -2;
@@ -271,7 +271,7 @@ int init_bus_HSI_88(bus_t busnumber )
   else
   {
     if ( buses[ busnumber ].fd > 0 )
-      status = -3;        /*  bus is already in use */
+      status = -3;        /* bus is already in use */
   }
 
   if ( status == 0 )
@@ -283,7 +283,7 @@ int init_bus_HSI_88(bus_t busnumber )
 
     if ( anzahl > 31 )
     {
-      printf( "Number of feedback-modules greater than 31!" );
+      DBG(busnumber, DBG_ERROR, "Number of feedback-modules greater than 31!");
       status = -4;
     }
   }
@@ -292,7 +292,7 @@ int init_bus_HSI_88(bus_t busnumber )
   {
     if ( status == 0 )
     {
-      fd = open_lineHSI88( buses[ busnumber ].device.filename.path );
+      fd = open_lineHSI88(busnumber, buses[ busnumber ].device.filename.path );
       if ( fd > 0 )
       {
         buses[ busnumber ].fd = fd;
@@ -309,11 +309,11 @@ int init_bus_HSI_88(bus_t busnumber )
   if ( status == 0 )
     working_HSI88 = 1;
 
-  printf( "INIT_BUS_HSI with code: %d\n", status );
+  DBG(busnumber, DBG_DEBUG, "INIT_BUS_HSI with code: %d\n", status);
   return status;
 }
 
-int term_bus_HSI_88(bus_t busnumber )
+int term_bus_HSI_88(bus_t busnumber)
 {
   if ( buses[ busnumber ].type != SERVER_HSI_88 )
     return 1;

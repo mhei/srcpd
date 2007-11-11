@@ -185,8 +185,8 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
 #ifdef linux
             busnumber += readconfig_I2C_DEV(doc, child, busnumber);
 #else
-            DBG(0, DBG_ERROR, "Sorry, I2C-DEV only available on Linux "
-                            "(yet)\n");
+            DBG(0, DBG_ERROR, "Sorry, I2C-DEV is only available on "
+                            "Linux (yet).\n");
 #endif
         }
 
@@ -237,7 +237,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
                             free(txt2);
                         }
                         else {
-                            buses[current_bus].device.net.protocol = 6;       /* TCP */
+                            buses[current_bus].device.net.protocol = 6; /* TCP */
                         }
                         break;
                 }
@@ -245,7 +245,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
             }
             switch (buses[current_bus].devicetype) {
                 case HW_FILENAME:
-                    DBG(current_bus, DBG_INFO, "** Filename='%s'",
+                    DBG(current_bus, DBG_DEBUG, "** Filename='%s'",
                         buses[current_bus].device.filename.path);
                     break;
                 case HW_NETWORK:
