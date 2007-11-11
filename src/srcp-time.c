@@ -87,7 +87,7 @@ void *thr_clock(void *v)
         /* delta Modellzeit = delta real time * ratio_x/ratio_y */
         sleeptime = (1000000 * vtime.ratio_y) / vtime.ratio_x;
         usleep(sleeptime);
-        // fürs Rechnen eine temporäre Kopie. Damit ist vtime immer gültig
+        /* fürs Rechnen eine temporäre Kopie. Damit ist vtime immer gültig */
         vt = vtime;
         vt.sec++;
         if (vt.sec >= 60) {
@@ -110,7 +110,7 @@ void *thr_clock(void *v)
             infoTIME(msg);
             queueInfoMessage(msg);
         }
-        // syslog(LOG_INFO, "time: %d %d %d %d %d %d", vtime.day, vtime.hour, vtime.min, vtime.sec,  vtime.ratio_x, vtime.ratio_y);
+        /* syslog(LOG_INFO, "time: %d %d %d %d %d %d", vtime.day, vtime.hour, vtime.min, vtime.sec,  vtime.ratio_x, vtime.ratio_y); */
     }
 }
 

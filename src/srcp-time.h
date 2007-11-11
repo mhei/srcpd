@@ -12,7 +12,7 @@
 
 #include <sys/time.h>
 
-/* Zeitgeber */
+/* timer */
 struct _VTIME
 {
   int day;

@@ -41,7 +41,7 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     buses[0].term_func = &term_bus_server;
     strcpy(buses[0].description, "SESSION SERVER TIME GM");
 
-    // initialize _SERVER_DATA with defaults
+    /* initialize _SERVER_DATA with defaults */
     serviceentry = getservbyname("srcp","tcp");
     if (serviceentry == NULL) {
 	__srv->TCPPORT = 4303;

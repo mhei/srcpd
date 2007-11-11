@@ -106,4 +106,4 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
-#endif         // _SRCP_MASTER_INCLUDE_H
+#endif         /* _SRCP_MASTER_INCLUDE_H */

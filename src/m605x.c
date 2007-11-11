@@ -367,11 +367,11 @@ void *thr_sendrec_M6051(void *v)
                     gatmp.activetime =
                         (gatmp.activetime > ga_min_active_time) ?
                         ga_min_active_time : gatmp.activetime;
-                    // n�chste Aktion ist automatisches Aus
+                    /* n�chste Aktion ist automatisches Aus */
                     gatmp.action = 0;
                 }
                 else {
-                    // egal wieviel, mind. 75m ein
+                    /* egal wieviel, mind. 75m ein */
                     gatmp.activetime = ga_min_active_time;
                 }
                 c = 33 + (gatmp.port ? 0 : 1);
@@ -418,6 +418,6 @@ void *thr_sendrec_M6051(void *v)
         }
         buses[bus].watchdog = 10;
         check_reset_fb(bus);
-        // fprintf(stderr, " ende\n");
+        /* fprintf(stderr, " ende\n"); */
     }
 }

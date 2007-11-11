@@ -226,7 +226,7 @@ int init_bus_LI100_SERIAL( bus_t busnumber )
   else
   {
     if ( buses[ busnumber ].fd > 0 )
-      status = -3;        // bus is already in use
+      status = -3;        /* bus is already in use */
   }
 
   if ( status == 0 )
@@ -252,9 +252,9 @@ int init_bus_LI100_SERIAL( bus_t busnumber )
     printf( "Version LENZ-Interface : %d.%d\n", __li100->version_interface / 256, __li100->version_interface % 256 );
     printf( "Code LENZ-Interface    : %d%d\n", __li100->code_interface / 16, __li100->code_interface % 16 );
     printf( "Version LENZ-Central unit  : %d.%d\n", __li100->version_zentrale / 256, __li100->version_zentrale % 256 );
-    //     printf("Code LENZ-Central unit     : %d",__li100->code_zentrale);
+    /* printf("Code LENZ-Central unit     : %d",__li100->code_zentrale); */
     __li100->get_addr = 0;
-    // if version of central unit is greater than 3.0, cleanup stack
+    /* if version of central unit is greater than 3.0, cleanup stack */
     if ( __li100->version_zentrale >= 0x0300 )
     {
       for ( ;; )
@@ -283,10 +283,10 @@ int init_bus_LI100_SERIAL( bus_t busnumber )
 #endif
       }
     }
-    // read all feedbacks for first time
+    /* read all feedbacks for first time */
     for(i=0;i<__li100->number_fb;i++)
     {
-      // read bit 0..3
+      /* read bit 0..3 */
       byte2send[0] = 0x42;
       byte2send[1] = i;
       byte2send[2] = 0x80;
@@ -295,7 +295,7 @@ int init_bus_LI100_SERIAL( bus_t busnumber )
 #else
       send_command_LI100_SERIAL( busnumber, byte2send );
 #endif
-      // read bit 4..7
+      /* read bit 4..7 */
       byte2send[0] = 0x42;
       byte2send[1] = i;
       byte2send[2] = 0x81;
@@ -364,7 +364,7 @@ void *thr_sendrec_LI100_SERIAL( void *v )
   DBG( busnumber, DBG_INFO, "thr_sendrec_LI100 (serial) is started as bus #%ld", busnumber );
 #endif
 
-  // initialize tga-structure
+  /* initialize tga-structure */
 
   for ( zaehler1 = 0; zaehler1 < 50; zaehler1++ )
     __li100->tga[ zaehler1 ].id = 0;
@@ -374,9 +374,9 @@ void *thr_sendrec_LI100_SERIAL( void *v )
 
   while ( 1 )
   {
-    //  syslog(LOG_INFO, "thr_sendrec_LI100 Start in loop");
+    /* syslog(LOG_INFO, "thr_sendrec_LI100 Start in loop"); */
     /* Start/Stop */
-    //fprintf(stderr, "START/STOP... ");
+    /* fprintf(stderr, "START/STOP... "); */
 
     if ( buses[busnumber].power_changed == 1 )
     {
@@ -387,7 +387,7 @@ void *thr_sendrec_LI100_SERIAL( void *v )
 #else
       status = send_command_LI100_SERIAL( busnumber, byte2send );
 #endif
-      if ( status == 0 )                                    // all was OK ?
+      if ( status == 0 )                                    /* all was OK ? */
         buses[ busnumber ].power_changed = 0;
     }
 
@@ -408,7 +408,7 @@ void *thr_sendrec_LI100_SERIAL( void *v )
     check_reset_fb( busnumber );
     buses[ busnumber ].watchdog = 1;
     usleep( 50000 );
-  }                           // End WHILE(1)
+  }                           /* End WHILE(1) */
 }
 
 #ifdef LI100_USB
@@ -428,7 +428,7 @@ void send_command_ga_LI100_SERIAL( bus_t busnumber )
   struct timeval akt_time, cmp_time;
 
   gettimeofday( &akt_time, NULL );
-  // first eventually Decoder switch off
+  /* first eventually Decoder switch off */
 
   for ( i = 0; i < 50; i++ )
   {
@@ -437,7 +437,7 @@ void send_command_ga_LI100_SERIAL( bus_t busnumber )
       syslog( LOG_INFO, "time %i,%i", ( int ) akt_time.tv_sec,
               ( int ) akt_time.tv_usec );
       cmp_time = __li100->tga[ i ].t;
-      // switch of time reached?
+      /* switch of time reached? */
 
       if ( cmpTime( &cmp_time, &akt_time ) )
       {
@@ -475,7 +475,7 @@ void send_command_ga_LI100_SERIAL( bus_t busnumber )
     }
   }
 
-  // Decoder switch on
+  /* Decoder switch on */
   if ( !queue_GA_isempty( busnumber ) )
   {
     unqueueNextGA( busnumber, &gatmp );
@@ -560,7 +560,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
   struct _GLSTATE gltmp, glakt;
 
   /* Locomotive decoder */
-  //fprintf(stderr, "LOK's... ");
+  /* fprintf(stderr, "LOK's... "); */
   /* nur senden, wenn wirklich etwas vorliegt */
 
   if ( !queue_GL_isempty( busnumber ) )
@@ -569,13 +569,13 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
     addr = gltmp.id;
     getGL( busnumber, addr, &glakt );
 
-    // speed, direction or function changed?
+    /* speed, direction or function changed? */
 
     if (( gltmp.direction != glakt.direction ) ||
         ( gltmp.speed != glakt.speed ) || ( gltmp.funcs != glakt.funcs ) )
     {
-      // Lokkommando soll gesendet werden
-      // emergency stop for one locomotive
+      /* Lokkommando soll gesendet werden */
+      /* emergency stop for one locomotive */
 
       if ( gltmp.direction == 2 )
       {
@@ -612,9 +612,9 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
         if ( __li100->version_zentrale <= 0x0150 )
         {
           byte2send[ 0 ] = 0xb3;
-          // address
+          /* address */
           byte2send[ 1 ] = gltmp.id;
-          // setting direction and speed
+          /* setting direction and speed */
           byte2send[ 2 ] = gltmp.speed;
 
           if ( gltmp.speed > 0 )
@@ -630,7 +630,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
             byte2send[ 2 ] |= 0x20;
           }
 
-          // functions f1..f4
+          /* functions f1..f4 */
           byte2send[ 3 ] = ( gltmp.funcs >> 1 ) & 0x000F;
 
           status = send_command_LI100_SERIAL( busnumber, byte2send );
@@ -640,9 +640,9 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
             ( __li100->version_zentrale < 0x0300 ) )
         {
           byte2send[ 0 ] = 0xb4;
-          // address
+          /* address */
           byte2send[ 1 ] = gltmp.id;
-          // mode
+          /* mode */
 
           switch ( gltmp.n_fs )
           {
@@ -651,7 +651,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
                 14:
               byte2send[ 4 ] = 0x00;
 
-              // setting direction and speed
+              /* setting direction and speed */
               byte2send[ 2 ] = gltmp.speed;
 
               if ( gltmp.speed > 0 )
@@ -674,7 +674,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
                 27:
               byte2send[ 4 ] = 0x01;
 
-              // setting direction and speed
+              /* setting direction and speed */
               byte2send[ 2 ] = gltmp.speed;
 
               if ( gltmp.speed > 0 )
@@ -702,7 +702,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
                 28:
               byte2send[ 4 ] = 0x02;
 
-              // setting direction and speed
+              /* setting direction and speed */
               byte2send[ 2 ] = gltmp.speed;
 
               if ( gltmp.speed > 0 )
@@ -730,7 +730,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
                 :
               byte2send[ 4 ] = 0x00;
 
-              // setting direction and speed
+              /* setting direction and speed */
               byte2send[ 2 ] = gltmp.speed;
 
               if ( gltmp.speed > 0 )
@@ -747,7 +747,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
               }
           }
 
-          // functions f1..f4
+          /* functions f1..f4 */
           byte2send[ 3 ] = ( gltmp.funcs >> 1 ) & 0x000F;
 
           status = send_command_LI100_SERIAL( busnumber, byte2send );
@@ -757,7 +757,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
         {
 #endif
           byte2send[ 0 ] = 0xe4;
-          // mode
+          /* mode */
 
           switch ( gltmp.n_fs )
           {
@@ -795,7 +795,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
               byte2send[ 1 ] = 0x12;
           }
 
-          // high byte of address
+          /* high byte of address */
           temp = gltmp.id;
 
           temp >>= 8;
@@ -805,14 +805,14 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
           if ( addr > 99 )
             byte2send[ 2 ] |= 0xc0;
 
-          // low byte of address
+          /* low byte of address */
           temp = gltmp.id;
 
           temp &= 0x00FF;
 
           byte2send[ 3 ] = temp;
 
-          // setting direction and speed
+          /* setting direction and speed */
           byte2send[ 4 ] = gltmp.speed;
 
           if (( gltmp.n_fs == 27 ) || ( gltmp.n_fs = 28 ) )
@@ -844,25 +844,25 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
 
 #endif
 
-          // send functions f0..f4
+          /* send functions f0..f4 */
           byte2send[ 0 ] = 0xe4;
 
-          // mode
+          /* mode */
           byte2send[ 1 ] = 0x20;
 
-          // high byte of address
+          /* high byte of address */
           temp = gltmp.id;
           temp >>= 8;
           byte2send[ 2 ] = temp;
           if ( addr > 99 )
             byte2send[ 2 ] |= 0xc0;
 
-          // low byte of address
+          /* low byte of address */
           temp = gltmp.id;
           temp &= 0x00FF;
           byte2send[ 3 ] = temp;
 
-          // setting F0-F4
+          /* setting F0-F4 */
           byte2send[ 4 ] = ( gltmp.funcs >> 1 ) & 0x00FF;
           if ( gltmp.funcs & 1 )
           {
@@ -911,7 +911,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
           {
             __li100->last_value = tmp_addr;
             byte2send[ 0 ] = 0xa1;
-            // address
+            /* address */
             byte2send[ 1 ] = tmp_addr;
 #ifdef LI100_USB
 
@@ -929,9 +929,9 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
             __li100->last_value = tmp_addr;
             getGL( busnumber, tmp_addr, &gltmp );
             byte2send[ 0 ] = 0xa2;
-            // address
+            /* address */
             byte2send[ 1 ] = tmp_addr;
-            // mode
+            /* mode */
 
             switch ( gltmp.n_fs )
             {
@@ -1149,7 +1149,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
     return status;
   }
 
-  // program decoder on the main
+  /* program decoder on the main */
 #ifdef LI100_USB
   int send_pom_cv_LI100_USB( bus_t busnumber, int addr, int cv, int value )
 #else
@@ -1163,13 +1163,13 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
 
     cv--;
 
-    // send pom-command
+    /* send pom-command */
     byte2send[ 0 ] = 0xE6;
     byte2send[ 1 ] = 0x30;
-    // high-byte of decoder-address
+    /* high-byte of decoder-address */
     tmp = addr >> 8;
     byte2send[ 2 ] = tmp;
-    // low-byte of decoder-address
+    /* low-byte of decoder-address */
     tmp = addr & 0xFF;
     byte2send[ 3 ] = tmp;
     tmp = 0x7C | (( cv >> 8 ) & 0x03 );
@@ -1191,7 +1191,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
     return ret_val;
   }
 
-  // program decoder on the main
+  /* program decoder on the main */
 #ifdef LI100_USB
   int send_pom_cvbit_LI100_USB( bus_t busnumber, int addr, int cv, int cvbit, int value )
 #else
@@ -1205,13 +1205,13 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
 
     cv--;
 
-    // send pom-command
+    /* send pom-command */
     byte2send[ 0 ] = 0xE6;
     byte2send[ 1 ] = 0x30;
-    // high-byte of decoder-address
+    /* high-byte of decoder-address */
     tmp = addr >> 8;
     byte2send[ 2 ] = tmp;
-    // low-byte of decoder-address
+    /* low-byte of decoder-address */
     tmp = addr & 0xFF;
     byte2send[ 3 ] = tmp;
     tmp = 0x7C | (( cv >> 8 ) & 0x03 );
@@ -1249,7 +1249,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
     unsigned char byte2send[ 20 ];
     unsigned char status;
 
-    // send command "turn all on"
+    /* send command "turn all on" */
     byte2send[ 0 ] = 0x21;
     byte2send[ 1 ] = 0x81;
 
@@ -1270,13 +1270,13 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
   void send_command_sm_LI100_SERIAL( bus_t busnumber )
 #endif
   {
-    //unsigned char byte2send;
-    //unsigned char status;
+    /* unsigned char byte2send; */
+    /* unsigned char status; */
 
     struct _SM smakt;
 
     /* Locomotive decoder */
-    //fprintf(stderr, "LOK's... ");
+    /* fprintf(stderr, "LOK's... "); */
     /* nur senden, wenn wirklich etwas vorliegt */
 
     if ( !queue_SM_isempty( busnumber ) )
@@ -1506,7 +1506,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
     unsigned char str[ 20 ];
 
 
-    // with debug level beyond DBG_DEBUG, we will not really work on hardware
+    /* with debug level beyond DBG_DEBUG, we will not really work on hardware */
 
     if ( buses[ busnumber ].debuglevel <= DBG_DEBUG )
     {
@@ -1529,7 +1529,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
 
              "readbyte(): (fd = %d), there are %d bytes to read.",
              buses[ busnumber ].fd, i );
-        // read only, if there is really an input
+        /* read only, if there is really an input */
 
         if ( i > 0 )
 #ifdef LI100_USB
@@ -1553,21 +1553,21 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
     int status;
 
 #ifdef LI100_USB
-    // header for LI100_USB
+    /* header for LI100_USB */
     writeByte( busnumber, 0xff, 0 );
     writeByte( busnumber, 0xfe, 0 );
 #endif
 
-    str[ 19 ] = 0x00;             // control-byte for xor
-    ctr = str[ 0 ] & 0x0f;        // generate length of command
+    str[ 19 ] = 0x00;             /* control-byte for xor */
+    ctr = str[ 0 ] & 0x0f;        /* generate length of command */
     ctr++;
 
-    for ( i = 0; i < ctr; i++ )                                  // send command
+    for ( i = 0; i < ctr; i++ )                                  /* send command */
     {
       str[ 19 ] ^= str[ i ];
       writeByte( busnumber, str[ i ], 0 );
     }
-    writeByte( busnumber, str[ 19 ], 0 ); // send X-Or-Byte
+    writeByte( busnumber, str[ 19 ], 0 ); /* send X-Or-Byte */
 
 #ifdef LI100_USB
 
@@ -1599,7 +1599,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
     gltmp.funcs = 0;
 
     message_processed = 0;
-    status = -1;                // wait for answer
+    status = -1;                /* wait for answer */
 
     ctr = 50;
 
@@ -1616,18 +1616,18 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
     }
 
 #ifdef LI100_USB
-    // skip LI100_USB-header
+    /* skip LI100_USB-header */
     readByte( busnumber, 1, &str[ 0 ] );
 
     readByte( busnumber, 1, &str[ 0 ] );
 
 #endif
 
-    ctr = str[ 0 ] & 0x0f;                                        // generate length of answer
+    ctr = str[ 0 ] & 0x0f;                                        /* generate length of answer */
 
     ctr += 2;
 
-    for ( i = 1; i < ctr; i++ )                                   // read answer
+    for ( i = 1; i < ctr; i++ )                                   /* read answer */
     {
       readByte( busnumber, 1, &str[ i ] );
     }
@@ -1639,10 +1639,10 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
       cXor ^= str[ i ];
     }
 
-    if ( cXor != 0x00 )                                           // must be 0x00
-      status = -1;                                                // error
+    if ( cXor != 0x00 )                                           /* must be 0x00 */
+      status = -1;                                                /* error */
 
-    if ( str[ 0 ] == 0x02 )                                       // version-number of interface
+    if ( str[ 0 ] == 0x02 )                                       /* version-number of interface */
     {
       __li100->version_interface =
         (( str[ 1 ] & 0xf0 ) << 4 ) + ( str[ 1 ] & 0x0f );
@@ -1650,7 +1650,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
       message_processed = 1;
     }
 
-    // version-number of central unit
+    /* version-number of central unit */
     if (( str[ 0 ] == 0x62 ) || ( str[ 0 ] == 0x63 ) )
     {
       if ( str[ 1 ] == 0x21 )
@@ -1664,7 +1664,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
           __li100->code_interface = -1;
 
 #ifndef LI100_USB
-        // check for address-range 1..99; 1..256 for version < V3.00
+        /* check for address-range 1..99; 1..256 for version < V3.00 */
         if ( __li100->version_zentrale < 0x0300 )
         {
           if ( __li100->number_gl > 99 )
@@ -1680,10 +1680,10 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
       }
     }
 
-    // power on/off
+    /* power on/off */
     if ( str[ 0 ] == 0x61 )
     {
-      // power on
+      /* power on */
 
       if ( str[ 1 ] == 0x01 )
       {
@@ -1708,7 +1708,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
         message_processed = 1;
       }
 
-      // power off
+      /* power off */
       if ( str[ 1 ] == 0x00 )
       {
         DBG( busnumber, DBG_DEBUG,
@@ -1725,7 +1725,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
         message_processed = 1;
       }
 
-      // program mode on
+      /* program mode on */
       if ( str[ 1 ] == 0x02 )
       {
         if ( __li100->pgm_mode == 0 )
@@ -1769,9 +1769,9 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
       gltmp.funcs = (( str[ 3 ] & 0x0f ) << 1 );
 
       if ( str[ 2 ] & 0x20 )
-        gltmp.funcs |= 0x01;        // light is on
+        gltmp.funcs |= 0x01;        /* light is on */
 
-      // get old data, to send only if something changed
+      /* get old data, to send only if something changed */
       getGL( busnumber, gltmp.id, &glakt );
 
       if (( glakt.speed != gltmp.speed ) ||
@@ -1800,11 +1800,11 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
       }
     }
 
-    // information about an engine (single traction)
+    /* information about an engine (single traction) */
     if ( str[ 0 ] == 0xe4 )
     {
       gltmp.id = __li100->last_value & 0x3fff;
-      //is engine always allocated by an external device?
+      /* is engine always allocated by an external device? */
 
       if ( !( str[ 1 ] & 0x08 ) )
       {
@@ -1826,7 +1826,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
           if ( gltmp.speed == 1 )
           {
             gltmp.speed = 0;
-            //             gltmp.direction = 2;
+            /* gltmp.direction = 2; */
           }
           else
           {
@@ -1854,7 +1854,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
           if ( gltmp.speed == 2 )
           {
             gltmp.speed = 0;
-            //             gltmp.direction = 2;
+            /* gltmp.direction = 2; */
           }
           else
           {
@@ -1866,9 +1866,9 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
       }
 
       if ( str[ 3 ] & 0x10 )
-        gltmp.funcs |= 0x01;        // light is on
+        gltmp.funcs |= 0x01;        /* light is on */
 
-      // get old data, to send only if something changed
+      /* get old data, to send only if something changed */
       getGL( busnumber, gltmp.id, &glakt );
 
       if (( glakt.speed != gltmp.speed ) ||
@@ -1879,7 +1879,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
       message_processed = 1;
     }
 
-    // information about feedback
+    /* information about feedback */
     if (( str[ 0 ] & 0xf0 ) == 0x40 )
     {
       ctr = str[ 0 ] & 0xf;
@@ -1891,10 +1891,10 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
         {
           case
 
-              0x00:                                         // switch-decoder without feedback
+              0x00:                                         /* switch-decoder without feedback */
           case
 
-              0x20:                                         // switch-decoder with feedback
+              0x20:                                         /* switch-decoder with feedback */
             gatmp.id = str[ i ];
 
             gatmp.id <<= 2;
@@ -1940,7 +1940,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
 
           case
 
-              0x40:                                         // feedback-decoder
+              0x40:                                         /* feedback-decoder */
             setFBmodul( busnumber,
                         ( str[ i ] * 2 ) + (( str[ i + 1 ] & 0x10 ) ? 2 : 1 ),
                         str[ i + 1 ] & 0x0f );
@@ -1952,7 +1952,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
       message_processed = 1;
     }
 
-    // answer of programming
+    /* answer of programming */
     if (( str[ 0 ] == 0x63 ) && (( str[ 1 ] & 0xf0 ) == 0x10 ) )
     {
       if ( __li100->last_type != -1 )
@@ -2081,7 +2081,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
 
     status++;
 
-    // get version of LI100
+    /* get version of LI100 */
     byte2send[ 0 ] = 0xF0;
 #ifdef LI100_USB
 
@@ -2096,7 +2096,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
     else
       return status;
 
-    // get version of central unit
+    /* get version of central unit */
     byte2send[ 0 ] = 0x21;
 
     byte2send[ 1 ] = 0x21;
@@ -2113,7 +2113,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
     else
       return status;
 
-    // get status of central unit
+    /* get status of central unit */
     byte2send[ 0 ] = 0x21;
 
     byte2send[ 1 ] = 0x24;

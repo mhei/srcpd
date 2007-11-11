@@ -961,7 +961,7 @@ int comp_maerklin_5(bus_t busnumber, int address, int direction,
         two_commands = TRUE;
 
     if (speed > 0) {
-        if (two_commands) {     // two commands necessary
+        if (two_commands) {     /* two commands necessary */
             if (speed % 2) {
                 sFS2 = speed / 2 + 1;
                 sFS1 = sFS2 + 1;
@@ -973,12 +973,12 @@ int comp_maerklin_5(bus_t busnumber, int address, int direction,
                     sFS1 = 0;
             }
         }
-        else {                  // one command necessary
+        else {                  /* one command necessary */
             sFS1 = speed / 2 + 1;
             sFS2 = 0;
         }
     }
-    else {                      // one command necessary
+    else {                      /* one command necessary */
         sFS1 = 0;
         sFS2 = 0;
     }
@@ -1009,7 +1009,7 @@ int comp_maerklin_ms(bus_t busnumber, int address, int port, int action)
     if (address < 1 || address > 324 || action < 0 || action > 1 ||
         port < 0 || port > 1)
         return 1;
-#if 0                           // GA Packet Cache
+#if 0                           /* GA Packet Cache */
     getMaerklinGaPacket(address, port, action, &p_packet);
     if (p_packet == NULL) {
 #endif
@@ -1066,11 +1066,11 @@ int comp_maerklin_ms(bus_t busnumber, int address, int port, int action)
                     break;
             }
         }
-#if 0                           // GA Packet Cache
+#if 0                           /* GA Packet Cache */
     }
 #endif
     queue_add(busnumber, address, p_packet, QM1SOLEPKT, 9);
-#if 0                           // GA Packet Cache
+#if 0                           /* GA Packet Cache */
     updateMaerklinGaPacketPool(address, port, action, p_packet);
 #endif
     return 0;

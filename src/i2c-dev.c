@@ -32,7 +32,7 @@
 #include "i2c-dev.h"
 
 #include <linux/i2c-dev.h>
-// we have to use kernel-headers directly, sorry!
+/* we have to use kernel-headers directly, sorry! */
 
 #ifndef I2C_SLAVE
 #define I2C_SLAVE 0x0703
@@ -57,7 +57,7 @@ static int write_PCF8574(bus_t bus, int addr, __u8 byte)
         return (ret);
     }
 
-    //  ret = i2c_smbus_write_byte(busfd, byte);
+    /* ret = i2c_smbus_write_byte(busfd, byte); */
 
     if (ret < 0) {
         DBG(bus, DBG_INFO, "Couldn't send byte %d to address %d (%s)",
@@ -142,18 +142,18 @@ static int handle_i2c_set_ga(bus_t bus, struct _GASTATE *gatmp)
         reset_old_value = 1;
     }
     else {
-        gatmp->activetime = ga_min_active_time; // always wait minimum time
+        gatmp->activetime = ga_min_active_time; /* always wait minimum time */
         reset_old_value = 0;
     }
 
     DBG(bus, DBG_DEBUG, "i2c_addr = %d on multiplexed bus #%d",
         i2c_addr, mult_busnum);
-    // port: 0     - direct write of value to device
-    //       other - select port pins directly, value = {0,1}
+    /* port: 0     - direct write of value to device */
+    /* other - select port pins directly, value = {0,1} */
 
     if (port == 0) {
 
-        // write directly to device
+        /* write directly to device */
 
         if (ga_hardware_inverters == 1) {
             i2c_val = ~value;
@@ -165,7 +165,7 @@ static int handle_i2c_set_ga(bus_t bus, struct _GASTATE *gatmp)
     }
     else {
 
-        // set bit for selected port to 1
+        /* set bit for selected port to 1 */
         I2C_VALUE pin_bit = 1 << (port - 1);
         value = (value & 1);
         i2c_val = data->i2c_values[i2c_addr][mult_busnum - 1];
@@ -282,7 +282,7 @@ int readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         child = child->next;
     }
 
-    // init the stuff
+    /* init the stuff */
 
     __i2cdev->number_ga = 256 * (__i2cdev->multiplex_buses);
 
@@ -329,7 +329,7 @@ int init_lineI2C_DEV(bus_t bus)
 
 void reset_ga(bus_t busnumber, int busfd)
 {
-    // reset ga devices to values stored in data->i2c_values
+    /* reset ga devices to values stored in data->i2c_values */
     I2CDEV_DATA *data = (I2CDEV_DATA *) buses[busnumber].driverdata;
     int i, multiplexer_adr;
     int multiplex_buses;
@@ -343,13 +343,13 @@ void reset_ga(bus_t busnumber, int busfd)
 
             select_bus(multiplexer_adr, busfd, busnumber);
 
-            // first PCF 8574 P
+            /* first PCF 8574 P */
             for (i = 32; i <= 39; i++) {
                 write_PCF8574(busnumber, i,
                               data->i2c_values[i][multiplexer_adr - 1]);
             }
 
-            // now PCF 8574 AP
+            /* now PCF 8574 AP */
             for (i = 56; i <= 63; i++) {
                 write_PCF8574(busnumber, i,
                               data->i2c_values[i][multiplexer_adr - 1]);
@@ -365,7 +365,7 @@ void select_bus(int mult_busnum, int busfd, bus_t busnumber)
 
     int addr, value = 0;
 
-    //addr = 224 + (2 * (int) (mult_busnum / 9));
+    /* addr = 224 + (2 * (int) (mult_busnum / 9)); */
     addr = 224;
     if (mult_busnum > 8)
         mult_busnum = 0;
@@ -403,7 +403,7 @@ int init_bus_I2C_DEV(bus_t i)
     DBG(i, DBG_INFO, "i2c-dev init: bus #%ld, debug %d", i,
         buses[i].debuglevel);
 
-    // init the hardware interface
+    /* init the hardware interface */
     if (buses[i].debuglevel < 6) {
         buses[i].fd = init_lineI2C_DEV(i);
     }
@@ -411,7 +411,7 @@ int init_bus_I2C_DEV(bus_t i)
         buses[i].fd = -1;
     }
 
-    // init software
+    /* init software */
     ga_hardware_inverters = data->ga_hardware_inverters;
     multiplex_buses = data->multiplex_buses;
 
@@ -424,18 +424,18 @@ int init_bus_I2C_DEV(bus_t i)
         buf = 0x00;
     }
 
-    // preload data->i2c_values
+    /* preload data->i2c_values */
 
     if (multiplex_buses > 0) {
 
         for (multiplexer_adr = 1; multiplexer_adr <= multiplex_buses;
              multiplexer_adr++) {
-            // first PCF 8574 P
+            /* first PCF 8574 P */
             for (j = 32; j <= 39; j++) {
                 data->i2c_values[j][multiplexer_adr - 1] = buf;
             }
 
-            // now PCF 8574 AP
+            /* now PCF 8574 AP */
             for (j = 56; j <= 63; j++) {
                 data->i2c_values[j][multiplexer_adr - 1] = buf;
             }
@@ -473,13 +473,13 @@ void *thr_sendrec_I2C_DEV(void *v)
 
     buses[bus].watchdog = 1;
 
-    // command processing starts here
+    /* command processing starts here */
     while (1) {
 
-        // process POWER changes
+        /* process POWER changes */
         if (buses[bus].power_changed == 1) {
 
-            // dummy select, power state is directly read by select_bus()
+            /* dummy select, power state is directly read by select_bus() */
             select_bus(0, buses[bus].fd, bus);
             buses[bus].power_changed = 0;
             infoPower(bus, msg);
@@ -491,7 +491,7 @@ void *thr_sendrec_I2C_DEV(void *v)
 
         }
 
-        // do nothing, if power off
+        /* do nothing, if power off */
         if (buses[bus].power_state == 0) {
             usleep(1000);
             continue;
@@ -499,7 +499,7 @@ void *thr_sendrec_I2C_DEV(void *v)
 
         buses[bus].watchdog = 4;
 
-        // process GA commands
+        /* process GA commands */
         if (!queue_GA_isempty(bus)) {
             unqueueNextGA(bus, &gatmp);
             handle_i2c_set_ga(bus, &gatmp);

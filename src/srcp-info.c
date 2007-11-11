@@ -108,7 +108,7 @@ int doInfoClient(int Socket, sessionid_t sessionid)
     int status, i, current, number, value;
     char reply[1000], description[1000];
 
-    // send start up-information to a new client
+    /* send start up-information to a new client */
     struct timeval cmp_time;
     bus_t busnumber;
     current = in;
@@ -116,8 +116,8 @@ int doInfoClient(int Socket, sessionid_t sessionid)
     for (busnumber = 0; busnumber <= num_buses; busnumber++) {
         DBG(busnumber, DBG_DEBUG,
             "send all data for bus number %d to new client", busnumber);
-        // first some global bus data
-        // send Descriptions for buses
+        /* first some global bus data */
+        /* send Descriptions for buses */
         describeBus(busnumber, reply);
         socket_writereply(Socket, reply);
         strcpy(description, reply);
@@ -138,7 +138,7 @@ int doInfoClient(int Socket, sessionid_t sessionid)
             *reply = 0x00;
         }
 
-        // send all needed generic locomotives
+        /* send all needed generic locomotives */
         if (strstr(description, "GL")) {
             number = getMaxAddrGL(busnumber);
             for (i = 1; i <= number; i++) {
@@ -160,7 +160,7 @@ int doInfoClient(int Socket, sessionid_t sessionid)
             }
         }
         
-        // send all needed generic assesoires
+        /* send all needed generic assesoires */
         if (strstr(description, "GA")) {
             number = get_number_ga(busnumber);
             for (i = 1; i <= number; i++) {
@@ -188,7 +188,7 @@ int doInfoClient(int Socket, sessionid_t sessionid)
             }
         }
 
-        // send all needed feedbacks
+        /* send all needed feedbacks */
         if (strstr(description, "FB")) {
             number = get_number_fb(busnumber);
             for (i = 1; i <= number; i++) {
@@ -214,7 +214,7 @@ int doInfoClient(int Socket, sessionid_t sessionid)
     current = in;
     
     while (1) {
-        // busy waiting, anyone with better code out there?
+        /* busy waiting, anyone with better code out there? */
         while (queueIsEmptyInfo(current))
             usleep(2000);
 

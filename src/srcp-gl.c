@@ -66,7 +66,7 @@ int getMaxAddrGL(bus_t busnumber)
     }
 }
 
-// es gibt Decoder fr 14, 27, 28 und 128 FS
+/* es gibt Decoder fr 14, 27, 28 und 128 FS */
 static int calcspeed(int vs, int vmax, int n_fs)
 {
     int rs;
@@ -77,14 +77,14 @@ static int calcspeed(int vs, int vmax, int n_fs)
         vs = 0;
     if (vs > vmax)
         vs = vmax;
-    // rs = (vs * n_fs) / vmax;
-    // for test: rs = ((vs * n_fs) / v_max) + 0.5
-    // ==> rs = ((2 * vs * n_fs) + v_max) / (2 * v_max)
-    rs = vs * n_fs;             // vs * n_fs
-    rs <<= 1;                   // 2 * vs * n_fs
-    rs += vmax;                 // (2 * vs * n_fs) + v_max
-    rs /= vmax;                 // ((2 * vs * n_fs) + v_max) / v_max
-    rs >>= 1;                   // ((2 * vs * n_fs) + v_max) / (2 * v_max)
+    /* rs = (vs * n_fs) / vmax; */
+    /* for test: rs = ((vs * n_fs) / v_max) + 0.5 */
+    /* ==> rs = ((2 * vs * n_fs) + v_max) / (2 * v_max) */
+    rs = vs * n_fs;             /* vs * n_fs */
+    rs <<= 1;                   /* 2 * vs * n_fs */
+    rs += vmax;                 /* (2 * vs * n_fs) + v_max */
+    rs /= vmax;                 /* ((2 * vs * n_fs) + v_max) / v_max */
+    rs >>= 1;                   /* ((2 * vs * n_fs) + v_max) / (2 * v_max) */
     if ((rs == 0) && (vs != 0))
         rs = 1;
 
@@ -126,7 +126,7 @@ int queueGL(bus_t busnumber, int addr, int dir, int speed, int maxspeed,
         }
 
         pthread_mutex_lock(&queue_mutex[busnumber]);
-        // Protokollbezeichner und sonstige INIT Werte in die Queue kopieren!
+        /* Protokollbezeichner und sonstige INIT Werte in die Queue kopieren! */
         queue[busnumber][in[busnumber]].protocol =
             gl[busnumber].glstate[addr].protocol;
         queue[busnumber][in[busnumber]].protocolversion =

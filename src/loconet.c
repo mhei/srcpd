@@ -92,7 +92,7 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                     child->name);;
         
         child = child->next;
-    }                           // while
+    }                           /* while */
 
     if (init_FB(busnumber, __loconet->number_fb)) {
         DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
@@ -373,7 +373,7 @@ static int ln_read_lbserver(bus_t busnumber, unsigned char *cmd, int len) {
 	    DBG(busnumber, DBG_DEBUG, " * message '%s' %d bytes", line+7, pktlen);
 	    for(i=0; i<pktlen; i++) {
 		cmd[i] = strtol(line+7+3*i, &d, 16);
-		// DBG(busnumber, DBG_DEBUG, " * %d %d ", i, cmd[i]);
+		/* DBG(busnumber, DBG_DEBUG, " * %d %d ", i, cmd[i]); */
 	    }
 	    retval = pktlen;
 	}
@@ -498,7 +498,7 @@ void *thr_sendrec_LOCONET(void *v)
                 infoPower(busnumber, msg);
                 queueInfoMessage(msg);
                 break;
-            case OPC_SW_REQ: // B0
+            case OPC_SW_REQ: /* B0 */
                 addr = (((unsigned int) ln_packet[1] & 0x007f) |
                        (((unsigned int) ln_packet[2] & 0x000f) << 7) ) + 1;
                 value = (ln_packet[2] & 0x10) >> 4;
@@ -509,9 +509,9 @@ void *thr_sendrec_LOCONET(void *v)
 		setGA(busnumber, addr, gatmp);
                 break;
 
-	    case OPC_SW_REP:    // B1
+	    case OPC_SW_REP:    /* B1 */
 		break;
-            case OPC_INPUT_REP: // B2
+            case OPC_INPUT_REP: /* B2 */
                 addr =
                     ((unsigned int) ln_packet[1] & 0x007f) |
                     (((unsigned int) ln_packet[2] & 0x000f) << 7);

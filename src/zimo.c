@@ -53,7 +53,7 @@ int readanswer(bus_t bus, char cmd, char *buf, int maxbuflen,
                 buf[cnt - 1] = c;
                 cnt++;
             }
-            //DBG(bus, DBG_INFO, "%ld", tdiff(ts,tn));
+            /* DBG(bus, DBG_INFO, "%ld", tdiff(ts,tn)); */
             gettimeofday(&tn, NULL);
             if (tdiff(ts, tn) > timeout_ms)
                 return 0;
@@ -131,7 +131,7 @@ int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                     child->name);;
 
         child = child->next;
-    }                           // while
+    }                           /* while */
 
     if (init_GL(busnumber, __zimo->number_gl)) {
         __zimo->number_gl = 0;
@@ -198,14 +198,14 @@ void *thr_sendrec_zimo(void *v)
 {
     struct _GLSTATE gltmp, glakt;
     struct _SM smtmp;
-    // TODO: struct _GASTATE gatmp, gaakt;
+    /* TODO: struct _GASTATE gatmp, gaakt; */
     int addr, temp, i;
     bus_t bus = (bus_t) v;
     char msg[20];
     char rr;
     char databyte1, databyte2, databyte3;
     unsigned int error, cv, val;
-    // TODO: unsigned char databyte, address;
+    /* TODO: unsigned char databyte, address; */
     DBG(bus, DBG_INFO, "zimo started, bus #%d, %s", bus,
         buses[bus].filename.path);
 
@@ -268,7 +268,7 @@ void *thr_sendrec_zimo(void *v)
         if (!queue_SM_isempty(bus)) {
             int returnvalue = -1;
             unqueueNextSM(bus, &smtmp);
-            //DBG(bus, DBG_INFO, "UNQUEUE SM, cmd:%d addr:%d type:%d typeaddr:%d bit:%04X ",smtmp.command,smtmp.addr,smtmp.type,smtmp.typeaddr,smtmp.bit);
+            /* DBG(bus, DBG_INFO, "UNQUEUE SM, cmd:%d addr:%d type:%d typeaddr:%d bit:%04X ",smtmp.command,smtmp.addr,smtmp.type,smtmp.typeaddr,smtmp.bit); */
             addr = smtmp.addr;
             if (addr == 0 && smtmp.type == CV
                 && (smtmp.typeaddr >= 0 && smtmp.typeaddr < 255)) {
@@ -297,12 +297,12 @@ void *thr_sendrec_zimo(void *v)
                     writeString(bus, (unsigned char *) msg, 0);
                     session_processwait(bus);
                     if (readanswer(bus, 'Q', msg, 20, 10000) > 3) {
-                        //sscanf(&msg[1],"%2X%2X%2X",&error,&cv,&val);
+                        /* sscanf(&msg[1],"%2X%2X%2X",&error,&cv,&val); */
                         sscanf(&msg[1], "%*3c%2X%2X", &cv, &val);
                         DBG(bus, DBG_INFO,
                             "SM GET ANSWER: error %d, cv %d, val %d",
                             error, cv, val);
-                        //if(!error && cv==smtmp.typeaddr)
+                        /* if(!error && cv==smtmp.typeaddr) */
                         returnvalue = val;
                     }
                     session_endwait(bus, returnvalue);

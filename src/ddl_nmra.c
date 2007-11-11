@@ -305,7 +305,7 @@ static const tTranslateData TranslateData[] = {
     {"11111", 5, 0x55}
 };
 
-// number of translatable patterns
+/* number of translatable patterns */
 static int DataCnt = sizeof(TranslateData) / sizeof(TranslateData[0]);
 
 static const tTranslateData_v3 TranslateData_v3[32][2] = {
@@ -463,7 +463,7 @@ int translateBitstream2Packetstream_v2(char *Bitstream, char *Packetstream)
         /* Check if the end of the buffer contains only 1s */
         if (strlen(Bitstream) <= 5) {
             if (strncmp(Bitstream, "11111", strlen(Bitstream)) == 0) {
-                // This is the end
+                /* This is the end */
                 Packetstream[j++] = (unsigned char) 0x55;
                 return j + 1;
             }
@@ -501,7 +501,7 @@ int translateBitstream2Packetstream_v2(char *Bitstream, char *Packetstream)
             j++;
             i = DataCnt - 1;
         }
-        // Check buffer size
+        /* Check buffer size */
         if (j >= PKTSIZE) {
             syslog(LOG_INFO, "Oops buffer too small - bitstream '%s'",
                    Bitstream);
@@ -639,7 +639,7 @@ void calc_14bit_address_byte(char *byte1, char *byte2, int address)
         j = address % 2;
         address = address / 2;
         if (i >= 6) {
-            switch (j) {        // set bit 7 to bit 0 of address-byte 2
+            switch (j) {        /* set bit 7 to bit 0 of address-byte 2 */
                 case 0:
                     byte2[i - 6] = '0';
                     break;
@@ -649,7 +649,7 @@ void calc_14bit_address_byte(char *byte1, char *byte2, int address)
             }
         }
         else {
-            switch (j) {        // set bit 7 to bit 2 of address-byte 1
+            switch (j) {        /* set bit 7 to bit 2 of address-byte 1 */
                 case 0:
                     byte1[2 + i] = '0';
                     break;
@@ -904,7 +904,7 @@ int comp_nmra_accessory(bus_t busnumber, int nr, int output,
     if (nr < 1 || nr > 4096 || output < 0 || output > 1 ||
         activate < 0 || activate > 1)
         return 1;
-#if 0                           // GA Packet Cache
+#if 0                           /* GA Packet Cache */
     /* get the calculated packet if available */
     j = getNMRAGaPacket(nr, output, activate, &p_packetstream);
     if (j == 0) {
@@ -933,12 +933,12 @@ int comp_nmra_accessory(bus_t busnumber, int nr, int output,
 
         j = translateBitstream2Packetstream(busnumber, bitstream,
                                             packetstream, TRUE);
-#if 0                           // GA Packet Cache
+#if 0                           /* GA Packet Cache */
     }
 #endif
     if (j > 0) {
         queue_add(busnumber, address, p_packetstream, QNBACCPKT, j);
-#if 0                           // GA Packet Cache
+#if 0                           /* GA Packet Cache */
         updateNMRAGaPacketPool(nr, output, activate, p_packetstream, j);
 #endif
         return 0;
@@ -1437,9 +1437,9 @@ void handleACK(bus_t busnumber, int sckt, int ack)
     //set_SerialLine(SL_RI,ON);
     usleep(1000);
     if ((ack == 1) && (scanACK(busnumber) == 1))
-        sprintf(buf, "INFO GL SM 2\n"); // ack not supported
+        sprintf(buf, "INFO GL SM 2\n"); /* ack not supported */
     else
-        sprintf(buf, "INFO GL SM %d\n", ack);   // ack supported ==> send to client
+        sprintf(buf, "INFO GL SM %d\n", ack);   /* ack supported ==> send to client */
 
     write(sckt, buf, strlen(buf));
 }
