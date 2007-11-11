@@ -277,8 +277,8 @@ int init_lineDDL(bus_t busnumber)
     }
 
 #if linux
-  // if IMPROVE_NMRADCC_TIMING is set, we have to initialize some
-  // structures
+  /* if IMPROVE_NMRADCC_TIMING is set, we have to initialize some */
+  /* structures */
   if (__DDL -> IMPROVE_NMRADCC_TIMING)
   {
     if (init_serinfo(dev,3,&__DDL->serinfo_marklin)!=0)
@@ -651,9 +651,9 @@ void send_packet(bus_t busnumber, int addr, char *packet,
 void improve_nmradcc_write(bus_t busnumber, char *packet,
                            int packet_size)
 {
-    // Idea: NMRA runs with 17000 Baud
-    // 115200 Baud / 7 = 16457 Baud
-    // -> every Bit 7 times send
+    /* Idea: NMRA runs with 17000 Baud */
+    /* 115200 Baud / 7 = 16457 Baud */
+    /* -> every Bit 7 times send */
     char improve_nmradcc_packet[packet_size * 7];
     int i, j;
     for (i = 0; i < packet_size; i++) {
@@ -844,21 +844,21 @@ int check_lines(bus_t busnumber)
     return (0);
 }
 
-// tvo 2005-12-03
+/* tvo 2005-12-03 */
 int krnl26_nanosleep(const struct timespec *req, struct timespec *rem) {
    struct   timeval start_tv, stop_tv;
    struct   timezone start_tz, stop_tz;
    long int sleep_usec;
    double   slept;
 
-   // Falls "Schlafwerte" zu groß, soll ein normales nanosleep gemacht werden
+   /* Falls "Schlafwerte" zu groß, soll ein normales nanosleep gemacht werden */
    if ((*req).tv_sec > 0 || (*req).tv_nsec > 2000000) {
-      return nanosleep(req, rem); // non-busy waiting
+      return nanosleep(req, rem); /* non-busy waiting */
    }
 
-   // here begins the busy waiting section
+   /* here begins the busy waiting section */
 
-   sleep_usec = (*req).tv_nsec / 1000; // Genauigkeit nur im usec-Bereich!!!
+   sleep_usec = (*req).tv_nsec / 1000; /* Genauigkeit nur im usec-Bereich!!! */
    gettimeofday(&start_tv, &start_tz);
    do {
      gettimeofday(&stop_tv, &stop_tz);
@@ -1006,16 +1006,16 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     buses[busnumber].thr_func = &thr_sendrec_DDL;
 
     strcpy(buses[busnumber].description, "GA GL POWER LOCK DESCRIPTION");
-    __DDL->oslevel = 1; // kernel 2.6
+    __DDL->oslevel = 1; /* kernel 2.6 */
 
     /* we need to check for kernel version below 2.6 or below */
     /* the following code breaks if a kernel version 2.10 will ever occur */
     uname(&utsBuffer);
     sprintf(buf, "%c%c",utsBuffer.release[0], utsBuffer.release[2]);
     if(atoi(buf)>25) {
-        __DDL->oslevel = 1; // kernel 2.6 or later
+        __DDL->oslevel = 1; /* kernel 2.6 or later */
     } else {
-	__DDL->oslevel = 0; // kernel 2.5 or earlier
+	__DDL->oslevel = 0; /* kernel 2.5 or earlier */
     }
 
     __DDL->number_gl = 81;
@@ -1162,7 +1162,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                     child->name);;
 
         child = child->next;
-    }                           // while
+    }                           /* while */
 
     if (init_GA(busnumber, __DDL->number_ga)) {
         __DDL->number_ga = 0;
@@ -1349,7 +1349,7 @@ void *thr_sendrec_DDL(void *v)
                                           ((gltmp.funcs >> 2) & 0x01),
                                           ((gltmp.funcs >> 3) & 0x01),
                                           ((gltmp.funcs >> 4) & 0x01));
-                    else        // emergency halt: FS 1
+                    else        /* emergency halt: FS 1 */
                         comp_nmra_f4b7s28(busnumber, addr, 0, 1,
                                           gltmp.funcs & 0x01,
                                           ((gltmp.funcs >> 1) & 0x01),
@@ -1365,7 +1365,7 @@ void *thr_sendrec_DDL(void *v)
                                            ((gltmp.funcs >> 2) & 0x01),
                                            ((gltmp.funcs >> 3) & 0x01),
                                            ((gltmp.funcs >> 4) & 0x01));
-                    else        // emergency halt: FS 1
+                    else        /* emergency halt: FS 1 */
                         comp_nmra_f4b7s128(busnumber, addr, 0, 1,
                                            gltmp.funcs & 0x01,
                                            ((gltmp.funcs >> 1) & 0x01),
@@ -1381,7 +1381,7 @@ void *thr_sendrec_DDL(void *v)
                                            ((gltmp.funcs >> 2) & 0x01),
                                            ((gltmp.funcs >> 3) & 0x01),
                                            ((gltmp.funcs >> 4) & 0x01));
-                    else        // emergency halt: FS 1
+                    else        /* emergency halt: FS 1 */
                         comp_nmra_f4b14s28(busnumber, addr, 0, 1,
                                            gltmp.funcs & 0x01,
                                            ((gltmp.funcs >> 1) & 0x01),
@@ -1397,7 +1397,7 @@ void *thr_sendrec_DDL(void *v)
                                             ((gltmp.funcs >> 2) & 0x01),
                                             ((gltmp.funcs >> 3) & 0x01),
                                             ((gltmp.funcs >> 4) & 0x01));
-                    else        // emergency halt: FS 1
+                    else        /* emergency halt: FS 1 */
                         comp_nmra_f4b14s128(busnumber, addr, 0, 1,
                                             gltmp.funcs & 0x01,
                                             ((gltmp.funcs >> 1) & 0x01),

@@ -50,7 +50,7 @@ email                : frank.schmischke@t-online.de
 
 static int initLine_IB( bus_t busnumber );
 
-// IB helper functions
+/* IB helper functions */
 static int sendBreak( const int fd,  bus_t busnumber );
 static int switchOffP50Command( const  bus_t busnumber );
 static int readAnswer_IB( const  bus_t busnumber,
@@ -83,7 +83,7 @@ int readConfig_IB( xmlDocPtr doc, xmlNodePtr node, bus_t busnumber )
 
   strcpy( buses[ busnumber ].description,
           "GA GL FB SM POWER LOCK DESCRIPTION" );
-  __ib->number_fb = 0;        // max. 31 for S88; Loconet is missing this time
+  __ib->number_fb = 0;        /* max. 31 for S88; Loconet is missing this time */
   __ib->number_ga = 256;
   __ib->number_gl = 80;
 
@@ -214,7 +214,7 @@ int init_bus_IB( bus_t busnumber )
   }
 
   status = 0;
-  //printf("Bus %d with debuglevel %d\n", busnumber, buses[ busnumber ].debuglevel);
+  /* printf("Bus %d with debuglevel %d\n", busnumber, buses[ busnumber ].debuglevel); */
   DBG( busnumber, DBG_INFO, "Bus %d with debuglevel %d\n", busnumber,
        buses[ busnumber ].debuglevel );
   if ( buses[ busnumber ].type != SERVER_IB )
@@ -224,7 +224,7 @@ int init_bus_IB( bus_t busnumber )
   else
   {
     if ( buses[ busnumber ].fd > 0 )
-      status = -3;        // bus is already in use
+      status = -3;        /* bus is already in use */
   }
 
   if ( status == 0 )
@@ -243,7 +243,7 @@ int init_bus_IB( bus_t busnumber )
     __ib->working_IB = 1;
 
   DBG( busnumber, DBG_INFO, "INIT_BUS_IB exited with code: %d\n", status );
-  //  printf( "INIT_BUS_IB exited with code: %d\n", status );
+  /* printf( "INIT_BUS_IB exited with code: %d\n", status ); */
 
   __ib->last_type = -1;
   __ib->emergency_on_ib = 0;
@@ -279,7 +279,7 @@ void *thr_sendrec_IB( void *v )
   DBG( busnumber, DBG_INFO, "thr_sendrec_IB is startet as bus %i",
        busnumber );
 
-  // initialize tga-structure
+  /* initialize tga-structure */
   for ( zaehler1 = 0; zaehler1 < 50; zaehler1++ )
     __ib->tga[ zaehler1 ].id = 0;
 
@@ -305,7 +305,7 @@ void *thr_sendrec_IB( void *v )
           usleep( 100000 );
           status = readByte( busnumber, 1, &rr );
         }
-        // sleep(2);
+        /* sleep(2); */
       }
       else
       {
@@ -325,11 +325,11 @@ void *thr_sendrec_IB( void *v )
           usleep( 100000 );
           status = readByte_IB( busnumber, 1, &rr );
         }
-        if ( rr == 0x00 )    // war alles OK?
+        if ( rr == 0x00 )    /* war alles OK? */
         {
           buses[ busnumber ].power_changed = 0;
         }
-        if ( rr == 0x06 )    // power on not possible - overheating
+        if ( rr == 0x06 )    /* power on not possible - overheating */
         {
           buses[ busnumber ].power_changed = 0;
           buses[ busnumber ].power_state = 0;
@@ -355,7 +355,7 @@ void *thr_sendrec_IB( void *v )
     check_reset_fb( busnumber );
     buses[ busnumber ].watchdog = 1;
     usleep( 50000 );
-  }                           // End WHILE(1)
+  }                           /* End WHILE(1) */
 }
 
 void send_command_ga_IB( bus_t busnumber )
@@ -370,7 +370,7 @@ void send_command_ga_IB( bus_t busnumber )
   struct timeval akt_time, cmp_time;
 
   gettimeofday( &akt_time, NULL );
-  // zuerst eventuell Decoder abschalten
+  /* zuerst eventuell Decoder abschalten */
   for ( i = 0; i < 50; i++ )
   {
     if ( __ib->tga[ i ].id )
@@ -378,7 +378,7 @@ void send_command_ga_IB( bus_t busnumber )
       DBG( busnumber, DBG_DEBUG, "Time %i,%i", ( int ) akt_time.tv_sec,
            ( int ) akt_time.tv_usec );
       cmp_time = __ib->tga[ i ].t;
-      if ( cmpTime( &cmp_time, &akt_time ) )     // switch off time reached?
+      if ( cmpTime( &cmp_time, &akt_time ) )     /* switch off time reached? */
       {
         gatmp = __ib->tga[ i ];
         addr = gatmp.id;
@@ -404,7 +404,7 @@ void send_command_ga_IB( bus_t busnumber )
     }
   }
 
-  // Decoder switch on
+  /* Decoder switch on */
   if ( !queue_GA_isempty( busnumber ) )
   {
     unqueueNextGA( busnumber, &gatmp );
@@ -428,7 +428,7 @@ void send_command_ga_IB( bus_t busnumber )
     }
     writeByte( busnumber, byte2send, 0 );
     status = 0;
-    // reschedule event: turn off --to be done--
+    /* reschedule event: turn off --to be done-- */
     if ( gatmp.action && ( gatmp.activetime > 0 ) )
     {
       status = 1;
@@ -470,7 +470,7 @@ void send_command_gl_IB( bus_t busnumber )
   struct _GLSTATE gltmp, glakt;
 
   /* locomotive decoder */
-  //fprintf(stderr, "LOK's... ");
+  /* fprintf(stderr, "LOK's... "); */
   /* nur senden, wenn wirklich etwas vorliegt */
   if ( !queue_GL_isempty( busnumber ) )
   {
@@ -478,39 +478,39 @@ void send_command_gl_IB( bus_t busnumber )
     addr = gltmp.id;
     getGL( busnumber, addr, &glakt );
 
-    // speed, direction or function changed?
+    /* speed, direction or function changed? */
     if ( ( gltmp.direction != glakt.direction ) ||
          ( gltmp.speed != glakt.speed ) || ( gltmp.funcs != glakt.funcs ) )
     {
-      // Lokkommando soll gesendet werden
+      /* Lokkommando soll gesendet werden */
       byte2send = 0x80;
       writeByte( busnumber, byte2send, 0 );
-      // send low byte of address
+      /* send low byte of address */
       temp = gltmp.id;
       temp &= 0x00FF;
       byte2send = temp;
       writeByte( busnumber, byte2send, 0 );
-      // send high byte of address
+      /* send high byte of address */
       temp = gltmp.id;
       temp >>= 8;
       byte2send = temp;
       writeByte( busnumber, byte2send, 0 );
-      if ( gltmp.direction == 2 )      // emergency stop activated?
+      if ( gltmp.direction == 2 )      /* emergency stop activated? */
       {
-        byte2send = 1;  // set emergency stop
+        byte2send = 1;  /* set emergency stop */
       }
       else
       {
 
-        // IB scales speeds INTERNALLY down!
-        // but gltmp.speed can already contain down-scaled speed
+        /* IB scales speeds INTERNALLY down! */
+        /* but gltmp.speed can already contain down-scaled speed */
 
-        // IB has general range of 0..127, independent of decoder type!
+        /* IB has general range of 0..127, independent of decoder type! */
         byte2send =
           ( unsigned char ) ( ( gltmp.speed * 126 ) / glakt.n_fs );
 
-        //printf("send_cmd_gl(): speed = %d, n_fs = %d\n", gltmp.speed, glakt.n_fs);
-        //printf("send_cmd_gl(): sending speed %d to IB\n", byte2send);
+        /* printf("send_cmd_gl(): speed = %d, n_fs = %d\n", gltmp.speed, glakt.n_fs); */
+        /* printf("send_cmd_gl(): sending speed %d to IB\n", byte2send); */
 
         if ( byte2send > 0 )
         {
@@ -518,7 +518,7 @@ void send_command_gl_IB( bus_t busnumber )
         }
       }
       writeByte( busnumber, byte2send, 0 );
-      // setting direction, light and function
+      /* setting direction, light and function */
       byte2send =
         ( gltmp.funcs >> 1 ) + ( gltmp.funcs & 0x01 ? 0x10 : 0 );
       byte2send |= 0xc0;
@@ -580,11 +580,11 @@ int read_page_IB( bus_t busnumber, int cv )
 
   byte2send = 0xEE;
   writeByte( busnumber, byte2send, 0 );
-  // low-byte of cv
+  /* low-byte of cv */
   tmp = cv & 0xFF;
   byte2send = tmp;
   writeByte( busnumber, byte2send, 0 );
-  // high-byte of cv
+  /* high-byte of cv */
   tmp = cv >> 8;
   byte2send = tmp;
   writeByte( busnumber, byte2send, 0 );
@@ -602,11 +602,11 @@ int write_page_IB( bus_t busnumber, int cv, int value )
 
   byte2send = 0xEF;
   writeByte( busnumber, byte2send, 0 );
-  // low-byte of cv
+  /* low-byte of cv */
   tmp = cv & 0xFF;
   byte2send = tmp;
   writeByte( busnumber, byte2send, 0 );
-  // high-byte of cv
+  /* high-byte of cv */
   tmp = cv >> 8;
   byte2send = tmp;
   writeByte( busnumber, byte2send, 0 );
@@ -624,11 +624,11 @@ int read_cv_IB( bus_t busnumber, int cv )
 
   byte2send = 0xF0;
   writeByte( busnumber, byte2send, 0 );
-  // low-byte of cv
+  /* low-byte of cv */
   tmp = cv & 0xFF;
   byte2send = tmp;
   writeByte( busnumber, byte2send, 0 );
-  // high-byte of cv
+  /* high-byte of cv */
   tmp = cv >> 8;
   byte2send = tmp;
   writeByte( busnumber, byte2send, 2 );
@@ -646,11 +646,11 @@ int write_cv_IB( bus_t busnumber, int cv, int value )
 
   byte2send = 0xF1;
   writeByte( busnumber, byte2send, 0 );
-  // low-byte of cv
+  /* low-byte of cv */
   tmp = cv & 0xFF;
   byte2send = tmp;
   writeByte( busnumber, byte2send, 0 );
-  // high-byte of cv
+  /* high-byte of cv */
   tmp = cv >> 8;
   byte2send = tmp;
   writeByte( busnumber, byte2send, 0 );
@@ -670,11 +670,11 @@ int read_cvbit_IB( bus_t busnumber, int cv, int bit )
 
   byte2send = 0xF2;
   writeByte( busnumber, byte2send, 0 );
-  // low-byte of cv
+  /* low-byte of cv */
   tmp = cv & 0xFF;
   byte2send = tmp;
   writeByte( busnumber, byte2send, 0 );
-  // high-byte of cv
+  /* high-byte of cv */
   tmp = cv >> 8;
   byte2send = tmp;
   writeByte( busnumber, byte2send, 2 );
@@ -692,11 +692,11 @@ int write_cvbit_IB( bus_t busnumber, int cv, int bit, int value )
 
   byte2send = 0xF3;
   writeByte( busnumber, byte2send, 0 );
-  // low-byte of cv
+  /* low-byte of cv */
   tmp = cv & 0xFF;
   byte2send = tmp;
   writeByte( busnumber, byte2send, 0 );
-  // high-byte of cv
+  /* high-byte of cv */
   tmp = cv >> 8;
   byte2send = tmp;
   writeByte( busnumber, byte2send, 0 );
@@ -710,7 +710,7 @@ int write_cvbit_IB( bus_t busnumber, int cv, int bit, int value )
   return status;
 }
 
-// program decoder on the main
+/* program decoder on the main */
 int send_pom_IB( bus_t busnumber, int addr, int cv, int value )
 {
   unsigned char byte2send;
@@ -718,22 +718,22 @@ int send_pom_IB( bus_t busnumber, int addr, int cv, int value )
   int ret_val;
   int tmp;
 
-  // send pom-command
+  /* send pom-command */
   byte2send = 0xDE;
   writeByte( busnumber, byte2send, 0 );
-  // low-byte of decoder-address
+  /* low-byte of decoder-address */
   tmp = addr & 0xFF;
   byte2send = tmp;
   writeByte( busnumber, byte2send, 0 );
-  // high-byte of decoder-address
+  /* high-byte of decoder-address */
   tmp = addr >> 8;
   byte2send = tmp;
   writeByte( busnumber, byte2send, 0 );
-  // low-byte of cv
+  /* low-byte of cv */
   tmp = cv & 0xff;
   byte2send = tmp;
   writeByte( busnumber, byte2send, 0 );
-  // high-byte of cv
+  /* high-byte of cv */
   tmp = cv >> 8;
   byte2send = tmp;
   writeByte( busnumber, byte2send, 0 );
@@ -754,7 +754,7 @@ int term_pgm_IB( bus_t busnumber )
   unsigned char status;
   int ret_val;
 
-  // send command turn off PT
+  /* send command turn off PT */
   byte2send = 0xE2;
   writeByte( busnumber, byte2send, 0 );
 
@@ -768,12 +768,12 @@ int term_pgm_IB( bus_t busnumber )
 
 void send_command_sm_IB( bus_t busnumber )
 {
-  //unsigned char byte2send;
-  //unsigned char status;
+  /* unsigned char byte2send; */
+  /* unsigned char status; */
   struct _SM smakt;
 
   /* locomotive decoder */
-  //fprintf(stderr, "LOK's... ");
+  /* fprintf(stderr, "LOK's... "); */
   /* nur senden, wenn wirklich etwas vorliegt */
   if ( !queue_SM_isempty( busnumber ) )
   {
@@ -854,7 +854,7 @@ void check_status_IB( bus_t busnumber )
      2. manuelle Lokbefehle
      3. manuelle Weichenbefehle */
 
-  //#warning add loconet
+  /* #warning add loconet */
 
   byte2send = 0xC8;
   writeByte( busnumber, byte2send, 0 );
@@ -870,7 +870,7 @@ void check_status_IB( bus_t busnumber )
     }
   }
 
-  // mindestens eine Lok wurde von Hand gesteuert
+  /* mindestens eine Lok wurde von Hand gesteuert */
   if ( xevnt1 & 0x01 )
   {
     byte2send = 0xC9;
@@ -880,41 +880,41 @@ void check_status_IB( bus_t busnumber )
     {
       if ( rr == 1 )
       {
-        gltmp.speed = 0;        // Lok befindet sich im Nothalt
+        gltmp.speed = 0;        /* Lok befindet sich im Nothalt */
         gltmp.direction = 2;
       }
       else
       {
-        gltmp.speed = rr;       // Lok f�rt mit dieser Geschwindigkeit
+        gltmp.speed = rr;       /* Lok f�rt mit dieser Geschwindigkeit */
         gltmp.direction = 0;
         if ( gltmp.speed > 0 )
           gltmp.speed--;
       }
-      // 2. byte functions
+      /* 2. byte functions */
       readByte_IB( busnumber, 1, &rr );
-      //gltmp.funcs = rr & 0xf0;
+      /* gltmp.funcs = rr & 0xf0; */
       gltmp.funcs = ( rr << 1 );
-      // 3. byte address (low-part A7..A0)
+      /* 3. byte address (low-part A7..A0) */
       readByte_IB( busnumber, 1, &rr );
       gltmp.id = rr;
-      // 4. byte address (high-part A13..A8), direction, light
+      /* 4. byte address (high-part A13..A8), direction, light */
       readByte_IB( busnumber, 1, &rr );
       if ( ( rr & 0x80 ) && ( gltmp.direction == 0 ) )
-        gltmp.direction = 1;    // Richtung ist vorw�ts
+        gltmp.direction = 1;    /* Richtung ist vorw�ts */
       if ( rr & 0x40 )
-        gltmp.funcs |= 0x01;    // Licht ist an
+        gltmp.funcs |= 0x01;    /* Licht ist an */
       rr &= 0x3F;
       gltmp.id |= rr << 8;
 
-      // 5. byte real speed (is ignored)
+      /* 5. byte real speed (is ignored) */
       readByte_IB( busnumber, 1, &rr );
-      //printf("speed reported in 5th byte: speed = %d\n", rr);
+      /* printf("speed reported in 5th byte: speed = %d\n", rr); */
 
-      //printf("got GL data from IB: lok# = %d, speed = %d, dir = %d\n",
-      //  gltmp.id, gltmp.speed, gltmp.direction);
+      /* printf("got GL data from IB: lok# = %d, speed = %d, dir = %d\n", */
+      /* gltmp.id, gltmp.speed, gltmp.direction); */
 
-      // initialize the GL if not done by user,
-      // because IB can report uninitialized GLs...
+      /* initialize the GL if not done by user, */
+      /* because IB can report uninitialized GLs... */
       if ( !isInitializedGL( busnumber, gltmp.id ) )
       {
         DBG( busnumber, DBG_INFO,
@@ -922,18 +922,18 @@ void check_status_IB( bus_t busnumber )
              gltmp.id );
         initGL( busnumber, gltmp.id, 'P', 1, 126, 5 );
       }
-      // get old data, to know which FS the user wants to have...
+      /* get old data, to know which FS the user wants to have... */
       getGL( busnumber, gltmp.id, &glakt );
-      // recalculate speed
+      /* recalculate speed */
       gltmp.speed = ( gltmp.speed * glakt.n_fs ) / 126;
       setGL( busnumber, gltmp.id, gltmp );
 
-      // next 1. byte
+      /* next 1. byte */
       readByte_IB( busnumber, 1, &rr );
     }
   }
 
-  // mindestens eine Rückmeldung hat sich geändert
+  /* mindestens eine Rückmeldung hat sich geändert */
   if ( xevnt1 & 0x04 )
   {
     byte2send = 0xCB;
@@ -951,7 +951,7 @@ void check_status_IB( bus_t busnumber )
     }
   }
 
-  // mindestens eine Weiche wurde von Hand geschaltet
+  /* mindestens eine Weiche wurde von Hand geschaltet */
   if ( xevnt1 & 0x20 )
   {
     byte2send = 0xCA;
@@ -970,7 +970,7 @@ void check_status_IB( bus_t busnumber )
     }
   }
 
-  // overheat, short on track etc.
+  /* overheat, short on track etc. */
   if ( xevnt2 & 0x3f )
   {
     DBG( busnumber, DBG_DEBUG,
@@ -997,8 +997,8 @@ void check_status_IB( bus_t busnumber )
     }
   }
 
-  // power off?
-  // we should send an XStatus-command
+  /* power off? */
+  /* we should send an XStatus-command */
   if ( ( xevnt1 & 0x08 ) || ( xevnt2 & 0x40 ) )
   {
     byte2send = 0xA2;
@@ -1031,21 +1031,21 @@ void check_status_IB( bus_t busnumber )
   }
 
 
-  if ( xevnt3 & 0x01 )             // we should send an XPT_event-command
+  if ( xevnt3 & 0x01 )             /* we should send an XPT_event-command */
     check_status_pt_IB( busnumber );
 }
 
 void check_status_pt_IB( bus_t busnumber )
 {
   int i;
-  //int temp;
-  //int status;
+  /* int temp; */
+  /* int status; */
   unsigned char byte2send;
   unsigned char rr[ 7 ];
 
   DBG( busnumber, DBG_DEBUG,
        "We've got an answer from programming decoder" );
-  // first clear input-buffer
+  /* first clear input-buffer */
   i = 0;
   while ( i == 0 )
   {
@@ -1060,10 +1060,10 @@ void check_status_pt_IB( bus_t busnumber )
     i = readByte_IB( busnumber, 1, &rr[ 0 ] );
     if ( i == 0 )
     {
-      // wait for an answer of our programming
+      /* wait for an answer of our programming */
       if ( rr[ 0 ] == 0xF5 )
       {
-        // sleep for one second, if answer is not available yet
+        /* sleep for one second, if answer is not available yet */
         i = -1;
         sleep( 1 );
       }
@@ -1150,7 +1150,7 @@ static int initLine_IB( bus_t busnumber )
   char *name = buses[ busnumber ].filename.path;
   DBG( busnumber, DBG_INFO, "Beginning to detect IB on serial line: %s\n",
        name );
-  //printf("Beginning to detect IB on serial line: %s\n", name);
+  /* printf("Beginning to detect IB on serial line: %s\n", name); */
 
   DBG( busnumber, DBG_INFO, "Opening serial line %s for 2400 baud\n",
        name );
@@ -1159,7 +1159,7 @@ static int initLine_IB( bus_t busnumber )
   if ( fd == -1 )
   {
     DBG( busnumber, DBG_ERROR, "Sorry, couldn't open device.\n" );
-    //printf("dammit, couldn't open device.\n");
+    /* printf("dammit, couldn't open device.\n"); */
     return 1;
   }
   buses[ busnumber ].fd = fd;
@@ -1177,14 +1177,14 @@ static int initLine_IB( bus_t busnumber )
   status = 0;
   sleep( 1 );
   DBG( busnumber, DBG_INFO, "Clearing input-buffer\n" );
-  //  printf("Clearing input-buffer\n");
+  /* printf("Clearing input-buffer\n"); */
   while ( status != -1 )
     status = readByte_IB( busnumber, 1, &rr );
 
   status = 0;
 
   DBG( busnumber, DBG_INFO, "Sending BREAK... " );
-  //printf("Sending BREAK... ");
+  /* printf("Sending BREAK... "); */
 
   status = sendBreak( fd, busnumber );
   close( fd );
@@ -1207,7 +1207,7 @@ static int initLine_IB( bus_t busnumber )
     DBG( busnumber, DBG_ERROR, "open_comport() failed\n" );
     return ( -1 );
   }
-  //printf("open_comport() successful; fd = %d\n", fd );
+  /* printf("open_comport() successful; fd = %d\n", fd ); */
 
   baud = checkBaudrate( fd, busnumber );
   if ( ( baud == B0 ) || ( baud > B38400 ) )
@@ -1224,7 +1224,7 @@ static int initLine_IB( bus_t busnumber )
 
   sleep( 1 );
 
-  // now open the comport for the communication
+  /* now open the comport for the communication */
 
   fd = open_comport( busnumber, buses[ busnumber ].baudrate );
   DBG( busnumber, DBG_DEBUG, "fd after open_comport = %d", fd );
@@ -1257,14 +1257,14 @@ static int sendBreak( const int fd, bus_t busnumber )
     return -1;
   }
   tcflow( fd, TCOOFF );
-  usleep( 300000 );             // 300 ms
+  usleep( 300000 );             /* 300 ms */
   if ( tcsendbreak( fd, 100 ) != 0 )
   {
     DBG( busnumber, DBG_ERROR, "sendBreak(): Error in tcsendbreak \n" );
     return -1;
   }
   sleep( 3 );
-  usleep( 600000 );             // 600 ms
+  usleep( 600000 );             /* 600 ms */
   tcflow( fd, TCOON );
   return 0;
 }
@@ -1353,17 +1353,17 @@ speed_t checkBaudrate( const int fd, const bus_t busnumber )
     for ( i = 0; i < 2; i++ )
     {
       int erg = readByte_IB( busnumber, 1, &input[ i ] );
-      //printf("baudrate = %d, readyByte_ib() returned %d\n", baudrate, erg);
+      /* printf("baudrate = %d, readyByte_ib() returned %d\n", baudrate, erg); */
       if ( erg == 0 )
         len++;
     }
 
-    //printf("Answer from IB: %s\n", input);
+    /* printf("Answer from IB: %s\n", input); */
 
     switch ( len )
     {
       case 1:
-        // IBox has P50 commands disabled
+        /* IBox has P50 commands disabled */
         found = 1;
         if ( input[ 0 ] == 'D' )
         {
@@ -1375,10 +1375,10 @@ speed_t checkBaudrate( const int fd, const bus_t busnumber )
              "IBox found; P50-commands are disabled.\n" );
         break;
       case 2:
-        // IBox has P50 commands enabled
+        /* IBox has P50 commands enabled */
         found = 1;
-        // don't know if this also works, when P50 is enabled...
-        // check disabled for now...
+        /* don't know if this also works, when P50 is enabled... */
+        /* check disabled for now... */
         DBG( busnumber, DBG_INFO,
              "IBox found; P50-commands are enabled.\n" );
         break;
@@ -1391,7 +1391,7 @@ speed_t checkBaudrate( const int fd, const bus_t busnumber )
       baudrate <<= 1;
       internalBaudrate = B0;
     }
-    usleep( 200000 );         // 200 ms
+    usleep( 200000 );         /* 200 ms */
   }
   DBG( busnumber, DBG_INFO, "Baudrate checked: %d\n", baudrate );
   return internalBaudrate;
@@ -1437,9 +1437,9 @@ static int resetBaudrate( const speed_t speed, const bus_t busnumber )
   }
   byte2send = 0x0d;
   writeByte( busnumber, byte2send, 0 );
-  usleep( 200000 );             // 200 ms
-  // use following line to see some debugging
-  //status = readAnswer_ib(busnumber, 1);
+  usleep( 200000 );             /* 200 ms */
+  /* use following line to see some debugging */
+  /* status = readAnswer_ib(busnumber, 1); */
   status = readAnswer_IB( busnumber, 0 );
   if ( status != 0 )
     return 1;
@@ -1467,8 +1467,8 @@ static int switchOffP50Command( const bus_t busnumber )
   byte2send = 0x0d;
   writeByte( busnumber, byte2send, 0 );
 
-  // use following line, to see some debugging
-  //status = readAnswer_ib(busnumber, 1);
+  /* use following line, to see some debugging */
+  /* status = readAnswer_ib(busnumber, 1); */
   status = readAnswer_IB( busnumber, 0 );
 
   return (status != 0) ? 1: 0;
@@ -1543,7 +1543,7 @@ static int readByte_IB( bus_t bus, int wait, unsigned char *the_byte )
     status = readByte( bus, wait, the_byte );
     if ( status == 0 )
       return 0;
-    //    printf("readByte() unsuccessfully; status = %d\n", status);
+    /* printf("readByte() unsuccessfully; status = %d\n", status); */
     usleep( 10000 );
   }
   return -1;

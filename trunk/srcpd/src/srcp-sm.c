@@ -144,9 +144,9 @@ int queueSM( bus_t busnumber, int command, int type, int addr,
   struct timeval akt_time;
   DBG( busnumber, DBG_INFO, "queueSM for %i (in=%d out=%d)", addr,
        in[ busnumber ], out[ busnumber ] );
-  // addr == -1 means using separate program-track
-  // addr != -1 means programming on the main (only available with CV)
-  //if ( (addr == -1) || ((addr > 0) && (addr <= number_sm) && (type == CV)) )
+  /* addr == -1 means using separate program-track */
+  /* addr != -1 means programming on the main (only available with CV) */
+  /* if ((addr == -1) || ((addr > 0) && (addr <= number_sm) && (type == CV))) */
   if ( queue_isfull( busnumber ) )
   {
     DBG( busnumber, DBG_DEBUG, "SM Queue is full" );

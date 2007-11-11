@@ -30,7 +30,8 @@ int readConfig_HSI_88(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber);
 
 int init_bus_HSI_88(bus_t busnumber);
 int term_bus_HSI_88(bus_t busnumber);
-int get_bus_config_HSI_88(bus_t busnummer, int *num_gl, int *num_ga, int *num_fb);
+int get_bus_config_HSI_88(bus_t busnummer, int *num_gl, int *num_ga,
+                int *num_fb);
 void* thr_sendrec_HSI_88(void*);
 
 #endif

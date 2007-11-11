@@ -47,7 +47,7 @@ typedef struct _tQData {
 #define MAX_MARKLIN_ADDRESS 256
 #define MAX_NMRA_ADDRESS 10367 /* idle-addr + 127 basic addr's + 10239 long's */
 
-// data types for maerklin packet pool
+/* data types for maerklin packet pool */
 typedef struct _tMaerklinPacket {
    char      packet[18];
    char      f_packets[4][18];
@@ -59,7 +59,7 @@ typedef struct _tMaerklinPacketPool {
    int             NrOfKnownAdresses;
 } tMaerklinPacketPool;
 
-// data types for NMRA packet pool
+/* data types for NMRA packet pool */
 typedef struct _tNMRAPacket {
    char      packet[PKTSIZE];
    int       packet_size;
@@ -124,7 +124,7 @@ typedef struct _DDL_DATA {
 
     pthread_mutex_t maerklin_pktpool_mutex;
     tMaerklinPacketPool MaerklinPacketPool;
-    int oslevel; // 0: ancient linux 2.4, 1 linux 2.6
+    int oslevel; /* 0: ancient linux 2.4, 1 linux 2.6 */
 
 } DDL_DATA;
 
@@ -137,8 +137,8 @@ int init_ga_DDL(struct _GASTATE *);
 int getDescription_DDL(char *reply);
 void* thr_sendrec_DDL(void *);
 
-#define  EP_MAERKLIN  1                  /* maerklin protocol            */
-#define  EP_NMRADCC   2                  /* nmra dcc protocol            */
+#define  EP_MAERKLIN  1                  /* maerklin protocol */
+#define  EP_NMRADCC   2                  /* nmra dcc protocol */
 
 /* constants for setSerialMode() */
 #define SDM_NOTINITIALIZED -1

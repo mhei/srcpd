@@ -12,7 +12,7 @@
 
 #include <libxml/tree.h>
 
-#define M6020_MODE            0x0001    //! Subtyp zum M605X
+#define M6020_MODE            0x0001    /* Subtyp zum M605X */
 
 typedef struct _M6051_DATA {
     int number_fb;

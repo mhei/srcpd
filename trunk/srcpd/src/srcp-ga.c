@@ -184,7 +184,7 @@ int infoGA(bus_t busnumber, int addr, int port, char *msg)
     int number_ga = get_number_ga(busnumber);
 
     if ((addr > 0) && (addr <= number_ga) && (port >= 0) && (port < MAXGAPORT))
-        // && (ga[busnumber].gastate[addr].tv[port].tv_sec>0) )
+        /* && (ga[busnumber].gastate[addr].tv[port].tv_sec>0) ) */
     {
         sprintf(msg, "%ld.%ld 100 INFO %ld GA %d %d %d\n",
                 ga[busnumber].gastate[addr].tv[port].tv_sec,
@@ -341,7 +341,7 @@ int init_GA(bus_t busnumber, int number)
         return 1;
 
     if (number > 0) {
-        // one more, 'cause we do not use index 0, but start with 1
+        /* one more, 'cause we do not use index 0, but start with 1 */
         ga[busnumber].gastate =
             malloc((number + 1) * sizeof(struct _GASTATE));
         if (ga[busnumber].gastate == NULL)

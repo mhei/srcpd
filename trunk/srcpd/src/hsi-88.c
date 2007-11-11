@@ -119,7 +119,7 @@ int readConfig_HSI_88( xmlDocPtr doc, xmlNodePtr node, bus_t busnumber )
     child = child->next;
   }
 
-  // create an array for feedbacks;
+  /*  create an array for feedbacks; */
   number = __hsi->number_fb[ 0 ];
   number += __hsi->number_fb[ 1 ];
   number += __hsi->number_fb[ 2 ];
@@ -180,8 +180,8 @@ static int init_lineHSI88( bus_t busnumber, int modules_left,
   while ( readByte( busnumber, 0, &rr ) == 0 )
   {}
 
-  // HSI-88 initialize
-  // switch off terminal-mode
+  /*  HSI-88 initialize */
+  /*  switch off terminal-mode */
   i = 1;
   while ( i )
   {
@@ -206,7 +206,7 @@ static int init_lineHSI88( bus_t busnumber, int modules_left,
       i = 0;
     readByte( busnumber, 0, &rr );
   }
-  // looking for version of HSI
+  /*  looking for version of HSI */
   byte2send = 'v';
   writeByte( busnumber, byte2send, 0 );
   byte2send = 0x0d;
@@ -225,8 +225,8 @@ static int init_lineHSI88( bus_t busnumber, int modules_left,
   status = 1;
   while ( status )
   {
-    // initialise module-numbers
-    // up to "GO", non feedback-module
+    /*  initialise module-numbers */
+    /*  up to "GO", non feedback-module */
     byte2send = 's';
     writeByte( busnumber, byte2send, 0 );
     byte2send = 0;
@@ -243,13 +243,13 @@ static int init_lineHSI88( bus_t busnumber, int modules_left,
     writeByte( busnumber, byte2send, 5 );
 
     rr = 0;
-    readByte( busnumber, 1, &rr );    // read answer (three bytes)
+    readByte( busnumber, 1, &rr );    /*  read answer (three bytes) */
     while ( rr != 's' )
     {
       usleep( 100000 );
       readByte( busnumber, 0, &rr );
     }
-    readByte( busnumber, 0, &rr );    // number of given modules
+    readByte( busnumber, 0, &rr );    /*  number of given modules */
     status = 0;
   }
   return 0;
@@ -271,7 +271,7 @@ int init_bus_HSI_88(bus_t busnumber )
   else
   {
     if ( buses[ busnumber ].fd > 0 )
-      status = -3;        // bus is already in use
+      status = -3;        /*  bus is already in use */
   }
 
   if ( status == 0 )
@@ -353,7 +353,7 @@ void *thr_sendrec_HSI_88( void *v )
     status = 1;
     while ( status )
     {
-      // Modulbelegung initialisieren
+      /*  Modulbelegung initialisieren */
       byte2send = 's';
       writeByte( busnumber, byte2send, 0 );
       byte2send = __hsi->number_fb[ 0 ];
@@ -372,19 +372,19 @@ void *thr_sendrec_HSI_88( void *v )
       writeByte( busnumber, byte2send, 200 );
 
       rr = 0;
-      readByte( busnumber, 0, &rr );        // read answer (three bytes)
+      readByte( busnumber, 0, &rr );        /*  read answer (three bytes) */
       while ( rr != 's' )
       {
         usleep( 100000 );
         readByte( busnumber, 0, &rr );
       }
-      readByte( busnumber, 0, &rr );        // number of given modules
+      readByte( busnumber, 0, &rr );        /*  number of given modules */
       anzahl = ( int ) rr;
       DBG( busnumber, DBG_INFO, "number of modules: %i", anzahl );
       anzahl -= __hsi->number_fb[ 0 ];
       anzahl -= __hsi->number_fb[ 1 ];
       anzahl -= __hsi->number_fb[ 2 ];
-      if ( anzahl == 0 )     // HSI initialisation correct ?
+      if ( anzahl == 0 )     /* HSI initialisation correct? */
       {
         status = 0;
       }
@@ -412,7 +412,7 @@ void *thr_sendrec_HSI_88( void *v )
         usleep( refresh_time );
         readByte( busnumber, 0, &rr );
       }
-      readByte( busnumber, 1, &rr );        // number of given modules
+      readByte( busnumber, 1, &rr );        /* number of given modules */
       anzahl = ( int ) rr;
       for ( zaehler1 = 0; zaehler1 < anzahl; zaehler1++ )
       {
@@ -426,10 +426,10 @@ void *thr_sendrec_HSI_88( void *v )
         DBG( busnumber, DBG_DEBUG, "feedback %i with 0x%04x", i,
              temp | rr );
       }
-      readByte( busnumber, 1, &rr );        // <CR>
+      readByte( busnumber, 1, &rr );        /* <CR> */
     }
     else
-    {                                       // only for testing
+    {                                       /* only for testing */
       setFBmodul( busnumber, 1, temp );
       i++;
       temp <<= 1;

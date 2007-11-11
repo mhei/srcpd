@@ -36,19 +36,19 @@ enum TYPE {
     CV_BIT
 };
 
-/* Lokdekoder */
+/* Loco decoder */
 struct _SM {
-    char protocol[6];           // at the moment only NMRA is support
-    // (for IB, but not completely)
-    // (work in progress)
+    char protocol[6];        /* currently only NMRA is supported */
+    /* (for IB, but not completely) */
+    /* (work in progress) */
     int type;
     int command;
     int protocolversion;
     int addr;
     int typeaddr;
-    int bit;                    // bit to set/get for CVBIT
+    int bit;                    /* bit to set/get for CVBIT */
     int value;
-    struct timeval tv;          // time of change
+    struct timeval tv;          /* time of change */
 } SM;
 
 int queueSM(bus_t busnumber, int command, int type, int addr, int typeaddr,

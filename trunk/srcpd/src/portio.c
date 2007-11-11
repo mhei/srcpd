@@ -40,29 +40,29 @@ int open_port(bus_t bus)
         if (serial < 0) {
                 DBG(bus, DBG_ERROR, 
 					"Error, could not open %s.\nReported error number: %d.\n",
-                    buses[bus].filename.path, errno); // , str_errno(errno));
+                    buses[bus].filename.path, errno); /* , str_errno(errno)); */
                 buses[bus].fd = -1;
                 return -errno;
         }
-        // Get default settings from OS
+        /* Get default settings from OS */
         tcgetattr(serial, &buses[bus].devicesettings);
-        // Ignore default setting from the OS
+        /* Ignore default setting from the OS */
         bzero(&settings, sizeof(struct termios));
-        // Setup settings for serial port
-        // Baud rate, enable read, local mode, 8 bits, 1 stop bit, no parity
+        /* Setup settings for serial port */
+        /* Baud rate, enable read, local mode, 8 bits, 1 stop bit, no parity */
         settings.c_cflag = buses[bus].baudrate | CREAD | CLOCAL | CS8;
-        // No parity control or generation
+        /* No parity control or generation */
         settings.c_iflag = IGNPAR;
         settings.c_oflag = 0;
         settings.c_lflag = 0;
-        settings.c_cc[VMIN] = 1;      // Block size is 1 character
-        settings.c_cc[VTIME] = 0;     // never a timeout
-        // Apply baud rate (new style)
+        settings.c_cc[VMIN] = 1;      /* Block size is 1 character */
+        settings.c_cc[VTIME] = 0;     /* never a timeout */
+        /* Apply baud rate (new style) */
         cfsetospeed(&settings, buses[bus].baudrate);
         cfsetispeed(&settings, buses[bus].baudrate);
-        // Apply settings for serial port
+        /* Apply settings for serial port */
         tcsetattr(serial, TCSANOW, &settings);
-        // Flush serial buffers
+        /* Flush serial buffers */
         tcflush(serial, TCIFLUSH);
         tcflush(serial, TCOFLUSH);
         buses[bus].fd = serial;
@@ -89,18 +89,18 @@ void write_port(bus_t bus, unsigned char b)
 
         i = 0;
         if (buses[bus].debuglevel <= DBG_DEBUG) {
-                // Wait for transmit queue to go empty
+                /* Wait for transmit queue to go empty */
                 tcdrain(buses[bus].fd);
                 i = write(buses[bus].fd, &b, 1);
         }
         if (i < 0) {
-                // Error reported from write
+                /* Error reported from write */
                 DBG(bus, DBG_ERROR, 
                         "write_port(): External error: errno %d",
-                        errno); // , str_errno(errno));
+                        errno); /* , str_errno(errno)); */
         }
         if (i == 0) {
-                // Error reported from write
+                /* Error reported from write */
                 DBG(bus, DBG_ERROR, 
                         "write_port(): No data written to port.\n");
         }
@@ -115,23 +115,23 @@ unsigned int read_port(bus_t bus)
         ssize_t i;
         unsigned int in;
 
-        // Default value in case of no real port or debugging
+        /* Default value in case of no real port or debugging */
         in = 0x00;
         if (buses[bus].debuglevel <= DBG_DEBUG) {
-                // read input port
+                /* read input port */
                 i = read(buses[bus].fd, &in, 1);
                 if (i < 0) {
-                        // Error reading port
+                        /* Error reading port */
                         DBG(bus, DBG_ERROR,
                             "read_port(): Read status: %d with errno = %d.\n",
-                            i, errno);// , str_errno(errno));
-                        in = 0x200 + errno;		// Result all blocked
+                            i, errno);/* , str_errno(errno)); */
+                        in = 0x200 + errno;		/* Result all blocked */
                 }
                 if (i == 0) {
-                        // Empty port
+                        /* Empty port */
                         DBG(bus, DBG_ERROR,
                                 "read_port(): Port empty.\n");
-                        in = 0x1FF;     // Result all blocked
+                        in = 0x1FF;     /* Result all blocked */
                 }
         }
         return in;

@@ -78,7 +78,7 @@ int stop_session(sessionid_t sessionid)
     gettimeofday(&akt_time, NULL);
 
     DBG(0, DBG_INFO, "Session terminated client-ID %ld", sessionid);
-    // clean all locks
+    /* clean all locks */
     unlock_ga_bysessionid(sessionid);
     unlock_gl_bysessionid(sessionid);
     sprintf(msg, "%lu.%.3lu 102 INFO 0 SESSION %lu\n", akt_time.tv_sec,

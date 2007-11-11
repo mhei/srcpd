@@ -16,10 +16,10 @@ int setPower(bus_t bus, int state, char *msg)
 {
     gettimeofday(&buses[bus].power_change_time, NULL);
     buses[bus].power_state = (state == -1) ? 0 : state;
-    //    buses[bus].power_state = state;
+    /* buses[bus].power_state = state; */
     strcpy(buses[bus].power_msg, msg);
     buses[bus].power_changed = (state == -1) ? 0 : 1;
-    //    buses[bus].power_changed = 1;
+    /* buses[bus].power_changed = 1; */
     /* Resume thread to transmit power change */
     resumeThread(bus);
     char reply[200];

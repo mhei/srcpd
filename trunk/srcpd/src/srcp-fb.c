@@ -119,16 +119,16 @@ int updateFB(bus_t bus, int port, int value)
 
     int port_t;
 
-    // check range to disallow segmentation fault
+    /* check range to disallow segmentation fault */
     if ((port > get_number_fb(bus)) || (port < 1))
         return SRCP_WRONGVALUE;
 
     port_t = port - 1;
-    // we read 8 or 16 ports at once, but we will only change those ports,
-    // which are really changed
-    //
-    // if changed contact is reset, we will wait 'min_time[bus]' seconds to
-    // minimize problems from contacts between track and train
+    /* we read 8 or 16 ports at once, but we will only change those ports, */
+    /* which are really changed */
+    /*  */
+    /* if changed contact is reset, we will wait 'min_time[bus]' seconds to */
+    /* minimize problems from contacts between track and train */
     if (fb[bus].fbstate[port_t].state != value) {
         DBG(bus, DBG_DEBUG, "FB %02i/%04i is set to \"%i\"", bus, port,
             value);
@@ -158,7 +158,7 @@ int updateFB(bus_t bus, int port, int value)
                 fb[bus].fbstate[port_t].timestamp = akt_time;
                 fb[bus].fbstate[port_t].change = 0;
                 pthread_mutex_unlock(&queue_mutex_fb);
-                // queue changes for writing info-message
+                /* queue changes for writing info-message */
                 queueInfoFB(bus, port);
             }
         }
@@ -189,7 +189,7 @@ int setFBmodul(bus_t bus, int modul, int values)
         dir = 1;
         mask = 1 << (ports - 1);
     }
-    // compute start contact ( (module - 1) * ports + 1 )
+    /* compute start contact ( (module - 1) * ports + 1 ) */
     fb_contact = modul - 1;
     fb_contact *= ports;
     fb_contact++;
@@ -294,7 +294,7 @@ void check_reset_fb(bus_t busnumber)
 
     while (getNextFB(busnumber, &reset_fb) != -1) {
         if (fb[busnumber].fbstate[reset_fb.port].change == 0) {
-            // drop this reset of feedback, because we've got an new impulse
+            /* drop this reset of feedback, because we've got an new impulse */
             unqueueNextFB(busnumber);
         }
         else {

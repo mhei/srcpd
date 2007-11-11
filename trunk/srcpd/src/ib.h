@@ -88,7 +88,7 @@ void check_status_pt_IB(bus_t busnumber);
 #define XEvtMem     0xD0
 #define XCR         0x0D
 
-// fehlercodes der IB
+/* fehlercodes der IB */
 
 #define XBADPARAM   0x02
 #define XPWOFF      0x06

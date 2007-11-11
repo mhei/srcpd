@@ -357,7 +357,7 @@ int readConfig(char *filename)
     xmlDocPtr doc;
     int rc;
 
-    // something to initialize
+    /*  something to initialize */
     memset(buses, 0, sizeof(buses));
     num_buses = 0;
 

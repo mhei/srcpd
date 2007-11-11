@@ -25,7 +25,7 @@ int readByte(bus_t bus, int wait, unsigned char *the_byte)
     ssize_t i;
     int status;
 
-    // with debug level beyond DBG_DEBUG, we will not really work on hardware
+    /* with debug level beyond DBG_DEBUG, we will not really work on hardware */
     if (buses[bus].debuglevel > DBG_DEBUG) {
         i = 1;
         *the_byte = 0;
@@ -43,7 +43,7 @@ int readByte(bus_t bus, int wait, unsigned char *the_byte)
         DBG(bus, DBG_DEBUG,
             "readbyte(): (fd = %d), there are %d bytes to read.",
             buses[bus].fd, i);
-        // read only, if there is really an input
+        /* read only, if there is really an input */
         if ((i > 0) || (wait == 1)) {
             i = read(buses[bus].fd, the_byte, 1);
             if (i < 0) {
@@ -71,7 +71,7 @@ void writeByte(bus_t bus, unsigned char b, unsigned long msecs)
     }
     if (i < 0) {
     DBG(bus, DBG_ERROR, "(FD: %d) External error: errno %d",
-        buses[bus].fd, errno); // , str_errno(errno));
+        buses[bus].fd, errno); /* , str_errno(errno)); */
     }
     else {
     DBG(bus, DBG_DEBUG, "(FD: %d) %i byte sent: 0x%02x (%d)",
