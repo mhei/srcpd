@@ -41,8 +41,95 @@ contains both default settings and an example bus.
 .fi
 .RE
 
+.SH m605x 
+This driver connects with the 6051 or 6050 devices from Marklin
+connected
+via the serial port. An USB2Serial converter should work fine. The
+serial
+line settings are fixed to 2400 8N2 and cannot be changed.
+
+.TP
+m6020mode
+
+In this mode the srcpd the srcpd does not sent the 4 functions. This
+is a feature of the 6021 only.
+
+.TP
+p_time
+
+This is the time the driver code waits until it recognized the input
+change in milliseconds. This feature may support a debounce found in
+the hardware.
+
+.TP
+ga_min_activetime
+
+The time in milliseconds a GA device needs to be in active state. The
+absolute minimum is 75 ms and is needed for stable communication with
+the 6051.
+
+.TP
+pause_between_commands
+
+This is the time between two commands the drivers must wait. The exact
+values should be hand tuned. If the system does not respond or drops
+commands try to increase this value. Default is 200 (milliseconds).
+
+.TP
+pause_between_bytes
+
+This is the time the driver waits between 2 bytes in multi-byte
+commands.
+The hardware handshake does not work with all devices so this parameter
+was introduced to support it. The default is 2 (milliseconds)
+
+.TP
+number_ga
+
+This is the number of GA. This parameter does not have a real effect
+since the interface supports the addresses 1 .. 256 only. Keep the
+default untouched.
+
+.TP
+number_gl
+
+Like the number of GA this number gives the maximum address. Since this
+number is limited to 80, keep the default untouched.
+
+.TP
+number_fb
+
+This is the number of 6088 modules attached to the 6051/6050 device. 
+It can be as large as 31. The dafault is 0 (no modules are attached).
+Please note that 6088 modules attached to other devices (memory)
+cannot be accessed.
+
+.SH loopback
+
+This bus does not connect to real hardware. It is used primarily
+for devolopment tasks but may be useful for real installations too.
+Every command on this bus only have a echo effect on the INFO sessions.
+The devices may be used as virtual devices for communication tasks.
+
+.TP
+number_ga
+
+This is the number of GA devices. Default is 256.
+
+.TP
+number_gl
+
+Like the number of GA this number gives the maximum address.
+Default is 80
+
+.TP
+number_fb
+
+This is the number of FB devices. Default is 0 (no devices).
+
 
 .SH FILES
 .I /etc/srcpd.conf
 .SH "SEE ALSO"
 .BR srcpd (8)
+
