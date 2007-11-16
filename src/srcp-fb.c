@@ -241,7 +241,7 @@ int startup_FB()
 
 void set_min_time(bus_t busnumber, int mt)
 {
-    if ((busnumber >= 0) && (busnumber < MAX_BUSES))
+    if (busnumber < MAX_BUSES)
         min_time[busnumber] = mt * 1000;
 }
 
