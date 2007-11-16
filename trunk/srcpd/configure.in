@@ -140,6 +140,6 @@ main()
   ipv6=no
 ))
 
-AC_CONFIG_FILES(Makefile src/Makefile)
+AC_CONFIG_FILES(Makefile src/Makefile man/Makefile)
 AC_CONFIG_FILES(debian/Makefile)
 AC_OUTPUT
