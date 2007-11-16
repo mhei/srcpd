@@ -1,7 +1,7 @@
 .TH srcpd.conf 5
-.SH NAME
-srcpd.conf \- configuration file of the srcpd deamon
-.SH DESCRIPTION
+.SH "NAME"
+srcpd.conf \- The configuration file for the srcpd deamon
+.SH "DESCRIPTION"
 The file
 .I /etc/srcpd.conf
 is used by the 
@@ -10,11 +10,13 @@ The file contains the runtime configuration for the deamon
 and it's connection(s) to model railroad systems.
 See
 .BR srcpd (8)
-for instruction to use it
+for instruction to use the daemon.
 
-.SH DEFAULT
-The default file is shipped as with the srcpd and
-contains both default settings and an example bus.
+.SH "DEFAULT CONFIGURATION FILE"
+
+.PP
+The default file is shipped as with the srcpd and contains both
+default settings and an example bus configuration.
 
 .RS
 .nf
@@ -36,66 +38,85 @@ contains both default settings and an example bus.
     <use_watchdog>no</use_watchdog>
     <verbosity>5</verbosity>
     <auto_power_on>yes</auto_power_on>
-   </bus>
+  </bus>
 </srcpd>
 .fi
 .RE
 
+.SH "FILE FORMAT"
+
+.PP
+The configuration file for srcpd is stored in XML format. As XML
+files are plain text, experienced users can manipulate such files with
+the help of a text editor. Less experienced users should select an
+external configuration tool to ensure a syntactically correct format.
+
+.PP
+Currently there is no document type definition available, to validate the
+format of a user created configuration file.
+
+.PP
+Each configuration file must contain the following structure:
+
+.RS
+.nf
+<?xml version="1.0"?>
+<srcpd>
+...
+</srcpd>
+.fi
+.RE
+
+
 .SH m605x 
+
+.PP
 This driver connects with the 6051 or 6050 devices from Marklin connected
 via the serial port. An USB2Serial converter should work fine. The serial
 line settings are fixed to 2400 8N2 and cannot be changed.
 
 .TP
 m6020mode
-
 In this mode the srcpd does not sent the 4 functions. This
 is a feature of the 6021 only.
 
 .TP
 p_time
-
 This is the time the driver code waits until it recognized the input
 change in milliseconds. This feature may support a debounce found in
 the hardware.
 
 .TP
 ga_min_activetime
-
 The time in milliseconds a GA device needs to be in active state. The
 absolute minimum is 75 ms and is needed for stable communication with
 the 6051.
 
 .TP
 pause_between_commands
-
 This is the time between two commands the drivers must wait. The exact
 values should be hand tuned. If the system does not respond or drops
 commands try to increase this value. Default is 200 (milliseconds).
 
 .TP
 pause_between_bytes
-
 This is the time the driver waits between 2 bytes in multi-byte commands.
 The hardware handshake does not work with all devices so this parameter
 was introduced to support it. The default is 2 (milliseconds)
 
 .TP
 number_ga
-
 This is the number of GA. This parameter does not have a real effect
 since the interface supports the addresses 1...256 only. Keep the
 default untouched.
 
 .TP
 number_gl
-
 Like the number of GA this number gives the maximum address. Since this
 number is limited to 80, keep the default untouched.
 
 .TP
 number_fb
-
 This is the number of 6088 modules attached to the 6051/6050 device. 
 It can be as large as 31. The default is 0 (no modules are attached).
 Please note that 6088 modules attached to other devices (memory)
@@ -103,6 +124,7 @@ cannot be accessed.
 
 .SH loopback
 
+.PP
 This bus does not connect to real hardware. It is used primarily
 for development tasks but may be useful for real installations too.
 Every command on this bus does only have an echo effect on the INFO
@@ -111,18 +133,15 @@ tasks.
 
 .TP
 number_ga
-
 This is the number of GA devices. Default is 256.
 
 .TP
 number_gl
-
 Like the number of GA this number gives the maximum address.
 Default is 80
 
 .TP
 number_fb
-
 This is the number of feedback devices. Default is 0 (no device).
 
 
@@ -130,4 +149,5 @@ This is the number of feedback devices. Default is 0 (no device).
 .I /etc/srcpd.conf
 .SH "SEE ALSO"
 .BR srcpd (8)
+
 
