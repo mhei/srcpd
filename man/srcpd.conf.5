@@ -1,0 +1,48 @@
+.TH srcpd.conf 5
+.SH NAME
+srcpd.conf \- configuration file of the srcpd deamon
+.SH DESCRIPTION
+The file
+.I /etc/srcpd.conf
+is used by the 
+.BR srcpd (8).
+The file contains the runtime configuration for the deamon 
+and it's connection(s) to model railroad systems.
+See
+.BR srcpd (8)
+for instruction to use it
+
+.SH DEFAULT
+The default file is shipped as with the srcpd and
+contains both default settings and an example bus.
+
+.RS
+.nf
+<?xml version="1.0"?>
+<srcpd version="2.0">
+  <bus>
+    <server>
+      <tcp-port>4303</tcp-port>
+      <pid-file>/var/run/srcpd.pid</pid-file>
+      <username>nobody</username>
+      <groupname>nogroup</groupname>
+    </server>
+    <verbosity>5</verbosity>
+  </bus>
+  <bus>
+    <loopback>
+      <number_fb>3</number_fb>
+    </loopback>
+    <use_watchdog>no</use_watchdog>
+    <verbosity>5</verbosity>
+    <auto_power_on>yes</auto_power_on>
+   </bus>
+</srcpd>
+.fi
+.RE
+
+
+.SH FILES
+.I /etc/srcpd.conf
+.SH "SEE ALSO"
+.BR srcpd (8)
