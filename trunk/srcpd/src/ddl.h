@@ -108,7 +108,7 @@ typedef struct _DDL_DATA {
     pthread_t refresh_ptid;
     struct _thr_param refresh_param;
 
-    char idle_data[MAXDATA];
+    unsigned char idle_data[MAXDATA];
     char NMRA_idle_data[PKTSIZE];
 
     int last_refreshed_maerklin_loco;
