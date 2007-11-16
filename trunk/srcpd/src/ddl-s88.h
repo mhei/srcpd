@@ -33,9 +33,8 @@ typedef struct _DDL_S88_DATA {
     /* timestamp, until when the s88data are valid */
     struct timeval s88valid;
 #ifdef __FreeBSD__
-    /* MAM 01/06/03 Wir emulieren inb,outb und ioperm ueber einen */
-    /* normalen Descriptor */
-    /* den muessen wir ja irgendwo speichern */
+    /* MAM 01/06/03: Emulate inb, outb and ioperm with the help of a
+     * file descriptor, which must be stored somewhere */
     int Fd;
 #endif
 
@@ -49,7 +48,8 @@ void *thr_sendrec_S88(void *);
 void *thr_sendrec_dummy(void *v);
 
 #ifdef __FreeBSD__
-/* MAM 01/06/03 Wir emulieren inb,outb und ioperm ueber einen */
+/* MAM 01/06/03: Emulate inb, outb and ioperm with the help of a file
+ * descriptor */
 #define ioperm(a,b,c) FBSD_ioperm(a,b,c,busnumber)
 #define inb(a) FBSD_inb(a,busnumber)
 #define outb(a,b) FBSD_outb(a,b,busnumber)

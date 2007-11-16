@@ -64,14 +64,14 @@
 /***************************************************************/
 
 /* signals on the S88-Bus */
-#define S88_QUIET 0x00          /* all signals low */
-#define S88_RESET 0x04          /* reset signal high */
-#define S88_LOAD  0x02          /* load signal high */
-#define S88_CLOCK 0x01          /* clock signal high */
-#define S88_DATA1 0x40          /* mask for data form S88 bus 1 (ACK) */
-#define S88_DATA2 0x80          /* mask for data from S88 bus 2 (BUSY) !inverted */
-#define S88_DATA3 0x20          /* mask for data from S88 bus 3 (PEND) */
-#define S88_DATA4 0x10          /* mask for data from S88 bus 4 (SEL) */
+#define S88_QUIET 0x00 /* all signals low */
+#define S88_RESET 0x04 /* reset signal high */
+#define S88_LOAD  0x02 /* load signal high */
+#define S88_CLOCK 0x01 /* clock signal high */
+#define S88_DATA1 0x40 /* mask for data form S88 bus 1 (ACK) */
+#define S88_DATA2 0x80 /* mask for data from S88 bus 2 (BUSY) !inverted */
+#define S88_DATA3 0x20 /* mask for data from S88 bus 3 (PEND) */
+#define S88_DATA4 0x10 /* mask for data from S88 bus 4 (SEL) */
 
 /* Output a Signal to the Bus */
 #define S88_WRITE(x) for (i = 0; i < S88CLOCK_SCALE; i++) outb(x, S88PORT)
@@ -272,7 +272,7 @@ int init_bus_S88(bus_t busnumber)
     for (i = 0; i < LPT_NUM; i++)
         isin = isin || (S88PORT == LPT_BASE[i]);
     if (isin) {
-        /* test, whether we can access the port */
+        /* test if port is accessible*/
         if (ioperm(S88PORT, 3, 1) == 0) {
             /* test, whether there is a real device on the S88DEV-port
                by writing and reading data to the port. If the written
@@ -292,7 +292,8 @@ int init_bus_S88(bus_t busnumber)
             else {
                 DBG(busnumber, DBG_WARN,
                     "warning: There is no port for s88 at 0x%X.", S88PORT);
-                ioperm(S88PORT, 3, 0);  /* stopping access to port address */
+                /* stop access to port address */
+                ioperm(S88PORT, 3, 0);
                 return 1;
             }
         }
@@ -317,9 +318,9 @@ int init_bus_S88(bus_t busnumber)
 * function s88load                                              *
 *                                                               *
 * purpose: Loads the data from the bus in s88data if the valid- *
-*          time space S88REFRESH is over. Then also the new      *
+*          time space S88REFRESH is over. Then also the new     *
 *          validity-timeout is set to s88valid.                 *
-*          If port is disabled or data is valid does nothing.      *
+*          If port is disabled or data is valid does nothing.   *
 *                                                               *
 * in:      ---                                                  *
 * out:     ---                                                  *
@@ -331,7 +332,7 @@ void s88load(bus_t busnumber)
 {
     int i, j, k, inbyte;
     struct timeval nowtime;
-    unsigned int s88data[S88_MAXPORTSB * S88_MAXBUSSES];        /* valid bus-data */
+    unsigned int s88data[S88_MAXPORTSB * S88_MAXBUSSES]; /* valid bus-data */
     int S88PORT = __ddl_s88->port;
     int S88CLOCK_SCALE = __ddl_s88->clockscale;
     int S88REFRESH = __ddl_s88->refresh;
@@ -538,7 +539,7 @@ unsigned char FBSD_inb(int Woher, bus_t busnumber)
             return 0;
     }
     ioctl(__ddl_s88->Fd, WelcherIoctl, &i);
-    /* DBG(busnumber, DBG_DEBUG,  "FBSD DDL-S88 InB finished Data %02X",i); */
+    /* DBG(busnumber, DBG_DEBUG, "FBSD DDL-S88 InB finished Data %02X",i); */
     return i;
 }
 
@@ -549,7 +550,7 @@ unsigned char FBSD_outb(unsigned char Data, int Wohin, bus_t busnumber)
     int WelchesPort;
     int WelcherIoctl;
 
-    /* DBG(busnumber, DBG_DEBUG,  "FBSD DDL-S88 OutB %d on Port %04X",Data,Wohin); */
+    /* DBG(busnumber, DBG_DEBUG, "FBSD DDL-S88 OutB %d on Port %04X",Data,Wohin); */
     if (__ddl_s88->Fd == -1) {
         DBG(busnumber, DBG_ERROR,
             "FBSD DDL-S88 Device not open for writing byte %d", Data);

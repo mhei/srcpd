@@ -137,13 +137,13 @@ int init_serinfo(int fd, int divisor, struct serial_struct **serinfo)
   (*serinfo)->flags = ASYNC_SPD_CUST | ASYNC_SKIP_TEST;
   return 0;
 }
-//
+
 int set_customdivisor(int fd, struct serial_struct *serinfo)
 {
   if (ioctl(fd, TIOCSSERIAL, serinfo) < 0) return -1;
   return 0;
 }
-//
+
 int reset_customdivisor(int fd)
 {
   struct serial_struct *serinfo = NULL;
@@ -220,17 +220,21 @@ int init_lineDDL(bus_t busnumber)
 
     int dev;
     int rc;
-    dev = open(buses[busnumber].device.filename.path, O_WRONLY);     /* open comport                 */
+    /* open comport */
+    dev = open(buses[busnumber].device.filename.path, O_WRONLY);
     if (dev < 0) {
         DBG(busnumber, DBG_FATAL,
             "device %s can not be opened for writing. Abort!",
             buses[busnumber].device.filename.path);
-        exit(1);                /* there is no chance to continue */
+        /* there is no chance to continue */
+        exit(1);
     }
 #if linux
-  if ((rc=reset_customdivisor(dev))!=0)
+  if ((rc = reset_customdivisor(dev)) != 0)
   {
-    DBG(busnumber, DBG_FATAL, "error initializing device %s (reset custom divisor %d). Abort!", buses[busnumber].device.filename.path, rc);
+    DBG(busnumber, DBG_FATAL,
+            "error initializing device %s (reset custom divisor %d). Abort!",
+            buses[busnumber].device.filename.path, rc);
     exit(1);
   }
 #endif
@@ -283,12 +287,16 @@ int init_lineDDL(bus_t busnumber)
   {
     if (init_serinfo(dev,3,&__DDL->serinfo_marklin)!=0)
     {
-      DBG(busnumber, DBG_FATAL, "error initializing device %s (init_serinfo mm). Abort!", buses[busnumber].device.filename.path);
+      DBG(busnumber, DBG_FATAL,
+              "error initializing device %s (init_serinfo mm). Abort!",
+              buses[busnumber].device.filename.path);
       exit(1);
     }
     if (init_serinfo(dev,7,&__DDL->serinfo_nmradcc)!=0)
     {
-      DBG(busnumber, DBG_FATAL, "error initializing device %s (init_serinfo dcc). Abort!",  buses[busnumber].device.filename.path);
+      DBG(busnumber, DBG_FATAL,
+              "error initializing device %s (init_serinfo dcc). Abort!",
+              buses[busnumber].device.filename.path);
       exit(1);
     }
   }
@@ -1024,15 +1032,15 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     __DDL->RI_CHECK = FALSE;    /* ring indicator checking      */
     __DDL->CHECKSHORT = FALSE;  /* default no shortcut checking */
     __DDL->DSR_INVERSE = FALSE; /* controls how DSR is used to  */
-    /* check shorts                 */
+                                /* check short-circuits         */
     __DDL->SHORTCUTDELAY = 0;   /* usecs shortcut delay         */
     __DDL->NMRADCC_TR_V = 3;    /* version of the NMRA dcc      */
-    /* translation routine (1 or 2) */
-    __DDL->ENABLED_PROTOCOLS = (EP_MAERKLIN | EP_NMRADCC);      /* enabled p's */
-    __DDL->IMPROVE_NMRADCC_TIMING = 0;  /* NMRA DCC: improve timing     */
+                                /* translation routine (1 or 2) */
+    __DDL->ENABLED_PROTOCOLS = (EP_MAERKLIN | EP_NMRADCC); /* enabled p's */
+    __DDL->IMPROVE_NMRADCC_TIMING = 0;  /* NMRA DCC: improve timing    */
 
     __DDL->WAITUART_USLEEP_PATCH = 0;   /* enable/disable usleep patch */
-    __DDL->WAITUART_USLEEP_USEC = 0;    /* usecs for usleep patch       */
+    __DDL->WAITUART_USLEEP_USEC = 0;    /* usecs for usleep patch      */
 
     __DDL->SERIAL_DEVICE_MODE = SDM_NOTINITIALIZED;
 
@@ -1188,7 +1196,7 @@ int term_bus_DDL(bus_t busnumber)
 
     set_lines_off(busnumber);
 
-    //pthread_cond_destroy(&(__DDL->refresh_cond));
+    /* pthread_cond_destroy(&(__DDL->refresh_cond)); */
     DBG(busnumber, DBG_INFO, "DDL bus %ld terminated", busnumber);
     return 0;
 }
