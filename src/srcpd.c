@@ -289,7 +289,7 @@ int main(int argc, char **argv)
     result = pthread_create(&ttid_clock, NULL, thr_clock, NULL);
     if (result != 0) {
         syslog(LOG_INFO, "Create clock thread failed: %s (errno = %d)\n",
-               strerror(errno), errno);
+               strerror(result), result);
     }
     pthread_detach(ttid_clock);
 
@@ -307,7 +307,7 @@ int main(int argc, char **argv)
                if (result != 0) {
                    syslog(LOG_INFO, "Create timer thread for bus %ld "
                            "failed: %s (errno = %d)\n", i,
-                           strerror(errno), errno);
+                           strerror(result), result);
                    exit(1);
                }
                pthread_detach(ttid_pid);
@@ -320,7 +320,7 @@ int main(int argc, char **argv)
                if (result != 0) {
                    syslog(LOG_INFO, "Create interface thread for bus %ld "
                            "failed: %s (errno = %d)\n", i,
-                           strerror(errno), errno);
+                           strerror(result), result);
                     exit(1);
                }
                pthread_detach(ttid_pid);
@@ -343,7 +343,7 @@ int main(int argc, char **argv)
     result = pthread_create(&ttid_cmd, NULL, thr_handlePort, &cmds);
     if (result != 0) {
         syslog(LOG_INFO, "Create command thread failed: %s (errno = %d)\n",
-                strerror(errno), errno);
+                strerror(result), result);
         exit(1);
     }
     pthread_detach(ttid_cmd);
@@ -394,7 +394,7 @@ int main(int argc, char **argv)
                     if (result != 0) {
                         syslog(LOG_INFO, "Recreate interface thread "
                                 "failed: %s (errno = %d)\n",
-                                strerror(errno), errno);
+                                strerror(result), result);
                         break;
                     }
                     buses[i].pid = ttid_pid;
