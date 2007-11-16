@@ -162,22 +162,24 @@ int  queue_empty(bus_t busnumber);
 void queue_add(bus_t busnumber, int addr, char * const packet, int packet_type, int packet_size);
 int  queue_get(bus_t busnumber, int *addr, char *packet, int *packet_size);
 
-#define ADDR14BIT_OFFSET 128   /* internal offset of the long addresses       */
+#define ADDR14BIT_OFFSET 128   /* internal offset of the long addresses */
 
 
 void init_MaerklinPacketPool(bus_t busnumber);
 char *get_maerklin_packet(bus_t busnumber, int adr, int fx);
-void update_MaerklinPacketPool(bus_t busnumber, int adr, char const * const sd_packet, char const * const f1,
-                                 char const * const f2, char const * const f3, char const * const f4);
+void update_MaerklinPacketPool(bus_t busnumber, int adr,
+        char const * const sd_packet, char const * const f1,
+        char const * const f2, char const * const f3, char const * const f4);
 void init_NMRAPacketPool(bus_t busnumber);
-void update_NMRAPacketPool(bus_t busnumber, int adr, char const * const packet, int packet_size,
-                                    char const * const fx_packet, int fx_packet_size);
-
+void update_NMRAPacketPool(bus_t busnumber, int adr,
+        char const * const packet, int packet_size,
+        char const * const fx_packet, int fx_packet_size);
 
 void (*waitUARTempty)(bus_t busnumber);
 int checkRingIndicator(bus_t busnumber);
 int checkShortcut(bus_t busnumber);
-void send_packet(bus_t busnumber, int addr, char *packet, int packet_size, int packet_type, int refresh);
+void send_packet(bus_t busnumber, int addr, char *packet,
+        int packet_size, int packet_type, int refresh);
 void improve_nmradcc_write(bus_t busnumber, char *packet, int packet_size);
 void refresh_loco(bus_t busnumber);
 long int compute_delta(struct timeval tv1, struct timeval tv2);

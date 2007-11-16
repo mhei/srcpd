@@ -312,7 +312,8 @@ int init_lineI2C_DEV(bus_t bus)
     int FD;
 
     if (buses[bus].debuglevel > 0) {
-        DBG(bus, DBG_INFO, "Opening i2c-dev: %s", buses[bus].device.filename.path);
+        DBG(bus, DBG_INFO, "Opening i2c-dev: %s",
+                buses[bus].device.filename.path);
     }
 
     FD = open(buses[bus].device.filename.path, O_RDWR);
@@ -453,7 +454,7 @@ int init_bus_I2C_DEV(bus_t i)
 * Enters an endless loop that waits for commands and
 * executes them.
 *
-* At the moment we only support GA-devices
+* Currently we only support GA-devices
 *
 */
 void *thr_sendrec_I2C_DEV(void *v)
@@ -491,7 +492,7 @@ void *thr_sendrec_I2C_DEV(void *v)
 
         }
 
-        /* do nothing, if power off */
+        /* do nothing, if power is off */
         if (buses[bus].power_state == 0) {
             usleep(1000);
             continue;

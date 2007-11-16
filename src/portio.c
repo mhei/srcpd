@@ -15,8 +15,9 @@
  * http://www.easysw.com/~mike/serial
  */
 
-#include "stdincludes.h"
+#include <string.h> /* for strerror() */
 
+#include "stdincludes.h"
 #include "config-srcpd.h"
 #include "ttycygwin.h"
 #include "portio.h"
@@ -36,14 +37,16 @@ int open_port(bus_t bus)
         int serial;
         struct termios settings;
 
-        serial  = open(buses[bus].device.filename.path, O_RDWR | O_NOCTTY);
+        serial = open(buses[bus].device.filename.path, O_RDWR | O_NOCTTY);
         if (serial < 0) {
-                DBG(bus, DBG_ERROR, "Error, could not open %s.\n"
-                                "Reported error number: %d.\n",
-                    buses[bus].device.filename.path, errno); /* , str_errno(errno)); */
-                buses[bus].fd = -1;
-                return -errno;
+            DBG(bus, DBG_ERROR,
+                    "Open serial line '%s' failed: %s (errno = %d)\n",
+                    buses[bus].device.filename.path, strerror(errno), errno);
+            buses[bus].fd = -1;
+            return -errno;
         }
+        buses[bus].fd = serial;
+
         /* Get default settings from OS */
         tcgetattr(serial, &buses[bus].devicesettings);
         /* Ignore default setting from the OS */
@@ -65,7 +68,7 @@ int open_port(bus_t bus)
         /* Flush serial buffers */
         tcflush(serial, TCIFLUSH);
         tcflush(serial, TCOFLUSH);
-        buses[bus].fd = serial;
+
         return serial;
 }
 
@@ -96,8 +99,8 @@ void write_port(bus_t bus, unsigned char b)
         if (i < 0) {
                 /* Error reported from write */
                 DBG(bus, DBG_ERROR, 
-                        "write_port(): External error: errno %d",
-                        errno); /* , str_errno(errno)); */
+                        "write_port() failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
         }
         if (i == 0) {
                 /* Error reported from write */
@@ -120,17 +123,19 @@ unsigned int read_port(bus_t bus)
         if (buses[bus].debuglevel <= DBG_DEBUG) {
                 /* read input port */
                 i = read(buses[bus].fd, &in, 1);
+
+                /* Error reading port */
                 if (i < 0) {
-                        /* Error reading port */
                         DBG(bus, DBG_ERROR,
-                            "read_port(): Read status: %d with errno = %d.\n",
-                            i, errno);/* , str_errno(errno)); */
-                        in = 0x200 + errno;		/* Result all blocked */
+                            "read_port() failed: %s (errno = %d)\n",
+                            strerror(errno), errno);
+                        in = 0x200 + errno;	/* Result all blocked */
                 }
+
+                /* Empty port buffer */
                 if (i == 0) {
-                        /* Empty port */
                         DBG(bus, DBG_ERROR,
-                                "read_port(): Port empty.\n");
+                                "read_port(): Port buffer empty.\n");
                         in = 0x1FF;     /* Result all blocked */
                 }
         }

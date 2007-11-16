@@ -83,7 +83,7 @@ int readConfig_IB( xmlDocPtr doc, xmlNodePtr node, bus_t busnumber )
 
   strcpy( buses[ busnumber ].description,
           "GA GL FB SM POWER LOCK DESCRIPTION" );
-  __ib->number_fb = 0;        /* max. 31 for S88; Loconet is missing this time */
+  __ib->number_fb = 0; /* max. 31 for S88; Loconet is missing this time */
   __ib->number_ga = 256;
   __ib->number_gl = 80;
 
@@ -370,7 +370,8 @@ void send_command_ga_IB( bus_t busnumber )
   struct timeval akt_time, cmp_time;
 
   gettimeofday( &akt_time, NULL );
-  /* zuerst eventuell Decoder abschalten */
+
+  /* first switch of decoders */
   for ( i = 0; i < 50; i++ )
   {
     if ( __ib->tga[ i ].id )
@@ -378,7 +379,9 @@ void send_command_ga_IB( bus_t busnumber )
       DBG( busnumber, DBG_DEBUG, "Time %i,%i", ( int ) akt_time.tv_sec,
            ( int ) akt_time.tv_usec );
       cmp_time = __ib->tga[ i ].t;
-      if ( cmpTime( &cmp_time, &akt_time ) )     /* switch off time reached? */
+
+      /* switch off time reached? */
+      if ( cmpTime( &cmp_time, &akt_time ) )
       {
         gatmp = __ib->tga[ i ];
         addr = gatmp.id;
@@ -404,7 +407,7 @@ void send_command_ga_IB( bus_t busnumber )
     }
   }
 
-  /* Decoder switch on */
+  /* switch on decoder */
   if ( !queue_GA_isempty( busnumber ) )
   {
     unqueueNextGA( busnumber, &gatmp );
@@ -428,6 +431,7 @@ void send_command_ga_IB( bus_t busnumber )
     }
     writeByte( busnumber, byte2send, 0 );
     status = 0;
+
     /* reschedule event: turn off --to be done-- */
     if ( gatmp.action && ( gatmp.activetime > 0 ) )
     {
@@ -471,7 +475,7 @@ void send_command_gl_IB( bus_t busnumber )
 
   /* locomotive decoder */
   /* fprintf(stderr, "LOK's... "); */
-  /* nur senden, wenn wirklich etwas vorliegt */
+  /* send only if new data is available */
   if ( !queue_GL_isempty( busnumber ) )
   {
     unqueueNextGL( busnumber, &gltmp );
@@ -482,7 +486,7 @@ void send_command_gl_IB( bus_t busnumber )
     if ( ( gltmp.direction != glakt.direction ) ||
          ( gltmp.speed != glakt.speed ) || ( gltmp.funcs != glakt.funcs ) )
     {
-      /* Lokkommando soll gesendet werden */
+      /* send loco command */
       byte2send = 0x80;
       writeByte( busnumber, byte2send, 0 );
       /* send low byte of address */
@@ -495,16 +499,16 @@ void send_command_gl_IB( bus_t busnumber )
       temp >>= 8;
       byte2send = temp;
       writeByte( busnumber, byte2send, 0 );
-      if ( gltmp.direction == 2 )      /* emergency stop activated? */
+
+      /* if emergency stop is activated set emergency stop */
+      if ( gltmp.direction == 2 )
       {
-        byte2send = 1;  /* set emergency stop */
+        byte2send = 1;
       }
       else
       {
-
         /* IB scales speeds INTERNALLY down! */
         /* but gltmp.speed can already contain down-scaled speed */
-
         /* IB has general range of 0..127, independent of decoder type! */
         byte2send =
           ( unsigned char ) ( ( gltmp.speed * 126 ) / glakt.n_fs );
@@ -518,9 +522,9 @@ void send_command_gl_IB( bus_t busnumber )
         }
       }
       writeByte( busnumber, byte2send, 0 );
-      /* setting direction, light and function */
-      byte2send =
-        ( gltmp.funcs >> 1 ) + ( gltmp.funcs & 0x01 ? 0x10 : 0 );
+
+      /* set direction, light and function */
+      byte2send = ( gltmp.funcs >> 1 ) + ( gltmp.funcs & 0x01 ? 0x10 : 0 );
       byte2send |= 0xc0;
       if ( gltmp.direction )
       {
@@ -774,7 +778,7 @@ void send_command_sm_IB( bus_t busnumber )
 
   /* locomotive decoder */
   /* fprintf(stderr, "LOK's... "); */
-  /* nur senden, wenn wirklich etwas vorliegt */
+  /* send only if data is available */
   if ( !queue_SM_isempty( busnumber ) )
   {
     unqueueNextSM( busnumber, &smakt );
@@ -849,7 +853,7 @@ void check_status_IB( bus_t busnumber )
   struct _GLSTATE gltmp, glakt;
   struct _GASTATE gatmp;
 
-  /* request for Status�changes :
+  /* Request for state�changes:
      1. �derungen an S88-Modulen
      2. manuelle Lokbefehle
      3. manuelle Weichenbefehle */
@@ -885,7 +889,7 @@ void check_status_IB( bus_t busnumber )
       }
       else
       {
-        gltmp.speed = rr;       /* Lok f�rt mit dieser Geschwindigkeit */
+        gltmp.speed = rr;       /* Lok faehrt mit dieser Geschwindigkeit */
         gltmp.direction = 0;
         if ( gltmp.speed > 0 )
           gltmp.speed--;
@@ -900,9 +904,9 @@ void check_status_IB( bus_t busnumber )
       /* 4. byte address (high-part A13..A8), direction, light */
       readByte_IB( busnumber, 1, &rr );
       if ( ( rr & 0x80 ) && ( gltmp.direction == 0 ) )
-        gltmp.direction = 1;    /* Richtung ist vorw�ts */
+        gltmp.direction = 1;    /* direction is forward */
       if ( rr & 0x40 )
-        gltmp.funcs |= 0x01;    /* Licht ist an */
+        gltmp.funcs |= 0x01;    /* light is on */
       rr &= 0x3F;
       gltmp.id |= rr << 8;
 
@@ -933,7 +937,7 @@ void check_status_IB( bus_t busnumber )
     }
   }
 
-  /* mindestens eine Rückmeldung hat sich geändert */
+  /* some feedback state has changed */
   if ( xevnt1 & 0x04 )
   {
     byte2send = 0xCB;
@@ -951,7 +955,7 @@ void check_status_IB( bus_t busnumber )
     }
   }
 
-  /* mindestens eine Weiche wurde von Hand geschaltet */
+  /* some turnout was switched by hand */
   if ( xevnt1 & 0x20 )
   {
     byte2send = 0xCA;
@@ -970,7 +974,7 @@ void check_status_IB( bus_t busnumber )
     }
   }
 
-  /* overheat, short on track etc. */
+  /* overheat, short-circuit on track etc. */
   if ( xevnt2 & 0x3f )
   {
     DBG( busnumber, DBG_DEBUG,
@@ -982,16 +986,17 @@ void check_status_IB( bus_t busnumber )
         setPower( busnumber, 0, "Overheating condition detected" );
       if ( xevnt2 & 0x10 )
         setPower( busnumber, 0,
-                  "Non-allowed electrical connection between programming track and rest of layout" );
+                  "Non-allowed electrical connection between "
+                  "programming track and rest of layout" );
       if ( xevnt2 & 0x08 )
         setPower( busnumber, 0,
                   "Overload on DCC-Booster or Loconet" );
       if ( xevnt2 & 0x04 )
-        setPower( busnumber, 0, "Short on internal booster" );
+        setPower( busnumber, 0, "Short-circuit on internal booster" );
       if ( xevnt2 & 0x02 )
         setPower( busnumber, 0, "Overload on Lokmaus-bus" );
       if ( xevnt2 & 0x01 )
-        setPower( busnumber, 0, "Short on external booster" );
+        setPower( busnumber, 0, "Short-circuit on external booster" );
 
       __ib->emergency_on_ib = 1;
     }
@@ -1031,7 +1036,8 @@ void check_status_IB( bus_t busnumber )
   }
 
 
-  if ( xevnt3 & 0x01 )             /* we should send an XPT_event-command */
+  /* we should send an XPT_event-command */
+  if ( xevnt3 & 0x01 )
     check_status_pt_IB( busnumber );
 }
 
@@ -1099,7 +1105,7 @@ static int open_comport( bus_t busnumber, speed_t baud )
 
   struct termios interface;
 
-  DBG( busnumber, DBG_INFO, "try opening serial line %s for %i baud",
+  DBG( busnumber, DBG_INFO, "Try to open serial line %s for %i baud",
        name, ( 2400 * ( 1 << ( baud - 11 ) ) ) );
   fd = open( name, O_RDWR );
   DBG( busnumber, DBG_DEBUG, "fd after open(...) = %d", fd );
@@ -1155,11 +1161,11 @@ static int initLine_IB( bus_t busnumber )
   DBG( busnumber, DBG_INFO, "Opening serial line %s for 2400 baud\n",
        name );
   fd = open( name, O_RDWR );
-  DBG( busnumber, DBG_INFO, "fd = %d", fd );
+  DBG( busnumber, DBG_DEBUG, "fd = %d", fd );
   if ( fd == -1 )
   {
-    DBG( busnumber, DBG_ERROR, "Sorry, couldn't open device.\n" );
-    /* printf("dammit, couldn't open device.\n"); */
+    DBG(busnumber, DBG_ERROR, "Open serial line failed: %s (errno = %d)\n",
+      strerror(errno), errno);
     return 1;
   }
   buses[ busnumber ].fd = fd;
@@ -1177,7 +1183,7 @@ static int initLine_IB( bus_t busnumber )
   status = 0;
   sleep( 1 );
   DBG( busnumber, DBG_INFO, "Clearing input-buffer\n" );
-  /* printf("Clearing input-buffer\n"); */
+
   while ( status != -1 )
     status = readByte_IB( busnumber, 1, &rr );
 
@@ -1204,7 +1210,8 @@ static int initLine_IB( bus_t busnumber )
   fd = open_comport( busnumber, baud );
   if ( fd < 0 )
   {
-    DBG( busnumber, DBG_ERROR, "open_comport() failed\n" );
+    DBG(busnumber, DBG_ERROR, "Open serial line failed: %s (errno = %d)\n",
+      strerror(errno), errno);
     return ( -1 );
   }
   /* printf("open_comport() successful; fd = %d\n", fd ); */
@@ -1252,17 +1259,23 @@ static int sendBreak( const int fd, bus_t busnumber )
 {
   if ( tcflush( fd, TCIOFLUSH ) != 0 )
   {
-    DBG( busnumber, DBG_ERROR,
-         "sendBreak(): Error in tcflush before break\n" );
+    DBG(busnumber, DBG_ERROR,
+            "sendBreak(): tcflush before break failed: %s (errno = %d)\n",
+            strerror(errno), errno);
     return -1;
   }
+
   tcflow( fd, TCOOFF );
   usleep( 300000 );             /* 300 ms */
+
   if ( tcsendbreak( fd, 100 ) != 0 )
   {
-    DBG( busnumber, DBG_ERROR, "sendBreak(): Error in tcsendbreak \n" );
+    DBG(busnumber, DBG_ERROR,
+            "sendBreak(): tcsendbreak failed: %s (errno = %d)\n",
+            strerror(errno), errno);
     return -1;
   }
+
   sleep( 3 );
   usleep( 600000 );             /* 600 ms */
   tcflow( fd, TCOON );
@@ -1289,7 +1302,6 @@ speed_t checkBaudrate( const int fd, const bus_t busnumber )
   short len = 0;
   int i;
   speed_t internalBaudrate = B0;
-  char msg[ 200 ];
 
   DBG( busnumber, DBG_INFO,
        "Checking baud rate inside IB, see special option S1 in IB-Handbook\n" );
@@ -1301,11 +1313,10 @@ speed_t checkBaudrate( const int fd, const bus_t busnumber )
     error = tcgetattr( fd, &interface );
     if ( error < 0 )
     {
-      strcpy( msg, strerror( errno ) );
-      DBG( busnumber, DBG_INFO,
-           "checkBaudrate(): Error in tcgetattr, error #%d: %s\n",
-           error, msg );
-      return B0;
+        DBG(busnumber, DBG_ERROR,
+                "checkBaudrate(): tcgetattr failed: %s (errno = %d)\n",
+                strerror(errno), errno);
+        return B0;
     }
     switch ( baudrate )
     {
@@ -1328,22 +1339,22 @@ speed_t checkBaudrate( const int fd, const bus_t busnumber )
         internalBaudrate = B19200;
         break;
     }
+
     if ( cfsetispeed( &interface, internalBaudrate ) != 0 )
     {
-      strcpy( msg, strerror( errno ) );
-      DBG( busnumber, DBG_INFO,
-           "CheckBaudate: Error in cfsetispeed, error #%d: %s\n",
-           error, msg );
+        DBG(busnumber, DBG_ERROR,
+                "checkBaudrate(): cfsetispeed failed: %s (errno = %d)\n",
+                strerror(errno), errno);
+        /*CHECK: What to do now?*/
     }
     tcflush( fd, TCOFLUSH );
     error = tcsetattr( fd, TCSANOW, &interface );
     if ( error != 0 )
     {
-      strcpy( msg, strerror( errno ) );
-      DBG( busnumber, DBG_INFO,
-           "CheckBaudate: Error in tcsetattr, error #%d: %s\n", error,
-           msg );
-      return B0;
+        DBG(busnumber, DBG_ERROR,
+                "checkBaudrate(): tcsetattr failed: %s (errno = %d)\n",
+                strerror(errno), errno);
+        return B0;
     }
 
     out = 0xC4;
@@ -1406,44 +1417,44 @@ static int resetBaudrate( const speed_t speed, const bus_t busnumber )
 {
   unsigned char byte2send;
   int status;
-  char *sendString = "";
+  unsigned char *sendString;
+
   switch ( speed )
   {
     case B2400:
       DBG( busnumber, DBG_INFO, "Changing baud rate to 2400 bps\n" );
-      sendString = "B2400";
-      writeString( busnumber, ( unsigned char * ) sendString, 0 );
+      sendString = (unsigned char *) "B2400";
+      writeString( busnumber, sendString, 0 );
       break;
     case B4800:
       DBG( busnumber, DBG_INFO, "Changing baud rate to 4800 bps\n" );
-      sendString = "B4800";
-      writeString( busnumber, ( unsigned char * ) sendString, 0 );
+      sendString = (unsigned char *) "B4800";
+      writeString( busnumber, sendString, 0 );
       break;
     case B9600:
       DBG( busnumber, DBG_INFO, "Changing baud rate to 9600 bps\n" );
-      sendString = "B9600";
-      writeString( busnumber, ( unsigned char * ) sendString, 0 );
+      sendString = (unsigned char *) "B9600";
+      writeString( busnumber, sendString, 0 );
       break;
     case B19200:
       DBG( busnumber, DBG_INFO, "Changing baud rate to 19200 bps\n" );
-      sendString = "B19200";
-      writeString( busnumber, ( unsigned char * ) sendString, 0 );
+      sendString = (unsigned char *) "B19200";
+      writeString( busnumber, sendString, 0 );
       break;
     case B38400:
       DBG( busnumber, DBG_INFO, "Changing baud rate to 38400 bps\n" );
-      sendString = "B38400";
-      writeString( busnumber, ( unsigned char * ) sendString, 0 );
+      sendString = (unsigned char *) "B38400";
+      writeString( busnumber, sendString, 0 );
       break;
   }
+
   byte2send = 0x0d;
   writeByte( busnumber, byte2send, 0 );
   usleep( 200000 );             /* 200 ms */
   /* use following line to see some debugging */
   /* status = readAnswer_ib(busnumber, 1); */
   status = readAnswer_IB( busnumber, 0 );
-  if ( status != 0 )
-    return 1;
-  return 0;
+  return (status != 0) ? 1: 0;
 }
 
 /**
@@ -1458,19 +1469,18 @@ static int resetBaudrate( const speed_t speed, const bus_t busnumber )
 static int switchOffP50Command( const bus_t busnumber )
 {
   unsigned char byte2send;
-  char *sendString = "xZzA1";
+  unsigned char *sendString = (unsigned char *)"xZzA1";
   int status;
 
   DBG( busnumber, DBG_INFO, "Switching off P50-commands\n" );
 
-  writeString( busnumber, ( unsigned char * ) sendString, 0 );
+  writeString( busnumber, sendString, 0 );
   byte2send = 0x0d;
   writeByte( busnumber, byte2send, 0 );
 
   /* use following line, to see some debugging */
   /* status = readAnswer_ib(busnumber, 1); */
   status = readAnswer_IB( busnumber, 0 );
-
   return (status != 0) ? 1: 0;
 }
 
