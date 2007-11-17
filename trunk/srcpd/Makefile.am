@@ -11,7 +11,5 @@ EXTRA_DIST = AUTHORS COPYING TODO NEWS ChangeLog INSTALL DESIGN \
 
 dist_sysconf_DATA = srcpd.conf
 
-dist_man_MANS = srcpd.8
-
 udevdir = $(sysconfdir)/udev/rules.d
 dist_udev_DATA = 10-liusb.rules
