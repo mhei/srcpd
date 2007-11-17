@@ -170,7 +170,7 @@ be found at http://sourceforge.net/projects/srcpd, topic »CVS«.
 
 After CVS checkout the first to do is a 
 
- autoreconf
+ autoreconf -i
 
 After that the usual ./configure && make && make install should do
 the work.
