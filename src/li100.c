@@ -1840,7 +1840,8 @@ int initLine_LI100_SERIAL( bus_t busnumber )
 
     if ( fd == -1 )
     {
-      DBG(busnumber, DBG_ERROR, "Sorry, could not open device '%s'.\n", name);
+        DBG(busnumber, DBG_ERROR, "Open serial device '%s' failed: %s "
+                "(errno = %d).\n", name, strerror(errno), errno);
       return status;
     }
 

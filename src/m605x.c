@@ -177,9 +177,12 @@ static int init_lineM6051(bus_t bus)
     if (buses[bus].debuglevel > 0) {
         DBG(bus, DBG_INFO, "Opening 605x: %s", buses[bus].device.filename.path);
     }
-    if ((FD = open(buses[bus].device.filename.path, O_RDWR | O_NONBLOCK)) == -1) {
-        DBG(bus, DBG_FATAL, "Couldn't open device %s.",
-            buses[bus].device.filename.path);
+
+    FD = open(buses[bus].device.filename.path, O_RDWR | O_NONBLOCK);
+    if (FD == -1) {
+        DBG(bus, DBG_ERROR, "Open serial device '%s' failed: %s "
+                "(errno = %d).\n", buses[bus].device.filename.path,
+                strerror(errno), errno);
         return -1;
     }
     tcgetattr(FD, &interface);

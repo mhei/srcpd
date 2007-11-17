@@ -318,14 +318,13 @@ int init_lineI2C_DEV(bus_t bus)
 
     FD = open(buses[bus].device.filename.path, O_RDWR);
 
-    if (FD <= 0) {
-        DBG(bus, DBG_FATAL, "Couldn't open device %s.",
-            buses[bus].device.filename.path);
-        FD = -1;
+    if (FD == -1) {
+        DBG(bus, DBG_ERROR, "Open device '%s' failed: %s "
+                "(errno = %d).\n", buses[bus].device.filename.path,
+                strerror(errno), errno);
     }
 
     return FD;
-
 }
 
 void reset_ga(bus_t busnumber, int busfd)

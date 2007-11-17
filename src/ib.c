@@ -1108,11 +1108,11 @@ static int open_comport( bus_t busnumber, speed_t baud )
   DBG( busnumber, DBG_INFO, "Try to open serial line %s for %i baud",
        name, ( 2400 * ( 1 << ( baud - 11 ) ) ) );
   fd = open( name, O_RDWR );
-  DBG( busnumber, DBG_DEBUG, "fd after open(...) = %d", fd );
   buses[ busnumber ].fd = fd;
-  if ( fd < 0 )
+  if (fd == -1)
   {
-    DBG( busnumber, DBG_ERROR, "Sorry, couldn't open device.\n" );
+      DBG(busnumber, DBG_ERROR, "Open serial line failed: %s (errno = %d).\n",
+              strerror(errno), errno);
   }
   else
   {

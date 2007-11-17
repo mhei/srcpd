@@ -144,7 +144,8 @@ static int open_lineHSI88(bus_t bus, char *name )
   fd = open(name, O_RDWR);
   if (fd == -1)
   {
-    DBG(bus, DBG_ERROR, "Sorry, couldn't open device.\n" );
+      DBG(bus, DBG_ERROR, "Open serial line failed: %s (errno = %d).\n",
+              strerror(errno), errno);
   }
   else
   {
