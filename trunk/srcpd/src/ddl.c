@@ -127,14 +127,19 @@ int queue_get(bus_t busnumber, int *addr, char *packet,
 #if linux
 int init_serinfo(int fd, int divisor, struct serial_struct **serinfo)
 {
-  if (*serinfo==NULL)
+  if (*serinfo == NULL)
   {
-    *serinfo=malloc(sizeof(struct serial_struct));
-    if (!*serinfo) return -1;
+    *serinfo = malloc(sizeof(struct serial_struct));
+    if (!*serinfo)
+        return -1;
   }
-  if (ioctl(fd, TIOCGSERIAL, *serinfo) < 0) return -1;
+
+  if (ioctl(fd, TIOCGSERIAL, *serinfo) < 0)
+      return -1;
+
   (*serinfo)->custom_divisor = divisor;
   (*serinfo)->flags = ASYNC_SPD_CUST | ASYNC_SKIP_TEST;
+
   return 0;
 }
 
@@ -148,12 +153,15 @@ int reset_customdivisor(int fd)
 {
   struct serial_struct *serinfo = NULL;
 
-  serinfo=malloc(sizeof(struct serial_struct));
-  if (!serinfo) return -1;
-  if (ioctl(fd, TIOCGSERIAL, serinfo) < 0) return -2;
+  serinfo = malloc(sizeof(struct serial_struct));
+  if (!serinfo)
+      return -1;
+  if (ioctl(fd, TIOCGSERIAL, serinfo) < 0)
+      return -2;
   (serinfo)->custom_divisor = 0;
   (serinfo)->flags = 0;
-  if (ioctl(fd, TIOCSSERIAL, serinfo) < 0) return -3;
+  if (ioctl(fd, TIOCSSERIAL, serinfo) < 0)
+      return -3;
   return 0;
 }
 #endif
@@ -220,12 +228,13 @@ int init_lineDDL(bus_t busnumber)
 
     int dev;
     int rc;
+
     /* open comport */
     dev = open(buses[busnumber].device.filename.path, O_WRONLY);
     if (dev < 0) {
-        DBG(busnumber, DBG_FATAL,
-            "device %s can not be opened for writing. Abort!",
-            buses[busnumber].device.filename.path);
+        DBG(busnumber, DBG_FATAL, "Device '%s' open failed: %s (errno = %d). "
+                "Terminating...\n", buses[busnumber].device.filename.path,
+                strerror(errno), errno);
         /* there is no chance to continue */
         exit(1);
     }
@@ -403,10 +412,13 @@ void init_NMRAPacketPool(bus_t busnumber)
     int i, j;
     char idle_packet[] = "11111111111111101111111100000000001111111110";
     char idle_pktstr[PKTSIZE];
+    int result;
 
-    if (pthread_mutex_init(&__DDL->nmra_pktpool_mutex, NULL)) {
+    result = pthread_mutex_init(&__DDL->nmra_pktpool_mutex, NULL);
+    if (result != 0) {
         DBG(busnumber, DBG_ERROR,
-            "cannot create mutex (NMRA packet pool). Abort!");
+            "pthread_mutex_init failed: %s (error = %d). Terminating!\n",
+            strerror(result), result);
         exit(1);
     }
 
@@ -865,8 +877,8 @@ int krnl26_nanosleep(const struct timespec *req, struct timespec *rem) {
    }
 
    /* here begins the busy waiting section */
-
-   sleep_usec = (*req).tv_nsec / 1000; /* Genauigkeit nur im usec-Bereich!!! */
+   /* Genauigkeit nur im usec-Bereich!!! */
+   sleep_usec = (*req).tv_nsec / 1000;
    gettimeofday(&start_tv, &start_tz);
    do {
      gettimeofday(&stop_tv, &stop_tz);

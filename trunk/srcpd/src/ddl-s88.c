@@ -492,9 +492,9 @@ int FBSD_ioperm(int Port, int KeineAhnung, int DesiredAccess,
     Fd = open(DevName, O_RDWR);
 
     if (Fd < 0) {
-
-        DBG(busnumber, DBG_ERROR,
-            "FBSD DDL-S88 cannot open port %04X on %s", Port, DevName);
+        DBG(busnumber, DBG_ERROR, "FBSD DDL-S88 open port %04X on %s "
+                "failed: %s (errno = %d).\n", Port, DevName,
+                strerror(errno), errno);
         return Fd;
     }
     DBG(busnumber, DBG_INFO,

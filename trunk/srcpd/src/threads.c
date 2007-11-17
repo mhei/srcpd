@@ -72,6 +72,7 @@ void *thr_handlePort(void *v)
 /* ******** */
     int lsock;
     int newsock;           /* The listen socket */
+    int result;
 
 #if defined (ENABLE_IPV6)
     struct sockaddr_in6 sin6;
@@ -97,11 +98,12 @@ void *thr_handlePort(void *v)
         /* Try to create a socket for listening */
         lsock = socket(AF_INET6, SOCK_STREAM, 0);
         if (lsock == -1) {
-            DBG(0, DBG_ERROR, "Error while creating a socket\n");
+            DBG(0, DBG_ERROR, "Socket creation failed: %s (errno = %d). "
+                    "Terminating...\n", strerror(errno), errno);
             exit(1);
         }
-        saddr = (struct sockaddr *) &sin6;      /* This should work since we are assigning the pointer */
-        fsaddr = (struct sockaddr *) &fsin6;    /* This should work since we are assigning the pointer */
+        saddr = (struct sockaddr *) &sin6;
+        fsaddr = (struct sockaddr *) &fsin6;
         socklen = sizeof(sin6);
     }
     else
@@ -116,7 +118,8 @@ void *thr_handlePort(void *v)
         /* Create the socket */
         lsock = socket(AF_INET, SOCK_STREAM, 0);
         if (lsock == -1) {
-            DBG(0, DBG_ERROR, "Error while creating a socket\n");
+            DBG(0, DBG_ERROR, "Socket creation failed: %s (errno = %d). "
+                    "Terminating...\n", strerror(errno), errno);
             exit(1);
         }
         saddr = (struct sockaddr *) &sin;
@@ -130,21 +133,23 @@ void *thr_handlePort(void *v)
     sock_opt = 1;
     if (setsockopt(lsock, SOL_SOCKET, SO_REUSEADDR, &sock_opt,
          sizeof(sock_opt)) == -1) {
-        DBG(0, DBG_ERROR,
-            "Error while setting socket option SO_REUSEADDR\n");
+        DBG(0, DBG_ERROR, "Setsockopt failed: %s (errno = %d). "
+                "Terminating...\n", strerror(errno), errno);
         close(lsock);
         exit(1);
     }
 
     /* saddr=(sockaddr_in) if lsock is of type AF_INET else its (sockaddr_in6) */
     if (bind(lsock, (struct sockaddr *) saddr, socklen) == -1) {
-        DBG(0, DBG_ERROR, "Unable to bind\n");
+        DBG(0, DBG_ERROR, "Bind failed: %s (errno = %d). "
+                "Terminating...\n", strerror(errno), errno);
         close(lsock);
         exit(1);
     }
 
     if (listen(lsock, 1) == -1) {
-        DBG(0, DBG_ERROR, "Error in listen()\n");
+        DBG(0, DBG_ERROR, "Listen failed: %s (errno = %d). "
+                "Terminating...\n", strerror(errno), errno);
         close(lsock);
         exit(1);
     }
@@ -156,7 +161,8 @@ void *thr_handlePort(void *v)
 
         if (newsock == -1) {
             /* Possibly the connection got aborted */
-            DBG(0, DBG_WARN, "Unable to accept the new connection\n");
+            DBG(0, DBG_WARN, "Accept failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
             continue;
         }
 
@@ -186,11 +192,19 @@ void *thr_handlePort(void *v)
                 inet_ntoa(sin_ptr->sin_addr), ntohs(sin_ptr->sin_port));
         }
         sock_opt = 1;
-        setsockopt(newsock, SOL_SOCKET, SO_KEEPALIVE, &sock_opt,
-                   sizeof(sock_opt));
+        if (setsockopt(newsock, SOL_SOCKET, SO_KEEPALIVE, &sock_opt,
+                    sizeof(sock_opt)) == -1) {
+            DBG(0, DBG_ERROR, "Setsockopt failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+            close(newsock);
+            continue;
+        }
 
-        if (pthread_create(&ttid, NULL, ti.func, (void *) newsock)) {
-            perror("Cannot create thread to handle client. Abort!");
+        result = pthread_create(&ttid, NULL, ti.func, (void *) newsock);
+        if (result != 0) {
+            syslog(LOG_INFO, "Create thread for network client "
+                    "failed: %s (errno = %d). Terminating...\n",
+                    strerror(result), result);
             exit(1);
         }
         pthread_detach(ttid);

@@ -158,7 +158,8 @@ int init_linezimo(bus_t bus, char *name)
     DBG(bus, DBG_INFO, "Try opening serial line %s for 9600 baud\n", name);
     fd = open(name, O_RDWR);
     if (fd == -1) {
-        DBG(bus, DBG_ERROR, "Sorry, couldn't open device.\n");
+        DBG(bus, DBG_ERROR, "Open serial line failed: %s (errno = %d).\n",
+                strerror(errno), errno);
     }
     else {
         tcgetattr(fd, &interface);
@@ -178,6 +179,9 @@ int init_linezimo(bus_t bus, char *name)
 
 int term_bus_zimo(bus_t bus)
 {
+    if (buses[bus].fd != -1)
+        close(buses[bus].fd);
+
     DBG(bus, DBG_INFO, "zimo bus %ld terminating", bus);
     return 0;
 }
@@ -185,12 +189,12 @@ int term_bus_zimo(bus_t bus)
 /* Initialisiere den Bus, signalisiere Fehler */
 /* Einmal aufgerufen mit busnummer als einzigem Parameter */
 /* return code wird ignoriert (vorerst) */
-int init_bus_zimo(bus_t i)
+int init_bus_zimo(bus_t bus)
 {
-    DBG(i, DBG_INFO, "zimo init: bus #%ld, debug %d, device %s", i,
-        buses[i].debuglevel, buses[i].device.filename.path);
-    buses[i].fd = init_linezimo(i, buses[i].device.filename.path);
-    DBG(i, DBG_INFO, "zimo init done");
+    DBG(bus, DBG_INFO, "zimo init: debug %d, device %s",
+        buses[bus].debuglevel, buses[bus].device.filename.path);
+    buses[bus].fd = init_linezimo(bus, buses[bus].device.filename.path);
+    DBG(bus, DBG_INFO, "zimo init done");
     return 0;
 }
 

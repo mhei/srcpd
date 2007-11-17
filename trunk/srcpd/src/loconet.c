@@ -113,10 +113,11 @@ static int init_lineLOCONET_serial(bus_t busnumber) {
     int fd;
     struct termios interface;
 
-
-    fd = open(buses[busnumber].device.filename.path, O_RDWR | O_NDELAY | O_NOCTTY);
+    fd = open(buses[busnumber].device.filename.path,
+            O_RDWR | O_NDELAY | O_NOCTTY);
     if (fd == -1) {
-        DBG(busnumber, DBG_ERROR, "Sorry, couldn't open device.\n");
+        DBG(busnumber, DBG_ERROR, "Device open failed: %s (errno = %d). "
+                "Terminating...\n", strerror(errno), errno);
         return 1;
     }
     buses[busnumber].fd = fd;
@@ -179,8 +180,12 @@ static int init_lineLOCONET_lbserver(bus_t busnumber) {
     char msg[256];
     server = gethostbyname (buses[busnumber].device.net.hostname);
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0)
-	DBG(busnumber, DBG_ERROR, "ERROR opening socket");
+    if (sockfd == -1) {
+        DBG(busnumber, DBG_ERROR,
+                "Socket creation failed: %s (errno = %d).\n",
+                strerror(errno), errno);
+    }
+
     bzero((char *) &serv_addr, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     bcopy((char *) server->h_addr,

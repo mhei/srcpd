@@ -95,7 +95,8 @@ void save_comport(bus_t bus)
 
     fd = open(buses[bus].device.filename.path, O_RDWR);
     if (fd == -1) {
-       DBG(bus, DBG_ERROR, "Error, could not open device.\n");
+        DBG(bus, DBG_ERROR, "Open serial line failed: %s (errno = %d).\n",
+                strerror(errno), errno);
     }
     else {
         tcgetattr(fd, &buses[bus].devicesettings);
@@ -111,7 +112,8 @@ void restore_comport(bus_t bus)
         buses[bus].device.filename.path);
     fd = open(buses[bus].device.filename.path, O_RDWR);
     if (fd == -1) {
-        DBG(bus, DBG_ERROR, "Error, could not open device.");
+        DBG(bus, DBG_ERROR, "Open serial line failed: %s (errno = %d).\n",
+                strerror(errno), errno);
     }
     else {
         DBG(bus, DBG_INFO, "Restoring old values...");
