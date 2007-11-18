@@ -1208,6 +1208,7 @@ static int initLine_IB( bus_t busnumber )
      P50 commands*/
   baud = B2400;
   fd = open_comport( busnumber, baud );
+  buses[ busnumber ].fd = fd;
   if ( fd < 0 )
   {
     DBG(busnumber, DBG_ERROR, "Open serial line failed: %s (errno = %d)\n",
@@ -1227,7 +1228,7 @@ static int initLine_IB( bus_t busnumber )
 
   status = switchOffP50Command( busnumber );
   status = resetBaudrate( buses[ busnumber ].baudrate, busnumber );
-  close_comport( fd );
+  close_comport(busnumber);
 
   sleep( 1 );
 
