@@ -1235,6 +1235,7 @@ static int initLine_IB( bus_t busnumber )
   /* now open the comport for the communication */
 
   fd = open_comport( busnumber, buses[ busnumber ].baudrate );
+  buses[ busnumber ].fd = fd;
   DBG( busnumber, DBG_DEBUG, "fd after open_comport = %d", fd );
   if ( fd < 0 )
   {
