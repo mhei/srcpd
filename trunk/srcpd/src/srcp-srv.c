@@ -24,8 +24,8 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
     struct servent *serviceentry;
     
-    DBG(busnumber, DBG_INFO, "bus %ld starting configuration child %s",
-        busnumber, node->name);
+    DBG(busnumber, DBG_INFO, "Reading configuration for bus '%s'",
+        node->name);
 
     buses[0].driverdata = malloc(sizeof(struct _SERVER_DATA));
 

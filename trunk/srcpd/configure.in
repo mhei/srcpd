@@ -73,7 +73,7 @@ AC_ARG_ENABLE(debug,
         AC_HELP_STRING([--enable-debug], [enable debug mode [default=no]]),
  enable_debug=$enableval, enable_debug=no)
 if test $enable_debug = yes; then
-   CFLAGS="-g -Wall"
+   CFLAGS="-g -Wall -Wextra"
    AC_MSG_RESULT(debug)
 else
    CFLAGS="-O2 -Wall"

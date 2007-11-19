@@ -45,10 +45,7 @@ extern char *WELCOME_MSG;
 
 /**
  * Shake hand phase.
- *
  */
-
-
 void* thr_doClient(void *v)
 {
     int Socket = (int) v;
@@ -58,6 +55,7 @@ void* thr_doClient(void *v)
     sessionid_t sessionid;
     int rc, nelem;
     struct timeval time;
+
     /* drop root permission for this thread */
     change_privileges(0);
 
@@ -146,6 +144,9 @@ void* thr_doClient(void *v)
             return NULL;
         }
     }
+    shutdown(Socket, SHUT_RDWR);
+    close(Socket);
+    return NULL;
 }
 
 /**
@@ -762,12 +763,9 @@ int handleRESET(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
     return rc;
 }
 
-
-
 /*
- * Command mode
+ * Command mode network thread routine
  */
-
 int doCmdClient(int Socket, sessionid_t sessionid)
 {
     char line[MAXSRCPLINELEN], reply[MAXSRCPLINELEN];
