@@ -1,11 +1,18 @@
 2007-11-19 Guido Scholz <guido.scholz@bayernline.de>
-	* netserver.c: fixed not closed info socket
-	* ib.c: fixed not closed file descriptor of serial device
+	* netserver.c: fixed not closed info socket; prevents srcpd from
+	eating socket resources
+	* ib.c: fixed not closed file descriptor of serial device;
+	prevents ib module from eating file descriptors
 
 2007-10-28 Guido Scholz <guido.scholz@bayernline.de>
 	* srcpd.c: fixed daemonization, process now is detached from
 	controlling terminal properly
 	* Changelog: reformated
+
+2007-08-18 Guido Scholz <guido.scholz@bayernline.de>
+	* config-srcp.c: disabled writing to 'stderr' during normal
+	operation, this fixes broken debian package updates and srcpd
+	misbehavior in SuSEs runlevel editor
 
 2007-05-23 Guido Scholz <guido.scholz@bayernline.de>
 	* srcp-ga.c: fixed microsecond value for GA initialization
