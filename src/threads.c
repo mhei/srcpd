@@ -51,6 +51,8 @@ void change_privileges(bus_t bus)
         }
     }
 }
+
+/*runtime check for ipv6 support */
 int ipv6_supported()
 {
 #if defined (ENABLE_IPV6)
@@ -58,21 +60,32 @@ int ipv6_supported()
 
     s = socket(AF_INET6, SOCK_STREAM, 0);
     if (s != -1) {
-        (void) close(s);
+        close(s);
         return 1;
     }
 #endif
     return 0;
 }
 
+/*cleanup routine for network syn request thread*/
+void end_netrequest_thread(net_thread_data *nt_data)
+{
+    if (nt_data->socket != -1) {
+        close(nt_data->socket);
+        nt_data->socket = -1;
+    }
+}
+
+/*handle incoming network syn requests*/
 void *thr_handlePort(void *v)
 {
     pthread_t ttid;
-    struct _THREADS ti = *((THREADS *) v);
-/* ******** */
-    int lsock;
-    int newsock;           /* The listen socket */
+    net_thread_data ntd = *((net_thread_data *) v);
+    int newsock;
     int result;
+
+    /*register cleanup routine*/
+    pthread_cleanup_push((void *) end_netrequest_thread, (void *) &ntd);
 
 #if defined (ENABLE_IPV6)
     struct sockaddr_in6 sin6;
@@ -85,19 +98,19 @@ void *thr_handlePort(void *v)
     int sock_opt;
 
 #ifdef ENABLE_IPV6
-    if (ipv6_supported()) {     /* Runtime check for IPv6 */
+    if (ipv6_supported()) {
         memset(&sin6, 0, sizeof(sin6));
+        sin6.sin6_family = AF_INET6;
 
-        sin6.sin6_family = AF_INET6;    /* Address family is AF_INET6 */
-
-        sin6.sin6_port = htons(ti.port);
-        sin6.sin6_addr = in6addr_any;   /* Specify any address */
+        sin6.sin6_port = htons(ntd.port);
+        sin6.sin6_addr = in6addr_any;
         /* Addresses of IPv4 nodes would be specified
            as IPv4-mapped addresses */
 
         /* Try to create a socket for listening */
-        lsock = socket(AF_INET6, SOCK_STREAM, 0);
-        if (lsock == -1) {
+        /*TODO: store socket descriptor to pthread_key*/
+        ntd.socket = socket(AF_INET6, SOCK_STREAM, 0);
+        if (ntd.socket == -1) {
             DBG(0, DBG_ERROR, "Socket creation failed: %s (errno = %d). "
                     "Terminating...\n", strerror(errno), errno);
             exit(1);
@@ -112,12 +125,12 @@ void *thr_handlePort(void *v)
         /* Here would be the original IPv4 code as usual */
         memset(&sin, 0, sizeof(sin));
         sin.sin_family = AF_INET;       /* IPv4 address family */
-        sin.sin_port = htons(ti.port);
+        sin.sin_port = htons(ntd.port);
         sin.sin_addr.s_addr = INADDR_ANY;
 
         /* Create the socket */
-        lsock = socket(AF_INET, SOCK_STREAM, 0);
-        if (lsock == -1) {
+        ntd.socket = socket(AF_INET, SOCK_STREAM, 0);
+        if (ntd.socket == -1) {
             DBG(0, DBG_ERROR, "Socket creation failed: %s (errno = %d). "
                     "Terminating...\n", strerror(errno), errno);
             exit(1);
@@ -131,33 +144,33 @@ void *thr_handlePort(void *v)
     }
 
     sock_opt = 1;
-    if (setsockopt(lsock, SOL_SOCKET, SO_REUSEADDR, &sock_opt,
+    if (setsockopt(ntd.socket, SOL_SOCKET, SO_REUSEADDR, &sock_opt,
          sizeof(sock_opt)) == -1) {
         DBG(0, DBG_ERROR, "Setsockopt failed: %s (errno = %d). "
                 "Terminating...\n", strerror(errno), errno);
-        close(lsock);
+        close(ntd.socket);
         exit(1);
     }
 
-    /* saddr=(sockaddr_in) if lsock is of type AF_INET else its (sockaddr_in6) */
-    if (bind(lsock, (struct sockaddr *) saddr, socklen) == -1) {
+    /* saddr=(sockaddr_in) if ntd.socket is of type AF_INET else its (sockaddr_in6) */
+    if (bind(ntd.socket, (struct sockaddr *) saddr, socklen) == -1) {
         DBG(0, DBG_ERROR, "Bind failed: %s (errno = %d). "
                 "Terminating...\n", strerror(errno), errno);
-        close(lsock);
+        close(ntd.socket);
         exit(1);
     }
 
-    if (listen(lsock, 1) == -1) {
+    if (listen(ntd.socket, 1) == -1) {
         DBG(0, DBG_ERROR, "Listen failed: %s (errno = %d). "
                 "Terminating...\n", strerror(errno), errno);
-        close(lsock);
+        close(ntd.socket);
         exit(1);
     }
 
-    /* Wait for a connection request */
+    /* Wait for connection requests */
     for (;;) {
         fsocklen = socklen;
-        newsock = accept(lsock, (struct sockaddr *) fsaddr, &fsocklen);
+        newsock = accept(ntd.socket, (struct sockaddr *) fsaddr, &fsocklen);
 
         if (newsock == -1) {
             /* Possibly the connection got aborted */
@@ -166,7 +179,7 @@ void *thr_handlePort(void *v)
             continue;
         }
 
-        DBG(0, DBG_INFO, "Received a new connection\n");
+        DBG(0, DBG_INFO, "New connection received.\n");
         /* Now process the connection as per the protocol */
 #ifdef ENABLE_IPV6
         if (ipv6_supported()) {
@@ -175,6 +188,7 @@ void *thr_handlePort(void *v)
              */
             struct sockaddr_in6 *sin6_ptr = (struct sockaddr_in6 *) fsaddr;
             char addrbuf[INET6_ADDRSTRLEN];
+
             if (IN6_IS_ADDR_V4MAPPED(&(sin6_ptr->sin6_addr))) {
                 DBG(0, DBG_INFO, "Connection from an IPv4 client\n");
             }
@@ -200,7 +214,9 @@ void *thr_handlePort(void *v)
             continue;
         }
 
-        result = pthread_create(&ttid, NULL, ti.func, (void *) newsock);
+        /* hand over client service to "thr_doClient()" from netserver.c */
+        result = pthread_create(&ttid, NULL, ntd.client_handler,
+                (void *) newsock);
         if (result != 0) {
             syslog(LOG_INFO, "Create thread for network client "
                     "failed: %s (errno = %d). Terminating...\n",
@@ -209,4 +225,6 @@ void *thr_handlePort(void *v)
         }
         pthread_detach(ttid);
     }
+    /*run the cleanup routine*/
+    pthread_cleanup_pop(1);
 }

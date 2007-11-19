@@ -1209,6 +1209,9 @@ int term_bus_DDL(bus_t busnumber)
     set_lines_off(busnumber);
 
     /* pthread_cond_destroy(&(__DDL->refresh_cond)); */
+    if (buses[busnumber].fd != -1)
+        close(buses[busnumber].fd);
+
     DBG(busnumber, DBG_INFO, "DDL bus %ld terminated", busnumber);
     return 0;
 }

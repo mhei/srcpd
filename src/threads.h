@@ -18,8 +18,9 @@ typedef struct _thr_param
 typedef struct _THREADS
 {
   unsigned short int port;
-  void *func;
-} THREADS;
+  int socket;
+  void *client_handler;
+} net_thread_data;
 
 void* thr_handlePort(void *);
 void change_privileges(bus_t bus);

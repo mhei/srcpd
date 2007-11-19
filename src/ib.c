@@ -61,8 +61,8 @@ static int resetBaudrate( const speed_t speed, const bus_t busnumber );
 
 int readConfig_IB( xmlDocPtr doc, xmlNodePtr node, bus_t busnumber )
 {
-  DBG( busnumber, DBG_INFO,
-       "reading configuration for intellibox at bus %ld", busnumber );
+  DBG( busnumber, DBG_INFO, "Reading configuration for bus '%s'",
+          node->name);
 
   buses[ busnumber ].driverdata = malloc( sizeof( struct _IB_DATA ) );
 
