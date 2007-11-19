@@ -126,7 +126,7 @@ int readConfig_IB( xmlDocPtr doc, xmlNodePtr node, bus_t busnumber )
       }
     }
 
-    else if ( xmlStrcmp( child->name, BAD_CAST "p_time" ) == 0 )
+    else if ( xmlStrcmp( child->name, BAD_CAST "fb_delay_time_0" ) == 0 )
     {
       txt = xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
       if ( txt != NULL )
@@ -1507,7 +1507,7 @@ static int readAnswer_IB( const bus_t busnumber,
 
   for ( i = 0; i < 80; i++ )
     input[ i ] = 0;
-  
+
   while ( ( found == 0 ) && ( counter < 80 ) )
   {
     if ( readByte_IB( busnumber, 1, &input[ counter ] ) == 0 )
@@ -1522,10 +1522,10 @@ static int readAnswer_IB( const bus_t busnumber,
     }
     counter++;
   }
-  
+
   if ( found == 0 )
     return -1;
-  
+
   if ( generatePrintf > 0 )
   {
     DBG( busnumber, DBG_INFO, "IBox returned: %s\n", input );
