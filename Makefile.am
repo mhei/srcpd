@@ -2,7 +2,7 @@
 # version: $Revision$
 # last update: $Date$
 
-SUBDIRS = src man debian
+SUBDIRS = src man
 
 EXTRA_DIST = AUTHORS COPYING TODO NEWS ChangeLog INSTALL DESIGN \
 	README README.freebsd README.ibox README.selectrix \
