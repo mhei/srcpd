@@ -104,9 +104,9 @@ void* thr_doClient(void *v)
                         rc = doInfoClient(Socket, sessionid);
                         break;
                 }
-                shutdown(Socket, 2);
-                close(Socket);
                 stop_session(sessionid);
+                shutdown(Socket, SHUT_RDWR);
+                close(Socket);
                 return NULL;
             }
 
