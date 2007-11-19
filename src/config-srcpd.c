@@ -318,6 +318,9 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
                     case 57600:
                         buses[current_bus].baudrate = B57600;
                         break;
+                    case 115200:
+                        buses[current_bus].baudrate = B115200;
+                        break;
                     default:
                         buses[current_bus].baudrate = B2400;
                         break;
@@ -400,7 +403,7 @@ void suspendThread(bus_t busnumber)
     DBG(0, DBG_DEBUG, "Thread on bus %d is going to stop.", busnumber);
     /* Lock thread till new data to process arrives */
     pthread_mutex_lock(&buses[busnumber].transmit_mutex);
-    pthread_cond_wait(&buses[busnumber].transmit_cond, 
+    pthread_cond_wait(&buses[busnumber].transmit_cond,
             &buses[busnumber].transmit_mutex);
      /* mutex released.       */
     pthread_mutex_unlock(&buses[busnumber].transmit_mutex);
