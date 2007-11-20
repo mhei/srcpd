@@ -147,7 +147,7 @@ int doInfoClient(int Socket, sessionid_t sessionid)
                     describeGL(busnumber, i, reply);
                     socket_writereply(Socket, reply);
                     *reply = 0x00;
-                    infoGL(busnumber, i, reply);
+                    cacheInfoGL(busnumber, i, reply);
                     socket_writereply(Socket, reply);
                     *reply = 0x00;
                     getlockGL(busnumber, i, &lockid);

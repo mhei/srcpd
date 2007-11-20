@@ -321,7 +321,7 @@ void *thr_sendrec_M6051(void *v)
             if (!queue_GL_isempty(bus)) {
                 unqueueNextGL(bus, &gltmp);
                 addr = gltmp.id;
-                getGL(bus, addr, &glakt);
+                cacheGetGL(bus, addr, &glakt);
 
                 if (gltmp.direction == 2) {
                     gltmp.speed = 0;
@@ -352,7 +352,7 @@ void *thr_sendrec_M6051(void *v)
                     SendByte = addr;
                     writeByte(bus, SendByte, pause_between_cmd);
                 }
-                setGL(bus, addr, gltmp);
+                cacheSetGL(bus, addr, gltmp);
             }
             buses[bus].watchdog = 4;
         }

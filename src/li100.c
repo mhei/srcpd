@@ -529,7 +529,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
   {
     unqueueNextGL( busnumber, &gltmp );
     addr = gltmp.id;
-    getGL( busnumber, addr, &glakt );
+    cacheGetGL( busnumber, addr, &glakt );
 
     /* speed, direction or function changed? */
 
@@ -810,7 +810,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
 
         if ( status == 0 )
         {
-          setGL( busnumber, addr, gltmp );
+          cacheSetGL( busnumber, addr, gltmp );
         }
       }
     }
@@ -853,7 +853,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
               ( __li100->version_zentrale < 0x0300 ) )
           {
             __li100->last_value = tmp_addr;
-            getGL( busnumber, tmp_addr, &gltmp );
+            cacheGetGL( busnumber, tmp_addr, &gltmp );
             byte2send[ 0 ] = 0xa2;
             /* address */
             byte2send[ 1 ] = tmp_addr;
@@ -1589,12 +1589,12 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
         gltmp.funcs |= 0x01;        /* light is on */
 
       /* get old data, to send only if something changed */
-      getGL( busnumber, gltmp.id, &glakt );
+      cacheGetGL( busnumber, gltmp.id, &glakt );
 
       if (( glakt.speed != gltmp.speed ) ||
           ( glakt.direction != gltmp.direction ) ||
           ( glakt.funcs != gltmp.funcs ) )
-        setGL( busnumber, gltmp.id, gltmp );
+        cacheSetGL( busnumber, gltmp.id, gltmp );
 
       message_processed = 1;
     }
@@ -1677,12 +1677,12 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
         gltmp.funcs |= 0x01;        /* light is on */
 
       /* get old data, to send only if something changed */
-      getGL( busnumber, gltmp.id, &glakt );
+      cacheGetGL( busnumber, gltmp.id, &glakt );
 
       if (( glakt.speed != gltmp.speed ) ||
           ( glakt.direction != gltmp.direction ) ||
           ( glakt.funcs != gltmp.funcs ) )
-        setGL( busnumber, gltmp.id, gltmp );
+        cacheSetGL( busnumber, gltmp.id, gltmp );
 
       message_processed = 1;
     }
