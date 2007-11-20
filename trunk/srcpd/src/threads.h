@@ -20,7 +20,7 @@ typedef struct _THREADS
   unsigned short int port;
   int socket;
   void *client_handler;
-} net_thread_data;
+} net_thread_t;
 
 void* thr_handlePort(void *);
 void change_privileges(bus_t bus);

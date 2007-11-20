@@ -19,8 +19,9 @@
 #define _SRCP_INFO_H
 
 #include "srcp-session.h"
+#include "netserver.h"
 
-int doInfoClient(int Socket, sessionid_t sessionid);
+int doInfoClient(client_thread_t* ctd);
 int startup_INFO(void);
 
 int queueIsEmptyInfo();
