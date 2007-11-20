@@ -11,7 +11,13 @@
 #define _NETSERVER_H
 
 
+typedef struct CLIENT_THREAD
+{
+  int socket;
+  sessionid_t session;
+  int mode;
+} client_thread_t;
+
 void* thr_doClient(void *v);
-int doCmdClient(int, sessionid_t);
 
 #endif

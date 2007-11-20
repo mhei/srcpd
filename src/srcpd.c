@@ -38,7 +38,7 @@
 fd_set rfds;
 int maxfd;
 pthread_t ttid_cmd, ttid_clock, ttid_pid;
-net_thread_data cmds;
+net_thread_t cmds;
 char conffile[MAXPATHLEN];
 
 extern int server_shutdown_state;
@@ -178,7 +178,6 @@ void cancel_all_threads()
 
     syslog(LOG_INFO, "Terminating SRCP service...");
     server_shutdown();
-    pthread_cancel(ttid_cmd);
     pthread_cancel(ttid_clock);
 
     /* now terminate all bus threads */
@@ -188,6 +187,7 @@ void cancel_all_threads()
     }
 
     /* server thread is last to be cleaned up */
+    pthread_cancel(ttid_cmd);
     (*buses[0].term_func) (0);
 
     wait(0);

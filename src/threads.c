@@ -68,7 +68,7 @@ int ipv6_supported()
 }
 
 /*cleanup routine for network syn request thread*/
-void end_netrequest_thread(net_thread_data *nt_data)
+void end_netrequest_thread(net_thread_t *nt_data)
 {
     if (nt_data->socket != -1) {
         close(nt_data->socket);
@@ -81,7 +81,7 @@ void *thr_handlePort(void *v)
 {
     int last_cancel_state, last_cancel_type;
     pthread_t ttid;
-    net_thread_data ntd = *((net_thread_data *) v);
+    net_thread_t ntd = *((net_thread_t *) v);
     int newsock;
     int result;
 
@@ -108,11 +108,8 @@ void *thr_handlePort(void *v)
 
         sin6.sin6_port = htons(ntd.port);
         sin6.sin6_addr = in6addr_any;
-        /* Addresses of IPv4 nodes would be specified
-           as IPv4-mapped addresses */
 
-        /* Try to create a socket for listening */
-        /*TODO: store socket descriptor to pthread_key*/
+        /* create a socket for listening */
         ntd.socket = socket(AF_INET6, SOCK_STREAM, 0);
         if (ntd.socket == -1) {
             DBG(0, DBG_ERROR, "Socket creation failed: %s (errno = %d). "

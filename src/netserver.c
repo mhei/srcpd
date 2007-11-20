@@ -42,38 +42,60 @@
 extern struct _VTIME vtime;
 extern char *WELCOME_MSG;
 
+/*forward declaration*/
+int doCmdClient(client_thread_t* ctd);
 
-/**
- * Shake hand phase.
- */
+/*cleanup routine for network client thread*/
+void end_client_thread(client_thread_t *ctd)
+{
+    if (ctd->session != 0)
+        stop_session(ctd->session);
+
+    if (ctd->socket != -1) {
+        close(ctd->socket);
+        ctd->socket = -1;
+    }
+
+    free(ctd);
+}
+
+/* handle connected SRCP clients, start with shake hand phase. */
 void* thr_doClient(void *v)
 {
-    int Socket = (int) v;
+    client_thread_t* ctd = (client_thread_t*) malloc(sizeof(client_thread_t));
+    if (ctd == NULL)
+        return NULL;
+    ctd->socket = (int) v;
+    ctd->mode = COMMAND;
+    ctd->session = 0;
+
     char line[MAXSRCPLINELEN], cmd[MAXSRCPLINELEN],
         parameter[MAXSRCPLINELEN], reply[MAXSRCPLINELEN];
-    int mode = COMMAND;
-    sessionid_t sessionid;
     int rc, nelem;
     struct timeval time;
+    int last_cancel_state, last_cancel_type;
 
     /* drop root permission for this thread */
     change_privileges(0);
 
-    if (socket_writereply(Socket, WELCOME_MSG) < 0) {
-        shutdown(Socket, SHUT_RDWR);
-        close(Socket);
-        return NULL;
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &last_cancel_type);
+
+    /*register cleanup routine*/
+    pthread_cleanup_push((void *) end_client_thread, (void *) ctd);
+
+    if (socket_writereply(ctd->socket, WELCOME_MSG) < 0) {
+        pthread_exit((void*) 1);
     }
 
     while (1) {
+        pthread_testcancel();
         rc = SRCP_HS_NODATA;
         reply[0] = 0x00;
         memset(line, 0, sizeof(line));
 
-        if (socket_readline(Socket, line, sizeof(line) - 1) < 0) {
-            shutdown(Socket, SHUT_RDWR);
-            close(Socket);
-            return NULL;
+        if (socket_readline(ctd->socket, line, sizeof(line) - 1) < 0) {
+            break;
         }
 
         memset(cmd, 0, sizeof(cmd));
@@ -84,28 +106,23 @@ void* thr_doClient(void *v)
             rc = SRCP_UNKNOWNCOMMAND;
 
             if (strncasecmp(cmd, "GO", 2) == 0) {
-		sessionid = session_getnextID();
+		ctd->session = session_getnextID();
                 gettimeofday(&time, NULL);
                 sprintf(reply, "%lu.%.3lu 200 OK GO %ld\n", time.tv_sec,
-                        time.tv_usec / 1000, sessionid);
-                if (socket_writereply(Socket, reply) < 0) {
-                    shutdown(Socket, SHUT_RDWR);
-                    close(Socket);
-                    return NULL;
+                        time.tv_usec / 1000, ctd->session);
+                if (socket_writereply(ctd->socket, reply) < 0) {
+                    pthread_exit((void*) 1);
                 }
-                start_session(sessionid, mode);
-                switch (mode) {
+                start_session(ctd->session, ctd->mode);
+                switch (ctd->mode) {
                     case COMMAND:
-                        rc = doCmdClient(Socket, sessionid);
+                        rc = doCmdClient(ctd);
                         break;
                     case INFO:
-                        rc = doInfoClient(Socket, sessionid);
+                        rc = doInfoClient(ctd);
                         break;
                 }
-                stop_session(sessionid);
-                shutdown(Socket, SHUT_RDWR);
-                close(Socket);
-                return NULL;
+                pthread_exit((void*) 0);
             }
 
             else if (strncasecmp(cmd, "SET", 3) == 0) {
@@ -115,11 +132,11 @@ void* thr_doClient(void *v)
                 if (n == 2
                     && strncasecmp(setcmd, "CONNECTIONMODE", 14) == 0) {
                     if (strncasecmp(p, "SRCP INFO", 9) == 0) {
-                        mode = INFO;
+                        ctd->mode = INFO;
                         rc = SRCP_OK_CONNMODE;
                     }
                     else if (strncasecmp(p, "SRCP COMMAND", 12) == 0) {
-                        mode = COMMAND;
+                        ctd->mode = COMMAND;
                         rc = SRCP_OK_CONNMODE;
                     }
                     else
@@ -138,15 +155,14 @@ void* thr_doClient(void *v)
         gettimeofday(&time, NULL);
         srcp_fmt_msg(rc, reply, time);
 
-        if (socket_writereply(Socket, reply) < 0) {
-            shutdown(Socket, SHUT_RDWR);
-            close(Socket);
-            return NULL;
+        if (socket_writereply(ctd->socket, reply) < 0) {
+            break;
         }
     }
-    shutdown(Socket, SHUT_RDWR);
-    close(Socket);
-    return NULL;
+
+    /*run the cleanup routine*/
+    pthread_cleanup_pop(1);
+    pthread_exit(NULL);
 }
 
 /**
@@ -766,7 +782,7 @@ int handleRESET(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
 /*
  * Command mode network thread routine
  */
-int doCmdClient(int Socket, sessionid_t sessionid)
+int doCmdClient(client_thread_t* ctd)
 {
     char line[MAXSRCPLINELEN], reply[MAXSRCPLINELEN];
     char cbus[MAXSRCPLINELEN], command[MAXSRCPLINELEN],
@@ -775,47 +791,46 @@ int doCmdClient(int Socket, sessionid_t sessionid)
     long int rc, nelem;
     struct timeval akt_time;
 
-    DBG(0, DBG_INFO, "Command mode just starting for session %ld", sessionid);
+    DBG(0, DBG_INFO, "Command mode starting for session %ld", ctd->session);
     while (1) {
+        pthread_testcancel();
         memset(line, 0, sizeof(line));
-        if (socket_readline(Socket, line, sizeof(line) - 1) < 0) {
-            shutdown(Socket, 0);
-            close(Socket);
+        if (socket_readline(ctd->socket, line, sizeof(line) - 1) < 0) {
             return -1;
         }
         memset(command, 0, sizeof(command));
         memset(devicegroup, 0, sizeof(devicegroup));
         memset(parameter, 0, sizeof(parameter));
         memset(reply, 0, sizeof(reply));
-        nelem =
-            sscanf(line, "%s %s %s %1000c", command, cbus, devicegroup,
-                   parameter);
+        nelem = sscanf(line, "%s %s %s %1000c", command, cbus,
+                devicegroup, parameter);
         bus = atoi(cbus);
         reply[0] = 0x00;
+
         if (nelem >= 3) {
             if (bus <= num_buses) {
                 rc = SRCP_UNKNOWNCOMMAND;
                 if (strncasecmp(command, "SET", 3) == 0) {
-                    rc = handleSET(sessionid, bus, devicegroup, parameter,
-                                   reply);
+                    rc = handleSET(ctd->session, bus, devicegroup,
+                            parameter, reply);
                 }
                 else if (strncasecmp(command, "GET", 3) == 0) {
-                    rc = handleGET(sessionid, bus, devicegroup, parameter,
-                                   reply);
+                    rc = handleGET(ctd->session, bus, devicegroup,
+                            parameter, reply);
                 }
                 else if (strncasecmp(command, "WAIT", 4) == 0) {
-                    rc = handleWAIT(sessionid, bus, devicegroup, parameter,
-                                    reply);
+                    rc = handleWAIT(ctd->session, bus, devicegroup,
+                            parameter, reply);
                 }
                 else if (strncasecmp(command, "INIT", 4) == 0) {
-                    rc = handleINIT(sessionid, bus, devicegroup, parameter,
-                                    reply);
+                    rc = handleINIT(ctd->session, bus, devicegroup,
+                            parameter, reply);
                 }
                 else if (strncasecmp(command, "TERM", 4) == 0) {
-                    rc = handleTERM(sessionid, bus, devicegroup, parameter,
-                                    reply);
+                    rc = handleTERM(ctd->session, bus, devicegroup,
+                            parameter, reply);
                     if (rc < 0) {
-                        if (socket_writereply(Socket, reply) < 0) {
+                        if (socket_writereply(ctd->socket, reply) < 0) {
                             break;
                         }
                         break;
@@ -823,11 +838,11 @@ int doCmdClient(int Socket, sessionid_t sessionid)
                     rc = abs(rc);
                 }
                 else if (strncasecmp(command, "VERIFY", 6) == 0) {
-                    rc = handleVERIFY(sessionid, bus, devicegroup,
+                    rc = handleVERIFY(ctd->session, bus, devicegroup,
                                       parameter, reply);
                 }
                 else if (strncasecmp(command, "RESET", 5) == 0) {
-                    rc = handleRESET(sessionid, bus, devicegroup,
+                    rc = handleRESET(ctd->session, bus, devicegroup,
                                      parameter, reply);
                 }
             }
@@ -839,13 +854,13 @@ int doCmdClient(int Socket, sessionid_t sessionid)
         }
         else {
             DBG(0, DBG_DEBUG, "list too short in session %ld: %d",
-                sessionid, nelem);
+                ctd->session, nelem);
             rc = SRCP_LISTTOOSHORT;
             gettimeofday(&akt_time, NULL);
             srcp_fmt_msg(rc, reply, akt_time);
         }
 
-        if (socket_writereply(Socket, reply) < 0) {
+        if (socket_writereply(ctd->socket, reply) < 0) {
             break;
         }
     }

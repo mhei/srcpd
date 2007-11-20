@@ -106,39 +106,44 @@ int startup_INFO(void)
  * Endless loop for new info mode client
  * terminates on write failure
  **/
-int doInfoClient(int Socket, sessionid_t sessionid)
+int doInfoClient(client_thread_t* ctd)
 {
-    int status, i, current, number, value;
+    int i, current, number, value;
     char reply[1000], description[1000];
 
     /* send start up-information to a new client */
     struct timeval cmp_time;
     bus_t busnumber;
     current = in;
-    DBG(0, DBG_DEBUG, "new Info-client requested %ld", sessionid);
+    DBG(0, DBG_DEBUG, "new Info-client requested %ld", ctd->session);
 
     for (busnumber = 0; busnumber <= num_buses; busnumber++) {
+        pthread_testcancel();
         DBG(busnumber, DBG_DEBUG,
             "send all data for bus number %d to new client", busnumber);
         /* first some global bus data */
         /* send Descriptions for buses */
         describeBus(busnumber, reply);
-        socket_writereply(Socket, reply);
+        if (socket_writereply(ctd->socket, reply) < 0)
+            return -1;
         strcpy(description, reply);
         *reply = 0x00;
         
         if (strstr(description, "POWER")) {
             infoPower(busnumber, reply);
-            socket_writereply(Socket, reply);
+            if (socket_writereply(ctd->socket, reply) < 0)
+                return -1;
             *reply = 0x00;
         }
         
         if (strstr(description, "TIME")) {
             describeTIME(reply);
-            socket_writereply(Socket, reply);
+            if (socket_writereply(ctd->socket, reply) < 0)
+                return -1;
             *reply = 0x00;
             infoTIME(reply);
-            socket_writereply(Socket, reply);
+            if (socket_writereply(ctd->socket, reply) < 0)
+                return -1;
             *reply = 0x00;
         }
 
@@ -149,15 +154,18 @@ int doInfoClient(int Socket, sessionid_t sessionid)
                 if (isInitializedGL(busnumber, i)) {
                     sessionid_t lockid;
                     describeGL(busnumber, i, reply);
-                    socket_writereply(Socket, reply);
+                    if (socket_writereply(ctd->socket, reply) < 0)
+                        return -1;
                     *reply = 0x00;
                     cacheInfoGL(busnumber, i, reply);
-                    socket_writereply(Socket, reply);
+                    if (socket_writereply(ctd->socket, reply) < 0)
+                        return -1;
                     *reply = 0x00;
                     getlockGL(busnumber, i, &lockid);
                     if (lockid != 0) {
                         describeLOCKGL(busnumber, i, reply);
-                        socket_writereply(Socket, reply);
+                        if (socket_writereply(ctd->socket, reply) < 0)
+                            return -1;
                         *reply = 0x00;
                     }
                 }
@@ -172,19 +180,22 @@ int doInfoClient(int Socket, sessionid_t sessionid)
                     sessionid_t lockid;
                     int rc, port;
                     describeGA(busnumber, i, reply);
-                    socket_writereply(Socket, reply);
+                    if (socket_writereply(ctd->socket, reply) < 0)
+                        return -1;
                     *reply = 0x00;
                     for (port = 0; port <= 1; port++) {
                         rc = infoGA(busnumber, i, port, reply);
                         if ((rc == SRCP_INFO)) {
-                            socket_writereply(Socket, reply);
+                            if (socket_writereply(ctd->socket, reply) < 0)
+                                return -1;
                             *reply = 0x00;
                         }
                     }
                     getlockGA(busnumber, i, &lockid);
                     if (lockid != 0) {
                         describeLOCKGA(busnumber, i, reply);
-                        socket_writereply(Socket, reply);
+                        if (socket_writereply(ctd->socket, reply) < 0)
+                            return -1;
                         *reply = 0x00;
                     }
 
@@ -199,13 +210,14 @@ int doInfoClient(int Socket, sessionid_t sessionid)
                 int rc = getFB(busnumber, i, &cmp_time, &value);
                 if (rc == SRCP_OK && value != 0) {
                     infoFB(busnumber, i, reply);
-                    socket_writereply(Socket, reply);
+                    if (socket_writereply(ctd->socket, reply) < 0)
+                        return -1;
                     *reply = 0x00;
                 }
             }
         }
     }
-    DBG(0, DBG_DEBUG, "all data to new Info-Client (%ld) sent", sessionid);
+    DBG(0, DBG_DEBUG, "all data to new Info-Client (%ld) sent", ctd->session);
 
     /* This is a race condition: we should stop queuing new
        messages until we reach this this point, it is possible to
@@ -221,6 +233,7 @@ int doInfoClient(int Socket, sessionid_t sessionid)
     current = in;
     
     while (1) {
+        pthread_testcancel();
         /*get mutex lock and wait for new messages*/
         pthread_mutex_lock(&queue_mutex_info);
         while (queueIsEmptyInfo(current))
@@ -231,10 +244,8 @@ int doInfoClient(int Socket, sessionid_t sessionid)
         while (!queueIsEmptyInfo(current)) {
             current = unqueueNextInfo(current, reply);
             DBG(0, DBG_DEBUG, "reply-length = %d", strlen(reply));
-            status = socket_writereply(Socket, reply);
-            if (status < 0) {
+            if (socket_writereply(ctd->socket, reply) < 0)
                 return -1;
-            }
         }
     }
     return 0;
