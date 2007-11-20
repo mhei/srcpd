@@ -79,10 +79,14 @@ void end_netrequest_thread(net_thread_data *nt_data)
 /*handle incoming network syn requests*/
 void *thr_handlePort(void *v)
 {
+    int last_cancel_state, last_cancel_type;
     pthread_t ttid;
     net_thread_data ntd = *((net_thread_data *) v);
     int newsock;
     int result;
+
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &last_cancel_type);
 
     /*register cleanup routine*/
     pthread_cleanup_push((void *) end_netrequest_thread, (void *) &ntd);
@@ -169,6 +173,7 @@ void *thr_handlePort(void *v)
 
     /* Wait for connection requests */
     for (;;) {
+        pthread_testcancel();
         fsocklen = socklen;
         newsock = accept(ntd.socket, (struct sockaddr *) fsaddr, &fsocklen);
 
