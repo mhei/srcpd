@@ -1,3 +1,7 @@
+2007-11-20 Guido Scholz <guido.scholz@bayernline.de>
+	* srcp-ga.c: fixed wrong milli-second format for INFO GA (was
+	e.g. »x.6« instead of »x.006«)
+
 2007-11-20 Matthias Trute <mtrute@users.sf.net>
 	* renamed getGL/setGL to cacheGetGL/cacheSetGL
 
