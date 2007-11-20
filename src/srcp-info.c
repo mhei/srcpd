@@ -19,11 +19,11 @@
    Manages the INFO SESSIONs. Every Hardware driver must call (directly or
    via set<devicegroup> functions the queueInfoMessage. This function will
    copy the preformated string into internal buffer (allocated) and sets
-   the current writer position (variable in). To avoid confusion, a semaphore
+   the current writer position (variable »in«). To avoid confusion, a mutex
    protects this process.
 
-   On the other end of the pipe are numerous threads waiting for
-   new data. Each and every of these threads maintains its own reader position
+   On the other end of the pipe are numerous threads waiting for new data.
+   Each and every of these threads maintains its own reader position
    (parameter current) to unqueue the recently added messages.
 
    When a new INFO sessions starts, it will send all status data and
@@ -48,7 +48,8 @@
 #define QUEUELENGTH_INFO 1000
 
 static char *info_queue[QUEUELENGTH_INFO];
-static pthread_mutex_t queue_mutex_info;
+static pthread_mutex_t queue_mutex_info = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t info_available = PTHREAD_COND_INITIALIZER;
 
 static int in = 0;
 
@@ -56,7 +57,7 @@ static int in = 0;
 int queueInfoMessage(char *msg)
 {
     pthread_mutex_lock(&queue_mutex_info);
-    /* Queue macht Kopien der Werte */
+    /* Queue contains copies of all message strings */
     free(info_queue[in]);
     info_queue[in] = calloc(strlen(msg) + 1, 1);
     strcpy(info_queue[in], msg);
@@ -64,6 +65,9 @@ int queueInfoMessage(char *msg)
     in++;
     if (in == QUEUELENGTH_INFO)
         in = 0;
+
+    /*tell all waiting info clients about new message*/
+    pthread_cond_broadcast(&info_available);
     pthread_mutex_unlock(&queue_mutex_info);
     return SRCP_OK;
 }
@@ -74,7 +78,7 @@ int queueIsEmptyInfo(int current)
     return (in == current);
 }
 
-/** liefert n�hsten Eintrag oder -1, setzt fifo pointer neu! */
+/* returns value for next item or -1, resets fifo buffer pointer! */
 int unqueueNextInfo(int current, char *info)
 {
     if (in == current)
@@ -91,7 +95,6 @@ int unqueueNextInfo(int current, char *info)
 int startup_INFO(void)
 {
     int i;
-    pthread_mutex_init(&queue_mutex_info, NULL);
     in = 0;
     for (i = 0; i < QUEUELENGTH_INFO; i++) {
         info_queue[i] = NULL;
@@ -113,6 +116,7 @@ int doInfoClient(int Socket, sessionid_t sessionid)
     bus_t busnumber;
     current = in;
     DBG(0, DBG_DEBUG, "new Info-client requested %ld", sessionid);
+
     for (busnumber = 0; busnumber <= num_buses; busnumber++) {
         DBG(busnumber, DBG_DEBUG,
             "send all data for bus number %d to new client", busnumber);
@@ -203,26 +207,34 @@ int doInfoClient(int Socket, sessionid_t sessionid)
     }
     DBG(0, DBG_DEBUG, "all data to new Info-Client (%ld) sent", sessionid);
 
-    /* This is a racing condition: we should stop queuing new
+    /* This is a race condition: we should stop queuing new
        messages until we reach this this point, it is possible to
        miss some data changed since we started this thread */
+
     if (in != current) {
         DBG(0, DBG_WARN,
             "INFO queue dropped some information (%d elements). Sorry",
             abs(in - current));
     }
+
+    /*TODO: check if this line is necessary */
     current = in;
     
     while (1) {
-        /* busy waiting, anyone with better code out there? */
+        /*get mutex lock and wait for new messages*/
+        pthread_mutex_lock(&queue_mutex_info);
         while (queueIsEmptyInfo(current))
-            usleep(2000);
+            pthread_cond_wait(&info_available, &queue_mutex_info);
+        pthread_mutex_unlock(&queue_mutex_info);
 
-        current = unqueueNextInfo(current, reply);
-        DBG(0, DBG_DEBUG, "reply-length = %d", strlen(reply));
-        status = socket_writereply(Socket, reply);
-        if (status < 0) {
-            break;
+        /* loop to send all new messages to SRCP client */
+        while (!queueIsEmptyInfo(current)) {
+            current = unqueueNextInfo(current, reply);
+            DBG(0, DBG_DEBUG, "reply-length = %d", strlen(reply));
+            status = socket_writereply(Socket, reply);
+            if (status < 0) {
+                return -1;
+            }
         }
     }
     return 0;
