@@ -1,3 +1,6 @@
+2007-11-20 Matthias Trute <mtrute@users.sf.net>
+	* renamed getGL/setGL to cacheGetGL/cacheSetGL
+
 2007-11-19 Frank Schmischke <frank.schmischke@t-online.de>
 	* config-srcp.c: add 115200 as value for speed for LI101F (Lenz)
 	* srcpd.conf.5: add sections for general, Lenz, Intellibox and HSI-88
