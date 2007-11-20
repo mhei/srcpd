@@ -480,7 +480,7 @@ void send_command_gl_IB( bus_t busnumber )
   {
     unqueueNextGL( busnumber, &gltmp );
     addr = gltmp.id;
-    getGL( busnumber, addr, &glakt );
+    cacheGetGL( busnumber, addr, &glakt );
 
     /* speed, direction or function changed? */
     if ( ( gltmp.direction != glakt.direction ) ||
@@ -534,7 +534,7 @@ void send_command_gl_IB( bus_t busnumber )
       readByte_IB( busnumber, 1, &status );
       if ( ( status == 0 ) || ( status == 0x41 ) || ( status == 0x42 ) )
       {
-        setGL( busnumber, addr, gltmp );
+        cacheSetGL( busnumber, addr, gltmp );
       }
     }
   }
@@ -927,10 +927,10 @@ void check_status_IB( bus_t busnumber )
         initGL( busnumber, gltmp.id, 'P', 1, 126, 5 );
       }
       /* get old data, to know which FS the user wants to have... */
-      getGL( busnumber, gltmp.id, &glakt );
+      cacheGetGL( busnumber, gltmp.id, &glakt );
       /* recalculate speed */
       gltmp.speed = ( gltmp.speed * glakt.n_fs ) / 126;
-      setGL( busnumber, gltmp.id, gltmp );
+      cacheSetGL( busnumber, gltmp.id, gltmp );
 
       /* next 1. byte */
       readByte_IB( busnumber, 1, &rr );

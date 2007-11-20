@@ -336,7 +336,7 @@ int comp_maerklin_1(bus_t busnumber, int address, int direction,
     if (address < 0 || address > 80 || func < 0 || func > 1 || speed < 0
         || speed > 15 || direction < 0 || direction > 1)
         return 1;
-    getGL(busnumber, address, &loco);
+    cacheGetGL(busnumber, address, &loco);
     if (direction != loco.direction) {
         speed = 1;
     }
@@ -952,7 +952,7 @@ int comp_maerklin_5(bus_t busnumber, int address, int direction,
        28     15     14                 15
      */
 
-    getGL(busnumber, address, &loco);
+    cacheGetGL(busnumber, address, &loco);
     speed_old = loco.speed;
 
     acceleration = (speed_old < speed);

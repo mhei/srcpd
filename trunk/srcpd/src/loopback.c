@@ -212,13 +212,13 @@ void *thr_sendrec_LOOPBACK(void *v)
         if (!queue_GL_isempty(bus)) {
             unqueueNextGL(bus, &gltmp);
             addr = gltmp.id;
-            getGL(bus, addr, &glakt);
+            cacheGetGL(bus, addr, &glakt);
 
             if (gltmp.direction == 2) {
                 gltmp.speed = 0;
                 gltmp.direction = !glakt.direction;
             }
-            setGL(bus, addr, gltmp);
+            cacheSetGL(bus, addr, gltmp);
         }
         buses[bus].watchdog = 4;
         if (!queue_GA_isempty(bus)) {

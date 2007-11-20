@@ -388,7 +388,7 @@ int handleGET(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
         long nelem, addr;
         nelem = sscanf(parameter, "%ld", &addr);
         if (nelem >= 1)
-            rc = infoGL(bus, addr, reply);
+            rc = cacheInfoGL(bus, addr, reply);
         else
             rc = srcp_fmt_msg(SRCP_LISTTOOSHORT, reply, akt_time);
     }

@@ -186,7 +186,7 @@ int unqueueNextGL(bus_t busnumber, struct _GLSTATE *l)
     return out[busnumber];
 }
 
-int getGL(bus_t busnumber, int addr, struct _GLSTATE *l)
+int cacheGetGL(bus_t busnumber, int addr, struct _GLSTATE *l)
 {
     if (isInitializedGL(busnumber, addr)) {
         *l = gl[busnumber].glstate[addr];
@@ -198,12 +198,12 @@ int getGL(bus_t busnumber, int addr, struct _GLSTATE *l)
 }
 
 /**
- * setGL is called from the hardware drivers to keep the
+ * cacheSetGL is called from the hardware drivers to keep the
  * the data and the info mode informed. It is called from
  * within the SRCP SET Command code.
  * It respects the TERM function.
 */
-int setGL(bus_t busnumber, int addr, struct _GLSTATE l)
+int cacheSetGL(bus_t busnumber, int addr, struct _GLSTATE l)
 {
     if (isValidGL(busnumber, addr)) {
         char msg[1000];
@@ -219,7 +219,7 @@ int setGL(bus_t busnumber, int addr, struct _GLSTATE l)
             bzero(&gl[busnumber].glstate[addr], sizeof(struct _GLSTATE));
         }
         else {
-            infoGL(busnumber, addr, msg);
+            cacheInfoGL(busnumber, addr, msg);
         }
         queueInfoMessage(msg);
         return SRCP_OK;
@@ -307,7 +307,7 @@ int describeGL(bus_t busnumber, int addr, char *msg)
     return SRCP_INFO;
 }
 
-int infoGL(bus_t busnumber, int addr, char *msg)
+int cacheInfoGL(bus_t busnumber, int addr, char *msg)
 {
     int i;
     char *tmp;

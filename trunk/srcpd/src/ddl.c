@@ -1430,7 +1430,7 @@ void *thr_sendrec_DDL(void *v)
                     break;
                 }
             }
-            setGL(busnumber, addr, gltmp);
+            cacheSetGL(busnumber, addr, gltmp);
         }
         buses[busnumber].watchdog = 4;
 

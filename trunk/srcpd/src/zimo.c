@@ -226,7 +226,7 @@ void *thr_sendrec_zimo(void *v)
         if (!queue_GL_isempty(bus)) {
             unqueueNextGL(bus, &gltmp);
             addr = gltmp.id;
-            getGL(bus, addr, &glakt);
+            cacheGetGL(bus, addr, &glakt);
             databyte1 = (gltmp.direction ? 0 : 32);
             databyte1 |= (gltmp.funcs & 0x01) ? 16 : 0;
             if (glakt.n_fs == 128)
@@ -266,7 +266,7 @@ void *thr_sendrec_zimo(void *v)
                     DBG(bus, DBG_INFO, "ignoring unread byte: %d (%c)", rr,
                         rr);
                 }
-                setGL(bus, addr, gltmp);
+                cacheSetGL(bus, addr, gltmp);
             }
         }
         if (!queue_SM_isempty(bus)) {

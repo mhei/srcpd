@@ -47,9 +47,9 @@ int queueGL(bus_t busnumber, int addr, int dir, int speed, int maxspeed, int f);
 int queue_GL_isempty(bus_t busnumber);
 int unqueueNextGL(bus_t busnumber, struct _GLSTATE *l);
 
-int getGL(bus_t busnumber, int addr, struct _GLSTATE *l);
-int setGL(bus_t busnumber, int addr, struct _GLSTATE l);
-int infoGL(bus_t busnumber, int addr, char* info);
+int cacheGetGL(bus_t busnumber, int addr, struct _GLSTATE *l);
+int cacheSetGL(bus_t busnumber, int addr, struct _GLSTATE l);
+int cacheInfoGL(bus_t busnumber, int addr, char* info);
 int describeGL(bus_t busnumber, int addr, char *msg);
 int initGL(bus_t busnumber, int addr, const char protocol, int protoversion, int n_fs, int n_func);
 int termGL(bus_t busnumber, int addr);

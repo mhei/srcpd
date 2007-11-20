@@ -538,7 +538,7 @@ void *thr_commandSelectrix(void *v)
                                                 ((gltmp.funcs & 0x02) ? 0x80 : 0);
                                         writeSXbus(busnumber, addr, data);
                                         __selectrix->bus_data[addr] = data;
-                                        setGL(busnumber, addr, gltmp);
+                                        cacheSetGL(busnumber, addr, gltmp);
                                         DBG(busnumber, DBG_DEBUG,
                                                 "Selectrix on bus %ld, "
                                                 "engine with address %d "
