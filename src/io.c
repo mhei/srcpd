@@ -22,66 +22,68 @@
 
 int readByte(bus_t bus, int wait, unsigned char *the_byte)
 {
-    ssize_t b_read;
+    ssize_t i;
     int status;
 
     /* with debug level beyond DBG_DEBUG, we will not really work on hardware */
     if (buses[bus].debuglevel > DBG_DEBUG) {
-        b_read = 1;
+        i = 1;
         *the_byte = 0;
     }
     else {
-        status = ioctl(buses[bus].fd, FIONREAD, &b_read);
-        if (status == -1) {
+        status = ioctl(buses[bus].fd, FIONREAD, &i);
+        if (status < 0) {
+            char msg[200];
+            strcpy(msg, strerror(errno));
             DBG(bus, DBG_ERROR,
-                "readbyte(): ioctl failed: %s (errno = %d)\n",
-                strerror(errno), errno);
+                "readbyte(): IOCTL status: %d with errno = %d: %s",
+                status, errno, msg);
             return -1;
         }
         DBG(bus, DBG_DEBUG,
             "readbyte(): (fd = %d), there are %d bytes to read.",
-            buses[bus].fd, b_read);
+            buses[bus].fd, i);
         /* read only, if there is really an input */
-        if ((b_read > 0) || (wait == 1)) {
-            b_read = read(buses[bus].fd, the_byte, 1);
-            if (b_read == -1) {
+        if ((i > 0) || (wait == 1)) {
+            i = read(buses[bus].fd, the_byte, 1);
+            if (i < 0) {
+                char emsg[200];
+                strerror_r(errno, emsg, sizeof(emsg));
                 DBG(bus, DBG_ERROR,
-                    "readbyte(): read failed: %s (errno = %d)\n",
-                    strerror(errno), errno);
+                    "readbyte(): read status: %d with errno = %d: %s", i,
+                    errno, *emsg);
             }
-            if (b_read > 0)
+            if (i > 0)
                 DBG(bus, DBG_DEBUG, "readbyte(): byte read: 0x%02x",
                     *the_byte);
         }
     }
-    return (b_read > 0 ? 0 : -1);
+    return (i > 0 ? 0 : -1);
 }
 
 void writeByte(bus_t bus, unsigned char b, unsigned long msecs)
 {
-    ssize_t b_written = 0;
+    ssize_t i = 0;
     char byte = b;
-
     if (buses[bus].debuglevel <= DBG_DEBUG) {
-        b_written = write(buses[bus].fd, &byte, 1);
+        i = write(buses[bus].fd, &byte, 1);
         tcdrain(buses[bus].fd);
     }
-    if (b_written == -1) {
-        DBG(bus, DBG_ERROR, "(FD: %d) write failed: %s (errno = %d)\n",
-                buses[bus].fd, errno, strerror(errno));
+    if (i < 0) {
+    DBG(bus, DBG_ERROR, "(FD: %d) External error: errno %d",
+        buses[bus].fd, errno); /* , str_errno(errno)); */
     }
     else {
-        DBG(bus, DBG_DEBUG, "(FD: %d) %i byte sent: 0x%02x (%d)",
-                buses[bus].fd, b_written, b, b);
+    DBG(bus, DBG_DEBUG, "(FD: %d) %i byte sent: 0x%02x (%d)",
+        buses[bus].fd, i, b, b);
     }
     usleep(msecs * 1000);
 }
 
 void writeString(bus_t bus, unsigned char *s, unsigned long msecs)
 {
-    size_t i, l;
-
-    l = strlen((char *) s);
+    int l = strlen((char *) s);
+    int i;
     for (i = 0; i < l; i++) {
         writeByte(bus, s[i], msecs);
     }
@@ -144,17 +146,10 @@ int socket_readline(int Socket, char *line, int len)
 {
     char c;
     int i = 0;
-    ssize_t b_read = read(Socket, &c, 1);
-
-    if (b_read == -1) {
-        DBG(0, DBG_ERROR, "read from socket %d failed: %s (errno = %d)\n",
-                Socket, strerror(errno), errno);
+    ssize_t bytes_read = read(Socket, &c, 1);
+    if (bytes_read <= 0) {
         return -1;
     }
-
-    else if (b_read == 0)
-        return 0;
-    
     else {
         if (isvalidchar(c))
             line[i++] = c;
@@ -177,33 +172,28 @@ int socket_readline(int Socket, char *line, int len)
  **/
 int socket_writereply(int Socket, const char *line)
 {
+    ssize_t status = 0;
+    int linelen = strlen(line);
     char chunk[MAXSRCPLINELEN], tmp[MAXSRCPLINELEN];
-    ssize_t b_written = 0;
-    size_t i, linelen;
-
-    i = 0;
-    linelen = strlen(line);
+    int i = 0;
 
     if (linelen <= 0)
         return 0;
 
     DBG(0, DBG_INFO, "socket %d, write %s", Socket, line);
     
-    while (i <= linelen - MAXSRCPLINELEN - 1 && b_written != -1) {
+    while (i <= linelen - MAXSRCPLINELEN - 1 && status >= 0) {
         memset(tmp, 0, sizeof(tmp));
         strncpy(tmp, line + i, MAXSRCPLINELEN - 2);
         sprintf(chunk, "%s\\\n", tmp);
-        b_written = write(Socket, chunk, strlen(chunk));
+        status = write(Socket, chunk, strlen(chunk));
         i += MAXSRCPLINELEN - 2;
     }
     
-    if (i < linelen && b_written != -1) {
-        b_written = write(Socket, line + i, linelen - i);
+    if (i < linelen && status >= 0) {
+        status = write(Socket, line + i, linelen - i);
     }
 
-    if (b_written == -1)
-        DBG(0, DBG_ERROR, "write to socket %d failed: %s (errno = %d)\n",
-                Socket, strerror(errno), errno);
-
-    return b_written;
+    DBG(0, DBG_INFO, "Status from write: %d", status);
+    return status;
 }
