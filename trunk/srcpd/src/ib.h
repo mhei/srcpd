@@ -31,6 +31,7 @@ typedef struct _IB_DATA
     struct _GASTATE tga[50];
     int working_IB;
     int emergency_on_ib;
+    unsigned int pause_between_cmd;
 } IB_DATA;
 
 int readConfig_IB(xmlDocPtr doc, xmlNodePtr node,  bus_t busnumber);
