@@ -54,7 +54,7 @@ int readByte(bus_t bus, int wait, unsigned char *the_byte)
                     *the_byte);
         }
     }
-    return (b_read >= 0 ? 0 : -1);
+    return (b_read > 0 ? 0 : -1);
 }
 
 void writeByte(bus_t bus, unsigned char b, unsigned long msecs)
