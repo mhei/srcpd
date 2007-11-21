@@ -108,7 +108,7 @@ Default is nogroup
 
 .SH hsi-88
 .PP
-This driver connects with the HSI-88 devices from Littfinski connected
+This driver connects with the HSI-88 device from Littfinski connected
 via the serial port. An USB2Serial converter should work fine. The serial
 line settings are fixed to 9600baud and cannot be changed. Sum of all
 feedback-modules must be less or equal to 31, otherwise you will get an
@@ -135,116 +135,74 @@ clients. Time is milliseconds. With this feature you can compensate bad
 feedback in a specific range.
 .TP
 refresh
-The time in microseconds srcpd will read feedback from HSI-88.
+The time in microseconds after srcpd will read feedback from HSI-88.
 
 
 .SH intellibox
 
 .PP
-This driver connects with the 6051 or 6050 devices from Marklin connected
-via the serial port. An USB2Serial converter should work fine. The serial
-line settings are fixed to 2400 8N2 and cannot be changed.
-
+This driver connects with the Intellibox device from Uhlenbrock connected
+via the serial port. Only extended mode commands are used. Program of
+decoders is currently implemented for DCC only.
+Possible values for speed of serial port are 2400baud, 4800baud, 9600baud,
+19200baud and 38400baud.
 .TP
-m6020mode
-In this mode the srcpd does not sent the 4 functions. This
-is a feature of the 6021 only.
-
-.TP
-p_time
-This is the time the driver code waits until it recognized the input
-change in milliseconds. This feature may support a debounce found in
-the hardware.
-
-.TP
-ga_min_activetime
-The time in milliseconds a GA device needs to be in active state. The
-absolute minimum is 75 ms and is needed for stable communication with
-the 6051.
-
+fb_delay_time_0
+This is the time an feedback input must be zero, before zero is delivered to
+clients. Time is milliseconds. With this feature you can compensate bad
+feedback in a specific range.
 .TP
 pause_between_commands
 This is the time between two commands the drivers must wait. The exact
 values should be hand tuned. If the system does not respond or drops
-commands try to increase this value. Default is 200 (milliseconds).
-
-.TP
-pause_between_bytes
-This is the time the driver waits between 2 bytes in multi-byte commands.
-The hardware handshake does not work with all devices so this parameter
-was introduced to support it. The default is 2 (milliseconds)
-
+commands try to increase this value. Default is 250 (milliseconds).
 .TP
 number_ga
-This is the number of GA. This parameter does not have a real effect
-since the interface supports the addresses 1...256 only. Keep the
-default untouched.
-
+This is the number of GA. Supported range is 0..1024. A value of 0 means no
+GA available.
+Default is 256.
 .TP
 number_gl
-Like the number of GA this number gives the maximum address. Since this
-number is limited to 80, keep the default untouched.
-
+Like the number of GA this number gives the maximum address. Supported range
+is 0..10239. A value of 0 means no GL available.
+Default is 80.
 .TP
 number_fb
-This is the number of 6088 modules attached to the 6051/6050 device.
+This is the number of S88 modules attached to the Intellibox device.
 It can be as large as 31. The default is 0 (no modules are attached).
-Please note that 6088 modules attached to other devices (memory)
-cannot be accessed.
+Please note that Loconet is currently not supported.
 
 .SH li100, li100usb
-
 .PP
-This driver connects with the 6051 or 6050 devices from Marklin connected
-via the serial port. An USB2Serial converter should work fine. The serial
-line settings are fixed to 2400 8N2 and cannot be changed.
-
+This driver connects with the LI100, LI100F, LI101F or LI-USB devices from
+LENZ connected via the serial port/USB-interface. An USB2Serial converter
+should not be used. The serial line settings are depending on type of
+interface. For LI-USB it's fixed to 57600baud with no chance to change.
+Autodetection of serial port interface speed is currently under
+construction. If connection fails, try restart of srcpd with an other
+speed. Possible values can be 9600baud, 19200baud, 38400baud, 57600baud and
+115200baud (depending on your interface).
 .TP
-m6020mode
-In this mode the srcpd does not sent the 4 functions. This
-is a feature of the 6021 only.
-
-.TP
-p_time
-This is the time the driver code waits until it recognized the input
-change in milliseconds. This feature may support a debounce found in
-the hardware.
-
-.TP
-ga_min_activetime
-The time in milliseconds a GA device needs to be in active state. The
-absolute minimum is 75 ms and is needed for stable communication with
-the 6051.
-
-.TP
-pause_between_commands
-This is the time between two commands the drivers must wait. The exact
-values should be hand tuned. If the system does not respond or drops
-commands try to increase this value. Default is 200 (milliseconds).
-
-.TP
-pause_between_bytes
-This is the time the driver waits between 2 bytes in multi-byte commands.
-The hardware handshake does not work with all devices so this parameter
-was introduced to support it. The default is 2 (milliseconds)
-
+fb_delay_time_0
+This is the time an feedback input must be zero, before zero is delivered to
+clients. Time is milliseconds. With this feature you can compensate bad
+feedback in a specific range.
 .TP
 number_ga
-This is the number of GA. This parameter does not have a real effect
-since the interface supports the addresses 1...256 only. Keep the
-default untouched.
-
+This is the number of GA. Supported range is 0..1024. A value of 0 means no
+GA available.
+Default is 99 (LI-USB 9999).
 .TP
 number_gl
-Like the number of GA this number gives the maximum address. Since this
-number is limited to 80, keep the default untouched.
-
+Like the number of GA this number gives the maximum address. Supported range
+is 0..9999. A value of 0 means no GL available.
+Default is 99 (LI-USB 9999).
 .TP
 number_fb
-This is the number of 6088 modules attached to the 6051/6050 device.
-It can be as large as 31. The default is 0 (no modules are attached).
-Please note that 6088 modules attached to other devices (memory)
-cannot be accessed.
+This is the number of RS modules attached to the Lenz device.
+It can be as large as 512. It's assumed, that one modul has 8 inputs.
+A value of 0 means no FB available.
+Default is 256 (LI-USB 512).
 
 .SH loopback
 
