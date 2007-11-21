@@ -48,7 +48,7 @@ email                : frank.schmischke@t-online.de
 
 #define __ib ((IB_DATA*)buses[busnumber].driverdata)
 
-static int initLine_IB( bus_t busnumber );
+static int init_lineIB( bus_t busnumber );
 
 /* IB helper functions */
 static int sendBreak( const int fd,  bus_t busnumber );
@@ -86,6 +86,7 @@ int readConfig_IB( xmlDocPtr doc, xmlNodePtr node, bus_t busnumber )
   __ib->number_fb = 0; /* max. 31 for S88; Loconet is missing this time */
   __ib->number_ga = 256;
   __ib->number_gl = 80;
+  __ib->pause_between_cmd = 250;
 
   xmlNodePtr child = node->children;
   xmlChar *txt = NULL;
@@ -133,6 +134,16 @@ int readConfig_IB( xmlDocPtr doc, xmlNodePtr node, bus_t busnumber )
       {
         set_min_time( busnumber, atoi( ( char * ) txt ) );
         xmlFree( txt );
+      }
+    }
+
+    else if (xmlStrcmp(child->name, BAD_CAST "pause_between_commands") == 0)
+    {
+      txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+      if (txt != NULL)
+      {
+        __ib->pause_between_cmd = atoi((char *) txt);
+        xmlFree(txt);
       }
     }
 
@@ -235,7 +246,7 @@ int init_bus_IB( bus_t busnumber )
   if ( buses[ busnumber ].debuglevel < 7 )
   {
     if ( status == 0 )
-      status = initLine_IB( busnumber );
+      status = init_lineIB( busnumber );
   }
   else
     buses[ busnumber ].fd = 9999;
@@ -298,7 +309,7 @@ void *thr_sendrec_IB( void *v )
              "send power off to IB off while emergency-stop" );
         __ib->emergency_on_ib = 2;
         byte2send = 0xA6;
-        writeByte( busnumber, byte2send, 250 );
+        writeByte( busnumber, byte2send, __ib->pause_between_cmd );
         status = readByte( busnumber, 1, &rr );
         while ( status == -1 )
         {
@@ -318,7 +329,7 @@ void *thr_sendrec_IB( void *v )
         }
         char msg[ 110 ];
         byte2send = buses[ busnumber ].power_state ? 0xA7 : 0xA6;
-        writeByte( busnumber, byte2send, 250 );
+        writeByte( busnumber, byte2send, __ib->pause_between_cmd );
         status = readByte_IB( busnumber, 1, &rr );
         while ( status == -1 )
         {
@@ -1144,7 +1155,7 @@ static int open_comport( bus_t busnumber, speed_t baud )
   return fd;
 }
 
-static int initLine_IB( bus_t busnumber )
+static int init_lineIB( bus_t busnumber )
 {
   int fd;
   int status;
