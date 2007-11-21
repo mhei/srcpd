@@ -371,7 +371,7 @@ static int ln_read_lbserver(bus_t busnumber, unsigned char *cmd, int len) {
 	    VERSION text: VERSION information about the server */
 	if(strstr(line, "RECEIVE ")) {
 	    /* we have a fixed format */
-	    int len = strlen(line) - 7;
+	    size_t len = strlen(line) - 7;
 	    int pktlen = len / 3;
 	    int i;
 	    char *d;

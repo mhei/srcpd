@@ -82,8 +82,9 @@ void writeByte(bus_t bus, unsigned char b, unsigned long msecs)
 
 void writeString(bus_t bus, unsigned char *s, unsigned long msecs)
 {
-    int l = strlen((char *) s);
-    int i;
+    size_t i, l;
+
+    l = strlen((char *) s);
     for (i = 0; i < l; i++) {
         writeByte(bus, s[i], msecs);
     }
@@ -172,17 +173,19 @@ int socket_readline(int Socket, char *line, int len)
  **/
 int socket_writereply(int Socket, const char *line)
 {
-    ssize_t status = 0;
-    int linelen = strlen(line);
     char chunk[MAXSRCPLINELEN], tmp[MAXSRCPLINELEN];
-    int i = 0;
+    ssize_t status = 0;
+    size_t i, linelen;
+
+    i = 0;
+    linelen = strlen(line);
 
     if (linelen <= 0)
         return 0;
 
     DBG(0, DBG_INFO, "socket %d, write %s", Socket, line);
     
-    while (i <= linelen - MAXSRCPLINELEN - 1 && status >= 0) {
+    while (i <= linelen - MAXSRCPLINELEN - 1 && status != -1) {
         memset(tmp, 0, sizeof(tmp));
         strncpy(tmp, line + i, MAXSRCPLINELEN - 2);
         sprintf(chunk, "%s\\\n", tmp);
@@ -190,7 +193,7 @@ int socket_writereply(int Socket, const char *line)
         i += MAXSRCPLINELEN - 2;
     }
     
-    if (i < linelen && status >= 0) {
+    if (i < linelen && status != -1) {
         status = write(Socket, line + i, linelen - i);
     }
 
