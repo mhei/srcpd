@@ -349,7 +349,8 @@ static const int BUFFERSIZE = 200;
 
 int translateabel(char *bs)
 {                               /* the result is only an index, no warranty */
-    int i, size;
+    int i;
+    size_t size;
     char *pbs;
     size = strlen(bs);
     for (i = (DataCnt - 1); i >= 0; i--) {
@@ -381,7 +382,7 @@ int translateBitstream2Packetstream_v1(char *Bitstream, char *Packetstream,
     int stack[NMRA_STACKSIZE];  /* stack for the i's                         */
     int pstack = 0;             /* stack pointer                             */
     int correction = 0;
-    int bufsize = 0;
+    size_t bufsize = 0;
     int highest_level = 0;      /* highest recursion level reached during algo.  */
     const int max_level_delta = 7;  /* additional recursion base, speeds up */
 
