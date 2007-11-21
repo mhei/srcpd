@@ -40,7 +40,6 @@ email                : frank.schmischke@t-online.de
 int cmpTime( struct timeval *t1, struct timeval *t2 );
 
 #define LI100_USB
-
 #include "li100.c"
 
 #undef LI100_USB
