@@ -1,8 +1,8 @@
 /***************************************************************************
-li100.c  -  description
--------------------
+                      li100.c  -  description
+                        -------------------
 begin                : Tue Jan 22 11:35:13 CEST 2002
-copyright            : (C) 2002 by Dipl.-Ing. Frank Schmischke
+copyright            : (C) 2002-2007 by Dipl.-Ing. Frank Schmischke
 email                : frank.schmischke@t-online.de
 ***************************************************************************/
 
@@ -35,9 +35,7 @@ int readConfig_LI100_SERIAL( xmlDocPtr doc, xmlNodePtr node,  bus_t busnumber )
 #else
   DBG( busnumber, DBG_INFO, "reading configuration for LI100 (serial) at bus #%ld", busnumber );
 #endif
-
   buses[ busnumber ].driverdata = malloc( sizeof( struct _LI100_DATA ) );
-
   if ( buses[busnumber].driverdata == NULL )
   {
     DBG( busnumber, DBG_ERROR,
@@ -47,70 +45,46 @@ int readConfig_LI100_SERIAL( xmlDocPtr doc, xmlNodePtr node,  bus_t busnumber )
 
 #ifdef LI100_USB
   buses[ busnumber ].type = SERVER_LI100_USB;
-
   buses[ busnumber ].init_func = &init_bus_LI100_USB;
-
   buses[ busnumber ].term_func = &term_bus_LI100_USB;
-
   buses[ busnumber ].thr_func = &thr_sendrec_LI100_USB;
-
   buses[ busnumber ].baudrate = B57600;
-
 #else
   buses[ busnumber ].type = SERVER_LI100_SERIAL;
-
   buses[ busnumber ].init_func = &init_bus_LI100_SERIAL;
-
   buses[ busnumber ].term_func = &term_bus_LI100_SERIAL;
-
   buses[ busnumber ].thr_func = &thr_sendrec_LI100_SERIAL;
-
   buses[ busnumber ].baudrate = B9600;
-
 #endif
   buses[ busnumber ].init_gl_func = &init_gl_LI100;
-
   buses[ busnumber ].init_ga_func = &init_ga_LI100;
-
   buses[ busnumber ].flags |= FB_4_PORTS;
-
   buses[ busnumber ].flags |= FB_ORDER_0;
-
   strcpy( buses[ busnumber ].description,
           "GA GL FB SM POWER LOCK DESCRIPTION" );
 
 #ifdef LI100_USB
   __li100->number_fb = 512;
-
   __li100->number_ga = 1024;
-
   __li100->number_gl = 9999;
-
 #else
   __li100->number_fb = 256;
-
   __li100->number_ga = 256;
-
   __li100->number_gl = 99;
-
 #endif
 
   xmlNodePtr child = node->children;
-
   xmlChar *txt = NULL;
-
   while ( child != NULL )
   {
     if ( xmlStrncmp( child->name, BAD_CAST "text", 4 ) == 0 )
     {
       /* just do nothing, it is only a comment */
     }
-
     else
       if ( xmlStrcmp( child->name, BAD_CAST "number_fb" ) == 0 )
       {
         txt = xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
-
         if ( txt != NULL )
         {
           __li100->number_fb = atoi(( char * ) txt );
@@ -121,7 +95,6 @@ int readConfig_LI100_SERIAL( xmlDocPtr doc, xmlNodePtr node,  bus_t busnumber )
         if ( xmlStrcmp( child->name, BAD_CAST "number_gl" ) == 0 )
         {
           txt = xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
-
           if ( txt != NULL )
           {
             __li100->number_gl = atoi(( char * ) txt );
@@ -132,7 +105,6 @@ int readConfig_LI100_SERIAL( xmlDocPtr doc, xmlNodePtr node,  bus_t busnumber )
           if ( xmlStrcmp( child->name, BAD_CAST "number_ga" ) == 0 )
           {
             txt = xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
-
             if ( txt != NULL )
             {
               __li100->number_ga = atoi(( char * ) txt );
@@ -143,7 +115,6 @@ int readConfig_LI100_SERIAL( xmlDocPtr doc, xmlNodePtr node,  bus_t busnumber )
             if ( xmlStrcmp( child->name, BAD_CAST "fb_delay_time_0" ) == 0 )
             {
               txt = xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
-
               if ( txt != NULL )
               {
                 set_min_time( busnumber, atoi(( char * ) txt ) );
@@ -152,9 +123,7 @@ int readConfig_LI100_SERIAL( xmlDocPtr doc, xmlNodePtr node,  bus_t busnumber )
             }
             else
               DBG( busnumber, DBG_WARN,
-                   "WARNING, unknown tag found: \"%s\"!\n",
-                   child->name );
-
+                   "WARNING, unknown tag found: \"%s\"!\n", child->name );
     child = child->next;
   }
 
@@ -192,12 +161,10 @@ int init_bus_LI100_SERIAL( bus_t busnumber )
   }
 
   status = 0;
-
   DBG( busnumber, DBG_DEBUG, "Lenz interface with debug level %d\n",
        buses[ busnumber ].debuglevel );
 
 #ifdef LI100_USB
-
   if ( buses[ busnumber ].type != SERVER_LI100_USB )
 #else
   if ( buses[ busnumber ].type != SERVER_LI100_SERIAL )
@@ -221,10 +188,8 @@ int init_bus_LI100_SERIAL( bus_t busnumber )
     if ( status == 0 )
 #ifdef LI100_USB
       status = initLine_LI100_USB( busnumber );
-
 #else
       status = initLine_LI100_SERIAL( busnumber );
-
 #endif
   }
   else
@@ -265,23 +230,17 @@ int init_bus_LI100_SERIAL( bus_t busnumber )
         if ( __li100->get_addr == 0 )
           break;
 
-        DBG( busnumber, DBG_DEBUG, "Remove engine with address %d from stack\n",
+        DBG( busnumber, DBG_INFO, "Remove engine with address %d from stack\n",
              __li100->get_addr & 0x3fff );
-
         byte2send[ 0 ] = 0xe3;
-
         byte2send[ 1 ] = 0x44;
-
         byte2send[ 2 ] = ( unsigned char )( __li100->get_addr >> 8 );
-
         byte2send[ 3 ] = ( unsigned char )( __li100->get_addr & 0x00FF );
 
 #ifdef LI100_USB
         send_command_LI100_USB( busnumber, byte2send );
-
 #else
         send_command_LI100_SERIAL( busnumber, byte2send );
-
 #endif
       }
     }
@@ -313,23 +272,16 @@ int init_bus_LI100_SERIAL( bus_t busnumber )
 #ifdef LI100_USB
   DBG( busnumber, DBG_DEBUG, "INIT_BUS_LI100 (usb) finished with "
        "code: %d\n", status );
-
 #else
   DBG( busnumber, DBG_DEBUG, "INIT_BUS_LI100 (serial) finished with "
        "code: %d\n", status );
-
 #endif
   __li100->last_type = -1;
-
   __li100->last_value = -1;
-
   __li100->emergency_on_LI100 = 0;
-
   __li100->extern_engine_ctr = 0;
-
   for ( i = 0; i < 100; i++ )
     __li100->extern_engine[ i ] = -1;
-
   __li100->pgm_mode = 0;
 
   return status;
@@ -343,7 +295,6 @@ int term_bus_LI100_SERIAL( bus_t busnumber )
 #endif
 {
 #ifdef LI100_USB
-
   if ( buses[ busnumber ].type != SERVER_LI100_USB )
 #else
   if ( buses[ busnumber ].type != SERVER_LI100_SERIAL )
@@ -354,11 +305,8 @@ int term_bus_LI100_SERIAL( bus_t busnumber )
     return 0;
 
   __li100->working_LI100 = 0;
-
   pthread_cancel( buses[ busnumber ].pid );
-
   buses[ busnumber ].pid = 0;
-
   close_comport( busnumber );
 
   return 0;
@@ -384,12 +332,9 @@ void *thr_sendrec_LI100_SERIAL( void *v )
 #endif
 
   /* initialize tga-structure */
-
   for ( zaehler1 = 0; zaehler1 < 50; zaehler1++ )
     __li100->tga[ zaehler1 ].id = 0;
-
   fb_zaehler1 = 0;
-
   fb_zaehler2 = 1;
 
   while ( 1 )
@@ -414,32 +359,19 @@ void *thr_sendrec_LI100_SERIAL( void *v )
 
 #ifdef LI100_USB
     send_command_gl_LI100_USB( busnumber );
-
     send_command_ga_LI100_USB( busnumber );
-
     check_status_LI100_USB( busnumber );
-
     check_extern_engines_USB( busnumber );
-
     send_command_sm_LI100_USB( busnumber );
-
 #else
     send_command_gl_LI100_SERIAL( busnumber );
-
     send_command_ga_LI100_SERIAL( busnumber );
-
     check_status_LI100_SERIAL( busnumber );
-
     check_extern_engines_SERIAL( busnumber );
-
     send_command_sm_LI100_SERIAL( busnumber );
-
 #endif
-
     check_reset_fb( busnumber );
-
     buses[ busnumber ].watchdog = 1;
-
     usleep( 50000 );
   }                           /* End WHILE(1) */
 }
@@ -457,13 +389,11 @@ void send_command_ga_LI100_SERIAL( bus_t busnumber )
   unsigned char status;
 
   struct _GASTATE gatmp;
-
   struct timeval akt_time, cmp_time;
 
   gettimeofday( &akt_time, NULL );
 
   /* first eventually Decoder switch off */
-
   for ( i = 0; i < 50; i++ )
   {
     if ( __li100->tga[ i ].id )
@@ -493,16 +423,11 @@ void send_command_ga_LI100_SERIAL( bus_t busnumber )
 
 #ifdef LI100_USB
         send_command_LI100_USB( busnumber, byte2send );
-
 #else
         send_command_LI100_SERIAL( busnumber, byte2send );
-
 #endif
-
         gatmp.action = 0;
-
         setGA( busnumber, addr, gatmp );
-
         __li100->tga[ i ].id = 0;
       }
     }
@@ -526,7 +451,6 @@ void send_command_ga_LI100_SERIAL( bus_t busnumber )
     {
       byte2send[ 2 ] |= 0x08;
     }
-
     if ( gatmp.port )
     {
       byte2send[ 2 ] |= 0x01;
@@ -534,10 +458,8 @@ void send_command_ga_LI100_SERIAL( bus_t busnumber )
 
 #ifdef LI100_USB
     send_command_LI100_USB( busnumber, byte2send );
-
 #else
     send_command_LI100_SERIAL( busnumber, byte2send );
-
 #endif
 
     status = 1;
@@ -629,17 +551,13 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
 
 #ifdef LI100_USB
         status = send_command_LI100_USB( busnumber, byte2send );
-
 #else
         status = send_command_LI100_SERIAL( busnumber, byte2send );
-
 #endif
-
       }
       else
       {
 #ifndef LI100_USB
-
         if ( __li100->version_zentrale <= 0x0150 )
         {
           byte2send[ 0 ] = 0xb3;
@@ -650,12 +568,10 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
 
           if ( gltmp.speed > 0 )
             byte2send[ 2 ] ++;
-
           if ( gltmp.direction )
           {
             byte2send[ 2 ] |= 0x40;
           }
-
           if ( gltmp.funcs & 1 )
           {
             byte2send[ 2 ] |= 0x20;
@@ -663,7 +579,6 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
 
           /* functions f1..f4 */
           byte2send[ 3 ] = ( gltmp.funcs >> 1 ) & 0x000F;
-
           status = send_command_LI100_SERIAL( busnumber, byte2send );
         }
 
@@ -677,94 +592,67 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
 
           switch ( gltmp.n_fs )
           {
-
             case 14:
               byte2send[ 4 ] = 0x00;
-
               /* setting direction and speed */
               byte2send[ 2 ] = gltmp.speed;
-
               if ( gltmp.speed > 0 )
                 byte2send[ 2 ] ++;
-
               if ( gltmp.direction )
               {
                 byte2send[ 2 ] |= 0x40;
               }
-
               if ( gltmp.funcs & 1 )
               {
                 byte2send[ 2 ] |= 0x20;
               }
-
               break;
-
             case 27:
               byte2send[ 4 ] = 0x01;
-
               /* setting direction and speed */
               byte2send[ 2 ] = gltmp.speed;
-
               if ( gltmp.speed > 0 )
                 byte2send[ 2 ] += 3;
-
               if ( byte2send[ 2 ] & 0x01 )
                 byte2send[ 2 ] |= 0x20;
-
               byte2send[ 2 ] >>= 1;
-
               if ( gltmp.direction )
               {
                 byte2send[ 2 ] |= 0x40;
               }
-
               if ( gltmp.funcs & 1 )
               {
                 byte2send[ 2 ] |= 0x20;
               }
-
               break;
-
             case 28:
               byte2send[ 4 ] = 0x02;
-
               /* setting direction and speed */
               byte2send[ 2 ] = gltmp.speed;
-
               if ( gltmp.speed > 0 )
                 byte2send[ 2 ] += 3;
-
               if ( byte2send[ 2 ] & 0x01 )
                 byte2send[ 2 ] |= 0x20;
-
               byte2send[ 2 ] >>= 1;
-
               if ( gltmp.direction )
               {
                 byte2send[ 2 ] |= 0x40;
               }
-
               if ( gltmp.funcs & 1 )
               {
                 byte2send[ 2 ] |= 0x20;
               }
-
               break;
-
             default :
               byte2send[ 4 ] = 0x00;
-
               /* setting direction and speed */
               byte2send[ 2 ] = gltmp.speed;
-
               if ( gltmp.speed > 0 )
                 byte2send[ 2 ] ++;
-
               if ( gltmp.direction )
               {
                 byte2send[ 2 ] |= 0x40;
               }
-
               if ( gltmp.funcs & 1 )
               {
                 byte2send[ 2 ] |= 0x20;
@@ -773,67 +661,53 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
 
           /* functions f1..f4 */
           byte2send[ 3 ] = ( gltmp.funcs >> 1 ) & 0x000F;
-
           status = send_command_LI100_SERIAL( busnumber, byte2send );
         }
 
         if ( __li100->version_zentrale >= 0x0300 )
-#endif
         {
+#endif
           byte2send[ 0 ] = 0xe4;
           /* mode */
 
           switch ( gltmp.n_fs )
           {
-
             case 14:
               byte2send[ 1 ] = 0x10;
               break;
-
             case 27:
               byte2send[ 1 ] = 0x11;
               break;
-
             case 28:
               byte2send[ 1 ] = 0x12;
               break;
-
             case 126:
               byte2send[ 1 ] = 0x13;
               break;
-
             default :
               byte2send[ 1 ] = 0x12;
           }
 
           /* high byte of address */
           temp = gltmp.id;
-
           temp >>= 8;
-
           byte2send[ 2 ] = temp;
-
           if ( addr > 99 )
             byte2send[ 2 ] |= 0xc0;
 
           /* low byte of address */
           temp = gltmp.id;
-
           temp &= 0x00FF;
-
           byte2send[ 3 ] = temp;
 
           /* setting direction and speed */
           byte2send[ 4 ] = gltmp.speed;
-
           if (( gltmp.n_fs == 27 ) || ( gltmp.n_fs = 28 ) )
           {
             if ( gltmp.speed > 0 )
               byte2send[ 4 ] += 3;
-
             if ( byte2send[ 4 ] & 0x01 )
               byte2send[ 4 ] |= 0x20;
-
             byte2send[ 4 ] >>= 1;
           }
           else
@@ -849,10 +723,8 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
 
 #ifdef LI100_USB
           status = send_command_LI100_USB( busnumber, byte2send );
-
 #else
           status = send_command_LI100_SERIAL( busnumber, byte2send );
-
 #endif
 
           /* send functions f0..f4 */
@@ -863,24 +735,18 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
 
           /* high byte of address */
           temp = gltmp.id;
-
           temp >>= 8;
-
           byte2send[ 2 ] = temp;
-
           if ( addr > 99 )
             byte2send[ 2 ] |= 0xc0;
 
           /* low byte of address */
           temp = gltmp.id;
-
           temp &= 0x00FF;
-
           byte2send[ 3 ] = temp;
 
           /* setting F0-F4 */
           byte2send[ 4 ] = ( gltmp.funcs >> 1 ) & 0x00FF;
-
           if ( gltmp.funcs & 1 )
           {
             byte2send[ 4 ] |= 0x10;
@@ -888,18 +754,15 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
 
 #ifdef LI100_USB
           status = send_command_LI100_USB( busnumber, byte2send );
-
 #else
           status = send_command_LI100_SERIAL( busnumber, byte2send );
-
-#endif
         }
+#endif
       }
 
-        if ( status == 0 )
-        {
-          cacheSetGL( busnumber, addr, gltmp );
-        }
+      if ( status == 0 )
+      {
+        cacheSetGL( busnumber, addr, gltmp );
       }
     }
   }
@@ -942,7 +805,7 @@ void check_extern_engines_SERIAL( bus_t busnumber )
             ( __li100->version_zentrale < 0x0300 ) )
         {
           __li100->last_value = tmp_addr;
-          getGL( busnumber, tmp_addr, &gltmp );
+          cacheGetGL( busnumber, tmp_addr, &gltmp );
           byte2send[ 0 ] = 0xa2;
           /* address */
           byte2send[ 1 ] = tmp_addr;
@@ -950,37 +813,24 @@ void check_extern_engines_SERIAL( bus_t busnumber )
 
           switch ( gltmp.n_fs )
           {
-            __li100->last_value = tmp_addr;
-            cacheGetGL( busnumber, tmp_addr, &gltmp );
-            byte2send[ 0 ] = 0xa2;
-            /* address */
-            byte2send[ 1 ] = tmp_addr;
-            /* mode */
-
             case 14:
               byte2send[ 2 ] = 0x00;
               break;
-
             case 27:
               byte2send[ 2 ] = 0x01;
               break;
-
             case 28:
               byte2send[ 2 ] = 0x02;
               break;
-
             default :
               byte2send[ 2 ] = 0x02;
           }
 
 #ifdef LI100_USB
           send_command_LI100_USB( busnumber, byte2send );
-
 #else
           send_command_LI100_SERIAL( busnumber, byte2send );
-
 #endif
-
         }
 
         if ( __li100->version_zentrale >= 0x0300 )
@@ -997,12 +847,10 @@ void check_extern_engines_SERIAL( bus_t busnumber )
           send_command_LI100_SERIAL( busnumber, byte2send );
           check_status_LI100_SERIAL( busnumber );
 #endif
-
         }
       }
     }
   }
-
   __li100->last_value = -1;
 }
 
@@ -1287,15 +1135,11 @@ void send_command_sm_LI100_SERIAL( bus_t busnumber )
 
     switch ( smakt.command )
     {
-      case
-
-          SET:
-
+      case SET:
         if ( smakt.addr == -1 )
         {
           switch ( smakt.type )
           {
-
             case REGISTER:
 #ifdef LI100_USB
               write_register_LI100_USB( busnumber, smakt.typeaddr, smakt.value );
@@ -1303,7 +1147,6 @@ void send_command_sm_LI100_SERIAL( bus_t busnumber )
               write_register_LI100_SERIAL( busnumber, smakt.typeaddr, smakt.value );
 #endif
               break;
-
             case CV:
 #ifdef LI100_USB
               write_cv_LI100_USB( busnumber, smakt.typeaddr, smakt.value );
@@ -1311,25 +1154,21 @@ void send_command_sm_LI100_SERIAL( bus_t busnumber )
               write_cv_LI100_SERIAL( busnumber, smakt.typeaddr, smakt.value );
 #endif
               break;
-
               /*        case CV_BIT:
                  write_cvbit( busnumber, smakt.typeaddr, smakt.bit, smakt.value );
                  break; */
-
             case PAGE:
 #ifdef LI100_USB
               write_page_LI100_USB( busnumber, smakt.typeaddr, smakt.value );
 #else
               write_page_LI100_SERIAL( busnumber, smakt.typeaddr, smakt.value );
 #endif
-
           }
         }
         else
         {
           switch ( smakt.type )
           {
-
             case CV:
 #ifdef LI100_USB
               send_pom_cv_LI100_USB( busnumber, smakt.addr, smakt.typeaddr, smakt.value );
@@ -1337,25 +1176,19 @@ void send_command_sm_LI100_SERIAL( bus_t busnumber )
               send_pom_cv_LI100_SERIAL( busnumber, smakt.addr, smakt.typeaddr, smakt.value );
 #endif
               break;
-
             case CV_BIT:
 #ifdef LI100_USB
               send_pom_cvbit_LI100_USB( busnumber, smakt.addr, smakt.typeaddr, smakt.bit, smakt.value );
-
 #else
               send_pom_cvbit_LI100_SERIAL( busnumber, smakt.addr, smakt.typeaddr, smakt.bit, smakt.value );
 #endif
               break;
           }
         }
-
         break;
-
       case GET:
-
         switch ( smakt.type )
         {
-
           case REGISTER:
 #ifdef LI100_USB
             read_register_LI100_USB( busnumber, smakt.typeaddr );
@@ -1363,7 +1196,6 @@ void send_command_sm_LI100_SERIAL( bus_t busnumber )
             read_register_LI100_SERIAL( busnumber, smakt.typeaddr );
 #endif
             break;
-
           case CV:
 #ifdef LI100_USB
             read_cv_LI100_USB( busnumber, smakt.typeaddr );
@@ -1371,11 +1203,9 @@ void send_command_sm_LI100_SERIAL( bus_t busnumber )
             read_cv_LI100_SERIAL( busnumber, smakt.typeaddr );
 #endif
             break;
-
             /*      case CV_BIT:
                read_cvbit( busnumber, smakt.typeaddr, smakt.bit );
                break; */
-
           case PAGE:
 #ifdef LI100_USB
             read_page_LI100_USB( busnumber, smakt.typeaddr );
@@ -1383,19 +1213,14 @@ void send_command_sm_LI100_SERIAL( bus_t busnumber )
             read_page_LI100_SERIAL( busnumber, smakt.typeaddr );
 #endif
         }
-
         break;
-
       case VERIFY:
         break;
-
       case INIT:
         break;
-
       case TERM:
         DBG( busnumber, DBG_DEBUG,
              "on bus %i pgm_mode is %i", busnumber, __li100->pgm_mode );
-
         if ( __li100->pgm_mode == 1 )
         {
 #ifdef LI100_USB
@@ -1404,7 +1229,6 @@ void send_command_sm_LI100_SERIAL( bus_t busnumber )
           term_pgm_LI100_SERIAL( busnumber );
 #endif
         }
-
         break;
     }
   }
@@ -1426,7 +1250,6 @@ void get_status_sm_LI100_SERIAL( bus_t busnumber )
 #else
   send_command_LI100_SERIAL( busnumber, byte2send );
 #endif
-
 }
 
 #ifdef LI100_USB
@@ -1439,9 +1262,7 @@ void check_status_LI100_SERIAL( bus_t busnumber )
   int status;
   unsigned char str[ 20 ];
 
-
   /* with debug level beyond DBG_DEBUG, we will not really work on hardware */
-
   if ( buses[ busnumber ].debuglevel <= DBG_DEBUG )
   {
     i = 1;
@@ -1460,18 +1281,14 @@ void check_status_LI100_SERIAL( bus_t busnumber )
       }
 
       DBG( busnumber, DBG_DEBUG,
-
            "readbyte(): (fd = %d), there are %d bytes to read.",
            buses[ busnumber ].fd, i );
       /* read only, if there is really an input */
-
       if ( i > 0 )
 #ifdef LI100_USB
         status = readAnswer_LI100_USB( busnumber, str );
-
 #else
         status = readAnswer_LI100_SERIAL( busnumber, str );
-
 #endif
     }
   }
@@ -1544,20 +1361,16 @@ int readAnswer_LI100_SERIAL( bus_t busnumber, unsigned char *str )
       return status;
 
     usleep( 2000 );
-
     status = readByte( busnumber, 1, &str[ 0 ] );
   }
 
 #ifdef LI100_USB
   /* skip LI100_USB-header */
   readByte( busnumber, 1, &str[ 0 ] );
-
   readByte( busnumber, 1, &str[ 0 ] );
-
 #endif
 
   ctr = str[ 0 ] & 0x0f;   /* generate length of answer */
-
   ctr += 2;
 
   /* read answer */
@@ -1567,7 +1380,6 @@ int readAnswer_LI100_SERIAL( bus_t busnumber, unsigned char *str )
   }
 
   cXor = 0;
-
   for ( i = 0; i < ctr; i++ )
   {
     cXor ^= str[ i ];
@@ -1607,10 +1419,8 @@ int readAnswer_LI100_SERIAL( bus_t busnumber, unsigned char *str )
         if ( __li100->number_ga > 256 )
           __li100->number_ga = 256;
       }
-
 #endif
       message_processed = 1;
-
     }
   }
 
@@ -1618,13 +1428,11 @@ int readAnswer_LI100_SERIAL( bus_t busnumber, unsigned char *str )
   if ( str[ 0 ] == 0x61 )
   {
     /* power on */
-
     if ( str[ 1 ] == 0x01 )
     {
       DBG( busnumber, DBG_DEBUG,
            "on bus %i power detected; old-state is %i", busnumber,
            getPower( busnumber ) );
-
       if (( __li100->emergency_on_LI100 == 1 )
           || ( !getPower( busnumber ) ) )
       {
@@ -1638,7 +1446,6 @@ int readAnswer_LI100_SERIAL( bus_t busnumber, unsigned char *str )
           setPower( busnumber, 1, "Program mode end" );
           __li100->pgm_mode = 0;
         }
-
       message_processed = 1;
     }
 
@@ -1648,14 +1455,12 @@ int readAnswer_LI100_SERIAL( bus_t busnumber, unsigned char *str )
       DBG( busnumber, DBG_DEBUG,
            "on bus %i no power detected; old-state is %i",
            busnumber, getPower( busnumber ) );
-
       if (( __li100->emergency_on_LI100 == 0 )
           && ( getPower( busnumber ) ) )
       {
         setPower( busnumber, 0, "Emergency Stop" );
         __li100->emergency_on_LI100 = 1;
       }
-
       message_processed = 1;
     }
 
@@ -1670,7 +1475,6 @@ int readAnswer_LI100_SERIAL( bus_t busnumber, unsigned char *str )
              busnumber );
         setPower( busnumber, -1, "Program mode start" );
       }
-
       message_processed = 1;
     }
   }
@@ -1684,11 +1488,8 @@ int readAnswer_LI100_SERIAL( bus_t busnumber, unsigned char *str )
       remove_extern_engine( busnumber, str[ 1 ] );
 
     gltmp.id = str[ 1 ];
-
     gltmp.direction = ( str[ 2 ] & 0x40 ) ? 1 : 0;
-
     gltmp.speed = str[ 2 ] & 0x0f;
-
     if ( gltmp.speed == 1 )
     {
       gltmp.speed = 0;
@@ -1699,19 +1500,16 @@ int readAnswer_LI100_SERIAL( bus_t busnumber, unsigned char *str )
       if ( gltmp.speed > 0 )
         gltmp.speed--;
     }
-
     gltmp.funcs = (( str[ 3 ] & 0x0f ) << 1 );
-
     if ( str[ 2 ] & 0x20 )
       gltmp.funcs |= 0x01;        /* light is on */
 
     /* get old data, to send only if something changed */
-    getGL( busnumber, gltmp.id, &glakt );
-
+    cacheGetGL( busnumber, gltmp.id, &glakt );
     if (( glakt.speed != gltmp.speed ) ||
         ( glakt.direction != gltmp.direction ) ||
         ( glakt.funcs != gltmp.funcs ) )
-      setGL( busnumber, gltmp.id, gltmp );
+      cacheSetGL( busnumber, gltmp.id, gltmp );
 
     message_processed = 1;
   }
@@ -1739,22 +1537,16 @@ int readAnswer_LI100_SERIAL( bus_t busnumber, unsigned char *str )
   {
     gltmp.id = __li100->last_value & 0x3fff;
     /* is engine always allocated by an external device? */
-
     if ( !( str[ 1 ] & 0x08 ) )
     {
       remove_extern_engine( busnumber, __li100->last_value );
     }
-
     gltmp.direction = ( str[ 2 ] & 0x80 ) ? 1 : 0;
-
     switch ( str[ 1 ] & 7 )
     {
-
       case 0:
-
       case 4:
         gltmp.speed = str[ 2 ] & 0x7f;
-
         if ( gltmp.speed == 1 )
         {
           gltmp.speed = 0;
@@ -1765,21 +1557,14 @@ int readAnswer_LI100_SERIAL( bus_t busnumber, unsigned char *str )
           if ( gltmp.speed > 0 )
             gltmp.speed--;
         }
-
         break;
-
       case 1:
-
       case 2:
         gltmp.speed = str[ 2 ] & 0x7f;
-
         gltmp.speed <<= 1;
-
         if ( gltmp.speed & 0x20 )
           gltmp.speed |= 0x01;
-
         gltmp.speed &= 0xdf;
-
         if ( gltmp.speed == 2 )
         {
           gltmp.speed = 0;
@@ -1790,21 +1575,17 @@ int readAnswer_LI100_SERIAL( bus_t busnumber, unsigned char *str )
           if ( gltmp.speed > 0 )
             gltmp.speed -= 3;
         }
-
         break;
     }
-
     if ( str[ 3 ] & 0x10 )
       gltmp.funcs |= 0x01;        /* light is on */
 
     /* get old data, to send only if something changed */
-    getGL( busnumber, gltmp.id, &glakt );
-
+    cacheGetGL( busnumber, gltmp.id, &glakt );
     if (( glakt.speed != gltmp.speed ) ||
         ( glakt.direction != gltmp.direction ) ||
         ( glakt.funcs != gltmp.funcs ) )
-      setGL( busnumber, gltmp.id, gltmp );
-
+      cacheSetGL( busnumber, gltmp.id, gltmp );
     message_processed = 1;
   }
 
@@ -1813,67 +1594,51 @@ int readAnswer_LI100_SERIAL( bus_t busnumber, unsigned char *str )
   {
     ctr = str[ 0 ] & 0xf;
     ctr += 2;
-
     for ( i = 1; i < ctr; i += 2 )
     {
       switch ( str[ i + 1 ] & 0x60 )
       {
-
         case 0x00:      /* switch-decoder without feedback */
-
         case 0x20:      /* switch-decoder with feedback */
           gatmp.id = str[ i ];
-
           gatmp.id <<= 2;
-
           if ( str[ i + 1 ] & 0x20 )
             gatmp.id += 2;
-
           tmp_addr = str[ i + 1 ] & 0x03;
-
           if ( tmp_addr == 0x01 )
           {
             gatmp.port = 0;
             gatmp.action = 1;
             setGA( busnumber, gatmp.id, gatmp );
           }
-
           if ( tmp_addr == 0x02 )
           {
             gatmp.port = 1;
             gatmp.action = 1;
             setGA( busnumber, gatmp.id, gatmp );
           }
-
           gatmp.id++;
-
           tmp_addr = str[ i + 1 ] & 0x0C;
-
           if ( tmp_addr == 0x04 )
           {
             gatmp.port = 0;
             gatmp.action = 1;
             setGA( busnumber, gatmp.id, gatmp );
           }
-
           if ( tmp_addr == 0x08 )
           {
             gatmp.port = 1;
             gatmp.action = 1;
             setGA( busnumber, gatmp.id, gatmp );
           }
-
           break;
-
         case 0x40:    /* feedback-decoder */
           setFBmodul( busnumber,
                       ( str[ i ] * 2 ) + (( str[ i + 1 ] & 0x10 ) ? 2 : 1 ),
                       str[ i + 1 ] & 0x0f );
-
           break;
       }
     }
-
     message_processed = 1;
   }
 
@@ -1888,7 +1653,6 @@ int readAnswer_LI100_SERIAL( bus_t busnumber, unsigned char *str )
              0 );
       __li100->last_type = -1;
     }
-
     message_processed = 1;
   }
 
@@ -1902,7 +1666,6 @@ int readAnswer_LI100_SERIAL( bus_t busnumber, unsigned char *str )
              __li100->last_value, -1 );
       __li100->last_type = -1;
     }
-
     message_processed = 1;
   }
 
@@ -1935,38 +1698,29 @@ int initLine_LI100_SERIAL( bus_t busnumber )
 
   switch ( buses[ busnumber ].baudrate )
   {
-
     case B9600:
       strcpy(( char * ) byte2send, "9600" );
       break;
-
     case B19200:
       strcpy(( char * ) byte2send, "19200" );
       break;
-
     case B38400:
       strcpy(( char * ) byte2send, "38400" );
       break;
-
     case B57600:
       strcpy(( char * ) byte2send, "57600" );
       break;
-
     case B115200:
       strcpy(( char * ) byte2send, "57600" );
       break;
-
     default :
       strcpy(( char * ) byte2send, "9600" );
       break;
   }
 
   DBG( busnumber, DBG_INFO, "Try to open serial line %s for %s baud\n",
-
        name, byte2send );
-
   fd = open( name, O_RDWR );
-
   if ( fd == -1 )
   {
     DBG( busnumber, DBG_ERROR, "Open serial device '%s' failed: %s "
@@ -1975,28 +1729,21 @@ int initLine_LI100_SERIAL( bus_t busnumber )
   }
 
   buses[ busnumber ].fd = fd;
-
   tcgetattr( fd, &interface );
   interface.c_oflag = ONOCR;
 #ifdef LI100_USB
   interface.c_cflag = CS8 | CLOCAL | CREAD | HUPCL;
 #else
-
   interface.c_cflag = CS8 | CRTSCTS | CLOCAL | CREAD | HUPCL;
 #endif
-
   interface.c_iflag = IGNBRK;
   interface.c_lflag = IEXTEN;
-
   cfsetispeed( &interface, buses[ busnumber ].baudrate );
-
   cfsetospeed( &interface, buses[ busnumber ].baudrate );
   interface.c_cc[ VMIN ] = 0;
   interface.c_cc[ VTIME ] = 1;
-
   tcsetattr( fd, TCSANOW, &interface );
   sleep( 1 );
-
   status++;
 
   /* get version of LI100 */
@@ -2014,15 +1761,12 @@ int initLine_LI100_SERIAL( bus_t busnumber )
 
   /* get version of central unit */
   byte2send[ 0 ] = 0x21;
-
   byte2send[ 1 ] = 0x21;
 
 #ifdef LI100_USB
   status2 = send_command_LI100_USB( busnumber, byte2send );
-
 #else
   status2 = send_command_LI100_SERIAL( busnumber, byte2send );
-
 #endif
   if ( status2 == 0 )
     status++;
@@ -2031,15 +1775,12 @@ int initLine_LI100_SERIAL( bus_t busnumber )
 
   /* get status of central unit */
   byte2send[ 0 ] = 0x21;
-
   byte2send[ 1 ] = 0x24;
 
 #ifdef LI100_USB
   status2 = send_command_LI100_USB( busnumber, byte2send );
-
 #else
   status2 = send_command_LI100_SERIAL( busnumber, byte2send );
-
 #endif
 
   if ( status2 == 0 )

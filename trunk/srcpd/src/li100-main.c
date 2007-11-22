@@ -1,8 +1,8 @@
 /***************************************************************************
-li100-main.c  -  description
--------------------
+                      li100-main.c  -  description
+                        -------------------
 begin                : Fri Oct 26 07:49:15 MEST 2006
-copyright            : (C) 2006 by Dipl.-Ing. Frank Schmischke
+copyright            : (C) 2006-2007 by Dipl.-Ing. Frank Schmischke
 email                : frank.schmischke@t-online.de
 ***************************************************************************/
 
