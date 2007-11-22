@@ -2,7 +2,7 @@
                            li100.h  -  description
                              -------------------
     begin                : Thu Jan 22 2002
-    copyright            : (C) 2002 by Dipl.-Ing. Frank Schmischke
+    copyright            : (C) 2002-2007 by Dipl.-Ing. Frank Schmischke
     email                : frank.schmischke@t-online.de
  ***************************************************************************/
 
