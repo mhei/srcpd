@@ -1,3 +1,6 @@
+2007-11-24 Matthias Trute <mtrute@users.sourceforge.net>
+	* imported most of the historical code from cvs to svn repository.
+
 2007-11-20 Guido Scholz <guido.scholz@bayernline.de>
 	* srcp-ga.c: fixed wrong milli-second format for INFO GA (was
 	e.g. »x.6« instead of »x.006«)
