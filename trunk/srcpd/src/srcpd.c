@@ -26,7 +26,7 @@
 #include "srcp-lock.h"
 #include "srcp-power.h"
 
-#include "srcp-srv.h"
+#include "srcp-server.h"
 #include "srcp-time.h"
 #include "srcp-info.h"
 #include "netservice.h"

@@ -32,7 +32,7 @@
 #include "config-srcpd.h"
 #include "srcp-power.h"
 #include "srcp-info.h"
-#include "srcp-srv.h"
+#include "srcp-server.h"
 #include "srcp-error.h"
 #include "srcp-gl.h"
 #include "srcp-ga.h"
