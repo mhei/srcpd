@@ -27,7 +27,7 @@ srcpd_SOURCES = \
 	srcp-fb.c \
 	srcp-ga.c \
 	srcp-gl.c \
-	srcp-gm.c
+	srcp-gm.c \
 	srcp-info.c \
 	srcp-lock.c \
 	srcp-power.c \
@@ -37,7 +37,7 @@ srcpd_SOURCES = \
 	srcp-time.c \
 	threads.c \
 	ttycygwin.c \
-	zimo.c \
+	zimo.c
 
 noinst_HEADERS = \
 	config-srcpd.h \
@@ -62,7 +62,7 @@ noinst_HEADERS = \
 	srcp-fb.h \
        	srcp-ga.h \
 	srcp-gl.h \
-	srcp-gm.h
+	srcp-gm.h \
 	srcp-info.h \
 	srcp-lock.h \
 	srcp-power.h \
@@ -73,7 +73,7 @@ noinst_HEADERS = \
 	stdincludes.h \
 	threads.h \
 	ttycygwin.h \
-	zimo.h \
+	zimo.h
 
 EXTRA_DIST = systemtest
 
