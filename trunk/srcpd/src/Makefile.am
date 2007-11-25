@@ -18,7 +18,7 @@ srcpd_SOURCES = \
 	loconet.c \
 	loopback.c \
 	m605x.c \
-	netserver.c \
+	clientservice.c \
 	portio.c \
 	selectrix.c \
 	srcpd.c \
@@ -54,7 +54,7 @@ noinst_HEADERS = \
        	loconet.h \
 	loopback.h \
 	m605x.h \
-	netserver.h \
+	clientservice.h \
        	portio.h \
 	selectrix.h \
 	srcp-descr.h \

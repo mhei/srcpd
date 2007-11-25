@@ -19,7 +19,7 @@
 #define _SRCP_INFO_H
 
 #include "srcp-session.h"
-#include "netserver.h"
+#include "clientservice.h"
 
 int doInfoClient(client_thread_t* ctd);
 int startup_INFO(void);
