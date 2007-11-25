@@ -8,7 +8,7 @@
 
 #include "stdincludes.h"
 #include "config-srcpd.h"
-#include "threads.h"
+#include "netservice.h"
 #include "srcp-srv.h"
 
 void change_privileges(bus_t bus)

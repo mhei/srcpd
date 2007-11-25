@@ -6,7 +6,6 @@
 
 #include "stdincludes.h"
 #include "config-srcpd.h"
-#include "threads.h"
 
 #include "io.h"
 #include "ddl.h"
