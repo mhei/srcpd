@@ -1,0 +1,318 @@
+.TH srcpd.conf 5
+.\"
+.\"
+.SH "NAME"
+srcpd.conf \- Die Konfigurationsdatei für den srcpd Deamon
+.\"
+.\"
+.SH "BESCHREIBUNG"
+The file
+.I /etc/srcpd.conf
+is used by the
+.BR srcpd (8).
+The file contains the runtime configuration for the deamon
+and it's connection(s) to model railroad systems.
+See
+.BR srcpd (8)
+for instruction to use the daemon.
+.\"
+.\"
+.SH "STANDARD KONFIGURATIONSDATEI"
+.\"
+.PP
+The default file is shipped as with the srcpd and contains both
+default settings and an example bus configuration.
+.PP
+.RS
+.nf
+<?xml version="1.0"?>
+<srcpd version="2.0">
+  <bus>
+    <server>
+      <tcp-port>4303</tcp-port>
+      <pid-file>/var/run/srcpd.pid</pid-file>
+      <username>nobody</username>
+      <groupname>nogroup</groupname>
+    </server>
+    <verbosity>5</verbosity>
+  </bus>
+  <bus>
+    <loopback>
+      <number_fb>3</number_fb>
+    </loopback>
+    <use_watchdog>no</use_watchdog>
+    <verbosity>5</verbosity>
+    <auto_power_on>yes</auto_power_on>
+  </bus>
+</srcpd>
+.fi
+.RE
+.\"
+.\"
+.SH "DATEIFORMAT"
+.\"
+.PP
+The configuration file for srcpd is stored in XML format. As XML
+files are plain text, experienced users can manipulate such files with
+the help of a text editor. Less experienced users should select an
+external configuration tool to ensure a syntactically correct format.
+.\"
+.PP
+Currently there is no document type definition available, to validate the
+format of a user created configuration file.
+.\"
+.PP
+Each configuration file must contain the following structure:
+.\"
+.PP
+.nf
+    <?xml version="1.0"?>
+    <srcpd>
+    ...
+    </srcpd>
+.fi
+.\"
+.\"
+.SH Allgemeines
+.\"
+.PP
+First bus should be server-bus.
+.\"
+.TP
+verbosity
+Depending on this number, srcpd-bus tells you less or more.
+0 - minimum output
+.\"
+.TP
+device
+This is physical address of device (like /dev/ttyS0). If bus is server or
+loopback, no entry device is needed.
+.\"
+.\"
+.SH server
+.\"
+.PP
+This bus is needed everytime. General parameters will be discribed here.
+.\"
+.TP
+tcp-port
+This is TCP/IP port for communication between srcpd and clients.
+Default is 4303 (this port is assigned to srcpd by IANA)
+.\"
+.TP
+pid-file
+File, where srcpd is storing it's pid.
+Default is /var/run/srcpd.pid
+.\"
+.TP
+username
+srcpd run under this user.
+Default is nobody
+.\"
+.TP
+groupname
+srcpd run under this group.
+Default is nogroup
+.\"
+.\"
+.SH hsi-88
+.\"
+.PP
+This driver connects with the HSI-88 device from Littfinski connected
+via the serial port. An USB2Serial converter should work fine. The serial
+line settings are fixed to 9600baud and cannot be changed. Sum of all
+feedback-modules must be less or equal to 31, otherwise you will get an
+errormessage.
+.\"
+.TP
+number_fb_left
+HSI-88 has three lines for S88-bus. This value is number of feedback-modules
+(with 16 inputs) connected to line called left. If you use feedback-modules
+with 8 inputs, 2 modules are counted as one.
+.\"
+.TP
+number_fb_center
+HSI-88 has three lines for S88-bus. This value is number of feedback-modules
+(with 16 inputs) connected to line called center. If you use feedback-modules
+with 8 inputs, 2 modules are counted as one.
+.\"
+.TP
+number_fb_right
+HSI-88 has three lines for S88-bus. This value is number of feedback-modules
+(with 16 inputs) connected to line called right. If you use feedback-modules
+with 8 inputs, 2 modules are counted as one.
+.\"
+.TP
+fb_delay_time_0
+This is the time an feedback input must be zero, before zero is delivered to
+clients. Time is milliseconds. With this feature you can compensate bad
+feedback in a specific range.
+.\"
+.TP
+refresh
+The time in microseconds after srcpd will read feedback from HSI-88.
+.\"
+.\"
+.SH intellibox
+.\"
+.PP
+This driver connects with the Intellibox device from Uhlenbrock connected
+via the serial port. Only extended mode commands are used. Program of
+decoders is currently implemented for DCC only.
+Possible values for speed of serial port are 2400baud, 4800baud, 9600baud,
+19200baud and 38400baud.
+.\"
+.TP
+fb_delay_time_0
+This is the time an feedback input must be zero, before zero is delivered to
+clients. Time is milliseconds. With this feature you can compensate bad
+feedback in a specific range.
+.\"
+.TP
+pause_between_commands
+This is the time between two commands the drivers must wait. The exact
+values should be hand tuned. If the system does not respond or drops
+commands try to increase this value. Default is 250 (milliseconds).
+.\"
+.TP
+number_ga
+This is the number of GA. Supported range is 0..1024. A value of 0 means no
+GA available.
+Default is 256.
+.\"
+.TP
+number_gl
+Like the number of GA this number gives the maximum address. Supported range
+is 0..10239. A value of 0 means no GL available.
+Default is 80.
+.\"
+.TP
+number_fb
+This is the number of S88 modules attached to the Intellibox device.
+It can be as large as 31. The default is 0 (no modules are attached).
+Please note that Loconet is currently not supported.
+.\"
+.\"
+.SH li100, li100usb
+.\"
+.PP
+This driver connects with the LI100, LI100F, LI101F or LI-USB devices from
+LENZ connected via the serial port/USB-interface. An USB2Serial converter
+should not be used. The serial line settings are depending on type of
+interface. For LI-USB it's fixed to 57600baud with no chance to change.
+Autodetection of serial port interface speed is currently under
+construction. If connection fails, try restart of srcpd with an other
+speed. Possible values can be 9600baud, 19200baud, 38400baud, 57600baud and
+115200baud (depending on your interface).
+.\"
+.TP
+fb_delay_time_0
+This is the time an feedback input must be zero, before zero is delivered to
+clients. Time is milliseconds. With this feature you can compensate bad
+feedback in a specific range.
+.\"
+.TP
+number_ga
+This is the number of GA. Supported range is 0..1024. A value of 0 means no
+GA available.
+Default is 99 (LI-USB 9999).
+.\"
+.TP
+number_gl
+Like the number of GA this number gives the maximum address. Supported range
+is 0..9999. A value of 0 means no GL available.
+Default is 99 (LI-USB 9999).
+.\"
+.TP
+number_fb
+This is the number of RS modules attached to the Lenz device.
+It can be as large as 512. It's assumed, that one modul has 8 inputs.
+A value of 0 means no FB available.
+Default is 256 (LI-USB 512).
+.\"
+.\"
+.SH loopback
+.\"
+.PP
+This bus does not connect to real hardware. It is used primarily
+for development tasks but may be useful for real installations too.
+Every command on this bus does only have an echo effect on the INFO
+sessions. The devices may be used as virtual devices for communication
+tasks.
+.\"
+.TP
+number_ga
+This is the number of GA devices. Default is 256.
+.\"
+.TP
+number_gl
+Like the number of GA this number gives the maximum address.
+Default is 80
+.\"
+.TP
+number_fb
+This is the number of feedback devices. Default is 0 (no device).
+.\"
+.\"
+.SH m605x
+.\"
+.PP
+This driver connects with the 6051 or 6050 devices from Marklin connected
+via the serial port. An USB2Serial converter should work fine. The serial
+line settings are fixed to 2400 8N2 and cannot be changed.
+.\"
+.TP
+m6020mode
+In this mode the srcpd does not sent the 4 functions. This
+is a feature of the 6021 only.
+.\"
+.TP
+p_time
+This is the time the driver code waits until it recognized the input
+change in milliseconds. This feature may support a debounce found in
+the hardware.
+.\"
+.TP
+ga_min_activetime
+The time in milliseconds a GA device needs to be in active state. The
+absolute minimum is 75 ms and is needed for stable communication with
+the 6051.
+.\"
+.TP
+pause_between_commands
+This is the time between two commands the drivers must wait. The exact
+values should be hand tuned. If the system does not respond or drops
+commands try to increase this value. Default is 200 (milliseconds).
+.\"
+.TP
+pause_between_bytes
+This is the time the driver waits between 2 bytes in multi-byte commands.
+The hardware handshake does not work with all devices so this parameter
+was introduced to support it. The default is 2 (milliseconds)
+.\"
+.TP
+number_ga
+This is the number of GA. This parameter does not have a real effect
+since the interface supports the addresses 1...256 only. Keep the
+default untouched.
+.\"
+.TP
+number_gl
+Like the number of GA this number gives the maximum address. Since this
+number is limited to 80, keep the default untouched.
+.\"
+.TP
+number_fb
+This is the number of 6088 modules attached to the 6051/6050 device.
+It can be as large as 31. The default is 0 (no modules are attached).
+Please note that 6088 modules attached to other devices (memory)
+cannot be accessed.
+.\"
+.\"
+.SH "DATEIEN"
+.I /etc/srcpd.conf
+.\"
+.\"
+.SH "SIEHE AUCH"
+.BR srcpd (8)
+
