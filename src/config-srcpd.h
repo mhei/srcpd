@@ -133,9 +133,9 @@ typedef struct _BUS
   /* driver specific */
   void *driverdata;       /* pointer to driverspecific data */
   int flags;              /* Watchdog flag */
-} BUS;
+} bus_data_t;
 
-struct _BUS buses[MAX_BUSES];
+bus_data_t buses[MAX_BUSES];
 bus_t num_buses;
 
 int readConfig(char *filename);
