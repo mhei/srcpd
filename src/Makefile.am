@@ -5,6 +5,7 @@
 sbin_PROGRAMS = srcpd
 
 srcpd_SOURCES = \
+	clientservice.c \
 	config-srcpd.c \
 	ddl.c \
 	ddl_maerklin.c \
@@ -18,11 +19,11 @@ srcpd_SOURCES = \
 	loconet.c \
 	loopback.c \
 	m605x.c \
-	clientservice.c \
+	netservice.c \
 	portio.c \
 	selectrix.c \
-	srcpd.c \
 	srcp-command.c \
+	srcpd.c \
 	srcp-descr.c \
 	srcp-error.c \
 	srcp-fb.c \
@@ -32,15 +33,15 @@ srcpd_SOURCES = \
 	srcp-info.c \
 	srcp-lock.c \
 	srcp-power.c \
+	srcp-server.c \
 	srcp-session.c \
 	srcp-sm.c \
-	srcp-server.c \
 	srcp-time.c \
-	netservice.c \
 	ttycygwin.c \
 	zimo.c
 
 noinst_HEADERS = \
+	clientservice.h \
 	config-srcpd.h \
 	ddl.h \
 	ddl_maerklin.h \
@@ -55,7 +56,7 @@ noinst_HEADERS = \
        	loconet.h \
 	loopback.h \
 	m605x.h \
-	clientservice.h \
+	netservice.h \
        	portio.h \
 	selectrix.h \
 	srcp-command.h \
@@ -68,12 +69,11 @@ noinst_HEADERS = \
 	srcp-info.h \
 	srcp-lock.h \
 	srcp-power.h \
+	srcp-server.h \
 	srcp-session.h \
 	srcp-sm.h \
-	srcp-server.h \
 	srcp-time.h \
 	stdincludes.h \
-	netservice.h \
 	ttycygwin.h \
 	zimo.h
 
