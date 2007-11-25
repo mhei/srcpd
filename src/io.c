@@ -14,6 +14,16 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
+
+/*
+	changes:
+
+	25.11.2007 Frank Schmischke
+			in isvalidchar() change 'char' to 'unsigned char' to avoid compiler
+			warning
+
+*/
+
 #include "stdincludes.h"
 
 #include "config-srcpd.h"
@@ -134,7 +144,7 @@ void close_comport(bus_t bus)
 
 /* Zeilenweises Lesen vom Socket      */
 /* nicht eben trivial!                */
-int isvalidchar(char c)
+int isvalidchar(unsigned char c)
 {
     return ((c >= 0x20 && c <= 127) || c == 0x09 || c == '\n');
 }
@@ -181,7 +191,7 @@ int socket_writereply(int Socket, const char *line)
         return 0;
 
     DBG(0, DBG_INFO, "socket %d, write %s", Socket, line);
-    
+
     while (i <= linelen - MAXSRCPLINELEN - 1 && status >= 0) {
         memset(tmp, 0, sizeof(tmp));
         strncpy(tmp, line + i, MAXSRCPLINELEN - 2);
@@ -195,7 +205,7 @@ int socket_writereply(int Socket, const char *line)
         }
         i += MAXSRCPLINELEN - 2;
     }
-    
+
     if (i < linelen && status >= 0) {
         status = write(Socket, line + i, linelen - i);
     }
