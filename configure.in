@@ -140,5 +140,5 @@ main()
   ipv6=no
 ))
 
-AC_CONFIG_FILES(Makefile src/Makefile man/Makefile)
+AC_CONFIG_FILES(Makefile src/Makefile man/Makefile man/de/Makefile)
 AC_OUTPUT
