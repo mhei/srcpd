@@ -27,7 +27,7 @@
 #include "srcp-gm.h"
 #include "srcp-power.h"
 #include "srcp-sm.h"
-#include "srcp-srv.h"
+#include "srcp-server.h"
 
 #include "srcp-descr.h"
 #include "srcp-time.h"

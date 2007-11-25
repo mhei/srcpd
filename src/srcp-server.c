@@ -9,7 +9,7 @@
 #include "stdincludes.h"
 
 #include "config-srcpd.h"
-#include "srcp-srv.h"
+#include "srcp-server.h"
 #include "srcp-error.h"
 #include "srcp-info.h"
 

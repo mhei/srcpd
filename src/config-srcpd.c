@@ -13,7 +13,7 @@
 #include "stdincludes.h"
 #include "config-srcpd.h"
 #include "srcp-fb.h"
-#include "srcp-srv.h"
+#include "srcp-server.h"
 #include "ddl.h"
 #include "m605x.h"
 #include "selectrix.h"

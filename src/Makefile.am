@@ -33,7 +33,7 @@ srcpd_SOURCES = \
 	srcp-power.c \
 	srcp-session.c \
 	srcp-sm.c \
-	srcp-srv.c \
+	srcp-server.c \
 	srcp-time.c \
 	netservice.c \
 	ttycygwin.c \
@@ -68,7 +68,7 @@ noinst_HEADERS = \
 	srcp-power.h \
 	srcp-session.h \
 	srcp-sm.h \
-	srcp-srv.h \
+	srcp-server.h \
 	srcp-time.h \
 	stdincludes.h \
 	netservice.h \
