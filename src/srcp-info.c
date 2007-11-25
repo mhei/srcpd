@@ -42,7 +42,6 @@
 #include "srcp-descr.h"
 #include "srcp-time.h"
 
-#include "netserver.h"
 #include "io.h"
 
 #define QUEUELENGTH_INFO 1000

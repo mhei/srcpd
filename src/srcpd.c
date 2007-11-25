@@ -18,7 +18,7 @@
 #include "config-srcpd.h"
 #include "srcp-session.h"
 #include "io.h"
-#include "netserver.h"
+#include "clientservice.h"
 #include "srcp-descr.h"
 #include "srcp-fb.h"
 #include "srcp-ga.h"

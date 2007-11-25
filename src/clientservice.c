@@ -33,7 +33,7 @@
 #include "srcp-time.h"
 
 #include "srcp-info.h"
-#include "netserver.h"
+#include "clientservice.h"
 #include "netservice.h"
 
 #define COMMAND 1
