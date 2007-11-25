@@ -31,12 +31,11 @@
 
 #include "i2c-dev.h"
 
-#include <linux/i2c-dev.h>
 /* we have to use kernel-headers directly, sorry! */
-
+#include <linux/i2c.h>
 #ifndef I2C_SLAVE
 #define I2C_SLAVE 0x0703
-#warning "defined hardcoded I2C_SLAVE, due to an yet unknown problem with headers."
+#warning "defined hardcoded I2C_SLAVE , due to an yet unknown problem with headers."
 #endif
 
 
