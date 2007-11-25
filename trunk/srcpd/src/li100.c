@@ -1593,7 +1593,6 @@ int readAnswer_LI100_SERIAL( bus_t busnumber, unsigned char *str )
   if (( str[ 0 ] & 0xf0 ) == 0x40 )
   {
     ctr = str[ 0 ] & 0xf;
-    ctr += 2;
     for ( i = 1; i < ctr; i += 2 )
     {
       switch ( str[ i + 1 ] & 0x60 )
