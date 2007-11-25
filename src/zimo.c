@@ -20,7 +20,7 @@
 #include <sys/time.h>
 #include <time.h>
 
-#define __zimo ((zimo_DATA*)buses[busnumber].driverdata)
+#define __ZIMO ((zimo_DATA*)buses[busnumber].driverdata)
 
 static long tdiff(struct timeval t1, struct timeval t2)
 {
@@ -65,7 +65,7 @@ int readanswer(bus_t bus, char cmd, char *buf, int maxbuflen,
     }
 }
 
-int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
+int readconfig_ZIMO(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
     buses[busnumber].driverdata = malloc(sizeof(struct _zimo_DATA));
 
@@ -76,14 +76,14 @@ int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     }
 
     buses[busnumber].type = SERVER_ZIMO;
-    buses[busnumber].init_func = &init_bus_zimo;
-    buses[busnumber].term_func = &term_bus_zimo;
-    buses[busnumber].thr_func = &thr_sendrec_zimo;
+    buses[busnumber].init_func = &init_bus_ZIMO;
+    buses[busnumber].term_func = &term_bus_ZIMO;
+    buses[busnumber].thr_func = &thr_sendrec_ZIMO;
     strcpy(buses[busnumber].description, "SM GL POWER LOCK DESCRIPTION");
 
-    __zimo->number_fb = 0;      /* max 31 */
-    __zimo->number_ga = 256;
-    __zimo->number_gl = 80;
+    __ZIMO->number_fb = 0;      /* max 31 */
+    __ZIMO->number_ga = 256;
+    __ZIMO->number_gl = 80;
 
     xmlNodePtr child = node->children;
     xmlChar *txt = NULL;
@@ -96,7 +96,7 @@ int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         else if (xmlStrcmp(child->name, BAD_CAST "number_fb") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
-                __zimo->number_fb = atoi((char *) txt);
+                __ZIMO->number_fb = atoi((char *) txt);
                 xmlFree(txt);
             }
         }
@@ -112,7 +112,7 @@ int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         else if (xmlStrcmp(child->name, BAD_CAST "number_gl") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
-                __zimo->number_gl = atoi((char *) txt);
+                __ZIMO->number_gl = atoi((char *) txt);
                 xmlFree(txt);
             }
         }
@@ -120,7 +120,7 @@ int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         else if (xmlStrcmp(child->name, BAD_CAST "number_ga") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
-                __zimo->number_ga = atoi((char *) txt);
+                __ZIMO->number_ga = atoi((char *) txt);
                 xmlFree(txt);
             }
         }
@@ -133,18 +133,18 @@ int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         child = child->next;
     }                           /* while */
 
-    if (init_GL(busnumber, __zimo->number_gl)) {
-        __zimo->number_gl = 0;
+    if (init_GL(busnumber, __ZIMO->number_gl)) {
+        __ZIMO->number_gl = 0;
         DBG(busnumber, DBG_ERROR, "Can't create array for locomotives");
     }
 
-    if (init_GA(busnumber, __zimo->number_ga)) {
-        __zimo->number_ga = 0;
+    if (init_GA(busnumber, __ZIMO->number_ga)) {
+        __ZIMO->number_ga = 0;
         DBG(busnumber, DBG_ERROR, "Can't create array for accessoires");
     }
 
-    if (init_FB(busnumber, __zimo->number_fb)) {
-        __zimo->number_fb = 0;
+    if (init_FB(busnumber, __ZIMO->number_fb)) {
+        __ZIMO->number_fb = 0;
         DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
     }
     return (1);
@@ -177,19 +177,20 @@ int init_linezimo(bus_t bus, char *name)
     return fd;
 }
 
-int term_bus_zimo(bus_t bus)
+int term_bus_ZIMO(bus_t bus)
 {
     if (buses[bus].fd != -1)
         close(buses[bus].fd);
 
     DBG(bus, DBG_INFO, "zimo bus %ld terminating", bus);
+    free(buses[bus].driverdata);
     return 0;
 }
 
 /* Initialisiere den Bus, signalisiere Fehler */
 /* Einmal aufgerufen mit busnummer als einzigem Parameter */
 /* return code wird ignoriert (vorerst) */
-int init_bus_zimo(bus_t bus)
+int init_bus_ZIMO(bus_t bus)
 {
     DBG(bus, DBG_INFO, "zimo init: debug %d, device %s",
         buses[bus].debuglevel, buses[bus].device.filename.path);
@@ -198,7 +199,7 @@ int init_bus_zimo(bus_t bus)
     return 0;
 }
 
-void *thr_sendrec_zimo(void *v)
+void *thr_sendrec_ZIMO(void *v)
 {
     struct _GLSTATE gltmp, glakt;
     struct _SM smtmp;

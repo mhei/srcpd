@@ -1212,6 +1212,7 @@ int term_bus_DDL(bus_t busnumber)
         close(buses[busnumber].fd);
 
     DBG(busnumber, DBG_INFO, "DDL bus %ld terminated", busnumber);
+    free(buses[busnumber].driverdata);
     return 0;
 }
 

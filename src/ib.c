@@ -272,9 +272,10 @@ int term_bus_IB( bus_t busnumber )
 
   __ib->working_IB = 0;
 
-  pthread_cancel( buses[ busnumber ].pid );
+  /*pthread_cancel( buses[ busnumber ].pid );*/
   buses[ busnumber ].pid = 0;
   close_comport( busnumber );
+  free(buses[busnumber].driverdata);
   return 0;
 }
 

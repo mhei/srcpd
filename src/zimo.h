@@ -9,10 +9,10 @@ typedef struct _zimo_DATA {
     int number_fb;
 } zimo_DATA;
 
-int readconfig_zimo(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber);
-int init_bus_zimo(bus_t);
-int term_bus_zimo(bus_t);
-int getDescription_zimo(char *reply);
-void* thr_sendrec_zimo(void *);
+int readconfig_ZIMO(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber);
+int init_bus_ZIMO(bus_t);
+int term_bus_ZIMO(bus_t);
+int getDescription_ZIMO(char *reply);
+void* thr_sendrec_ZIMO(void *);
 
 #endif
