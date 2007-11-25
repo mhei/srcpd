@@ -1,4 +1,3 @@
-
 /* 
  * Vorliegende Software unterliegt der General Public License, 
  * Version 2, 1991. (c) Matthias Trute, 2000-2001.
@@ -10,7 +9,6 @@
 #include "srcp-error.h"
 #include "srcp-info.h"
 
-struct _VTIME vtime;
 
 int startup_TIME(void)
 {

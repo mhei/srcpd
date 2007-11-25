@@ -22,6 +22,7 @@ srcpd_SOURCES = \
 	portio.c \
 	selectrix.c \
 	srcpd.c \
+	srcp-command.c \
 	srcp-descr.c \
 	srcp-error.c \
 	srcp-fb.c \
@@ -57,6 +58,7 @@ noinst_HEADERS = \
 	clientservice.h \
        	portio.h \
 	selectrix.h \
+	srcp-command.h \
 	srcp-descr.h \
 	srcp-error.h \
 	srcp-fb.h \

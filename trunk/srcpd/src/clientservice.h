@@ -10,6 +10,7 @@
 #ifndef _CLIENTSERVICE_H
 #define _CLIENTSERVICE_H
 
+#include "config-srcpd.h"
 
 typedef struct CLIENT_THREAD
 {
