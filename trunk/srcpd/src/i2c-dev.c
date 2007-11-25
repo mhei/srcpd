@@ -382,6 +382,7 @@ int term_bus_I2C_DEV(bus_t bus)
 {
     DBG(bus, DBG_INFO, "i2c-dev bus #%ld terminating"), bus;
     close(buses[bus].fd);
+    free(buses[bus].driverdata);
     return 0;
 }
 

@@ -23,10 +23,6 @@
 
 int doInfoClient(client_thread_t* ctd);
 int startup_INFO(void);
-
-int queueIsEmptyInfo();
-int unqueueInfoNext(char *info);
-
 int queueInfoMessage(char *);
 
 #endif

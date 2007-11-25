@@ -133,7 +133,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
 
         /* but the most important are not ;=)  */
         else if (xmlStrcmp(child->name, BAD_CAST "zimo") == 0) {
-            busnumber += readconfig_zimo(doc, child, busnumber);
+            busnumber += readconfig_ZIMO(doc, child, busnumber);
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "ddl") == 0) {

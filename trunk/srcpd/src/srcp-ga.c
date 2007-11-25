@@ -186,7 +186,7 @@ int infoGA(bus_t busnumber, int addr, int port, char *msg)
     if ((addr > 0) && (addr <= number_ga) && (port >= 0) && (port < MAXGAPORT))
         /* && (ga[busnumber].gastate[addr].tv[port].tv_sec>0) ) */
     {
-        sprintf(msg, "%lu.%3lu 100 INFO %ld GA %d %d %d\n",
+        sprintf(msg, "%lu.%.3lu 100 INFO %ld GA %d %d %d\n",
                 ga[busnumber].gastate[addr].tv[port].tv_sec,
                 ga[busnumber].gastate[addr].tv[port].tv_usec / 1000,
                 busnumber, addr, port, ga[busnumber].gastate[addr].action);

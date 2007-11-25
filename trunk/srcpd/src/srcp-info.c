@@ -72,13 +72,13 @@ int queueInfoMessage(char *msg)
 }
 
 
-int queueIsEmptyInfo(int current)
+static int queueIsEmptyInfo(int current)
 {
     return (in == current);
 }
 
 /* returns value for next item or -1, resets fifo buffer pointer! */
-int unqueueNextInfo(int current, char *info)
+static int unqueueNextInfo(int current, char *info)
 {
     if (in == current)
         return -1;
@@ -114,7 +114,7 @@ int doInfoClient(client_thread_t* ctd)
     struct timeval cmp_time;
     bus_t busnumber;
     current = in;
-    DBG(0, DBG_DEBUG, "new Info-client requested %ld", ctd->session);
+    DBG(0, DBG_DEBUG, "New INFO client requested %ld", ctd->session);
 
     for (busnumber = 0; busnumber <= num_buses; busnumber++) {
         pthread_testcancel();
@@ -216,23 +216,17 @@ int doInfoClient(client_thread_t* ctd)
             }
         }
     }
-    DBG(0, DBG_DEBUG, "all data to new Info-Client (%ld) sent", ctd->session);
+    DBG(0, DBG_DEBUG, "All messages send to new INFO client "
+            "(session: %ld)\n", ctd->session);
 
-    /* This is a race condition: we should stop queuing new
-       messages until we reach this this point, it is possible to
-       miss some data changed since we started this thread */
-
-    if (in != current) {
-        DBG(0, DBG_WARN,
-            "INFO queue dropped some information (%d elements). Sorry",
-            abs(in - current));
-    }
-
-    /*TODO: check if this line is necessary */
-    current = in;
+    /* There is a kind of race condition: Newly queued messages may be
+     * ignored until we reach this point. But there is no message loss
+     * because the following while loop will detect and send them.
+     */
     
     while (1) {
         pthread_testcancel();
+
         /*get mutex lock and wait for new messages*/
         pthread_mutex_lock(&queue_mutex_info);
         while (queueIsEmptyInfo(current))

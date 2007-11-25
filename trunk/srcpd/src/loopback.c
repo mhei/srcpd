@@ -109,6 +109,7 @@ static int init_lineLoopback(bus_t bus)
 int term_bus_LOOPBACK(bus_t bus)
 {
     DBG(bus, DBG_INFO, "loopback bus #%ld terminating", bus);
+    free(buses[bus].driverdata);
     return 0;
 }
 

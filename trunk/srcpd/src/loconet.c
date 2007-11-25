@@ -230,6 +230,8 @@ int term_bus_LOCONET(bus_t busnumber)
     DBG(busnumber, DBG_INFO,
         "Loconet bus %ld: %u packets sent, %u packets received", busnumber,
         __loconet->sent_packets, __loconet->recv_packets);
+
+    free(buses[busnumber].driverdata);
     return 0;
 }
 

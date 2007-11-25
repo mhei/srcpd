@@ -393,8 +393,14 @@ void s88load(bus_t busnumber)
     }
 }
 
-int term_bus_S88(bus_t bus)
+int term_bus_S88(bus_t busnumber)
 {
+#ifdef __FreeBSD__
+    if (__ddl_s88->Fd != -1)
+        close(__ddl_s88->Fd);
+#endif
+
+    free(buses[busnumber].driverdata);
     return 0;
 }
 

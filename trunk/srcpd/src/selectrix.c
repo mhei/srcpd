@@ -274,6 +274,7 @@ int term_bus_Selectrix(bus_t busnumber)
         }
         DBG(busnumber, DBG_INFO, "Selectrix bus term done, "
         "fd=%d", buses[busnumber].fd);
+        free(buses[busnumber].driverdata);
         return 0;
 }
 

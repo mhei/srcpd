@@ -226,7 +226,11 @@ int init_bus_M6051(bus_t bus)
 
 int term_bus_M6051(bus_t bus)
 {
+    if (buses[bus].fd != -1)
+        close(buses[bus].fd);
+
     DBG(bus, DBG_INFO, "M605x bus term done, fd=%d", buses[bus].fd);
+    free(buses[bus].driverdata);
     return 0;
 }
 
