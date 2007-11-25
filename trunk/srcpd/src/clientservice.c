@@ -15,25 +15,12 @@
 
 #include "stdincludes.h"
 
-#include "config-srcpd.h"
-#include "srcp-session.h"
-#include "io.h"
-#include "srcp-command.h"
-#include "srcp-error.h"
-#include "srcp-fb.h"
-#include "srcp-time.h"
-#include "srcp-ga.h"
-#include "srcp-gl.h"
-#include "srcp-gm.h"
-#include "srcp-power.h"
-#include "srcp-sm.h"
-#include "srcp-server.h"
-#include "srcp-descr.h"
-#include "srcp-time.h"
-
-#include "srcp-info.h"
 #include "clientservice.h"
+#include "io.h"
 #include "netservice.h"
+#include "srcp-error.h"
+#include "srcp-command.h"
+#include "srcp-info.h"
 
 #define COMMAND 1
 #define INFO    2
@@ -49,7 +36,6 @@ void end_client_thread(client_thread_t *ctd)
 
     if (ctd->socket != -1) {
         close(ctd->socket);
-        ctd->socket = -1;
     }
 
     free(ctd);
