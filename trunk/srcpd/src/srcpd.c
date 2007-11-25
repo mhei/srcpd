@@ -15,21 +15,20 @@
  ***************************************************************************/
 #include "stdincludes.h"
 
-#include "config-srcpd.h"
-#include "srcp-session.h"
-#include "io.h"
 #include "clientservice.h"
+#include "config-srcpd.h"
+#include "io.h"
+#include "netservice.h"
 #include "srcp-descr.h"
 #include "srcp-fb.h"
 #include "srcp-ga.h"
 #include "srcp-gl.h"
+#include "srcp-info.h"
 #include "srcp-lock.h"
 #include "srcp-power.h"
-
 #include "srcp-server.h"
+#include "srcp-session.h"
 #include "srcp-time.h"
-#include "srcp-info.h"
-#include "netservice.h"
 
 #define	MAXFD	64 /* for daemon_init */
 
