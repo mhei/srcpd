@@ -7,8 +7,8 @@
  */
 
 
-#ifndef _SRCP_SRV_H
-#define _SRCP_SRV_H
+#ifndef _SRCP_SERVER_H
+#define _SRCP_SERVER_H
 
 #include <libxml/tree.h>
 #include <stdio.h>

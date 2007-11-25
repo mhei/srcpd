@@ -7,8 +7,8 @@
  */
 
 
-#ifndef _THREADS_H
-#define _THREADS_H
+#ifndef _NETSERVICE_H
+#define _NETSERVICE_H
 
 typedef struct _thr_param
 {

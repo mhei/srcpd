@@ -1,4 +1,3 @@
-
 /*
  * Vorliegende Software unterliegt der General Public License,
  * Version 2, 1991. (c) Matthias Trute, 2000-2001.
@@ -28,7 +27,6 @@
 #include "srcp-power.h"
 #include "srcp-sm.h"
 #include "srcp-server.h"
-
 #include "srcp-descr.h"
 #include "srcp-time.h"
 

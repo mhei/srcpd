@@ -7,8 +7,8 @@
  */
 
 
-#ifndef _NETSERVER_H
-#define _NETSERVER_H
+#ifndef _CLIENTSERVICE_H
+#define _CLIENTSERVICE_H
 
 
 typedef struct CLIENT_THREAD
