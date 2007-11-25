@@ -1,0 +1,83 @@
+'\" t
+.TH srcpd 8 
+.\"
+.\"
+.SH "NAME"
+srcpd \- SRCP sprechender Systemdienst
+.\"
+.\"
+.SH SYNTAX
+.B srcpd
+[ Optionen ] 
+.\"
+.\"
+.SH "BESCHREIBUNG"
+.PP
+Dieses Handbuch ist nicht vollständig. Für weitere Informationen
+besuchen Sie bitte die Internetseite des Projektes unter
+http://srcpd.sourceforge.net/.
+.PP
+Bei
+.B srcpd
+handelt es sich um einen UNIX-Systemdienst (Daemon) zur Steuerung einer
+digitalen Modellbahn über das Simple Railroad Command Protocol (SRCP).
+.PP
+Upon start up it reads in a configuration file named srcpd.conf
+from the usual places. The SRCP itself is specified on 
+http://srcpd.sourceforge.net/srcp.
+.\"
+.\"
+.SH "OPTIONEN"
+.TP
+.BI \-h
+prints some useful help about command line options and exit
+.TP
+.BI \-v
+print program version, SRCP Level and exit
+.TP
+.BI \-f <filename>
+use the specified filename as the configuration file. The default
+value will be defined at compile time and can be displayed using the
+-h parameter.
+.\"
+.\"
+.SH Anmerkungen zum Lenz Interface
+.TP
+It is very important that you have modul ftdi_sio available.
+Due to concept of Lenz, there you get different return values after start.
+.TP
+.BI 0
+everything is OK
+.TP
+.BI -1
+Central Unit not found. Unable to read version of central unit.
+.TP
+.BI -2
+Central Unit not found. Unable to read version of central unit.
+.TP
+.BI -3
+Interface not found. Unable to read version of interface.
+This can also happen, if no central unit is connected to interface.
+.TP
+.BI -4
+device not found
+.\"
+.\"
+.SH "SIEHE AUCH"
+.BR srcpd.conf (5)
+.\"
+.\"
+.SH "FEHLER"
+.PP
+Sicher gibt es noch ein ganze Reihe an Fehlern. Bitte leiten Sie
+Fehlerberichte und Vorschläge für Verbesserungen an die
+Entwickler-Mailingliste auf http://srcpd.sourceforge.net/.
+.\"
+.\"
+.SH "AUTOREN"
+Das srcpd-Team auf sourceforge.
+.\"
+.\"
+.SH "LIZENZ"
+GNU General Public License, Version 2
+
