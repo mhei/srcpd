@@ -13,7 +13,7 @@
 #include <sys/time.h>
 
 /* timer */
-struct _VTIME
+typedef struct _VTIME
 {
   int day;
   int hour;
@@ -22,17 +22,19 @@ struct _VTIME
   int ratio_x; /* ratio_x == 0 und die Uhr steht */
   int ratio_y;
   struct timeval inittime;
-};
+} vtime_t;
+
+/*global variable*/
+vtime_t vtime;
 
 int startup_TIME(void);
-
 int setTIME(int d, int h, int m, int s);
 int initTIME(int fx, int fy);
 int getTIME(struct _VTIME *vt);
 int infoTIME(char *msg);
 int waitTIME(int d, int h, int m, int s, char *reply);
-
 int describeTIME(char *reply);
+
 void* thr_clock(void *);
 
 #endif
