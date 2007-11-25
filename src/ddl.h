@@ -31,7 +31,7 @@
 #include <libxml/tree.h>
 
 #include "config-srcpd.h"
-#include "threads.h"
+#include "netservice.h"
 
 #define QSIZE       2000
 #define PKTSIZE     40

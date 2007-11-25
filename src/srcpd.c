@@ -29,7 +29,7 @@
 #include "srcp-srv.h"
 #include "srcp-time.h"
 #include "srcp-info.h"
-#include "threads.h"
+#include "netservice.h"
 
 #define	MAXFD	64 /* for daemon_init */
 

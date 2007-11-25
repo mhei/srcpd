@@ -34,7 +34,7 @@
 
 #include "srcp-info.h"
 #include "netserver.h"
-#include "threads.h"
+#include "netservice.h"
 
 #define COMMAND 1
 #define INFO    2
