@@ -974,7 +974,7 @@ void *thr_refresh_cycle(void *v)
     return NULL;
 }
 
-int init_gl_DDL(struct _GLSTATE *gl)
+int init_gl_DDL(gl_state_t *gl)
 {
     switch (gl->protocol) {
     case 'M':                  /* Motorola Codes */
@@ -1269,7 +1269,7 @@ int init_bus_DDL(bus_t busnumber)
 
 void *thr_sendrec_DDL(void *v)
 {
-    struct _GLSTATE gltmp;
+    gl_state_t gltmp;
     ga_state_t gatmp;
     int addr, error;
     bus_t busnumber = (bus_t) v;

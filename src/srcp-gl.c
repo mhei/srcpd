@@ -17,7 +17,7 @@
 static struct _GL gl[MAX_BUSES];
 
 /* Kommandoqueues pro Bus */
-static struct _GLSTATE queue[MAX_BUSES][QUEUELEN];
+static gl_state_t queue[MAX_BUSES][QUEUELEN];
 static pthread_mutex_t queue_mutex[MAX_BUSES];
 /* Schreibposition fr die Writer der Queue */
 static int out[MAX_BUSES], in[MAX_BUSES];
@@ -174,7 +174,7 @@ static int queue_isfull(bus_t busnumber)
 }
 
 /** liefert n�hsten Eintrag oder -1, setzt fifo pointer neu! */
-int unqueueNextGL(bus_t busnumber, struct _GLSTATE *l)
+int unqueueNextGL(bus_t busnumber, gl_state_t *l)
 {
     if (in[busnumber] == out[busnumber])
         return -1;
@@ -186,7 +186,7 @@ int unqueueNextGL(bus_t busnumber, struct _GLSTATE *l)
     return out[busnumber];
 }
 
-int cacheGetGL(bus_t busnumber, int addr, struct _GLSTATE *l)
+int cacheGetGL(bus_t busnumber, int addr, gl_state_t *l)
 {
     if (isInitializedGL(busnumber, addr)) {
         *l = gl[busnumber].glstate[addr];
@@ -203,7 +203,7 @@ int cacheGetGL(bus_t busnumber, int addr, struct _GLSTATE *l)
  * within the SRCP SET Command code.
  * It respects the TERM function.
 */
-int cacheSetGL(bus_t busnumber, int addr, struct _GLSTATE l)
+int cacheSetGL(bus_t busnumber, int addr, gl_state_t l)
 {
     if (isValidGL(busnumber, addr)) {
         char msg[1000];
@@ -216,7 +216,7 @@ int cacheSetGL(bus_t busnumber, int addr, struct _GLSTATE l)
                     gl[busnumber].glstate[addr].tv.tv_sec,
                     gl[busnumber].glstate[addr].tv.tv_usec / 1000,
                     busnumber, addr);
-            bzero(&gl[busnumber].glstate[addr], sizeof(struct _GLSTATE));
+            bzero(&gl[busnumber].glstate[addr], sizeof(gl_state_t));
         }
         else {
             cacheInfoGL(busnumber, addr, msg);
@@ -235,7 +235,7 @@ int initGL(bus_t busnumber, int addr, const char protocol,
     int rc = SRCP_WRONGVALUE;
     if (isValidGL(busnumber, addr)) {
         char msg[1000];
-        struct _GLSTATE tgl;
+        gl_state_t tgl;
         memset(&tgl, 0, sizeof(tgl));
         rc = SRCP_OK;
         gettimeofday(&tgl.inittime, NULL);
@@ -482,12 +482,12 @@ int init_GL(bus_t busnumber, int number)
 
     if (number > 0) {
         gl[busnumber].glstate =
-            malloc((number + 1) * sizeof(struct _GLSTATE));
+            malloc((number + 1) * sizeof(gl_state_t));
         if (gl[busnumber].glstate == NULL)
             return 1;
         gl[busnumber].numberOfGl = number;
         for (i = 0; i <= number; i++) {
-            bzero(&gl[busnumber].glstate[i], sizeof(struct _GLSTATE));
+            bzero(&gl[busnumber].glstate[i], sizeof(gl_state_t));
         }
     }
     return 0;
@@ -495,7 +495,7 @@ int init_GL(bus_t busnumber, int number)
 
 void debugGL(bus_t busnumber, int start, int end)
 {
-    struct _GLSTATE *gls;
+    gl_state_t *gls;
     int i;
 
     DBG(busnumber, DBG_WARN, "debug GLSTATE from %d to %d", start, end);

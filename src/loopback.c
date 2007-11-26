@@ -116,7 +116,7 @@ int term_bus_LOOPBACK(bus_t bus)
 /**
  * initGL: modifies the gl data used to initialize the device
  **/
-int init_gl_LOOPBACK(struct _GLSTATE *gl)
+int init_gl_LOOPBACK(gl_state_t *gl)
 {
     switch (gl->protocol) {
         case 'L':
@@ -186,7 +186,7 @@ int init_bus_LOOPBACK(bus_t i)
 
 void *thr_sendrec_LOOPBACK(void *v)
 {
-    struct _GLSTATE gltmp, glakt;
+    gl_state_t gltmp, glakt;
     ga_state_t gatmp;
     int addr;
     bus_t bus = (bus_t) v;

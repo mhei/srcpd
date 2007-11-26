@@ -511,7 +511,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
   unsigned char byte2send[ 20 ];
   int status = -1;
 
-  struct _GLSTATE gltmp, glakt;
+  gl_state_t gltmp, glakt;
 
   /* Locomotive decoder */
   /* fprintf(stderr, "LOK's... "); */
@@ -778,7 +778,7 @@ void check_extern_engines_SERIAL( bus_t busnumber )
   int tmp_addr;
   unsigned char byte2send[ 20 ];
 
-  struct _GLSTATE gltmp;
+  gl_state_t gltmp;
 
   if ( __li100->extern_engine_ctr > 0 )
   {
@@ -1342,7 +1342,7 @@ int readAnswer_LI100_SERIAL( bus_t busnumber, unsigned char *str )
   int message_processed;
   unsigned char cXor;
 
-  struct _GLSTATE gltmp, glakt;
+  gl_state_t gltmp, glakt;
 
   ga_state_t gatmp /*, gaakt*/;
   gltmp.speed = 0;

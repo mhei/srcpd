@@ -75,7 +75,7 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber);
 int init_lineSelectrix(bus_t bus);
 int init_bus_Selectrix(bus_t bus);
 int term_bus_Selectrix(bus_t bus);
-int init_gl_Selectrix(struct _GLSTATE *gl);
+int init_gl_Selectrix(gl_state_t *gl);
 int init_ga_Selectrix(ga_state_t *ga);
 int init_fb_Selectrix(bus_t busnumber, int addr, const char protocol, int index);
 void *thr_commandSelectrix(void *);

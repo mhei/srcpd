@@ -132,7 +132,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber);
 int init_lineDDL(bus_t busnumber);
 int init_bus_DDL(bus_t busnumber);
 int term_bus_DDL(bus_t busnumber);
-int init_gl_DDL(struct _GLSTATE *);
+int init_gl_DDL(gl_state_t *);
 int init_ga_DDL(ga_state_t *);
 int getDescription_DDL(char *reply);
 void* thr_sendrec_DDL(void *);

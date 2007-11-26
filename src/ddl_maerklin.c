@@ -328,7 +328,7 @@ int comp_maerklin_1(bus_t busnumber, int address, int direction,
     char trits[9];
     char packet[18];
     int i, j;
-    struct _GLSTATE loco;
+    gl_state_t loco;
     DBG(busnumber, DBG_DEBUG,
         "Command for Maerklin protocol type 1: %d received", address);
 
@@ -913,7 +913,7 @@ int comp_maerklin_5(bus_t busnumber, int address, int direction,
     int speed_old;
     int two_commands = FALSE;
     int acceleration = FALSE;
-    struct _GLSTATE loco;
+    gl_state_t loco;
 
     /* no special error handling, it's job of the clients */
     if (speed < 0 || speed > 28)
