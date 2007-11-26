@@ -40,7 +40,7 @@ int initTIME(int fx, int fy)
     return SRCP_OK;
 }
 
-int getTIME(struct _VTIME *vt)
+int getTIME(vtime_t *vt)
 {
     *vt = vtime;
     return SRCP_OK;
@@ -72,7 +72,7 @@ int describeTIME(char *reply)
  ***********************************************************************/
 void *thr_clock(void *v)
 {
-    struct _VTIME vt;
+    vtime_t vt;
     int sendinfo = 0;
     vtime.ratio_x = 0;
     vtime.ratio_y = 0;
