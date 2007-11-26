@@ -13,7 +13,7 @@
 #include <sys/time.h>
 
 /* Lokdekoder */
-struct _GLSTATE
+typedef struct _GLSTATE
 {
   int state ;   /* 0==dead, 1==living, 2==terminating */
   char protocol;
@@ -29,12 +29,12 @@ struct _GLSTATE
   struct timeval locktime;
   long int lockduration;
   sessionid_t locked_by;
-};
+} gl_state_t;
 
 typedef struct _GL
 {
   int numberOfGl;
-  struct _GLSTATE *glstate;
+  gl_state_t *glstate;
 } GL;
 
 int startup_GL(void);
@@ -45,10 +45,10 @@ int isValidGL(bus_t busnumber, int addr);
 
 int queueGL(bus_t busnumber, int addr, int dir, int speed, int maxspeed, int f);
 int queue_GL_isempty(bus_t busnumber);
-int unqueueNextGL(bus_t busnumber, struct _GLSTATE *l);
+int unqueueNextGL(bus_t busnumber, gl_state_t *l);
 
-int cacheGetGL(bus_t busnumber, int addr, struct _GLSTATE *l);
-int cacheSetGL(bus_t busnumber, int addr, struct _GLSTATE l);
+int cacheGetGL(bus_t busnumber, int addr, gl_state_t *l);
+int cacheSetGL(bus_t busnumber, int addr, gl_state_t l);
 int cacheInfoGL(bus_t busnumber, int addr, char* info);
 int describeGL(bus_t busnumber, int addr, char *msg);
 int initGL(bus_t busnumber, int addr, const char protocol, int protoversion, int n_fs, int n_func);

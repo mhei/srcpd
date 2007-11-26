@@ -118,7 +118,7 @@ typedef struct _BUS
 
   int (*init_func)(bus_t);           /* address of init function */
   int (*term_func)(bus_t);           /* address of term function */
-  int (*init_gl_func) ( struct _GLSTATE *);  /* called to check default init */
+  int (*init_gl_func) ( gl_state_t *);  /* called to check default init */
   int (*init_ga_func) ( ga_state_t *);  /* called to check default init */
   int (*init_fb_func) (bus_t busnumber, int addr,
           const char protocolb, int index);  /* called to check default init */

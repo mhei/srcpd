@@ -283,7 +283,7 @@ int term_bus_Selectrix(bus_t busnumber)
 ********************************************************/
 /* Engines */
 /* INIT <bus> GL <adr> S 1 31 2 */
-int init_gl_Selectrix(struct _GLSTATE *gl)
+int init_gl_Selectrix(gl_state_t *gl)
 {
         if ((gl->protocol == 'S') || (gl->protocol == 's')) {
                 return ((gl->n_fs == 31) && (gl->protocolversion == 1) &&
@@ -460,7 +460,7 @@ void writeSXbus(bus_t busnumber, int SXadres, int SXdata)
 void *thr_commandSelectrix(void *v)
 {
         int addr, data, state;
-        struct _GLSTATE gltmp;
+        gl_state_t gltmp;
         ga_state_t gatmp;
 
         bus_t busnumber = (bus_t) v;

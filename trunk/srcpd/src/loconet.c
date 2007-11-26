@@ -27,7 +27,7 @@
 
 #define __loconet ((LOCONET_DATA*)buses[busnumber].driverdata)
 
-static int init_gl_LOCONET(struct _GLSTATE *);
+static int init_gl_LOCONET(gl_state_t *);
 static int init_ga_LOCONET(ga_state_t *);
 
 int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
@@ -239,7 +239,7 @@ int term_bus_LOCONET(bus_t busnumber)
  * initGL: modifies the gl data used to initialize the device
 
  */
-static int init_gl_LOCONET(struct _GLSTATE *gl)
+static int init_gl_LOCONET(gl_state_t *gl)
 {
     return SRCP_OK;
 }

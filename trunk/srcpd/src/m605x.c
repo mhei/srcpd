@@ -237,7 +237,7 @@ int term_bus_M6051(bus_t bus)
 /**
  * initGL: modifies the gl data used to initialize the device
  **/
-int init_gl_M6051(struct _GLSTATE *gl)
+int init_gl_M6051(gl_state_t *gl)
 {
     if (gl->protocol != 'M')
         return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
@@ -270,7 +270,7 @@ void *thr_sendrec_M6051(void *v)
     int akt_S88, addr, temp, number_fb;
     char c;
     unsigned char rr;
-    struct _GLSTATE gltmp, glakt;
+    gl_state_t gltmp, glakt;
     ga_state_t gatmp;
     bus_t bus = (bus_t) v;
     int ga_min_active_time =

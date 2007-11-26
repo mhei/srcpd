@@ -39,7 +39,7 @@ int readConfig_IB(xmlDocPtr doc, xmlNodePtr node,  bus_t busnumber);
 
 int init_bus_IB(bus_t busnumber);
 int term_bus_IB(bus_t busnumber);
-int init_gl_IB(struct _GLSTATE *gl);
+int init_gl_IB(gl_state_t *gl);
 int init_ga_IB(ga_state_t *ga);
 
 void* thr_sendrec_IB(void *);

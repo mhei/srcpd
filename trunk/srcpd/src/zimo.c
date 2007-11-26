@@ -201,7 +201,7 @@ int init_bus_ZIMO(bus_t bus)
 
 void *thr_sendrec_ZIMO(void *v)
 {
-    struct _GLSTATE gltmp, glakt;
+    gl_state_t gltmp, glakt;
     struct _SM smtmp;
     /* TODO: ga_state_t gatmp, gaakt; */
     int addr, temp, i;

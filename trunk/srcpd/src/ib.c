@@ -185,7 +185,7 @@ int cmpTime( struct timeval *t1, struct timeval *t2 )
  * initGL: modifies the gl data used to initialize the device
  * this is called whenever a new loco comes in town...
  */
-int init_gl_IB( struct _GLSTATE *gl )
+int init_gl_IB( gl_state_t *gl )
 {
   gl->n_fs = 126;
   gl->n_func = 5;
@@ -483,7 +483,7 @@ void send_command_gl_IB( bus_t busnumber )
   int addr = 0;
   unsigned char byte2send;
   unsigned char status;
-  struct _GLSTATE gltmp, glakt;
+  gl_state_t gltmp, glakt;
 
   /* locomotive decoder */
   /* fprintf(stderr, "LOK's... "); */
@@ -862,7 +862,7 @@ void check_status_IB( bus_t busnumber )
   unsigned char byte2send;
   unsigned char rr;
   unsigned char xevnt1, xevnt2, xevnt3;
-  struct _GLSTATE gltmp, glakt;
+  gl_state_t gltmp, glakt;
   ga_state_t gatmp;
 
   /* Request for state�changes:

@@ -50,7 +50,7 @@ int cmpTime( struct timeval *t1, struct timeval *t2 );
  * initGL: modifies the gl data used to initialize the device
  * this is called whenever a new loco comes in town...
  */
-int init_gl_LI100( struct _GLSTATE *gl )
+int init_gl_LI100( gl_state_t *gl )
 {
   gl->protocol = 'N';
   return SRCP_OK;
