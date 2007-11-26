@@ -1,5 +1,5 @@
 '\" t
-.TH srcpd 8 
+.TH srcpd 8 "November 26, 2007"
 .SH NAME
 srcpd \- SRCP speaking daemon
 .SH SYNOPSIS
@@ -24,13 +24,14 @@ prints some useful help about command line options and exit
 .BI \-v
 print program version, SRCP Level and exit
 .TP
-.BI \-f <filename>
+.BI \-f\ <filename>
 use the specified filename as the configuration file. The default
 value will be defined at compile time and can be displayed using the
 -h parameter.
 
-.SH Notes for Lenz Interfaces
-.TP
+.SH NOTES
+.SS Notes for Lenz Interfaces
+.PP
 It is very important that you have modul ftdi_sio available.
 Due to concept of Lenz, there you get different return values after start.
 .TP
@@ -51,9 +52,7 @@ This can also happen, if no central unit is connected to interface.
 device not found
 
 .SH "SEE ALSO"
-.BR http://srcpd.sourceforge.net/srcpd
-.br
-.I
+srcpd.conf (5)
 
 .SH BUGS
 There ARE bugs, we're sure.
