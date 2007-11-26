@@ -17,12 +17,12 @@ typedef struct _FBSTATE
   struct timeval timestamp;
   short int state;
   short int change;
-} FBSTATE;
+} fb_state_t;
 
 typedef struct _FB
 {
   int numberOfFb;
-  struct _FBSTATE *fbstate;
+  fb_state_t *fbstate;
 } FB;
 
 typedef struct _RESET_FB
