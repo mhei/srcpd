@@ -84,20 +84,21 @@ static int unqueueNextInfo(int current, char *info)
         return -1;
 
     pthread_mutex_lock(&queue_mutex_info);
-    strcpy(info, info_queue[current++]);
+    strcpy(info, info_queue[current]);
+    pthread_mutex_unlock(&queue_mutex_info);
+
+    /* calculation can be outside of lock because "current" is local
+     * to socket sender thread */
+    current++;
     if (current == QUEUELENGTH_INFO)
         current = 0;
-    pthread_mutex_unlock(&queue_mutex_info);
     return current;
 }
 
+/*clear info message queue*/
 int startup_INFO(void)
 {
-    int i;
-    in = 0;
-    for (i = 0; i < QUEUELENGTH_INFO; i++) {
-        info_queue[i] = NULL;
-    }
+    memset(info_queue, 0, sizeof(info_queue));
     return SRCP_OK;
 }
 
