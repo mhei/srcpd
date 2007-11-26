@@ -294,7 +294,7 @@ int init_gl_Selectrix(struct _GLSTATE *gl)
 
 /* Switches, signals, ... */
 /* INIT <bus> GA <adr> S */
-int init_ga_Selectrix(struct _GASTATE *ga)
+int init_ga_Selectrix(ga_state_t *ga)
 {
         if ((ga->protocol == 'S') || (ga->protocol == 's')) {
                 return SRCP_OK;
@@ -461,7 +461,7 @@ void *thr_commandSelectrix(void *v)
 {
         int addr, data, state;
         struct _GLSTATE gltmp;
-        struct _GASTATE gatmp;
+        ga_state_t gatmp;
 
         bus_t busnumber = (bus_t) v;
         state = 0;

@@ -203,7 +203,7 @@ void *thr_sendrec_ZIMO(void *v)
 {
     struct _GLSTATE gltmp, glakt;
     struct _SM smtmp;
-    /* TODO: struct _GASTATE gatmp, gaakt; */
+    /* TODO: ga_state_t gatmp, gaakt; */
     int addr, temp, i;
     bus_t bus = (bus_t) v;
     char msg[20];

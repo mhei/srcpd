@@ -388,7 +388,7 @@ void send_command_ga_LI100_SERIAL( bus_t busnumber )
   unsigned char byte2send[ 20 ];
   unsigned char status;
 
-  struct _GASTATE gatmp;
+  ga_state_t gatmp;
   struct timeval akt_time, cmp_time;
 
   gettimeofday( &akt_time, NULL );
@@ -1344,7 +1344,7 @@ int readAnswer_LI100_SERIAL( bus_t busnumber, unsigned char *str )
 
   struct _GLSTATE gltmp, glakt;
 
-  struct _GASTATE gatmp /*, gaakt*/;
+  ga_state_t gatmp /*, gaakt*/;
   gltmp.speed = 0;
   gltmp.funcs = 0;
 

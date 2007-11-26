@@ -15,7 +15,7 @@
 #define MAXGAPORT 2
 
 /* Schaltdekoder */
-struct _GASTATE {
+typedef struct _GASTATE {
     int state;                  /* 0==dead, 1==living, 2==terminating */
     char protocol;              /* Protocol Id */
     int id;                     /* Der Identifier */
@@ -30,11 +30,11 @@ struct _GASTATE {
     struct timeval locktime;
     sessionid_t locked_by;      /* who has the LOCK? */
     long int lockduration;
-};
+} ga_state_t;
 
 typedef struct _GA {
     int numberOfGa;
-    struct _GASTATE *gastate;
+    ga_state_t* gastate;
 } GA;
 
 int startup_GA(void);
@@ -43,15 +43,15 @@ int get_number_ga(bus_t busnumber);
 
 int queueGA(bus_t busnumber, int addr, int port, int action,
             long int activetime);
-int unqueueNextGA(bus_t busnumber, struct _GASTATE *);
+int unqueueNextGA(bus_t busnumber, ga_state_t *);
 int queue_GA_isempty(bus_t busnumber);
 
-int getGA(bus_t busnumber, int addr, struct _GASTATE *a);
-int setGA(bus_t busnumber, int addr, struct _GASTATE a);
+int getGA(bus_t busnumber, int addr, ga_state_t *a);
+int setGA(bus_t busnumber, int addr, ga_state_t a);
 int initGA(bus_t busnumber, int addr, const char protocol);
 int describeGA(bus_t busnumber, int addr, char *msg);
 int infoGA(bus_t busnumber, int addr, int port, char *msg);
-int cmpGA(struct _GASTATE a, struct _GASTATE b);
+int cmpGA(ga_state_t a, ga_state_t b);
 int isInitializedGA(bus_t busnumber, int addr);
 
 int lockGA(bus_t busnumber, int addr, long int duration,

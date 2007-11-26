@@ -28,7 +28,7 @@
 #define __loconet ((LOCONET_DATA*)buses[busnumber].driverdata)
 
 static int init_gl_LOCONET(struct _GLSTATE *);
-static int init_ga_LOCONET(struct _GASTATE *);
+static int init_ga_LOCONET(ga_state_t *);
 
 int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
@@ -248,7 +248,7 @@ static int init_gl_LOCONET(struct _GLSTATE *gl)
  * initGA: modifies the ga data used to initialize the device
 
  */
-static int init_ga_LOCONET(struct _GASTATE *ga)
+static int init_ga_LOCONET(ga_state_t *ga)
 {
     return SRCP_OK;
 }
@@ -480,7 +480,7 @@ void *thr_sendrec_LOCONET(void *v)
     unsigned int addr, timeoutcnt;
     int value, port;
     char msg[110];
-    struct _GASTATE gatmp;
+    ga_state_t gatmp;
     
     DBG(busnumber, DBG_INFO, "Loconet started, bus #%d, %s", busnumber,
         buses[busnumber].device.filename.path);
@@ -548,7 +548,7 @@ void *thr_sendrec_LOCONET(void *v)
                 queueInfoMessage(msg);
             }
             else if (!queue_GA_isempty(busnumber)) {
-                struct _GASTATE gatmp;
+                ga_state_t gatmp;
                 unqueueNextGA(busnumber, &gatmp);
                 addr = gatmp.id-1;
 		ln_packetlen = 4;

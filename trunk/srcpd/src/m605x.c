@@ -257,7 +257,7 @@ int init_gl_M6051(struct _GLSTATE *gl)
 /**
  * initGA: modifies the ga data used to initialize the device
  **/
-int init_ga_M6051(struct _GASTATE *ga)
+int init_ga_M6051(ga_state_t *ga)
 {
     if ((ga->protocol != 'M') || (ga->protocol != 'P'))
         return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
@@ -271,7 +271,7 @@ void *thr_sendrec_M6051(void *v)
     char c;
     unsigned char rr;
     struct _GLSTATE gltmp, glakt;
-    struct _GASTATE gatmp;
+    ga_state_t gatmp;
     bus_t bus = (bus_t) v;
     int ga_min_active_time =
         ((M6051_DATA *) buses[bus].driverdata)->ga_min_active_time;

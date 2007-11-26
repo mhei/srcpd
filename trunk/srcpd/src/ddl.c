@@ -989,7 +989,7 @@ int init_gl_DDL(struct _GLSTATE *gl)
     return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
 }
 
-int init_ga_DDL(struct _GASTATE *ga)
+int init_ga_DDL(ga_state_t *ga)
 {
     switch (ga->protocol) {
     case 'M':                  /* Motorola Codes */
@@ -1270,7 +1270,7 @@ int init_bus_DDL(bus_t busnumber)
 void *thr_sendrec_DDL(void *v)
 {
     struct _GLSTATE gltmp;
-    struct _GASTATE gatmp;
+    ga_state_t gatmp;
     int addr, error;
     bus_t busnumber = (bus_t) v;
 

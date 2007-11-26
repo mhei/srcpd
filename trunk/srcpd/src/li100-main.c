@@ -59,7 +59,7 @@ int init_gl_LI100( struct _GLSTATE *gl )
 /**
  * initGA: modifies the ga data used to initialize the device
  */
-int init_ga_LI100( struct _GASTATE *ga )
+int init_ga_LI100( ga_state_t *ga )
 {
   ga->protocol = 'N';
   return SRCP_OK;

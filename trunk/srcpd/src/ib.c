@@ -197,7 +197,7 @@ int init_gl_IB( struct _GLSTATE *gl )
  * initGA: modifies the ga data used to initialize the device
 
  */
-int init_ga_IB( struct _GASTATE *ga )
+int init_ga_IB( ga_state_t *ga )
 {
   ga->protocol = 'M';
   return SRCP_OK;
@@ -378,7 +378,7 @@ void send_command_ga_IB( bus_t busnumber )
   unsigned char byte2send;
   unsigned char status;
   unsigned char rr;
-  struct _GASTATE gatmp;
+  ga_state_t gatmp;
   struct timeval akt_time, cmp_time;
 
   gettimeofday( &akt_time, NULL );
@@ -863,7 +863,7 @@ void check_status_IB( bus_t busnumber )
   unsigned char rr;
   unsigned char xevnt1, xevnt2, xevnt3;
   struct _GLSTATE gltmp, glakt;
-  struct _GASTATE gatmp;
+  ga_state_t gatmp;
 
   /* Request for state�changes:
      1. �derungen an S88-Modulen

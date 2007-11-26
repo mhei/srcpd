@@ -156,7 +156,7 @@ int init_gl_LOOPBACK(struct _GLSTATE *gl)
 /**
  * initGA: modifies the ga data used to initialize the device
  **/
-int init_ga_LOOPBACK(struct _GASTATE *ga)
+int init_ga_LOOPBACK(ga_state_t *ga)
 {
     if ((ga->protocol == 'M') || (ga->protocol == 'N')
         || (ga->protocol == 'P'))
@@ -187,7 +187,7 @@ int init_bus_LOOPBACK(bus_t i)
 void *thr_sendrec_LOOPBACK(void *v)
 {
     struct _GLSTATE gltmp, glakt;
-    struct _GASTATE gatmp;
+    ga_state_t gatmp;
     int addr;
     bus_t bus = (bus_t) v;
 
