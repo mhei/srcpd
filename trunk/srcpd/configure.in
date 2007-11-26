@@ -45,20 +45,23 @@ esac
 
 
 dnl Checks for header files.
-dnl TODO: fix double check of stdlib.h, string.h, strings.h unistd.h
-AC_CHECK_HEADERS(fcntl.h stdlib.h string.h strings.h syslog.h unistd.h \
-         errno.h pthread.h pwd.h sys/time.h signal.h termios.h netdb.h)
+AC_CHECK_HEADERS(fcntl.h syslog.h errno.h pthread.h pwd.h sys/time.h \
+                 signal.h termios.h netdb.h, ,
+                 AC_MSG_ERROR(essential header file is missing))
 
 dnl Checks for host dependend header files.
 case $host in
   *-*-linux*)
-    AC_CHECK_HEADERS(sys/io.h linux/serial.h linux/lp.h)
+    AC_CHECK_HEADERS(sys/io.h linux/serial.h linux/lp.h, ,
+                 AC_MSG_ERROR(essential header file is missing))
     ;;
   *-*-cygwin*)
-    AC_CHECK_HEADERS(sys/io.h)
+    AC_CHECK_HEADERS(sys/io.h, ,
+                 AC_MSG_ERROR(essential header file is missing))
     ;;
   *-*-freebsd*)
-    AC_CHECK_HEADERS(dev/ppbus/ppi.h)
+    AC_CHECK_HEADERS(dev/ppbus/ppi.h, ,
+                 AC_MSG_ERROR(essential header file is missing))
     ;;
   *)
     ;;

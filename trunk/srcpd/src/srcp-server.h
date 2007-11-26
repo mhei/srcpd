@@ -35,6 +35,6 @@ void server_reset(void);
 void server_shutdown(void);
 
 int describeSERVER(bus_t bus, int addr, char *reply);
-int infoSERVER( char *msg);
+int infoSERVER(char *msg);
 #endif
 
