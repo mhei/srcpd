@@ -1,5 +1,4 @@
-'\" t
-.TH srcpd 8 
+.TH srcpd 8 "26. November 2007"
 .\"
 .\"
 .SH "NAME"
@@ -22,49 +21,58 @@ Bei
 handelt es sich um einen UNIX-Systemdienst (Daemon) zur Steuerung einer
 digitalen Modellbahn über das Simple Railroad Command Protocol (SRCP).
 .PP
-Upon start up it reads in a configuration file named srcpd.conf
-from the usual places. The SRCP itself is specified on 
+Beim Start liest das Programm die systemweite Konfigurationsdatei
+\fBsrcpd.conf\fP ein. Hierbei handelt es sich um eine XML-Datei, deren
+Aufbau und Inhalt im Handbuch \fBsrcpd.conf (5)\fP näher erläutert sind.
+Die Spezifikation von SRCP selbst befindet sich auf der Internetseite
 http://srcpd.sourceforge.net/srcp.
 .\"
 .\"
 .SH "OPTIONEN"
 .TP
 .BI \-h
-prints some useful help about command line options and exit
+Ausgabe einiger kurzer Hinweise zur Benutzung.
 .TP
 .BI \-v
-print program version, SRCP Level and exit
+Ausgabe der Version des Programms und der unterstützten SRCP-Version.
 .TP
-.BI \-f <filename>
-use the specified filename as the configuration file. The default
-value will be defined at compile time and can be displayed using the
--h parameter.
+.BI \-f\  <Dateiname>
+Nutze den übergebenen Dateinamen als Konfigurationsdatei. Der
+voreingestellte Wert für diese Datei wird beim Kompilieren des
+Programms festgelegt und kann mit der Option \fB-h\fP angezeigt werden.
 .\"
 .\"
-.SH Anmerkungen zum Lenz Interface
-.TP
-It is very important that you have modul ftdi_sio available.
-Due to concept of Lenz, there you get different return values after start.
+.SH BEMERKUNGEN (NOTES)
+.SS Lenz USB-Interface
+.PP
+Um dieses USB-Gerät in Betrieb zu nehmen, muß das Kernelmodul
+\fBftdi_sio\fP verfügbar sein. Bei den gängigen Linux-Distributionen
+ist das in der Regel ohne zusätzliche Konfigurationseinstellungen der
+Fall. Due to concept of Lenz, there you get different return values
+after start.
 .TP
 .BI 0
-everything is OK
+Das Gerät ist betriebsbereit.
 .TP
 .BI -1
-Central Unit not found. Unable to read version of central unit.
+Digitalzentrale wurde nicht gefunden. Die Softwareversion der Zentrale
+konnte nicht ermittelt werden.
 .TP
 .BI -2
-Central Unit not found. Unable to read version of central unit.
+Digitalzentrale wurde nicht gefunden. Die Softwareversion der Zentrale
+konnte nicht ermittelt werden.
 .TP
 .BI -3
-Interface not found. Unable to read version of interface.
-This can also happen, if no central unit is connected to interface.
+USB-Interface nicht gefunden. Die Softwareversion des
+Schnittstellengerätes konnte nicht ermittelt werden. Möglicherweise ist
+keine Digitalzentrale am USB-Interface angeschlossen.
 .TP
 .BI -4
-device not found
+Gerät nicht gefunden.
 .\"
 .\"
 .SH "SIEHE AUCH"
-.BR srcpd.conf (5)
+srcpd.conf (5)
 .\"
 .\"
 .SH "FEHLER"
