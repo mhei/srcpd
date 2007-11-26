@@ -256,7 +256,7 @@ int init_FB(bus_t bus, int number)
     if (number > 0) {
         gettimeofday(&akt_time, NULL);
 
-        fb[bus].fbstate = malloc(number * sizeof(struct _FBSTATE));
+        fb[bus].fbstate = malloc(number * sizeof(fb_state_t));
         if (fb[bus].fbstate == NULL)
             return 1;
         fb[bus].numberOfFb = number;
