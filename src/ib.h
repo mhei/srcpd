@@ -28,7 +28,7 @@ typedef struct _IB_DATA
     int last_type;
     int last_typeaddr;
     int last_value;
-    struct _GASTATE tga[50];
+    ga_state_t tga[50];
     int working_IB;
     int emergency_on_ib;
     unsigned int pause_between_cmd;
@@ -40,7 +40,7 @@ int readConfig_IB(xmlDocPtr doc, xmlNodePtr node,  bus_t busnumber);
 int init_bus_IB(bus_t busnumber);
 int term_bus_IB(bus_t busnumber);
 int init_gl_IB(struct _GLSTATE *gl);
-int init_ga_IB(struct _GASTATE *ga);
+int init_ga_IB(ga_state_t *ga);
 
 void* thr_sendrec_IB(void *);
 

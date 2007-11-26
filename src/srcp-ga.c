@@ -34,7 +34,7 @@
 static volatile struct _GA ga[MAX_BUSES];
 
 /* Kommandoqueues pro Bus */
-static struct _GASTATE queue[MAX_BUSES][QUEUELEN];
+static ga_state_t queue[MAX_BUSES][QUEUELEN];
 static pthread_mutex_t queue_mutex[MAX_BUSES];
 static int out[MAX_BUSES], in[MAX_BUSES];
 
@@ -103,7 +103,7 @@ static int queue_isfull(bus_t busnumber)
 }
 
 /** liefert naechsten Eintrag oder -1, setzt fifo pointer neu! */
-int unqueueNextGA(bus_t busnumber, struct _GASTATE *a)
+int unqueueNextGA(bus_t busnumber, ga_state_t *a)
 {
     if (in[busnumber] == out[busnumber])
         return -1;
@@ -115,7 +115,7 @@ int unqueueNextGA(bus_t busnumber, struct _GASTATE *a)
     return out[busnumber];
 }
 
-int getGA(bus_t busnumber, int addr, struct _GASTATE *a)
+int getGA(bus_t busnumber, int addr, ga_state_t *a)
 {
     int number_ga = get_number_ga(busnumber);
 
@@ -136,7 +136,7 @@ int isInitializedGA(bus_t busnumber, int addr)
 /* ********************
  *   SRCP commands
  */
-int setGA(bus_t busnumber, int addr, struct _GASTATE a)
+int setGA(bus_t busnumber, int addr, ga_state_t a)
 {
     int number_ga = get_number_ga(busnumber);
 
@@ -343,7 +343,7 @@ int init_GA(bus_t busnumber, int number)
     if (number > 0) {
         /* one more, 'cause we do not use index 0, but start with 1 */
         ga[busnumber].gastate =
-            malloc((number + 1) * sizeof(struct _GASTATE));
+            malloc((number + 1) * sizeof(ga_state_t));
         if (ga[busnumber].gastate == NULL)
             return 1;
         ga[busnumber].numberOfGa = number;

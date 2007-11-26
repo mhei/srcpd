@@ -13,7 +13,7 @@ int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber);
 int init_bus_LOOPBACK(bus_t );
 int term_bus_LOOPBACK(bus_t);
 int init_gl_LOOPBACK(struct _GLSTATE *);
-int init_ga_LOOPBACK(struct _GASTATE *);
+int init_ga_LOOPBACK(ga_state_t *);
 int getDescription_LOOPBACK(char *reply);
 void* thr_sendrec_LOOPBACK(void *);
 

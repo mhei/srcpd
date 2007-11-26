@@ -29,7 +29,7 @@ typedef struct _LI100_DATA
     int last_typeaddr;
     int last_value;
     int get_addr;
-    struct _GASTATE tga[50];
+    ga_state_t tga[50];
     int working_LI100;
     int emergency_on_LI100;
     int version_interface;
@@ -62,7 +62,7 @@ int send_command_LI100_SERIAL( bus_t busnumber, unsigned char *str );
 void get_status_sm_LI100_SERIAL( bus_t busnumber );
 
 int init_gl_LI100( struct _GLSTATE *gl );
-int init_ga_LI100( struct _GASTATE *ga );
+int init_ga_LI100( ga_state_t *ga );
 void* thr_sendrec_LI100_USB( void* );
 void* thr_sendrec_LI100_SERIAL( void* );
 void add_extern_engine( bus_t busnumber, int address );

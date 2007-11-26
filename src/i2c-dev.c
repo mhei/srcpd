@@ -112,7 +112,7 @@ static int write_i2c_dev(bus_t bus, int addr, I2C_VALUE value)
 
 /*  Handle set command of GA */
 
-static int handle_i2c_set_ga(bus_t bus, struct _GASTATE *gatmp)
+static int handle_i2c_set_ga(bus_t bus, ga_state_t *gatmp)
 {
     I2C_ADDR i2c_addr;
     I2C_VALUE i2c_val;
@@ -462,7 +462,7 @@ void *thr_sendrec_I2C_DEV(void *v)
 
     bus_t bus = (bus_t) v;
 
-    struct _GASTATE gatmp;
+    ga_state_t gatmp;
 
     I2CDEV_DATA *data = buses[bus].driverdata;
 
