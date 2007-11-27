@@ -11,9 +11,9 @@ home page at http://srcpd.sourceforge.net for full documentation!
 
 .B srcpd
 is a UNIX daemon speaking the simple railroad command protocol
-SRCP.
+(SRCP).
 
-Upon start up it reads in a configuration file named srcpd.conf
+Upon start up it reads in a configuration file named \fBsrcpd.conf\fP
 from the usual places. The SRCP itself is specified on 
 http://srcpd.sourceforge.net/srcp.
 .SH OPTIONS
@@ -30,9 +30,9 @@ value will be defined at compile time and can be displayed using the
 -h parameter.
 
 .SH NOTES
-.SS Notes for Lenz Interfaces
+.SS Lenz USB Interfaces
 .PP
-It is very important that you have modul ftdi_sio available.
+It is very important that you have kernel modul ftdi_sio available.
 Due to concept of Lenz, there you get different return values after start.
 .TP
 .BI 0
@@ -55,10 +55,11 @@ device not found
 srcpd.conf (5)
 
 .SH BUGS
-There ARE bugs, we're sure.
+Possibly there are some bugs. Please report them to the project
+developer mailing list.
 
 .SH AUTHORS
-the srcpd team on sourceforge
+The srcpd team on sourceforge.
 
 .SH LICENSE
-General Public License, Version2
+GNU General Public License, Version 2
