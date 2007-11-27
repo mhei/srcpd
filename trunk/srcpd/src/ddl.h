@@ -28,7 +28,7 @@
 #include <linux/serial.h>
 #endif
 
-#include <libxml/tree.h>
+#include <libxml/tree.h> /*xmlDocPtr, xmlNodePtr*/
 
 #include "config-srcpd.h"
 #include "netservice.h"

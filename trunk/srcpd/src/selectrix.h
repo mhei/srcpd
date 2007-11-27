@@ -9,7 +9,8 @@
 #ifndef _Selectrix_H
 #define _Selectrix_H
 
-#include <libxml/tree.h>
+#include <libxml/tree.h> /*xmlDocPtr, xmlNodePtr*/
+
 
 /* Read and Write command for the interface (Send with the address) */
 #define SXread      0x00    /* Read command on the Selectrixbus */

@@ -3,10 +3,11 @@
 #ifndef _LOCONET_H
 #define _LOCONET_H
 
-#define LN_FLAG_ECHO 1        /* loconet interface sends commands back to rs232 */
-#define LN_FLAG_MS100 2       /* MS100 compatible settings (implicit no echo)   */
+#include <libxml/tree.h> /*xmlDocPtr, xmlNodePtr*/
 
-#include <libxml/parser.h>
+
+#define LN_FLAG_ECHO 1     /* loconet interface sends commands back to rs232 */
+#define LN_FLAG_MS100 2    /* MS100 compatible settings (implicit no echo)   */
 
 typedef struct _LOCONET_DATA {
     int number_fb;              /* used internally */

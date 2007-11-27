@@ -10,7 +10,7 @@
 #ifndef _M605X_H
 #define _M605X_H
 
-#include <libxml/tree.h>
+#include <libxml/tree.h> /*xmlDocPtr, xmlNodePtr*/
 
 #define M6020_MODE            0x0001    /* Subtyp zum M605X */
 

@@ -17,7 +17,8 @@
 #ifndef _LI100_H
 #define _LI100_H
 
-#include <libxml/tree.h>
+#include <libxml/tree.h> /*xmlDocPtr, xmlNodePtr*/
+
 
 typedef struct _LI100_DATA
 {
