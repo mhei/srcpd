@@ -66,51 +66,54 @@ Each configuration file must contain the following structure:
 .fi
 
 
-.SH general
-
+.SS General hints
 .PP
-First bus should be server-bus.
+The first configured bus should be the server-bus.
+
+.SS Universal options
+.PP
+These options are usable for all used bus sections.
 .TP
 verbosity
-Depending on this number, srcpd-bus tells you less or more.
-0 - minimum output
+Depending on this number (valid range: 0..5) the bus will tell you less
+or more about what is happening. The 0 value gives a minimum output.
+This option is mainly used for debugging reasons.
 
 .TP
 device
-This is physical address of device (like /dev/ttyS0). If bus is server or
-loopback, no entry device is needed.
+This is physical address of device (like /dev/ttyS0). If bus is
+\fBserver\fP or \fBloopback\fP no assignment is necessary.
 
-.SH server
-
+.SS server
 .PP
 This bus is needed everytime. General parameters will be discribed here.
 
 .TP
 tcp-port
 This is TCP/IP port for communication between srcpd and clients.
-Default is 4303 (this port is assigned to srcpd by IANA)
+Default is 4303 (this port is assigned to srcpd by IANA).
 
 .TP
 pid-file
-File, where srcpd is storing it's pid.
-Default is /var/run/srcpd.pid
+File, where srcpd is storing it's process-id. Default is
+\fI/var/run/srcpd.pid\fP.
 
 .TP
 username
-srcpd run under this user.
-Default is nobody
+srcpd runs under this user.
+Default is \fBnobody\fP.
 
 .TP
 groupname
-srcpd run under this group.
-Default is nogroup
+srcpd runs under this group.
+Default is \fBnogroup\fP.
 
 
-.SH hsi-88
+.SS hsi-88
 .PP
-This driver connects with the HSI-88 device from Littfinski connected
+This driver supports the HSI-88 device from Littfinski connected
 via the serial port. An USB2Serial converter should work fine. The serial
-line settings are fixed to 9600baud and cannot be changed. Sum of all
+line settings are fixed to 9600 baud and cannot be changed. Sum of all
 feedback-modules must be less or equal to 31, otherwise you will get an
 errormessage.
 .TP
@@ -138,14 +141,14 @@ refresh
 The time in microseconds after srcpd will read feedback from HSI-88.
 
 
-.SH intellibox
+.SS intellibox
 
 .PP
-This driver connects with the Intellibox device from Uhlenbrock connected
-via the serial port. Only extended mode commands are used. Program of
-decoders is currently implemented for DCC only.
-Possible values for speed of serial port are 2400baud, 4800baud, 9600baud,
-19200baud and 38400baud.
+This driver supports the Intellibox device from Uhlenbrock connected
+via the serial port. Only extended mode commands are used. Programming
+decoders is currently implemented for DCC only. Possible values for speed
+of serial port are 2400 baud, 4800 baud, 9600 baud, 19200 baud and
+38400 baud.
 .TP
 fb_delay_time_0
 This is the time an feedback input must be zero, before zero is delivered to
@@ -159,20 +162,18 @@ commands try to increase this value. Default is 250 (milliseconds).
 .TP
 number_ga
 This is the number of GA. Supported range is 0..1024. A value of 0 means no
-GA available.
-Default is 256.
+GA available.  Default is 256.
 .TP
 number_gl
 Like the number of GA this number gives the maximum address. Supported range
-is 0..10239. A value of 0 means no GL available.
-Default is 80.
+is 0..10239. A value of 0 means no GL available. Default is 80.
 .TP
 number_fb
 This is the number of S88 modules attached to the Intellibox device.
 It can be as large as 31. The default is 0 (no modules are attached).
 Please note that Loconet is currently not supported.
 
-.SH li100, li100usb
+.SS li100, li100usb
 .PP
 This driver connects with the LI100, LI100F, LI101F or LI-USB devices from
 LENZ connected via the serial port/USB-interface. An USB2Serial converter
@@ -204,8 +205,7 @@ It can be as large as 512. It's assumed, that one modul has 8 inputs.
 A value of 0 means no FB available.
 Default is 256 (LI-USB 512).
 
-.SH loopback
-
+.SS loopback
 .PP
 This bus does not connect to real hardware. It is used primarily
 for development tasks but may be useful for real installations too.
@@ -226,8 +226,7 @@ Default is 80
 number_fb
 This is the number of feedback devices. Default is 0 (no device).
 
-.SH m605x
-
+.SS m605x
 .PP
 This driver connects with the 6051 or 6050 devices from Marklin connected
 via the serial port. An USB2Serial converter should work fine. The serial
@@ -265,7 +264,7 @@ was introduced to support it. The default is 2 (milliseconds)
 .TP
 number_ga
 This is the number of GA. This parameter does not have a real effect
-since the interface supports the addresses 1...256 only. Keep the
+since the interface supports the addresses 1..256 only. Keep the
 default untouched.
 
 .TP
@@ -276,13 +275,13 @@ number is limited to 80, keep the default untouched.
 .TP
 number_fb
 This is the number of 6088 modules attached to the 6051/6050 device.
-It can be as large as 31. The default is 0 (no modules are attached).
-Please note that 6088 modules attached to other devices (memory)
-cannot be accessed.
+The valid range is from 0..31. The default value is 0 (no modules are
+attached). Please note that 6088 modules attached to other devices
+(memory) cannot be accessed.
 
 .SH FILES
 .I /etc/srcpd.conf
 .SH "SEE ALSO"
-.BR srcpd (8)
+.BR srcpd\ (8)
 
 
