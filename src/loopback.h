@@ -3,7 +3,7 @@
 #ifndef _LOOPBACK_H
 #define _LOOPBACK_H
 
-#include <libxml/parser.h>
+#include <libxml/tree.h> /*xmlDocPtr, xmlNodePtr*/
 
 typedef struct _LOOPBACK_DATA {
     int number_ga;

@@ -3,7 +3,8 @@
 #ifndef _ZIMO_H
 #define _ZIMO_H
 
-#include <libxml/parser.h>
+#include <libxml/tree.h> /*xmlDocPtr, xmlNodePtr*/
+
 
 typedef struct _zimo_DATA {
     int number_ga;

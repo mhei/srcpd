@@ -17,7 +17,8 @@
 #ifndef _IB_H
 #define _IB_H
 
-#include <libxml/tree.h>
+#include <libxml/tree.h> /*xmlDocPtr, xmlNodePtr*/
+
 
 typedef struct _IB_DATA
 {
@@ -34,7 +35,7 @@ typedef struct _IB_DATA
     unsigned int pause_between_cmd;
 } IB_DATA;
 
-int readConfig_IB(xmlDocPtr doc, xmlNodePtr node,  bus_t busnumber);
+int readConfig_IB(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber);
 
 
 int init_bus_IB(bus_t busnumber);

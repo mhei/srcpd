@@ -17,7 +17,8 @@
 #ifndef _DDL_S88_H
 #define _DDL_S88_H
 
-#include <libxml/tree.h>
+#include <libxml/tree.h> /*xmlDocPtr, xmlNodePtr*/
+
 /* maximal number of bytes read from one s88-bus */
 #define S88_MAXPORTSB 62
 /* maximal number of s88-busses */

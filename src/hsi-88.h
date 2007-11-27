@@ -17,7 +17,8 @@
 #ifndef _HSI_88_H
 #define _HSI_88_H
 
-#include <libxml/tree.h>
+#include <libxml/tree.h> /*xmlDocPtr, xmlNodePtr*/
+
 
 typedef struct _HSI_88_DATA
 {
