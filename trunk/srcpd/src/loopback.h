@@ -3,6 +3,8 @@
 #ifndef _LOOPBACK_H
 #define _LOOPBACK_H
 
+#include <libxml/parser.h>
+
 typedef struct _LOOPBACK_DATA {
     int number_ga;
     int number_gl;

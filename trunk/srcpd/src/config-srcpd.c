@@ -10,6 +10,12 @@
 *            addition of Selectrix
 */
 
+
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+#include <libxml/xmlmemory.h>
+
+
 #include "stdincludes.h"
 #include "config-srcpd.h"
 #include "srcp-fb.h"

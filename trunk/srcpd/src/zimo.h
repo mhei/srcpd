@@ -3,6 +3,8 @@
 #ifndef _ZIMO_H
 #define _ZIMO_H
 
+#include <libxml/parser.h>
+
 typedef struct _zimo_DATA {
     int number_ga;
     int number_gl;

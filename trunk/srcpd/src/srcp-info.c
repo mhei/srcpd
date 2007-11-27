@@ -16,19 +16,21 @@
  ***************************************************************************/
 
 /*
-   Manages the INFO SESSIONs. Every Hardware driver must call (directly or
-   via set<devicegroup> functions the queueInfoMessage. This function will
-   copy the preformated string into internal buffer (allocated) and sets
-   the current writer position (variable »in«). To avoid confusion, a mutex
-   protects this process.
+   This code manages INFO SESSIONs. Every hardware driver must call
+   (directly or via set<devicegroup> functions) the queueInfoMessage().
+   This function copies the preformated string into an internal buffer
+   (allocated) and adjusts the current writer position (variable »in«).
+   To avoid memory access confusion, a mutex protects the writing
+   process.
 
-   On the other end of the pipe are numerous threads waiting for new data.
-   Each and every of these threads maintains its own reader position
-   (parameter current) to unqueue the recently added messages.
+   On the other end of the pipe are numerous threads waiting to read new
+   data.  Each of these threads maintains its own reader position
+   (parameter »current«) to unqueue the recently added messages.
 
-   When a new INFO sessions starts, it will send all status data and
-   after that will enter the reader cycle.
+   When a new INFO sessions starts, it will first send all savailable
+   status data and then enter the reader cycle.
  */
+
 #include "stdincludes.h"
 
 #include "config-srcpd.h"
@@ -47,10 +49,10 @@
 #define QUEUELENGTH_INFO 1000
 
 static char *info_queue[QUEUELENGTH_INFO];
+static int in = 0;
+
 static pthread_mutex_t queue_mutex_info = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t info_available = PTHREAD_COND_INITIALIZER;
-
-static int in = 0;
 
 /* queue a pre-formatted message */
 int queueInfoMessage(char *msg)
@@ -95,9 +97,10 @@ static int unqueueNextInfo(int current, char *info)
     return current;
 }
 
-/*clear info message queue*/
+/*clear info message queue and level indicator*/
 int startup_INFO(void)
 {
+    in = 0;
     memset(info_queue, 0, sizeof(info_queue));
     return SRCP_OK;
 }
