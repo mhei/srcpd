@@ -21,9 +21,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <grp.h>
-#include <libxml/parser.h>
-#include <libxml/tree.h>
-#include <libxml/xmlmemory.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <pthread.h>
