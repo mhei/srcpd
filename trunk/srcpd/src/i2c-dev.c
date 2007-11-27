@@ -28,16 +28,18 @@
 #include "srcp-server.h"
 #include "srcp-info.h"
 #include "srcp-error.h"
-
 #include "i2c-dev.h"
 
-/* we have to use kernel-headers directly, sorry! */
-#include <linux/i2c.h>
-#ifndef I2C_SLAVE
-#define I2C_SLAVE 0x0703
-#warning "defined hardcoded I2C_SLAVE , due to an yet unknown problem with headers."
+#include <linux/version.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)
+  #include <linux/i2c.h>
+#else
+  #include <linux/i2c-dev.h>
+  #ifndef I2C_SLAVE
+    #define I2C_SLAVE 0x0703
+    #warning "Value for I2C_SLAVE defined due to a problem with system headers."
+  #endif
 #endif
-
 
 #define __i2cdev ((I2CDEV_DATA*)buses[busnumber].driverdata)
 
