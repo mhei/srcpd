@@ -197,7 +197,7 @@ static int init_lineLOCONET_lbserver(bus_t busnumber) {
     alarm(0);
     socket_readline(sockfd, msg, sizeof(msg)-1);
     DBG(busnumber, DBG_INFO, "connected to %s", msg);
-    buses[busnumber].device.file.fd = sockfd;
+    buses[busnumber].device.net.sockfd = sockfd;
     return 1;
 
 }
@@ -222,8 +222,8 @@ int term_bus_LOCONET(bus_t busnumber)
 	    close(buses[busnumber].device.file.fd);
 	     break;
 	case HW_NETWORK:
-	    shutdown(buses[busnumber].device.file.fd, SHUT_RDWR);
-	    close(buses[busnumber].device.file.fd);
+	    shutdown(buses[busnumber].device.net.sockfd, SHUT_RDWR);
+	    close(buses[busnumber].device.net.sockfd);
 	     break;
 	}
 
@@ -262,9 +262,6 @@ int init_bus_LOCONET(bus_t busnumber)
         DBG(busnumber, DBG_INFO, "Loconet bus %ld open device %s",
             busnumber, buses[busnumber].device.file.path);
         init_lineLOCONET(busnumber);
-    }
-    else {
-        buses[busnumber].device.file.fd = -1;
     }
     DBG(busnumber, DBG_INFO, "Loconet bus %ld init done", busnumber);
     return 0;
@@ -356,7 +353,7 @@ static int ln_read_serial(bus_t busnumber, unsigned char *cmd, int len)
 
 
 static int ln_read_lbserver(bus_t busnumber, unsigned char *cmd, int len) {
-    int fd = buses[busnumber].device.file.fd;
+    int fd = buses[busnumber].device.net.sockfd;
     fd_set fds;
     struct timeval t = { 0, 0 };
     int retval = 0;
@@ -413,7 +410,7 @@ static int ln_write_lbserver(long int busnumber, const unsigned char *cmd,
 	strcat(msg, tmp);
     }
     strcat(msg, "\r\n");
-    socket_writereply(buses[busnumber].device.file.fd, msg);
+    socket_writereply(buses[busnumber].device.net.sockfd, msg);
     DBG(busnumber, DBG_DEBUG,
 	"sent Loconet packet with OPC 0x%02x, %d bytes (%s)", cmd[0], len, msg);
     __loconet->sent_packets++;
