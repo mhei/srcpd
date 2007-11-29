@@ -79,7 +79,7 @@ int readConfig_IB( xmlDocPtr doc, xmlNodePtr node, bus_t busnumber )
   buses[ busnumber ].init_gl_func = &init_gl_IB;
   buses[ busnumber ].init_ga_func = &init_ga_IB;
   buses[ busnumber ].flags |= FB_16_PORTS;
-  buses[ busnumber ].baudrate = B38400;
+  buses[ busnumber ].device.file.baudrate = B38400;
 
   strcpy( buses[ busnumber ].description,
           "GA GL FB SM POWER LOCK DESCRIPTION" );
@@ -234,7 +234,7 @@ int init_bus_IB( bus_t busnumber )
   }
   else
   {
-    if ( buses[ busnumber ].fd > 0 )
+    if ( buses[ busnumber ].device.file.fd > 0 )
       status = -3;        /* bus is already in use */
   }
 
@@ -249,7 +249,7 @@ int init_bus_IB( bus_t busnumber )
       status = init_lineIB( busnumber );
   }
   else
-    buses[ busnumber ].fd = 9999;
+    buses[ busnumber ].device.file.fd = 9999;
   if ( status == 0 )
     __ib->working_IB = 1;
 
@@ -1108,7 +1108,7 @@ void check_status_pt_IB( bus_t busnumber )
 static int open_comport( bus_t busnumber, speed_t baud )
 {
   int fd;
-  char *name = buses[ busnumber ].device.filename.path;
+  char *name = buses[ busnumber ].device.file.path;
 #ifdef linux
 
   unsigned char rr;
@@ -1120,7 +1120,7 @@ static int open_comport( bus_t busnumber, speed_t baud )
   DBG( busnumber, DBG_INFO, "Try to open serial line %s for %i baud",
        name, ( 2400 * ( 1 << ( baud - 11 ) ) ) );
   fd = open( name, O_RDWR );
-  buses[ busnumber ].fd = fd;
+  buses[ busnumber ].device.file.fd = fd;
   if (fd == -1)
   {
       DBG(busnumber, DBG_ERROR, "Open serial line failed: %s (errno = %d).\n",
@@ -1165,7 +1165,7 @@ static int init_lineIB( bus_t busnumber )
   unsigned char byte2send;
   struct termios interface;
 
-  char *name = buses[busnumber].device.filename.path;
+  char *name = buses[busnumber].device.file.path;
   DBG( busnumber, DBG_INFO, "Beginning to detect IB on serial line: %s\n",
        name );
   /* printf("Beginning to detect IB on serial line: %s\n", name); */
@@ -1180,7 +1180,7 @@ static int init_lineIB( bus_t busnumber )
       strerror(errno), errno);
     return 1;
   }
-  buses[ busnumber ].fd = fd;
+  buses[ busnumber ].device.file.fd = fd;
   tcgetattr( fd, &interface );
   interface.c_oflag = ONOCR;
   interface.c_cflag = CS8 | CRTSCTS | CSTOPB | CLOCAL | CREAD | HUPCL;
@@ -1220,7 +1220,7 @@ static int init_lineIB( bus_t busnumber )
      P50 commands*/
   baud = B2400;
   fd = open_comport( busnumber, baud );
-  buses[ busnumber ].fd = fd;
+  buses[ busnumber ].device.file.fd = fd;
   if ( fd < 0 )
   {
     DBG(busnumber, DBG_ERROR, "Open serial line failed: %s (errno = %d)\n",
@@ -1236,18 +1236,18 @@ static int init_lineIB( bus_t busnumber )
     return -1;
   }
 
-  buses[ busnumber ].baudrate = baud;
+  buses[ busnumber ].device.file.baudrate = baud;
 
   status = switchOffP50Command( busnumber );
-  status = resetBaudrate( buses[ busnumber ].baudrate, busnumber );
+  status = resetBaudrate( buses[ busnumber ].device.file.baudrate, busnumber );
   close_comport(busnumber);
 
   sleep( 1 );
 
   /* now open the comport for the communication */
 
-  fd = open_comport( busnumber, buses[ busnumber ].baudrate );
-  buses[ busnumber ].fd = fd;
+  fd = open_comport( busnumber, buses[ busnumber ].device.file.baudrate );
+  buses[ busnumber ].device.file.fd = fd;
   DBG( busnumber, DBG_DEBUG, "fd after open_comport = %d", fd );
   if ( fd < 0 )
   {

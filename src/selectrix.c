@@ -68,7 +68,7 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
         /* Selectrix specific data to the global data */
         buses[busnumber].type = SERVER_SELECTRIX;
-        buses[busnumber].baudrate = B9600;
+        buses[busnumber].device.file.baudrate = B9600;
         buses[busnumber].init_func = &init_bus_Selectrix;
         buses[busnumber].term_func = &term_bus_Selectrix;
         buses[busnumber].thr_func = &thr_commandSelectrix;
@@ -255,10 +255,10 @@ int init_bus_Selectrix(bus_t busnumber)
         if (buses[busnumber].debuglevel <= DBG_DEBUG) {
                 open_port(busnumber);
         } else {
-                buses[busnumber].fd = -1;
+                buses[busnumber].device.file.fd = -1;
         }
         DBG(busnumber, DBG_INFO, "Selectrix init done, fd=%d",
-                buses[busnumber].fd);
+                buses[busnumber].device.file.fd);
         DBG(busnumber, DBG_INFO, "Selectrix description: %s",
                 buses[busnumber].description);
         DBG(busnumber, DBG_INFO, "Selectrix flags: %04X (hex)",
@@ -269,11 +269,11 @@ int init_bus_Selectrix(bus_t busnumber)
 /* Close serial port */
 int term_bus_Selectrix(bus_t busnumber)
 {
-        if (buses[busnumber].fd != -1) {
+        if (buses[busnumber].device.file.fd != -1) {
                 close_port(busnumber);
         }
         DBG(busnumber, DBG_INFO, "Selectrix bus term done, "
-        "fd=%d", buses[busnumber].fd);
+        "fd=%d", buses[busnumber].device.file.fd);
         free(buses[busnumber].driverdata);
         return 0;
 }
@@ -405,7 +405,7 @@ int readSXbus(bus_t busnumber)
 {
         unsigned int rr;
 
-        if (buses[busnumber].fd != -1 ) {
+        if (buses[busnumber].device.file.fd != -1 ) {
                 /* Wait until a character arrives */
                 rr = read_port(busnumber);
                 DBG(busnumber, DBG_DEBUG,
@@ -420,7 +420,7 @@ int readSXbus(bus_t busnumber)
 
 void commandreadSXbus(bus_t busnumber, int SXadres)
 {
-        if (buses[busnumber].fd != -1 ) {
+        if (buses[busnumber].device.file.fd != -1 ) {
                 /* Select Rautenhaus bus */
                 selRautenhaus(busnumber, SXadres);
                 SXadres &= 0x7F;
@@ -439,7 +439,7 @@ void commandreadSXbus(bus_t busnumber, int SXadres)
 /* Write data to the SX-bus (8bits) */
 void writeSXbus(bus_t busnumber, int SXadres, int SXdata)
 {
-        if (buses[busnumber].fd != -1) {
+        if (buses[busnumber].device.file.fd != -1) {
                 /* Select Rautenhaus bus */
                 selRautenhaus(busnumber, SXadres);
                 SXadres &= 0x7F;

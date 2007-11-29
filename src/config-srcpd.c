@@ -103,16 +103,14 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
 
     /* Communication port to default values */
     buses[current_bus].devicetype = HW_FILENAME;
-    buses[current_bus].fd = -1;
-    buses[current_bus].baudrate = B2400;
 
     /* FIXME: this will lead to a memory leak if initialization of
      * (busnumber - 1) failed */
-    buses[current_bus].device.filename.path = malloc(strlen("/dev/null") + 1);
-    if (buses[current_bus].device.filename.path == NULL)
+    buses[current_bus].device.file.path = malloc(strlen("/dev/null") + 1);
+    if (buses[current_bus].device.file.path == NULL)
         return current_bus;
 
-    strcpy(buses[current_bus].device.filename.path, "/dev/null");
+    strcpy(buses[current_bus].device.file.path, "/dev/null");
 
     /* Definition of thread synchronisation  */
     pthread_mutex_init(&buses[current_bus].transmit_mutex, NULL);
@@ -214,14 +212,14 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
             if (txt != NULL) {
                 switch (buses[current_bus].devicetype) {
                     case HW_FILENAME:
-                        free(buses[current_bus].device.filename.path);
-                        buses[current_bus].device.filename.path =
+                        free(buses[current_bus].device.file.path);
+                        buses[current_bus].device.file.path =
                             malloc(strlen((char *) txt) + 1);
-                        strcpy(buses[current_bus].device.filename.path,
+                        strcpy(buses[current_bus].device.file.path,
                                (char *) txt);
                         break;
                     case HW_NETWORK:
-                        free(buses[current_bus].device.filename.path);
+                        free(buses[current_bus].device.file.path);
                         buses[current_bus].device.net.hostname =
                             malloc(strlen((char *) txt) + 1);
                         strcpy(buses[current_bus].device.net.hostname,
@@ -252,7 +250,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
             switch (buses[current_bus].devicetype) {
                 case HW_FILENAME:
                     DBG(current_bus, DBG_DEBUG, "** Filename='%s'",
-                        buses[current_bus].device.filename.path);
+                        buses[current_bus].device.file.path);
                     break;
                 case HW_NETWORK:
                     DBG(current_bus, DBG_DEBUG,
@@ -307,28 +305,28 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
 
                 switch (speed) {
                     case 2400:
-                        buses[current_bus].baudrate = B2400;
+                        buses[current_bus].device.file.baudrate = B2400;
                         break;
                     case 4800:
-                        buses[current_bus].baudrate = B4800;
+                        buses[current_bus].device.file.baudrate = B4800;
                         break;
                     case 9600:
-                        buses[current_bus].baudrate = B9600;
+                        buses[current_bus].device.file.baudrate = B9600;
                         break;
                     case 19200:
-                        buses[current_bus].baudrate = B19200;
+                        buses[current_bus].device.file.baudrate = B19200;
                         break;
                     case 38400:
-                        buses[current_bus].baudrate = B38400;
+                        buses[current_bus].device.file.baudrate = B38400;
                         break;
                     case 57600:
-                        buses[current_bus].baudrate = B57600;
+                        buses[current_bus].device.file.baudrate = B57600;
                         break;
                     case 115200:
-                        buses[current_bus].baudrate = B115200;
+                        buses[current_bus].device.file.baudrate = B115200;
                         break;
                     default:
-                        buses[current_bus].baudrate = B2400;
+                        buses[current_bus].device.file.baudrate = B2400;
                         break;
                 }
                 xmlFree(txt);

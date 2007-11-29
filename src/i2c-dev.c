@@ -47,7 +47,7 @@
 static int write_PCF8574(bus_t bus, int addr, __u8 byte)
 {
 
-    int busfd = buses[bus].fd;
+    int busfd = buses[bus].device.file.fd;
     int ret;
 
     ret = ioctl(busfd, I2C_SLAVE, addr);
@@ -132,7 +132,7 @@ static int handle_i2c_set_ga(bus_t bus, ga_state_t *gatmp)
     value = gatmp->action;
 
     mult_busnum = (addr / 256) + 1;
-    select_bus(mult_busnum, buses[bus].fd, bus);
+    select_bus(mult_busnum, buses[bus].device.file.fd, bus);
 
     i2c_addr = (addr % 256);
     /* gettimeofday(gatmp->tv[0], NULL); */
@@ -314,14 +314,14 @@ int init_lineI2C_DEV(bus_t bus)
 
     if (buses[bus].debuglevel > 0) {
         DBG(bus, DBG_INFO, "Opening i2c-dev: %s",
-                buses[bus].device.filename.path);
+                buses[bus].device.file.path);
     }
 
-    FD = open(buses[bus].device.filename.path, O_RDWR);
+    FD = open(buses[bus].device.file.path, O_RDWR);
 
     if (FD == -1) {
         DBG(bus, DBG_ERROR, "Open device '%s' failed: %s "
-                "(errno = %d).\n", buses[bus].device.filename.path,
+                "(errno = %d).\n", buses[bus].device.file.path,
                 strerror(errno), errno);
     }
 
@@ -382,7 +382,7 @@ void select_bus(int mult_busnum, int busfd, bus_t busnumber)
 int term_bus_I2C_DEV(bus_t bus)
 {
     DBG(bus, DBG_INFO, "i2c-dev bus #%ld terminating"), bus;
-    close(buses[bus].fd);
+    close(buses[bus].device.file.fd);
     free(buses[bus].driverdata);
     return 0;
 }
@@ -407,10 +407,10 @@ int init_bus_I2C_DEV(bus_t i)
 
     /* init the hardware interface */
     if (buses[i].debuglevel < 6) {
-        buses[i].fd = init_lineI2C_DEV(i);
+        buses[i].device.file.fd = init_lineI2C_DEV(i);
     }
     else {
-        buses[i].fd = -1;
+        buses[i].device.file.fd = -1;
     }
 
     /* init software */
@@ -471,7 +471,7 @@ void *thr_sendrec_I2C_DEV(void *v)
     int ga_reset_devices = data->ga_reset_devices;
 
     DBG(bus, DBG_INFO, "i2c-dev started, bus #%ld, %s", bus,
-        buses[bus].device.filename.path);
+        buses[bus].device.file.path);
 
     buses[bus].watchdog = 1;
 
@@ -482,13 +482,13 @@ void *thr_sendrec_I2C_DEV(void *v)
         if (buses[bus].power_changed == 1) {
 
             /* dummy select, power state is directly read by select_bus() */
-            select_bus(0, buses[bus].fd, bus);
+            select_bus(0, buses[bus].device.file.fd, bus);
             buses[bus].power_changed = 0;
             infoPower(bus, msg);
             queueInfoMessage(msg);
 
             if ((ga_reset_devices == 1) && (buses[bus].power_state == 1)) {
-                reset_ga(bus, buses[bus].fd);
+                reset_ga(bus, buses[bus].device.file.fd);
             }
 
         }
@@ -506,7 +506,7 @@ void *thr_sendrec_I2C_DEV(void *v)
             unqueueNextGA(bus, &gatmp);
             handle_i2c_set_ga(bus, &gatmp);
             setGA(bus, gatmp.id, gatmp);
-            select_bus(0, buses[bus].fd, bus);
+            select_bus(0, buses[bus].device.file.fd, bus);
             buses[bus].watchdog = 6;
         }
         usleep(1000);
