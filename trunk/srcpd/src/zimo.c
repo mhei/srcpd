@@ -37,7 +37,7 @@ int readanswer(bus_t bus, char cmd, char *buf, int maxbuflen,
 
     gettimeofday(&ts, NULL);
     while (1) {
-        status = ioctl(buses[bus].fd, FIONREAD, &i);
+        status = ioctl(buses[bus].device.file.fd, FIONREAD, &i);
         if (status < 0)
             return -1;
         if (i) {
@@ -179,8 +179,8 @@ int init_linezimo(bus_t bus, char *name)
 
 int term_bus_ZIMO(bus_t bus)
 {
-    if (buses[bus].fd != -1)
-        close(buses[bus].fd);
+    if (buses[bus].device.file.fd != -1)
+        close(buses[bus].device.file.fd);
 
     DBG(bus, DBG_INFO, "zimo bus %ld terminating", bus);
     free(buses[bus].driverdata);
@@ -193,8 +193,8 @@ int term_bus_ZIMO(bus_t bus)
 int init_bus_ZIMO(bus_t bus)
 {
     DBG(bus, DBG_INFO, "zimo init: debug %d, device %s",
-        buses[bus].debuglevel, buses[bus].device.filename.path);
-    buses[bus].fd = init_linezimo(bus, buses[bus].device.filename.path);
+        buses[bus].debuglevel, buses[bus].device.file.path);
+    buses[bus].device.file.fd = init_linezimo(bus, buses[bus].device.file.path);
     DBG(bus, DBG_INFO, "zimo init done");
     return 0;
 }
@@ -212,7 +212,7 @@ void *thr_sendrec_ZIMO(void *v)
     unsigned int error, cv, val;
     /* TODO: unsigned char databyte, address; */
     DBG(bus, DBG_INFO, "zimo started, bus #%d, %s", bus,
-        buses[bus].device.filename.path);
+        buses[bus].device.file.path);
 
     buses[bus].watchdog = 1;
     while (1) {
@@ -260,10 +260,10 @@ void *thr_sendrec_ZIMO(void *v)
                         13);
                 DBG(bus, DBG_INFO, "%s", msg);
                 writeString(bus, (unsigned char *) msg, 0);
-                ioctl(buses[bus].fd, FIONREAD, &temp);
+                ioctl(buses[bus].device.file.fd, FIONREAD, &temp);
                 while (temp > 0) {
                     readByte(bus, 0, (unsigned char *) &rr);
-                    ioctl(buses[bus].fd, FIONREAD, &temp);
+                    ioctl(buses[bus].device.file.fd, FIONREAD, &temp);
                     DBG(bus, DBG_INFO, "ignoring unread byte: %d (%c)", rr,
                         rr);
                 }

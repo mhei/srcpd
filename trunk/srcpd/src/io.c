@@ -41,7 +41,7 @@ int readByte(bus_t bus, int wait, unsigned char *the_byte)
         *the_byte = 0;
     }
     else {
-        status = ioctl(buses[bus].fd, FIONREAD, &i);
+        status = ioctl(buses[bus].device.file.fd, FIONREAD, &i);
         if (status < 0) {
             DBG(bus, DBG_ERROR,
                 "readbyte(): ioctl failed: %s (errno = %d)\n",
@@ -50,10 +50,10 @@ int readByte(bus_t bus, int wait, unsigned char *the_byte)
         }
         DBG(bus, DBG_DEBUG,
             "readbyte(): (fd = %d), there are %d bytes to read.",
-            buses[bus].fd, i);
+            buses[bus].device.file.fd, i);
         /* read only, if there is really an input */
         if ((i > 0) || (wait == 1)) {
-            i = read(buses[bus].fd, the_byte, 1);
+            i = read(buses[bus].device.file.fd, the_byte, 1);
             if (i < 0) {
                 DBG(bus, DBG_ERROR,
                     "readbyte(): read failed: %s (errno = %d)\n",
@@ -73,16 +73,16 @@ void writeByte(bus_t bus, unsigned char b, unsigned long msecs)
     char byte = b;
 
     if (buses[bus].debuglevel <= DBG_DEBUG) {
-        i = write(buses[bus].fd, &byte, 1);
-        tcdrain(buses[bus].fd);
+        i = write(buses[bus].device.file.fd, &byte, 1);
+        tcdrain(buses[bus].device.file.fd);
     }
     if (i < 0) {
         DBG(bus, DBG_ERROR, "(FD: %d) write failed: %s (errno = %d)\n",
-                buses[bus].fd, strerror(errno), errno);
+                buses[bus].device.file.fd, strerror(errno), errno);
     }
     else {
         DBG(bus, DBG_DEBUG, "(FD: %d) %i byte sent: 0x%02x (%d)\n",
-        buses[bus].fd, i, b, b);
+        buses[bus].device.file.fd, i, b, b);
     }
     usleep(msecs * 1000);
 }
@@ -100,13 +100,13 @@ void save_comport(bus_t bus)
 {
     int fd;
 
-    fd = open(buses[bus].device.filename.path, O_RDWR);
+    fd = open(buses[bus].device.file.path, O_RDWR);
     if (fd == -1) {
         DBG(bus, DBG_ERROR, "Open serial line failed: %s (errno = %d).\n",
                 strerror(errno), errno);
     }
     else {
-        tcgetattr(fd, &buses[bus].devicesettings);
+        tcgetattr(fd, &buses[bus].device.file.devicesettings);
         close(fd);
     }
 }
@@ -116,15 +116,15 @@ void restore_comport(bus_t bus)
     int fd;
 
     DBG(bus, DBG_INFO, "Restoring attributes for serial line %s",
-        buses[bus].device.filename.path);
-    fd = open(buses[bus].device.filename.path, O_RDWR);
+        buses[bus].device.file.path);
+    fd = open(buses[bus].device.file.path, O_RDWR);
     if (fd == -1) {
         DBG(bus, DBG_ERROR, "Open serial line failed: %s (errno = %d).\n",
                 strerror(errno), errno);
     }
     else {
         DBG(bus, DBG_INFO, "Restoring old values...");
-        tcsetattr(fd, TCSANOW, &buses[bus].devicesettings);
+        tcsetattr(fd, TCSANOW, &buses[bus].device.file.devicesettings);
         close(fd);
         DBG(bus, DBG_INFO, "Old values successfully restored");
     }
@@ -135,11 +135,11 @@ void close_comport(bus_t bus)
     struct termios interface;
     DBG(bus, DBG_INFO, "Closing serial line");
 
-    tcgetattr(buses[bus].fd, &interface);
+    tcgetattr(buses[bus].device.file.fd, &interface);
     cfsetispeed(&interface, B0);
     cfsetospeed(&interface, B0);
-    tcsetattr(buses[bus].fd, TCSANOW, &interface);
-    close(buses[bus].fd);
+    tcsetattr(buses[bus].device.file.fd, TCSANOW, &interface);
+    close(buses[bus].device.file.fd);
 }
 
 /* Zeilenweises Lesen vom Socket      */

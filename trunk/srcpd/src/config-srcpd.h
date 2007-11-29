@@ -87,25 +87,17 @@ typedef struct _BUS
   union {
       struct {
         char *path;    /* Path to device, if not null */
-      } filename;
+        int fd;        /* file descriptor */
+        speed_t baudrate;
+        struct termios devicesettings; /* save device settings, if used */
+      } file;
       struct {
         char *hostname;  /* DNS resolvable hostname */
         int protocol;    /* Values are taken from /etc/protocols: 6==tcp */
         int port;    /* if using tcp or udp: portnumber to connect to. */
       } net;
   } device;
-  /** statistics */
-  unsigned int bytes_recevied;
-  unsigned int bytes_sent;
-  unsigned int commands_processed;
-
-  /* serial device parameters */
-  speed_t baudrate;
-  struct termios devicesettings; /* save device settings, if used */
-
-  /** Now internally used data */
-  int fd;                      /* file descriptor of device */
-
+ 
   pthread_t pid;               /* PID of the thread */
   pthread_t pidtimer;          /* PID of the timer thread */
   void *thr_func;              /* address of the thread function */

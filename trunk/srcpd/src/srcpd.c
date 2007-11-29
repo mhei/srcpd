@@ -85,11 +85,11 @@ void init_all_buses()
             }
 
             /* Configure descriptors for Selectrix module to throw SIGIO */
-            if ((buses[i].fd != -1) && (buses[i].type == SERVER_SELECTRIX)) {
-                FD_SET(buses[i].fd, &rfds);
-                maxfd = (maxfd > buses[i].fd ? maxfd : buses[i].fd);
-                fcntl(buses[i].fd, F_SETOWN, getpid());
-                fcntl(buses[i].fd, F_SETFL, FASYNC);
+            if ((buses[i].device.file.fd != -1) && (buses[i].type == SERVER_SELECTRIX)) {
+                FD_SET(buses[i].device.file.fd, &rfds);
+                maxfd = (maxfd > buses[i].device.file.fd ? maxfd : buses[i].device.file.fd);
+                fcntl(buses[i].device.file.fd, F_SETOWN, getpid());
+                fcntl(buses[i].device.file.fd, F_SETFL, FASYNC);
             }
         }
     }
@@ -246,7 +246,7 @@ void sigio_handler(int status)
     /* find bus matching the triggering descriptor */
     else {
         for (i = 1; i <= num_buses; i++) {
-            if ((buses[i].fd != -1) && (FD_ISSET(buses[i].fd, &rfds))) {
+            if ((buses[i].device.file.fd != -1) && (FD_ISSET(buses[i].device.file.fd, &rfds))) {
                 if (buses[i].sigio_reader != NULL) {
                    (*buses[i].sigio_reader) (i);
                 }

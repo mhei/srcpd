@@ -48,13 +48,13 @@ int readConfig_LI100_SERIAL( xmlDocPtr doc, xmlNodePtr node,  bus_t busnumber )
   buses[ busnumber ].init_func = &init_bus_LI100_USB;
   buses[ busnumber ].term_func = &term_bus_LI100_USB;
   buses[ busnumber ].thr_func = &thr_sendrec_LI100_USB;
-  buses[ busnumber ].baudrate = B57600;
+  buses[ busnumber ].device.file.baudrate = B57600;
 #else
   buses[ busnumber ].type = SERVER_LI100_SERIAL;
   buses[ busnumber ].init_func = &init_bus_LI100_SERIAL;
   buses[ busnumber ].term_func = &term_bus_LI100_SERIAL;
   buses[ busnumber ].thr_func = &thr_sendrec_LI100_SERIAL;
-  buses[ busnumber ].baudrate = B9600;
+  buses[ busnumber ].device.file.baudrate = B9600;
 #endif
   buses[ busnumber ].init_gl_func = &init_gl_LI100;
   buses[ busnumber ].init_ga_func = &init_ga_LI100;
@@ -174,7 +174,7 @@ int init_bus_LI100_SERIAL( bus_t busnumber )
   }
   else
   {
-    if ( buses[ busnumber ].fd > 0 )
+    if ( buses[ busnumber ].device.file.fd > 0 )
       status = -3;        /* bus is already in use */
   }
 
@@ -193,7 +193,7 @@ int init_bus_LI100_SERIAL( bus_t busnumber )
 #endif
   }
   else
-    buses[ busnumber ].fd = 9999;
+    buses[ busnumber ].device.file.fd = 9999;
 
   if ( status == 0 )
   {
@@ -1269,7 +1269,7 @@ void check_status_LI100_SERIAL( bus_t busnumber )
 
     while ( i > 0 )
     {
-      status = ioctl( buses[ busnumber ].fd, FIONREAD, &i );
+      status = ioctl( buses[ busnumber ].device.file.fd, FIONREAD, &i );
 
       if ( status < 0 )
       {
@@ -1282,7 +1282,7 @@ void check_status_LI100_SERIAL( bus_t busnumber )
 
       DBG( busnumber, DBG_DEBUG,
            "readbyte(): (fd = %d), there are %d bytes to read.",
-           buses[ busnumber ].fd, i );
+           buses[ busnumber ].device.file.fd, i );
       /* read only, if there is really an input */
       if ( i > 0 )
 #ifdef LI100_USB
@@ -1690,12 +1690,12 @@ int initLine_LI100_SERIAL( bus_t busnumber )
 
   struct termios interface;
 
-  char *name = buses[ busnumber ].device.filename.path;
+  char *name = buses[ busnumber ].device.file.path;
   DBG( busnumber, DBG_INFO, "Beginning to detect LI100 on serial "
        "line: %s\n", name );
   status = -4;
 
-  switch ( buses[ busnumber ].baudrate )
+  switch ( buses[ busnumber ].device.file.baudrate )
   {
     case B9600:
       strcpy(( char * ) byte2send, "9600" );
@@ -1727,7 +1727,7 @@ int initLine_LI100_SERIAL( bus_t busnumber )
     return status;
   }
 
-  buses[ busnumber ].fd = fd;
+  buses[ busnumber ].device.file.fd = fd;
   tcgetattr( fd, &interface );
   interface.c_oflag = ONOCR;
 #ifdef LI100_USB
@@ -1737,8 +1737,8 @@ int initLine_LI100_SERIAL( bus_t busnumber )
 #endif
   interface.c_iflag = IGNBRK;
   interface.c_lflag = IEXTEN;
-  cfsetispeed( &interface, buses[ busnumber ].baudrate );
-  cfsetospeed( &interface, buses[ busnumber ].baudrate );
+  cfsetispeed( &interface, buses[ busnumber ].device.file.baudrate );
+  cfsetospeed( &interface, buses[ busnumber ].device.file.baudrate );
   interface.c_cc[ VMIN ] = 0;
   interface.c_cc[ VTIME ] = 1;
   tcsetattr( fd, TCSANOW, &interface );

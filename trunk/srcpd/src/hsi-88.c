@@ -271,7 +271,7 @@ int init_bus_HSI_88(bus_t busnumber )
   }
   else
   {
-    if ( buses[ busnumber ].fd > 0 )
+    if ( buses[ busnumber ].device.file.fd > 0 )
       status = -3;        /* bus is already in use */
   }
 
@@ -293,10 +293,10 @@ int init_bus_HSI_88(bus_t busnumber )
   {
     if ( status == 0 )
     {
-      fd = open_lineHSI88(busnumber, buses[ busnumber ].device.filename.path );
+      fd = open_lineHSI88(busnumber, buses[ busnumber ].device.file.path );
       if ( fd > 0 )
       {
-        buses[ busnumber ].fd = fd;
+        buses[ busnumber ].device.file.fd = fd;
         status = init_lineHSI88( busnumber, __hsi->number_fb[ 0 ],
                                  __hsi->number_fb[ 1 ],
                                  __hsi->number_fb[ 2 ] );
@@ -306,7 +306,7 @@ int init_bus_HSI_88(bus_t busnumber )
     }
   }
   else
-    buses[ busnumber ].fd = 9999;
+    buses[ busnumber ].device.file.fd = 9999;
   if ( status == 0 )
     working_HSI88 = 1;
 

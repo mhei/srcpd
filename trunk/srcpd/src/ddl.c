@@ -171,7 +171,7 @@ int setSerialMode(bus_t busnumber, int mode)
     case SDM_MAERKLIN:
         if (__DDL->SERIAL_DEVICE_MODE != SDM_MAERKLIN) {
             if (tcsetattr
-                (buses[busnumber].fd, TCSANOW,
+                (buses[busnumber].device.file.fd, TCSANOW,
                  &__DDL->maerklin_dev_termios) != 0) {
                 DBG(busnumber, DBG_ERROR,
                     "error setting serial device mode to Maerklin!");
@@ -180,7 +180,7 @@ int setSerialMode(bus_t busnumber, int mode)
 #if linux
         if (__DDL->IMPROVE_NMRADCC_TIMING)
         {
-          if (set_customdivisor(buses[busnumber].fd, __DDL->serinfo_marklin)!=0)
+          if (set_customdivisor(buses[busnumber].device.file.fd, __DDL->serinfo_marklin)!=0)
           {
             DBG(busnumber, DBG_ERROR, "cannot set custom divisor for maerklin of serial device!");
             return -1;
@@ -193,7 +193,7 @@ int setSerialMode(bus_t busnumber, int mode)
     case SDM_NMRA:
         if (__DDL->SERIAL_DEVICE_MODE != SDM_NMRA) {
             if (tcsetattr
-                (buses[busnumber].fd, TCSANOW,
+                (buses[busnumber].device.file.fd, TCSANOW,
                  &__DDL->nmra_dev_termios) != 0) {
                 DBG(busnumber, DBG_ERROR,
                     "error setting serial device mode to NMRA!");
@@ -202,7 +202,7 @@ int setSerialMode(bus_t busnumber, int mode)
 #if linux
         if (__DDL -> IMPROVE_NMRADCC_TIMING)
         {
-          if (set_customdivisor(buses[busnumber].fd, __DDL->serinfo_nmradcc)!=0)
+          if (set_customdivisor(buses[busnumber].device.file.fd, __DDL->serinfo_nmradcc)!=0)
           {
             DBG(busnumber, DBG_ERROR, "cannot set custom divisor for nmra dcc of serial device!");
             return -1;
@@ -229,10 +229,10 @@ int init_lineDDL(bus_t busnumber)
     int rc;
 
     /* open comport */
-    dev = open(buses[busnumber].device.filename.path, O_WRONLY);
+    dev = open(buses[busnumber].device.file.path, O_WRONLY);
     if (dev < 0) {
         DBG(busnumber, DBG_FATAL, "Device '%s' open failed: %s (errno = %d). "
-                "Terminating...\n", buses[busnumber].device.filename.path,
+                "Terminating...\n", buses[busnumber].device.file.path,
                 strerror(errno), errno);
         /* there is no chance to continue */
         exit(1);
@@ -242,7 +242,7 @@ int init_lineDDL(bus_t busnumber)
   {
     DBG(busnumber, DBG_FATAL,
             "error initializing device %s (reset custom divisor %d). Abort!",
-            buses[busnumber].device.filename.path, rc);
+            buses[busnumber].device.file.path, rc);
     exit(1);
   }
 #endif
@@ -252,12 +252,12 @@ int init_lineDDL(bus_t busnumber)
 
     if (tcgetattr(dev, &__DDL->maerklin_dev_termios) != 0) {
         DBG(busnumber, DBG_FATAL, "error initializing device %s. Abort!",
-            buses[busnumber].device.filename.path);
+            buses[busnumber].device.file.path);
         exit(1);
     }
     if (tcgetattr(dev, &__DDL->nmra_dev_termios) != 0) {
         DBG(busnumber, DBG_FATAL, "error initializing device %s. Abort!",
-            buses[busnumber].device.filename.path);
+            buses[busnumber].device.file.path);
         exit(1);
     }
 
@@ -297,23 +297,23 @@ int init_lineDDL(bus_t busnumber)
     {
       DBG(busnumber, DBG_FATAL,
               "error initializing device %s (init_serinfo mm). Abort!",
-              buses[busnumber].device.filename.path);
+              buses[busnumber].device.file.path);
       exit(1);
     }
     if (init_serinfo(dev,7,&__DDL->serinfo_nmradcc)!=0)
     {
       DBG(busnumber, DBG_FATAL,
               "error initializing device %s (init_serinfo dcc). Abort!",
-              buses[busnumber].device.filename.path);
+              buses[busnumber].device.file.path);
       exit(1);
     }
   }
 #endif
-    buses[busnumber].fd = dev; /* we need that value at the next step */
+    buses[busnumber].device.file.fd = dev; /* we need that value at the next step */
     /* setting serial device to default mode */
     if (!setSerialMode(busnumber, SDM_DEFAULT) == 0) {
         DBG(busnumber, DBG_FATAL, "error initializing device %s. Abort!",
-            buses[busnumber].device.filename.path);
+            buses[busnumber].device.file.path);
         exit(1);
     }
 
@@ -479,9 +479,9 @@ void waitUARTempty_COMMON(bus_t busnumber)
     int result;
     do {                        /* wait until UART is empty */
 #if linux
-        ioctl(buses[busnumber].fd, TIOCSERGETLSR, &result);
+        ioctl(buses[busnumber].device.file.fd, TIOCSERGETLSR, &result);
 #else
-        ioctl(buses[busnumber].fd, TCSADRAIN, &result);
+        ioctl(buses[busnumber].device.file.fd, TCSADRAIN, &result);
 #endif
     } while (!result);
 }
@@ -491,9 +491,9 @@ void waitUARTempty_COMMON_USLEEPPATCH(bus_t busnumber)
     int result;
     do {                        /* wait until UART is empty */
 #if linux
-        ioctl(buses[busnumber].fd, TIOCSERGETLSR, &result);
+        ioctl(buses[busnumber].device.file.fd, TIOCSERGETLSR, &result);
 #else
-        ioctl(buses[busnumber].fd, TCSADRAIN, &result);
+        ioctl(buses[busnumber].device.file.fd, TCSADRAIN, &result);
 #endif
         usleep(__DDL->WAITUART_USLEEP_USEC);
     } while (!result);
@@ -509,7 +509,7 @@ void waitUARTempty_CLEANNMRADCC(bus_t busnumber)
     int outbytes;
 
     /* look how many bytes are in UART's out buffer */
-    ioctl(buses[busnumber].fd, TIOCOUTQ, &outbytes);
+    ioctl(buses[busnumber].device.file.fd, TIOCOUTQ, &outbytes);
 
     if (outbytes > NUMBUFFERBYTES) {
         struct timespec sleeptime;
@@ -525,7 +525,7 @@ void waitUARTempty_CLEANNMRADCC(bus_t busnumber)
 int checkRingIndicator(bus_t busnumber)
 {
     int result, arg;
-    result = ioctl(buses[busnumber].fd, TIOCMGET, &arg);
+    result = ioctl(buses[busnumber].device.file.fd, TIOCMGET, &arg);
     if (result >= 0) {
         if (arg & TIOCM_RI) {
             DBG(busnumber, DBG_INFO,
@@ -547,7 +547,7 @@ int checkShortcut(bus_t busnumber)
     time_t short_now = 0;
     struct timeval tv_shortcut = { 0, 0 };
 
-    result = ioctl(buses[busnumber].fd, TIOCMGET, &arg);
+    result = ioctl(buses[busnumber].device.file.fd, TIOCMGET, &arg);
     if (result >= 0) {
         if (((arg & TIOCM_DSR) && (!__DDL->DSR_INVERSE))
             || ((~arg & TIOCM_DSR) && (__DDL->DSR_INVERSE))) {
@@ -602,10 +602,10 @@ void send_packet(bus_t busnumber, int addr, char *packet,
             laps = 4;           /* YYTV 9 */
         for (i = 0; i < laps; i++) {
             nanosleep_DDL(&rqtp_end19K, &__DDL->rmtp);
-            write(buses[busnumber].fd, packet, 18);
+            write(buses[busnumber].device.file.fd, packet, 18);
             waitUARTempty(busnumber);
             nanosleep_DDL(&rqtp_btw19K, &__DDL->rmtp);
-            write(buses[busnumber].fd, packet, 18);
+            write(buses[busnumber].device.file.fd, packet, 18);
             waitUARTempty(busnumber);
         }
         break;
@@ -618,10 +618,10 @@ void send_packet(bus_t busnumber, int addr, char *packet,
             laps = 3;           /* YYTV 6 */
         for (i = 0; i < laps; i++) {
             nanosleep_DDL(&rqtp_end19K, &__DDL->rmtp);
-            write(buses[busnumber].fd, packet, 18);
+            write(buses[busnumber].device.file.fd, packet, 18);
             waitUARTempty(busnumber);
             nanosleep_DDL(&rqtp_btw19K, &__DDL->rmtp);
-            write(buses[busnumber].fd, packet, 18);
+            write(buses[busnumber].device.file.fd, packet, 18);
             waitUARTempty(busnumber);
         }
         break;
@@ -631,10 +631,10 @@ void send_packet(bus_t busnumber, int addr, char *packet,
             return;
         for (i = 0; i < 2; i++) {
             nanosleep_DDL(&rqtp_end38K, &__DDL->rmtp);
-            write(buses[busnumber].fd, packet, 9);
+            write(buses[busnumber].device.file.fd, packet, 9);
             waitUARTempty(busnumber);
             nanosleep_DDL(&rqtp_btw38K, &__DDL->rmtp);
-            write(buses[busnumber].fd, packet, 9);
+            write(buses[busnumber].device.file.fd, packet, 9);
             waitUARTempty(busnumber);
         }
         break;
@@ -643,21 +643,21 @@ void send_packet(bus_t busnumber, int addr, char *packet,
         if (setSerialMode(busnumber, SDM_NMRA) < 0)
             return;
         if (__DDL->IMPROVE_NMRADCC_TIMING) {
-            improve_nmradcc_write(buses[busnumber].fd, packet,
+            improve_nmradcc_write(buses[busnumber].device.file.fd, packet,
                                   packet_size);
             waitUARTempty(busnumber);
-            improve_nmradcc_write(buses[busnumber].fd,
+            improve_nmradcc_write(buses[busnumber].device.file.fd,
                                   __DDL->NMRA_idle_data, 13);
             waitUARTempty(busnumber);
-            improve_nmradcc_write(buses[busnumber].fd, packet,
+            improve_nmradcc_write(buses[busnumber].device.file.fd, packet,
                                   packet_size);
         }
         else {
-            write(buses[busnumber].fd, packet, packet_size);
+            write(buses[busnumber].device.file.fd, packet, packet_size);
             waitUARTempty(busnumber);
-            write(buses[busnumber].fd, __DDL->NMRA_idle_data, 13);
+            write(buses[busnumber].device.file.fd, __DDL->NMRA_idle_data, 13);
             waitUARTempty(busnumber);
-            write(buses[busnumber].fd, packet, packet_size);
+            write(buses[busnumber].device.file.fd, packet, packet_size);
         }
         break;
     }
@@ -680,7 +680,7 @@ void improve_nmradcc_write(bus_t busnumber, char *packet,
             improve_nmradcc_packet[i * 7 + j] = packet[i];
         }
     }
-    write(buses[busnumber].fd, improve_nmradcc_packet, (packet_size * 7));
+    write(buses[busnumber].device.file.fd, improve_nmradcc_packet, (packet_size * 7));
 }
 
 void refresh_loco(bus_t busnumber)
@@ -691,7 +691,7 @@ void refresh_loco(bus_t busnumber)
         adr =
             __DDL->MaerklinPacketPool.knownAdresses[__DDL->
                                                     last_refreshed_maerklin_loco];
-        tcflush(buses[busnumber].fd, TCOFLUSH);
+        tcflush(buses[busnumber].device.file.fd, TCOFLUSH);
         if (__DDL->last_refreshed_maerklin_fx < 0)
             send_packet(busnumber, adr,
                         __DDL->MaerklinPacketPool.packets[adr].packet, 18,
@@ -764,7 +764,7 @@ long int compute_delta(struct timeval tv1, struct timeval tv2)
 void set_SerialLine(bus_t busnumber, int line, int mode)
 {
     int result, arg;
-    result = ioctl(buses[busnumber].fd, TIOCMGET, &arg);
+    result = ioctl(buses[busnumber].device.file.fd, TIOCMGET, &arg);
     if (result >= 0) {
         switch (line) {
         case SL_DTR:
@@ -798,7 +798,7 @@ void set_SerialLine(bus_t busnumber, int line, int mode)
                 arg |= TIOCM_CTS;
             break;
         }
-        result = ioctl(buses[busnumber].fd, TIOCMSET, &arg);
+        result = ioctl(buses[busnumber].device.file.fd, TIOCMSET, &arg);
     }
     if (result < 0)
         DBG(busnumber, DBG_ERROR,
@@ -811,14 +811,14 @@ void set_SerialLine(bus_t busnumber, int line, int mode)
 void set_lines_on(bus_t busnumber)
 {
     set_SerialLine(busnumber, SL_DTR, ON);
-    tcflow(buses[busnumber].fd, TCOON);
+    tcflow(buses[busnumber].device.file.fd, TCOON);
 }
 
 void set_lines_off(bus_t busnumber)
 {
     /* set interface lines to the off state */
-    tcflush(buses[busnumber].fd, TCOFLUSH);
-    tcflow(buses[busnumber].fd, TCOOFF);
+    tcflush(buses[busnumber].device.file.fd, TCOFLUSH);
+    tcflow(buses[busnumber].device.file.fd, TCOOFF);
     set_SerialLine(busnumber, SL_DTR, OFF);
 }
 
@@ -922,36 +922,36 @@ void *thr_refresh_cycle(void *v)
     pthread_setschedparam(pthread_self(), SCHED_FIFO, &sparam);
 
     /* some boosters like the Maerklin 6017 must be initialized */
-    tcflow(buses[busnumber].fd, TCOON);
+    tcflow(buses[busnumber].device.file.fd, TCOON);
     set_SerialLine(busnumber, SL_DTR, ON);
-    write(buses[busnumber].fd, "SRCP-DAEMON", 11);
-    tcflush(buses[busnumber].fd, TCOFLUSH);
+    write(buses[busnumber].device.file.fd, "SRCP-DAEMON", 11);
+    tcflush(buses[busnumber].device.file.fd, TCOFLUSH);
 
     /* now set some serial lines */
-    tcflow(buses[busnumber].fd, TCOOFF);
+    tcflow(buses[busnumber].device.file.fd, TCOOFF);
     set_SerialLine(busnumber, SL_RTS, ON);      /* +12V for ever on RTS   */
     set_SerialLine(busnumber, SL_CTS, OFF);     /* -12V for ever on CTS   */
     set_SerialLine(busnumber, SL_DTR, OFF);     /* disable booster output */
 
-    tcflow(buses[busnumber].fd, TCOON);
+    tcflow(buses[busnumber].device.file.fd, TCOON);
     set_SerialLine(busnumber, SL_DTR, ON);
 
     gettimeofday(&tv1, &tz);
     for (;;) {
         if (check_lines(busnumber))
             continue;
-        write(buses[busnumber].fd, __DDL->idle_data, MAXDATA);
+        write(buses[busnumber].device.file.fd, __DDL->idle_data, MAXDATA);
         packet_type = queue_get(busnumber, &addr, packet, &packet_size);
         /*now,look at commands */
         if (packet_type > QNOVALIDPKT) {
-            tcflush(buses[busnumber].fd, TCOFLUSH);
+            tcflush(buses[busnumber].device.file.fd, TCOFLUSH);
             while (packet_type > QNOVALIDPKT) {
                 if (check_lines(busnumber))
                     continue;
                 send_packet(busnumber, addr, packet, packet_size,
                             packet_type, FALSE);
                 if (__DDL->ENABLED_PROTOCOLS == (EP_MAERKLIN | EP_NMRADCC))
-                    write(buses[busnumber].fd, __DDL->NMRA_idle_data, 13);
+                    write(buses[busnumber].device.file.fd, __DDL->NMRA_idle_data, 13);
                 packet_type =
                     queue_get(busnumber, &addr, packet, &packet_size);
             }
@@ -1208,8 +1208,8 @@ int term_bus_DDL(bus_t busnumber)
     set_lines_off(busnumber);
 
     /* pthread_cond_destroy(&(__DDL->refresh_cond)); */
-    if (buses[busnumber].fd != -1)
-        close(buses[busnumber].fd);
+    if (buses[busnumber].device.file.fd != -1)
+        close(buses[busnumber].device.file.fd);
 
     DBG(busnumber, DBG_INFO, "DDL bus %ld terminated", busnumber);
     free(buses[busnumber].driverdata);
@@ -1225,7 +1225,7 @@ int init_bus_DDL(bus_t busnumber)
         buses[busnumber].debuglevel);
     int i;
 
-    buses[busnumber].fd = init_lineDDL(busnumber);
+    buses[busnumber].device.file.fd = init_lineDDL(busnumber);
 
     __DDL->short_detected = 0;
 
@@ -1275,7 +1275,7 @@ void *thr_sendrec_DDL(void *v)
     bus_t busnumber = (bus_t) v;
 
     DBG(busnumber, DBG_INFO, "DDL started on device %s",
-        buses[busnumber].device.filename.path);
+        buses[busnumber].device.file.path);
 
     buses[busnumber].watchdog = 1;
     /*
