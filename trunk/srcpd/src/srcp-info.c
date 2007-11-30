@@ -158,7 +158,7 @@ int doInfoClient(client_thread_t* ctd)
             for (i = 1; i <= number; i++) {
                 if (isInitializedGL(busnumber, i)) {
                     sessionid_t lockid;
-                    describeGL(busnumber, i, reply);
+                    cacheDescribeGL(busnumber, i, reply);
                     if (socket_writereply(ctd->socket, reply) < 0)
                         return -1;
                     *reply = 0x00;
@@ -166,7 +166,7 @@ int doInfoClient(client_thread_t* ctd)
                     if (socket_writereply(ctd->socket, reply) < 0)
                         return -1;
                     *reply = 0x00;
-                    getlockGL(busnumber, i, &lockid);
+                    cacheGetLockGL(busnumber, i, &lockid);
                     if (lockid != 0) {
                         describeLOCKGL(busnumber, i, reply);
                         if (socket_writereply(ctd->socket, reply) < 0)

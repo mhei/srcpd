@@ -239,7 +239,7 @@ int term_bus_LOCONET(bus_t busnumber)
 }
 
 /**
- * initGL: modifies the gl data used to initialize the device
+ * cacheInitGL: modifies the gl data used to initialize the device
 
  */
 static int init_gl_LOCONET(gl_state_t *gl)

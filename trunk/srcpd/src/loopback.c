@@ -115,7 +115,7 @@ int term_bus_LOOPBACK(bus_t bus)
 }
 
 /**
- * initGL: modifies the gl data used to initialize the device
+ * cacheInitGL: modifies the gl data used to initialize the device
  **/
 int init_gl_LOOPBACK(gl_state_t *gl)
 {

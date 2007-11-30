@@ -53,7 +53,7 @@ static int handle_setcheck(sessionid_t sessionid, bus_t bus, char *device,
         if (anzparms >= 4) {
             sessionid_t lockid;
             /* Only if not locked or emergency stop !! */
-            getlockGL(bus, laddr, &lockid);
+            cacheGetLockGL(bus, laddr, &lockid);
             if (lockid == 0 || lockid == sessionid || direction == 2) {
                 rc = SRCP_OK;
                 if (setorcheck == 1)
@@ -175,7 +175,7 @@ static int handle_setcheck(sessionid_t sessionid, bus_t bus, char *device,
             if (strncmp(devgrp, "GL", 2) == 0) {
                 rc = SRCP_OK;
                 if (setorcheck == 1)
-                    rc = lockGL(bus, addr, duration, sessionid);
+                    rc = cacheLockGL(bus, addr, duration, sessionid);
             }
             else if (strncmp(devgrp, "GA", 2) == 0) {
                 rc = SRCP_OK;
@@ -340,7 +340,7 @@ int handleGET(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
                 syslog_bus(bus, DBG_INFO, "DESCRIPTION: devgrp=%s addr=%ld",
                     devgrp, addr);
                 if (strncmp(devgrp, "GL", 2) == 0)
-                    rc = describeGL(bus, addr, reply);
+                    rc = cacheDescribeGL(bus, addr, reply);
                 else if (strncmp(devgrp, "GA", 2) == 0)
                     rc = describeGA(bus, addr, reply);
                 else if (strncmp(devgrp, "FB", 2) == 0)
@@ -490,10 +490,10 @@ int handleTERM(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
             nelem = sscanf(parameter, "%ld", &addr);
         if (nelem == 1) {
             sessionid_t lockid;
-            getlockGL(bus, addr, &lockid);
+            cacheGetLockGL(bus, addr, &lockid);
             if (lockid == 0 || lockid == sessionid) {
-                rc = unlockGL(bus, addr, sessionid);
-                rc = termGL(bus, addr);
+                rc = cacheUnlockGL(bus, addr, sessionid);
+                rc = cacheTermGL(bus, addr);
             }
             else {
                 rc = SRCP_DEVICELOCKED;
@@ -515,7 +515,7 @@ int handleTERM(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
         else {
             rc = SRCP_UNSUPPORTEDDEVICE;
             if (strncmp(devgrp, "GL", 2) == 0) {
-                rc = unlockGL(bus, addr, sessionid);
+                rc = cacheUnlockGL(bus, addr, sessionid);
             }
             else if (strncmp(devgrp, "GA", 2) == 0) {
                 rc = unlockGA(bus, addr, sessionid);
@@ -567,7 +567,7 @@ int handleINIT(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
             sscanf(parameter, "%ld %c %ld %ld %ld", &addr, &prot,
                    &protversion, &n_fs, &n_func);
         if (nelem >= 5) {
-            rc = initGL(bus, addr, prot, protversion, n_fs, n_func);
+            rc = cacheInitGL(bus, addr, prot, protversion, n_fs, n_func);
         }
         else {
             rc = SRCP_LISTTOOSHORT;

@@ -117,7 +117,7 @@ int queueGL(bus_t busnumber, int addr, int dir, int speed, int maxspeed,
 
     if (isValidGL(busnumber, addr)) {
         if (!isInitializedGL(busnumber, addr)) {
-            initGL(busnumber, addr, 'P', 1, 14, 1);
+            cacheInitGL(busnumber, addr, 'P', 1, 14, 1);
             syslog_bus(busnumber, DBG_WARN, "GL default init for %d-%d",
                 busnumber, addr);
         }
@@ -230,7 +230,7 @@ int cacheSetGL(bus_t busnumber, int addr, gl_state_t l)
     }
 }
 
-int initGL(bus_t busnumber, int addr, const char protocol,
+int cacheInitGL(bus_t busnumber, int addr, const char protocol,
            int protoversion, int n_fs, int n_func)
 {
     int rc = SRCP_WRONGVALUE;
@@ -251,7 +251,7 @@ int initGL(bus_t busnumber, int addr, const char protocol,
         if (rc == SRCP_OK) {
             gl[busnumber].glstate[addr] = tgl;
             gl[busnumber].glstate[addr].state = 1;
-            describeGL(busnumber, addr, msg);
+            cacheDescribeGL(busnumber, addr, msg);
             queueInfoMessage(msg);
             queueGL(busnumber, addr, 0, 0, 1, 0);
         }
@@ -263,7 +263,7 @@ int initGL(bus_t busnumber, int addr, const char protocol,
 }
 
 
-int termGL(bus_t busnumber, int addr)
+int cacheTermGL(bus_t busnumber, int addr)
 {
     if (isInitializedGL(busnumber, addr)) {
         gl[busnumber].glstate[addr].state = 2;
@@ -290,7 +290,7 @@ int resetGL(bus_t busnumber, int addr)
     }
 }
 
-int describeGL(bus_t busnumber, int addr, char *msg)
+int cacheDescribeGL(bus_t busnumber, int addr, char *msg)
 {
     if (isInitializedGL(busnumber, addr)) {
         sprintf(msg, "%lu.%.3lu 101 INFO %ld GL %d %c %d %d %d\n",
@@ -342,7 +342,7 @@ int cacheInfoGL(bus_t busnumber, int addr, char *msg)
 }
 
 /* has to use a semaphore, must be atomized! */
-int lockGL(bus_t busnumber, int addr, long int duration,
+int cacheLockGL(bus_t busnumber, int addr, long int duration,
            sessionid_t sessionid)
 {
     char msg[256];
@@ -365,7 +365,7 @@ int lockGL(bus_t busnumber, int addr, long int duration,
     }
 }
 
-int getlockGL(bus_t busnumber, int addr, sessionid_t * session_id)
+int cacheGetLockGL(bus_t busnumber, int addr, sessionid_t * session_id)
 {
     if (isInitializedGL(busnumber, addr)) {
 
@@ -393,7 +393,7 @@ int describeLOCKGL(bus_t bus, int addr, char *reply)
     }
 }
 
-int unlockGL(bus_t busnumber, int addr, sessionid_t sessionid)
+int cacheUnlockGL(bus_t busnumber, int addr, sessionid_t sessionid)
 {
     if (isInitializedGL(busnumber, addr)) {
 
@@ -430,7 +430,7 @@ void unlock_gl_bysessionid(sessionid_t sessionid)
         number = getMaxAddrGL(i);
         for (j = 1; j <= number; j++) {
             if (gl[i].glstate[j].locked_by == sessionid) {
-                unlockGL(i, j, sessionid);
+                cacheUnlockGL(i, j, sessionid);
             }
         }
     }
@@ -448,7 +448,7 @@ void unlock_gl_bytime(void)
         for (j = 1; j <= number; j++) {
             if (gl[i].glstate[j].lockduration > 0
                 && gl[i].glstate[j].lockduration-- == 1) {
-                unlockGL(i, j, gl[i].glstate[j].locked_by);
+                cacheUnlockGL(i, j, gl[i].glstate[j].locked_by);
             }
         }
     }
