@@ -205,7 +205,7 @@ void sighup_handler(int s)
     syslog(LOG_INFO, "SIGHUP(1) received!");
     cancel_all_threads();
     if (0 == readConfig(conffile)) {
-        DBG(0, DBG_ERROR, "Error, no valid bus setup found in "
+        syslog_bus(0, DBG_ERROR, "Error, no valid bus setup found in "
                         "configuration file. Terminating.\n");
         exit(1);
     }
@@ -379,10 +379,10 @@ int main(int argc, char **argv)
     }
 
     openlog("srcpd", LOG_PID, LOG_USER);
-    DBG(0, DBG_INFO, "conffile = \"%s\"\n", conffile);
+    syslog_bus(0, DBG_INFO, "conffile = \"%s\"\n", conffile);
 
     if (0 == readConfig(conffile)) {
-        DBG(0, DBG_ERROR, "Error, no valid bus setup found in "
+        syslog_bus(0, DBG_ERROR, "Error, no valid bus setup found in "
                         "configuration file '%s'.\n", conffile);
         exit(1);
     }
@@ -396,7 +396,7 @@ int main(int argc, char **argv)
 
         /*daemonize process*/
         if (0 != daemon_init()) {
-            DBG(0, DBG_ERROR,"Daemonization failed!\n");
+            syslog_bus(0, DBG_ERROR,"Daemonization failed!\n");
             exit(1);
         }
 

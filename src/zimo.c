@@ -45,7 +45,7 @@ int readanswer(bus_t bus, char cmd, char *buf, int maxbuflen,
             return -1;
         if (i) {
             readByte(bus, 0, (unsigned char *) &c);
-            DBG(bus, DBG_INFO, "zimo read %02X", c);
+            syslog_bus(bus, DBG_INFO, "zimo read %02X", c);
             if ((lc == 10 || lc == 13) && c == cmd)
                 cnt = 1;
             if (cnt) {
@@ -56,7 +56,7 @@ int readanswer(bus_t bus, char cmd, char *buf, int maxbuflen,
                 buf[cnt - 1] = c;
                 cnt++;
             }
-            /* DBG(bus, DBG_INFO, "%ld", tdiff(ts,tn)); */
+            /* syslog_bus(bus, DBG_INFO, "%ld", tdiff(ts,tn)); */
             gettimeofday(&tn, NULL);
             if (tdiff(ts, tn) > timeout_ms)
                 return 0;
@@ -73,7 +73,7 @@ int readconfig_ZIMO(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     buses[busnumber].driverdata = malloc(sizeof(struct _zimo_DATA));
 
     if (buses[busnumber].driverdata == NULL) {
-        DBG(busnumber, DBG_ERROR,
+        syslog_bus(busnumber, DBG_ERROR,
                 "Memory allocation error in module '%s'.", node->name);
         return 0;
     }
@@ -129,7 +129,7 @@ int readconfig_ZIMO(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         }
 
         else
-            DBG(busnumber, DBG_WARN,
+            syslog_bus(busnumber, DBG_WARN,
                     "WARNING, unknown tag found: \"%s\"!\n",
                     child->name);;
 
@@ -138,17 +138,17 @@ int readconfig_ZIMO(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     if (init_GL(busnumber, __ZIMO->number_gl)) {
         __ZIMO->number_gl = 0;
-        DBG(busnumber, DBG_ERROR, "Can't create array for locomotives");
+        syslog_bus(busnumber, DBG_ERROR, "Can't create array for locomotives");
     }
 
     if (init_GA(busnumber, __ZIMO->number_ga)) {
         __ZIMO->number_ga = 0;
-        DBG(busnumber, DBG_ERROR, "Can't create array for accessoires");
+        syslog_bus(busnumber, DBG_ERROR, "Can't create array for accessoires");
     }
 
     if (init_FB(busnumber, __ZIMO->number_fb)) {
         __ZIMO->number_fb = 0;
-        DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
+        syslog_bus(busnumber, DBG_ERROR, "Can't create array for feedback");
     }
     return (1);
 }
@@ -158,10 +158,10 @@ int init_linezimo(bus_t bus, char *name)
     int fd;
     struct termios interface;
 
-    DBG(bus, DBG_INFO, "Try opening serial line %s for 9600 baud\n", name);
+    syslog_bus(bus, DBG_INFO, "Try opening serial line %s for 9600 baud\n", name);
     fd = open(name, O_RDWR);
     if (fd == -1) {
-        DBG(bus, DBG_ERROR, "Open serial line failed: %s (errno = %d).\n",
+        syslog_bus(bus, DBG_ERROR, "Open serial line failed: %s (errno = %d).\n",
                 strerror(errno), errno);
     }
     else {
@@ -185,7 +185,7 @@ int term_bus_ZIMO(bus_t bus)
     if (buses[bus].device.file.fd != -1)
         close(buses[bus].device.file.fd);
 
-    DBG(bus, DBG_INFO, "zimo bus %ld terminating", bus);
+    syslog_bus(bus, DBG_INFO, "zimo bus %ld terminating", bus);
     free(buses[bus].driverdata);
     return 0;
 }
@@ -195,10 +195,10 @@ int term_bus_ZIMO(bus_t bus)
 /* return code wird ignoriert (vorerst) */
 int init_bus_ZIMO(bus_t bus)
 {
-    DBG(bus, DBG_INFO, "zimo init: debug %d, device %s",
+    syslog_bus(bus, DBG_INFO, "zimo init: debug %d, device %s",
         buses[bus].debuglevel, buses[bus].device.file.path);
     buses[bus].device.file.fd = init_linezimo(bus, buses[bus].device.file.path);
-    DBG(bus, DBG_INFO, "zimo init done");
+    syslog_bus(bus, DBG_INFO, "zimo init done");
     return 0;
 }
 
@@ -214,7 +214,7 @@ void *thr_sendrec_ZIMO(void *v)
     char databyte1, databyte2, databyte3;
     unsigned int error, cv, val;
     /* TODO: unsigned char databyte, address; */
-    DBG(bus, DBG_INFO, "zimo started, bus #%d, %s", bus,
+    syslog_bus(bus, DBG_INFO, "zimo started, bus #%d, %s", bus,
         buses[bus].device.file.path);
 
     buses[bus].watchdog = 1;
@@ -243,11 +243,11 @@ void *thr_sendrec_ZIMO(void *v)
             databyte3 = 0x00;
             if (addr > 128) {
                 sprintf(msg, "E%04X%c", addr, 13);
-                DBG(bus, DBG_INFO, "%s", msg);
+                syslog_bus(bus, DBG_INFO, "%s", msg);
                 writeString(bus, (unsigned char *) msg, 0);
                 addr = 0;
                 i = readanswer(bus, 'E', msg, 20, 40);
-                DBG(bus, DBG_INFO, "readed %d", i);
+                syslog_bus(bus, DBG_INFO, "readed %d", i);
                 switch (i) {
                 case 8:
                     sscanf(&msg[1], "%02X", &addr);
@@ -261,13 +261,13 @@ void *thr_sendrec_ZIMO(void *v)
                 sprintf(msg, "F%c%02X%02X%02X%02X%02X%c", glakt.protocol,
                         addr, gltmp.speed, databyte1, databyte2, databyte3,
                         13);
-                DBG(bus, DBG_INFO, "%s", msg);
+                syslog_bus(bus, DBG_INFO, "%s", msg);
                 writeString(bus, (unsigned char *) msg, 0);
                 ioctl(buses[bus].device.file.fd, FIONREAD, &temp);
                 while (temp > 0) {
                     readByte(bus, 0, (unsigned char *) &rr);
                     ioctl(buses[bus].device.file.fd, FIONREAD, &temp);
-                    DBG(bus, DBG_INFO, "ignoring unread byte: %d (%c)", rr,
+                    syslog_bus(bus, DBG_INFO, "ignoring unread byte: %d (%c)", rr,
                         rr);
                 }
                 cacheSetGL(bus, addr, gltmp);
@@ -276,13 +276,13 @@ void *thr_sendrec_ZIMO(void *v)
         if (!queue_SM_isempty(bus)) {
             int returnvalue = -1;
             unqueueNextSM(bus, &smtmp);
-            /* DBG(bus, DBG_INFO, "UNQUEUE SM, cmd:%d addr:%d type:%d typeaddr:%d bit:%04X ",smtmp.command,smtmp.addr,smtmp.type,smtmp.typeaddr,smtmp.bit); */
+            /* syslog_bus(bus, DBG_INFO, "UNQUEUE SM, cmd:%d addr:%d type:%d typeaddr:%d bit:%04X ",smtmp.command,smtmp.addr,smtmp.type,smtmp.typeaddr,smtmp.bit); */
             addr = smtmp.addr;
             if (addr == 0 && smtmp.type == CV
                 && (smtmp.typeaddr >= 0 && smtmp.typeaddr < 255)) {
                 switch (smtmp.command) {
                 case SET:
-                    DBG(bus, DBG_INFO, "SM SET #%d %02X", smtmp.typeaddr,
+                    syslog_bus(bus, DBG_INFO, "SM SET #%d %02X", smtmp.typeaddr,
                         smtmp.value);
                     sprintf(msg, "RN%02X%02X%c", smtmp.typeaddr,
                             smtmp.value, 13);
@@ -300,14 +300,14 @@ void *thr_sendrec_ZIMO(void *v)
                           smtmp.value, 0);
                     break;
                 case GET:
-                    DBG(bus, DBG_INFO, "SM GET #%d", smtmp.typeaddr);
+                    syslog_bus(bus, DBG_INFO, "SM GET #%d", smtmp.typeaddr);
                     sprintf(msg, "Q%02X%c", smtmp.typeaddr, 13);
                     writeString(bus, (unsigned char *) msg, 0);
                     session_processwait(bus);
                     if (readanswer(bus, 'Q', msg, 20, 10000) > 3) {
                         /* sscanf(&msg[1],"%2X%2X%2X",&error,&cv,&val); */
                         sscanf(&msg[1], "%*3c%2X%2X", &cv, &val);
-                        DBG(bus, DBG_INFO,
+                        syslog_bus(bus, DBG_INFO,
                             "SM GET ANSWER: error %d, cv %d, val %d",
                             error, cv, val);
                         /* if(!error && cv==smtmp.typeaddr) */

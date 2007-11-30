@@ -26,14 +26,14 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
     struct servent *serviceentry;
     
-    DBG(busnumber, DBG_INFO, "Reading configuration for bus '%s'",
+    syslog_bus(busnumber, DBG_INFO, "Reading configuration for bus '%s'",
         node->name);
 
     buses[0].driverdata = malloc(sizeof(struct _SERVER_DATA));
 
     /* if there is too less memory for server data -> exit process */
     if (buses[0].driverdata == NULL) {
-        DBG(busnumber, DBG_ERROR,
+        syslog_bus(busnumber, DBG_ERROR,
                 "Memory allocation error in module '%s'.", node->name);
         exit(1);
     }
@@ -77,7 +77,7 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                 xmlFree(__server->listenip);
                 __server->listenip = malloc(strlen((char *) txt) + 1);
                 strcpy(__server->listenip, (char *) txt);
-                DBG(busnumber, DBG_INFO, "listen-ip: %s", txt);
+                syslog_bus(busnumber, DBG_INFO, "listen-ip: %s", txt);
                 xmlFree(txt);
             }
         }
@@ -97,7 +97,7 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                 xmlFree(__server->username);
                 __server->username = malloc(strlen((char *) txt) + 1);
                 if (__server->username == NULL) {
-                    DBG(busnumber, DBG_ERROR, "Cannot allocate memory\n");
+                    syslog_bus(busnumber, DBG_ERROR, "Cannot allocate memory\n");
                     exit(1);
                 }
                 strcpy(__server->username, (char *) txt);
@@ -111,7 +111,7 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                 xmlFree(__server->groupname);
                 __server->groupname = malloc(strlen((char *) txt) + 1);
                 if (__server->groupname == NULL) {
-                    DBG(busnumber, DBG_ERROR, "Cannot allocate memory\n");
+                    syslog_bus(busnumber, DBG_ERROR, "Cannot allocate memory\n");
                     exit(1);
                 }
                 strcpy(__server->groupname, (char *) txt);
@@ -120,7 +120,7 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         }
 
         else
-            DBG(busnumber, DBG_WARN,
+            syslog_bus(busnumber, DBG_WARN,
                     "WARNING, unknown tag found: \"%s\"!\n",
                     child->name);;
         
@@ -144,13 +144,13 @@ int describeSERVER(bus_t bus, int addr, char *reply)
 int init_bus_server(bus_t bus)
 {
     gettimeofday(&buses[0].power_change_time, NULL);
-    DBG(bus, DBG_INFO, "init_bus %ld", bus);
+    syslog_bus(bus, DBG_INFO, "init_bus %ld", bus);
     return 0;
 }
 
 int term_bus_server(bus_t bus)
 {
-    DBG(bus, DBG_INFO, "term_bus %ld", bus);
+    syslog_bus(bus, DBG_INFO, "term_bus %ld", bus);
     return 0;
 }
 

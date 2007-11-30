@@ -57,7 +57,7 @@ int queueGA(bus_t busnumber, int addr, int port, int action,
 
     if ((addr > 0) && (addr <= number_ga)) {
         if (queue_isfull(busnumber)) {
-            DBG(busnumber, DBG_WARN, "GA Command Queue full");
+            syslog_bus(busnumber, DBG_WARN, "GA Command Queue full");
             return SRCP_TEMPORARILYPROHIBITED;
         }
 
@@ -205,7 +205,7 @@ int initGA(bus_t busnumber, int addr, const char protocol)
 {
     int rc = SRCP_OK;
     int number_ga = get_number_ga(busnumber);
-    DBG(busnumber, DBG_DEBUG, "init GA: %d %c", addr, protocol);
+    syslog_bus(busnumber, DBG_DEBUG, "init GA: %d %c", addr, protocol);
     if ((addr > 0) && (addr <= number_ga)) {
         char msg[100];
         ga[busnumber].gastate[addr].protocol = protocol;
@@ -293,7 +293,7 @@ void unlock_ga_bysessionid(sessionid_t sessionid)
 {
     int i, j;
     int number;
-    DBG(0, DBG_DEBUG, "unlock GA by session-ID %ld", sessionid);
+    syslog_bus(0, DBG_DEBUG, "unlock GA by session-ID %ld", sessionid);
     for (i = 0; i < num_buses; i++) {
         number = get_number_ga(i);
         for (j = 1; j <= number; j++) {

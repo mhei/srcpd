@@ -34,7 +34,7 @@ int readConfig_HSI_88( xmlDocPtr doc, xmlNodePtr node, bus_t busnumber )
   buses[ busnumber ].driverdata = malloc( sizeof( struct _HSI_88_DATA ) );
 
     if (buses[busnumber].driverdata == NULL) {
-        DBG(busnumber, DBG_ERROR,
+        syslog_bus(busnumber, DBG_ERROR,
                 "Memory allocation error in module '%s'.", node->name);
         return 0;
     }
@@ -112,7 +112,7 @@ int readConfig_HSI_88( xmlDocPtr doc, xmlNodePtr node, bus_t busnumber )
     }
 
     else
-      DBG( busnumber, DBG_WARN,
+      syslog_bus( busnumber, DBG_WARN,
            "WARNING, unknown tag found: \"%s\"!\n",
            child->name );
     ;
@@ -130,7 +130,7 @@ int readConfig_HSI_88( xmlDocPtr doc, xmlNodePtr node, bus_t busnumber )
     __hsi->number_fb[ 0 ] = 0;
     __hsi->number_fb[ 1 ] = 0;
     __hsi->number_fb[ 2 ] = 0;
-    DBG( busnumber, DBG_ERROR, "Can't create array for feedback" );
+    syslog_bus( busnumber, DBG_ERROR, "Can't create array for feedback" );
   }
 
   return ( 1 );
@@ -141,11 +141,11 @@ static int open_lineHSI88(bus_t bus, char *name )
   int fd;
   struct termios interface;
 
-  DBG(bus, DBG_DEBUG, "try opening serial line %s for 9600 baud\n", name );
+  syslog_bus(bus, DBG_DEBUG, "try opening serial line %s for 9600 baud\n", name );
   fd = open(name, O_RDWR);
   if (fd == -1)
   {
-      DBG(bus, DBG_ERROR, "Open serial line failed: %s (errno = %d).\n",
+      syslog_bus(bus, DBG_ERROR, "Open serial line failed: %s (errno = %d).\n",
               strerror(errno), errno);
   }
   else
@@ -222,7 +222,7 @@ static int init_lineHSI88( bus_t busnumber, int modules_left,
     __hsi->v_text[ i ] = ( char ) rr;
   }
   __hsi->v_text[ i ] = 0x00;
-  DBG(busnumber, DBG_DEBUG, "HSI version: %s\n", __hsi->v_text);
+  syslog_bus(busnumber, DBG_DEBUG, "HSI version: %s\n", __hsi->v_text);
 
   status = 1;
   while ( status )
@@ -264,7 +264,7 @@ int init_bus_HSI_88(bus_t busnumber )
   int anzahl;
 
   status = 0;
-  DBG(busnumber, DBG_DEBUG, "HSI-88 with debuglevel %d\n",
+  syslog_bus(busnumber, DBG_DEBUG, "HSI-88 with debuglevel %d\n",
           buses[ busnumber ].debuglevel);
   if ( buses[ busnumber ].type != SERVER_HSI_88 )
   {
@@ -285,7 +285,7 @@ int init_bus_HSI_88(bus_t busnumber )
 
     if ( anzahl > 31 )
     {
-      DBG(busnumber, DBG_ERROR, "Number of feedback-modules greater than 31!");
+      syslog_bus(busnumber, DBG_ERROR, "Number of feedback-modules greater than 31!");
       status = -4;
     }
   }
@@ -311,7 +311,7 @@ int init_bus_HSI_88(bus_t busnumber )
   if ( status == 0 )
     working_HSI88 = 1;
 
-  DBG(busnumber, DBG_DEBUG, "INIT_BUS_HSI with code: %d\n", status);
+  syslog_bus(busnumber, DBG_DEBUG, "INIT_BUS_HSI with code: %d\n", status);
   return status;
 }
 
@@ -344,7 +344,7 @@ void *thr_sendrec_HSI_88( void *v )
 
   busnumber = ( bus_t ) v;
   refresh_time = __hsi->refresh;
-  DBG( busnumber, DBG_INFO, "thr_sendrec_HSI_88 is started" );
+  syslog_bus( busnumber, DBG_INFO, "thr_sendrec_HSI_88 is started" );
 
   zaehler1 = 0;
   fb_zaehler1 = 0;
@@ -383,7 +383,7 @@ void *thr_sendrec_HSI_88( void *v )
       }
       readByte( busnumber, 0, &rr );        /*  number of given modules */
       anzahl = ( int ) rr;
-      DBG( busnumber, DBG_INFO, "number of modules: %i", anzahl );
+      syslog_bus( busnumber, DBG_INFO, "number of modules: %i", anzahl );
       anzahl -= __hsi->number_fb[ 0 ];
       anzahl -= __hsi->number_fb[ 1 ];
       anzahl -= __hsi->number_fb[ 2 ];
@@ -393,7 +393,7 @@ void *thr_sendrec_HSI_88( void *v )
       }
       else
       {
-        DBG( busnumber, DBG_ERROR, "error while initialising" );
+        syslog_bus( busnumber, DBG_ERROR, "error while initialising" );
         sleep( 1 );
         while ( readByte( busnumber, 0, &rr ) == 0 )
         {}
@@ -426,7 +426,7 @@ void *thr_sendrec_HSI_88( void *v )
         temp <<= 8;
         readByte( busnumber, 1, &rr );
         setFBmodul( busnumber, i, temp | rr );
-        DBG( busnumber, DBG_DEBUG, "feedback %i with 0x%04x", i,
+        syslog_bus( busnumber, DBG_DEBUG, "feedback %i with 0x%04x", i,
              temp | rr );
       }
       readByte( busnumber, 1, &rr );        /* <CR> */

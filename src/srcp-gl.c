@@ -33,7 +33,7 @@ static int queue_isfull(bus_t busnumber);
  */
 int isValidGL(bus_t busnumber, int addr)
 {
-    DBG(busnumber, DBG_INFO, "GL VALID: %d %d (from %d to %d)", busnumber,
+    syslog_bus(busnumber, DBG_INFO, "GL VALID: %d %d (from %d to %d)", busnumber,
         addr, /*num_buses */ 1, gl[busnumber].numberOfGl /*- 1*/ );
 
     /* in bus 0 GL are not allowed */
@@ -118,11 +118,11 @@ int queueGL(bus_t busnumber, int addr, int dir, int speed, int maxspeed,
     if (isValidGL(busnumber, addr)) {
         if (!isInitializedGL(busnumber, addr)) {
             initGL(busnumber, addr, 'P', 1, 14, 1);
-            DBG(busnumber, DBG_WARN, "GL default init for %d-%d",
+            syslog_bus(busnumber, DBG_WARN, "GL default init for %d-%d",
                 busnumber, addr);
         }
         if (queue_isfull(busnumber)) {
-            DBG(busnumber, DBG_WARN, "GL Command Queue full");
+            syslog_bus(busnumber, DBG_WARN, "GL Command Queue full");
             return SRCP_TEMPORARILYPROHIBITED;
         }
 
@@ -425,7 +425,7 @@ void unlock_gl_bysessionid(sessionid_t sessionid)
 {
     int i, j;
     int number;
-    DBG(0, DBG_INFO, "unlock GL by session-ID %ld", sessionid);
+    syslog_bus(0, DBG_INFO, "unlock GL by session-ID %ld", sessionid);
     for (i = 0; i <= num_buses; i++) {
         number = getMaxAddrGL(i);
         for (j = 1; j <= number; j++) {
@@ -477,7 +477,7 @@ int startup_GL(void)
 int init_GL(bus_t busnumber, int number)
 {
     int i;
-    DBG(busnumber, DBG_WARN, "INIT GL: %d", number);
+    syslog_bus(busnumber, DBG_WARN, "INIT GL: %d", number);
     if (busnumber >= MAX_BUSES)
         return 1;
 
@@ -499,22 +499,22 @@ void debugGL(bus_t busnumber, int start, int end)
     gl_state_t *gls;
     int i;
 
-    DBG(busnumber, DBG_WARN, "debug GLSTATE from %d to %d", start, end);
+    syslog_bus(busnumber, DBG_WARN, "debug GLSTATE from %d to %d", start, end);
     for (i = start; i <= end; i++) {
         gls = &gl[busnumber].glstate[i];
-        DBG(busnumber, DBG_WARN, "GLSTATE for %d/%d", busnumber, i);
-        DBG(busnumber, DBG_WARN, "state %d", gls->state);
-        DBG(busnumber, DBG_WARN, "protocol %c", gls->protocol);
-        DBG(busnumber, DBG_WARN, "protocolversion %d",
+        syslog_bus(busnumber, DBG_WARN, "GLSTATE for %d/%d", busnumber, i);
+        syslog_bus(busnumber, DBG_WARN, "state %d", gls->state);
+        syslog_bus(busnumber, DBG_WARN, "protocol %c", gls->protocol);
+        syslog_bus(busnumber, DBG_WARN, "protocolversion %d",
             gls->protocolversion);
-        DBG(busnumber, DBG_WARN, "n_func %d", gls->n_func);
-        DBG(busnumber, DBG_WARN, "n_fs %d", gls->n_fs);
-        DBG(busnumber, DBG_WARN, "id %d", gls->id);
-        DBG(busnumber, DBG_WARN, "speed %d", gls->speed);
-        DBG(busnumber, DBG_WARN, "direction %d", gls->direction);
-        DBG(busnumber, DBG_WARN, "funcs %d", gls->funcs);
-        DBG(busnumber, DBG_WARN, "lockduration %ld", gls->lockduration);
-        DBG(busnumber, DBG_WARN, "locked_by %ld", gls->locked_by);
+        syslog_bus(busnumber, DBG_WARN, "n_func %d", gls->n_func);
+        syslog_bus(busnumber, DBG_WARN, "n_fs %d", gls->n_fs);
+        syslog_bus(busnumber, DBG_WARN, "id %d", gls->id);
+        syslog_bus(busnumber, DBG_WARN, "speed %d", gls->speed);
+        syslog_bus(busnumber, DBG_WARN, "direction %d", gls->direction);
+        syslog_bus(busnumber, DBG_WARN, "funcs %d", gls->funcs);
+        syslog_bus(busnumber, DBG_WARN, "lockduration %ld", gls->lockduration);
+        syslog_bus(busnumber, DBG_WARN, "locked_by %ld", gls->locked_by);
         /*  struct timeval tv;
            struct timeval inittime;
            struct timeval locktime; */

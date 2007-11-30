@@ -166,7 +166,7 @@ static int handle_setcheck(sessionid_t sessionid, bus_t bus, char *device,
         if (strlen(parameter) > 0) {
             nelem =
                 sscanf(parameter, "%s %ld %ld", devgrp, &addr, &duration);
-            DBG(bus, DBG_INFO, "LOCK: %s", parameter);
+            syslog_bus(bus, DBG_INFO, "LOCK: %s", parameter);
         }
         if (nelem >= 3) {
             rc = SRCP_UNSUPPORTEDDEVICEGROUP;
@@ -335,7 +335,7 @@ int handleGET(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
         }
         else {
             if (bus_has_devicegroup(bus, DG_DESCRIPTION)) {
-                DBG(bus, DBG_INFO, "DESCRIPTION: devgrp=%s addr=%ld",
+                syslog_bus(bus, DBG_INFO, "DESCRIPTION: devgrp=%s addr=%ld",
                     devgrp, addr);
                 if (strncmp(devgrp, "GL", 2) == 0)
                     rc = describeGL(bus, addr, reply);
@@ -401,7 +401,7 @@ int handleWAIT(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
         int value, waitvalue;
         nelem =
             sscanf(parameter, "%ld %d %ld", &port, &waitvalue, &timeout);
-        DBG(bus, DBG_INFO, "wait: %d %d %d", port, waitvalue, timeout);
+        syslog_bus(bus, DBG_INFO, "wait: %d %d %d", port, waitvalue, timeout);
         if (nelem >= 3) {
             if (getFB(bus, port, &time, &value) == SRCP_OK
                 && value == waitvalue) {
@@ -646,7 +646,7 @@ int doCmdClient(client_thread_t* ctd)
     long int rc, nelem;
     struct timeval akt_time;
 
-    DBG(0, DBG_INFO, "Command mode starting for session %ld", ctd->session);
+    syslog_bus(0, DBG_INFO, "Command mode starting for session %ld", ctd->session);
     while (1) {
         pthread_testcancel();
         memset(line, 0, sizeof(line));
@@ -708,7 +708,7 @@ int doCmdClient(client_thread_t* ctd)
             }
         }
         else {
-            DBG(0, DBG_DEBUG, "list too short in session %ld: %d",
+            syslog_bus(0, DBG_DEBUG, "list too short in session %ld: %d",
                 ctd->session, nelem);
             rc = SRCP_LISTTOOSHORT;
             gettimeofday(&akt_time, NULL);

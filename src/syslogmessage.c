@@ -33,7 +33,7 @@
    remaining parameters according to format string
  */
 
-void DBG(bus_t busnumber, int dbglevel, const char *fmt, ...)
+void syslog_bus(bus_t busnumber, int dbglevel, const char *fmt, ...)
 {
     if (dbglevel <= buses[busnumber].debuglevel) {
         va_list parm;

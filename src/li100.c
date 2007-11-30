@@ -33,14 +33,14 @@ int readConfig_LI100_SERIAL( xmlDocPtr doc, xmlNodePtr node,  bus_t busnumber )
 #endif
 {
 #ifdef LI100_USB
-  DBG( busnumber, DBG_INFO, "reading configuration for LI100 (usb) at bus #%ld", busnumber );
+  syslog_bus( busnumber, DBG_INFO, "reading configuration for LI100 (usb) at bus #%ld", busnumber );
 #else
-  DBG( busnumber, DBG_INFO, "reading configuration for LI100 (serial) at bus #%ld", busnumber );
+  syslog_bus( busnumber, DBG_INFO, "reading configuration for LI100 (serial) at bus #%ld", busnumber );
 #endif
   buses[ busnumber ].driverdata = malloc( sizeof( struct _LI100_DATA ) );
   if ( buses[busnumber].driverdata == NULL )
   {
-    DBG( busnumber, DBG_ERROR,
+    syslog_bus( busnumber, DBG_ERROR,
          "Memory allocation error in module '%s'.", node->name );
     return 0;
   }
@@ -124,7 +124,7 @@ int readConfig_LI100_SERIAL( xmlDocPtr doc, xmlNodePtr node,  bus_t busnumber )
               }
             }
             else
-              DBG( busnumber, DBG_WARN,
+              syslog_bus( busnumber, DBG_WARN,
                    "WARNING, unknown tag found: \"%s\"!\n", child->name );
     child = child->next;
   }
@@ -145,25 +145,25 @@ int init_bus_LI100_SERIAL( bus_t busnumber )
   if ( init_GA( busnumber, __li100->number_ga ) )
   {
     __li100->number_ga = 0;
-    DBG( busnumber, DBG_ERROR, "Can't create array for assesoirs" );
+    syslog_bus( busnumber, DBG_ERROR, "Can't create array for assesoirs" );
   }
 
   if ( init_GL( busnumber, __li100->number_gl ) )
   {
     __li100->number_gl = 0;
-    DBG( busnumber, DBG_ERROR, "Can't create array for locomotives" );
+    syslog_bus( busnumber, DBG_ERROR, "Can't create array for locomotives" );
   }
 
-  DBG( busnumber, DBG_WARN, "debug array for locomotives" );
+  syslog_bus( busnumber, DBG_WARN, "debug array for locomotives" );
 
   if ( init_FB( busnumber, __li100->number_fb * 8 ) )
   {
     __li100->number_fb = 0;
-    DBG( busnumber, DBG_ERROR, "Can't create array for feedback" );
+    syslog_bus( busnumber, DBG_ERROR, "Can't create array for feedback" );
   }
 
   status = 0;
-  DBG( busnumber, DBG_DEBUG, "Lenz interface with debug level %d\n",
+  syslog_bus( busnumber, DBG_DEBUG, "Lenz interface with debug level %d\n",
        buses[ busnumber ].debuglevel );
 
 #ifdef LI100_USB
@@ -200,13 +200,13 @@ int init_bus_LI100_SERIAL( bus_t busnumber )
   if ( status == 0 )
   {
     __li100->working_LI100 = 1;
-    DBG( busnumber, DBG_INFO, "Version LENZ-Interface : %d.%d\n",
+    syslog_bus( busnumber, DBG_INFO, "Version LENZ-Interface : %d.%d\n",
          __li100->version_interface / 256,
          __li100->version_interface % 256 );
-    DBG( busnumber, DBG_INFO, "Code LENZ-Interface    : %d%d\n",
+    syslog_bus( busnumber, DBG_INFO, "Code LENZ-Interface    : %d%d\n",
          __li100->code_interface / 16,
          __li100->code_interface % 16 );
-    DBG( busnumber, DBG_INFO, "Version LENZ-Central unit  : %d.%d\n",
+    syslog_bus( busnumber, DBG_INFO, "Version LENZ-Central unit  : %d.%d\n",
          __li100->version_zentrale / 256,
          __li100->version_zentrale % 256 );
     /* printf("Code LENZ-Central unit     : %d",__li100->code_zentrale); */
@@ -232,7 +232,7 @@ int init_bus_LI100_SERIAL( bus_t busnumber )
         if ( __li100->get_addr == 0 )
           break;
 
-        DBG( busnumber, DBG_INFO, "Remove engine with address %d from stack\n",
+        syslog_bus( busnumber, DBG_INFO, "Remove engine with address %d from stack\n",
              __li100->get_addr & 0x3fff );
         byte2send[ 0 ] = 0xe3;
         byte2send[ 1 ] = 0x44;
@@ -272,10 +272,10 @@ int init_bus_LI100_SERIAL( bus_t busnumber )
   }
 
 #ifdef LI100_USB
-  DBG( busnumber, DBG_DEBUG, "INIT_BUS_LI100 (usb) finished with "
+  syslog_bus( busnumber, DBG_DEBUG, "INIT_BUS_LI100 (usb) finished with "
        "code: %d\n", status );
 #else
-  DBG( busnumber, DBG_DEBUG, "INIT_BUS_LI100 (serial) finished with "
+  syslog_bus( busnumber, DBG_DEBUG, "INIT_BUS_LI100 (serial) finished with "
        "code: %d\n", status );
 #endif
   __li100->last_type = -1;
@@ -328,9 +328,9 @@ void *thr_sendrec_LI100_SERIAL( void *v )
 
   busnumber = ( bus_t ) v;
 #ifdef LI100_USB
-  DBG( busnumber, DBG_INFO, "thr_sendrec_LI100 (usb) is started as bus #%ld", busnumber );
+  syslog_bus( busnumber, DBG_INFO, "thr_sendrec_LI100 (usb) is started as bus #%ld", busnumber );
 #else
-  DBG( busnumber, DBG_INFO, "thr_sendrec_LI100 (serial) is started as bus #%ld", busnumber );
+  syslog_bus( busnumber, DBG_INFO, "thr_sendrec_LI100 (serial) is started as bus #%ld", busnumber );
 #endif
 
   /* initialize tga-structure */
@@ -400,7 +400,7 @@ void send_command_ga_LI100_SERIAL( bus_t busnumber )
   {
     if ( __li100->tga[ i ].id )
     {
-        DBG( busnumber, DBG_DEBUG, "time %i,%i", ( int ) akt_time.tv_sec,
+        syslog_bus( busnumber, DBG_DEBUG, "time %i,%i", ( int ) akt_time.tv_sec,
                 ( int ) akt_time.tv_usec );
       cmp_time = __li100->tga[ i ].t;
       /* switch of time reached? */
@@ -485,7 +485,7 @@ void send_command_ga_LI100_SERIAL( bus_t busnumber )
           __li100->tga[ i1 ] = gatmp;
 
           status = 0;
-          DBG( busnumber, DBG_DEBUG,
+          syslog_bus( busnumber, DBG_DEBUG,
                "GA %i for switch off at %i,%i on %i",
                __li100->tga[ i1 ].id,
                ( int ) __li100->tga[ i1 ].t.tv_sec,
@@ -1132,7 +1132,7 @@ void send_command_sm_LI100_SERIAL( bus_t busnumber )
     __li100->last_bit = smakt.bit;
     __li100->last_value = smakt.value;
 
-    DBG( busnumber, DBG_DEBUG, "in send_command_sm: last_type[%d] = %d",
+    syslog_bus( busnumber, DBG_DEBUG, "in send_command_sm: last_type[%d] = %d",
          busnumber, __li100->last_type );
 
     switch ( smakt.command )
@@ -1221,7 +1221,7 @@ void send_command_sm_LI100_SERIAL( bus_t busnumber )
       case INIT:
         break;
       case TERM:
-        DBG( busnumber, DBG_DEBUG,
+        syslog_bus( busnumber, DBG_DEBUG,
              "on bus %i pgm_mode is %i", busnumber, __li100->pgm_mode );
         if ( __li100->pgm_mode == 1 )
         {
@@ -1277,12 +1277,12 @@ void check_status_LI100_SERIAL( bus_t busnumber )
       {
         char msg[ 200 ];
         strcpy( msg, strerror( errno ) );
-        DBG( busnumber, DBG_ERROR,
+        syslog_bus( busnumber, DBG_ERROR,
              "readbyte(): IOCTL   status: %d with errno = %d: %s",
              status, errno, msg );
       }
 
-      DBG( busnumber, DBG_DEBUG,
+      syslog_bus( busnumber, DBG_DEBUG,
            "readbyte(): (fd = %d), there are %d bytes to read.",
            buses[ busnumber ].device.file.fd, i );
       /* read only, if there is really an input */
@@ -1432,7 +1432,7 @@ int readAnswer_LI100_SERIAL( bus_t busnumber, unsigned char *str )
     /* power on */
     if ( str[ 1 ] == 0x01 )
     {
-      DBG( busnumber, DBG_DEBUG,
+      syslog_bus( busnumber, DBG_DEBUG,
            "on bus %i power detected; old-state is %i", busnumber,
            getPower( busnumber ) );
       if (( __li100->emergency_on_LI100 == 1 )
@@ -1454,7 +1454,7 @@ int readAnswer_LI100_SERIAL( bus_t busnumber, unsigned char *str )
     /* power off */
     if ( str[ 1 ] == 0x00 )
     {
-      DBG( busnumber, DBG_DEBUG,
+      syslog_bus( busnumber, DBG_DEBUG,
            "on bus %i no power detected; old-state is %i",
            busnumber, getPower( busnumber ) );
       if (( __li100->emergency_on_LI100 == 0 )
@@ -1472,7 +1472,7 @@ int readAnswer_LI100_SERIAL( bus_t busnumber, unsigned char *str )
       if ( __li100->pgm_mode == 0 )
       {
         __li100->pgm_mode = 1;
-        DBG( busnumber, DBG_DEBUG,
+        syslog_bus( busnumber, DBG_DEBUG,
              "on bus %i program mode was activated",
              busnumber );
         setPower( busnumber, -1, "Program mode start" );
@@ -1673,7 +1673,7 @@ int readAnswer_LI100_SERIAL( bus_t busnumber, unsigned char *str )
   /* at last catch all unknown command keys and show a warning message */
   if ( message_processed == 0 )
   {
-    DBG( busnumber, DBG_WARN,
+    syslog_bus( busnumber, DBG_WARN,
          "Unknown command key received: 0x%02x 0x%02x", str[ 0 ], str[ 1 ] );
   }
 
@@ -1693,7 +1693,7 @@ int initLine_LI100_SERIAL( bus_t busnumber )
   struct termios interface;
 
   char *name = buses[ busnumber ].device.file.path;
-  DBG( busnumber, DBG_INFO, "Beginning to detect LI100 on serial "
+  syslog_bus( busnumber, DBG_INFO, "Beginning to detect LI100 on serial "
        "line: %s\n", name );
   status = -4;
 
@@ -1719,12 +1719,12 @@ int initLine_LI100_SERIAL( bus_t busnumber )
       break;
   }
 
-  DBG( busnumber, DBG_INFO, "Try to open serial line %s for %s baud\n",
+  syslog_bus( busnumber, DBG_INFO, "Try to open serial line %s for %s baud\n",
        name, byte2send );
   fd = open( name, O_RDWR );
   if ( fd == -1 )
   {
-    DBG( busnumber, DBG_ERROR, "Open serial device '%s' failed: %s "
+    syslog_bus( busnumber, DBG_ERROR, "Open serial device '%s' failed: %s "
          "(errno = %d).\n", name, strerror( errno ), errno );
     return status;
   }

@@ -62,7 +62,7 @@ int start_session(sessionid_t sessionid, int mode)
     char msg[1000];
     struct timeval akt_time;
     gettimeofday(&akt_time, NULL);
-    DBG(0, DBG_INFO, "Session started; client-ID %ld, mode %d", sessionid,
+    syslog_bus(0, DBG_INFO, "Session started; client-ID %ld, mode %d", sessionid,
         mode);
     sprintf(msg, "%lu.%.3lu 101 INFO 0 SESSION %lu %s\n", akt_time.tv_sec,
             akt_time.tv_usec / 1000, sessionid,
@@ -80,7 +80,7 @@ int stop_session(sessionid_t sessionid)
     struct timeval akt_time;
     gettimeofday(&akt_time, NULL);
 
-    DBG(0, DBG_INFO, "Session terminated client-ID %ld", sessionid);
+    syslog_bus(0, DBG_INFO, "Session terminated client-ID %ld", sessionid);
     /* clean all locks */
     unlock_ga_bysessionid(sessionid);
     unlock_gl_bysessionid(sessionid);
@@ -110,14 +110,14 @@ int termSESSION(bus_t bus, sessionid_t sessionid, sessionid_t termsessionid,
 
 int session_preparewait(bus_t busnumber)
 {
-    DBG(busnumber, DBG_DEBUG, "SESSION prepare wait for bus %ld",
+    syslog_bus(busnumber, DBG_DEBUG, "SESSION prepare wait for bus %ld",
         busnumber);
     return pthread_mutex_lock(&cb_mutex[busnumber]);
 }
 
 int session_cleanupwait(bus_t busnumber)
 {
-    DBG(busnumber, DBG_DEBUG, "SESSION cleanup wait for bus %ld",
+    syslog_bus(busnumber, DBG_DEBUG, "SESSION cleanup wait for bus %ld",
         busnumber);
     return pthread_mutex_unlock(&cb_mutex[busnumber]);
 }
@@ -131,31 +131,31 @@ int session_wait(bus_t busnumber, unsigned int timeout, int *result)
     stimeout.tv_sec = now.tv_sec + timeout;
     stimeout.tv_nsec = now.tv_usec * 1000;
 
-    DBG(busnumber, DBG_DEBUG, "SESSION start wait1 for bus %ld", busnumber);
+    syslog_bus(busnumber, DBG_DEBUG, "SESSION start wait1 for bus %ld", busnumber);
     rc = pthread_cond_timedwait(&cb_cond[busnumber], &cb_mutex[busnumber],
                                 &stimeout);
     *result = cb_data[busnumber];
-    DBG(busnumber, DBG_DEBUG, "SESSION start wait2 for bus %ld", busnumber);
+    syslog_bus(busnumber, DBG_DEBUG, "SESSION start wait2 for bus %ld", busnumber);
     return rc;
 }
 
 int session_endwait(bus_t busnumber, int returnvalue)
 {
-    DBG(busnumber, DBG_DEBUG, "SESSION end wait1 for bus %ld", busnumber);
+    syslog_bus(busnumber, DBG_DEBUG, "SESSION end wait1 for bus %ld", busnumber);
     cb_data[busnumber] = returnvalue;
     pthread_cond_broadcast(&cb_cond[busnumber]);
     pthread_mutex_unlock(&cb_mutex[busnumber]);
-    DBG(busnumber, DBG_DEBUG, "SESSION end wait2 for bus %ld", busnumber);
+    syslog_bus(busnumber, DBG_DEBUG, "SESSION end wait2 for bus %ld", busnumber);
     return returnvalue;
 }
 
 int session_processwait(bus_t busnumber)
 {
     int rc;
-    DBG(busnumber, DBG_DEBUG, "SESSION process wait1 for bus %ld",
+    syslog_bus(busnumber, DBG_DEBUG, "SESSION process wait1 for bus %ld",
         busnumber);
     rc = pthread_mutex_lock(&cb_mutex[busnumber]);
-    DBG(busnumber, DBG_DEBUG, "SESSION process wait2 for bus %ld",
+    syslog_bus(busnumber, DBG_DEBUG, "SESSION process wait2 for bus %ld",
         busnumber);
     return rc;
 }

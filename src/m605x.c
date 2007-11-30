@@ -45,7 +45,7 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     buses[busnumber].driverdata = malloc(sizeof(struct _M6051_DATA));
 
     if (buses[busnumber].driverdata == NULL) {
-        DBG(busnumber, DBG_ERROR,
+        syslog_bus(busnumber, DBG_ERROR,
                 "Memory allocation error in module '%s'.", node->name);
         return 0;
     }
@@ -142,7 +142,7 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         }
 
         else
-            DBG(busnumber, DBG_WARN,
+            syslog_bus(busnumber, DBG_WARN,
                 "WARNING, unknown tag found: \"%s\"!\n", child->name);;
 
         child = child->next;
@@ -150,17 +150,17 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     if (init_GA(busnumber, __m6051->number_ga)) {
         __m6051->number_ga = 0;
-        DBG(busnumber, DBG_ERROR, "Can't create array for assesoirs");
+        syslog_bus(busnumber, DBG_ERROR, "Can't create array for assesoirs");
     }
 
     if (init_GL(busnumber, __m6051->number_gl)) {
         __m6051->number_gl = 0;
-        DBG(busnumber, DBG_ERROR, "Can't create array for locomotives");
+        syslog_bus(busnumber, DBG_ERROR, "Can't create array for locomotives");
     }
 
     if (init_FB(busnumber, __m6051->number_fb * 16)) {
         __m6051->number_fb = 0;
-        DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
+        syslog_bus(busnumber, DBG_ERROR, "Can't create array for feedback");
     }
 
     return 1;
@@ -176,12 +176,12 @@ static int init_lineM6051(bus_t bus)
     struct termios interface;
 
     if (buses[bus].debuglevel > 0) {
-        DBG(bus, DBG_INFO, "Opening 605x: %s", buses[bus].device.file.path);
+        syslog_bus(bus, DBG_INFO, "Opening 605x: %s", buses[bus].device.file.path);
     }
 
     FD = open(buses[bus].device.file.path, O_RDWR | O_NONBLOCK);
     if (FD == -1) {
-        DBG(bus, DBG_ERROR, "Open serial device '%s' failed: %s "
+        syslog_bus(bus, DBG_ERROR, "Open serial device '%s' failed: %s "
                 "(errno = %d).\n", buses[bus].device.file.path,
                 strerror(errno), errno);
         return -1;
@@ -204,23 +204,23 @@ static int init_lineM6051(bus_t bus)
     interface.c_cflag = CREAD | HUPCL | CS8 | CSTOPB | CRTSCTS;
 #endif
     tcsetattr(FD, TCSANOW, &interface);
-    DBG(bus, DBG_INFO, "Opening 605x succeeded FD=%d", FD);
+    syslog_bus(bus, DBG_INFO, "Opening 605x succeeded FD=%d", FD);
     return FD;
 }
 
 int init_bus_M6051(bus_t bus)
 {
 
-    DBG(bus, DBG_INFO, "M605x  init: debug %d", buses[bus].debuglevel);
+    syslog_bus(bus, DBG_INFO, "M605x  init: debug %d", buses[bus].debuglevel);
     if (buses[bus].debuglevel <= DBG_DEBUG) {
         buses[bus].device.file.fd = init_lineM6051(bus);
     }
     else {
         buses[bus].device.file.fd = -1;
     }
-    DBG(bus, DBG_INFO, "M605x init done, fd=%d", buses[bus].device.file.fd);
-    DBG(bus, DBG_INFO, "M605x: %s", buses[bus].description);
-    DBG(bus, DBG_INFO, "M605x flags: %d",
+    syslog_bus(bus, DBG_INFO, "M605x init done, fd=%d", buses[bus].device.file.fd);
+    syslog_bus(bus, DBG_INFO, "M605x: %s", buses[bus].description);
+    syslog_bus(bus, DBG_INFO, "M605x flags: %d",
         buses[bus].flags & AUTO_POWER_ON);
     return 0;
 }
@@ -230,7 +230,7 @@ int term_bus_M6051(bus_t bus)
     if (buses[bus].device.file.fd != -1)
         close(buses[bus].device.file.fd);
 
-    DBG(bus, DBG_INFO, "M605x bus term done, fd=%d", buses[bus].device.file.fd);
+    syslog_bus(bus, DBG_INFO, "M605x bus term done, fd=%d", buses[bus].device.file.fd);
     free(buses[bus].driverdata);
     return 0;
 }
@@ -285,7 +285,7 @@ void *thr_sendrec_M6051(void *v)
     akt_S88 = 1;
     buses[bus].watchdog = 1;
 
-    DBG(bus, DBG_INFO, "M605x on bus %ld thread started, fd=%d", bus,
+    syslog_bus(bus, DBG_INFO, "M605x on bus %ld thread started, fd=%d", bus,
         buses[bus].device.file.fd);
     ioctl(buses[bus].device.file.fd, FIONREAD, &temp);
     if (((M6051_DATA *) buses[bus].driverdata)->cmd32_pending) {
@@ -296,7 +296,7 @@ void *thr_sendrec_M6051(void *v)
     while (temp > 0) {
         readByte(bus, 0, &rr);
         ioctl(buses[bus].device.file.fd, FIONREAD, &temp);
-        DBG(bus, DBG_INFO, "Ignoring unread byte: %d ", rr);
+        syslog_bus(bus, DBG_INFO, "Ignoring unread byte: %d ", rr);
     }
 
     while (1) {
@@ -408,7 +408,7 @@ void *thr_sendrec_M6051(void *v)
             while (temp > 0) {
                 readByte(bus, 0, &rr);
                 ioctl(buses[bus].device.file.fd, FIONREAD, &temp);
-                DBG(bus, DBG_INFO,
+                syslog_bus(bus, DBG_INFO,
                     "FB M6051: oops; ignoring unread byte: %d ", rr);
             }
             SendByte = 192 + akt_S88;

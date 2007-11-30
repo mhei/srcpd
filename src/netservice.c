@@ -30,15 +30,15 @@ void change_privileges(bus_t bus)
         if ((group = getgrnam(grp)) != NULL ||
             (group = getgrgid((gid_t) atoi(grp))) != NULL) {
             if (setegid(group->gr_gid) != 0) {
-                DBG(0, DBG_WARN, "could not change to group %s: %s",
+                syslog_bus(0, DBG_WARN, "could not change to group %s: %s",
                     group->gr_name, strerror(errno));
             }
             else {
-                DBG(0, DBG_INFO, "changed to group %s", group->gr_name);
+                syslog_bus(0, DBG_INFO, "changed to group %s", group->gr_name);
             }
         }
         else {
-            DBG(0, DBG_WARN, "could not change to group %s", grp);
+            syslog_bus(0, DBG_WARN, "could not change to group %s", grp);
         }
     }
 
@@ -46,15 +46,15 @@ void change_privileges(bus_t bus)
         if ((passwd = getpwnam(uid)) != NULL ||
             (passwd = getpwuid((uid_t) atoi(uid))) != NULL) {
             if (seteuid(passwd->pw_uid) != 0) {
-                DBG(0, DBG_INFO, "could not change to user %s: %s",
+                syslog_bus(0, DBG_INFO, "could not change to user %s: %s",
                     passwd->pw_name, strerror(errno));
             }
             else {
-                DBG(0, DBG_INFO, "changed to user %s", passwd->pw_name);
+                syslog_bus(0, DBG_INFO, "changed to user %s", passwd->pw_name);
             }
         }
         else {
-            DBG(0, DBG_INFO, "could not change to user %s", uid);
+            syslog_bus(0, DBG_INFO, "could not change to user %s", uid);
         }
     }
 }
@@ -119,7 +119,7 @@ void *thr_handlePort(void *v)
         /* create a socket for listening */
         ntd.socket = socket(AF_INET6, SOCK_STREAM, 0);
         if (ntd.socket == -1) {
-            DBG(0, DBG_ERROR, "Socket creation failed: %s (errno = %d). "
+            syslog_bus(0, DBG_ERROR, "Socket creation failed: %s (errno = %d). "
                     "Terminating...\n", strerror(errno), errno);
             exit(1);
         }
@@ -139,7 +139,7 @@ void *thr_handlePort(void *v)
         /* Create the socket */
         ntd.socket = socket(AF_INET, SOCK_STREAM, 0);
         if (ntd.socket == -1) {
-            DBG(0, DBG_ERROR, "Socket creation failed: %s (errno = %d). "
+            syslog_bus(0, DBG_ERROR, "Socket creation failed: %s (errno = %d). "
                     "Terminating...\n", strerror(errno), errno);
             exit(1);
         }
@@ -154,7 +154,7 @@ void *thr_handlePort(void *v)
     sock_opt = 1;
     if (setsockopt(ntd.socket, SOL_SOCKET, SO_REUSEADDR, &sock_opt,
          sizeof(sock_opt)) == -1) {
-        DBG(0, DBG_ERROR, "Setsockopt failed: %s (errno = %d). "
+        syslog_bus(0, DBG_ERROR, "Setsockopt failed: %s (errno = %d). "
                 "Terminating...\n", strerror(errno), errno);
         close(ntd.socket);
         exit(1);
@@ -162,14 +162,14 @@ void *thr_handlePort(void *v)
 
     /* saddr=(sockaddr_in) if ntd.socket is of type AF_INET else its (sockaddr_in6) */
     if (bind(ntd.socket, (struct sockaddr *) saddr, socklen) == -1) {
-        DBG(0, DBG_ERROR, "Bind failed: %s (errno = %d). "
+        syslog_bus(0, DBG_ERROR, "Bind failed: %s (errno = %d). "
                 "Terminating...\n", strerror(errno), errno);
         close(ntd.socket);
         exit(1);
     }
 
     if (listen(ntd.socket, 1) == -1) {
-        DBG(0, DBG_ERROR, "Listen failed: %s (errno = %d). "
+        syslog_bus(0, DBG_ERROR, "Listen failed: %s (errno = %d). "
                 "Terminating...\n", strerror(errno), errno);
         close(ntd.socket);
         exit(1);
@@ -183,12 +183,12 @@ void *thr_handlePort(void *v)
 
         if (newsock == -1) {
             /* Possibly the connection got aborted */
-            DBG(0, DBG_WARN, "Accept failed: %s (errno = %d)\n",
+            syslog_bus(0, DBG_WARN, "Accept failed: %s (errno = %d)\n",
                     strerror(errno), errno);
             continue;
         }
 
-        DBG(0, DBG_INFO, "New connection received.\n");
+        syslog_bus(0, DBG_INFO, "New connection received.\n");
         /* Now process the connection as per the protocol */
 #ifdef ENABLE_IPV6
         if (ipv6_supported()) {
@@ -199,10 +199,10 @@ void *thr_handlePort(void *v)
             char addrbuf[INET6_ADDRSTRLEN];
 
             if (IN6_IS_ADDR_V4MAPPED(&(sin6_ptr->sin6_addr))) {
-                DBG(0, DBG_INFO, "Connection from an IPv4 client\n");
+                syslog_bus(0, DBG_INFO, "Connection from an IPv4 client\n");
             }
 
-            DBG(0, DBG_INFO, "Connection from %s/%d\n",
+            syslog_bus(0, DBG_INFO, "Connection from %s/%d\n",
                 inet_ntop(AF_INET6, (void *) &(sin6_ptr->sin6_addr),
                           addrbuf, sizeof(addrbuf)),
                 ntohs(sin6_ptr->sin6_port));
@@ -211,13 +211,13 @@ void *thr_handlePort(void *v)
 #endif
         {
             struct sockaddr_in *sin_ptr = (struct sockaddr_in *) fsaddr;
-            DBG(0, DBG_INFO, "Connection from %s/%d\n",
+            syslog_bus(0, DBG_INFO, "Connection from %s/%d\n",
                 inet_ntoa(sin_ptr->sin_addr), ntohs(sin_ptr->sin_port));
         }
         sock_opt = 1;
         if (setsockopt(newsock, SOL_SOCKET, SO_KEEPALIVE, &sock_opt,
                     sizeof(sock_opt)) == -1) {
-            DBG(0, DBG_ERROR, "Setsockopt failed: %s (errno = %d)\n",
+            syslog_bus(0, DBG_ERROR, "Setsockopt failed: %s (errno = %d)\n",
                     strerror(errno), errno);
             close(newsock);
             continue;
@@ -227,7 +227,7 @@ void *thr_handlePort(void *v)
         result = pthread_create(&ttid, NULL, ntd.client_handler,
                 (void *) newsock);
         if (result != 0) {
-            DBG(0, DBG_ERROR, "Create thread for network client "
+            syslog_bus(0, DBG_ERROR, "Create thread for network client "
                     "failed: %s (errno = %d). Terminating...\n",
                     strerror(result), result);
             exit(1);

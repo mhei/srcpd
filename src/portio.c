@@ -40,7 +40,7 @@ int open_port(bus_t bus)
 
         serial = open(buses[bus].device.file.path, O_RDWR | O_NOCTTY);
         if (serial < 0) {
-            DBG(bus, DBG_ERROR,
+            syslog_bus(bus, DBG_ERROR,
                     "Open serial line '%s' failed: %s (errno = %d)\n",
                     buses[bus].device.file.path, strerror(errno), errno);
             buses[bus].device.file.fd = -1;
@@ -99,13 +99,13 @@ void write_port(bus_t bus, unsigned char b)
         }
         if (i < 0) {
                 /* Error reported from write */
-                DBG(bus, DBG_ERROR, 
+                syslog_bus(bus, DBG_ERROR, 
                         "write_port() failed: %s (errno = %d)\n",
                         strerror(errno), errno);
         }
         if (i == 0) {
                 /* Error reported from write */
-                DBG(bus, DBG_ERROR, 
+                syslog_bus(bus, DBG_ERROR, 
                         "write_port(): No data written to port.\n");
         }
 }
@@ -127,7 +127,7 @@ unsigned int read_port(bus_t bus)
 
                 /* Error reading port */
                 if (i < 0) {
-                        DBG(bus, DBG_ERROR,
+                        syslog_bus(bus, DBG_ERROR,
                             "read_port() failed: %s (errno = %d)\n",
                             strerror(errno), errno);
                         in = 0x200 + errno;	/* Result all blocked */
@@ -135,7 +135,7 @@ unsigned int read_port(bus_t bus)
 
                 /* Empty port buffer */
                 if (i == 0) {
-                        DBG(bus, DBG_ERROR,
+                        syslog_bus(bus, DBG_ERROR,
                                 "read_port(): Port buffer empty.\n");
                         in = 0x1FF;     /* Result all blocked */
                 }
