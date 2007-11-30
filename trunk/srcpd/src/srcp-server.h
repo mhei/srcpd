@@ -18,6 +18,7 @@
 #include <sys/param.h>
 
 #include "config.h" /*for VERSION*/
+#include "config-srcpd.h" /*for bus_t*/
 
 
 typedef struct _SERVER_DATA {

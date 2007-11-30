@@ -17,7 +17,6 @@
 
 #include "clientservice.h"
 #include "io.h"
-#include "netservice.h"
 #include "srcp-error.h"
 #include "srcp-command.h"
 #include "srcp-info.h"
@@ -60,8 +59,8 @@ void* thr_doClient(void *v)
     struct timeval time;
     int last_cancel_state, last_cancel_type;
 
-    /* drop root permission for this thread */
-    change_privileges(0);
+    /* drop root permission for this thread (doubled)*/
+    /*change_privileges(0);*/
 
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &last_cancel_type);

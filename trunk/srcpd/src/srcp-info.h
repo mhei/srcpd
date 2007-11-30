@@ -18,7 +18,6 @@
 #ifndef _SRCP_INFO_H
 #define _SRCP_INFO_H
 
-#include "srcp-session.h"
 #include "clientservice.h"
 
 int doInfoClient(client_thread_t* ctd);

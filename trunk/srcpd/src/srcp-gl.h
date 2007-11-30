@@ -6,11 +6,14 @@
  *
  */
 
-
 #ifndef _SRCP_GL_H
 #define _SRCP_GL_H
 
 #include <sys/time.h>
+
+#include "config-srcpd.h"
+#include "srcp-session.h"
+
 
 /* Lokdekoder */
 typedef struct _GLSTATE

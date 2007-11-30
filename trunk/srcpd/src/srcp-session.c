@@ -17,7 +17,6 @@
 
 #include "stdincludes.h"
 
-#include "config-srcpd.h"
 #include "srcp-session.h"
 #include "srcp-ga.h"
 #include "srcp-gl.h"

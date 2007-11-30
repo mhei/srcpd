@@ -6,11 +6,14 @@
  *
  */
 
-
 #ifndef _SRCP_GA_H
 #define _SRCP_GA_H
 
 #include <sys/time.h>
+
+#include "config-srcpd.h"
+#include "srcp-session.h"
+
 
 #define MAXGAPORT 2
 
