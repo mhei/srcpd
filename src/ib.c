@@ -183,7 +183,7 @@ int cmpTime( struct timeval *t1, struct timeval *t2 )
 }
 
 /**
- * initGL: modifies the gl data used to initialize the device
+ * cacheInitGL: modifies the gl data used to initialize the device
  * this is called whenever a new loco comes in town...
  */
 int init_gl_IB( gl_state_t *gl )
@@ -937,7 +937,7 @@ void check_status_IB( bus_t busnumber )
         syslog_bus( busnumber, DBG_INFO,
              "IB reported uninitialized GL. Performing default init for %d",
              gltmp.id );
-        initGL( busnumber, gltmp.id, 'P', 1, 126, 5 );
+        cacheInitGL( busnumber, gltmp.id, 'P', 1, 126, 5 );
       }
       /* get old data, to know which FS the user wants to have... */
       cacheGetGL( busnumber, gltmp.id, &glakt );

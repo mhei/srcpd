@@ -8,7 +8,7 @@
  *
  * 2002-12-29 Manuel Borchers
  *            handleSET():
- *            - getlockGL changed to getlockGA in the GA-command-processing
+ *            - cacheGetLockGL changed to getlockGA in the GA-command-processing
  *            - if the device is locked, return code is now set to
  *              SRCP_DEVICELOCKED
  */
