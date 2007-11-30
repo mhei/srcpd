@@ -18,6 +18,8 @@
 #ifndef _SRCP_SESSION_H
 #define _SRCP_SESSION_H
 
+typedef unsigned long int sessionid_t ;
+
 int startup_SESSION(void);
 
 sessionid_t session_getnextID();

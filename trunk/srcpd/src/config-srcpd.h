@@ -31,7 +31,6 @@
 
 
 typedef unsigned long int bus_t;
-typedef unsigned long int sessionid_t ;
 
 
 #include "srcp-session.h"
