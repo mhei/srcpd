@@ -18,7 +18,7 @@
 int server_reset_state;
 int server_shutdown_state;
 
-#define __srv ((SERVER_DATA*)buses[busnumber].driverdata)
+#define __server ((SERVER_DATA*)buses[0].driverdata)
 
 int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
@@ -44,14 +44,14 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     /* initialize _SERVER_DATA with defaults */
     serviceentry = getservbyname("srcp","tcp");
     if (serviceentry == NULL) {
-	__srv->TCPPORT = 4303;
+	__server->TCPPORT = 4303;
     } else {
-	__srv->TCPPORT = ntohs(serviceentry->s_port);
+	__server->TCPPORT = ntohs(serviceentry->s_port);
     }
-    strcpy(__srv->PIDFILE, "/var/run/srcpd.pid");
-    __srv->groupname = NULL;
-    __srv->username = NULL;
-    __srv->listenip = NULL;
+    strcpy(__server->PIDFILE, "/var/run/srcpd.pid");
+    __server->groupname = NULL;
+    __server->username = NULL;
+    __server->listenip = NULL;
 
     xmlNodePtr child = node->children;
     xmlChar *txt = NULL;
@@ -64,7 +64,7 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         else if (xmlStrcmp(child->name, BAD_CAST "tcp-port") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
-                __srv->TCPPORT = atoi((char *) txt);
+                __server->TCPPORT = atoi((char *) txt);
                 xmlFree(txt);
             }
         }
@@ -72,9 +72,9 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         else if (xmlStrcmp(child->name, BAD_CAST "listen-ip") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
-                xmlFree(__srv->listenip);
-                __srv->listenip = malloc(strlen((char *) txt) + 1);
-                strcpy(__srv->listenip, (char *) txt);
+                xmlFree(__server->listenip);
+                __server->listenip = malloc(strlen((char *) txt) + 1);
+                strcpy(__server->listenip, (char *) txt);
                 DBG(busnumber, DBG_INFO, "listen-ip: %s", txt);
                 xmlFree(txt);
             }
@@ -83,8 +83,8 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         else if (xmlStrcmp(child->name, BAD_CAST "pid-file") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
-                strncpy(__srv->PIDFILE, (char *) txt, MAXPATHLEN - 2);
-                __srv->PIDFILE[MAXPATHLEN - 1] = 0x00;
+                strncpy(__server->PIDFILE, (char *) txt, MAXPATHLEN - 2);
+                __server->PIDFILE[MAXPATHLEN - 1] = 0x00;
                 xmlFree(txt);
             }
         }
@@ -92,13 +92,13 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         else if (xmlStrcmp(child->name, BAD_CAST "username") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
-                xmlFree(__srv->username);
-                __srv->username = malloc(strlen((char *) txt) + 1);
-                if (__srv->username == NULL) {
+                xmlFree(__server->username);
+                __server->username = malloc(strlen((char *) txt) + 1);
+                if (__server->username == NULL) {
                     DBG(busnumber, DBG_ERROR, "Cannot allocate memory\n");
                     exit(1);
                 }
-                strcpy(__srv->username, (char *) txt);
+                strcpy(__server->username, (char *) txt);
                 xmlFree(txt);
             }
         }
@@ -106,13 +106,13 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         else if (xmlStrcmp(child->name, BAD_CAST "groupname") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
-                xmlFree(__srv->groupname);
-                __srv->groupname = malloc(strlen((char *) txt) + 1);
-                if (__srv->groupname == NULL) {
+                xmlFree(__server->groupname);
+                __server->groupname = malloc(strlen((char *) txt) + 1);
+                if (__server->groupname == NULL) {
                     DBG(busnumber, DBG_ERROR, "Cannot allocate memory\n");
                     exit(1);
                 }
-                strcpy(__srv->groupname, (char *) txt);
+                strcpy(__server->groupname, (char *) txt);
                 xmlFree(txt);
             }
         }
