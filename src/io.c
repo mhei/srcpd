@@ -28,7 +28,9 @@
 
 #include "config-srcpd.h"
 #include "io.h"
+#include "syslogmessage.h"
 #include "ttycygwin.h"
+
 
 int readByte(bus_t bus, int wait, unsigned char *the_byte)
 {

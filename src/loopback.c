@@ -16,6 +16,7 @@
 #include "srcp-server.h"
 #include "srcp-info.h"
 #include "srcp-error.h"
+#include "syslogmessage.h"
 
 #define __loopback ((LOOPBACK_DATA*)buses[busnumber].driverdata)
 

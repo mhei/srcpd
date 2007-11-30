@@ -44,6 +44,7 @@ email                : frank.schmischke@t-online.de
 #include "srcp-info.h"
 #include "srcp-error.h"
 #include "srcp-session.h"
+#include "syslogmessage.h"
 #include "ttycygwin.h"
 
 #define __ib ((IB_DATA*)buses[busnumber].driverdata)

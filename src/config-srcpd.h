@@ -28,7 +28,6 @@
 
 #include <termios.h>
 #include <sys/param.h>
-#include <stdarg.h>
 
 
 typedef unsigned long int bus_t;
@@ -150,12 +149,4 @@ void resumeThread(bus_t busnumber);
 
 int bus_has_devicegroup(bus_t bus, int dg);
 
-#define DBG_NONE 0
-#define DBG_FATAL 1
-#define DBG_ERROR 2
-#define DBG_WARN 3
-#define DBG_INFO 4
-#define DBG_DEBUG 5
-
-void DBG(bus_t busnumber, int dbglevel, const char *fmt, ...);
 #endif

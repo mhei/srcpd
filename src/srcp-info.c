@@ -33,6 +33,7 @@
 
 #include "stdincludes.h"
 
+#include "io.h"
 #include "config-srcpd.h"
 #include "srcp-gl.h"
 #include "srcp-ga.h"
@@ -43,8 +44,8 @@
 #include "srcp-error.h"
 #include "srcp-descr.h"
 #include "srcp-time.h"
+#include "syslogmessage.h"
 
-#include "io.h"
 
 #define QUEUELENGTH_INFO 1000
 

@@ -27,6 +27,7 @@
 #include "srcp-ga.h"
 #include "srcp-error.h"
 #include "srcp-info.h"
+#include "syslogmessage.h"
 
 #define QUEUELEN 50
 

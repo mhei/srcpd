@@ -4,6 +4,9 @@
  *
  */
 
+#include <sys/time.h>
+#include <time.h>
+
 #include "stdincludes.h"
 
 #include "config-srcpd.h"
@@ -17,8 +20,8 @@
 #include "srcp-server.h"
 #include "srcp-info.h"
 #include "srcp-session.h"
-#include <sys/time.h>
-#include <time.h>
+#include "syslogmessage.h"
+
 
 #define __ZIMO ((zimo_DATA*)buses[busnumber].driverdata)
 

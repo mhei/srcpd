@@ -275,6 +275,7 @@
 #include "stdincludes.h"
 #include "ddl.h"
 #include "ddl_nmra.h"
+#include "syslogmessage.h"
 
 typedef struct {
     char *pattern;

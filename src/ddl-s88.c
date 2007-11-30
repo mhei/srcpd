@@ -44,6 +44,7 @@
 #include "io.h"
 #include "srcp-power.h"
 #include "srcp-info.h"
+#include "syslogmessage.h"
 
 /***************************************************************/
 /* erddcd - Electric Railroad Direct Digital Command Daemon    */

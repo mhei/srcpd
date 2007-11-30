@@ -20,6 +20,7 @@
 #include "srcp-info.h"
 #include "srcp-session.h"
 #include "srcp-error.h"
+#include "syslogmessage.h"
 
 #ifdef HAVE_LINUX_SERIAL_H
 #include "linux/serial.h"

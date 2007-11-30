@@ -10,8 +10,9 @@
 #include "config-srcpd.h"
 #include "srcp-error.h"
 #include "srcp-info.h"
-
 #include "srcp-fb.h"
+#include "syslogmessage.h"
+
 
 /* one array for all buses             */
 /* not visible outside of this module   */

@@ -17,6 +17,8 @@
 #ifndef _IO_H
 #define _IO_H
 
+#include "config-srcpd.h"
+
 int  readByte(bus_t bus, int wait, unsigned char *the_byte);
 void writeByte(bus_t bus, unsigned char the_byte, unsigned long msec);
 void writeString(bus_t bus, unsigned char *the_string, unsigned long msecs);

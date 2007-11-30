@@ -6,14 +6,16 @@
  *
  */
 
+#include <netdb.h>
+
 #include "stdincludes.h"
 
 #include "config-srcpd.h"
 #include "srcp-server.h"
 #include "srcp-error.h"
 #include "srcp-info.h"
+#include "syslogmessage.h"
 
-#include <netdb.h>
 
 int server_reset_state;
 int server_shutdown_state;

@@ -9,6 +9,8 @@
 #include "srcp-error.h"
 #include "srcp-info.h"
 #include "srcp-gm.h"
+#include "syslogmessage.h"
+
 
 int setGM( bus_t bus, char *msg )
 {

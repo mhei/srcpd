@@ -21,6 +21,7 @@
 #include "config-srcpd.h"
 #include "ttycygwin.h"
 #include "portio.h"
+#include "syslogmessage.h"
 
 /**
  * open_port:

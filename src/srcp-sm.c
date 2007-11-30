@@ -22,6 +22,8 @@
 #include "srcp-info.h"
 #include "srcp-session.h"
 #include "srcp-sm.h"
+#include "syslogmessage.h"
+
 
 #define QUEUELEN 2
 
