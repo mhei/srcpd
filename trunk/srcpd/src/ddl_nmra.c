@@ -277,6 +277,7 @@
 #include "ddl_nmra.h"
 #include "syslogmessage.h"
 
+
 typedef struct {
     char *pattern;
     int patternlength;
@@ -899,7 +900,7 @@ int comp_nmra_accessory(bus_t busnumber, int nr, int output,
 
     int j;
 
-    DBG(busnumber, DBG_DEBUG,
+    syslog_bus(busnumber, DBG_DEBUG,
         "command for NMRA protocol for accessory decoders (NA) received");
 
     /* no special error handling, it's job of the clients */
@@ -962,7 +963,7 @@ int comp_nmra_baseline(bus_t busnumber, int address, int direction,
     int adr = 0;
     int j;
 
-    DBG(busnumber, DBG_DEBUG,
+    syslog_bus(busnumber, DBG_DEBUG,
         "command for NMRA protocol baseline (NB) received");
 
     adr = address;
@@ -1020,7 +1021,7 @@ int comp_nmra_f4b7s28(bus_t busnumber, int address, int direction,
     int f[5];
     int i, j, jj;
 
-    DBG(busnumber, DBG_DEBUG,
+    syslog_bus(busnumber, DBG_DEBUG,
         "command for NMRA protocol 4f7b28fs (N1) received");
 
     adr = address;
@@ -1105,7 +1106,7 @@ int comp_nmra_f4b7s128(bus_t busnumber, int address, int direction,
     int f[5];
     int i, j, jj;
 
-    DBG(busnumber, DBG_DEBUG,
+    syslog_bus(busnumber, DBG_DEBUG,
         "command for NMRA protocol 4f7b128fs (N2) received");
 
     adr = address;
@@ -1193,7 +1194,7 @@ int comp_nmra_f4b14s28(bus_t busnumber, int address, int direction,
     int f[5];
     int i, j, jj;
 
-    DBG(busnumber, DBG_DEBUG,
+    syslog_bus(busnumber, DBG_DEBUG,
         "command for NMRA protocol 4f14b28fs (N3) received");
 
     adr = address;
@@ -1289,7 +1290,7 @@ int comp_nmra_f4b14s128(bus_t busnumber, int address, int direction,
     int f[5];
     int i, j, jj;
 
-    DBG(busnumber, DBG_DEBUG,
+    syslog_bus(busnumber, DBG_DEBUG,
         "command for NMRA protocol 4f14b128fs (N4) received");
 
     adr = address;
@@ -1461,7 +1462,7 @@ void protocol_nmra_sm_direct_cvbyte(bus_t busnumber, int sckt, int cv,
 
     int i, j, l, ack;
 
-    DBG(busnumber, DBG_DEBUG,
+    syslog_bus(busnumber, DBG_DEBUG,
         "command for NMRA service mode instruction (SMDWY) received");
 
     /* no special error handling, it's job of the clients */
@@ -1607,7 +1608,7 @@ void protocol_nmra_sm_write_cvbit(bus_t bus, int sckt, int cv, int bit,
 
     int i, j, l, ack;
 
-    DBG(bus, DBG_DEBUG,
+    syslog_bus(bus, DBG_DEBUG,
         "command for NMRA service mode instruction (SMDWB) received");
 
     /* no special error handling, it's job of the clients */
@@ -1731,7 +1732,7 @@ void protocol_nmra_sm_phregister(bus_t bus, int sckt, int reg,
 
     int i, j, l, y, ack;
 
-    DBG(bus, DBG_DEBUG,
+    syslog_bus(bus, DBG_DEBUG,
         "command for NMRA service mode instruction (SMPRA) received");
 
     /* no special error handling, it's job of the clients */

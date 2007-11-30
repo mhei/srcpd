@@ -144,14 +144,14 @@ int queueSM( bus_t busnumber, int command, int type, int addr,
              int typeaddr, int bit, int value )
 {
   struct timeval akt_time;
-  DBG( busnumber, DBG_INFO, "queueSM for %i (in=%d out=%d)", addr,
+  syslog_bus( busnumber, DBG_INFO, "queueSM for %i (in=%d out=%d)", addr,
        in[ busnumber ], out[ busnumber ] );
   /* addr == -1 means using separate program-track */
   /* addr != -1 means programming on the main (only available with CV) */
   /* if ((addr == -1) || ((addr > 0) && (addr <= number_sm) && (type == CV))) */
   if ( queue_isfull( busnumber ) )
   {
-    DBG( busnumber, DBG_DEBUG, "SM Queue is full" );
+    syslog_bus( busnumber, DBG_DEBUG, "SM Queue is full" );
     return SRCP_TEMPORARILYPROHIBITED;
   }
 
@@ -170,7 +170,7 @@ int queueSM( bus_t busnumber, int command, int type, int addr,
     in[ busnumber ] = 0;
 
   pthread_mutex_unlock( &queue_mutex[ busnumber ] );
-  DBG( busnumber, DBG_DEBUG, "SM queued" );
+  syslog_bus( busnumber, DBG_DEBUG, "SM queued" );
   return SRCP_OK;
 }
 
@@ -220,7 +220,7 @@ int setSM( bus_t busnumber, int type, int addr, int typeaddr, int bit,
 {
   struct timeval tv;
 
-  DBG( busnumber, DBG_DEBUG,
+  syslog_bus( busnumber, DBG_DEBUG,
        "CV: %d         BIT: %d         VALUE: 0x%02x", typeaddr, bit,
        value );
   if ( addr == -1 )
@@ -244,7 +244,7 @@ int infoSM( bus_t busnumber, int command, int type, int addr,
   int status, result;
   struct timeval now;
 
-  DBG( busnumber, DBG_INFO, "TYPE: %d, CV: %d, BIT: %d, VALUE: 0x%02x",
+  syslog_bus( busnumber, DBG_INFO, "TYPE: %d, CV: %d, BIT: %d, VALUE: 0x%02x",
        type, typeaddr, bit, value );
   session_preparewait( busnumber );
   status = queueSM( busnumber, command, type, addr, typeaddr, bit, value );

@@ -74,7 +74,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
         return busnumber;
 
     if (busnumber >= MAX_BUSES) {
-            DBG(0, DBG_ERROR,
+            syslog_bus(0, DBG_ERROR,
                "Sorry, you have used an invalid bus number (%ld). "
                "If this is greater than or equal to %d,\n"
                "you need to recompile the sources.\n",
@@ -128,7 +128,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
             if (busnumber == 0)
                 busnumber += readconfig_server(doc, child, busnumber);
             else
-                DBG(0, DBG_ERROR, "Sorry, type=server is not allowed "
+                syslog_bus(0, DBG_ERROR, "Sorry, type=server is not allowed "
                                 "at bus %ld!\n", busnumber);
         }
 
@@ -161,7 +161,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
 #if defined(linux) || defined(__CYGWIN__) || defined(__FreeBSD__)
             busnumber += readconfig_DDL_S88(doc, child, busnumber);
 #else
-            DBG(0, DBG_ERROR, "Sorry, DDL-S88 not (yet) available on "
+            syslog_bus(0, DBG_ERROR, "Sorry, DDL-S88 not (yet) available on "
                             "this system.\n");
 #endif
         }
@@ -186,7 +186,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
 #ifdef linux
             busnumber += readconfig_I2C_DEV(doc, child, busnumber);
 #else
-            DBG(0, DBG_ERROR, "Sorry, I2C-DEV is only available on "
+            syslog_bus(0, DBG_ERROR, "Sorry, I2C-DEV is only available on "
                             "Linux (yet).\n");
 #endif
         }
@@ -201,7 +201,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
                 buses[current_bus].devicetype = HW_NETWORK;
             }
             else {
-                DBG(0, DBG_ERROR, "WARNING, \"%s\" (bus %ld) is an "
+                syslog_bus(0, DBG_ERROR, "WARNING, \"%s\" (bus %ld) is an "
                      "unknown device specifier!\n", child->name, current_bus);
             }
             free(txt2);
@@ -246,11 +246,11 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
             }
             switch (buses[current_bus].devicetype) {
                 case HW_FILENAME:
-                    DBG(current_bus, DBG_DEBUG, "** Filename='%s'",
+                    syslog_bus(current_bus, DBG_DEBUG, "** Filename='%s'",
                         buses[current_bus].device.file.path);
                     break;
                 case HW_NETWORK:
-                    DBG(current_bus, DBG_DEBUG,
+                    syslog_bus(current_bus, DBG_DEBUG,
                         "** Network Host='%s', Protocol=%d Port=%d",
                         buses[current_bus].device.net.hostname,
                         buses[current_bus].device.net.protocol,
@@ -331,7 +331,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
         }
 
         else
-            DBG(0, DBG_ERROR,"WARNING, \"%s\" (bus %ld) is an unknown tag!\n",
+            syslog_bus(0, DBG_ERROR,"WARNING, \"%s\" (bus %ld) is an unknown tag!\n",
                    child->name, current_bus);
 
         child = child->next;
@@ -348,7 +348,7 @@ static bus_t walk_config_xml(xmlDocPtr doc)
 
     root = xmlDocGetRootElement(doc);
     if (root == NULL) {
-        DBG(0, DBG_ERROR, "Error, no XML document root found.\n");
+        syslog_bus(0, DBG_ERROR, "Error, no XML document root found.\n");
         return bus;
     }
     child = root->children;
@@ -371,14 +371,14 @@ int readConfig(char *filename)
     num_buses = 0;
 
     /* some defaults */
-    DBG(0, DBG_DEBUG, "parsing %s", filename);
+    syslog_bus(0, DBG_DEBUG, "parsing %s", filename);
     doc = xmlParseFile(filename);
 
     /* always show a message */
     if (doc != NULL) {
-        DBG(0, DBG_DEBUG, "walking %s", filename);
+        syslog_bus(0, DBG_DEBUG, "walking %s", filename);
         rb = walk_config_xml(doc);
-        DBG(0, DBG_DEBUG, " done %s; found %ld buses", filename, rb);
+        syslog_bus(0, DBG_DEBUG, " done %s; found %ld buses", filename, rb);
         xmlFreeDoc(doc);
         /*
          *Free the global variables that may
@@ -387,7 +387,7 @@ int readConfig(char *filename)
         xmlCleanupParser();
     }
     else {
-        DBG(0, DBG_ERROR,
+        syslog_bus(0, DBG_ERROR,
             "Error, no XML document tree found parsing %s.\n", filename);
     }
     return (rb > 0);
@@ -401,14 +401,14 @@ int readConfig(char *filename)
  */
 void suspendThread(bus_t busnumber)
 {
-    DBG(0, DBG_DEBUG, "Thread on bus %d is going to stop.", busnumber);
+    syslog_bus(0, DBG_DEBUG, "Thread on bus %d is going to stop.", busnumber);
     /* Lock thread till new data to process arrives */
     pthread_mutex_lock(&buses[busnumber].transmit_mutex);
     pthread_cond_wait(&buses[busnumber].transmit_cond,
             &buses[busnumber].transmit_mutex);
      /* mutex released.       */
     pthread_mutex_unlock(&buses[busnumber].transmit_mutex);
-    DBG(0, DBG_DEBUG, "Thread on bus %d is working again.", busnumber);
+    syslog_bus(0, DBG_DEBUG, "Thread on bus %d is working again.", busnumber);
 }
 
 /**
@@ -422,6 +422,6 @@ void resumeThread(bus_t busnumber)
     pthread_mutex_lock(&buses[busnumber].transmit_mutex);
     pthread_cond_signal(&buses[busnumber].transmit_cond);
     pthread_mutex_unlock(&buses[busnumber].transmit_mutex);
-    DBG(0, DBG_DEBUG, "Thread on bus %d is woken up", busnumber);
+    syslog_bus(0, DBG_DEBUG, "Thread on bus %d is woken up", busnumber);
 }
 

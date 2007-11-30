@@ -55,13 +55,13 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         int i, offset;
         int portindex = 0;
 
-        DBG(busnumber, DBG_ERROR, 
+        syslog_bus(busnumber, DBG_ERROR, 
                 "Entering selectrix specific data for bus: %d",
                 busnumber);
 
         buses[busnumber].driverdata = malloc(sizeof(struct _SELECTRIX_DATA));
         if (buses[busnumber].driverdata == NULL) {
-                DBG(busnumber, DBG_ERROR,
+                syslog_bus(busnumber, DBG_ERROR,
                         "Memory allocation error in module '%s'.",
                         node->name);
                 return 0;
@@ -179,7 +179,7 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                                                 /* Store address and number SXbus */
                                                 __selectrix->fb_adresses[portindex] =
                                                         atoi((char *) subtxt) + offset;
-                                                DBG(busnumber, DBG_WARN,
+                                                syslog_bus(busnumber, DBG_WARN,
                                                     "Adding feedback port number"
                                                     " %d with address %s.",
                                                 portindex, subtxt + offset);
@@ -189,7 +189,7 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                                                 }
                                         }
                                 } else {
-                                        DBG(busnumber, DBG_WARN,
+                                        syslog_bus(busnumber, DBG_WARN,
 	                                        "WARNING, unknown sub "
                                                 "tag found: \"%s\"!\n",
 	                                        subchild->name);
@@ -197,7 +197,7 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                                 subchild = subchild->next;
                         }
                 } else {
-                        DBG(busnumber, DBG_WARN,
+                        syslog_bus(busnumber, DBG_WARN,
                         "WARNING, unknown tag found: \"%s\"!\n",
                         child->name);
                 }
@@ -208,34 +208,34 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                 __selectrix->number_fb) < __selectrix->max_address) {
                 if (init_GL(busnumber, __selectrix->number_gl)) {
                         __selectrix->number_gl = 0;
-                        DBG(busnumber, DBG_ERROR, "Can't create array "
+                        syslog_bus(busnumber, DBG_ERROR, "Can't create array "
                                                   "for locomotives");
                 }
                 if (init_GA(busnumber, __selectrix->number_ga)) {
                         __selectrix->number_ga = 0;
-                        DBG(busnumber, DBG_ERROR, "Can't create array "
+                        syslog_bus(busnumber, DBG_ERROR, "Can't create array "
                                                   "for assesoirs");
                 }
                 if (init_FB(busnumber, __selectrix->number_fb * 8)) {
                         __selectrix->number_fb = 0;
-                        DBG(busnumber, DBG_ERROR, "Can't create array "
+                        syslog_bus(busnumber, DBG_ERROR, "Can't create array "
                                                   "for feedback");
                 }
         } else {
                 __selectrix->number_gl = 0;
                 __selectrix->number_ga = 0;
                 __selectrix->number_fb = 0;
-                DBG(busnumber, DBG_ERROR, "Too many devices on the SX-bus");
+                syslog_bus(busnumber, DBG_ERROR, "Too many devices on the SX-bus");
         }
-        DBG(busnumber, DBG_WARN,
+        syslog_bus(busnumber, DBG_WARN,
                 "Found %d loco's.", __selectrix->number_gl);
-        DBG(busnumber, DBG_WARN,
+        syslog_bus(busnumber, DBG_WARN,
                 "Found %d switches.", __selectrix->number_ga);
-        DBG(busnumber, DBG_WARN,
+        syslog_bus(busnumber, DBG_WARN,
                 "Found %d feedback modules.", __selectrix->number_fb);
         if (portindex!= 0) {
                 for (i = 1; i <= portindex; i++) {
-                        DBG(busnumber, DBG_WARN,
+                        syslog_bus(busnumber, DBG_WARN,
                             "Found feedback port number %d with address %d.",
                             i, __selectrix->fb_adresses[i]);
                 }
@@ -251,18 +251,18 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 /* On success the port handle is changed to a value <> -1 */
 int init_bus_Selectrix(bus_t busnumber)
 {
-        DBG(busnumber, DBG_INFO, "Selectrix init: debuglevel %d",
+        syslog_bus(busnumber, DBG_INFO, "Selectrix init: debuglevel %d",
                 buses[busnumber].debuglevel);
         if (buses[busnumber].debuglevel <= DBG_DEBUG) {
                 open_port(busnumber);
         } else {
                 buses[busnumber].device.file.fd = -1;
         }
-        DBG(busnumber, DBG_INFO, "Selectrix init done, fd=%d",
+        syslog_bus(busnumber, DBG_INFO, "Selectrix init done, fd=%d",
                 buses[busnumber].device.file.fd);
-        DBG(busnumber, DBG_INFO, "Selectrix description: %s",
+        syslog_bus(busnumber, DBG_INFO, "Selectrix description: %s",
                 buses[busnumber].description);
-        DBG(busnumber, DBG_INFO, "Selectrix flags: %04X (hex)",
+        syslog_bus(busnumber, DBG_INFO, "Selectrix flags: %04X (hex)",
                 __selectrix->SXflags);
         return 0;
 }
@@ -273,7 +273,7 @@ int term_bus_Selectrix(bus_t busnumber)
         if (buses[busnumber].device.file.fd != -1) {
                 close_port(busnumber);
         }
-        DBG(busnumber, DBG_INFO, "Selectrix bus term done, "
+        syslog_bus(busnumber, DBG_INFO, "Selectrix bus term done, "
         "fd=%d", buses[busnumber].device.file.fd);
         free(buses[busnumber].driverdata);
         return 0;
@@ -357,7 +357,7 @@ void confRautenhaus(bus_t busnumber)
                 /* Write configuration to the device */
                 write_port(busnumber, SXwrite + RautenhsCC);
                 write_port(busnumber, configuration);
-                DBG(busnumber, DBG_INFO,
+                syslog_bus(busnumber, DBG_INFO,
                         "Selectrix on bus %ld, Rautenhaus "
                         "configuration is: %02X (hex).",
                         busnumber, configuration);
@@ -376,7 +376,7 @@ void selRautenhaus(bus_t busnumber, int adres)
                                 write_port(busnumber, SXwrite + RautenhsCC);
                                 write_port(busnumber, RautenhsB1);
                                 __selectrix->SXflags |= Rautenhaus_RTBS;
-                                DBG(busnumber, DBG_INFO,
+                                syslog_bus(busnumber, DBG_INFO,
                                         "Selectrix on bus %ld, Rautenhaus "
                                         "bus 1 selected.",
                                         busnumber);
@@ -389,7 +389,7 @@ void selRautenhaus(bus_t busnumber, int adres)
                                 write_port(busnumber, SXwrite + RautenhsCC);
                                 write_port(busnumber, RautenhsB0);
                                 __selectrix->SXflags &= ~Rautenhaus_RTBS;
-                                DBG(busnumber, DBG_INFO,
+                                syslog_bus(busnumber, DBG_INFO,
                                         "Selectrix on bus %ld, Rautenhaus "
                                         "bus 0 selected.",
                                         busnumber);
@@ -409,7 +409,7 @@ int readSXbus(bus_t busnumber)
         if (buses[busnumber].device.file.fd != -1 ) {
                 /* Wait until a character arrives */
                 rr = read_port(busnumber);
-                DBG(busnumber, DBG_DEBUG,
+                syslog_bus(busnumber, DBG_DEBUG,
                        "Selectrix on bus %ld, read byte %02X (hex).",
                        busnumber, rr);
                 if (rr < 0x100) {
@@ -431,7 +431,7 @@ void commandreadSXbus(bus_t busnumber, int SXadres)
                 write_port(busnumber, 0xaa);
                 /* receive data */
         } else {
-                DBG(busnumber, DBG_DEBUG,
+                syslog_bus(busnumber, DBG_DEBUG,
                         "Selectrix on bus %ld, address %d not read.",
                         busnumber, SXadres);
         }
@@ -449,7 +449,7 @@ void writeSXbus(bus_t busnumber, int SXadres, int SXdata)
                 /* write data to the SX-bus */
                 write_port(busnumber, SXdata);
         } else {
-                DBG(busnumber, DBG_DEBUG,
+                syslog_bus(busnumber, DBG_DEBUG,
                         "Selectrix on bus %ld, byte %d not to address %d.",
                         busnumber, SXdata, SXadres);
         }
@@ -467,7 +467,7 @@ void *thr_commandSelectrix(void *v)
         bus_t busnumber = (bus_t) v;
         state = 0;
         buses[busnumber].watchdog = 0;
-        DBG(busnumber, DBG_INFO,
+        syslog_bus(busnumber, DBG_INFO,
                 "Selectrix on bus #%ld command thread started.",
                 busnumber);
         while (1) {
@@ -487,7 +487,7 @@ void *thr_commandSelectrix(void *v)
                         }
                         infoPower(busnumber, msg);
                         queueInfoMessage(msg);
-                        DBG(busnumber, DBG_DEBUG,
+                        syslog_bus(busnumber, DBG_DEBUG,
                                 "Selectrix on bus %ld had a power change.",
                                 busnumber);
                         buses[busnumber].power_changed = 0;
@@ -511,7 +511,7 @@ void *thr_commandSelectrix(void *v)
                         if (__selectrix->max_address > addr) {
                                 /* Check: terminating the engine */
                                 if (gltmp.state == 2) {
-                                        DBG(busnumber, DBG_DEBUG,
+                                        syslog_bus(busnumber, DBG_DEBUG,
                                                 "Selectrix on bus %ld, engine "
                                                 "with address %d is removed",
                                                 busnumber, addr);
@@ -541,14 +541,14 @@ void *thr_commandSelectrix(void *v)
                                         writeSXbus(busnumber, addr, data);
                                         __selectrix->bus_data[addr] = data;
                                         cacheSetGL(busnumber, addr, gltmp);
-                                        DBG(busnumber, DBG_DEBUG,
+                                        syslog_bus(busnumber, DBG_DEBUG,
                                                 "Selectrix on bus %ld, "
                                                 "engine with address %d "
                                                 "has data %02X (hex).",
                                                 busnumber, addr, data);
                                 }
                         } else {
-                                DBG(busnumber, DBG_DEBUG,
+                                syslog_bus(busnumber, DBG_DEBUG,
                                         "Selectrix on bus %ld, invalid "
                                         "address %d with engine",
                                         busnumber, addr);
@@ -592,7 +592,7 @@ void *thr_commandSelectrix(void *v)
                                                 data &= 0x7f;
                                                 break;
                                         default:
-                                                DBG(busnumber, DBG_DEBUG,
+                                                syslog_bus(busnumber, DBG_DEBUG,
                                                         "Selectrix on "
                                                         "bus %ld, invalid "
                                                         "port number %d with "
@@ -628,7 +628,7 @@ void *thr_commandSelectrix(void *v)
                                                 data |= 0x80;
                                                 break;
                                         default:
-                                                DBG(busnumber, DBG_DEBUG,
+                                                syslog_bus(busnumber, DBG_DEBUG,
                                                         "Selectrix on "
                                                         "bus %ld, invalid "
                                                         "port number %d with "
@@ -639,12 +639,12 @@ void *thr_commandSelectrix(void *v)
                                 }
                                 writeSXbus(busnumber, addr, data);
                                 __selectrix->bus_data[addr] = data;
-                                DBG(busnumber, DBG_DEBUG,
+                                syslog_bus(busnumber, DBG_DEBUG,
                                         "Selectrix on bus %ld, address %d "
                                         "has new data %02X (hex).",
                                         busnumber, addr, data);
                         } else {
-                                DBG(busnumber, DBG_DEBUG,
+                                syslog_bus(busnumber, DBG_DEBUG,
                                         "Selectrix on bus %ld, invalid "
                                         "address %d with switch/signal or ...",
                                         busnumber, addr);
@@ -664,7 +664,7 @@ void *thr_commandSelectrix(void *v)
                                 commandreadSXbus(busnumber, addr);
                         } else {
                                 __selectrix->startFB = 0;
-                                DBG(busnumber, DBG_DEBUG,
+                                syslog_bus(busnumber, DBG_DEBUG,
                                         "Selectrix on bus %ld, invalid "
                                         "address %d with feedback index %d.",
                                         busnumber, addr, __selectrix->currentFB);
@@ -685,7 +685,7 @@ void *thr_feedbackSelectrix(void *v)
         int addr;
 
         bus_t busnumber = (bus_t) v;
-        DBG(busnumber, DBG_INFO, "Selectrix on bus #%ld "
+        syslog_bus(busnumber, DBG_INFO, "Selectrix on bus #%ld "
                 "feedback thread started.",
                 busnumber);
         __selectrix->currentFB = __selectrix->number_fb;
@@ -715,7 +715,7 @@ void *thr_feedbackSelectrix(void *v)
                                         __selectrix->startFB = 1;
                                         resumeThread(busnumber);
                                 } else {
-                                        DBG(busnumber, DBG_INFO,
+                                        syslog_bus(busnumber, DBG_INFO,
                                                 "Selectrix on bus %ld, "
                                                 "invalid address %d "
                                                 "with feedback index %d.",
@@ -744,14 +744,14 @@ void sig_processSelectrix(bus_t busnumber)
         int found;
         int dataUP, i;
 
-        DBG(busnumber, DBG_INFO, "Selectrix on bus #%ld signal processed.",
+        syslog_bus(busnumber, DBG_INFO, "Selectrix on bus #%ld signal processed.",
                 busnumber);
         /* Read the SX-bus */
         data = readSXbus(busnumber);
         if (__selectrix->startFB == 2) {
                 addr = __selectrix->fb_adresses[__selectrix->currentFB];
                 __selectrix->bus_data[addr] = data;
-                DBG(busnumber, DBG_INFO,
+                syslog_bus(busnumber, DBG_INFO,
                         "Selectrix on bus %ld, address %d "
                         "has feedback data %02X (hex).",
                         busnumber, addr, data);
@@ -786,7 +786,7 @@ void sig_processSelectrix(bus_t busnumber)
                         /* 0: SX-bus data */
                         addr = __selectrix->fb_adresses[__selectrix->currentFB];
                         __selectrix->bus_data[addr] = data;
-                        DBG(busnumber, DBG_INFO,
+                        syslog_bus(busnumber, DBG_INFO,
                                 "Selectrix on bus %ld, address %d "
                                 "has feedback data %02X (hex).",
                                 busnumber, addr, data);
@@ -805,7 +805,7 @@ void sig_processSelectrix(bus_t busnumber)
                         __selectrix->SXflags |= Rautenhaus_ADR;
                 }
         } else {
-                DBG(busnumber, DBG_INFO,
+                syslog_bus(busnumber, DBG_INFO,
                         "Selectrix on bus %ld, discarded data %02X (hex).",
                         busnumber, data);
         }

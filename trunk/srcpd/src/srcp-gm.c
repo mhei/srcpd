@@ -16,7 +16,7 @@ int setGM( bus_t bus, char *msg )
 {
     struct timeval akt_time;
     char *msgtmp;
-    DBG(0, DBG_DEBUG, "%s", msg);
+    syslog_bus(0, DBG_DEBUG, "%s", msg);
 
     gettimeofday(&akt_time, NULL);
     msgtmp = malloc(strlen(msg)+30);

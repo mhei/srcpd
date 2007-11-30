@@ -62,7 +62,7 @@ void queue_init(bus_t busnumber)
 
     error = pthread_mutex_init(&__DDL->queue_mutex, NULL);
     if (error) {
-        DBG(0, DBG_ERROR, "DDL Engine: Cannot create mutex. Abort!");
+        syslog_bus(0, DBG_ERROR, "DDL Engine: Cannot create mutex. Abort!");
         exit(1);
     }
 
@@ -174,7 +174,7 @@ int setSerialMode(bus_t busnumber, int mode)
             if (tcsetattr
                 (buses[busnumber].device.file.fd, TCSANOW,
                  &__DDL->maerklin_dev_termios) != 0) {
-                DBG(busnumber, DBG_ERROR,
+                syslog_bus(busnumber, DBG_ERROR,
                     "error setting serial device mode to Maerklin!");
                 return -1;
             }
@@ -183,7 +183,7 @@ int setSerialMode(bus_t busnumber, int mode)
         {
           if (set_customdivisor(buses[busnumber].device.file.fd, __DDL->serinfo_marklin)!=0)
           {
-            DBG(busnumber, DBG_ERROR, "cannot set custom divisor for maerklin of serial device!");
+            syslog_bus(busnumber, DBG_ERROR, "cannot set custom divisor for maerklin of serial device!");
             return -1;
           }
         }
@@ -196,7 +196,7 @@ int setSerialMode(bus_t busnumber, int mode)
             if (tcsetattr
                 (buses[busnumber].device.file.fd, TCSANOW,
                  &__DDL->nmra_dev_termios) != 0) {
-                DBG(busnumber, DBG_ERROR,
+                syslog_bus(busnumber, DBG_ERROR,
                     "error setting serial device mode to NMRA!");
                 return -1;
             }
@@ -205,7 +205,7 @@ int setSerialMode(bus_t busnumber, int mode)
         {
           if (set_customdivisor(buses[busnumber].device.file.fd, __DDL->serinfo_nmradcc)!=0)
           {
-            DBG(busnumber, DBG_ERROR, "cannot set custom divisor for nmra dcc of serial device!");
+            syslog_bus(busnumber, DBG_ERROR, "cannot set custom divisor for nmra dcc of serial device!");
             return -1;
           }
         }
@@ -214,7 +214,7 @@ int setSerialMode(bus_t busnumber, int mode)
         }
         break;
     default:
-        DBG(busnumber, DBG_ERROR,
+        syslog_bus(busnumber, DBG_ERROR,
             "error setting serial device to unknown mode!");
         return -1;
     }
@@ -232,7 +232,7 @@ int init_lineDDL(bus_t busnumber)
     /* open comport */
     dev = open(buses[busnumber].device.file.path, O_WRONLY);
     if (dev < 0) {
-        DBG(busnumber, DBG_FATAL, "Device '%s' open failed: %s (errno = %d). "
+        syslog_bus(busnumber, DBG_FATAL, "Device '%s' open failed: %s (errno = %d). "
                 "Terminating...\n", buses[busnumber].device.file.path,
                 strerror(errno), errno);
         /* there is no chance to continue */
@@ -241,7 +241,7 @@ int init_lineDDL(bus_t busnumber)
 #if linux
   if ((rc = reset_customdivisor(dev)) != 0)
   {
-    DBG(busnumber, DBG_FATAL,
+    syslog_bus(busnumber, DBG_FATAL,
             "error initializing device %s (reset custom divisor %d). Abort!",
             buses[busnumber].device.file.path, rc);
     exit(1);
@@ -252,12 +252,12 @@ int init_lineDDL(bus_t busnumber)
     tcflow(dev, TCOOFF);        /* suspend output */
 
     if (tcgetattr(dev, &__DDL->maerklin_dev_termios) != 0) {
-        DBG(busnumber, DBG_FATAL, "error initializing device %s. Abort!",
+        syslog_bus(busnumber, DBG_FATAL, "error initializing device %s. Abort!",
             buses[busnumber].device.file.path);
         exit(1);
     }
     if (tcgetattr(dev, &__DDL->nmra_dev_termios) != 0) {
-        DBG(busnumber, DBG_FATAL, "error initializing device %s. Abort!",
+        syslog_bus(busnumber, DBG_FATAL, "error initializing device %s. Abort!",
             buses[busnumber].device.file.path);
         exit(1);
     }
@@ -296,14 +296,14 @@ int init_lineDDL(bus_t busnumber)
   {
     if (init_serinfo(dev,3,&__DDL->serinfo_marklin)!=0)
     {
-      DBG(busnumber, DBG_FATAL,
+      syslog_bus(busnumber, DBG_FATAL,
               "error initializing device %s (init_serinfo mm). Abort!",
               buses[busnumber].device.file.path);
       exit(1);
     }
     if (init_serinfo(dev,7,&__DDL->serinfo_nmradcc)!=0)
     {
-      DBG(busnumber, DBG_FATAL,
+      syslog_bus(busnumber, DBG_FATAL,
               "error initializing device %s (init_serinfo dcc). Abort!",
               buses[busnumber].device.file.path);
       exit(1);
@@ -313,7 +313,7 @@ int init_lineDDL(bus_t busnumber)
     buses[busnumber].device.file.fd = dev; /* we need that value at the next step */
     /* setting serial device to default mode */
     if (!setSerialMode(busnumber, SDM_DEFAULT) == 0) {
-        DBG(busnumber, DBG_FATAL, "error initializing device %s. Abort!",
+        syslog_bus(busnumber, DBG_FATAL, "error initializing device %s. Abort!",
             buses[busnumber].device.file.path);
         exit(1);
     }
@@ -329,7 +329,7 @@ void init_MaerklinPacketPool(bus_t busnumber)
     int i, j;
 
     if (pthread_mutex_init(&__DDL->maerklin_pktpool_mutex, NULL)) {
-        DBG(busnumber, DBG_ERROR,
+        syslog_bus(busnumber, DBG_ERROR,
             "cannot create mutex (Maerklin packet pool). Abort!");
         exit(1);
     }
@@ -377,7 +377,7 @@ void update_MaerklinPacketPool(bus_t busnumber, int adr,
 {
     int i, found;
 
-    DBG(busnumber, DBG_INFO, "update MM Packet Pool: %d", adr);
+    syslog_bus(busnumber, DBG_INFO, "update MM Packet Pool: %d", adr);
     found = 0;
     for (i = 0; i < __DDL->MaerklinPacketPool.NrOfKnownAdresses && !found;
          i++)
@@ -416,7 +416,7 @@ void init_NMRAPacketPool(bus_t busnumber)
 
     result = pthread_mutex_init(&__DDL->nmra_pktpool_mutex, NULL);
     if (result != 0) {
-        DBG(busnumber, DBG_ERROR,
+        syslog_bus(busnumber, DBG_ERROR,
             "pthread_mutex_init failed: %s (error = %d). Terminating!\n",
             strerror(result), result);
         exit(1);
@@ -529,14 +529,14 @@ int checkRingIndicator(bus_t busnumber)
     result = ioctl(buses[busnumber].device.file.fd, TIOCMGET, &arg);
     if (result >= 0) {
         if (arg & TIOCM_RI) {
-            DBG(busnumber, DBG_INFO,
+            syslog_bus(busnumber, DBG_INFO,
                 "ring indicator alert. Power on tracks stopped!");
             return 1;
         }
         return 0;
     }
     else {
-        DBG(busnumber, DBG_ERROR,
+        syslog_bus(busnumber, DBG_ERROR,
             "ioctl() call failed. Power on tracks stopped!");
         return 1;
     }
@@ -561,7 +561,7 @@ int checkShortcut(bus_t busnumber)
             short_now = tv_shortcut.tv_sec * 1000000 + tv_shortcut.tv_usec;
             if (__DDL->SHORTCUTDELAY <=
                 (short_now - __DDL->short_detected)) {
-                DBG(busnumber, DBG_INFO,
+                syslog_bus(busnumber, DBG_INFO,
                     "shortcut detected. Power on tracks stopped!");
                 return 1;
             }
@@ -572,7 +572,7 @@ int checkShortcut(bus_t busnumber)
         }
     }
     else {
-        DBG(busnumber, DBG_INFO,
+        syslog_bus(busnumber, DBG_INFO,
             "ioctl() call failed. Power on tracks stopped!");
         return 1;
     }
@@ -802,7 +802,7 @@ void set_SerialLine(bus_t busnumber, int line, int mode)
         result = ioctl(buses[busnumber].device.file.fd, TIOCMSET, &arg);
     }
     if (result < 0)
-        DBG(busnumber, DBG_ERROR,
+        syslog_bus(busnumber, DBG_ERROR,
             "ioctl() call failed. Serial line not set! (%d: %d)", line,
             mode);
 }
@@ -846,11 +846,11 @@ int check_lines(bus_t busnumber)
     if (buses[busnumber].power_changed == 1) {
         if (buses[busnumber].power_state == 0) {
             set_lines_off(busnumber);
-            DBG(busnumber, DBG_INFO, "refresh cycle stopped.");
+            syslog_bus(busnumber, DBG_INFO, "refresh cycle stopped.");
         }
         if (buses[busnumber].power_state == 1) {
 	    set_lines_on(busnumber);
-            DBG(busnumber, DBG_INFO, "refresh cycle restarted.");
+            syslog_bus(busnumber, DBG_INFO, "refresh cycle restarted.");
         }
         buses[busnumber].power_changed = 0;
         infoPower(busnumber, msg);
@@ -1012,7 +1012,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     buses[busnumber].driverdata = malloc(sizeof(struct _DDL_DATA));
 
     if (buses[busnumber].driverdata == NULL) {
-        DBG(busnumber, DBG_ERROR,
+        syslog_bus(busnumber, DBG_ERROR,
                 "Memory allocation error in module '%s'.", node->name);
         return 0;
     }
@@ -1177,7 +1177,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         }
 
         else
-            DBG(busnumber, DBG_WARN,
+            syslog_bus(busnumber, DBG_WARN,
                     "WARNING, unknown tag found: \"%s\"!\n",
                     child->name);;
 
@@ -1186,12 +1186,12 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     if (init_GA(busnumber, __DDL->number_ga)) {
         __DDL->number_ga = 0;
-        DBG(busnumber, DBG_ERROR, "Can't create array for assesoirs");
+        syslog_bus(busnumber, DBG_ERROR, "Can't create array for assesoirs");
     }
 
     if (init_GL(busnumber, __DDL->number_gl)) {
         __DDL->number_gl = 0;
-        DBG(busnumber, DBG_ERROR, "Can't create array for locomotives");
+        syslog_bus(busnumber, DBG_ERROR, "Can't create array for locomotives");
     }
 
     return (1);
@@ -1212,7 +1212,7 @@ int term_bus_DDL(bus_t busnumber)
     if (buses[busnumber].device.file.fd != -1)
         close(buses[busnumber].device.file.fd);
 
-    DBG(busnumber, DBG_INFO, "DDL bus %ld terminated", busnumber);
+    syslog_bus(busnumber, DBG_INFO, "DDL bus %ld terminated", busnumber);
     free(buses[busnumber].driverdata);
     return 0;
 }
@@ -1222,7 +1222,7 @@ int term_bus_DDL(bus_t busnumber)
 /* return code wird ignoriert (vorerst) */
 int init_bus_DDL(bus_t busnumber)
 {
-    DBG(busnumber, DBG_INFO, "DDL init with debug level %d",
+    syslog_bus(busnumber, DBG_INFO, "DDL init with debug level %d",
         buses[busnumber].debuglevel);
     int i;
 
@@ -1264,7 +1264,7 @@ int init_bus_DDL(bus_t busnumber)
     if (__DDL->ENABLED_PROTOCOLS & EP_NMRADCC) {
         init_NMRAPacketPool(busnumber);
     }
-    DBG(busnumber, DBG_INFO, "DDL init done");
+    syslog_bus(busnumber, DBG_INFO, "DDL init done");
     return 0;
 }
 
@@ -1275,7 +1275,7 @@ void *thr_sendrec_DDL(void *v)
     int addr, error;
     bus_t busnumber = (bus_t) v;
 
-    DBG(busnumber, DBG_INFO, "DDL started on device %s",
+    syslog_bus(busnumber, DBG_INFO, "DDL started on device %s",
         buses[busnumber].device.file.path);
 
     buses[busnumber].watchdog = 1;
@@ -1288,7 +1288,7 @@ void *thr_sendrec_DDL(void *v)
                        (void *) &(__DDL->refresh_param) );
 
     if (error) {
-        DBG(busnumber, DBG_ERROR,
+        syslog_bus(busnumber, DBG_ERROR,
             "cannot create thread: refresh_cycle. Abort! %d", error);
     }
 
@@ -1306,7 +1306,7 @@ void *thr_sendrec_DDL(void *v)
             addr = gltmp.id;
             speed = gltmp.speed;
             direction = gltmp.direction;
-            DBG(busnumber, DBG_DEBUG, "next command: %c (%x) %d %d", p, p,
+            syslog_bus(busnumber, DBG_DEBUG, "next command: %c (%x) %d %d", p, p,
                 pv, addr);
             switch (p) {
             case 'M':          /* Motorola Codes */
@@ -1440,7 +1440,7 @@ void *thr_sendrec_DDL(void *v)
             unqueueNextGA(busnumber, &gatmp);
             addr = gatmp.id;
             p = gatmp.protocol;
-            DBG(busnumber, DBG_DEBUG, "next GA command: %c (%x) %d", p, p,
+            syslog_bus(busnumber, DBG_DEBUG, "next GA command: %c (%x) %d", p, p,
                 addr);
             switch (p) {
             case 'M':          /* Motorola Codes */
@@ -1458,7 +1458,7 @@ void *thr_sendrec_DDL(void *v)
             if (gatmp.activetime >= 0) {
                 usleep(1000L * (unsigned long) gatmp.activetime);
                 gatmp.action = 0;
-                DBG(busnumber, DBG_DEBUG, "delayed GA command: %c (%x) %d",
+                syslog_bus(busnumber, DBG_DEBUG, "delayed GA command: %c (%x) %d",
                     p, p, addr);
                 switch (p) {
                 case 'M':      /* Motorola Codes */

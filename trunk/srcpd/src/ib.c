@@ -62,13 +62,13 @@ static int resetBaudrate( const speed_t speed, const bus_t busnumber );
 
 int readConfig_IB( xmlDocPtr doc, xmlNodePtr node, bus_t busnumber )
 {
-  DBG( busnumber, DBG_INFO, "Reading configuration for bus '%s'",
+  syslog_bus( busnumber, DBG_INFO, "Reading configuration for bus '%s'",
           node->name);
 
   buses[ busnumber ].driverdata = malloc( sizeof( struct _IB_DATA ) );
 
     if (buses[busnumber].driverdata == NULL) {
-        DBG(busnumber, DBG_ERROR,
+        syslog_bus(busnumber, DBG_ERROR,
                 "Memory allocation error in module '%s'.", node->name);
         return 0;
     }
@@ -149,7 +149,7 @@ int readConfig_IB( xmlDocPtr doc, xmlNodePtr node, bus_t busnumber )
     }
 
     else
-      DBG( busnumber, DBG_WARN,
+      syslog_bus( busnumber, DBG_WARN,
            "WARNING, unknown tag found: \"%s\"!\n",
            child->name );
     ;
@@ -211,23 +211,23 @@ int init_bus_IB( bus_t busnumber )
   if ( init_GA( busnumber, __ib->number_ga ) )
   {
     __ib->number_ga = 0;
-    DBG( busnumber, DBG_ERROR, "Can't create array for assesoirs" );
+    syslog_bus( busnumber, DBG_ERROR, "Can't create array for assesoirs" );
   }
 
   if ( init_GL( busnumber, __ib->number_gl ) )
   {
     __ib->number_gl = 0;
-    DBG( busnumber, DBG_ERROR, "Can't create array for locomotives" );
+    syslog_bus( busnumber, DBG_ERROR, "Can't create array for locomotives" );
   }
   if ( init_FB( busnumber, __ib->number_fb * 16 ) )
   {
     __ib->number_fb = 0;
-    DBG( busnumber, DBG_ERROR, "Can't create array for feedback" );
+    syslog_bus( busnumber, DBG_ERROR, "Can't create array for feedback" );
   }
 
   status = 0;
   /* printf("Bus %d with debuglevel %d\n", busnumber, buses[ busnumber ].debuglevel); */
-  DBG( busnumber, DBG_INFO, "Bus %d with debuglevel %d\n", busnumber,
+  syslog_bus( busnumber, DBG_INFO, "Bus %d with debuglevel %d\n", busnumber,
        buses[ busnumber ].debuglevel );
   if ( buses[ busnumber ].type != SERVER_IB )
   {
@@ -254,7 +254,7 @@ int init_bus_IB( bus_t busnumber )
   if ( status == 0 )
     __ib->working_IB = 1;
 
-  DBG( busnumber, DBG_INFO, "INIT_BUS_IB exited with code: %d\n", status );
+  syslog_bus( busnumber, DBG_INFO, "INIT_BUS_IB exited with code: %d\n", status );
   /* printf( "INIT_BUS_IB exited with code: %d\n", status ); */
 
   __ib->last_type = -1;
@@ -289,7 +289,7 @@ void *thr_sendrec_IB( void *v )
   int zaehler1, fb_zaehler1, fb_zaehler2;
 
   busnumber = ( bus_t ) v;
-  DBG( busnumber, DBG_INFO, "thr_sendrec_IB is startet as bus %i",
+  syslog_bus( busnumber, DBG_INFO, "thr_sendrec_IB is startet as bus %i",
        busnumber );
 
   /* initialize tga-structure */
@@ -307,7 +307,7 @@ void *thr_sendrec_IB( void *v )
     {
       if ( __ib->emergency_on_ib == 1 )
       {
-        DBG( busnumber, DBG_INFO,
+        syslog_bus( busnumber, DBG_INFO,
              "send power off to IB off while emergency-stop" );
         __ib->emergency_on_ib = 2;
         byte2send = 0xA6;
@@ -389,7 +389,7 @@ void send_command_ga_IB( bus_t busnumber )
   {
     if ( __ib->tga[ i ].id )
     {
-      DBG( busnumber, DBG_DEBUG, "Time %i,%i", ( int ) akt_time.tv_sec,
+      syslog_bus( busnumber, DBG_DEBUG, "Time %i,%i", ( int ) akt_time.tv_sec,
            ( int ) akt_time.tv_usec );
       cmp_time = __ib->tga[ i ].t;
 
@@ -462,7 +462,7 @@ void send_command_ga_IB( bus_t busnumber )
             gatmp.t.tv_usec -= 1000000;
           }
           __ib->tga[ i1 ] = gatmp;
-          DBG( busnumber, DBG_DEBUG,
+          syslog_bus( busnumber, DBG_DEBUG,
                "GA %i for switch off at %i,%i on %i",
                __ib->tga[ i1 ].id, ( int ) __ib->tga[ i1 ].t.tv_sec,
                ( int ) __ib->tga[ i1 ].t.tv_usec, i1 );
@@ -801,7 +801,7 @@ void send_command_sm_IB( bus_t busnumber )
     __ib->last_bit = smakt.bit;
     __ib->last_value = smakt.value;
 
-    DBG( busnumber, DBG_DEBUG, "in send_command_sm: last_type[%d] = %d",
+    syslog_bus( busnumber, DBG_DEBUG, "in send_command_sm: last_type[%d] = %d",
          busnumber, __ib->last_type );
     switch ( smakt.command )
     {
@@ -934,7 +934,7 @@ void check_status_IB( bus_t busnumber )
       /* because IB can report uninitialized GLs... */
       if ( !isInitializedGL( busnumber, gltmp.id ) )
       {
-        DBG( busnumber, DBG_INFO,
+        syslog_bus( busnumber, DBG_INFO,
              "IB reported uninitialized GL. Performing default init for %d",
              gltmp.id );
         initGL( busnumber, gltmp.id, 'P', 1, 126, 5 );
@@ -990,7 +990,7 @@ void check_status_IB( bus_t busnumber )
   /* overheat, short-circuit on track etc. */
   if ( xevnt2 & 0x3f )
   {
-    DBG( busnumber, DBG_DEBUG,
+    syslog_bus( busnumber, DBG_DEBUG,
          "On bus %i short detected; old-state is %i", busnumber,
          getPower( busnumber ) );
     if ( ( __ib->emergency_on_ib == 0 ) && ( getPower( busnumber ) ) )
@@ -1024,7 +1024,7 @@ void check_status_IB( bus_t busnumber )
     readByte_IB( busnumber, 1, &rr );
     if ( !( rr & 0x08 ) )
     {
-      DBG( busnumber, DBG_DEBUG,
+      syslog_bus( busnumber, DBG_DEBUG,
            "On bus %i no power detected; old-state is %i", busnumber,
            getPower( busnumber ) );
       if ( ( __ib->emergency_on_ib == 0 ) && ( getPower( busnumber ) ) )
@@ -1035,7 +1035,7 @@ void check_status_IB( bus_t busnumber )
     }
     else
     {
-      DBG( busnumber, DBG_DEBUG,
+      syslog_bus( busnumber, DBG_DEBUG,
            "On bus %i power detected; old-state is %i", busnumber,
            getPower( busnumber ) );
       if ( ( __ib->emergency_on_ib == 1 ) || ( !getPower( busnumber ) ) )
@@ -1062,7 +1062,7 @@ void check_status_pt_IB( bus_t busnumber )
   unsigned char byte2send;
   unsigned char rr[ 7 ];
 
-  DBG( busnumber, DBG_DEBUG,
+  syslog_bus( busnumber, DBG_DEBUG,
        "We've got an answer from programming decoder" );
   /* first clear input-buffer */
   i = 0;
@@ -1118,13 +1118,13 @@ static int open_comport( bus_t busnumber, speed_t baud )
 
   struct termios interface;
 
-  DBG( busnumber, DBG_INFO, "Try to open serial line %s for %i baud",
+  syslog_bus( busnumber, DBG_INFO, "Try to open serial line %s for %i baud",
        name, ( 2400 * ( 1 << ( baud - 11 ) ) ) );
   fd = open( name, O_RDWR );
   buses[ busnumber ].device.file.fd = fd;
   if (fd == -1)
   {
-      DBG(busnumber, DBG_ERROR, "Open serial line failed: %s (errno = %d).\n",
+      syslog_bus(busnumber, DBG_ERROR, "Open serial line failed: %s (errno = %d).\n",
               strerror(errno), errno);
   }
   else
@@ -1167,17 +1167,17 @@ static int init_lineIB( bus_t busnumber )
   struct termios interface;
 
   char *name = buses[busnumber].device.file.path;
-  DBG( busnumber, DBG_INFO, "Beginning to detect IB on serial line: %s\n",
+  syslog_bus( busnumber, DBG_INFO, "Beginning to detect IB on serial line: %s\n",
        name );
   /* printf("Beginning to detect IB on serial line: %s\n", name); */
 
-  DBG( busnumber, DBG_INFO, "Opening serial line %s for 2400 baud\n",
+  syslog_bus( busnumber, DBG_INFO, "Opening serial line %s for 2400 baud\n",
        name );
   fd = open( name, O_RDWR );
-  DBG( busnumber, DBG_DEBUG, "fd = %d", fd );
+  syslog_bus( busnumber, DBG_DEBUG, "fd = %d", fd );
   if ( fd == -1 )
   {
-    DBG(busnumber, DBG_ERROR, "Open serial line failed: %s (errno = %d)\n",
+    syslog_bus(busnumber, DBG_ERROR, "Open serial line failed: %s (errno = %d)\n",
       strerror(errno), errno);
     return 1;
   }
@@ -1195,14 +1195,14 @@ static int init_lineIB( bus_t busnumber )
 
   status = 0;
   sleep( 1 );
-  DBG( busnumber, DBG_INFO, "Clearing input-buffer\n" );
+  syslog_bus( busnumber, DBG_INFO, "Clearing input-buffer\n" );
 
   while ( status != -1 )
     status = readByte_IB( busnumber, 1, &rr );
 
   status = 0;
 
-  DBG( busnumber, DBG_INFO, "Sending BREAK... " );
+  syslog_bus( busnumber, DBG_INFO, "Sending BREAK... " );
   /* printf("Sending BREAK... "); */
 
   status = sendBreak( fd, busnumber );
@@ -1210,11 +1210,11 @@ static int init_lineIB( bus_t busnumber )
 
   if ( status == 0 )
   {
-    DBG( busnumber, DBG_INFO, "successful.\n" );
+    syslog_bus( busnumber, DBG_INFO, "successful.\n" );
   }
   else
   {
-    DBG( busnumber, DBG_INFO, "not successful.\n" );
+    syslog_bus( busnumber, DBG_INFO, "not successful.\n" );
   }
 
   /* open the comport in 2400, to get baud rate from IB and turn off
@@ -1224,7 +1224,7 @@ static int init_lineIB( bus_t busnumber )
   buses[ busnumber ].device.file.fd = fd;
   if ( fd < 0 )
   {
-    DBG(busnumber, DBG_ERROR, "Open serial line failed: %s (errno = %d)\n",
+    syslog_bus(busnumber, DBG_ERROR, "Open serial line failed: %s (errno = %d)\n",
       strerror(errno), errno);
     return ( -1 );
   }
@@ -1233,7 +1233,7 @@ static int init_lineIB( bus_t busnumber )
   baud = checkBaudrate( fd, busnumber );
   if ( ( baud == B0 ) || ( baud > B38400 ) )
   {
-    DBG( busnumber, DBG_ERROR, "checkBaurate() failed\n" );
+    syslog_bus( busnumber, DBG_ERROR, "checkBaurate() failed\n" );
     return -1;
   }
 
@@ -1249,7 +1249,7 @@ static int init_lineIB( bus_t busnumber )
 
   fd = open_comport( busnumber, buses[ busnumber ].device.file.baudrate );
   buses[ busnumber ].device.file.fd = fd;
-  DBG( busnumber, DBG_DEBUG, "fd after open_comport = %d", fd );
+  syslog_bus( busnumber, DBG_DEBUG, "fd after open_comport = %d", fd );
   if ( fd < 0 )
   {
     printf( "open_comport() failed\n" );
@@ -1262,7 +1262,7 @@ static int init_lineIB( bus_t busnumber )
     return ( 1 );
   if ( rr == 'D' )
   {
-    DBG( busnumber, DBG_FATAL,
+    syslog_bus( busnumber, DBG_FATAL,
          "Intellibox in download mode.\nDO NOT PROCEED!\n" );
     return ( 2 );
   }
@@ -1274,7 +1274,7 @@ static int sendBreak( const int fd, bus_t busnumber )
 {
   if ( tcflush( fd, TCIOFLUSH ) != 0 )
   {
-    DBG(busnumber, DBG_ERROR,
+    syslog_bus(busnumber, DBG_ERROR,
             "sendBreak(): tcflush before break failed: %s (errno = %d)\n",
             strerror(errno), errno);
     return -1;
@@ -1285,7 +1285,7 @@ static int sendBreak( const int fd, bus_t busnumber )
 
   if ( tcsendbreak( fd, 100 ) != 0 )
   {
-    DBG(busnumber, DBG_ERROR,
+    syslog_bus(busnumber, DBG_ERROR,
             "sendBreak(): tcsendbreak failed: %s (errno = %d)\n",
             strerror(errno), errno);
     return -1;
@@ -1318,17 +1318,17 @@ speed_t checkBaudrate( const int fd, const bus_t busnumber )
   int i;
   speed_t internalBaudrate = B0;
 
-  DBG( busnumber, DBG_INFO,
+  syslog_bus( busnumber, DBG_INFO,
        "Checking baud rate inside IB, see special option S1 in IB-Handbook\n" );
   for ( i = 0; i < 10; i++ )
     input[ i ] = 0;
   while ( ( found == 0 ) && ( baudrate <= 38400 ) )
   {
-    DBG( busnumber, DBG_INFO, "baudrate = %i\n", baudrate );
+    syslog_bus( busnumber, DBG_INFO, "baudrate = %i\n", baudrate );
     error = tcgetattr( fd, &interface );
     if ( error < 0 )
     {
-        DBG(busnumber, DBG_ERROR,
+        syslog_bus(busnumber, DBG_ERROR,
                 "checkBaudrate(): tcgetattr failed: %s (errno = %d)\n",
                 strerror(errno), errno);
         return B0;
@@ -1357,7 +1357,7 @@ speed_t checkBaudrate( const int fd, const bus_t busnumber )
 
     if ( cfsetispeed( &interface, internalBaudrate ) != 0 )
     {
-        DBG(busnumber, DBG_ERROR,
+        syslog_bus(busnumber, DBG_ERROR,
                 "checkBaudrate(): cfsetispeed failed: %s (errno = %d)\n",
                 strerror(errno), errno);
         /*CHECK: What to do now?*/
@@ -1366,7 +1366,7 @@ speed_t checkBaudrate( const int fd, const bus_t busnumber )
     error = tcsetattr( fd, TCSANOW, &interface );
     if ( error != 0 )
     {
-        DBG(busnumber, DBG_ERROR,
+        syslog_bus(busnumber, DBG_ERROR,
                 "checkBaudrate(): tcsetattr failed: %s (errno = %d)\n",
                 strerror(errno), errno);
         return B0;
@@ -1393,11 +1393,11 @@ speed_t checkBaudrate( const int fd, const bus_t busnumber )
         found = 1;
         if ( input[ 0 ] == 'D' )
         {
-          DBG( busnumber, DBG_FATAL,
+          syslog_bus( busnumber, DBG_FATAL,
                "Intellibox in download mode.\nDO NOT PROCEED!\n" );
           return ( 2 );
         }
-        DBG( busnumber, DBG_INFO,
+        syslog_bus( busnumber, DBG_INFO,
              "IBox found; P50-commands are disabled.\n" );
         break;
       case 2:
@@ -1405,7 +1405,7 @@ speed_t checkBaudrate( const int fd, const bus_t busnumber )
         found = 1;
         /* don't know if this also works, when P50 is enabled... */
         /* check disabled for now... */
-        DBG( busnumber, DBG_INFO,
+        syslog_bus( busnumber, DBG_INFO,
              "IBox found; P50-commands are enabled.\n" );
         break;
       default:
@@ -1419,7 +1419,7 @@ speed_t checkBaudrate( const int fd, const bus_t busnumber )
     }
     usleep( 200000 );         /* 200 ms */
   }
-  DBG( busnumber, DBG_INFO, "Baudrate checked: %d\n", baudrate );
+  syslog_bus( busnumber, DBG_INFO, "Baudrate checked: %d\n", baudrate );
   return internalBaudrate;
 }
 
@@ -1437,27 +1437,27 @@ static int resetBaudrate( const speed_t speed, const bus_t busnumber )
   switch ( speed )
   {
     case B2400:
-      DBG( busnumber, DBG_INFO, "Changing baud rate to 2400 bps\n" );
+      syslog_bus( busnumber, DBG_INFO, "Changing baud rate to 2400 bps\n" );
       sendString = (unsigned char *) "B2400";
       writeString( busnumber, sendString, 0 );
       break;
     case B4800:
-      DBG( busnumber, DBG_INFO, "Changing baud rate to 4800 bps\n" );
+      syslog_bus( busnumber, DBG_INFO, "Changing baud rate to 4800 bps\n" );
       sendString = (unsigned char *) "B4800";
       writeString( busnumber, sendString, 0 );
       break;
     case B9600:
-      DBG( busnumber, DBG_INFO, "Changing baud rate to 9600 bps\n" );
+      syslog_bus( busnumber, DBG_INFO, "Changing baud rate to 9600 bps\n" );
       sendString = (unsigned char *) "B9600";
       writeString( busnumber, sendString, 0 );
       break;
     case B19200:
-      DBG( busnumber, DBG_INFO, "Changing baud rate to 19200 bps\n" );
+      syslog_bus( busnumber, DBG_INFO, "Changing baud rate to 19200 bps\n" );
       sendString = (unsigned char *) "B19200";
       writeString( busnumber, sendString, 0 );
       break;
     case B38400:
-      DBG( busnumber, DBG_INFO, "Changing baud rate to 38400 bps\n" );
+      syslog_bus( busnumber, DBG_INFO, "Changing baud rate to 38400 bps\n" );
       sendString = (unsigned char *) "B38400";
       writeString( busnumber, sendString, 0 );
       break;
@@ -1487,7 +1487,7 @@ static int switchOffP50Command( const bus_t busnumber )
   unsigned char *sendString = (unsigned char *)"xZzA1";
   int status;
 
-  DBG( busnumber, DBG_INFO, "Switching off P50-commands\n" );
+  syslog_bus( busnumber, DBG_INFO, "Switching off P50-commands\n" );
 
   writeString( busnumber, sendString, 0 );
   byte2send = 0x0d;
@@ -1541,7 +1541,7 @@ static int readAnswer_IB( const bus_t busnumber,
 
   if ( generatePrintf > 0 )
   {
-    DBG( busnumber, DBG_INFO, "IBox returned: %s\n", input );
+    syslog_bus( busnumber, DBG_INFO, "IBox returned: %s\n", input );
   }
   return 0;
 }

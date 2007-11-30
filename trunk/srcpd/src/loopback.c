@@ -25,7 +25,7 @@ int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     buses[busnumber].driverdata = malloc(sizeof(struct _LOOPBACK_DATA));
 
     if (buses[busnumber].driverdata == NULL) {
-        DBG(busnumber, DBG_ERROR,
+        syslog_bus(busnumber, DBG_ERROR,
                 "Memory allocation error in module '%s'.", node->name);
         return 0;
     }
@@ -76,7 +76,7 @@ int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         }
 
         else
-            DBG(busnumber, DBG_WARN,
+            syslog_bus(busnumber, DBG_WARN,
                     "WARNING, unknown tag found: \"%s\"!\n",
                     child->name);;
         
@@ -85,17 +85,17 @@ int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     if (init_GL(busnumber, __loopback->number_gl)) {
         __loopback->number_gl = 0;
-        DBG(busnumber, DBG_ERROR, "Can't create array for locomotives");
+        syslog_bus(busnumber, DBG_ERROR, "Can't create array for locomotives");
     }
 
     if (init_GA(busnumber, __loopback->number_ga)) {
         __loopback->number_ga = 0;
-        DBG(busnumber, DBG_ERROR, "Can't create array for accessoires");
+        syslog_bus(busnumber, DBG_ERROR, "Can't create array for accessoires");
     }
 
     if (init_FB(busnumber, __loopback->number_fb)) {
         __loopback->number_fb = 0;
-        DBG(busnumber, DBG_ERROR, "Can't create array for feedback");
+        syslog_bus(busnumber, DBG_ERROR, "Can't create array for feedback");
     }
     return (1);
 }
@@ -109,7 +109,7 @@ static int init_lineLoopback(bus_t bus)
 
 int term_bus_LOOPBACK(bus_t bus)
 {
-    DBG(bus, DBG_INFO, "loopback bus #%ld terminating", bus);
+    syslog_bus(bus, DBG_INFO, "loopback bus #%ld terminating", bus);
     free(buses[bus].driverdata);
     return 0;
 }
@@ -171,17 +171,17 @@ int init_ga_LOOPBACK(ga_state_t *ga)
  */
 int init_bus_LOOPBACK(bus_t i)
 {
-    DBG(i, DBG_INFO, "loopback init: bus #%ld, debug %d", i,
+    syslog_bus(i, DBG_INFO, "loopback init: bus #%ld, debug %d", i,
         buses[i].debuglevel);
     if (buses[i].debuglevel == 0) {
-        DBG(i, DBG_INFO, "loopback bus #%ld open device %s (not really!)",
+        syslog_bus(i, DBG_INFO, "loopback bus #%ld open device %s (not really!)",
             i, buses[i].device.file.path);
         buses[i].device.file.fd = init_lineLoopback(i);
     }
     else {
         buses[i].device.file.fd = -1;
     }
-    DBG(i, DBG_INFO, "loopback init done");
+    syslog_bus(i, DBG_INFO, "loopback init done");
     return 0;
 }
 
@@ -192,7 +192,7 @@ void *thr_sendrec_LOOPBACK(void *v)
     int addr;
     bus_t bus = (bus_t) v;
 
-    DBG(bus, DBG_INFO, "loopback started, bus #%d, %s", bus,
+    syslog_bus(bus, DBG_INFO, "loopback started, bus #%d, %s", bus,
         buses[bus].device.file.path);
 
     buses[bus].watchdog = 1;

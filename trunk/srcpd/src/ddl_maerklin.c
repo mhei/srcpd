@@ -331,7 +331,7 @@ int comp_maerklin_1(bus_t busnumber, int address, int direction,
     char packet[18];
     int i, j;
     gl_state_t loco;
-    DBG(busnumber, DBG_DEBUG,
+    syslog_bus(busnumber, DBG_DEBUG,
         "Command for Maerklin protocol type 1: %d received", address);
 
     /* no special error handling, it's job of the clients */
@@ -405,7 +405,7 @@ int comp_maerklin_2(bus_t busnumber, int address, int direction,
     int adr = 0;
     int mspeed;
 
-    DBG(busnumber, DBG_DEBUG,
+    syslog_bus(busnumber, DBG_DEBUG,
         "Command for Maerklin protocol type 2 (M2) received");
 
     adr = address;
@@ -537,7 +537,7 @@ int comp_maerklin_2(bus_t busnumber, int address, int direction,
         }
     }
 
-    DBG(busnumber, DBG_DEBUG, "   sending packages ... ");
+    syslog_bus(busnumber, DBG_DEBUG, "   sending packages ... ");
 
     /* lets have a look, what has changed ... */
     for (i = 0; i < 4; i++) {
@@ -575,7 +575,7 @@ int comp_maerklin_3(bus_t busnumber, int address, int direction,
     int speed_halfstep = 0;
     int mspeed;
 
-    DBG(busnumber, DBG_DEBUG,
+    syslog_bus(busnumber, DBG_DEBUG,
         "Command for Maerklin protocol type 3 (28 speed steps) (M3) received");
 
     adr = address;
@@ -754,7 +754,7 @@ int comp_maerklin_4(bus_t busnumber, int address, int direction,
     int adr = 0;
     int mspeed;
 
-    DBG(busnumber, DBG_DEBUG, "Command for Maerklin protocol type 4 "
+    syslog_bus(busnumber, DBG_DEBUG, "Command for Maerklin protocol type 4 "
             "(M4, Uhlenbrock Intellibox) received");
 
     adr = address;
@@ -1004,7 +1004,7 @@ int comp_maerklin_ms(bus_t busnumber, int address, int port, int action)
     int i, j;
     int id, subid;
 
-    DBG(busnumber, DBG_DEBUG,
+    syslog_bus(busnumber, DBG_DEBUG,
         "command for solenoid (Maerklin) (MS) received");
 
     /* no special error handling, it's job of the clients */
@@ -1086,7 +1086,7 @@ int comp_maerklin_mf(bus_t busnumber, int address, int f1, int f2,
     char packet[9];
     int i;
 
-    DBG(busnumber, DBG_DEBUG,
+    syslog_bus(busnumber, DBG_DEBUG,
         "Command for func decoder (Maerklin) (MF) received");
 
     /* no special error handling, it's job of the clients */

@@ -119,11 +119,11 @@ int doInfoClient(client_thread_t* ctd)
     struct timeval cmp_time;
     bus_t busnumber;
     current = in;
-    DBG(0, DBG_DEBUG, "New INFO client requested %ld", ctd->session);
+    syslog_bus(0, DBG_DEBUG, "New INFO client requested %ld", ctd->session);
 
     for (busnumber = 0; busnumber <= num_buses; busnumber++) {
         pthread_testcancel();
-        DBG(busnumber, DBG_DEBUG,
+        syslog_bus(busnumber, DBG_DEBUG,
             "send all data for bus number %d to new client", busnumber);
         /* first some global bus data */
         /* send Descriptions for buses */
@@ -221,7 +221,7 @@ int doInfoClient(client_thread_t* ctd)
             }
         }
     }
-    DBG(0, DBG_DEBUG, "All messages send to new INFO client "
+    syslog_bus(0, DBG_DEBUG, "All messages send to new INFO client "
             "(session: %ld)\n", ctd->session);
 
     /* There is a kind of race condition: Newly queued messages may be
@@ -241,7 +241,7 @@ int doInfoClient(client_thread_t* ctd)
         /* loop to send all new messages to SRCP client */
         while (!queueIsEmptyInfo(current)) {
             current = unqueueNextInfo(current, reply);
-            DBG(0, DBG_DEBUG, "reply-length = %d", strlen(reply));
+            syslog_bus(0, DBG_DEBUG, "reply-length = %d", strlen(reply));
             if (socket_writereply(ctd->socket, reply) < 0)
                 return -1;
         }

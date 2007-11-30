@@ -45,24 +45,24 @@ int readByte(bus_t bus, int wait, unsigned char *the_byte)
     else {
         status = ioctl(buses[bus].device.file.fd, FIONREAD, &i);
         if (status < 0) {
-            DBG(bus, DBG_ERROR,
+            syslog_bus(bus, DBG_ERROR,
                 "readbyte(): ioctl failed: %s (errno = %d)\n",
                 strerror(errno), errno);
             return -1;
         }
-        DBG(bus, DBG_DEBUG,
+        syslog_bus(bus, DBG_DEBUG,
             "readbyte(): (fd = %d), there are %d bytes to read.",
             buses[bus].device.file.fd, i);
         /* read only, if there is really an input */
         if ((i > 0) || (wait == 1)) {
             i = read(buses[bus].device.file.fd, the_byte, 1);
             if (i < 0) {
-                DBG(bus, DBG_ERROR,
+                syslog_bus(bus, DBG_ERROR,
                     "readbyte(): read failed: %s (errno = %d)\n",
                     strerror(errno), errno);
             }
             if (i > 0)
-                DBG(bus, DBG_DEBUG, "readbyte(): byte read: 0x%02x",
+                syslog_bus(bus, DBG_DEBUG, "readbyte(): byte read: 0x%02x",
                     *the_byte);
         }
     }
@@ -79,11 +79,11 @@ void writeByte(bus_t bus, unsigned char b, unsigned long msecs)
         tcdrain(buses[bus].device.file.fd);
     }
     if (i < 0) {
-        DBG(bus, DBG_ERROR, "(FD: %d) write failed: %s (errno = %d)\n",
+        syslog_bus(bus, DBG_ERROR, "(FD: %d) write failed: %s (errno = %d)\n",
                 buses[bus].device.file.fd, strerror(errno), errno);
     }
     else {
-        DBG(bus, DBG_DEBUG, "(FD: %d) %i byte sent: 0x%02x (%d)\n",
+        syslog_bus(bus, DBG_DEBUG, "(FD: %d) %i byte sent: 0x%02x (%d)\n",
         buses[bus].device.file.fd, i, b, b);
     }
     usleep(msecs * 1000);
@@ -104,7 +104,7 @@ void save_comport(bus_t bus)
 
     fd = open(buses[bus].device.file.path, O_RDWR);
     if (fd == -1) {
-        DBG(bus, DBG_ERROR, "Open serial line failed: %s (errno = %d).\n",
+        syslog_bus(bus, DBG_ERROR, "Open serial line failed: %s (errno = %d).\n",
                 strerror(errno), errno);
     }
     else {
@@ -117,25 +117,25 @@ void restore_comport(bus_t bus)
 {
     int fd;
 
-    DBG(bus, DBG_INFO, "Restoring attributes for serial line %s",
+    syslog_bus(bus, DBG_INFO, "Restoring attributes for serial line %s",
         buses[bus].device.file.path);
     fd = open(buses[bus].device.file.path, O_RDWR);
     if (fd == -1) {
-        DBG(bus, DBG_ERROR, "Open serial line failed: %s (errno = %d).\n",
+        syslog_bus(bus, DBG_ERROR, "Open serial line failed: %s (errno = %d).\n",
                 strerror(errno), errno);
     }
     else {
-        DBG(bus, DBG_INFO, "Restoring old values...");
+        syslog_bus(bus, DBG_INFO, "Restoring old values...");
         tcsetattr(fd, TCSANOW, &buses[bus].device.file.devicesettings);
         close(fd);
-        DBG(bus, DBG_INFO, "Old values successfully restored");
+        syslog_bus(bus, DBG_INFO, "Old values successfully restored");
     }
 }
 
 void close_comport(bus_t bus)
 {
     struct termios interface;
-    DBG(bus, DBG_INFO, "Closing serial line");
+    syslog_bus(bus, DBG_INFO, "Closing serial line");
 
     tcgetattr(buses[bus].device.file.fd, &interface);
     cfsetispeed(&interface, B0);
@@ -157,7 +157,7 @@ int socket_readline(int Socket, char *line, int len)
     int i = 0;
     ssize_t bytes_read = read(Socket, &c, 1);
     if (bytes_read <= 0) {
-        DBG(0, DBG_ERROR,
+        syslog_bus(0, DBG_ERROR,
                 "read from socket %d failed: %s (errno = %d)\n",
                 Socket, strerror(errno), errno);
         return -1;
@@ -175,7 +175,7 @@ int socket_readline(int Socket, char *line, int len)
         }
     }
     line[i++] = 0x00;
-    DBG(0, DBG_DEBUG, "socket %d, read %s", Socket, line);
+    syslog_bus(0, DBG_DEBUG, "socket %d, read %s", Socket, line);
     return 0;
 }
 
@@ -192,7 +192,7 @@ int socket_writereply(int Socket, const char *line)
     if (linelen <= 0)
         return 0;
 
-    DBG(0, DBG_INFO, "socket %d, write %s", Socket, line);
+    syslog_bus(0, DBG_INFO, "socket %d, write %s", Socket, line);
 
     while (i <= linelen - MAXSRCPLINELEN - 1 && status >= 0) {
         memset(tmp, 0, sizeof(tmp));
@@ -200,7 +200,7 @@ int socket_writereply(int Socket, const char *line)
         sprintf(chunk, "%s\\\n", tmp);
         status = write(Socket, chunk, strlen(chunk));
         if (status == -1) {
-            DBG(0, DBG_ERROR,
+            syslog_bus(0, DBG_ERROR,
                     "write to socket %d failed: %s (errno = %d)\n",
                     Socket, strerror(errno), errno);
             return status;
@@ -212,6 +212,6 @@ int socket_writereply(int Socket, const char *line)
         status = write(Socket, line + i, linelen - i);
     }
 
-    DBG(0, DBG_INFO, "Status from write: %d", status);
+    syslog_bus(0, DBG_INFO, "Status from write: %d", status);
     return status;
 }

@@ -25,7 +25,7 @@
 #define DBG_INFO 4
 #define DBG_DEBUG 5
 
-void DBG(bus_t busnumber, int dbglevel, const char *fmt, ...);
+void syslog_bus(bus_t busnumber, int dbglevel, const char *fmt, ...);
 void syslog_session(sessionid_t session, int dbglevel, const char *fmt, ...);
 
 #endif
