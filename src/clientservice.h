@@ -10,7 +10,7 @@
 #ifndef _CLIENTSERVICE_H
 #define _CLIENTSERVICE_H
 
-#include "config-srcpd.h"
+#include "srcp-session.h"
 
 typedef struct CLIENT_THREAD
 {

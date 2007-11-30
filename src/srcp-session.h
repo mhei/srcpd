@@ -18,7 +18,8 @@
 #ifndef _SRCP_SESSION_H
 #define _SRCP_SESSION_H
 
-typedef unsigned long int sessionid_t ;
+#include "config-srcpd.h"
+
 
 int startup_SESSION(void);
 
@@ -35,4 +36,5 @@ int session_endwait(bus_t, int returnvalue);
 int session_cleanupwait(bus_t);
 
 int session_processwait(bus_t);
+
 #endif

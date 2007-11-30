@@ -10,6 +10,8 @@
 #define _SRCP_ERROR_H
 
 #include "stdincludes.h"
+
+
 /* Handshake */
 #define SRCP_OK_GO                      200
 #define SRCP_OK_PROTOCOL                201

@@ -10,6 +10,8 @@
 #ifndef _NETSERVICE_H
 #define _NETSERVICE_H
 
+#include "config-srcpd.h"
+
 typedef struct _thr_param
 {
     bus_t busnumber;

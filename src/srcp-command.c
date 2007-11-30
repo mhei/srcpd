@@ -6,7 +6,9 @@
 
 #include <string.h>
 
+#include "config-srcpd.h"
 #include "io.h"
+#include "srcp-session.h"
 #include "srcp-command.h"
 #include "srcp-descr.h"
 #include "srcp-error.h"

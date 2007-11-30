@@ -44,6 +44,7 @@
 #include "srcp-error.h"
 #include "srcp-descr.h"
 #include "srcp-time.h"
+#include "srcp-session.h"
 #include "syslogmessage.h"
 
 

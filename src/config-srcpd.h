@@ -23,23 +23,23 @@
  *                                                                         *
  *                                                                         *
  ***************************************************************************/
+
 #ifndef _CONFIG_SRCPD_H
 #define _CONFIG_SRCPD_H
 
 #include <termios.h>
 #include <sys/param.h>
 
-
+/*due to cross references, this types are defined here*/
 typedef unsigned long int bus_t;
+typedef unsigned long int sessionid_t;
 
-
-#include "srcp-session.h"
 #include "srcp-gl.h"
 #include "srcp-ga.h"
 
 
-#define MAX_BUSES              20    /* max number of integrated buses in srcpd */
-#define MAXSRCPLINELEN       1001    /* max number of bytes per line plus 0x00 */
+#define MAX_BUSES              20 /* max number of integrated buses in srcpd */
+#define MAXSRCPLINELEN       1001 /* max number of bytes per line plus 0x00 */
 
 /* srcp bus types */
 #define SERVER_SERVER           0    /* server */
@@ -73,6 +73,7 @@ typedef unsigned long int bus_t;
 #define HW_UNDEFINED 0
 #define HW_FILENAME  1
 #define HW_NETWORK   2
+
 
 /* Busstruktur */
 typedef struct _BUS

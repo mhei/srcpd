@@ -5,7 +5,6 @@
  * Version 2, 1991. (c) Matthias Trute, 2000-2002.
  *
  */
-#include "stdincludes.h"
 
 #include "srcp-error.h"
 

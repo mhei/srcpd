@@ -12,7 +12,6 @@
 #include <sys/socket.h>
 
 #include "stdincludes.h"
-#include "config-srcpd.h"
 #include "netservice.h"
 #include "srcp-server.h"
 #include "syslogmessage.h"
