@@ -444,12 +444,9 @@ void resumeThread(bus_t busnumber)
   */
 void DBG(bus_t busnumber, int dbglevel, const char *fmt, ...)
 {
-    va_list parm;
-    va_start(parm, fmt);
-
     if (dbglevel <= buses[busnumber].debuglevel) {
-        va_list parm2;
-        va_start(parm2, fmt);
+        va_list parm;
+        va_start(parm, fmt);
         char *msg;
         msg = (char *) malloc(sizeof(char) * (strlen(fmt) + 10));
         if (msg == NULL)
@@ -458,7 +455,6 @@ void DBG(bus_t busnumber, int dbglevel, const char *fmt, ...)
         vsyslog(LOG_INFO, msg, parm);
         free(msg);
 
-        va_end(parm2);
+        va_end(parm);
     }
-    va_end(parm);
 }
