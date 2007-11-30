@@ -6,6 +6,11 @@
  *
  */
 
+#include <arpa/inet.h>
+#include <grp.h>
+#include <pwd.h>
+#include <sys/socket.h>
+
 #include "stdincludes.h"
 #include "config-srcpd.h"
 #include "netservice.h"
@@ -220,7 +225,7 @@ void *thr_handlePort(void *v)
         result = pthread_create(&ttid, NULL, ntd.client_handler,
                 (void *) newsock);
         if (result != 0) {
-            syslog(LOG_INFO, "Create thread for network client "
+            DBG(0, DBG_ERROR, "Create thread for network client "
                     "failed: %s (errno = %d). Terminating...\n",
                     strerror(result), result);
             exit(1);

@@ -398,8 +398,8 @@ void send_command_ga_LI100_SERIAL( bus_t busnumber )
   {
     if ( __li100->tga[ i ].id )
     {
-      syslog( LOG_INFO, "time %i,%i", ( int ) akt_time.tv_sec,
-              ( int ) akt_time.tv_usec );
+        DBG( busnumber, DBG_DEBUG, "time %i,%i", ( int ) akt_time.tv_sec,
+                ( int ) akt_time.tv_usec );
       cmp_time = __li100->tga[ i ].t;
       /* switch of time reached? */
 

@@ -14,6 +14,9 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <libxml/xmlmemory.h>
+#include <netdb.h>
+#include <stdarg.h>                                 
+#include <syslog.h>
 
 
 #include "stdincludes.h"
