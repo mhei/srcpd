@@ -11,6 +11,7 @@
 #define _I2C_DEV_H
 
 #include <libxml/tree.h> /*xmlDocPtr, xmlNodePtr*/
+#include <netinet/in.h>
 
 
 #define MAX_I2C_DEVICES      255

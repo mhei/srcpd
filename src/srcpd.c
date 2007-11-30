@@ -13,6 +13,8 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
+
+#include <syslog.h>
 #include "stdincludes.h"
 
 #include "clientservice.h"

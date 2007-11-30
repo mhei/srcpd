@@ -4,6 +4,8 @@
  * loconet: loconet/srcp gateway
  */
 
+#include <netdb.h>
+
 #include "stdincludes.h"
 
 #include "config-srcpd.h"
