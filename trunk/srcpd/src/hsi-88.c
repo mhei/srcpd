@@ -21,6 +21,7 @@
 #include "hsi-88.h"
 #include "io.h"
 #include "srcp-fb.h"
+#include "syslogmessage.h"
 
 #define __hsi ((HSI_88_DATA*)buses[busnumber].driverdata)
 

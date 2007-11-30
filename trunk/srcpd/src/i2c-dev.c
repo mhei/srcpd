@@ -28,6 +28,7 @@
 #include "srcp-server.h"
 #include "srcp-info.h"
 #include "srcp-error.h"
+#include "syslogmessage.h"
 #include "i2c-dev.h"
 
 #include <linux/version.h>

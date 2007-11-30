@@ -46,6 +46,7 @@
 #include "config-srcpd.h"
 #include "ddl_maerklin.h"
 #include "ddl_nmra.h"
+#include "syslogmessage.h"
 
 #ifdef __CYGWIN__
 #define TIOCOUTQ 0x5411

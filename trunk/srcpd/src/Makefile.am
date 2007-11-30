@@ -37,6 +37,7 @@ srcpd_SOURCES = \
 	srcp-session.c \
 	srcp-sm.c \
 	srcp-time.c \
+	syslogmessage.c \
 	ttycygwin.c \
 	zimo.c
 
@@ -74,6 +75,7 @@ noinst_HEADERS = \
 	srcp-sm.h \
 	srcp-time.h \
 	stdincludes.h \
+	syslogmessage.h \
 	ttycygwin.h \
 	zimo.h
 

@@ -15,8 +15,6 @@
 #include <libxml/tree.h>
 #include <libxml/xmlmemory.h>
 #include <netdb.h>
-#include <stdarg.h>                                 
-#include <syslog.h>
 
 
 #include "stdincludes.h"
@@ -34,6 +32,7 @@
 #include "zimo.h"
 #include "li100.h"
 #include "loconet.h"
+#include "syslogmessage.h"
 
 
 /* SRCP server welcome message */
@@ -431,33 +430,3 @@ void resumeThread(bus_t busnumber)
     DBG(0, DBG_DEBUG, "Thread on bus %d is woken up", busnumber);
 }
 
-/**
-  * DBG: write some syslog information is current debug level of the
-         bus is greater then the the debug level of the message. e.g.
-         if a debug message is deb_info and the bus is configured
-         to inform only about deb_error, no message will be generated.
-  * @param busnumber
-    integer, busnumber
-  * @param dbglevel
-    one of the constants DBG_FATAL, DBG_ERROR, DBG_WARN, DBG_INFO, DBG_DEBUG
-  * @param fmt
-    const char *: standard c format string
-  * @param ...
-    remaining parameters according to format string
-  */
-void DBG(bus_t busnumber, int dbglevel, const char *fmt, ...)
-{
-    if (dbglevel <= buses[busnumber].debuglevel) {
-        va_list parm;
-        va_start(parm, fmt);
-        char *msg;
-        msg = (char *) malloc(sizeof(char) * (strlen(fmt) + 10));
-        if (msg == NULL)
-            return;
-        sprintf(msg, "[bus %ld] %s", busnumber, fmt);
-        vsyslog(LOG_INFO, msg, parm);
-        free(msg);
-
-        va_end(parm);
-    }
-}

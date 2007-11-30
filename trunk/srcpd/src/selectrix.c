@@ -38,6 +38,7 @@
 #include "srcp-ga.h"
 #include "srcp-fb.h"
 #include "selectrix.h"
+#include "syslogmessage.h"
 #include "ttycygwin.h"
 
 /* Macro definition */

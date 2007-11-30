@@ -15,6 +15,8 @@
 #include "config-srcpd.h"
 #include "netservice.h"
 #include "srcp-server.h"
+#include "syslogmessage.h"
+
 
 void change_privileges(bus_t bus)
 {

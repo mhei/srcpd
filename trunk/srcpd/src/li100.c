@@ -15,6 +15,8 @@ email                : frank.schmischke@t-online.de
  *                                                                         *
  ***************************************************************************/
 
+#include "syslogmessage.h"
+
 
 #ifdef LI100_USB
 static int readAnswer_LI100_USB( bus_t busnumber, unsigned char *str );

@@ -14,6 +14,7 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
+
 #include "stdincludes.h"
 
 #include "config-srcpd.h"
@@ -22,6 +23,8 @@
 #include "srcp-gl.h"
 #include "srcp-error.h"
 #include "srcp-info.h"
+#include "syslogmessage.h"
+
 
 static pthread_mutex_t cb_mutex[MAX_BUSES];
 static pthread_cond_t cb_cond[MAX_BUSES];

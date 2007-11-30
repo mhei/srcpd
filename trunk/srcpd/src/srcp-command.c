@@ -6,6 +6,7 @@
 
 #include <string.h>
 
+#include "io.h"
 #include "srcp-command.h"
 #include "srcp-descr.h"
 #include "srcp-error.h"
@@ -16,7 +17,7 @@
 #include "srcp-server.h"
 #include "srcp-sm.h"
 #include "srcp-time.h"
-#include "io.h"
+#include "syslogmessage.h"
 
 
 /**

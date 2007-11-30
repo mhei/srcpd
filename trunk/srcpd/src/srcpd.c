@@ -31,6 +31,8 @@
 #include "srcp-server.h"
 #include "srcp-session.h"
 #include "srcp-time.h"
+#include "syslogmessage.h"
+
 
 #define	MAXFD	64 /* for daemon_init */
 
