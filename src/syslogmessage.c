@@ -49,3 +49,21 @@ void DBG(bus_t busnumber, int dbglevel, const char *fmt, ...)
         va_end(parm);
     }
 }
+
+void syslog_session(sessionid_t session, int dbglevel, const char *fmt, ...)
+{
+    if (dbglevel <= buses[0].debuglevel) {
+        va_list parm;
+        va_start(parm, fmt);
+
+        char *msg;
+        msg = (char *) malloc(sizeof(char) * (strlen(fmt) + 14));
+        if (msg == NULL)
+            return;
+        sprintf(msg, "[session %ld] %s", session, fmt);
+        vsyslog(LOG_INFO, msg, parm);
+        free(msg);
+
+        va_end(parm);
+    }
+}

@@ -17,6 +17,9 @@
 #include <unistd.h>
 #include <sys/param.h>
 
+#include "config.h" /*for VERSION*/
+
+
 typedef struct _SERVER_DATA {
     unsigned short int TCPPORT;
     char *listenip;

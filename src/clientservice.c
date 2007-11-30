@@ -21,11 +21,14 @@
 #include "srcp-error.h"
 #include "srcp-command.h"
 #include "srcp-info.h"
+#include "srcp-server.h"
 
 #define COMMAND 1
 #define INFO    2
 
-extern char *WELCOME_MSG;
+/* SRCP server welcome message */
+const char *WELCOME_MSG =
+    "srcpd V" VERSION "; SRCP 0.8.3; SRCPOTHER 0.8.4-wip\n";
 
 
 /*cleanup routine for network client thread*/

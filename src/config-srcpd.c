@@ -35,11 +35,6 @@
 #include "syslogmessage.h"
 
 
-/* SRCP server welcome message */
-const char *WELCOME_MSG =
-    "srcpd V" VERSION "; SRCP 0.8.3; SRCPOTHER 0.8.4-wip\n";
-
-
 /* check if a bus has a device group or not */
 int bus_has_devicegroup(bus_t bus, int dg)
 {
