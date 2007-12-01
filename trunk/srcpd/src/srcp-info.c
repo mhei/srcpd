@@ -120,7 +120,7 @@ int doInfoClient(client_thread_t* ctd)
     struct timeval cmp_time;
     bus_t busnumber;
     current = in;
-    syslog_bus(0, DBG_DEBUG, "New INFO client requested %ld", ctd->session);
+    syslog_session(ctd->session, DBG_DEBUG, "New INFO client requested");
 
     for (busnumber = 0; busnumber <= num_buses; busnumber++) {
         pthread_testcancel();

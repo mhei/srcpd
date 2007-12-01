@@ -21,6 +21,7 @@
 #include "srcp-command.h"
 #include "srcp-info.h"
 #include "srcp-server.h"
+#include "syslogmessage.h"
 
 #define COMMAND 1
 #define INFO    2
@@ -33,8 +34,10 @@ const char *WELCOME_MSG =
 /*cleanup routine for network client thread*/
 void end_client_thread(client_thread_t *ctd)
 {
-    if (ctd->session != 0)
+    if (ctd->session != 0) {
         stop_session(ctd->session);
+        session_destroy(ctd->session);
+    }
 
     if (ctd->socket != -1) {
         close(ctd->socket);
@@ -90,7 +93,12 @@ void* thr_doClient(void *v)
             rc = SRCP_UNKNOWNCOMMAND;
 
             if (strncasecmp(cmd, "GO", 2) == 0) {
-		ctd->session = session_getnextID();
+                ctd->session = session_create(pthread_self());
+                if (0 == ctd->session) {
+                    syslog_bus(0, DBG_ERROR, "Session create failed!");
+                    pthread_exit((void*) 1);
+                }
+
                 gettimeofday(&time, NULL);
                 sprintf(reply, "%lu.%.3lu 200 OK GO %ld\n", time.tv_sec,
                         time.tv_usec / 1000, ctd->session);
