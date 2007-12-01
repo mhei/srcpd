@@ -112,7 +112,8 @@ void unlock_info_queue_mutex()
     int result;
     result = pthread_mutex_unlock(&queue_mutex_info);
     if (result != 0)
-        syslog_bus(0, DBG_WARN, "Locked mutex released in thread destructor.");
+        syslog_bus(0, DBG_WARN, "Mutex unlock failed: %s (errno = %d).",
+                strerror(result), result);
 }
 
 /**
