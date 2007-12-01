@@ -73,7 +73,7 @@ static void list_remove(session_node_t **p)
     }
 }
 
-/* search sessionid in list */
+/* search sessionid in list, return pointer to node */
 static session_node_t **list_search_session(session_node_t **n,
         sessionid_t sid) {
     while (*n != NULL) {
@@ -83,6 +83,18 @@ static session_node_t **list_search_session(session_node_t **n,
         n = &(*n)->next;
     }
     return NULL;
+}
+
+/* search thread id by sessionid, return thread id */
+static pthread_t list_search_thread_by_sessionid(session_node_t **n,
+        sessionid_t sid) {
+    while (*n != NULL) {
+        if ((*n)->session == sid) {
+            return (*n)->thread;
+        }
+        n = &(*n)->next;
+    }
+    return 0;
 }
 
 /**
@@ -128,12 +140,10 @@ void session_destroy(sessionid_t session)
 /* terminate a session by cancellation of client thread */
 void session_terminate(sessionid_t session)
 {
-    pthread_t pc = 0;
+    pthread_t pc;
 
     pthread_mutex_lock(&session_list_mutex);
-    session_node_t** node = list_search_session(&session_list, session);
-    if (*node != NULL)
-        pc = (*node)->thread;
+    pc = list_search_thread_by_sessionid(&session_list, session);
     pthread_mutex_unlock(&session_list_mutex);
     if (0 != pc)
         pthread_cancel(pc);
