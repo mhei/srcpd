@@ -163,16 +163,14 @@ void terminate_all_sessions()
 
     session_node_t* node = session_list;   
 
-    /*first cancel al session threads ...*/
+    /*first cancel all session threads ...*/
     pthread_mutex_lock(&session_list_mutex);
     while (node != NULL) {
         pthread_cancel(node->thread);
         node = node->next;
     }
-    pthread_mutex_unlock(&session_list_mutex);
 
     /*... then wait for complete termination*/
-    pthread_mutex_lock(&session_list_mutex);
     while (runningsessions != 0)
         pthread_cond_wait(&session_run_cond, &session_list_mutex);
     pthread_mutex_unlock(&session_list_mutex);
@@ -181,7 +179,6 @@ void terminate_all_sessions()
 /*this function is used by clientservice to start the session*/
 int start_session(sessionid_t sessionid, int mode)
 {
-
     char msg[1000];
     struct timeval akt_time;
     gettimeofday(&akt_time, NULL);
