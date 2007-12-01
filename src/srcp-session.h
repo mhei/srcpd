@@ -27,6 +27,7 @@ int startup_SESSION(void);
 
 sessionid_t session_create(pthread_t thread);
 void session_destroy(sessionid_t session);
+void terminate_all_sessions();
 
 int start_session(sessionid_t, int);
 int stop_session(sessionid_t);
@@ -37,7 +38,6 @@ int session_preparewait(bus_t);
 int session_wait(bus_t, unsigned int timeout, int *result);
 int session_endwait(bus_t, int returnvalue);
 int session_cleanupwait(bus_t);
-
 int session_processwait(bus_t);
 
 #endif

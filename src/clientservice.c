@@ -31,10 +31,15 @@ const char *WELCOME_MSG =
     "srcpd V" VERSION "; SRCP 0.8.3; SRCPOTHER 0.8.4-wip\n";
 
 
-/*cleanup routine for network client thread*/
+/* Cleanup routine for network client thread. Info threads must release
+ * the queue mutex when they are cancelled in pthread_cond_wait(), not
+ * to block themselves trying to queue their termination message.
+ */
 void end_client_thread(client_thread_t *ctd)
 {
     if (ctd->session != 0) {
+        if (ctd->mode == INFO)
+            unlock_info_queue_mutex();
         stop_session(ctd->session);
         session_destroy(ctd->session);
     }

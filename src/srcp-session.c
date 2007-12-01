@@ -40,8 +40,10 @@ typedef struct sn {
 
 /*session counter, session list root and mutex to lock access*/
 static sessionid_t lastsession = 0;
+static unsigned int runningsessions = 0;
 static session_node_t* session_list = NULL;
 static pthread_mutex_t session_list_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t session_run_cond = PTHREAD_COND_INITIALIZER;
 
 static pthread_mutex_t cb_mutex[MAX_BUSES];
 static pthread_cond_t cb_cond[MAX_BUSES];
@@ -120,8 +122,10 @@ sessionid_t session_create(pthread_t thread)
     pthread_mutex_lock(&session_list_mutex);
     lastsession++;
     node = list_add(&session_list, lastsession, thread);
-    if (NULL != node)
+    if (NULL != node) {
         session = lastsession;
+        runningsessions++;
+    }
     else
         lastsession--;
     pthread_mutex_unlock(&session_list_mutex);
@@ -134,6 +138,8 @@ void session_destroy(sessionid_t session)
 {
     pthread_mutex_lock(&session_list_mutex);
     list_remove(list_search_session(&session_list, session));
+    runningsessions--;
+    pthread_cond_signal(&session_run_cond);
     pthread_mutex_unlock(&session_list_mutex);
 }
 
@@ -152,7 +158,24 @@ void session_terminate(sessionid_t session)
 /* terminate all active sessions */
 void terminate_all_sessions()
 {
-    /*TODO*/
+    if (session_list == NULL)
+        return;
+
+    session_node_t* node = session_list;   
+
+    /*first cancel al session threads ...*/
+    pthread_mutex_lock(&session_list_mutex);
+    while (node != NULL) {
+        pthread_cancel(node->thread);
+        node = node->next;
+    }
+    pthread_mutex_unlock(&session_list_mutex);
+
+    /*... then wait for complete termination*/
+    pthread_mutex_lock(&session_list_mutex);
+    while (runningsessions != 0)
+        pthread_cond_wait(&session_run_cond, &session_list_mutex);
+    pthread_mutex_unlock(&session_list_mutex);
 }
 
 /*this function is used by clientservice to start the session*/
@@ -168,7 +191,7 @@ int start_session(sessionid_t sessionid, int mode)
             (mode == 1 ? "COMMAND" : "INFO"));
     queueInfoMessage(msg);
 
-    syslog_session(sessionid, DBG_INFO, "Session started, mode %d", mode);
+    syslog_session(sessionid, DBG_INFO, "Session started with mode %d", mode);
     return SRCP_OK;
 }
 
@@ -190,7 +213,6 @@ int stop_session(sessionid_t sessionid)
             akt_time.tv_usec / 1000, sessionid);
     queueInfoMessage(msg);
 
-    syslog_session(sessionid, DBG_INFO, "Session terminated.");
     return SRCP_OK;
 }
 
