@@ -1,19 +1,19 @@
-/***************************************************************************
-                          srcp-session.c  -  description
-                             -------------------
+/**************************************************************************
+                          srcp-session.c
+                         -------------------
     begin                : Don Apr 25 2002
     copyright            : (C) 2002 by
     email                :
- ***************************************************************************/
+ **************************************************************************/
 
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
+/**************************************************************************
+ *                                                                        *
+ *  This program is free software; you can redistribute it and/or modify  *
+ *  it under the terms of the GNU General Public License as published by  *
+ *  the Free Software Foundation; either version 2 of the License, or     *
+ *  (at your option) any later version.                                   *
+ *                                                                        *
+ **************************************************************************/
 
 #include "stdincludes.h"
 
@@ -25,22 +25,65 @@
 #include "syslogmessage.h"
 
 
+/* 
+ * A linked list stores the data of all connected sessions. This code was
+ * mainly impressed by:
+ *   http://en.wikipedia.org/wiki/Linked_list#Language_support
+ */
+
+/*session list node to store session data*/
+typedef struct sn {
+    sessionid_t session;
+    pthread_t thread;
+    struct sn *next;
+} session_node_t;
+
+/*session counter, session list root and mutex to lock access*/
+static sessionid_t lastsession = 0;
+static session_node_t* session_list = NULL;
+static pthread_mutex_t session_list_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 static pthread_mutex_t cb_mutex[MAX_BUSES];
 static pthread_cond_t cb_cond[MAX_BUSES];
 static int cb_data[MAX_BUSES];
 
-static sessionid_t SessionID = MAX_BUSES + 1;
-static pthread_mutex_t SessionID_mut = PTHREAD_MUTEX_INITIALIZER;
 
-sessionid_t session_getnextID()
+
+/*add new session data node to list*/
+static session_node_t *list_add(session_node_t **p, sessionid_t sid,
+        pthread_t tid)
 {
-    sessionid_t result;
-    pthread_mutex_lock(&SessionID_mut);
-    result = SessionID++;
-    pthread_mutex_unlock(&SessionID_mut);
-    return result;
+    session_node_t *n = (session_node_t *)malloc(sizeof(session_node_t));
+    if (n == NULL)
+        return n;
+    n->next = *p;
+    *p = n;
+    n->session = sid;
+    n->thread = tid;
+    return n;
 }
 
+/*remove session data node from list*/
+static void list_remove(session_node_t **p)
+{
+    if (*p != NULL) {
+        session_node_t *n = *p;
+        *p = (*p)->next;
+        free(n);
+    }
+}
+
+/* search sessionid in list */
+static session_node_t **list_search_session(session_node_t **n,
+        sessionid_t sid) {
+    while (*n != NULL) {
+        if ((*n)->session == sid) {
+            return n;
+        }
+        n = &(*n)->next;
+    }
+    return NULL;
+}
 
 /**
  * First initialisation after program start up
@@ -55,23 +98,73 @@ int startup_SESSION(void)
     return 0;
 }
 
+/* Create new session data node and return the new sessionid.
+ * On failure function returns 0. */
+sessionid_t session_create(pthread_t thread)
+{
+    session_node_t* node = NULL;
+    sessionid_t session = 0;
+
+    pthread_mutex_lock(&session_list_mutex);
+    lastsession++;
+    node = list_add(&session_list, lastsession, thread);
+    if (NULL != node)
+        session = lastsession;
+    else
+        lastsession--;
+    pthread_mutex_unlock(&session_list_mutex);
+    return session;
+}
+
+/* Called by client thread after session_stop() to remove a no longer
+ * valid session node */
+void session_destroy(sessionid_t session)
+{
+    pthread_mutex_lock(&session_list_mutex);
+    list_remove(list_search_session(&session_list, session));
+    pthread_mutex_unlock(&session_list_mutex);
+}
+
+/* terminate a session by cancellation of client thread */
+void session_terminate(sessionid_t session)
+{
+    pthread_t pc = 0;
+
+    pthread_mutex_lock(&session_list_mutex);
+    session_node_t** node = list_search_session(&session_list, session);
+    if (*node != NULL)
+        pc = (*node)->thread;
+    pthread_mutex_unlock(&session_list_mutex);
+    if (0 != pc)
+        pthread_cancel(pc);
+}
+
+/* terminate all active sessions */
+void terminate_all_sessions()
+{
+    /*TODO*/
+}
+
+/*this function is used by clientservice to start the session*/
 int start_session(sessionid_t sessionid, int mode)
 {
 
     char msg[1000];
     struct timeval akt_time;
     gettimeofday(&akt_time, NULL);
-    syslog_bus(0, DBG_INFO, "Session started; client-ID %ld, mode %d", sessionid,
-        mode);
+
     sprintf(msg, "%lu.%.3lu 101 INFO 0 SESSION %lu %s\n", akt_time.tv_sec,
             akt_time.tv_usec / 1000, sessionid,
             (mode == 1 ? "COMMAND" : "INFO"));
     queueInfoMessage(msg);
+
+    syslog_session(sessionid, DBG_INFO, "Session started, mode %d", mode);
     return SRCP_OK;
 }
 
 /**
- * called by netserver after finishing the session-loop
+ * this funtion is called by clientservice when the client thread
+ * terminates
  */
 int stop_session(sessionid_t sessionid)
 {
@@ -79,13 +172,15 @@ int stop_session(sessionid_t sessionid)
     struct timeval akt_time;
     gettimeofday(&akt_time, NULL);
 
-    syslog_bus(0, DBG_INFO, "Session terminated client-ID %ld", sessionid);
     /* clean all locks */
     unlock_ga_bysessionid(sessionid);
     unlock_gl_bysessionid(sessionid);
+
     sprintf(msg, "%lu.%.3lu 102 INFO 0 SESSION %lu\n", akt_time.tv_sec,
             akt_time.tv_usec / 1000, sessionid);
     queueInfoMessage(msg);
+
+    syslog_session(sessionid, DBG_INFO, "Session terminated.");
     return SRCP_OK;
 }
 
@@ -102,6 +197,8 @@ int termSESSION(bus_t bus, sessionid_t sessionid, sessionid_t termsessionid,
                 char *reply)
 {
     if (sessionid == termsessionid || termsessionid == 0) {
+        stop_session(termsessionid);
+        session_terminate(termsessionid);
         return -SRCP_OK;
     }
     return SRCP_FORBIDDEN;

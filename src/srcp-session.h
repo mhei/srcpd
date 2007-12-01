@@ -18,12 +18,15 @@
 #ifndef _SRCP_SESSION_H
 #define _SRCP_SESSION_H
 
+#include <pthread.h>
+
 #include "config-srcpd.h"
 
 
 int startup_SESSION(void);
 
-sessionid_t session_getnextID();
+sessionid_t session_create(pthread_t thread);
+void session_destroy(sessionid_t session);
 
 int start_session(sessionid_t, int);
 int stop_session(sessionid_t);
