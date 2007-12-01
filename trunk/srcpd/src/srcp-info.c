@@ -107,6 +107,14 @@ int startup_INFO(void)
     return SRCP_OK;
 }
 
+void unlock_info_queue_mutex()
+{
+    int result;
+    result = pthread_mutex_unlock(&queue_mutex_info);
+    if (result != 0)
+        syslog_bus(0, DBG_WARN, "Locked mutex released in thread destructor.");
+}
+
 /**
  * Endless loop for new info mode client
  * terminates on write failure
@@ -242,7 +250,6 @@ int doInfoClient(client_thread_t* ctd)
         /* loop to send all new messages to SRCP client */
         while (!queueIsEmptyInfo(current)) {
             current = unqueueNextInfo(current, reply);
-            syslog_bus(0, DBG_DEBUG, "reply-length = %d", strlen(reply));
             if (socket_writereply(ctd->socket, reply) < 0)
                 return -1;
         }

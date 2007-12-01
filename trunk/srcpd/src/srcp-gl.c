@@ -425,7 +425,7 @@ void unlock_gl_bysessionid(sessionid_t sessionid)
 {
     int i, j;
     int number;
-    syslog_bus(0, DBG_INFO, "unlock GL by session-ID %ld", sessionid);
+    syslog_session(sessionid, DBG_DEBUG, "Unlocking GLs by session-id");
     for (i = 0; i <= num_buses; i++) {
         number = getMaxAddrGL(i);
         for (j = 1; j <= number; j++) {

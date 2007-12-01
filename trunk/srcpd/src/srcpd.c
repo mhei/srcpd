@@ -89,9 +89,12 @@ void init_all_buses()
             }
 
             /* Configure descriptors for Selectrix module to throw SIGIO */
-            if ((buses[i].device.file.fd != -1) && (buses[i].type == SERVER_SELECTRIX)) {
+            if ((buses[i].device.file.fd != -1) && 
+                    (buses[i].type == SERVER_SELECTRIX)) {
                 FD_SET(buses[i].device.file.fd, &rfds);
-                maxfd = (maxfd > buses[i].device.file.fd ? maxfd : buses[i].device.file.fd);
+                maxfd = (maxfd > buses[i].device.file.fd 
+                        ? maxfd 
+                        : buses[i].device.file.fd);
                 fcntl(buses[i].device.file.fd, F_SETOWN, getpid());
                 fcntl(buses[i].device.file.fd, F_SETFL, FASYNC);
             }
@@ -183,12 +186,17 @@ void cancel_all_threads()
     server_shutdown();
     pthread_cancel(ttid_clock);
 
-    /* now terminate all bus threads */
+    /* terminate all bus threads */
     for (i = 1; i <= num_buses; i++) {
         pthread_cancel(buses[i].pid);
         (*buses[i].term_func) (i);
     }
 
+    /* terminate all running sessions */
+    terminate_all_sessions();
+
+    /*TODO: check this; should be first to sessions to prevent
+     * reconnects*/
     /* server thread is last to be cleaned up */
     pthread_cancel(ttid_cmd);
     (*buses[0].term_func) (0);

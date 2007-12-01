@@ -293,7 +293,7 @@ void unlock_ga_bysessionid(sessionid_t sessionid)
 {
     int i, j;
     int number;
-    syslog_bus(0, DBG_DEBUG, "unlock GA by session-ID %ld", sessionid);
+    syslog_session(sessionid, DBG_DEBUG, "Unlocking GAs by session-id");
     for (i = 0; i < num_buses; i++) {
         number = get_number_ga(i);
         for (j = 1; j <= number; j++) {
@@ -317,8 +317,6 @@ void unlock_ga_bytime(void)
             }
         }
     }
-
-
 }
 
 int startup_GA(void)
