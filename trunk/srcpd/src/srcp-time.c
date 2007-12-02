@@ -8,6 +8,11 @@
 #include "srcp-time.h"
 #include "srcp-error.h"
 #include "srcp-info.h"
+#include "syslogmessage.h"
+
+
+/*local variable for time thread*/
+static pthread_t time_tid;
 
 
 int startup_TIME(void)
@@ -110,5 +115,26 @@ void *thr_clock(void *v)
         }
         /* syslog(LOG_INFO, "time: %d %d %d %d %d %d", vtime.day, vtime.hour, vtime.min, vtime.sec,  vtime.ratio_x, vtime.ratio_y); */
     }
+}
+
+
+/*create time/clock thread*/
+void create_time_thread()
+{
+    int result;
+
+    result = pthread_create(&time_tid, NULL, thr_clock, NULL);
+    if (result != 0) {
+        syslog_bus(0, DBG_INFO, "Create clock thread failed: %s "
+                "(errno = %d)\n", strerror(result), result);
+    }
+    pthread_detach(time_tid);
+}
+
+/*destroy time/clock thread*/
+void destroy_time_thread()
+{
+    pthread_cancel(time_tid);
+    /*TODO: wait for termination*/
 }
 
