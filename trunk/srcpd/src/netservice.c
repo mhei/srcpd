@@ -237,9 +237,9 @@ void *thr_handlePort(void* v)
             continue;
         }
 
-        /* hand over client service to "thr_doClient()" from netserver.c */
+        /* hand over client service to "thr_doClient()" from clientservice.c */
         result = pthread_create(&ttid, NULL, thr_doClient,
-                (void *) newsock);
+                (void *) (long int) newsock);
         if (result != 0) {
             syslog_bus(0, DBG_ERROR, "Create thread for network client "
                     "failed: %s (errno = %d). Terminating...\n",
