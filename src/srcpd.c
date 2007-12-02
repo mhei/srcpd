@@ -17,9 +17,7 @@
 #include <syslog.h>
 #include "stdincludes.h"
 
-#include "clientservice.h"
 #include "config-srcpd.h"
-#include "io.h"
 #include "netservice.h"
 #include "srcp-descr.h"
 #include "srcp-fb.h"
@@ -27,7 +25,6 @@
 #include "srcp-gl.h"
 #include "srcp-info.h"
 #include "srcp-lock.h"
-#include "srcp-power.h"
 #include "srcp-server.h"
 #include "srcp-session.h"
 #include "srcp-time.h"
@@ -40,12 +37,12 @@
 /* structures to determine which port needs to be served */
 fd_set rfds;
 int maxfd;
-pthread_t ttid_pid;
 char conffile[MAXPATHLEN];
 
 extern int server_shutdown_state;
 extern int server_reset_state;
 extern const char *WELCOME_MSG;
+
 
 void CreatePIDFile(int pid)
 {
@@ -101,70 +98,17 @@ void init_all_buses()
     }
 }
 
-
-/* create all server threads*/
+/*create all kind of server threads*/
 void create_all_threads()
 {
-    int result;
-    bus_t i;
-
     server_shutdown_state = 0;
-
-    /* start time/clock thread */
+    
     create_time_thread();
-
-    syslog(LOG_INFO, "Going to start %ld interface threads for the buses",
-           num_buses);
-
-    /* start threads for all buses */
-    for (i = 1; i <= num_buses; i++) {
-        syslog(LOG_INFO, "Going to start interface thread #%ld type(%d)",
-               i, buses[i].type);
-
-        if (buses[i].thr_timer != NULL) {
-               result = pthread_create(&ttid_pid, NULL, buses[i].thr_timer,
-                                        (void *) i);
-               if (result != 0) {
-                   syslog(LOG_INFO, "Create timer thread for bus %ld "
-                           "failed: %s (errno = %d)\n", i,
-                           strerror(result), result);
-                   exit(1);
-               }
-               pthread_detach(ttid_pid);
-               buses[i].pidtimer = ttid_pid;
-        }
-
-        if (buses[i].thr_func != NULL) {
-               result = pthread_create(&ttid_pid, NULL, buses[i].thr_func,
-                                        (void *) i);
-               if (result != 0) {
-                   syslog(LOG_INFO, "Create interface thread for bus %ld "
-                           "failed: %s (errno = %d)\n", i,
-                           strerror(result), result);
-                    exit(1);
-               }
-               pthread_detach(ttid_pid);
-               buses[i].pid = ttid_pid;
-        }
-
-        syslog(LOG_INFO, "Interface thread #%ld started successfully, "
-                "type(%d): pid %ld", i, buses[i].type,
-                (long) (buses[i].pid));
-
-        if (((buses[i].flags & AUTO_POWER_ON) == AUTO_POWER_ON)) {
-            setPower(i, 1, "AUTO POWER ON");
-        }
-        else {
-            setPower(i, 0, "AUTO POWER OFF");
-        }
-    }
-
-    /* create network connection thread */
+    create_all_bus_threads();
     create_netservice_thread();
 
     syslog(LOG_INFO, "All threads started");
 }
-
 
 /* cancel all server threads*/
 void cancel_all_threads()
@@ -172,13 +116,8 @@ void cancel_all_threads()
     syslog(LOG_INFO, "Terminating SRCP service...");
     server_shutdown();
 
-    /* terminate time thread */
     destroy_time_thread();
-
-    /* terminate all running buses */
     terminate_all_buses();
-
-    /* terminate all running sessions */
     terminate_all_sessions();
 
     /*TODO: check this; should be first to sessions to prevent
@@ -189,7 +128,6 @@ void cancel_all_threads()
     wait(0);
     syslog(LOG_INFO, "SRCP service terminated.");
 }
-
 
 /* signal SIGHUP(1) caught */
 void sighup_handler(int s)
@@ -327,6 +265,7 @@ int main(int argc, char **argv)
     int result;
     int sleep_ctr;
     char c;
+    pthread_t ttid_pid;
 
 
     /* First: Init the device data used internally */

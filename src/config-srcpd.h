@@ -132,6 +132,7 @@ bus_t num_buses;
 
 int readConfig(char *filename);
 
+void create_all_bus_threads();
 void terminate_all_buses();
 void suspend_bus_thread(bus_t busnumber);
 void resume_bus_thread(bus_t busnumber);
