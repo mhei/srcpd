@@ -40,8 +40,7 @@
 /* structures to determine which port needs to be served */
 fd_set rfds;
 int maxfd;
-pthread_t ttid_cmd, ttid_pid;
-net_thread_t cmds;
+pthread_t ttid_pid;
 char conffile[MAXPATHLEN];
 
 extern int server_shutdown_state;
@@ -160,14 +159,8 @@ void create_all_threads()
         }
     }
 
-    /* network connection thread */
-    result = pthread_create(&ttid_cmd, NULL, thr_handlePort, &cmds);
-    if (result != 0) {
-        syslog(LOG_INFO, "Create command thread failed: %s (errno = %d). "
-                "Terminating...\n", strerror(result), result);
-        exit(1);
-    }
-    pthread_detach(ttid_cmd);
+    /* create network connection thread */
+    create_netservice_thread();
 
     syslog(LOG_INFO, "All threads started");
 }
@@ -191,8 +184,7 @@ void cancel_all_threads()
     /*TODO: check this; should be first to sessions to prevent
      * reconnects*/
     /* server thread is last to be cleaned up */
-    pthread_cancel(ttid_cmd);
-    (*buses[0].term_func) (0);
+    destroy_netservice_thread();
 
     wait(0);
     syslog(LOG_INFO, "SRCP service terminated.");
@@ -389,10 +381,6 @@ int main(int argc, char **argv)
                         "configuration file '%s'.\n", conffile);
         exit(1);
     }
-
-    cmds.port = ((SERVER_DATA *) buses[0].driverdata)->TCPPORT;
-    cmds.socket = -1;
-    cmds.client_handler = thr_doClient;
 
     /* do not daemonize if in debug mode */
     if (buses[0].debuglevel < DBG_DEBUG) {

@@ -13,8 +13,18 @@
 
 #include "stdincludes.h"
 #include "netservice.h"
+#include "clientservice.h"
 #include "srcp-server.h"
 #include "syslogmessage.h"
+
+
+typedef struct _THREADS
+{
+  unsigned short int port;
+  int socket;
+} net_thread_t;
+
+static pthread_t netservice_tid;
 
 
 void change_privileges(bus_t bus)
@@ -223,7 +233,7 @@ void *thr_handlePort(void *v)
         }
 
         /* hand over client service to "thr_doClient()" from netserver.c */
-        result = pthread_create(&ttid, NULL, ntd.client_handler,
+        result = pthread_create(&ttid, NULL, thr_doClient,
                 (void *) newsock);
         if (result != 0) {
             syslog_bus(0, DBG_ERROR, "Create thread for network client "
@@ -236,3 +246,30 @@ void *thr_handlePort(void *v)
     /*run the cleanup routine*/
     pthread_cleanup_pop(1);
 }
+
+/* create network connection thread */
+void create_netservice_thread()
+{
+    int result;
+    net_thread_t cmds;
+
+    cmds.port = ((SERVER_DATA *) buses[0].driverdata)->TCPPORT;
+    cmds.socket = -1;
+
+    result = pthread_create(&netservice_tid, NULL, thr_handlePort, &cmds);
+    if (result != 0) {
+        syslog_bus(0, DBG_INFO, "Create command thread failed: %s "
+                "(errno = %d). Terminating...\n", strerror(result), result);
+        exit(1);
+    }
+    pthread_detach(netservice_tid);
+}
+
+/* destroy network connection thread */
+void destroy_netservice_thread()
+{
+    pthread_cancel(netservice_tid);
+    (*buses[0].term_func) (0);
+    /*TODO: wait for termination*/
+}
+
