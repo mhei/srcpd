@@ -57,7 +57,7 @@ void* thr_doClient(void* v)
     client_thread_t* ctd = (client_thread_t*) malloc(sizeof(client_thread_t));
     if (ctd == NULL)
         return NULL;
-    ctd->socket = (int) v;
+    ctd->socket = (long int) v;
     ctd->mode = COMMAND;
     ctd->session = 0;
 
