@@ -52,7 +52,7 @@ void end_client_thread(client_thread_t *ctd)
 }
 
 /* handle connected SRCP clients, start with shake hand phase. */
-void* thr_doClient(void *v)
+void* thr_doClient(void* v)
 {
     client_thread_t* ctd = (client_thread_t*) malloc(sizeof(client_thread_t));
     if (ctd == NULL)
