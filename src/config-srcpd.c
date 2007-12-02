@@ -425,3 +425,14 @@ void resume_bus_thread(bus_t busnumber)
     syslog_bus(0, DBG_DEBUG, "Thread on bus %d is woken up", busnumber);
 }
 
+/*terminate all running bus threads*/
+void terminate_all_buses()
+{
+    bus_t bus;
+
+    for (bus = 1; bus <= num_buses; bus++) {
+        pthread_cancel(buses[bus].pid);
+        (*buses[bus].term_func) (bus);
+    }
+    /*TODO: wait until all threads are cancelled*/
+}
