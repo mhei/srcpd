@@ -180,17 +180,12 @@ void create_all_threads()
 /* cancel all server threads*/
 void cancel_all_threads()
 {
-    bus_t i;
-
     syslog(LOG_INFO, "Terminating SRCP service...");
     server_shutdown();
     pthread_cancel(ttid_clock);
 
-    /* terminate all bus threads */
-    for (i = 1; i <= num_buses; i++) {
-        pthread_cancel(buses[i].pid);
-        (*buses[i].term_func) (i);
-    }
+    /* terminate all running buses */
+    terminate_all_buses();
 
     /* terminate all running sessions */
     terminate_all_sessions();
