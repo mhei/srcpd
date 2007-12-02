@@ -21,7 +21,7 @@ int setPower(bus_t bus, int state, char *msg)
     buses[bus].power_changed = (state == -1) ? 0 : 1;
     /* buses[bus].power_changed = 1; */
     /* Resume thread to transmit power change */
-    resumeThread(bus);
+    resume_bus_thread(bus);
     char reply[200];
     infoPower(bus, reply);
     queueInfoMessage(reply);

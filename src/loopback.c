@@ -1,7 +1,7 @@
 /* $Id$ */
 
 /**
- * loopback: simple Bus driver without any hardware.
+ * loopback: simple bus driver without any hardware.
  **/
 
 #include "stdincludes.h"

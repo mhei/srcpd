@@ -399,7 +399,7 @@ int readConfig(char *filename)
  * @param busnumber
        bus_t given the bus which thread has to be stopped.
  */
-void suspendThread(bus_t busnumber)
+void suspend_bus_thread(bus_t busnumber)
 {
     syslog_bus(0, DBG_DEBUG, "Thread on bus %d is going to stop.", busnumber);
     /* Lock thread till new data to process arrives */
@@ -416,7 +416,7 @@ void suspendThread(bus_t busnumber)
  * @param busnumber
        bus_t given the bus which thread has to be stopped.
  */
-void resumeThread(bus_t busnumber)
+void resume_bus_thread(bus_t busnumber)
 {
     /* Let thread process a feedback */
     pthread_mutex_lock(&buses[busnumber].transmit_mutex);
