@@ -210,7 +210,8 @@ void cancel_all_threads()
 void sighup_handler(int s)
 {
     signal(s, sighup_handler);
-    syslog(LOG_INFO, "SIGHUP(1) received!");
+    syslog(LOG_INFO, "SIGHUP(1) received, "
+            "going to re-read configuration file.");
     cancel_all_threads();
     if (0 == readConfig(conffile)) {
         syslog_bus(0, DBG_ERROR, "Error, no valid bus setup found in "
@@ -258,7 +259,8 @@ void sigio_handler(int status)
     /* find bus matching the triggering descriptor */
     else {
         for (i = 1; i <= num_buses; i++) {
-            if ((buses[i].device.file.fd != -1) && (FD_ISSET(buses[i].device.file.fd, &rfds))) {
+            if ((buses[i].device.file.fd != -1) &&
+                    (FD_ISSET(buses[i].device.file.fd, &rfds))) {
                 if (buses[i].sigio_reader != NULL) {
                    (*buses[i].sigio_reader) (i);
                 }

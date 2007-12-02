@@ -102,9 +102,7 @@ int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
 static int init_lineLoopback(bus_t bus)
 {
-    int FD;
-    FD = -1;
-    return FD;
+    return -1;
 }
 
 int term_bus_LOOPBACK(bus_t bus)
@@ -121,6 +119,7 @@ int init_gl_LOOPBACK(gl_state_t *gl)
 {
     switch (gl->protocol) {
         case 'L':
+        case 'S': /*TODO: implement range checks*/
         case 'P':
             return SRCP_OK;
             break;
@@ -160,7 +159,7 @@ int init_gl_LOOPBACK(gl_state_t *gl)
 int init_ga_LOOPBACK(ga_state_t *ga)
 {
     if ((ga->protocol == 'M') || (ga->protocol == 'N')
-        || (ga->protocol == 'P'))
+        || (ga->protocol == 'P') || (ga->protocol == 'S'))
         return SRCP_OK;
     return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
 }
@@ -171,17 +170,17 @@ int init_ga_LOOPBACK(ga_state_t *ga)
  */
 int init_bus_LOOPBACK(bus_t i)
 {
-    syslog_bus(i, DBG_INFO, "loopback init: bus #%ld, debug %d", i,
+    syslog_bus(i, DBG_INFO, "loopback start initialization (verbosity = %d).",
         buses[i].debuglevel);
     if (buses[i].debuglevel == 0) {
-        syslog_bus(i, DBG_INFO, "loopback bus #%ld open device %s (not really!)",
-            i, buses[i].device.file.path);
+        syslog_bus(i, DBG_INFO, "loopback open device %s (not really!).",
+            buses[i].device.file.path);
         buses[i].device.file.fd = init_lineLoopback(i);
     }
     else {
         buses[i].device.file.fd = -1;
     }
-    syslog_bus(i, DBG_INFO, "loopback init done");
+    syslog_bus(i, DBG_INFO, "loopback initialization done.");
     return 0;
 }
 
@@ -192,7 +191,7 @@ void *thr_sendrec_LOOPBACK(void *v)
     int addr;
     bus_t bus = (bus_t) v;
 
-    syslog_bus(bus, DBG_INFO, "loopback started, bus #%d, %s", bus,
+    syslog_bus(bus, DBG_INFO, "loopback bus thread started %s",
         buses[bus].device.file.path);
 
     buses[bus].watchdog = 1;
