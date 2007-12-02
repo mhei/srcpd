@@ -648,7 +648,9 @@ int doCmdClient(client_thread_t* ctd)
     long int rc, nelem;
     struct timeval akt_time;
 
-    syslog_bus(0, DBG_INFO, "Command mode starting for session %ld", ctd->session);
+    syslog_bus(0, DBG_INFO, "Command mode starting for session %ld",
+            ctd->session);
+
     while (1) {
         pthread_testcancel();
         memset(line, 0, sizeof(line));

@@ -36,5 +36,7 @@ int waitTIME(int d, int h, int m, int s, char *reply);
 int describeTIME(char *reply);
 
 void* thr_clock(void *);
+void create_time_thread();
+void destroy_time_thread();
 
 #endif
