@@ -131,8 +131,8 @@ void create_time_thread()
     pthread_detach(time_tid);
 }
 
-/*destroy time/clock thread*/
-void destroy_time_thread()
+/*cancel time/clock thread*/
+void cancel_time_thread()
 {
     pthread_cancel(time_tid);
     /*TODO: wait for termination*/
