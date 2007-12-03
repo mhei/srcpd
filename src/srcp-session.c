@@ -176,7 +176,7 @@ void terminate_all_sessions()
     pthread_mutex_unlock(&session_list_mutex);
 }
 
-/*this function is used by clientservice to start the session*/
+/*this function is used by clientservice starting the session*/
 int start_session(sessionid_t sessionid, int mode)
 {
     char msg[1000];
@@ -225,8 +225,7 @@ int describeSESSION(bus_t bus, sessionid_t sessionid, char *reply)
 int termSESSION(bus_t bus, sessionid_t sessionid, sessionid_t termsessionid,
                 char *reply)
 {
-    if (sessionid == termsessionid || termsessionid == 0) {
-        stop_session(termsessionid);
+    if (sessionid == termsessionid) {
         session_terminate(termsessionid);
         return -SRCP_OK;
     }
