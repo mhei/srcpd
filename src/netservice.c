@@ -275,8 +275,8 @@ void create_netservice_thread()
             port);
 }
 
-/* destroy network connection thread */
-void destroy_netservice_thread()
+/* cancel network connection thread */
+void cancel_netservice_thread()
 {
     pthread_cancel(netservice_tid);
     (*buses[0].term_func) (0);

@@ -18,6 +18,6 @@ typedef struct _thr_param
 } thr_param;
 
 void create_netservice_thread();
-void destroy_netservice_thread();
+void cancel_netservice_thread();
 
 #endif
