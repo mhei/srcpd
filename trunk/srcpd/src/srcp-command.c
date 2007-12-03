@@ -536,7 +536,7 @@ int handleTERM(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
         if (strlen(parameter) > 0)
             nelem = sscanf(parameter, "%ld", &termsession);
         if (nelem <= 0)
-            termsession = 0;
+            termsession = sessionid;
         rc = termSESSION(bus, sessionid, termsession, reply);
     }
 
