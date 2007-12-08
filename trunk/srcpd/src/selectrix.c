@@ -672,7 +672,7 @@ void *thr_commandSelectrix(void *v)
                 }
                 if (state == 0) {
                         /* Lock thread till new data to process arrives */
-                        suspend_bus_thread(busnumber);
+                        suspendThread(busnumber);
                 }
         }
 }
@@ -697,7 +697,7 @@ void *thr_feedbackSelectrix(void *v)
                         case 2:
                                 __selectrix->startFB = 1;
                         case 1:
-                                resume_bus_thread(busnumber);
+                                resumeThread(busnumber);
                                 break;
                         case 0:
                                 /* Select the next module */
@@ -713,7 +713,7 @@ void *thr_feedbackSelectrix(void *v)
                                 if (__selectrix->max_address > addr) {
                                         /* Let thread process a feedback */
                                         __selectrix->startFB = 1;
-                                        resume_bus_thread(busnumber);
+                                        resumeThread(busnumber);
                                 } else {
                                         syslog_bus(busnumber, DBG_INFO,
                                                 "Selectrix on bus %ld, "

@@ -18,15 +18,6 @@
 #include "syslogmessage.h"
 
 
-typedef struct _THREADS
-{
-  unsigned short int port;
-  int socket;
-} net_thread_t;
-
-static pthread_t netservice_tid;
-
-
 void change_privileges(bus_t bus)
 {
     struct group *group;
@@ -88,23 +79,18 @@ void end_netrequest_thread(net_thread_t *nt_data)
 {
     if (nt_data->socket != -1) {
         close(nt_data->socket);
+        nt_data->socket = -1;
     }
-    free(nt_data);
 }
 
 /*handle incoming network syn requests*/
-void *thr_handlePort(void* v)
+void *thr_handlePort(void *v)
 {
     int last_cancel_state, last_cancel_type;
     pthread_t ttid;
+    net_thread_t ntd = *((net_thread_t *) v);
     int newsock;
     int result;
-
-    net_thread_t* ntd = (net_thread_t*) malloc(sizeof(net_thread_t));
-    if (ntd == NULL)
-        return NULL;
-
-    ntd->port = (unsigned long int) v;
 
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &last_cancel_type);
@@ -127,12 +113,12 @@ void *thr_handlePort(void* v)
         memset(&sin6, 0, sizeof(sin6));
         sin6.sin6_family = AF_INET6;
 
-        sin6.sin6_port = htons(ntd->port);
+        sin6.sin6_port = htons(ntd.port);
         sin6.sin6_addr = in6addr_any;
 
         /* create a socket for listening */
-        ntd->socket = socket(AF_INET6, SOCK_STREAM, 0);
-        if (ntd->socket == -1) {
+        ntd.socket = socket(AF_INET6, SOCK_STREAM, 0);
+        if (ntd.socket == -1) {
             syslog_bus(0, DBG_ERROR, "Socket creation failed: %s (errno = %d). "
                     "Terminating...\n", strerror(errno), errno);
             exit(1);
@@ -147,12 +133,12 @@ void *thr_handlePort(void* v)
         /* Here would be the original IPv4 code as usual */
         memset(&sin, 0, sizeof(sin));
         sin.sin_family = AF_INET;       /* IPv4 address family */
-        sin.sin_port = htons(ntd->port);
+        sin.sin_port = htons(ntd.port);
         sin.sin_addr.s_addr = INADDR_ANY;
 
         /* Create the socket */
-        ntd->socket = socket(AF_INET, SOCK_STREAM, 0);
-        if (ntd->socket == -1) {
+        ntd.socket = socket(AF_INET, SOCK_STREAM, 0);
+        if (ntd.socket == -1) {
             syslog_bus(0, DBG_ERROR, "Socket creation failed: %s (errno = %d). "
                     "Terminating...\n", strerror(errno), errno);
             exit(1);
@@ -166,26 +152,26 @@ void *thr_handlePort(void* v)
     }
 
     sock_opt = 1;
-    if (setsockopt(ntd->socket, SOL_SOCKET, SO_REUSEADDR, &sock_opt,
+    if (setsockopt(ntd.socket, SOL_SOCKET, SO_REUSEADDR, &sock_opt,
          sizeof(sock_opt)) == -1) {
         syslog_bus(0, DBG_ERROR, "Setsockopt failed: %s (errno = %d). "
                 "Terminating...\n", strerror(errno), errno);
-        close(ntd->socket);
+        close(ntd.socket);
         exit(1);
     }
 
     /* saddr=(sockaddr_in) if ntd.socket is of type AF_INET else its (sockaddr_in6) */
-    if (bind(ntd->socket, (struct sockaddr *) saddr, socklen) == -1) {
+    if (bind(ntd.socket, (struct sockaddr *) saddr, socklen) == -1) {
         syslog_bus(0, DBG_ERROR, "Bind failed: %s (errno = %d). "
                 "Terminating...\n", strerror(errno), errno);
-        close(ntd->socket);
+        close(ntd.socket);
         exit(1);
     }
 
-    if (listen(ntd->socket, 1) == -1) {
+    if (listen(ntd.socket, 1) == -1) {
         syslog_bus(0, DBG_ERROR, "Listen failed: %s (errno = %d). "
                 "Terminating...\n", strerror(errno), errno);
-        close(ntd->socket);
+        close(ntd.socket);
         exit(1);
     }
 
@@ -193,7 +179,7 @@ void *thr_handlePort(void* v)
     for (;;) {
         pthread_testcancel();
         fsocklen = socklen;
-        newsock = accept(ntd->socket, (struct sockaddr *) fsaddr, &fsocklen);
+        newsock = accept(ntd.socket, (struct sockaddr *) fsaddr, &fsocklen);
 
         if (newsock == -1) {
             /* Possibly the connection got aborted */
@@ -237,9 +223,9 @@ void *thr_handlePort(void* v)
             continue;
         }
 
-        /* hand over client service to "thr_doClient()" from clientservice.c */
-        result = pthread_create(&ttid, NULL, thr_doClient,
-                (void *) (long int) newsock);
+        /* hand over client service to "thr_doClient()" from netserver.c */
+        result = pthread_create(&ttid, NULL, ntd.client_handler,
+                (void *) newsock);
         if (result != 0) {
             syslog_bus(0, DBG_ERROR, "Create thread for network client "
                     "failed: %s (errno = %d). Terminating...\n",
@@ -251,49 +237,3 @@ void *thr_handlePort(void* v)
     /*run the cleanup routine*/
     pthread_cleanup_pop(1);
 }
-
-/* create network connection thread */
-void create_netservice_thread()
-{
-    int result;
-    unsigned short int port;
-
-    port = ((SERVER_DATA *) buses[0].driverdata)->TCPPORT;
-
-    /*TODO: search for other solution than doubled type cast*/
-    result = pthread_create(&netservice_tid, NULL, thr_handlePort,
-            (void*) (unsigned long int) port);
-
-    if (result != 0) {
-        syslog_bus(0, DBG_ERROR, "Create netservice thread failed: %s "
-                "(errno = %d). Terminating...\n", strerror(result), result);
-        exit(1);
-    }
-    /*pthread_detach(netservice_tid);*/
-    
-    syslog_bus(0, DBG_INFO, "Netservice thread for port %d created.",
-            port);
-}
-
-/* cancel network connection thread */
-void cancel_netservice_thread()
-{
-    int result;
-
-    result = pthread_cancel(netservice_tid);
-    if (result != 0)
-        syslog_bus(0, DBG_ERROR,
-                "Netservice thread cancel failed: %s (errno = %d).",
-                strerror(result), result);
-    /*(*buses[0].term_func) (0);*/
-    /*TODO: wait for termination*/
-
-    result = pthread_join(netservice_tid, NULL);
-    if (result != 0)
-        syslog_bus(0, DBG_ERROR,
-                "Netservice thread join failed: %s (errno = %d).",
-                strerror(result), result);
-
-    syslog_bus(0, DBG_INFO, "Netservice thread cancelled.");
-}
-
