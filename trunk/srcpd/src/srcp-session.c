@@ -225,7 +225,7 @@ int describeSESSION(bus_t bus, sessionid_t sessionid, char *reply)
 int termSESSION(bus_t bus, sessionid_t sessionid, sessionid_t termsessionid,
                 char *reply)
 {
-    if (sessionid == termsessionid || termsessionid == 0) {
+    if (sessionid == termsessionid) {
         stop_session(termsessionid);
         session_terminate(termsessionid);
         return -SRCP_OK;
