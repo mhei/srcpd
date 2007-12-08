@@ -146,7 +146,6 @@ void cancel_all_threads()
     pthread_cancel(ttid_cmd);
     (*buses[0].term_func) (0);
 
-    wait(0);
     syslog(LOG_INFO, "SRCP service terminated.");
 }
 
@@ -394,7 +393,7 @@ int main(int argc, char **argv)
                             "hangs, restarting: (old pid: %ld, %d)",
                             i, (long) buses[i].tid, buses[i].watchdog);
                     pthread_cancel(buses[i].tid);
-                    waitpid((long) buses[i].tid, NULL, 0);
+                    pthread_join(buses[i].tid, NULL);
                     result = pthread_create(&ttid_tid, NULL,
                             buses[i].thr_func, (void *) i);
                     if (result != 0) {
@@ -404,7 +403,6 @@ int main(int argc, char **argv)
                         break;
                     }
                     buses[i].tid = ttid_tid;
-                    pthread_detach(buses[i].tid);
                 }
                 buses[i].watchdog = 0;
             }
