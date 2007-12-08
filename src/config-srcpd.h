@@ -98,8 +98,8 @@ typedef struct _BUS
       } net;
   } device;
  
-  pthread_t tid;               /* PID of the thread */
-  pthread_t tidtimer;          /* PID of the timer thread */
+  pthread_t tid;               /* ID of the thread */
+  pthread_t tidtimer;          /* ID of the timer thread */
   void *thr_func;              /* address of the thread function */
   void *thr_timer;             /* address of the timer thread */
   void (*sigio_reader)(bus_t); /* address of the SIGIO based device reader */

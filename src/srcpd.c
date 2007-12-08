@@ -390,7 +390,7 @@ int main(int argc, char **argv)
                     && !queue_GA_isempty(i)
                     && (buses[i].flags & USE_WATCHDOG)) {
                     syslog(LOG_INFO, "Oops: Interface thread #%ld "
-                            "hangs, restarting: (old pid: %ld, %d)",
+                            "hangs, restarting: (old tid: %ld, %d)",
                             i, (long) buses[i].tid, buses[i].watchdog);
                     pthread_cancel(buses[i].tid);
                     pthread_join(buses[i].tid, NULL);
