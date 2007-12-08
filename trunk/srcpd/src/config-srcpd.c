@@ -20,6 +20,7 @@
 #include "stdincludes.h"
 #include "config-srcpd.h"
 #include "srcp-fb.h"
+#include "srcp-power.h"
 #include "srcp-server.h"
 #include "ddl.h"
 #include "m605x.h"
@@ -425,3 +426,99 @@ void resume_bus_thread(bus_t busnumber)
     syslog_bus(0, DBG_DEBUG, "Thread on bus %d is woken up", busnumber);
 }
 
+/*create all bus threads*/
+void create_all_bus_threads()
+{
+    pthread_t ttid_pid;
+    int result;
+    bus_t i;
+
+    syslog_bus(0, DBG_INFO, "Starting %ld bus interface threads.",
+            num_buses);
+
+    /* start threads for all buses */
+    for (i = 1; i <= num_buses; i++) {
+        syslog_bus(0, DBG_INFO,
+                "Starting interface thread number %ld (type = %d).",
+                i, buses[i].type);
+
+        if (buses[i].thr_timer != NULL) {
+               result = pthread_create(&ttid_pid, NULL, buses[i].thr_timer,
+                                        (void *) i);
+               if (result != 0) {
+                   syslog(LOG_INFO, "Create timer thread for bus %ld "
+                           "failed: %s (errno = %d)\n", i,
+                           strerror(result), result);
+                   exit(1);
+               }
+               buses[i].pidtimer = ttid_pid;
+        }
+
+        if (buses[i].thr_func != NULL) {
+               result = pthread_create(&ttid_pid, NULL, buses[i].thr_func,
+                                        (void *) i);
+               if (result != 0) {
+                   syslog(LOG_INFO, "Create interface thread for bus %ld "
+                           "failed: %s (errno = %d)\n", i,
+                           strerror(result), result);
+                    exit(1);
+               }
+               buses[i].pid = ttid_pid;
+        }
+
+        syslog(LOG_INFO, "Interface thread #%ld started successfully, "
+                "type(%d): pid %ld", i, buses[i].type,
+                (long) (buses[i].pid));
+
+        if (((buses[i].flags & AUTO_POWER_ON) == AUTO_POWER_ON)) {
+            setPower(i, 1, "AUTO POWER ON");
+        }
+        else {
+            setPower(i, 0, "AUTO POWER OFF");
+        }
+    }
+}
+
+/*terminate all running bus threads*/
+void cancel_all_bus_threads()
+{
+    bus_t bus;
+    int result = 0;
+    void* thr_result;
+
+    for (bus = 1; bus <= num_buses; bus++) {
+
+        if (buses[bus].pidtimer != 0) {
+            result = pthread_cancel(buses[bus].pidtimer);
+            if (result != 0)
+                syslog_bus(bus, DBG_ERROR,
+                        "Timer thread cancel failed: %s (errno = %d).",
+                        strerror(result), result);
+
+            /*wait until timer thread terminates*/
+            result = pthread_join(buses[bus].pidtimer, &thr_result);
+            if (result != 0)
+                syslog_bus(bus, DBG_ERROR,
+                        "Timer thread join failed: %s (errno = %d).",
+                        strerror(result), result);
+
+        }
+
+        pthread_cancel(buses[bus].pid);
+        if (result != 0)
+            syslog_bus(bus, DBG_ERROR,
+                    "Interface thread cancel failed: %s (errno = %d).",
+                    strerror(result), result);
+
+        (*buses[bus].term_func) (bus);
+
+        /*wait until thread terminates*/
+        result = pthread_join(buses[bus].pid, &thr_result);
+        if (result != 0)
+            syslog_bus(0, DBG_ERROR,
+                    "Bus %ld thread join failed: %s (errno = %d).", bus,
+                    strerror(result), result);
+
+    }
+    syslog_bus(0, DBG_INFO, "All bus threads cancelled.");
+}

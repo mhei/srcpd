@@ -320,13 +320,8 @@ int term_bus_HSI_88(bus_t busnumber)
   if ( buses[ busnumber ].type != SERVER_HSI_88 )
     return 1;
 
-  /*if ( buses[ busnumber ].pid == 0 )
-    return 0;*/
-
   working_HSI88 = 0;
 
-  /*pthread_cancel( buses[ busnumber ].pid );
-  buses[ busnumber ].pid = 0;*/
   close_comport( busnumber );
   free(buses[busnumber].driverdata);
   return 0;

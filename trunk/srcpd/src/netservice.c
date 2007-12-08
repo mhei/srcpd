@@ -75,12 +75,12 @@ int ipv6_supported()
 }
 
 /*cleanup routine for network syn request thread*/
-void end_netrequest_thread(net_thread_t *nt_data)
+void end_netrequest_thread(net_thread_t *ntd)
 {
-    if (nt_data->socket != -1) {
-        close(nt_data->socket);
-        nt_data->socket = -1;
+    if (ntd->socket != -1) {
+        close(ntd->socket);
     }
+    free(buses[0].driverdata);
 }
 
 /*handle incoming network syn requests*/
@@ -234,6 +234,8 @@ void *thr_handlePort(void *v)
         }
         pthread_detach(ttid);
     }
+
     /*run the cleanup routine*/
     pthread_cleanup_pop(1);
+    return NULL;
 }

@@ -268,13 +268,8 @@ int term_bus_IB( bus_t busnumber )
   if ( buses[ busnumber ].type != SERVER_IB )
     return 1;
 
-  if ( buses[ busnumber ].pid == 0 )
-    return 0;
-
   __ib->working_IB = 0;
 
-  /*pthread_cancel( buses[ busnumber ].pid );*/
-  buses[ busnumber ].pid = 0;
   close_comport( busnumber );
   free(buses[busnumber].driverdata);
   return 0;

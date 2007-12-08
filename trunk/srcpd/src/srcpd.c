@@ -40,7 +40,7 @@
 /* structures to determine which port needs to be served */
 fd_set rfds;
 int maxfd;
-pthread_t ttid_cmd, ttid_pid;
+pthread_t ttid_cmd;
 net_thread_t cmds;
 char conffile[MAXPATHLEN];
 
@@ -107,57 +107,11 @@ void init_all_buses()
 void create_all_threads()
 {
     int result;
-    bus_t i;
 
     server_shutdown_state = 0;
     /* start clock thread */
     create_time_thread();
-
-    syslog(LOG_INFO, "Going to start %ld interface threads for the buses",
-           num_buses);
-
-    /* start threads for all buses */
-    for (i = 1; i <= num_buses; i++) {
-        syslog(LOG_INFO, "Going to start interface thread #%ld type(%d)",
-               i, buses[i].type);
-
-        if (buses[i].thr_timer != NULL) {
-               result = pthread_create(&ttid_pid, NULL, buses[i].thr_timer,
-                                        (void *) i);
-               if (result != 0) {
-                   syslog(LOG_INFO, "Create timer thread for bus %ld "
-                           "failed: %s (errno = %d)\n", i,
-                           strerror(result), result);
-                   exit(1);
-               }
-               pthread_detach(ttid_pid);
-               buses[i].pidtimer = ttid_pid;
-        }
-
-        if (buses[i].thr_func != NULL) {
-               result = pthread_create(&ttid_pid, NULL, buses[i].thr_func,
-                                        (void *) i);
-               if (result != 0) {
-                   syslog(LOG_INFO, "Create interface thread for bus %ld "
-                           "failed: %s (errno = %d)\n", i,
-                           strerror(result), result);
-                    exit(1);
-               }
-               pthread_detach(ttid_pid);
-               buses[i].pid = ttid_pid;
-        }
-
-        syslog(LOG_INFO, "Interface thread #%ld started successfully, "
-                "type(%d): pid %ld", i, buses[i].type,
-                (long) (buses[i].pid));
-
-        if (((buses[i].flags & AUTO_POWER_ON) == AUTO_POWER_ON)) {
-            setPower(i, 1, "AUTO POWER ON");
-        }
-        else {
-            setPower(i, 0, "AUTO POWER OFF");
-        }
-    }
+    create_all_bus_threads();
 
     /* network connection thread */
     result = pthread_create(&ttid_cmd, NULL, thr_handlePort, &cmds);
@@ -175,19 +129,15 @@ void create_all_threads()
 /* cancel all server threads*/
 void cancel_all_threads()
 {
-    bus_t i;
-
     syslog(LOG_INFO, "Terminating SRCP service...");
     server_shutdown();
+
+    /* if service is going to terminate, first wait 2 seconds,
+     * this is according to protocol specification */
+    sleep(2);
+
     cancel_time_thread();
-
-    /* terminate all bus threads */
-    for (i = 1; i <= num_buses; i++) {
-        pthread_cancel(buses[i].pid);
-        (*buses[i].term_func) (i);
-    }
-
-    /* terminate all running sessions */
+    cancel_all_bus_threads();
     terminate_all_sessions();
 
     /*TODO: check this; should be first to sessions to prevent
@@ -205,7 +155,8 @@ void cancel_all_threads()
 void sighup_handler(int s)
 {
     signal(s, sighup_handler);
-    syslog(LOG_INFO, "SIGHUP(1) received!");
+    syslog(LOG_INFO, "SIGHUP(1) received, "
+            "going to re-read configuration file.");
     cancel_all_threads();
     if (0 == readConfig(conffile)) {
         syslog_bus(0, DBG_ERROR, "Error, no valid bus setup found in "
@@ -253,7 +204,8 @@ void sigio_handler(int status)
     /* find bus matching the triggering descriptor */
     else {
         for (i = 1; i <= num_buses; i++) {
-            if ((buses[i].device.file.fd != -1) && (FD_ISSET(buses[i].device.file.fd, &rfds))) {
+            if ((buses[i].device.file.fd != -1) &&
+                    (FD_ISSET(buses[i].device.file.fd, &rfds))) {
                 if (buses[i].sigio_reader != NULL) {
                    (*buses[i].sigio_reader) (i);
                 }
@@ -335,6 +287,7 @@ int main(int argc, char **argv)
     int result;
     int sleep_ctr;
     char c;
+    pthread_t ttid_pid;
 
 
     /* First: Init the device data used internally */
@@ -419,11 +372,7 @@ int main(int argc, char **argv)
      * hanging processes
      */
     while (1) {
-
-        /* if service is going to terminate, first wait 2 seconds,
-         * this is according to protocol specification */
         if (server_shutdown_state == 1) {
-            sleep(2);
             break;
         }
 
