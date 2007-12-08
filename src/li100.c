@@ -305,7 +305,7 @@ int term_bus_LI100_SERIAL( bus_t busnumber )
 
   __li100->working_LI100 = 0;
   close_comport( busnumber );
-
+  free(buses[busnumber].driverdata);
   return 0;
 }
 
