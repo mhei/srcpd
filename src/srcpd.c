@@ -40,7 +40,7 @@
 /* structures to determine which port needs to be served */
 fd_set rfds;
 int maxfd;
-pthread_t ttid_cmd, ttid_clock, ttid_pid;
+pthread_t ttid_cmd, ttid_pid;
 net_thread_t cmds;
 char conffile[MAXPATHLEN];
 
@@ -103,7 +103,7 @@ void init_all_buses()
 }
 
 
-/* create all server threads*/
+/*create all kind of server threads*/
 void create_all_threads()
 {
     int result;
@@ -111,12 +111,7 @@ void create_all_threads()
 
     server_shutdown_state = 0;
     /* start clock thread */
-    result = pthread_create(&ttid_clock, NULL, thr_clock, NULL);
-    if (result != 0) {
-        syslog(LOG_INFO, "Create clock thread failed: %s (errno = %d)\n",
-               strerror(result), result);
-    }
-    pthread_detach(ttid_clock);
+    create_time_thread();
 
     syslog(LOG_INFO, "Going to start %ld interface threads for the buses",
            num_buses);
@@ -184,7 +179,7 @@ void cancel_all_threads()
 
     syslog(LOG_INFO, "Terminating SRCP service...");
     server_shutdown();
-    pthread_cancel(ttid_clock);
+    cancel_time_thread();
 
     /* terminate all bus threads */
     for (i = 1; i <= num_buses; i++) {

@@ -8,6 +8,11 @@
 #include "srcp-time.h"
 #include "srcp-error.h"
 #include "srcp-info.h"
+#include "syslogmessage.h"
+
+
+/*local variable for time thread*/
+static pthread_t time_tid;
 
 
 int startup_TIME(void)
@@ -110,5 +115,41 @@ void *thr_clock(void *v)
         }
         /* syslog(LOG_INFO, "time: %d %d %d %d %d %d", vtime.day, vtime.hour, vtime.min, vtime.sec,  vtime.ratio_x, vtime.ratio_y); */
     }
+}
+
+
+/*create time/clock thread*/
+void create_time_thread()
+{
+    int result;
+
+    result = pthread_create(&time_tid, NULL, thr_clock, NULL);
+    if (result != 0) {
+        syslog_bus(0, DBG_INFO, "Create time thread failed: %s "
+                "(errno = %d)\n", strerror(result), result);
+    }
+    /*pthread_detach(time_tid);*/
+
+    syslog_bus(0, DBG_INFO, "Time thread created.");
+}
+
+/*cancel time/clock thread*/
+void cancel_time_thread()
+{
+    int result;
+
+    result = pthread_cancel(time_tid);
+    if (result != 0)
+        syslog_bus(0, DBG_ERROR,
+                "Time thread cancel failed: %s (errno = %d).",
+                strerror(result), result);
+
+    result = pthread_join(time_tid, NULL);
+    if (result != 0)
+        syslog_bus(0, DBG_ERROR,
+                "Time thread join failed: %s (errno = %d).",
+                strerror(result), result);
+
+    syslog_bus(0, DBG_INFO, "Time thread cancelled.");
 }
 
