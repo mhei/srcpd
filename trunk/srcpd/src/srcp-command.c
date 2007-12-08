@@ -648,7 +648,9 @@ int doCmdClient(client_thread_t* ctd)
     long int rc, nelem;
     struct timeval akt_time;
 
-    syslog_bus(0, DBG_INFO, "Command mode starting for session %ld", ctd->session);
+    syslog_bus(0, DBG_INFO, "Command mode starting for session %ld",
+            ctd->session);
+
     while (1) {
         pthread_testcancel();
         memset(line, 0, sizeof(line));
@@ -686,6 +688,7 @@ int doCmdClient(client_thread_t* ctd)
                 else if (strncasecmp(command, "TERM", 4) == 0) {
                     rc = handleTERM(ctd->session, bus, devicegroup,
                             parameter, reply);
+                    /*special option for session termination (?)*/
                     if (rc < 0) {
                         if (socket_writereply(ctd->socket, reply) < 0) {
                             break;
@@ -703,12 +706,14 @@ int doCmdClient(client_thread_t* ctd)
                                      parameter, reply);
                 }
             }
+            /* bus > num_buses */
             else {
                 rc = SRCP_WRONGVALUE;
                 gettimeofday(&akt_time, NULL);
                 srcp_fmt_msg(rc, reply, akt_time);
             }
         }
+        /* nelem < 3 */
         else {
             syslog_bus(0, DBG_DEBUG, "list too short in session %ld: %d",
                 ctd->session, nelem);

@@ -1,7 +1,7 @@
 /* $Id$ */
 
 /**
- * loopback: simple Bus driver without any hardware.
+ * loopback: simple bus driver without any hardware.
  **/
 
 #include "stdincludes.h"
@@ -172,17 +172,17 @@ int init_ga_LOOPBACK(ga_state_t *ga)
  */
 int init_bus_LOOPBACK(bus_t i)
 {
-    syslog_bus(i, DBG_INFO, "loopback init: bus #%ld, debug %d", i,
+    syslog_bus(i, DBG_INFO, "loopback start initialization (verbosity = %d).",
         buses[i].debuglevel);
     if (buses[i].debuglevel == 0) {
-        syslog_bus(i, DBG_INFO, "loopback bus #%ld open device %s (not really!)",
-            i, buses[i].device.file.path);
+        syslog_bus(i, DBG_INFO, "loopback open device %s (not really!).",
+            buses[i].device.file.path);
         buses[i].device.file.fd = init_lineLoopback(i);
     }
     else {
         buses[i].device.file.fd = -1;
     }
-    syslog_bus(i, DBG_INFO, "loopback init done");
+    syslog_bus(i, DBG_INFO, "loopback initialization done");
     return 0;
 }
 
@@ -193,7 +193,7 @@ void *thr_sendrec_LOOPBACK(void *v)
     int addr;
     bus_t bus = (bus_t) v;
 
-    syslog_bus(bus, DBG_INFO, "loopback started, bus #%d, %s", bus,
+    syslog_bus(bus, DBG_INFO, "loopback bus thread started %s",
         buses[bus].device.file.path);
 
     buses[bus].watchdog = 1;
