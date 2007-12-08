@@ -121,6 +121,7 @@ int init_gl_LOOPBACK(gl_state_t *gl)
 {
     switch (gl->protocol) {
         case 'L':
+        case 'S': /*TODO: implement range checks*/
         case 'P':
             return SRCP_OK;
             break;
@@ -160,7 +161,7 @@ int init_gl_LOOPBACK(gl_state_t *gl)
 int init_ga_LOOPBACK(ga_state_t *ga)
 {
     if ((ga->protocol == 'M') || (ga->protocol == 'N')
-        || (ga->protocol == 'P'))
+        || (ga->protocol == 'P') || (ga->protocol == 'S'))
         return SRCP_OK;
     return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
 }
