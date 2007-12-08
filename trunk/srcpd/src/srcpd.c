@@ -287,7 +287,7 @@ int main(int argc, char **argv)
     int result;
     int sleep_ctr;
     char c;
-    pthread_t ttid_pid;
+    pthread_t ttid_tid;
 
 
     /* First: Init the device data used internally */
@@ -392,10 +392,10 @@ int main(int argc, char **argv)
                     && (buses[i].flags & USE_WATCHDOG)) {
                     syslog(LOG_INFO, "Oops: Interface thread #%ld "
                             "hangs, restarting: (old pid: %ld, %d)",
-                            i, (long) buses[i].pid, buses[i].watchdog);
-                    pthread_cancel(buses[i].pid);
-                    waitpid((long) buses[i].pid, NULL, 0);
-                    result = pthread_create(&ttid_pid, NULL,
+                            i, (long) buses[i].tid, buses[i].watchdog);
+                    pthread_cancel(buses[i].tid);
+                    waitpid((long) buses[i].tid, NULL, 0);
+                    result = pthread_create(&ttid_tid, NULL,
                             buses[i].thr_func, (void *) i);
                     if (result != 0) {
                         syslog(LOG_INFO, "Recreate interface thread "
@@ -403,8 +403,8 @@ int main(int argc, char **argv)
                                 strerror(result), result);
                         break;
                     }
-                    buses[i].pid = ttid_pid;
-                    pthread_detach(buses[i].pid);
+                    buses[i].tid = ttid_tid;
+                    pthread_detach(buses[i].tid);
                 }
                 buses[i].watchdog = 0;
             }

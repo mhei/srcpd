@@ -429,7 +429,7 @@ void resume_bus_thread(bus_t busnumber)
 /*create all bus threads*/
 void create_all_bus_threads()
 {
-    pthread_t ttid_pid;
+    pthread_t ttid_tid;
     int result;
     bus_t i;
 
@@ -443,7 +443,7 @@ void create_all_bus_threads()
                 i, buses[i].type);
 
         if (buses[i].thr_timer != NULL) {
-               result = pthread_create(&ttid_pid, NULL, buses[i].thr_timer,
+               result = pthread_create(&ttid_tid, NULL, buses[i].thr_timer,
                                         (void *) i);
                if (result != 0) {
                    syslog(LOG_INFO, "Create timer thread for bus %ld "
@@ -451,11 +451,11 @@ void create_all_bus_threads()
                            strerror(result), result);
                    exit(1);
                }
-               buses[i].pidtimer = ttid_pid;
+               buses[i].tidtimer = ttid_tid;
         }
 
         if (buses[i].thr_func != NULL) {
-               result = pthread_create(&ttid_pid, NULL, buses[i].thr_func,
+               result = pthread_create(&ttid_tid, NULL, buses[i].thr_func,
                                         (void *) i);
                if (result != 0) {
                    syslog(LOG_INFO, "Create interface thread for bus %ld "
@@ -463,12 +463,12 @@ void create_all_bus_threads()
                            strerror(result), result);
                     exit(1);
                }
-               buses[i].pid = ttid_pid;
+               buses[i].tid = ttid_tid;
         }
 
         syslog(LOG_INFO, "Interface thread #%ld started successfully, "
-                "type(%d): pid %ld", i, buses[i].type,
-                (long) (buses[i].pid));
+                "type(%d): tid %ld", i, buses[i].type,
+                (long) (buses[i].tid));
 
         if (((buses[i].flags & AUTO_POWER_ON) == AUTO_POWER_ON)) {
             setPower(i, 1, "AUTO POWER ON");
@@ -488,15 +488,15 @@ void cancel_all_bus_threads()
 
     for (bus = 1; bus <= num_buses; bus++) {
 
-        if (buses[bus].pidtimer != 0) {
-            result = pthread_cancel(buses[bus].pidtimer);
+        if (buses[bus].tidtimer != 0) {
+            result = pthread_cancel(buses[bus].tidtimer);
             if (result != 0)
                 syslog_bus(bus, DBG_ERROR,
                         "Timer thread cancel failed: %s (errno = %d).",
                         strerror(result), result);
 
             /*wait until timer thread terminates*/
-            result = pthread_join(buses[bus].pidtimer, &thr_result);
+            result = pthread_join(buses[bus].tidtimer, &thr_result);
             if (result != 0)
                 syslog_bus(bus, DBG_ERROR,
                         "Timer thread join failed: %s (errno = %d).",
@@ -504,7 +504,7 @@ void cancel_all_bus_threads()
 
         }
 
-        pthread_cancel(buses[bus].pid);
+        pthread_cancel(buses[bus].tid);
         if (result != 0)
             syslog_bus(bus, DBG_ERROR,
                     "Interface thread cancel failed: %s (errno = %d).",
@@ -513,7 +513,7 @@ void cancel_all_bus_threads()
         (*buses[bus].term_func) (bus);
 
         /*wait until thread terminates*/
-        result = pthread_join(buses[bus].pid, &thr_result);
+        result = pthread_join(buses[bus].tid, &thr_result);
         if (result != 0)
             syslog_bus(0, DBG_ERROR,
                     "Bus %ld thread join failed: %s (errno = %d).", bus,
