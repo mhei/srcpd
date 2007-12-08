@@ -76,7 +76,7 @@ int queueGA(bus_t busnumber, int addr, int port, int action,
 
         pthread_mutex_unlock(&queue_mutex[busnumber]);
         /* Restart thread to send GL command */
-        resumeThread(busnumber);
+        resume_bus_thread(busnumber);
     }
     else {
         return SRCP_WRONGVALUE;
