@@ -269,7 +269,7 @@ void create_netservice_thread()
                 "(errno = %d). Terminating...\n", strerror(result), result);
         exit(1);
     }
-    pthread_detach(netservice_tid);
+    /*pthread_detach(netservice_tid);*/
     
     syslog_bus(0, DBG_INFO, "Netservice thread for port %d created.",
             port);
@@ -278,9 +278,21 @@ void create_netservice_thread()
 /* cancel network connection thread */
 void cancel_netservice_thread()
 {
-    pthread_cancel(netservice_tid);
-    (*buses[0].term_func) (0);
+    int result;
+
+    result = pthread_cancel(netservice_tid);
+    if (result != 0)
+        syslog_bus(0, DBG_ERROR,
+                "Netservice thread cancel failed: %s (errno = %d).",
+                strerror(result), result);
+    /*(*buses[0].term_func) (0);*/
     /*TODO: wait for termination*/
+
+    result = pthread_join(netservice_tid, NULL);
+    if (result != 0)
+        syslog_bus(0, DBG_ERROR,
+                "Netservice thread join failed: %s (errno = %d).",
+                strerror(result), result);
 
     syslog_bus(0, DBG_INFO, "Netservice thread cancelled.");
 }

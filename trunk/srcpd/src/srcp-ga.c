@@ -205,7 +205,7 @@ int initGA(bus_t busnumber, int addr, const char protocol)
 {
     int rc = SRCP_OK;
     int number_ga = get_number_ga(busnumber);
-    syslog_bus(busnumber, DBG_DEBUG, "init GA: %d %c", addr, protocol);
+    syslog_bus(busnumber, DBG_INFO, "init GA: %d %c", addr, protocol);
     if ((addr > 0) && (addr <= number_ga)) {
         char msg[100];
         ga[busnumber].gastate[addr].protocol = protocol;

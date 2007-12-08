@@ -37,6 +37,9 @@ const char *WELCOME_MSG =
  */
 void end_client_thread(client_thread_t *ctd)
 {
+    syslog_session(ctd->session, DBG_INFO, "Session cancelled (mode = %d).",
+            ctd->mode);
+
     if (ctd->session != 0) {
         if (ctd->mode == INFO)
             unlock_info_queue_mutex();
