@@ -37,9 +37,6 @@ const char *WELCOME_MSG =
  */
 void end_client_thread(client_thread_t *ctd)
 {
-    syslog_session(ctd->session, DBG_INFO, "Session cancelled (mode = %d).",
-            ctd->mode);
-
     if (ctd->session != 0) {
         if (ctd->mode == INFO)
             unlock_info_queue_mutex();
@@ -55,12 +52,12 @@ void end_client_thread(client_thread_t *ctd)
 }
 
 /* handle connected SRCP clients, start with shake hand phase. */
-void* thr_doClient(void* v)
+void* thr_doClient(void *v)
 {
     client_thread_t* ctd = (client_thread_t*) malloc(sizeof(client_thread_t));
     if (ctd == NULL)
         return NULL;
-    ctd->socket = (long int) v;
+    ctd->socket = (int) v;
     ctd->mode = COMMAND;
     ctd->session = 0;
 

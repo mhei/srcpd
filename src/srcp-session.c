@@ -176,7 +176,7 @@ void terminate_all_sessions()
     pthread_mutex_unlock(&session_list_mutex);
 }
 
-/*this function is used by clientservice starting the session*/
+/*this function is used by clientservice to start the session*/
 int start_session(sessionid_t sessionid, int mode)
 {
     char msg[1000];
@@ -219,13 +219,14 @@ int describeSESSION(bus_t bus, sessionid_t sessionid, char *reply)
 }
 
 /**
- * called by srcp command session finishing a session;
+ * called by srcp command session to finish a session;
  * return negative value of SRCP_OK to ack the request.
  */
 int termSESSION(bus_t bus, sessionid_t sessionid, sessionid_t termsessionid,
                 char *reply)
 {
-    if (sessionid == termsessionid) {
+    if (sessionid == termsessionid || termsessionid == 0) {
+        stop_session(termsessionid);
         session_terminate(termsessionid);
         return -SRCP_OK;
     }
@@ -255,11 +256,11 @@ int session_wait(bus_t busnumber, unsigned int timeout, int *result)
     stimeout.tv_sec = now.tv_sec + timeout;
     stimeout.tv_nsec = now.tv_usec * 1000;
 
-    syslog_bus(busnumber, DBG_DEBUG, "SESSION start wait1");
+    syslog_bus(busnumber, DBG_DEBUG, "SESSION start wait1 for bus %ld", busnumber);
     rc = pthread_cond_timedwait(&cb_cond[busnumber], &cb_mutex[busnumber],
                                 &stimeout);
     *result = cb_data[busnumber];
-    syslog_bus(busnumber, DBG_DEBUG, "SESSION start wait2");
+    syslog_bus(busnumber, DBG_DEBUG, "SESSION start wait2 for bus %ld", busnumber);
     return rc;
 }
 

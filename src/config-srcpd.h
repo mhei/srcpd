@@ -132,10 +132,8 @@ bus_t num_buses;
 
 int readConfig(char *filename);
 
-void create_all_bus_threads();
-void terminate_all_buses();
-void suspend_bus_thread(bus_t busnumber);
-void resume_bus_thread(bus_t busnumber);
+void suspendThread(bus_t busnumber);
+void resumeThread(bus_t busnumber);
 
 #define DG_SESSION 1
 #define DG_TIME 2

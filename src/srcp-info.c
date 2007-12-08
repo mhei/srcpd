@@ -212,6 +212,7 @@ int doInfoClient(client_thread_t* ctd)
                             return -1;
                         *reply = 0x00;
                     }
+
                 }
             }
         }
