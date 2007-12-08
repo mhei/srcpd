@@ -125,16 +125,31 @@ void create_time_thread()
 
     result = pthread_create(&time_tid, NULL, thr_clock, NULL);
     if (result != 0) {
-        syslog_bus(0, DBG_INFO, "Create clock thread failed: %s "
+        syslog_bus(0, DBG_INFO, "Create time thread failed: %s "
                 "(errno = %d)\n", strerror(result), result);
     }
-    pthread_detach(time_tid);
+    /*pthread_detach(time_tid);*/
+
+    syslog_bus(0, DBG_INFO, "Time thread created.");
 }
 
 /*cancel time/clock thread*/
 void cancel_time_thread()
 {
-    pthread_cancel(time_tid);
-    /*TODO: wait for termination*/
+    int result;
+
+    result = pthread_cancel(time_tid);
+    if (result != 0)
+        syslog_bus(0, DBG_ERROR,
+                "Time thread cancel failed: %s (errno = %d).",
+                strerror(result), result);
+
+    result = pthread_join(time_tid, NULL);
+    if (result != 0)
+        syslog_bus(0, DBG_ERROR,
+                "Time thread join failed: %s (errno = %d).",
+                strerror(result), result);
+
+    syslog_bus(0, DBG_INFO, "Time thread cancelled.");
 }
 

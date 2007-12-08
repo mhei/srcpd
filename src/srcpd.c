@@ -117,13 +117,13 @@ void cancel_all_threads()
     server_shutdown();
 
     cancel_time_thread();
+    cancel_netservice_thread();
     terminate_all_buses();
     terminate_all_sessions();
 
     /*TODO: check this; should be first to sessions to prevent
      * reconnects*/
     /* server thread is last to be cleaned up */
-    cancel_netservice_thread();
 
     wait(0);
     syslog(LOG_INFO, "SRCP service terminated.");

@@ -49,6 +49,11 @@ email                : frank.schmischke@t-online.de
 
 #define __ib ((IB_DATA*)buses[busnumber].driverdata)
 
+typedef struct bt {
+  int fd;
+  bus_t bus;
+} bus_thread_t;
+
 static int init_lineIB( bus_t busnumber );
 
 /* IB helper functions */
@@ -280,6 +285,15 @@ int term_bus_IB( bus_t busnumber )
   return 0;
 }
 
+/*thread cleanup routine for this bus*/
+static void end_bus_thread(bus_thread_t *btd)
+{
+    syslog_bus(btd->bus, DBG_INFO, "IB bus thread cancelled 1.");
+    term_bus_IB(btd->bus);
+    syslog_bus(btd->bus, DBG_INFO, "IB bus thread cancelled 2.");
+    free(btd);
+}
+
 void *thr_sendrec_IB( void *v )
 {
   unsigned char byte2send;
@@ -287,8 +301,22 @@ void *thr_sendrec_IB( void *v )
   unsigned char rr;
   bus_t busnumber;
   int zaehler1, fb_zaehler1, fb_zaehler2;
+    int last_cancel_state, last_cancel_type;
 
-  busnumber = ( bus_t ) v;
+    busnumber = (bus_t) v;
+
+    bus_thread_t* btd = (bus_thread_t*) malloc(sizeof(bus_thread_t));
+    if (btd == NULL)
+        return NULL;
+    btd->bus = busnumber;
+    btd->fd = -1;
+
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &last_cancel_type);
+
+    /*register cleanup routine*/
+    pthread_cleanup_push((void *) end_bus_thread, (void *) btd);
+
   syslog_bus( busnumber, DBG_INFO, "thr_sendrec_IB is startet as bus %i",
        busnumber );
 
@@ -301,8 +329,8 @@ void *thr_sendrec_IB( void *v )
   byte2send = XSensOff;
   writeByte( busnumber, byte2send, 0 );
   status = readByte( busnumber, 1, &rr );
-  while ( 1 )
-  {
+  while (1) {
+        pthread_testcancel();
     if (buses[busnumber].power_changed == 1)
     {
       if ( __ib->emergency_on_ib == 1 )
@@ -369,6 +397,9 @@ void *thr_sendrec_IB( void *v )
     buses[ busnumber ].watchdog = 1;
     usleep( 50000 );
   }                           /* End WHILE(1) */
+
+    /*run the cleanup routine*/
+    pthread_cleanup_pop(1);
 }
 
 void send_command_ga_IB( bus_t busnumber )

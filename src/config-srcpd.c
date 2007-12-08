@@ -438,8 +438,9 @@ void create_all_bus_threads()
 
     /* start threads for all buses */
     for (i = 1; i <= num_buses; i++) {
-        syslog(LOG_INFO, "Going to start interface thread #%ld type(%d)",
-               i, buses[i].type);
+        syslog_bus(0, DBG_INFO,
+                "Starting interface thread number %ld (type = %d).",
+                i, buses[i].type);
 
         if (buses[i].thr_timer != NULL) {
                result = pthread_create(&ttid_pid, NULL, buses[i].thr_timer,
@@ -463,7 +464,7 @@ void create_all_bus_threads()
                            strerror(result), result);
                     exit(1);
                }
-               pthread_detach(ttid_pid);
+               /*pthread_detach(ttid_pid);*/
                buses[i].pid = ttid_pid;
         }
 
@@ -484,10 +485,18 @@ void create_all_bus_threads()
 void terminate_all_buses()
 {
     bus_t bus;
+    int result;
 
     for (bus = 1; bus <= num_buses; bus++) {
+        if (buses[bus].pidtimer != 0)
+            pthread_cancel(buses[bus].pidtimer);
         pthread_cancel(buses[bus].pid);
-        (*buses[bus].term_func) (bus);
+        /*(*buses[bus].term_func) (bus);*/
     }
     /*TODO: wait until all threads are cancelled*/
+    result = pthread_join(buses[bus].pid, NULL);
+    if (result != 0)
+        syslog_bus(0, DBG_ERROR,
+                "Bus %ld thread join failed: %s (errno = %d).", bus,
+                strerror(result), result);
 }

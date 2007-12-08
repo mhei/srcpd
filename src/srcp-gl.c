@@ -477,7 +477,7 @@ int startup_GL(void)
 int init_GL(bus_t busnumber, int number)
 {
     int i;
-    syslog_bus(busnumber, DBG_WARN, "INIT GL: %d", number);
+    syslog_bus(busnumber, DBG_INFO, "init GL: %d", number);
     if (busnumber >= MAX_BUSES)
         return 1;
 
