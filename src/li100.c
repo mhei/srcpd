@@ -303,12 +303,7 @@ int term_bus_LI100_SERIAL( bus_t busnumber )
 #endif
     return 1;
 
-  if ( buses[ busnumber ].pid == 0 )
-    return 0;
-
   __li100->working_LI100 = 0;
-  pthread_cancel( buses[ busnumber ].pid );
-  buses[ busnumber ].pid = 0;
   close_comport( busnumber );
 
   return 0;

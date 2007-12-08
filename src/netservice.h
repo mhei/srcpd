@@ -25,6 +25,5 @@ typedef struct _THREADS
 } net_thread_t;
 
 void* thr_handlePort(void *);
-void change_privileges(bus_t bus);
 
 #endif

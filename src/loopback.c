@@ -109,7 +109,7 @@ static int init_lineLoopback(bus_t bus)
 
 int term_bus_LOOPBACK(bus_t bus)
 {
-    syslog_bus(bus, DBG_INFO, "loopback bus #%ld terminating", bus);
+    syslog_bus(bus, DBG_INFO, "loopback bus terminated.");
     free(buses[bus].driverdata);
     return 0;
 }
@@ -182,7 +182,7 @@ int init_bus_LOOPBACK(bus_t i)
     else {
         buses[i].device.file.fd = -1;
     }
-    syslog_bus(i, DBG_INFO, "loopback initialization done");
+    syslog_bus(i, DBG_INFO, "loopback initialization done.");
     return 0;
 }
 
