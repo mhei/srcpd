@@ -504,7 +504,7 @@ void cancel_all_bus_threads()
 
         }
 
-        pthread_cancel(buses[bus].tid);
+        result = pthread_cancel(buses[bus].tid);
         if (result != 0)
             syslog_bus(bus, DBG_ERROR,
                     "Interface thread cancel failed: %s (errno = %d).",
