@@ -1,4 +1,4 @@
-.TH srcpd.conf 5 "09. Dezember 2007"
+.TH srcpd.conf 5
 .\"
 .\"
 .SH "NAME"
@@ -7,7 +7,7 @@ srcpd.conf \- Die Konfigurationsdatei für den srcpd Deamon
 .\"
 .SH "BESCHREIBUNG"
 Die Datei \fIsrcpd.conf\fP wird vom SRCP-Daemon \fBsrcpd\fP als
-systemweite Konfigurationsdatei genutzt. Sie beschreibt die
+systemweite Konfigurationsdatei genutzt. Sie bescheibt die
 für die Laufzeit des Systemsdienstes entscheidenden Einstellungen zum
 Verhalten des Daemons selbst, sowie die Anzahl, Art und Betriebsweise
 der angeschlossenen Schnittstellen zur Modellbahn. Weitere Details zum
@@ -64,8 +64,9 @@ entsprechende Fehlermeldungen an den syslog-Daemon. Diese können über
 die Datei \fI/var/log/messages\fP verfolgt werden.
 .\"
 .PP
-Aktuell gibt es keine Dokumententypspezifikation, mit der der Inhalt der
-Konfigurationsdatei auf seine Gültigkeit hin überprüft werden kann.
+Aktuell gibt es keine Dokumententypspezifikation (DTD), mit der der
+Inhalt der Konfigurationsdatei auf seine Gültigkeit hin überprüft werden
+kann.
 .\"
 .PP
 Jede Konfigurationsdatei muß die folgende Grundstruktur enthalten:
@@ -126,6 +127,13 @@ möglichst niedrig gewählt werden.
 device
 Hiermit wird der Name der angesteuerten Schnittstelle (z.B. /dev/ttyS0)
 festgelegt. Die Busse \fBserver\fP und \fBloopback\fP benötigen diesen
+Eintrag nicht.
+.\"
+.TP
+auto_power_on
+Hiermit wird festgelegt, ob beim Start des Daemons automatisch der
+Digitalstrom des Busses eingeschaltet wird. Gültige Werte sind »yes«
+oder »no«. Die Busse \fBserver\fP und \fBloopback\fP benötigen diesen
 Eintrag nicht.
 .\"
 .\"
@@ -276,24 +284,25 @@ Default is 256 (LI-USB 512).
 .SS loopback
 .\"
 .PP
-This bus does not connect to real hardware. It is used primarily
-for development tasks but may be useful for real installations too.
-Every command on this bus does only have an echo effect on the INFO
-sessions. The devices may be used as virtual devices for communication
-tasks.
+Dieser Bus stellt keine Verbindung zu einem existierenden Steuergerät
+her. Er ist primär für Entwicklungzwecke gedacht kann aber auch 
+bei betriebsfähgien Installationen nützlich sein. Jedes Kommando auf
+diesem Bus bewirkt lediglich ein entsprechendes Echo bei den
+INFO-Sitzungen. Dieser Bus kann also für Kommunikationszwecke genutzt
+werden.
 .\"
 .TP
 number_ga
-This is the number of GA devices. Default is 256.
+Anzahl der adressierbaren GA-Geräte. Die Voreinstellung ist 256.
 .\"
 .TP
 number_gl
-Like the number of GA this number gives the maximum address.
-Default is 80
+Anzahl der adressierbaren GL-Geräte. Die Voreinstellung ist 80.
 .\"
 .TP
 number_fb
-This is the number of feedback devices. Default is 0 (no device).
+Anzahl der adressierbaren Rückmeldekontakte. Die Voreintsellung ist 0
+(keine Rückmeldemodule vorhanden).
 .\"
 .\"
 .SS m605x
