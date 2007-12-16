@@ -32,7 +32,6 @@ int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     buses[busnumber].type = SERVER_LOOPBACK;
     buses[busnumber].init_func = &init_bus_LOOPBACK;
-    buses[busnumber].term_func = &term_bus_LOOPBACK;
     buses[busnumber].thr_func = &thr_sendrec_LOOPBACK;
     buses[busnumber].init_gl_func = &init_gl_LOOPBACK;
     buses[busnumber].init_ga_func = &init_ga_LOOPBACK;
@@ -102,16 +101,7 @@ int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
 static int init_lineLoopback(bus_t bus)
 {
-    int FD;
-    FD = -1;
-    return FD;
-}
-
-int term_bus_LOOPBACK(bus_t bus)
-{
-    syslog_bus(bus, DBG_INFO, "loopback bus terminated.");
-    free(buses[bus].driverdata);
-    return 0;
+    return -1;
 }
 
 /**
@@ -186,14 +176,37 @@ int init_bus_LOOPBACK(bus_t i)
     return 0;
 }
 
+/*thread cleanup routine for this bus*/
+static void end_bus_thread(bus_thread_t *btd)
+{
+    syslog_bus(btd->bus, DBG_INFO, "Loopback bus terminated.");
+    free(buses[btd->bus].driverdata);
+    free(btd);
+}
+
+/*main thread routine for this bus*/
 void *thr_sendrec_LOOPBACK(void *v)
 {
     gl_state_t gltmp, glakt;
     ga_state_t gatmp;
     int addr;
+    int last_cancel_state, last_cancel_type;
+
     bus_t bus = (bus_t) v;
 
-    syslog_bus(bus, DBG_INFO, "loopback bus thread started %s",
+    bus_thread_t* btd = (bus_thread_t*) malloc(sizeof(bus_thread_t));
+    if (btd == NULL)
+        pthread_exit((void*) 1);
+    btd->bus = bus;
+    btd->fd = -1;
+
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &last_cancel_type);
+
+    /*register cleanup routine*/
+    pthread_cleanup_push((void *) end_bus_thread, (void *) btd);
+
+    syslog_bus(bus, DBG_INFO, "Loopback bus started (device = %s).",
         buses[bus].device.file.path);
 
     buses[bus].watchdog = 1;
@@ -235,4 +248,8 @@ void *thr_sendrec_LOOPBACK(void *v)
         }
         usleep(1000);
     }
+
+    /*run the cleanup routine*/
+    pthread_cleanup_pop(1);
+    return NULL;
 }

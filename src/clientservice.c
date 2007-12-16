@@ -37,6 +37,9 @@ const char *WELCOME_MSG =
  */
 void end_client_thread(client_thread_t *ctd)
 {
+    syslog_session(ctd->session, DBG_INFO, "Session cancelled (mode = %d).",
+            ctd->mode);
+
     if (ctd->session != 0) {
         if (ctd->mode == INFO)
             unlock_info_queue_mutex();
@@ -52,12 +55,12 @@ void end_client_thread(client_thread_t *ctd)
 }
 
 /* handle connected SRCP clients, start with shake hand phase. */
-void* thr_doClient(void *v)
+void* thr_doClient(void* v)
 {
     client_thread_t* ctd = (client_thread_t*) malloc(sizeof(client_thread_t));
     if (ctd == NULL)
-        return NULL;
-    ctd->socket = (int) v;
+        pthread_exit((void*) 1);
+    ctd->socket = (long int) v;
     ctd->mode = COMMAND;
     ctd->session = 0;
 
@@ -66,9 +69,6 @@ void* thr_doClient(void *v)
     int rc, nelem;
     struct timeval time;
     int last_cancel_state, last_cancel_type;
-
-    /* drop root permission for this thread (doubled)*/
-    /*change_privileges(0);*/
 
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &last_cancel_type);
@@ -110,6 +110,7 @@ void* thr_doClient(void *v)
                 if (socket_writereply(ctd->socket, reply) < 0) {
                     pthread_exit((void*) 1);
                 }
+
                 start_session(ctd->session, ctd->mode);
                 switch (ctd->mode) {
                     case COMMAND:

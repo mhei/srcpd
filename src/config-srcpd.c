@@ -94,7 +94,6 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
     buses[current_bus].thr_timer = NULL;
     buses[current_bus].sigio_reader = NULL;
     buses[current_bus].init_func = NULL;
-    buses[current_bus].term_func = NULL;
     buses[current_bus].init_gl_func = NULL;
     buses[current_bus].init_ga_func = NULL;
     buses[current_bus].init_fb_func = NULL;
@@ -466,9 +465,9 @@ void create_all_bus_threads()
                buses[i].tid = ttid_tid;
         }
 
-        syslog(LOG_INFO, "Interface thread #%ld started successfully, "
-                "type(%d): tid %ld", i, buses[i].type,
-                (long) (buses[i].tid));
+        syslog_bus(i, LOG_INFO, "Interface thread started successfully "
+                "(type =%d, tid = %u)", buses[i].type,
+                (unsigned int) (buses[i].tid));
 
         if (((buses[i].flags & AUTO_POWER_ON) == AUTO_POWER_ON)) {
             setPower(i, 1, "AUTO POWER ON");
@@ -501,7 +500,6 @@ void cancel_all_bus_threads()
                 syslog_bus(bus, DBG_ERROR,
                         "Timer thread join failed: %s (errno = %d).",
                         strerror(result), result);
-
         }
 
         result = pthread_cancel(buses[bus].tid);
@@ -510,15 +508,44 @@ void cancel_all_bus_threads()
                     "Interface thread cancel failed: %s (errno = %d).",
                     strerror(result), result);
 
-        (*buses[bus].term_func) (bus);
-
         /*wait until thread terminates*/
         result = pthread_join(buses[bus].tid, &thr_result);
         if (result != 0)
-            syslog_bus(0, DBG_ERROR,
-                    "Bus %ld thread join failed: %s (errno = %d).", bus,
+            syslog_bus(bus, DBG_ERROR,
+                    "Interface thread join failed: %s (errno = %d).",
                     strerror(result), result);
 
+        syslog_bus(bus, DBG_INFO, "Bus successfully cancelled.");
     }
-    syslog_bus(0, DBG_INFO, "All bus threads cancelled.");
+}
+
+/* activate watchdog if necessary */
+void run_bus_watchdog()
+{
+    bus_t bus;
+    int result;
+    pthread_t ttid_tid;
+
+    for (bus = 1; bus <= num_buses; bus++) {
+        if (buses[bus].watchdog == 0
+                && !queue_GL_isempty(bus)
+                && !queue_GA_isempty(bus)
+                && (buses[bus].flags & USE_WATCHDOG)) {
+            syslog_bus(bus, DBG_ERROR, "Oops: Interface thread "
+                    "hangs, restarting (old tid = %ld, %d).",
+                    (long) buses[bus].tid, buses[bus].watchdog);
+            pthread_cancel(buses[bus].tid);
+            pthread_join(buses[bus].tid, NULL);
+            result = pthread_create(&ttid_tid, NULL,
+                    buses[bus].thr_func, (void *) bus);
+            if (result != 0) {
+                syslog(LOG_INFO, "Recreate interface thread "
+                        "failed: %s (errno = %d)\n",
+                        strerror(result), result);
+                break;
+            }
+            buses[bus].tid = ttid_tid;
+        }
+        buses[bus].watchdog = 0;
+    }
 }

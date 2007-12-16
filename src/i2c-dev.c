@@ -223,7 +223,6 @@ int readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     buses[busnumber].type = SERVER_I2C_DEV;
     buses[busnumber].init_func = &init_bus_I2C_DEV;
-    buses[busnumber].term_func = &term_bus_I2C_DEV;
     buses[busnumber].thr_func = &thr_sendrec_I2C_DEV;
     strcpy(buses[busnumber].description, "GA POWER DESCRIPTION");
 
@@ -311,22 +310,22 @@ int readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
 int init_lineI2C_DEV(bus_t bus)
 {
-    int FD;
+    int fd;
 
     if (buses[bus].debuglevel > 0) {
         syslog_bus(bus, DBG_INFO, "Opening i2c-dev: %s",
                 buses[bus].device.file.path);
     }
 
-    FD = open(buses[bus].device.file.path, O_RDWR);
+    fd = open(buses[bus].device.file.path, O_RDWR);
 
-    if (FD == -1) {
+    if (fd == -1) {
         syslog_bus(bus, DBG_ERROR, "Open device '%s' failed: %s "
                 "(errno = %d).\n", buses[bus].device.file.path,
                 strerror(errno), errno);
     }
 
-    return FD;
+    return fd;
 }
 
 void reset_ga(bus_t busnumber, int busfd)
@@ -364,7 +363,6 @@ void reset_ga(bus_t busnumber, int busfd)
 
 void select_bus(int mult_busnum, int busfd, bus_t busnumber)
 {
-
     int addr, value = 0;
 
     /* addr = 224 + (2 * (int) (mult_busnum / 9)); */
@@ -378,14 +376,6 @@ void select_bus(int mult_busnum, int busfd, bus_t busnumber)
     write_PCF8574(busnumber, (addr >> 1), value);
     /*  ioctl(busfd, I2C_SLAVE, (addr >> 1));
        writeByte(busnumber, value, 1); */
-}
-
-int term_bus_I2C_DEV(bus_t bus)
-{
-    syslog_bus(bus, DBG_INFO, "i2c-dev bus #%ld terminating"), bus;
-    close(buses[bus].device.file.fd);
-    free(buses[bus].driverdata);
-    return 0;
 }
 
 /*
@@ -443,11 +433,19 @@ int init_bus_I2C_DEV(bus_t i)
                 data->i2c_values[j][multiplexer_adr - 1] = buf;
             }
         }
-
     }
 
     syslog_bus(i, DBG_INFO, "i2c-dev init done");
     return 0;
+}
+
+/*thread cleanup routine for this bus*/
+static void end_bus_thread(bus_thread_t *btd)
+{
+    syslog_bus(btd->bus, DBG_INFO, "i2c-dev bus terminated.");
+    close(buses[btd->bus].device.file.fd);
+    free(buses[btd->bus].driverdata);
+    free(btd);
 }
 
 /*
@@ -462,55 +460,67 @@ int init_bus_I2C_DEV(bus_t i)
 void *thr_sendrec_I2C_DEV(void *v)
 {
     char msg[1000];
-
-    bus_t bus = (bus_t) v;
-
     ga_state_t gatmp;
+    int last_cancel_state, last_cancel_type;
 
-    I2CDEV_DATA *data = buses[bus].driverdata;
+    bus_thread_t* btd = (bus_thread_t*) malloc(sizeof(bus_thread_t));
+    if (btd == NULL)
+        pthread_exit((void*) 1);
+    btd->bus =  (bus_t) v;
+    btd->fd = -1;
 
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &last_cancel_type);
+
+    /*register cleanup routine*/
+    pthread_cleanup_push((void *) end_bus_thread, (void *) btd);
+
+    syslog_bus(btd->bus, DBG_INFO, "i2c-dev bus started (device =  %s).",
+        buses[btd->bus].device.file.path);
+
+    I2CDEV_DATA *data = buses[btd->bus].driverdata;
     int ga_reset_devices = data->ga_reset_devices;
-
-    syslog_bus(bus, DBG_INFO, "i2c-dev started, bus #%ld, %s", bus,
-        buses[bus].device.file.path);
-
-    buses[bus].watchdog = 1;
+    buses[btd->bus].watchdog = 1;
 
     /* command processing starts here */
     while (1) {
 
         /* process POWER changes */
-        if (buses[bus].power_changed == 1) {
+        if (buses[btd->bus].power_changed == 1) {
 
             /* dummy select, power state is directly read by select_bus() */
-            select_bus(0, buses[bus].device.file.fd, bus);
-            buses[bus].power_changed = 0;
-            infoPower(bus, msg);
+            select_bus(0, buses[btd->bus].device.file.fd, btd->bus);
+            buses[btd->bus].power_changed = 0;
+            infoPower(btd->bus, msg);
             queueInfoMessage(msg);
 
-            if ((ga_reset_devices == 1) && (buses[bus].power_state == 1)) {
-                reset_ga(bus, buses[bus].device.file.fd);
+            if ((ga_reset_devices == 1) && (buses[btd->bus].power_state == 1)) {
+                reset_ga(btd->bus, buses[btd->bus].device.file.fd);
             }
 
         }
 
         /* do nothing, if power is off */
-        if (buses[bus].power_state == 0) {
+        if (buses[btd->bus].power_state == 0) {
             usleep(1000);
             continue;
         }
 
-        buses[bus].watchdog = 4;
+        buses[btd->bus].watchdog = 4;
 
         /* process GA commands */
-        if (!queue_GA_isempty(bus)) {
-            unqueueNextGA(bus, &gatmp);
-            handle_i2c_set_ga(bus, &gatmp);
-            setGA(bus, gatmp.id, gatmp);
-            select_bus(0, buses[bus].device.file.fd, bus);
-            buses[bus].watchdog = 6;
+        if (!queue_GA_isempty(btd->bus)) {
+            unqueueNextGA(btd->bus, &gatmp);
+            handle_i2c_set_ga(btd->bus, &gatmp);
+            setGA(btd->bus, gatmp.id, gatmp);
+            select_bus(0, buses[btd->bus].device.file.fd, btd->bus);
+            buses[btd->bus].watchdog = 6;
         }
         usleep(1000);
     }
+
+    /*run the cleanup routine*/
+    pthread_cleanup_pop(1);
+    return NULL;
 }
 #endif

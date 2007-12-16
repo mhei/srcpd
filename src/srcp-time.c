@@ -144,12 +144,13 @@ void cancel_time_thread()
                 "Time thread cancel failed: %s (errno = %d).",
                 strerror(result), result);
 
+    /*wait until time thread terminates*/
     result = pthread_join(time_tid, NULL);
     if (result != 0)
         syslog_bus(0, DBG_ERROR,
                 "Time thread join failed: %s (errno = %d).",
                 strerror(result), result);
 
-    syslog_bus(0, DBG_INFO, "Time thread cancelled.");
+    syslog_bus(0, DBG_DEBUG, "Time thread cancelled.");
 }
 

@@ -17,13 +17,7 @@ typedef struct _thr_param
     bus_t busnumber;
 } thr_param;
 
-typedef struct _THREADS
-{
-  unsigned short int port;
-  int socket;
-  void *client_handler;
-} net_thread_t;
-
-void* thr_handlePort(void *);
+void create_netservice_thread();
+void cancel_netservice_thread();
 
 #endif

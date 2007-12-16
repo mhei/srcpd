@@ -25,20 +25,17 @@ typedef uint8_t  I2C_MUX_BUS;
 typedef I2C_VALUE I2C_DEV_VALUES[MAX_I2C_DEVICES][MAX_MULTIPELEX_BUSES];
 
 typedef struct _I2CDEV_DATA {
-
-  int number_ga;
-  int multiplex_buses;
-  int ga_hardware_inverters;
-  int ga_reset_devices;
-  int ga_min_active_time;
-
+    int number_ga;
+    int multiplex_buses;
+    int ga_hardware_inverters;
+    int ga_reset_devices;
+    int ga_min_active_time;
     I2C_DEV_VALUES i2c_values;
 } I2CDEV_DATA;
 
 int readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber);
 int init_lineI2C_DEV( bus_t );
 int init_bus_I2C_DEV( bus_t);
-int term_bus_I2C_DEV( bus_t );
 int getDescription_I2C_DEV(char *reply);
 void* thr_sendrec_I2C_DEV(void *);
 

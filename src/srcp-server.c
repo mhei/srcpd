@@ -40,7 +40,6 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     buses[0].type = SERVER_SERVER;
     buses[0].init_func = &init_bus_server;
-    buses[0].term_func = &term_bus_server;
     strcpy(buses[0].description, "SESSION SERVER TIME GM");
 
     /* initialize _SERVER_DATA with defaults */
@@ -145,12 +144,6 @@ int init_bus_server(bus_t bus)
 {
     gettimeofday(&buses[0].power_change_time, NULL);
     syslog_bus(bus, DBG_INFO, "init_bus %ld", bus);
-    return 0;
-}
-
-int term_bus_server(bus_t bus)
-{
-    syslog_bus(bus, DBG_INFO, "term_bus %ld", bus);
     return 0;
 }
 

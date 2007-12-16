@@ -898,7 +898,7 @@ void *thr_refresh_cycle(void *v)
     char packet[PKTSIZE];
     int addr;
     struct _thr_param *tp = v;
-    bus_t busnumber = tp -> busnumber;
+    bus_t busnumber = tp->busnumber;
     struct timeval tv1, tv2;
     struct timezone tz;
     /* argument for nanosleep to do non-busy waiting */
@@ -1019,7 +1019,6 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     buses[busnumber].type = SERVER_DDL;
     buses[busnumber].init_func = &init_bus_DDL;
-    buses[busnumber].term_func = &term_bus_DDL;
     buses[busnumber].init_gl_func = &init_gl_DDL;
     buses[busnumber].init_ga_func = &init_ga_DDL;
 
@@ -1197,26 +1196,6 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     return (1);
 }
 
-int term_bus_DDL(bus_t busnumber)
-{
-    /* store thread return value here */
-    void *pThreadReturn;
-    /* send cancel to refresh cycle */
-    pthread_cancel(__DDL->refresh_ptid);
-    /* wait until the refresh cycle has terminated */
-    pthread_join(__DDL->refresh_ptid, &pThreadReturn);
-
-    set_lines_off(busnumber);
-
-    /* pthread_cond_destroy(&(__DDL->refresh_cond)); */
-    if (buses[busnumber].device.file.fd != -1)
-        close(buses[busnumber].device.file.fd);
-
-    syslog_bus(busnumber, DBG_INFO, "DDL bus %ld terminated", busnumber);
-    free(buses[busnumber].driverdata);
-    return 0;
-}
-
 /* Initialisiere den Bus, signalisiere Fehler */
 /* Einmal aufgerufen mit busnummer als einzigem Parameter */
 /* return code wird ignoriert (vorerst) */
@@ -1268,45 +1247,83 @@ int init_bus_DDL(bus_t busnumber)
     return 0;
 }
 
+/*thread cleanup routine for this bus*/
+static void end_bus_thread(bus_thread_t *btd)
+{
+    /* store thread return value here */
+    void *pThreadReturn;
+    /* send cancel to refresh cycle */
+
+    pthread_cancel(((DDL_DATA*)buses[btd->bus].driverdata)->refresh_ptid);
+    /* wait until the refresh cycle has terminated */
+    pthread_join(((DDL_DATA*)buses[btd->bus].driverdata)->refresh_ptid,
+            &pThreadReturn);
+
+    set_lines_off(btd->bus);
+
+    /* pthread_cond_destroy(&(__DDL->refresh_cond)); */
+    if (buses[btd->bus].device.file.fd != -1)
+        close(buses[btd->bus].device.file.fd);
+
+    syslog_bus(btd->bus, DBG_INFO, "DDL bus terminated");
+    free(buses[btd->bus].driverdata);
+    free(btd);
+}
+
 void *thr_sendrec_DDL(void *v)
 {
     gl_state_t gltmp;
     ga_state_t gatmp;
     int addr, error;
-    bus_t busnumber = (bus_t) v;
+    int last_cancel_state, last_cancel_type;
 
-    syslog_bus(busnumber, DBG_INFO, "DDL started on device %s",
-        buses[busnumber].device.file.path);
+    bus_thread_t* btd = (bus_thread_t*) malloc(sizeof(bus_thread_t));
+    if (btd == NULL)
+        pthread_exit((void*) 1);
+    btd->bus =  (bus_t) v;
+    btd->fd = -1;
 
-    buses[busnumber].watchdog = 1;
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &last_cancel_type);
+
+    /*register cleanup routine*/
+    pthread_cleanup_push((void *) end_bus_thread, (void *) btd);
+
+    syslog_bus(btd->bus, DBG_INFO, "DDL bus started (device = %s).",
+        buses[btd->bus].device.file.path);
+
+    buses[btd->bus].watchdog = 1;
     /*
      * Starting the thread that is responsible for the signals on 
      * serial port.
      */
-    __DDL->refresh_param.busnumber = busnumber;
-    error = pthread_create(&(__DDL->refresh_ptid), NULL, thr_refresh_cycle,
-                       (void *) &(__DDL->refresh_param) );
+    ((DDL_DATA*)buses[btd->bus].driverdata)->refresh_param.busnumber = btd->bus;
+    error = pthread_create(
+            &(((DDL_DATA*)buses[btd->bus].driverdata)->refresh_ptid),
+            NULL, thr_refresh_cycle,
+            (void *) &(((DDL_DATA*)buses[btd->bus].driverdata)->refresh_param));
 
     if (error) {
-        syslog_bus(busnumber, DBG_ERROR,
-            "cannot create thread: refresh_cycle. Abort! %d", error);
+        syslog_bus(btd->bus, DBG_ERROR,
+            "Cannot create thread: refresh_cycle. Abort! %d", error);
     }
 
     while (1) {
-        if (!queue_GL_isempty(busnumber)) {
+        pthread_testcancel();
+        if (!queue_GL_isempty(btd->bus)) {
             char p;
             int pv;
             int speed;
             int direction;
 
-            unqueueNextGL(busnumber, &gltmp);
+            unqueueNextGL(btd->bus, &gltmp);
             p = gltmp.protocol;
             /* need to compute from the n_fs and n_func parameters */
             pv = gltmp.protocolversion;
             addr = gltmp.id;
             speed = gltmp.speed;
             direction = gltmp.direction;
-            syslog_bus(busnumber, DBG_DEBUG, "next command: %c (%x) %d %d", p, p,
+            syslog_bus(btd->bus, DBG_DEBUG, "next command: %c (%x) %d %d", p, p,
                 pv, addr);
             switch (p) {
             case 'M':          /* Motorola Codes */
@@ -1316,11 +1333,11 @@ void *thr_sendrec_DDL(void *v)
                     speed = 0;
                 switch (pv) {
                 case 1:
-                    comp_maerklin_1(busnumber, addr, gltmp.direction,
+                    comp_maerklin_1(btd->bus, addr, gltmp.direction,
                                     speed, gltmp.funcs & 0x01);
                     break;
                 case 2:
-                    comp_maerklin_2(busnumber, addr, gltmp.direction,
+                    comp_maerklin_2(btd->bus, addr, gltmp.direction,
                                     speed, gltmp.funcs & 0x01,
                                     ((gltmp.funcs >> 1) & 0x01),
                                     ((gltmp.funcs >> 2) & 0x01),
@@ -1328,7 +1345,7 @@ void *thr_sendrec_DDL(void *v)
                                     ((gltmp.funcs >> 4) & 0x01));
                     break;
                 case 3:
-                    comp_maerklin_3(busnumber, addr, gltmp.direction,
+                    comp_maerklin_3(btd->bus, addr, gltmp.direction,
                                     speed, gltmp.funcs & 0x01,
                                     ((gltmp.funcs >> 1) & 0x01),
                                     ((gltmp.funcs >> 2) & 0x01),
@@ -1336,7 +1353,7 @@ void *thr_sendrec_DDL(void *v)
                                     ((gltmp.funcs >> 4) & 0x01));
                     break;
                 case 4:
-                    comp_maerklin_4(busnumber, addr, gltmp.direction,
+                    comp_maerklin_4(btd->bus, addr, gltmp.direction,
                                     speed, gltmp.funcs & 0x01,
                                     ((gltmp.funcs >> 1) & 0x01),
                                     ((gltmp.funcs >> 2) & 0x01),
@@ -1344,7 +1361,7 @@ void *thr_sendrec_DDL(void *v)
                                     ((gltmp.funcs >> 4) & 0x01));
                     break;
                 case 5:
-                    comp_maerklin_5(busnumber, addr, gltmp.direction,
+                    comp_maerklin_5(btd->bus, addr, gltmp.direction,
                                     speed, gltmp.funcs & 0x01,
                                     ((gltmp.funcs >> 1) & 0x01),
                                     ((gltmp.funcs >> 2) & 0x01),
@@ -1359,22 +1376,22 @@ void *thr_sendrec_DDL(void *v)
                 switch (pv) {
                 case 1:
                     if (direction != 2)
-                        comp_nmra_baseline(busnumber, addr, direction,
+                        comp_nmra_baseline(btd->bus, addr, direction,
                                            speed);
                     else
                         /* emergency halt: FS 1 */
-                        comp_nmra_baseline(busnumber, addr, 0, 1);
+                        comp_nmra_baseline(btd->bus, addr, 0, 1);
                     break;
                 case 2:
                     if (direction != 2)
-                        comp_nmra_f4b7s28(busnumber, addr, direction,
+                        comp_nmra_f4b7s28(btd->bus, addr, direction,
                                           speed, gltmp.funcs & 0x01,
                                           ((gltmp.funcs >> 1) & 0x01),
                                           ((gltmp.funcs >> 2) & 0x01),
                                           ((gltmp.funcs >> 3) & 0x01),
                                           ((gltmp.funcs >> 4) & 0x01));
                     else        /* emergency halt: FS 1 */
-                        comp_nmra_f4b7s28(busnumber, addr, 0, 1,
+                        comp_nmra_f4b7s28(btd->bus, addr, 0, 1,
                                           gltmp.funcs & 0x01,
                                           ((gltmp.funcs >> 1) & 0x01),
                                           ((gltmp.funcs >> 2) & 0x01),
@@ -1383,14 +1400,14 @@ void *thr_sendrec_DDL(void *v)
                     break;
                 case 3:
                     if (direction != 2)
-                        comp_nmra_f4b7s128(busnumber, addr, direction,
+                        comp_nmra_f4b7s128(btd->bus, addr, direction,
                                            speed, gltmp.funcs & 0x01,
                                            ((gltmp.funcs >> 1) & 0x01),
                                            ((gltmp.funcs >> 2) & 0x01),
                                            ((gltmp.funcs >> 3) & 0x01),
                                            ((gltmp.funcs >> 4) & 0x01));
                     else        /* emergency halt: FS 1 */
-                        comp_nmra_f4b7s128(busnumber, addr, 0, 1,
+                        comp_nmra_f4b7s128(btd->bus, addr, 0, 1,
                                            gltmp.funcs & 0x01,
                                            ((gltmp.funcs >> 1) & 0x01),
                                            ((gltmp.funcs >> 2) & 0x01),
@@ -1399,14 +1416,14 @@ void *thr_sendrec_DDL(void *v)
                     break;
                 case 4:
                     if (direction != 2)
-                        comp_nmra_f4b14s28(busnumber, addr, direction,
+                        comp_nmra_f4b14s28(btd->bus, addr, direction,
                                            speed, gltmp.funcs & 0x01,
                                            ((gltmp.funcs >> 1) & 0x01),
                                            ((gltmp.funcs >> 2) & 0x01),
                                            ((gltmp.funcs >> 3) & 0x01),
                                            ((gltmp.funcs >> 4) & 0x01));
                     else        /* emergency halt: FS 1 */
-                        comp_nmra_f4b14s28(busnumber, addr, 0, 1,
+                        comp_nmra_f4b14s28(btd->bus, addr, 0, 1,
                                            gltmp.funcs & 0x01,
                                            ((gltmp.funcs >> 1) & 0x01),
                                            ((gltmp.funcs >> 2) & 0x01),
@@ -1415,14 +1432,14 @@ void *thr_sendrec_DDL(void *v)
                     break;
                 case 5:
                     if (direction != 2)
-                        comp_nmra_f4b14s128(busnumber, addr, direction,
+                        comp_nmra_f4b14s128(btd->bus, addr, direction,
                                             speed, gltmp.funcs & 0x01,
                                             ((gltmp.funcs >> 1) & 0x01),
                                             ((gltmp.funcs >> 2) & 0x01),
                                             ((gltmp.funcs >> 3) & 0x01),
                                             ((gltmp.funcs >> 4) & 0x01));
                     else        /* emergency halt: FS 1 */
-                        comp_nmra_f4b14s128(busnumber, addr, 0, 1,
+                        comp_nmra_f4b14s128(btd->bus, addr, 0, 1,
                                             gltmp.funcs & 0x01,
                                             ((gltmp.funcs >> 1) & 0x01),
                                             ((gltmp.funcs >> 2) & 0x01),
@@ -1431,48 +1448,52 @@ void *thr_sendrec_DDL(void *v)
                     break;
                 }
             }
-            cacheSetGL(busnumber, addr, gltmp);
+            cacheSetGL(btd->bus, addr, gltmp);
         }
-        buses[busnumber].watchdog = 4;
+        buses[btd->bus].watchdog = 4;
 
-        if (!queue_GA_isempty(busnumber)) {
+        if (!queue_GA_isempty(btd->bus)) {
             char p;
-            unqueueNextGA(busnumber, &gatmp);
+            unqueueNextGA(btd->bus, &gatmp);
             addr = gatmp.id;
             p = gatmp.protocol;
-            syslog_bus(busnumber, DBG_DEBUG, "next GA command: %c (%x) %d", p, p,
+            syslog_bus(btd->bus, DBG_DEBUG, "next GA command: %c (%x) %d", p, p,
                 addr);
             switch (p) {
             case 'M':          /* Motorola Codes */
-                comp_maerklin_ms(busnumber, addr, gatmp.port,
+                comp_maerklin_ms(btd->bus, addr, gatmp.port,
                                  gatmp.action);
                 break;
             case 'N':
-                comp_nmra_accessory(busnumber, addr, gatmp.port,
+                comp_nmra_accessory(btd->bus, addr, gatmp.port,
                                     gatmp.action);
                 break;
             }
-            setGA(busnumber, addr, gatmp);
-            buses[busnumber].watchdog = 5;
+            setGA(btd->bus, addr, gatmp);
+            buses[btd->bus].watchdog = 5;
 
             if (gatmp.activetime >= 0) {
                 usleep(1000L * (unsigned long) gatmp.activetime);
                 gatmp.action = 0;
-                syslog_bus(busnumber, DBG_DEBUG, "delayed GA command: %c (%x) %d",
+                syslog_bus(btd->bus, DBG_DEBUG, "delayed GA command: %c (%x) %d",
                     p, p, addr);
                 switch (p) {
                 case 'M':      /* Motorola Codes */
-                    comp_maerklin_ms(busnumber, addr, gatmp.port,
+                    comp_maerklin_ms(btd->bus, addr, gatmp.port,
                                      gatmp.action);
                     break;
                 case 'N':
-                    comp_nmra_accessory(busnumber, addr, gatmp.port,
+                    comp_nmra_accessory(btd->bus, addr, gatmp.port,
                                         gatmp.action);
                     break;
                 }
-                setGA(busnumber, addr, gatmp);
+                setGA(btd->bus, addr, gatmp);
             }
         }
         usleep(3000);
     }
+
+    /*run the cleanup routine*/
+    pthread_cleanup_pop(1);
+    return NULL;
 }

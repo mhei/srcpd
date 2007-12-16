@@ -2,7 +2,7 @@
                           srcpd.c  -  description
                           -----------------------
     begin                : Wed Jul 4 2001
-    copyright            : (C) 2001, 2002 by the srcpd team
+    copyright            : (C) 2001 - 2007 by the srcpd team
  ***************************************************************************/
 
 /***************************************************************************
@@ -17,9 +17,7 @@
 #include <syslog.h>
 #include "stdincludes.h"
 
-#include "clientservice.h"
 #include "config-srcpd.h"
-#include "io.h"
 #include "netservice.h"
 #include "srcp-descr.h"
 #include "srcp-fb.h"
@@ -27,7 +25,6 @@
 #include "srcp-gl.h"
 #include "srcp-info.h"
 #include "srcp-lock.h"
-#include "srcp-power.h"
 #include "srcp-server.h"
 #include "srcp-session.h"
 #include "srcp-time.h"
@@ -40,13 +37,12 @@
 /* structures to determine which port needs to be served */
 fd_set rfds;
 int maxfd;
-pthread_t ttid_cmd;
-net_thread_t cmds;
 char conffile[MAXPATHLEN];
 
 extern int server_shutdown_state;
 extern int server_reset_state;
 extern const char *WELCOME_MSG;
+
 
 void CreatePIDFile(int pid)
 {
@@ -102,29 +98,17 @@ void init_all_buses()
     }
 }
 
-
 /*create all kind of server threads*/
 void create_all_threads()
 {
-    int result;
-
     server_shutdown_state = 0;
-    /* start clock thread */
+    
     create_time_thread();
     create_all_bus_threads();
-
-    /* network connection thread */
-    result = pthread_create(&ttid_cmd, NULL, thr_handlePort, &cmds);
-    if (result != 0) {
-        syslog(LOG_INFO, "Create command thread failed: %s (errno = %d). "
-                "Terminating...\n", strerror(result), result);
-        exit(1);
-    }
-    pthread_detach(ttid_cmd);
+    create_netservice_thread();
 
     syslog(LOG_INFO, "All threads started");
 }
-
 
 /* cancel all server threads*/
 void cancel_all_threads()
@@ -136,19 +120,13 @@ void cancel_all_threads()
      * this is according to protocol specification */
     sleep(2);
 
+    cancel_netservice_thread();
     cancel_time_thread();
     cancel_all_bus_threads();
     terminate_all_sessions();
 
-    /*TODO: check this; should be first to sessions to prevent
-     * reconnects*/
-    /* server thread is last to be cleaned up */
-    pthread_cancel(ttid_cmd);
-    (*buses[0].term_func) (0);
-
     syslog(LOG_INFO, "SRCP service terminated.");
 }
-
 
 /* signal SIGHUP(1) caught */
 void sighup_handler(int s)
@@ -282,11 +260,8 @@ int daemon_init()
 
 int main(int argc, char **argv)
 {
-    bus_t i;
-    int result;
     int sleep_ctr;
     char c;
-    pthread_t ttid_tid;
 
 
     /* First: Init the device data used internally */
@@ -316,18 +291,17 @@ int main(int argc, char **argv)
                 break;
             case 'h':
                 printf(WELCOME_MSG);
-                printf("srcpd -f <conffile> -v -h\n");
-                printf
-                    ("v           -  prints program version and exits\n");
-                printf
-                    ("f           -  use another config file (default %s)\n",
+                printf("Usage: srcpd -f <conffile> -v -h\n\n");
+                printf("Options:\n");
+                printf("  -v  Show program version and quit.\n");
+                printf("  -f  Use another config file (default %s).\n",
                      conffile);
-                printf("h           -  prints this text and exits\n");
+                printf("  -h  Show this help text and quit.\n");
                 exit(1);
                 break;
             default:
-                printf("unknown parameter\n");
-                printf("use: \"srcpd -h\" for help, exiting\n");
+                printf("Unknown option.\n");
+                printf("Use: \"srcpd -h\" for help, terminating.\n");
                 exit(1);
                 break;
         }
@@ -341,10 +315,7 @@ int main(int argc, char **argv)
                         "configuration file '%s'.\n", conffile);
         exit(1);
     }
-
-    cmds.port = ((SERVER_DATA *) buses[0].driverdata)->TCPPORT;
-    cmds.socket = -1;
-    cmds.client_handler = thr_doClient;
+    /*TODO: change privileges should be right _here_*/
 
     /* do not daemonize if in debug mode */
     if (buses[0].debuglevel < DBG_DEBUG) {
@@ -357,14 +328,12 @@ int main(int argc, char **argv)
 
     }
 
-    server_shutdown_state = 0;
-    sleep_ctr = 10;
-
     CreatePIDFile(getpid());
     syslog(LOG_INFO, "%s", WELCOME_MSG);
     install_signal_handlers();
     init_all_buses();
     create_all_threads();
+    sleep_ctr = 10;
 
     /*
      * Main loop: Wait for _real_ tasks: shutdown, reset and watch for
@@ -379,33 +348,12 @@ int main(int argc, char **argv)
         sleep_ctr--;
 
         if (sleep_ctr == 0) {
+
             /* clear LOCKs */
             unlock_gl_bytime();
             unlock_ga_bytime();
-
-            /* activate watchdog if necessary */
-            for (i = 1; i <= num_buses; i++) {
-                if (buses[i].watchdog == 0
-                    && !queue_GL_isempty(i)
-                    && !queue_GA_isempty(i)
-                    && (buses[i].flags & USE_WATCHDOG)) {
-                    syslog(LOG_INFO, "Oops: Interface thread #%ld "
-                            "hangs, restarting: (old tid: %ld, %d)",
-                            i, (long) buses[i].tid, buses[i].watchdog);
-                    pthread_cancel(buses[i].tid);
-                    pthread_join(buses[i].tid, NULL);
-                    result = pthread_create(&ttid_tid, NULL,
-                            buses[i].thr_func, (void *) i);
-                    if (result != 0) {
-                        syslog(LOG_INFO, "Recreate interface thread "
-                                "failed: %s (errno = %d)\n",
-                                strerror(result), result);
-                        break;
-                    }
-                    buses[i].tid = ttid_tid;
-                }
-                buses[i].watchdog = 0;
-            }
+            
+            run_bus_watchdog();
             sleep_ctr = 10;
         }
     }

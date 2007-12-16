@@ -80,7 +80,6 @@ int readconfig_ZIMO(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     buses[busnumber].type = SERVER_ZIMO;
     buses[busnumber].init_func = &init_bus_ZIMO;
-    buses[busnumber].term_func = &term_bus_ZIMO;
     buses[busnumber].thr_func = &thr_sendrec_ZIMO;
     strcpy(buses[busnumber].description, "SM GL POWER LOCK DESCRIPTION");
 
@@ -158,7 +157,8 @@ int init_linezimo(bus_t bus, char *name)
     int fd;
     struct termios interface;
 
-    syslog_bus(bus, DBG_INFO, "Try opening serial line %s for 9600 baud\n", name);
+    syslog_bus(bus, DBG_INFO, "Try opening serial line %s for 9600 baud\n",
+            name);
     fd = open(name, O_RDWR);
     if (fd == -1) {
         syslog_bus(bus, DBG_ERROR, "Open serial line failed: %s (errno = %d).\n",
@@ -180,57 +180,71 @@ int init_linezimo(bus_t bus, char *name)
     return fd;
 }
 
-int term_bus_ZIMO(bus_t bus)
-{
-    if (buses[bus].device.file.fd != -1)
-        close(buses[bus].device.file.fd);
-
-    syslog_bus(bus, DBG_INFO, "zimo bus %ld terminating", bus);
-    free(buses[bus].driverdata);
-    return 0;
-}
-
 /* Initialisiere den Bus, signalisiere Fehler */
 /* Einmal aufgerufen mit busnummer als einzigem Parameter */
 /* return code wird ignoriert (vorerst) */
 int init_bus_ZIMO(bus_t bus)
 {
-    syslog_bus(bus, DBG_INFO, "zimo init: debug %d, device %s",
+    syslog_bus(bus, DBG_INFO, "Zimo init: debug %d, device %s",
         buses[bus].debuglevel, buses[bus].device.file.path);
     buses[bus].device.file.fd = init_linezimo(bus, buses[bus].device.file.path);
-    syslog_bus(bus, DBG_INFO, "zimo init done");
+    syslog_bus(bus, DBG_INFO, "Zimo init done");
     return 0;
+}
+
+/*thread cleanup routine for this bus*/
+static void end_bus_thread(bus_thread_t *btd)
+{
+    syslog_bus(btd->bus, DBG_INFO, "Zimo bus terminated.");
+
+    if (buses[btd->bus].device.file.fd != -1)
+        close(buses[btd->bus].device.file.fd);
+
+    free(buses[btd->bus].driverdata);
+    free(btd);
 }
 
 void *thr_sendrec_ZIMO(void *v)
 {
     gl_state_t gltmp, glakt;
     struct _SM smtmp;
-    /* TODO: ga_state_t gatmp, gaakt; */
     int addr, temp, i;
-    bus_t bus = (bus_t) v;
     char msg[20];
     char rr;
     char databyte1, databyte2, databyte3;
     unsigned int error, cv, val;
-    /* TODO: unsigned char databyte, address; */
-    syslog_bus(bus, DBG_INFO, "zimo started, bus #%d, %s", bus,
-        buses[bus].device.file.path);
+    int last_cancel_state, last_cancel_type;
 
-    buses[bus].watchdog = 1;
+    bus_thread_t* btd = (bus_thread_t*) malloc(sizeof(bus_thread_t));
+    if (btd == NULL)
+        pthread_exit((void*) 1);
+    btd->bus =  (bus_t) v;
+    btd->fd = -1;
+
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &last_cancel_type);
+
+    /*register cleanup routine*/
+    pthread_cleanup_push((void *) end_bus_thread, (void *) btd);
+
+    syslog_bus(btd->bus, DBG_INFO, "Zimo bus started (device = %s)",
+        buses[btd->bus].device.file.path);
+    buses[btd->bus].watchdog = 1;
+
     while (1) {
-        if (buses[bus].power_changed == 1) {
-            sprintf(msg, "S%c%c", (buses[bus].power_state) ? 'E' : 'A',
+        pthread_testcancel();
+        if (buses[btd->bus].power_changed == 1) {
+            sprintf(msg, "S%c%c", (buses[btd->bus].power_state) ? 'E' : 'A',
                     13);
-            writeString(bus, (unsigned char *) msg, 0);
-            buses[bus].power_changed = 0;
-            infoPower(bus, msg);
+            writeString(btd->bus, (unsigned char *) msg, 0);
+            buses[btd->bus].power_changed = 0;
+            infoPower(btd->bus, msg);
             queueInfoMessage(msg);
         }
-        if (!queue_GL_isempty(bus)) {
-            unqueueNextGL(bus, &gltmp);
+        if (!queue_GL_isempty(btd->bus)) {
+            unqueueNextGL(btd->bus, &gltmp);
             addr = gltmp.id;
-            cacheGetGL(bus, addr, &glakt);
+            cacheGetGL(btd->bus, addr, &glakt);
             databyte1 = (gltmp.direction ? 0 : 32);
             databyte1 |= (gltmp.funcs & 0x01) ? 16 : 0;
             if (glakt.n_fs == 128)
@@ -243,83 +257,87 @@ void *thr_sendrec_ZIMO(void *v)
             databyte3 = 0x00;
             if (addr > 128) {
                 sprintf(msg, "E%04X%c", addr, 13);
-                syslog_bus(bus, DBG_INFO, "%s", msg);
-                writeString(bus, (unsigned char *) msg, 0);
+                syslog_bus(btd->bus, DBG_INFO, "%s", msg);
+                writeString(btd->bus, (unsigned char *) msg, 0);
                 addr = 0;
-                i = readanswer(bus, 'E', msg, 20, 40);
-                syslog_bus(bus, DBG_INFO, "readed %d", i);
+                i = readanswer(btd->bus, 'E', msg, 20, 40);
+                syslog_bus(btd->bus, DBG_INFO, "readed %d", i);
                 switch (i) {
-                case 8:
-                    sscanf(&msg[1], "%02X", &addr);
-                    break;
-                case 10:
-                    sscanf(&msg[3], "%02X", &addr);
-                    break;
+                    case 8:
+                        sscanf(&msg[1], "%02X", &addr);
+                        break;
+                    case 10:
+                        sscanf(&msg[3], "%02X", &addr);
+                        break;
                 }
             }
             if (addr) {
                 sprintf(msg, "F%c%02X%02X%02X%02X%02X%c", glakt.protocol,
                         addr, gltmp.speed, databyte1, databyte2, databyte3,
                         13);
-                syslog_bus(bus, DBG_INFO, "%s", msg);
-                writeString(bus, (unsigned char *) msg, 0);
-                ioctl(buses[bus].device.file.fd, FIONREAD, &temp);
+                syslog_bus(btd->bus, DBG_INFO, "%s", msg);
+                writeString(btd->bus, (unsigned char *) msg, 0);
+                ioctl(buses[btd->bus].device.file.fd, FIONREAD, &temp);
                 while (temp > 0) {
-                    readByte(bus, 0, (unsigned char *) &rr);
-                    ioctl(buses[bus].device.file.fd, FIONREAD, &temp);
-                    syslog_bus(bus, DBG_INFO, "ignoring unread byte: %d (%c)", rr,
-                        rr);
+                    readByte(btd->bus, 0, (unsigned char *) &rr);
+                    ioctl(buses[btd->bus].device.file.fd, FIONREAD, &temp);
+                    syslog_bus(btd->bus, DBG_INFO,
+                            "ignoring unread byte: %d (%c)", rr, rr);
                 }
-                cacheSetGL(bus, addr, gltmp);
+                cacheSetGL(btd->bus, addr, gltmp);
             }
         }
-        if (!queue_SM_isempty(bus)) {
+        if (!queue_SM_isempty(btd->bus)) {
             int returnvalue = -1;
-            unqueueNextSM(bus, &smtmp);
-            /* syslog_bus(bus, DBG_INFO, "UNQUEUE SM, cmd:%d addr:%d type:%d typeaddr:%d bit:%04X ",smtmp.command,smtmp.addr,smtmp.type,smtmp.typeaddr,smtmp.bit); */
+            unqueueNextSM(btd->bus, &smtmp);
+            /* syslog_bus(btd->bus, DBG_INFO, "UNQUEUE SM, cmd:%d addr:%d type:%d typeaddr:%d bit:%04X ",smtmp.command,smtmp.addr,smtmp.type,smtmp.typeaddr,smtmp.bit); */
             addr = smtmp.addr;
             if (addr == 0 && smtmp.type == CV
-                && (smtmp.typeaddr >= 0 && smtmp.typeaddr < 255)) {
+                    && (smtmp.typeaddr >= 0 && smtmp.typeaddr < 255)) {
                 switch (smtmp.command) {
-                case SET:
-                    syslog_bus(bus, DBG_INFO, "SM SET #%d %02X", smtmp.typeaddr,
-                        smtmp.value);
-                    sprintf(msg, "RN%02X%02X%c", smtmp.typeaddr,
-                            smtmp.value, 13);
-                    writeString(bus, (unsigned char *) msg, 0);
-                    session_processwait(bus);
-                    if (readanswer(bus, 'Q', msg, 20, 1000) > 3) {
-                        sscanf(&msg[1], "%2X%2X%2X", &error, &cv, &val);
-                        if (!error && cv == smtmp.typeaddr
-                            && val == smtmp.value)
-                            returnvalue = 0;
-                    }
-                    session_endwait(bus, val);
-                    gettimeofday(&smtmp.tv, NULL);
-                    setSM(bus, smtmp.type, addr, smtmp.typeaddr, smtmp.bit,
-                          smtmp.value, 0);
-                    break;
-                case GET:
-                    syslog_bus(bus, DBG_INFO, "SM GET #%d", smtmp.typeaddr);
-                    sprintf(msg, "Q%02X%c", smtmp.typeaddr, 13);
-                    writeString(bus, (unsigned char *) msg, 0);
-                    session_processwait(bus);
-                    if (readanswer(bus, 'Q', msg, 20, 10000) > 3) {
-                        /* sscanf(&msg[1],"%2X%2X%2X",&error,&cv,&val); */
-                        sscanf(&msg[1], "%*3c%2X%2X", &cv, &val);
-                        syslog_bus(bus, DBG_INFO,
-                            "SM GET ANSWER: error %d, cv %d, val %d",
-                            error, cv, val);
-                        /* if(!error && cv==smtmp.typeaddr) */
-                        returnvalue = val;
-                    }
-                    session_endwait(bus, returnvalue);
-                    break;
+                    case SET:
+                        syslog_bus(btd->bus, DBG_INFO, "SM SET #%d %02X",
+                                smtmp.typeaddr, smtmp.value);
+                        sprintf(msg, "RN%02X%02X%c", smtmp.typeaddr,
+                                smtmp.value, 13);
+                        writeString(btd->bus, (unsigned char *) msg, 0);
+                        session_processwait(btd->bus);
+                        if (readanswer(btd->bus, 'Q', msg, 20, 1000) > 3) {
+                            sscanf(&msg[1], "%2X%2X%2X", &error, &cv, &val);
+                            if (!error && cv == smtmp.typeaddr
+                                    && val == smtmp.value)
+                                returnvalue = 0;
+                        }
+                        session_endwait(btd->bus, val);
+                        gettimeofday(&smtmp.tv, NULL);
+                        setSM(btd->bus, smtmp.type, addr, smtmp.typeaddr,
+                                smtmp.bit, smtmp.value, 0);
+                        break;
+                    case GET:
+                        syslog_bus(btd->bus, DBG_INFO, "SM GET #%d", smtmp.typeaddr);
+                        sprintf(msg, "Q%02X%c", smtmp.typeaddr, 13);
+                        writeString(btd->bus, (unsigned char *) msg, 0);
+                        session_processwait(btd->bus);
+                        if (readanswer(btd->bus, 'Q', msg, 20, 10000) > 3) {
+                            /* sscanf(&msg[1],"%2X%2X%2X",&error,&cv,&val); */
+                            sscanf(&msg[1], "%*3c%2X%2X", &cv, &val);
+                            syslog_bus(btd->bus, DBG_INFO,
+                                    "SM GET ANSWER: error %d, cv %d, val %d",
+                                    error, cv, val);
+                            /* if(!error && cv==smtmp.typeaddr) */
+                            returnvalue = val;
+                        }
+                        session_endwait(btd->bus, returnvalue);
+                        break;
                 }
             }
 
-            buses[bus].watchdog = 4;
+            buses[btd->bus].watchdog = 4;
             usleep(10);
         }
     }
+
+    /*run the cleanup routine*/
+    pthread_cleanup_pop(1);
+    return NULL;
 }

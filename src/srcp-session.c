@@ -51,7 +51,7 @@ static int cb_data[MAX_BUSES];
 
 
 
-/*add new session data node to list*/
+/*add new session data node to list with session id and thread id*/
 static session_node_t *list_add(session_node_t **p, sessionid_t sid,
         pthread_t tid)
 {
@@ -132,8 +132,8 @@ sessionid_t session_create(pthread_t thread)
     return session;
 }
 
-/* Called by client thread after session_stop() to remove a no longer
- * valid session node */
+/* Called in cleanup routine of client/session thread after
+ * session_stop() to remove a no longer valid session node */
 void session_destroy(sessionid_t session)
 {
     pthread_mutex_lock(&session_list_mutex);
@@ -234,15 +234,13 @@ int termSESSION(bus_t bus, sessionid_t sessionid, sessionid_t termsessionid,
 
 int session_preparewait(bus_t busnumber)
 {
-    syslog_bus(busnumber, DBG_DEBUG, "SESSION prepare wait for bus %ld",
-        busnumber);
+    syslog_bus(busnumber, DBG_DEBUG, "SESSION prepare wait for bus.");
     return pthread_mutex_lock(&cb_mutex[busnumber]);
 }
 
 int session_cleanupwait(bus_t busnumber)
 {
-    syslog_bus(busnumber, DBG_DEBUG, "SESSION cleanup wait for bus %ld",
-        busnumber);
+    syslog_bus(busnumber, DBG_DEBUG, "SESSION cleanup wait for bus.");
     return pthread_mutex_unlock(&cb_mutex[busnumber]);
 }
 
@@ -265,21 +263,19 @@ int session_wait(bus_t busnumber, unsigned int timeout, int *result)
 
 int session_endwait(bus_t busnumber, int returnvalue)
 {
-    syslog_bus(busnumber, DBG_DEBUG, "SESSION end wait1 for bus %ld", busnumber);
+    syslog_bus(busnumber, DBG_DEBUG, "SESSION end wait1 for bus.");
     cb_data[busnumber] = returnvalue;
     pthread_cond_broadcast(&cb_cond[busnumber]);
     pthread_mutex_unlock(&cb_mutex[busnumber]);
-    syslog_bus(busnumber, DBG_DEBUG, "SESSION end wait2 for bus %ld", busnumber);
+    syslog_bus(busnumber, DBG_DEBUG, "SESSION end wait2 for bus.");
     return returnvalue;
 }
 
 int session_processwait(bus_t busnumber)
 {
     int rc;
-    syslog_bus(busnumber, DBG_DEBUG, "SESSION process wait1 for bus %ld",
-        busnumber);
+    syslog_bus(busnumber, DBG_DEBUG, "SESSION process wait1 for bus.");
     rc = pthread_mutex_lock(&cb_mutex[busnumber]);
-    syslog_bus(busnumber, DBG_DEBUG, "SESSION process wait2 for bus %ld",
-        busnumber);
+    syslog_bus(busnumber, DBG_DEBUG, "SESSION process wait2 for bus.");
     return rc;
 }

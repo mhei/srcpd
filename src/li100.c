@@ -48,13 +48,11 @@ int readConfig_LI100_SERIAL( xmlDocPtr doc, xmlNodePtr node,  bus_t busnumber )
 #ifdef LI100_USB
   buses[ busnumber ].type = SERVER_LI100_USB;
   buses[ busnumber ].init_func = &init_bus_LI100_USB;
-  buses[ busnumber ].term_func = &term_bus_LI100_USB;
   buses[ busnumber ].thr_func = &thr_sendrec_LI100_USB;
   buses[ busnumber ].device.file.baudrate = B57600;
 #else
   buses[ busnumber ].type = SERVER_LI100_SERIAL;
   buses[ busnumber ].init_func = &init_bus_LI100_SERIAL;
-  buses[ busnumber ].term_func = &term_bus_LI100_SERIAL;
   buses[ busnumber ].thr_func = &thr_sendrec_LI100_SERIAL;
   buses[ busnumber ].device.file.baudrate = B9600;
 #endif
@@ -289,24 +287,22 @@ int init_bus_LI100_SERIAL( bus_t busnumber )
   return status;
 }
 
-
+/*thread cleanup routine for this bus*/
 #ifdef LI100_USB
-int term_bus_LI100_USB( bus_t busnumber )
+static void end_bus_usb_thread(bus_thread_t *btd)
 #else
-int term_bus_LI100_SERIAL( bus_t busnumber )
+static void end_bus_rs232_thread(bus_thread_t *btd)
 #endif
 {
 #ifdef LI100_USB
-  if ( buses[ busnumber ].type != SERVER_LI100_USB )
+    syslog_bus(btd->bus, DBG_INFO, "LI100 bus (usb) terminated.");
 #else
-  if ( buses[ busnumber ].type != SERVER_LI100_SERIAL )
+    syslog_bus(btd->bus, DBG_INFO, "LI100 bus (serial) terminated.");
 #endif
-    return 1;
-
-  __li100->working_LI100 = 0;
-  close_comport( busnumber );
-  free(buses[busnumber].driverdata);
-  return 0;
+    __li100t->working_LI100 = 0;
+    close_comport(btd->bus);
+    free(buses[btd->bus].driverdata);
+    free(btd);
 }
 
 #ifdef LI100_USB
@@ -315,62 +311,78 @@ void *thr_sendrec_LI100_USB( void *v )
 void *thr_sendrec_LI100_SERIAL( void *v )
 #endif
 {
-  bus_t busnumber;
-  unsigned char byte2send[ 20 ];
-  int status;
+    unsigned char byte2send[ 20 ];
+    int status;
+    int zaehler1, fb_zaehler1, fb_zaehler2;
+    int last_cancel_state, last_cancel_type;
 
-  int zaehler1, fb_zaehler1, fb_zaehler2;
+    bus_thread_t* btd = (bus_thread_t*) malloc(sizeof(bus_thread_t));
+    if (btd == NULL)
+        pthread_exit((void*) 1);
+    btd->bus =  (bus_t) v;
+    btd->fd = -1;
 
-  busnumber = ( bus_t ) v;
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &last_cancel_type);
+
+
 #ifdef LI100_USB
-  syslog_bus( busnumber, DBG_INFO, "thr_sendrec_LI100 (usb) is started as bus #%ld", busnumber );
+    /*register cleanup routine*/
+    pthread_cleanup_push((void *) end_bus_usb_thread, (void *) btd);
+    syslog_bus( btd->bus, DBG_INFO, "LI100 bus (usb) started.");
 #else
-  syslog_bus( busnumber, DBG_INFO, "thr_sendrec_LI100 (serial) is started as bus #%ld", busnumber );
+    /*register cleanup routine*/
+    pthread_cleanup_push((void *) end_bus_rs232_thread, (void *) btd);
+    syslog_bus( btd->bus, DBG_INFO, "LI100 bus (serial) started.");
 #endif
 
   /* initialize tga-structure */
   for ( zaehler1 = 0; zaehler1 < 50; zaehler1++ )
-    __li100->tga[ zaehler1 ].id = 0;
+    __li100t->tga[ zaehler1 ].id = 0;
   fb_zaehler1 = 0;
   fb_zaehler2 = 1;
 
-  while ( 1 )
-  {
+  while (1) {
+        pthread_testcancel();
     /* syslog(LOG_INFO, "thr_sendrec_LI100 Start in loop"); */
     /* Start/Stop */
     /* fprintf(stderr, "START/STOP... "); */
 
-    if ( buses[busnumber].power_changed == 1 )
+    if ( buses[btd->bus].power_changed == 1 )
     {
       byte2send[ 0 ] = 0x21;
-      byte2send[ 1 ] = buses[ busnumber ].power_state ? 0x81 : 0x80;
+      byte2send[ 1 ] = buses[ btd->bus ].power_state ? 0x81 : 0x80;
 #ifdef LI100_USB
-      status = send_command_LI100_USB( busnumber, byte2send );
+      status = send_command_LI100_USB( btd->bus, byte2send );
 #else
-      status = send_command_LI100_SERIAL( busnumber, byte2send );
+      status = send_command_LI100_SERIAL( btd->bus, byte2send );
 #endif
 
       if ( status == 0 )   /* all was OK ? */
-        buses[ busnumber ].power_changed = 0;
+        buses[ btd->bus ].power_changed = 0;
     }
 
 #ifdef LI100_USB
-    send_command_gl_LI100_USB( busnumber );
-    send_command_ga_LI100_USB( busnumber );
-    check_status_LI100_USB( busnumber );
-    check_extern_engines_USB( busnumber );
-    send_command_sm_LI100_USB( busnumber );
+    send_command_gl_LI100_USB( btd->bus );
+    send_command_ga_LI100_USB( btd->bus );
+    check_status_LI100_USB( btd->bus );
+    check_extern_engines_USB( btd->bus );
+    send_command_sm_LI100_USB( btd->bus );
 #else
-    send_command_gl_LI100_SERIAL( busnumber );
-    send_command_ga_LI100_SERIAL( busnumber );
-    check_status_LI100_SERIAL( busnumber );
-    check_extern_engines_SERIAL( busnumber );
-    send_command_sm_LI100_SERIAL( busnumber );
+    send_command_gl_LI100_SERIAL( btd->bus );
+    send_command_ga_LI100_SERIAL( btd->bus );
+    check_status_LI100_SERIAL( btd->bus );
+    check_extern_engines_SERIAL( btd->bus );
+    send_command_sm_LI100_SERIAL( btd->bus );
 #endif
-    check_reset_fb( busnumber );
-    buses[ busnumber ].watchdog = 1;
+    check_reset_fb( btd->bus );
+    buses[ btd->bus ].watchdog = 1;
     usleep( 50000 );
   }                           /* End WHILE(1) */
+
+    /*run the cleanup routine*/
+    pthread_cleanup_pop(1);
+    return NULL;
 }
 
 #ifdef LI100_USB
