@@ -334,16 +334,17 @@ void s88load(bus_t busnumber)
     unsigned int s88data[S88_MAXPORTSB * S88_MAXBUSSES]; /* valid bus-data */
     int S88PORT = __ddl_s88->port;
     int S88CLOCK_SCALE = __ddl_s88->clockscale;
-    int S88REFRESH = __ddl_s88->refresh;
+    int S88REFRESH = 1000 * __ddl_s88->refresh;
 
     gettimeofday(&nowtime, NULL);
     if ((nowtime.tv_sec > __ddl_s88->s88valid.tv_sec) ||
         ((nowtime.tv_sec == __ddl_s88->s88valid.tv_sec) &&
          (nowtime.tv_usec > __ddl_s88->s88valid.tv_usec))) {
         /* data is out of date - get new data from the bus */
+
         /* initialize the s88data array */
-        for (i = 0; i < S88_MAXPORTSB * S88_MAXBUSSES; i++)
-            s88data[i] = 0;
+        memset(s88data, 0, sizeof(s88data));
+
         if (S88PORT) {
             /* if port is disabled do nothing */
             /* load the bus */
@@ -384,7 +385,7 @@ void s88load(bus_t busnumber)
                     setFBmodul(busnumber + 3, j + 1,
                                s88data[j + 3 * S88_MAXPORTSB]);
             }
-            nowtime.tv_usec += S88REFRESH * 1000;
+            nowtime.tv_usec += S88REFRESH;
             __ddl_s88->s88valid.tv_usec = nowtime.tv_usec % 1000000;
             __ddl_s88->s88valid.tv_sec =
                 nowtime.tv_sec + nowtime.tv_usec / 1000000;
