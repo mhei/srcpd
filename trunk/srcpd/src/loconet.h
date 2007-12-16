@@ -26,7 +26,6 @@ typedef struct _LOCONET_DATA {
 
 int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber);
 int init_bus_LOCONET(bus_t);
-int term_bus_LOCONET(bus_t);
 int getDescription_LOCONET(char *reply);
 void *thr_sendrec_LOCONET(void *);
 

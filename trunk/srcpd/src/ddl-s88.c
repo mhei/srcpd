@@ -102,7 +102,6 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     buses[busnumber].type = SERVER_S88;
     buses[busnumber].init_func = &init_bus_S88;
-    buses[busnumber].term_func = &term_bus_S88;
     buses[busnumber].thr_func = &thr_sendrec_S88;
 
     __ddl_s88->port = 0x0378;
@@ -130,7 +129,6 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     for (i = 1; i < 4; i++) {
         buses[busnumber + i].type = SERVER_S88;
         buses[busnumber + i].init_func = NULL;
-        buses[busnumber + i].term_func = NULL;
         buses[busnumber + i].thr_func = &thr_sendrec_dummy;
         buses[busnumber + i].driverdata = NULL;
     }
@@ -394,41 +392,65 @@ void s88load(bus_t busnumber)
     }
 }
 
-int term_bus_S88(bus_t busnumber)
+/*thread cleanup routine for this bus*/
+static void end_bus_thread(bus_thread_t *btd)
 {
+    syslog_bus(btd->bus, DBG_INFO, "DDL-S88 bus terminated.");
+
 #ifdef __FreeBSD__
-    if (__ddl_s88->Fd != -1)
-        close(__ddl_s88->Fd);
+    if (((DDL_S88_DATA *) buses[busnumber].driverdata)->Fd != -1)
+        close(((DDL_S88_DATA *) buses[busnumber].driverdata)->Fd);
 #endif
 
-    free(buses[busnumber].driverdata);
-    return 0;
+    free(buses[btd->bus].driverdata);
+    free(btd);
 }
 
 void *thr_sendrec_S88(void *v)
 {
-    bus_t busnumber = (bus_t) v;
+    int last_cancel_state, last_cancel_type;
+
+    bus_thread_t* btd = (bus_thread_t*) malloc(sizeof(bus_thread_t));
+    if (btd == NULL)
+        pthread_exit((void*) 1);
+    btd->bus =  (bus_t) v;
+    btd->fd = -1;
+
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &last_cancel_type);
+
+    /*register cleanup routine*/
+    pthread_cleanup_push((void *) end_bus_thread, (void *) btd);
+
     unsigned long int sleepusec = 100000;
 
-    int S88REFRESH = __ddl_s88->refresh;
+    int S88REFRESH = ((DDL_S88_DATA *) buses[btd->bus].driverdata)->refresh;
     /* set refresh-cycle */
     if (sleepusec < S88REFRESH * 1000)
         sleepusec = S88REFRESH * 1000;
+
+    syslog_bus(btd->bus, DBG_INFO, "DDL_S88 bus startet (device = %s).",
+        buses[btd->bus].device.file.path);
+
     while (1) {
-        if (buses[busnumber].power_changed == 1) {
+        if (buses[btd->bus].power_changed == 1) {
             char msg[110];
-            buses[busnumber].power_changed = 0;
-            infoPower(busnumber, msg);
+            buses[btd->bus].power_changed = 0;
+            infoPower(btd->bus, msg);
             queueInfoMessage(msg);
         }
-        if (buses[busnumber].power_state == 0) {
+        if (buses[btd->bus].power_state == 0) {
             usleep(1000);
             continue;
         }
-        check_reset_fb(busnumber);
+        check_reset_fb(btd->bus);
         usleep(sleepusec);
-        s88load(busnumber);
+        s88load(btd->bus);
     }
+
+    /*run the cleanup routine*/
+    pthread_cleanup_pop(1);
+    return NULL;
 }
 
 void *thr_sendrec_dummy(void *v)

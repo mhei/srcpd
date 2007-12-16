@@ -29,6 +29,7 @@
 #endif
 
 #define __loconet ((LOCONET_DATA*)buses[busnumber].driverdata)
+#define __loconett ((LOCONET_DATA*)buses[btd->bus].driverdata)
 
 static int init_gl_LOCONET(gl_state_t *);
 static int init_ga_LOCONET(ga_state_t *);
@@ -48,7 +49,6 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     buses[busnumber].type = SERVER_LOCONET;
     buses[busnumber].init_func = &init_bus_LOCONET;
-    buses[busnumber].term_func = &term_bus_LOCONET;
     buses[busnumber].thr_func = &thr_sendrec_LOCONET;
     buses[busnumber].init_gl_func = &init_gl_LOCONET;
     buses[busnumber].init_ga_func = &init_ga_LOCONET;
@@ -214,27 +214,6 @@ static int init_lineLOCONET(bus_t busnumber) {
 	    return init_lineLOCONET_lbserver(busnumber);
 	     break;
 	}
-    return 0;
-}
-
-int term_bus_LOCONET(bus_t busnumber)
-{
-    syslog_bus(busnumber, DBG_INFO, "Loconet bus %lu terminating", busnumber);
-    switch (buses[busnumber].devicetype) {
-        case HW_FILENAME:
-	    close(buses[busnumber].device.file.fd);
-	     break;
-	case HW_NETWORK:
-	    shutdown(buses[busnumber].device.net.sockfd, SHUT_RDWR);
-	    close(buses[busnumber].device.net.sockfd);
-	     break;
-	}
-
-    syslog_bus(busnumber, DBG_INFO,
-        "Loconet bus %ld: %u packets sent, %u packets received", busnumber,
-        __loconet->sent_packets, __loconet->recv_packets);
-
-    free(buses[busnumber].driverdata);
     return 0;
 }
 
@@ -472,149 +451,189 @@ static int ln_opc_peer_xfer_read(bus_t busnumber,
     return 1;
 }
 
+/*thread cleanup routine for this bus*/
+static void end_bus_thread(bus_thread_t *btd)
+{
+    syslog_bus(btd->bus, DBG_INFO, "Loconet bus terminated.");
+
+    switch (buses[btd->bus].devicetype) {
+        case HW_FILENAME:
+            close(buses[btd->bus].device.file.fd);
+            break;
+        case HW_NETWORK:
+            shutdown(buses[btd->bus].device.net.sockfd, SHUT_RDWR);
+            close(buses[btd->bus].device.net.sockfd);
+            break;
+    }
+
+    syslog_bus(btd->bus, DBG_INFO,
+        "Loconet bus: %u packets sent, %u packets received",
+        __loconett->sent_packets, __loconett->recv_packets);
+
+    free(buses[btd->bus].driverdata);
+    free(btd);
+}
+
 void *thr_sendrec_LOCONET(void *v)
 {
-    bus_t busnumber = (bus_t) v;
     unsigned char ln_packet[128];       /* max length is coded with 7 bit */
     unsigned char ln_packetlen = 2;
     unsigned int addr, timeoutcnt;
     int value, port;
     char msg[110];
     ga_state_t gatmp;
-    
-    syslog_bus(busnumber, DBG_INFO, "Loconet started, bus #%d, %s", busnumber,
-        buses[busnumber].device.file.path);
+    int last_cancel_state, last_cancel_type;
+
+    bus_thread_t* btd = (bus_thread_t*) malloc(sizeof(bus_thread_t));
+    if (btd == NULL)
+        pthread_exit((void*) 1);
+    btd->bus = (bus_t) v;
+    btd->fd = -1;
+
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &last_cancel_type);
+
+    /*register cleanup routine*/
+    pthread_cleanup_push((void *) end_bus_thread, (void *) btd);
+
+    syslog_bus(btd->bus, DBG_INFO, "Loconet bus started (device = %s).",
+            buses[btd->bus].device.file.path);
     timeoutcnt = 0;
+
     while (1) {
-        buses[busnumber].watchdog = 1;
+        pthread_testcancel();
+        buses[btd->bus].watchdog = 1;
         memset(ln_packet, 0, sizeof(ln_packet));
         /* first is always to read _from_ Loconet */
-        if (((ln_packetlen =
-              ln_read(busnumber, ln_packet, sizeof(ln_packet))) > 0)) {
+        if ((ln_packetlen = ln_read(btd->bus, ln_packet,
+                        sizeof(ln_packet))) > 0) {
 
             switch (ln_packet[0]) {
-            case OPC_GPOFF:
-                buses[busnumber].power_state = 0;
-                strcpy(buses[busnumber].power_msg, "from Loconet");
-                infoPower(busnumber, msg);
-                queueInfoMessage(msg);
-                break;
-            case OPC_GPON:
-                buses[busnumber].power_state = 1;
-                strcpy(buses[busnumber].power_msg, "from Loconet");
-                infoPower(busnumber, msg);
-                queueInfoMessage(msg);
-                break;
-            case OPC_SW_REQ: /* B0 */
-                addr = (((unsigned int) ln_packet[1] & 0x007f) |
-                       (((unsigned int) ln_packet[2] & 0x000f) << 7) ) + 1;
-                value = (ln_packet[2] & 0x10) >> 4;
-		port  = (ln_packet[2] & 0x20) >> 5;
-		getGA(busnumber, addr, &gatmp);
-		gatmp.action = value;
-		gatmp.port   = port;
-		setGA(busnumber, addr, gatmp);
-                break;
+                case OPC_GPOFF:
+                    buses[btd->bus].power_state = 0;
+                    strcpy(buses[btd->bus].power_msg, "from Loconet");
+                    infoPower(btd->bus, msg);
+                    queueInfoMessage(msg);
+                    break;
+                case OPC_GPON:
+                    buses[btd->bus].power_state = 1;
+                    strcpy(buses[btd->bus].power_msg, "from Loconet");
+                    infoPower(btd->bus, msg);
+                    queueInfoMessage(msg);
+                    break;
+                case OPC_SW_REQ: /* B0 */
+                    addr = (((unsigned int) ln_packet[1] & 0x007f) |
+                            (((unsigned int) ln_packet[2] & 0x000f) << 7) ) + 1;
+                    value = (ln_packet[2] & 0x10) >> 4;
+                    port  = (ln_packet[2] & 0x20) >> 5;
+                    getGA(btd->bus, addr, &gatmp);
+                    gatmp.action = value;
+                    gatmp.port   = port;
+                    setGA(btd->bus, addr, gatmp);
+                    break;
 
-	    case OPC_SW_REP:    /* B1 */
-		break;
-            case OPC_INPUT_REP: /* B2 */
-                addr =
-                    ((unsigned int) ln_packet[1] & 0x007f) |
-                    (((unsigned int) ln_packet[2] & 0x000f) << 7);
-                addr = 1 + addr * 2 +
-                    ((((unsigned int) ln_packet[2] & 0x0020) >> 5));
-                value = (ln_packet[2] & 0x10) >> 4;
-                updateFB(busnumber, addr, value);
-                break;
-            case OPC_PEER_XFER:
-                /* this one is difficult */
-                ln_opc_peer_xfer_read(busnumber, ln_packet);
-                break;
-            default:
-                /* unknown Loconet packet received, ignored */
-                break;
+                case OPC_SW_REP:    /* B1 */
+                    break;
+                case OPC_INPUT_REP: /* B2 */
+                    addr =
+                        ((unsigned int) ln_packet[1] & 0x007f) |
+                        (((unsigned int) ln_packet[2] & 0x000f) << 7);
+                    addr = 1 + addr * 2 +
+                        ((((unsigned int) ln_packet[2] & 0x0020) >> 5));
+                    value = (ln_packet[2] & 0x10) >> 4;
+                    updateFB(btd->bus, addr, value);
+                    break;
+                case OPC_PEER_XFER:
+                    /* this one is difficult */
+                    ln_opc_peer_xfer_read(btd->bus, ln_packet);
+                    break;
+                default:
+                    /* unknown Loconet packet received, ignored */
+                    break;
             }
         }
-        if (__loconet->ln_msglen == 0) {
+        if (__loconett->ln_msglen == 0) {
             /* now we process the way back _to_ Loconet */
             ln_packet[0] = OPC_IDLE;
             ln_packetlen = 2;
-            if (buses[busnumber].power_changed == 1) {
-                ln_packet[0] = 0x82 + buses[busnumber].power_state;
+            if (buses[btd->bus].power_changed == 1) {
+                ln_packet[0] = 0x82 + buses[btd->bus].power_state;
                 ln_packetlen = 2;
-                buses[busnumber].power_changed = 0;
-                infoPower(busnumber, msg);
+                buses[btd->bus].power_changed = 0;
+                infoPower(btd->bus, msg);
                 queueInfoMessage(msg);
             }
-            else if (!queue_GA_isempty(busnumber)) {
+            else if (!queue_GA_isempty(btd->bus)) {
                 ga_state_t gatmp;
-                unqueueNextGA(busnumber, &gatmp);
+                unqueueNextGA(btd->bus, &gatmp);
                 addr = gatmp.id-1;
-		ln_packetlen = 4;
-		ln_packet[0] = OPC_SW_REQ;
+                ln_packetlen = 4;
+                ln_packet[0] = OPC_SW_REQ;
 
-		ln_packet[1] = (unsigned short int) (addr & 0x0007f);
-		ln_packet[2] = (unsigned short int) (( addr >> 7) & 0x000f);
-		ln_packet[2] |= (unsigned short int) ( (gatmp.port & 0x0001) << 5);
-		ln_packet[2] |= (unsigned short int) ( (gatmp.action & 0x0001) << 4);
-		
-		if(gatmp.action == 1) {
-        	    gettimeofday(&gatmp.tv[gatmp.port], NULL);
-        	}
-        	setGA(busnumber, addr, gatmp);
-                syslog_bus(busnumber, DBG_DEBUG, "Loconet: GA SET #%d %02X",
+                ln_packet[1] = (unsigned short int) (addr & 0x0007f);
+                ln_packet[2] = (unsigned short int) (( addr >> 7) & 0x000f);
+                ln_packet[2] |= (unsigned short int) ( (gatmp.port & 0x0001) << 5);
+                ln_packet[2] |= (unsigned short int) ( (gatmp.action & 0x0001) << 4);
+
+                if(gatmp.action == 1) {
+                    gettimeofday(&gatmp.tv[gatmp.port], NULL);
+                }
+                setGA(btd->bus, addr, gatmp);
+                syslog_bus(btd->bus, DBG_DEBUG, "Loconet: GA SET #%d %02X",
                         gatmp.id, gatmp.action);
             }
 
-            else if (!queue_SM_isempty(busnumber)) {
+            else if (!queue_SM_isempty(btd->bus)) {
                 struct _SM smtmp;
-                session_processwait(busnumber);
-                unqueueNextSM(busnumber, &smtmp);
+                session_processwait(btd->bus);
+                unqueueNextSM(btd->bus, &smtmp);
                 addr = smtmp.addr;
                 switch (smtmp.command) {
-                case SET:
-                    syslog_bus(busnumber, DBG_DEBUG, "Loconet: SM SET #%d %02X",
-                        smtmp.addr, smtmp.value);
-                    break;
-                case GET:
-                    syslog_bus(busnumber, DBG_DEBUG, "Loconet SM GET #%d[%d]",
-                        smtmp.addr, smtmp.typeaddr);
-                    ln_packetlen = 16;
-                    ln_packet[0] = 0xe5;        /* OPC_PEER_XFER, old fashioned */
-                    ln_packet[1] = ln_packetlen;
-                    ln_packet[2] = __loconet->loconetID;        /* sender ID */
-                    ln_packet[3] = (unsigned char) smtmp.addr;  /* dest address */
-                    ln_packet[4] = 0x01;
-                    ln_packet[5] = 0x10;
-                    ln_packet[6] = 0x02;
-                    ln_packet[7] = (unsigned char) smtmp.typeaddr;
-                    ln_packet[8] = 0x00;
-                    ln_packet[9] = 0x00;
-                    ln_packet[10] = 0x00;
-                    break;
+                    case SET:
+                        syslog_bus(btd->bus, DBG_DEBUG, "Loconet: SM SET #%d %02X",
+                                smtmp.addr, smtmp.value);
+                        break;
+                    case GET:
+                        syslog_bus(btd->bus, DBG_DEBUG, "Loconet SM GET #%d[%d]",
+                                smtmp.addr, smtmp.typeaddr);
+                        ln_packetlen = 16;
+                        ln_packet[0] = 0xe5;  /* OPC_PEER_XFER, old fashioned */
+                        ln_packet[1] = ln_packetlen;
+                        ln_packet[2] = __loconett->loconetID;  /* sender ID */
+                        ln_packet[3] = (unsigned char) smtmp.addr; /* dest address */
+                        ln_packet[4] = 0x01;
+                        ln_packet[5] = 0x10;
+                        ln_packet[6] = 0x02;
+                        ln_packet[7] = (unsigned char) smtmp.typeaddr;
+                        ln_packet[8] = 0x00;
+                        ln_packet[9] = 0x00;
+                        ln_packet[10] = 0x00;
+                        break;
                 }
             }
             ln_packet[ln_packetlen - 1] =
                 ln_checksum(ln_packet, ln_packetlen - 1);
             if (ln_packet[0] != OPC_IDLE) {
-                ln_write(busnumber, ln_packet, ln_packetlen);
+                ln_write(btd->bus, ln_packet, ln_packetlen);
                 timeoutcnt = 0;
             }
         }
         else {
-            syslog_bus(busnumber, DBG_DEBUG,
-                "Still waiting for echo of last command (%d)", timeoutcnt);
+            syslog_bus(btd->bus, DBG_DEBUG,
+                    "Still waiting for echo of last command (%d)", timeoutcnt);
             usleep(100000);
             timeoutcnt++;
             if (timeoutcnt > 10) {
-                syslog_bus(busnumber, DBG_DEBUG,
-                    "time out for reading echo, giving up");
-                __loconet->ln_msglen = 0;
+                syslog_bus(btd->bus, DBG_DEBUG,
+                        "time out for reading echo, giving up");
+                __loconett->ln_msglen = 0;
             }
         }
         usleep(1000);
     }
-}
 
+    /*run the cleanup routine*/
+    pthread_cleanup_pop(1);
+    return NULL;
+}
 

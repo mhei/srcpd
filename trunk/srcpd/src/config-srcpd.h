@@ -75,7 +75,14 @@ typedef unsigned long int sessionid_t;
 #define HW_NETWORK   2
 
 
-/* Busstruktur */
+/*basic data for bus threads*/
+typedef struct bt {
+  int fd;
+  bus_t bus;
+} bus_thread_t;
+
+
+/* bus data struct */
 typedef struct _BUS
 {
   int debuglevel;  /* verbosity level of syslog */
@@ -98,24 +105,22 @@ typedef struct _BUS
       } net;
   } device;
  
+  /* thread synchronisation variables */
+  pthread_mutex_t transmit_mutex;
+  pthread_cond_t transmit_cond;
+
   pthread_t tid;               /* ID of the thread */
   pthread_t tidtimer;          /* ID of the timer thread */
   void *thr_func;              /* address of the thread function */
   void *thr_timer;             /* address of the timer thread */
   void (*sigio_reader)(bus_t); /* address of the SIGIO based device reader */
-
-  /* Definition of thread synchronisation */
-  pthread_mutex_t transmit_mutex;
-  pthread_cond_t transmit_cond;
-
-  int (*init_func)(bus_t);           /* address of init function */
-  int (*term_func)(bus_t);           /* address of term function */
-  int (*init_gl_func) ( gl_state_t *);  /* called to check default init */
-  int (*init_ga_func) ( ga_state_t *);  /* called to check default init */
-  int (*init_fb_func) (bus_t busnumber, int addr,
+  int (*init_func)(bus_t);             /* address of init function */
+  int (*init_gl_func) (gl_state_t *);  /* called to check default init */
+  int (*init_ga_func) (ga_state_t *);  /* called to check default init */
+  int (*init_fb_func) (bus_t bus, int addr,
           const char protocolb, int index);  /* called to check default init */
 
-  int watchdog;                              /* used to monitor the thread */
+  int watchdog;                /* watchdog to monitor bus thread */
 
   /* Power management on the track */
   int power_state;
@@ -131,11 +136,11 @@ bus_data_t buses[MAX_BUSES];
 bus_t num_buses;
 
 int readConfig(char *filename);
-
+void run_bus_watchdog();
 void create_all_bus_threads();
 void cancel_all_bus_threads();
-void suspend_bus_thread(bus_t busnumber);
-void resume_bus_thread(bus_t busnumber);
+void suspend_bus_thread(bus_t bus);
+void resume_bus_thread(bus_t bus);
 
 #define DG_SESSION 1
 #define DG_TIME 2

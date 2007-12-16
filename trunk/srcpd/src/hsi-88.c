@@ -41,7 +41,6 @@ int readConfig_HSI_88( xmlDocPtr doc, xmlNodePtr node, bus_t busnumber )
 
   buses[ busnumber ].type = SERVER_HSI_88;
   buses[ busnumber ].init_func = &init_bus_HSI_88;
-  buses[ busnumber ].term_func = &term_bus_HSI_88;
   buses[ busnumber ].thr_func = &thr_sendrec_HSI_88;
   buses[ busnumber ].flags |= FB_ORDER_0;
   buses[ busnumber ].flags |= FB_16_PORTS;
@@ -315,128 +314,145 @@ int init_bus_HSI_88(bus_t busnumber )
   return status;
 }
 
-int term_bus_HSI_88(bus_t busnumber)
+/*thread cleanup routine for this bus*/
+static void end_bus_thread(bus_thread_t *btd)
 {
-  if ( buses[ busnumber ].type != SERVER_HSI_88 )
-    return 1;
-
-  working_HSI88 = 0;
-
-  close_comport( busnumber );
-  free(buses[busnumber].driverdata);
-  return 0;
+    syslog_bus(btd->bus, DBG_INFO, "HSI-88 bus terminated.");
+    working_HSI88 = 0;
+    close_comport(btd->bus);
+    free(buses[btd->bus].driverdata);
+    free(btd);
 }
 
 void *thr_sendrec_HSI_88( void *v )
 {
-  bus_t busnumber;
-  int refresh_time;
-  int anzahl, i, temp;
-  unsigned char byte2send;
-  unsigned char rr;
-  int status;
-  int zaehler1, fb_zaehler1, fb_zaehler2;
+    int refresh_time;
+    int anzahl, i, temp;
+    unsigned char byte2send;
+    unsigned char rr;
+    int status;
+    int zaehler1, fb_zaehler1, fb_zaehler2;
+    int last_cancel_state, last_cancel_type;
 
-  busnumber = ( bus_t ) v;
-  refresh_time = __hsi->refresh;
-  syslog_bus( busnumber, DBG_INFO, "thr_sendrec_HSI_88 is started" );
+    bus_thread_t* btd = (bus_thread_t*) malloc(sizeof(bus_thread_t));
+    if (btd == NULL)
+        pthread_exit((void*) 1);
+    btd->bus =  (bus_t) v;
+    btd->fd = -1;
 
-  zaehler1 = 0;
-  fb_zaehler1 = 0;
-  fb_zaehler2 = 1;
-  i = 0;
-  temp = 1;
-  if ( buses[ busnumber ].debuglevel <= DBG_DEBUG )
-  {
-    status = 1;
-    while ( status )
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &last_cancel_type);
+
+    /*register cleanup routine*/
+    pthread_cleanup_push((void *) end_bus_thread, (void *) btd);
+
+    syslog_bus(btd->bus, DBG_INFO, "HSI-88 bus startet (device = %s).",
+            buses[btd->bus].device.file.path);
+
+    refresh_time = ((HSI_88_DATA*)buses[btd->bus].driverdata)->refresh;
+
+    zaehler1 = 0;
+    fb_zaehler1 = 0;
+    fb_zaehler2 = 1;
+    i = 0;
+    temp = 1;
+    if ( buses[ btd->bus ].debuglevel <= DBG_DEBUG )
     {
-      /*  Modulbelegung initialisieren */
-      byte2send = 's';
-      writeByte( busnumber, byte2send, 0 );
-      byte2send = __hsi->number_fb[ 0 ];
-      writeByte( busnumber, byte2send, 0 );
-      byte2send = __hsi->number_fb[ 1 ];
-      writeByte( busnumber, byte2send, 0 );
-      byte2send = __hsi->number_fb[ 2 ];
-      writeByte( busnumber, byte2send, 0 );
-      byte2send = 0x0d;
-      writeByte( busnumber, byte2send, 0 );
-      byte2send = 0x0d;
-      writeByte( busnumber, byte2send, 0 );
-      byte2send = 0x0d;
-      writeByte( busnumber, byte2send, 0 );
-      byte2send = 0x0d;
-      writeByte( busnumber, byte2send, 200 );
+        status = 1;
+        while ( status )
+        {
+            /* Modulbelegung initialisieren */
+            byte2send = 's';
+            writeByte( btd->bus, byte2send, 0 );
+            byte2send = ((HSI_88_DATA*)buses[btd->bus].driverdata)->number_fb[0];
+            writeByte( btd->bus, byte2send, 0 );
+            byte2send = ((HSI_88_DATA*)buses[btd->bus].driverdata)->number_fb[1];
+            writeByte( btd->bus, byte2send, 0 );
+            byte2send = ((HSI_88_DATA*)buses[btd->bus].driverdata)->number_fb[2];
+            writeByte( btd->bus, byte2send, 0 );
+            byte2send = 0x0d;
+            writeByte( btd->bus, byte2send, 0 );
+            byte2send = 0x0d;
+            writeByte( btd->bus, byte2send, 0 );
+            byte2send = 0x0d;
+            writeByte( btd->bus, byte2send, 0 );
+            byte2send = 0x0d;
+            writeByte( btd->bus, byte2send, 200 );
 
-      rr = 0;
-      readByte( busnumber, 0, &rr );        /*  read answer (three bytes) */
-      while ( rr != 's' )
-      {
-        usleep( 100000 );
-        readByte( busnumber, 0, &rr );
-      }
-      readByte( busnumber, 0, &rr );        /*  number of given modules */
-      anzahl = ( int ) rr;
-      syslog_bus( busnumber, DBG_INFO, "number of modules: %i", anzahl );
-      anzahl -= __hsi->number_fb[ 0 ];
-      anzahl -= __hsi->number_fb[ 1 ];
-      anzahl -= __hsi->number_fb[ 2 ];
-      if ( anzahl == 0 )     /* HSI initialisation correct? */
-      {
-        status = 0;
-      }
-      else
-      {
-        syslog_bus( busnumber, DBG_ERROR, "error while initialising" );
-        sleep( 1 );
-        while ( readByte( busnumber, 0, &rr ) == 0 )
-        {}
-      }
-    }
-  }
+            rr = 0;
+            readByte( btd->bus, 0, &rr );     /*  read answer (three bytes) */
+            while ( rr != 's' )
+            {
+                usleep( 100000 );
+                readByte( btd->bus, 0, &rr );
+            }
+            readByte( btd->bus, 0, &rr );     /*  number of given modules */
+            anzahl = ( int ) rr;
+            syslog_bus( btd->bus, DBG_INFO, "Number of modules: %i", anzahl );
+            anzahl -= ((HSI_88_DATA*)buses[btd->bus].driverdata)->number_fb[0];
+            anzahl -= ((HSI_88_DATA*)buses[btd->bus].driverdata)->number_fb[1];
+            anzahl -= ((HSI_88_DATA*)buses[btd->bus].driverdata)->number_fb[2];
 
-  while ( 1 )
-  {
-    if ( buses[ busnumber ].debuglevel <= DBG_DEBUG )
-    {
-      rr = 0;
-      while ( rr != 'i' )
-      {
-        /* first check here for reset of feedbacks
-           (do this check at the end, we will not run, until
-           get new changes from HSI) */
-        check_reset_fb( busnumber );
-        usleep( refresh_time );
-        readByte( busnumber, 0, &rr );
-      }
-      readByte( busnumber, 1, &rr );        /* number of given modules */
-      anzahl = ( int ) rr;
-      for ( zaehler1 = 0; zaehler1 < anzahl; zaehler1++ )
-      {
-        readByte( busnumber, 1, &rr );
-        i = rr;
-        readByte( busnumber, 1, &rr );
-        temp = rr;
-        temp <<= 8;
-        readByte( busnumber, 1, &rr );
-        setFBmodul( busnumber, i, temp | rr );
-        syslog_bus( busnumber, DBG_DEBUG, "feedback %i with 0x%04x", i,
-             temp | rr );
-      }
-      readByte( busnumber, 1, &rr );        /* <CR> */
+            /* HSI initialisation correct? */
+            if ( anzahl == 0 )
+            {
+                status = 0;
+            }
+            else
+            {
+                syslog_bus( btd->bus, DBG_ERROR, "error while initialising" );
+                sleep( 1 );
+                while ( readByte( btd->bus, 0, &rr ) == 0 )
+                {}
+            }
+        }
     }
-    else
-    {                                       /* only for testing */
-      setFBmodul( busnumber, 1, temp );
-      i++;
-      temp <<= 1;
-      if ( i > 16 )
-      {
-        i = 0;
-        temp = 1;
-      }
-      sleep( 2 );
+
+    while ( 1 ) {
+        pthread_testcancel();
+        if ( buses[ btd->bus ].debuglevel <= DBG_DEBUG )
+        {
+            rr = 0;
+            while ( rr != 'i' )
+            {
+                /* first check here for reset of feedbacks
+                   (do this check at the end, we will not run, until
+                   get new changes from HSI) */
+                check_reset_fb( btd->bus );
+                usleep( refresh_time );
+                readByte( btd->bus, 0, &rr );
+            }
+            readByte( btd->bus, 1, &rr );        /* number of given modules */
+            anzahl = ( int ) rr;
+            for ( zaehler1 = 0; zaehler1 < anzahl; zaehler1++ )
+            {
+                readByte( btd->bus, 1, &rr );
+                i = rr;
+                readByte( btd->bus, 1, &rr );
+                temp = rr;
+                temp <<= 8;
+                readByte( btd->bus, 1, &rr );
+                setFBmodul( btd->bus, i, temp | rr );
+                syslog_bus( btd->bus, DBG_DEBUG, "feedback %i with 0x%04x", i,
+                        temp | rr );
+            }
+            readByte( btd->bus, 1, &rr );        /* <CR> */
+        }
+        else
+        {                                       /* only for testing */
+            setFBmodul( btd->bus, 1, temp );
+            i++;
+            temp <<= 1;
+            if ( i > 16 )
+            {
+                i = 0;
+                temp = 1;
+            }
+            sleep( 2 );
+        }
     }
-  }
+
+    /*run the cleanup routine*/
+    pthread_cleanup_pop(1);
+    return NULL;
 }

@@ -48,6 +48,7 @@ email                : frank.schmischke@t-online.de
 #include "ttycygwin.h"
 
 #define __ib ((IB_DATA*)buses[busnumber].driverdata)
+#define __ibt ((IB_DATA*)buses[btd->bus].driverdata)
 
 static int init_lineIB( bus_t busnumber );
 
@@ -75,7 +76,6 @@ int readConfig_IB( xmlDocPtr doc, xmlNodePtr node, bus_t busnumber )
 
   buses[ busnumber ].type = SERVER_IB;
   buses[ busnumber ].init_func = &init_bus_IB;
-  buses[ busnumber ].term_func = &term_bus_IB;
   buses[ busnumber ].thr_func = &thr_sendrec_IB;
   buses[ busnumber ].init_gl_func = &init_gl_IB;
   buses[ busnumber ].init_ga_func = &init_ga_IB;
@@ -250,7 +250,7 @@ int init_bus_IB( bus_t busnumber )
       status = init_lineIB( busnumber );
   }
   else
-    buses[ busnumber ].device.file.fd = 9999;
+    buses[ busnumber ].device.file.fd = -1;
   if ( status == 0 )
     __ib->working_IB = 1;
 
@@ -263,107 +263,121 @@ int init_bus_IB( bus_t busnumber )
   return status;
 }
 
-int term_bus_IB( bus_t busnumber )
+/*thread cleanup routine for this bus*/
+static void end_bus_thread(bus_thread_t *btd)
 {
-  if ( buses[ busnumber ].type != SERVER_IB )
-    return 1;
-
-  __ib->working_IB = 0;
-
-  close_comport( busnumber );
-  free(buses[busnumber].driverdata);
-  return 0;
+    syslog_bus(btd->bus, DBG_INFO, "Intellibox bus terminated.");
+    ((IB_DATA*)buses[btd->bus].driverdata)->working_IB = 0;
+    close_comport(btd->bus);
+    free(buses[btd->bus].driverdata);
+    free(btd);
 }
 
 void *thr_sendrec_IB( void *v )
 {
-  unsigned char byte2send;
-  int status;
-  unsigned char rr;
-  bus_t busnumber;
-  int zaehler1, fb_zaehler1, fb_zaehler2;
+    unsigned char byte2send;
+    int status;
+    unsigned char rr;
+    int zaehler1, fb_zaehler1, fb_zaehler2;
+    int last_cancel_state, last_cancel_type;
 
-  busnumber = ( bus_t ) v;
-  syslog_bus( busnumber, DBG_INFO, "thr_sendrec_IB is startet as bus %i",
-       busnumber );
+    bus_thread_t* btd = (bus_thread_t*) malloc(sizeof(bus_thread_t));
+    if (btd == NULL)
+        pthread_exit((void*) 1);
+    btd->bus =  (bus_t) v;
+    btd->fd = -1;
 
-  /* initialize tga-structure */
-  for ( zaehler1 = 0; zaehler1 < 50; zaehler1++ )
-    __ib->tga[ zaehler1 ].id = 0;
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &last_cancel_type);
 
-  fb_zaehler1 = 0;
-  fb_zaehler2 = 1;
-  byte2send = XSensOff;
-  writeByte( busnumber, byte2send, 0 );
-  status = readByte( busnumber, 1, &rr );
-  while ( 1 )
-  {
-    if (buses[busnumber].power_changed == 1)
-    {
-      if ( __ib->emergency_on_ib == 1 )
-      {
-        syslog_bus( busnumber, DBG_INFO,
-             "send power off to IB off while emergency-stop" );
-        __ib->emergency_on_ib = 2;
-        byte2send = 0xA6;
-        writeByte( busnumber, byte2send, __ib->pause_between_cmd );
-        status = readByte( busnumber, 1, &rr );
-        while ( status == -1 )
-        {
-          usleep( 100000 );
-          status = readByte( busnumber, 1, &rr );
-        }
-        /* sleep(2); */
-      }
-      else
-      {
-        if ( ( __ib->emergency_on_ib == 2 )
-             && ( buses[ busnumber ].power_state == 0 ) )
-        {
-          check_status_IB( busnumber );
-          usleep( 50000 );
-          continue;
-        }
-        char msg[ 110 ];
-        byte2send = buses[ busnumber ].power_state ? 0xA7 : 0xA6;
-        writeByte( busnumber, byte2send, __ib->pause_between_cmd );
-        status = readByte_IB( busnumber, 1, &rr );
-        while ( status == -1 )
-        {
-          usleep( 100000 );
-          status = readByte_IB( busnumber, 1, &rr );
-        }
-        if ( rr == 0x00 )    /* war alles OK? */
-        {
-          buses[ busnumber ].power_changed = 0;
-        }
-        if ( rr == 0x06 )    /* power on not possible - overheating */
-        {
-          buses[ busnumber ].power_changed = 0;
-          buses[ busnumber ].power_state = 0;
-        }
-        if ( buses[ busnumber ].power_state == 1 )
-          __ib->emergency_on_ib = 0;
-        infoPower( busnumber, msg );
-        queueInfoMessage( msg );
-      }
-    }
+    /*register cleanup routine*/
+    pthread_cleanup_push((void *) end_bus_thread, (void *) btd);
 
-    if ( buses[ busnumber ].power_state == 0 )
-    {
-      check_status_IB( busnumber );
-      usleep( 50000 );
-      continue;
-    }
+    syslog_bus(btd->bus, DBG_INFO, "Intellibox bus startet (device = %s).",
+        buses[btd->bus].device.file.path);
 
-    send_command_gl_IB( busnumber );
-    send_command_ga_IB( busnumber );
-    check_status_IB( busnumber );
-    send_command_sm_IB( busnumber );
-    check_reset_fb( busnumber );
-    buses[ busnumber ].watchdog = 1;
-    usleep( 50000 );
-  }                           /* End WHILE(1) */
+    /* initialize tga-structure */
+    for ( zaehler1 = 0; zaehler1 < 50; zaehler1++ )
+        __ibt->tga[ zaehler1 ].id = 0;
+
+    fb_zaehler1 = 0;
+    fb_zaehler2 = 1;
+    byte2send = XSensOff;
+    writeByte( btd->bus, byte2send, 0 );
+    status = readByte( btd->bus, 1, &rr );
+
+    while (1) {
+        pthread_testcancel();
+        if (buses[btd->bus].power_changed == 1)
+        {
+            if ( __ibt->emergency_on_ib == 1 )
+            {
+                syslog_bus( btd->bus, DBG_INFO,
+                        "send power off to IB off while emergency-stop" );
+                __ibt->emergency_on_ib = 2;
+                byte2send = 0xA6;
+                writeByte( btd->bus, byte2send, __ibt->pause_between_cmd );
+                status = readByte( btd->bus, 1, &rr );
+                while ( status == -1 )
+                {
+                    usleep( 100000 );
+                    status = readByte( btd->bus, 1, &rr );
+                }
+                /* sleep(2); */
+            }
+            else
+            {
+                if ( ( __ibt->emergency_on_ib == 2 )
+                        && ( buses[ btd->bus ].power_state == 0 ) )
+                {
+                    check_status_IB( btd->bus );
+                    usleep( 50000 );
+                    continue;
+                }
+                char msg[ 110 ];
+                byte2send = buses[ btd->bus ].power_state ? 0xA7 : 0xA6;
+                writeByte(btd->bus, byte2send, __ibt->pause_between_cmd );
+                status = readByte_IB( btd->bus, 1, &rr );
+                while ( status == -1 )
+                {
+                    usleep( 100000 );
+                    status = readByte_IB( btd->bus, 1, &rr );
+                }
+                if ( rr == 0x00 )    /* war alles OK? */
+                {
+                    buses[ btd->bus ].power_changed = 0;
+                }
+                if ( rr == 0x06 )    /* power on not possible - overheating */
+                {
+                    buses[ btd->bus ].power_changed = 0;
+                    buses[ btd->bus ].power_state = 0;
+                }
+                if ( buses[ btd->bus ].power_state == 1 )
+                    __ibt->emergency_on_ib = 0;
+                infoPower( btd->bus, msg );
+                queueInfoMessage( msg );
+            }
+        }
+
+        if ( buses[ btd->bus ].power_state == 0 )
+        {
+            check_status_IB( btd->bus );
+            usleep( 50000 );
+            continue;
+        }
+
+        send_command_gl_IB( btd->bus );
+        send_command_ga_IB( btd->bus );
+        check_status_IB( btd->bus );
+        send_command_sm_IB( btd->bus );
+        check_reset_fb( btd->bus );
+        buses[ btd->bus ].watchdog = 1;
+        usleep( 50000 );
+    }                           /* End WHILE(1) */
+
+    /*run the cleanup routine*/
+    pthread_cleanup_pop(1);
+    return NULL;
 }
 
 void send_command_ga_IB( bus_t busnumber )

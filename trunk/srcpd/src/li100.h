@@ -44,7 +44,6 @@ typedef struct _LI100_DATA
 
 int readConfig_LI100_USB(xmlDocPtr doc, xmlNodePtr node,  bus_t busnumber);
 int init_bus_LI100_USB( bus_t busnumber );
-int term_bus_LI100_USB( bus_t busnumber );
 void send_command_ga_LI100_USB( bus_t busnumber );
 void send_command_gl_LI100_USB( bus_t busnumber );
 void send_command_sm_LI100_USB( bus_t busnumber );
@@ -54,7 +53,6 @@ void get_status_sm_LI100_USB( bus_t busnumber );
 
 int readConfig_LI100_SERIAL(xmlDocPtr doc, xmlNodePtr node,  bus_t busnumber);
 int init_bus_LI100_SERIAL( bus_t busnumber );
-int term_bus_LI100_SERIAL( bus_t busnumber );
 void send_command_ga_LI100_SERIAL( bus_t busnumber );
 void send_command_gl_LI100_SERIAL( bus_t busnumber );
 void send_command_sm_LI100_SERIAL( bus_t busnumber );
