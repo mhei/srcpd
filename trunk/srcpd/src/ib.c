@@ -196,7 +196,6 @@ int init_gl_IB( gl_state_t *gl )
 
 /**
  * initGA: modifies the ga data used to initialize the device
-
  */
 int init_ga_IB( ga_state_t *ga )
 {
@@ -1176,18 +1175,18 @@ static int init_lineIB( bus_t busnumber )
   struct termios interface;
 
   char *name = buses[busnumber].device.file.path;
-  syslog_bus( busnumber, DBG_INFO, "Beginning to detect IB on serial line: %s\n",
-       name );
-  /* printf("Beginning to detect IB on serial line: %s\n", name); */
+  syslog_bus( busnumber, DBG_INFO,
+          "Beginning to detect IB on serial line: %s\n", name );
 
-  syslog_bus( busnumber, DBG_INFO, "Opening serial line %s for 2400 baud\n",
-       name );
+  syslog_bus( busnumber, DBG_INFO,
+          "Opening serial line %s for 2400 baud\n", name );
   fd = open( name, O_RDWR );
   syslog_bus( busnumber, DBG_DEBUG, "fd = %d", fd );
   if ( fd == -1 )
   {
-    syslog_bus(busnumber, DBG_ERROR, "Open serial line failed: %s (errno = %d)\n",
-      strerror(errno), errno);
+    syslog_bus(busnumber, DBG_ERROR,
+            "Open serial line failed: %s (errno = %d)\n",
+            strerror(errno), errno);
     return 1;
   }
   buses[ busnumber ].device.file.fd = fd;
@@ -1212,7 +1211,6 @@ static int init_lineIB( bus_t busnumber )
   status = 0;
 
   syslog_bus( busnumber, DBG_INFO, "Sending BREAK... " );
-  /* printf("Sending BREAK... "); */
 
   status = sendBreak( fd, busnumber );
   close( fd );
@@ -1233,11 +1231,11 @@ static int init_lineIB( bus_t busnumber )
   buses[ busnumber ].device.file.fd = fd;
   if ( fd < 0 )
   {
-    syslog_bus(busnumber, DBG_ERROR, "Open serial line failed: %s (errno = %d)\n",
-      strerror(errno), errno);
+      syslog_bus(busnumber, DBG_ERROR,
+              "Open serial line failed: %s (errno = %d)\n",
+              strerror(errno), errno);
     return ( -1 );
   }
-  /* printf("open_comport() successful; fd = %d\n", fd ); */
 
   baud = checkBaudrate( fd, busnumber );
   if ( ( baud == B0 ) || ( baud > B38400 ) )

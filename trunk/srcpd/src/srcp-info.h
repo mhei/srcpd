@@ -20,7 +20,7 @@
 
 #include "clientservice.h"
 
-int doInfoClient(client_thread_t* ctd);
+int doInfoClient(session_node_t*);
 int startup_INFO(void);
 int queueInfoMessage(char *);
 void unlock_info_queue_mutex();

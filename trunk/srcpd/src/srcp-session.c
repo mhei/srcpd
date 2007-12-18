@@ -31,13 +31,6 @@
  *   http://en.wikipedia.org/wiki/Linked_list#Language_support
  */
 
-/*session list node to store session data*/
-typedef struct sn {
-    sessionid_t session;
-    pthread_t thread;
-    struct sn *next;
-} session_node_t;
-
 /*session counter, session list root and mutex to lock access*/
 static sessionid_t lastsession = 0;
 static unsigned int runningsessions = 0;
@@ -51,17 +44,18 @@ static int cb_data[MAX_BUSES];
 
 
 
-/*add new session data node to list with session id and thread id*/
-static session_node_t *list_add(session_node_t **p, sessionid_t sid,
-        pthread_t tid)
+/*add new session data node to list with socket*/
+static session_node_t *list_add(session_node_t **p, int s)
 {
     session_node_t *n = (session_node_t *)malloc(sizeof(session_node_t));
     if (n == NULL)
         return n;
     n->next = *p;
     *p = n;
-    n->session = sid;
-    n->thread = tid;
+    n->session = 0;
+    n->socket = s;
+    n->thread = 0;
+    n->mode = 0;
     return n;
 }
 
@@ -76,7 +70,7 @@ static void list_remove(session_node_t **p)
 }
 
 /* search sessionid in list, return pointer to node */
-static session_node_t **list_search_session(session_node_t **n,
+static session_node_t** list_search_session(session_node_t **n,
         sessionid_t sid) {
     while (*n != NULL) {
         if ((*n)->session == sid) {
@@ -99,6 +93,21 @@ static pthread_t list_search_thread_by_sessionid(session_node_t **n,
     return 0;
 }
 
+/* search valid info sessionid, return 1 if found, 0 if not found */
+static int list_search_info_sessionid(session_node_t **n,
+        sessionid_t sid) {
+    int returnvalue = 0;
+
+    while (*n != NULL) {
+        if ((*n)->session == sid && (*n)->mode == smInfo) {
+            returnvalue = 1;
+            break;
+        }
+        n = &(*n)->next;
+    }
+    return returnvalue;
+}
+
 /**
  * First initialisation after program start up
  */
@@ -112,35 +121,60 @@ int startup_SESSION(void)
     return 0;
 }
 
-/* Create new session data node and return the new sessionid.
- * On failure function returns 0. */
-sessionid_t session_create(pthread_t thread)
+/*create a node with a anonymous session*/
+session_node_t* create_anonymous_session(int s)
 {
     session_node_t* node = NULL;
-    sessionid_t session = 0;
 
     pthread_mutex_lock(&session_list_mutex);
-    lastsession++;
-    node = list_add(&session_list, lastsession, thread);
+    node = list_add(&session_list, s);
     if (NULL != node) {
-        session = lastsession;
         runningsessions++;
     }
-    else
-        lastsession--;
     pthread_mutex_unlock(&session_list_mutex);
-    return session;
+    return node;
 }
 
-/* Called in cleanup routine of client/session thread after
- * session_stop() to remove a no longer valid session node */
-void session_destroy(sessionid_t session)
+/*destroy a node with a anonymous session*/
+void destroy_anonymous_session(session_node_t* n)
+{
+    if (n == NULL)
+        return;
+
+    pthread_mutex_lock(&session_list_mutex);
+    list_remove(&n);
+    runningsessions--;
+    pthread_cond_signal(&session_run_cond);
+    pthread_mutex_unlock(&session_list_mutex);
+}
+
+/*destroy a fully funtionalized session*/
+void destroy_session(sessionid_t session)
 {
     pthread_mutex_lock(&session_list_mutex);
     list_remove(list_search_session(&session_list, session));
     runningsessions--;
     pthread_cond_signal(&session_run_cond);
     pthread_mutex_unlock(&session_list_mutex);
+}
+
+/*register a new session id*/
+void register_session(session_node_t* n)
+{
+    pthread_mutex_lock(&session_list_mutex);
+    lastsession++;
+    n->session = lastsession;
+    pthread_mutex_unlock(&session_list_mutex);
+}
+
+/* search for valid session id */
+int is_valid_info_session(sessionid_t session)
+{
+    int isvalid;
+    pthread_mutex_lock(&session_list_mutex);
+    isvalid = list_search_info_sessionid(&session_list, session);
+    pthread_mutex_unlock(&session_list_mutex);
+    return isvalid;
 }
 
 /* terminate a session by cancellation of client thread */
@@ -174,21 +208,23 @@ void terminate_all_sessions()
     while (runningsessions != 0)
         pthread_cond_wait(&session_run_cond, &session_list_mutex);
     pthread_mutex_unlock(&session_list_mutex);
+    syslog_bus(0, DBG_INFO, "Session thread termination completed.");
 }
 
 /*this function is used by clientservice starting the session*/
-int start_session(sessionid_t sessionid, int mode)
+int start_session(session_node_t* sn)
 {
     char msg[1000];
     struct timeval akt_time;
     gettimeofday(&akt_time, NULL);
 
     sprintf(msg, "%lu.%.3lu 101 INFO 0 SESSION %lu %s\n", akt_time.tv_sec,
-            akt_time.tv_usec / 1000, sessionid,
-            (mode == 1 ? "COMMAND" : "INFO"));
+            akt_time.tv_usec / 1000, sn->session,
+            (sn->mode == 1 ? "COMMAND" : "INFO"));
     queueInfoMessage(msg);
 
-    syslog_session(sessionid, DBG_INFO, "Session started with mode %d", mode);
+    syslog_session(sn->session, DBG_INFO,
+            "Session started (mode = %d).", sn->mode);
     return SRCP_OK;
 }
 

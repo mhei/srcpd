@@ -22,14 +22,31 @@
 
 #include "config-srcpd.h"
 
+/*session modes, should be enum type*/
+#define smCommand 1
+#define smInfo    2
+
+
+/*session list node to store session data*/
+typedef struct sn {
+    sessionid_t session;
+    pthread_t thread;
+    int socket;
+    int mode;
+    struct sn *next;
+} session_node_t;
+
 
 int startup_SESSION(void);
 
-sessionid_t session_create(pthread_t thread);
-void session_destroy(sessionid_t session);
+session_node_t* create_anonymous_session(int);
+void register_session(session_node_t*);
+void destroy_anonymous_session(session_node_t*);
+void destroy_session(sessionid_t);
 void terminate_all_sessions();
+int is_valid_info_session(sessionid_t);
 
-int start_session(sessionid_t, int);
+int start_session(session_node_t*);
 int stop_session(sessionid_t);
 int describeSESSION(bus_t, sessionid_t, char *);
 int termSESSION(bus_t, sessionid_t, sessionid_t, char *);

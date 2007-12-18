@@ -41,9 +41,8 @@ static int handle_setcheck(sessionid_t sessionid, bus_t bus, char *device,
         func = 0;
         /* We could provide a maximum of 32 on/off functions,
            but for now 12+1 will be good enough */
-        anzparms =
-            sscanf(parameter,
-                   "%ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld",
+        anzparms = sscanf(parameter, "%ld %ld %ld %ld %ld %ld %ld %ld "
+                "%ld %ld %ld %ld %ld %ld %ld %ld %ld",
                    &laddr, &direction, &speed, &maxspeed, &f[0], &f[1],
                    &f[2], &f[3], &f[4], &f[5], &f[6], &f[7], &f[8], &f[9],
                    &f[10], &f[11], &f[12]);
@@ -106,13 +105,20 @@ static int handle_setcheck(sessionid_t sessionid, bus_t bus, char *device,
         }
     }
 
+    /*SET 0 GM <send_to_id> <reply_to_id> <message_type> <message>*/
     else if (bus_has_devicegroup(bus, DG_GM)
         && strncasecmp(device, "GM", 2) == 0) {
-	
-        char  msg[MAXSRCPLINELEN];
+        sessionid_t sendto, replyto;
+        int result;
+        char msg[MAXSRCPLINELEN];
+
         memset(msg, 0, sizeof(msg));
-        sscanf(parameter, "%990c",  msg);
-        rc = setGM(bus, msg);
+        /*TODO: scan also message type*/
+        result = sscanf(parameter, "%lu %lu %990c", &sendto, &replyto, msg);
+        if (result < 3)
+            rc = SRCP_LISTTOOSHORT;
+        else
+            rc = setGM(sendto, replyto, msg);
     }
 
     else if (bus_has_devicegroup(bus, DG_SM)
@@ -122,7 +128,9 @@ static int handle_setcheck(sessionid_t sessionid, bus_t bus, char *device,
         char *ctype;
 
         ctype = malloc(MAXSRCPLINELEN);
-        /* TODO: check malloc returns NULL*/
+        if (ctype == NULL) {
+            /* TODO: proper action if malloc returns NULL*/
+        }
         sscanf(parameter, "%ld %s %ld %ld %ld", &addr, ctype, &value1,
                &value2, &value3);
         type = -1;
@@ -134,6 +142,7 @@ static int handle_setcheck(sessionid_t sessionid, bus_t bus, char *device,
             type = CV_BIT;
         else if (strcasecmp(ctype, "PAGE") == 0)
             type = PAGE;
+
         free(ctype);
         if (type == -1)
             rc = SRCP_WRONGVALUE;
@@ -290,7 +299,9 @@ int handleGET(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
         char *ctype;
 
         ctype = malloc(MAXSRCPLINELEN);
-        /* TODO: check malloc returns NULL*/
+        if (ctype == NULL) {
+            /* TODO: proper action if malloc returns NULL*/
+        }
         sscanf(parameter, "%ld %s %ld %ld", &addr, ctype, &value1,
                &value2);
         type = CV;
@@ -440,7 +451,7 @@ int handleWAIT(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
         nelem = sscanf(parameter, "%ld %ld %ld %ld", &d, &h, &m, &s);
         if (vtime.ratio_x != 0 && vtime.ratio_y != 0) {
             if (nelem >= 4) {
-                /* es wird nicht gerechnet, der Zeitfluss ist nicht gleichmaessig! */
+                /* no calculation, der Zeitfluss ist nicht gleichmaessig! */
                 while ((((d * 24 + h) * 60 + m) * 60 + s) >=
                        (((vtime.day * 24 + vtime.hour) * 60 +
                          vtime.min) * 60 + vtime.sec)) {
@@ -474,7 +485,7 @@ int handleVERIFY(sessionid_t sessionid, bus_t bus, char *device,
 
 /**
  * TERM
- * negative return code will terminate current session! */
+ * negative return code (rc) will terminate current session! */
 int handleTERM(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
                char *reply)
 {
@@ -639,7 +650,7 @@ int handleRESET(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
 /*
  * Command mode network thread routine
  */
-int doCmdClient(client_thread_t* ctd)
+int doCmdClient(session_node_t* sn)
 {
     char line[MAXSRCPLINELEN], reply[MAXSRCPLINELEN];
     char cbus[MAXSRCPLINELEN], command[MAXSRCPLINELEN],
@@ -648,13 +659,12 @@ int doCmdClient(client_thread_t* ctd)
     long int rc, nelem;
     struct timeval akt_time;
 
-    syslog_bus(0, DBG_INFO, "Command mode starting for session %ld",
-            ctd->session);
+    syslog_session(sn->session, DBG_INFO, "Command mode starting.");
 
     while (1) {
         pthread_testcancel();
         memset(line, 0, sizeof(line));
-        if (socket_readline(ctd->socket, line, sizeof(line) - 1) < 0) {
+        if (socket_readline(sn->socket, line, sizeof(line) - 1) < 0) {
             return -1;
         }
         memset(command, 0, sizeof(command));
@@ -670,27 +680,27 @@ int doCmdClient(client_thread_t* ctd)
             if (bus <= num_buses) {
                 rc = SRCP_UNKNOWNCOMMAND;
                 if (strncasecmp(command, "SET", 3) == 0) {
-                    rc = handleSET(ctd->session, bus, devicegroup,
+                    rc = handleSET(sn->session, bus, devicegroup,
                             parameter, reply);
                 }
                 else if (strncasecmp(command, "GET", 3) == 0) {
-                    rc = handleGET(ctd->session, bus, devicegroup,
+                    rc = handleGET(sn->session, bus, devicegroup,
                             parameter, reply);
                 }
                 else if (strncasecmp(command, "WAIT", 4) == 0) {
-                    rc = handleWAIT(ctd->session, bus, devicegroup,
+                    rc = handleWAIT(sn->session, bus, devicegroup,
                             parameter, reply);
                 }
                 else if (strncasecmp(command, "INIT", 4) == 0) {
-                    rc = handleINIT(ctd->session, bus, devicegroup,
+                    rc = handleINIT(sn->session, bus, devicegroup,
                             parameter, reply);
                 }
                 else if (strncasecmp(command, "TERM", 4) == 0) {
-                    rc = handleTERM(ctd->session, bus, devicegroup,
+                    rc = handleTERM(sn->session, bus, devicegroup,
                             parameter, reply);
                     /*special option for session termination (?)*/
                     if (rc < 0) {
-                        if (socket_writereply(ctd->socket, reply) < 0) {
+                        if (socket_writereply(sn->socket, reply) < 0) {
                             break;
                         }
                         break;
@@ -698,11 +708,11 @@ int doCmdClient(client_thread_t* ctd)
                     rc = abs(rc);
                 }
                 else if (strncasecmp(command, "VERIFY", 6) == 0) {
-                    rc = handleVERIFY(ctd->session, bus, devicegroup,
+                    rc = handleVERIFY(sn->session, bus, devicegroup,
                                       parameter, reply);
                 }
                 else if (strncasecmp(command, "RESET", 5) == 0) {
-                    rc = handleRESET(ctd->session, bus, devicegroup,
+                    rc = handleRESET(sn->session, bus, devicegroup,
                                      parameter, reply);
                 }
             }
@@ -716,13 +726,13 @@ int doCmdClient(client_thread_t* ctd)
         /* nelem < 3 */
         else {
             syslog_bus(0, DBG_DEBUG, "list too short in session %ld: %d",
-                ctd->session, nelem);
+                sn->session, nelem);
             rc = SRCP_LISTTOOSHORT;
             gettimeofday(&akt_time, NULL);
             srcp_fmt_msg(rc, reply, akt_time);
         }
 
-        if (socket_writereply(ctd->socket, reply) < 0) {
+        if (socket_writereply(sn->socket, reply) < 0) {
             break;
         }
     }

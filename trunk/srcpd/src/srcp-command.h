@@ -11,6 +11,6 @@
 
 #include "clientservice.h"
 
-int doCmdClient(client_thread_t* ctd);
+int doCmdClient(session_node_t*);
 
 #endif
