@@ -8,6 +8,6 @@
 #ifndef _SRCP_GM_H
 #define _SRCP_GM_H
 
-int setGM( bus_t bus, char *msg);
+int setGM(sessionid_t, sessionid_t, char *);
 
 #endif

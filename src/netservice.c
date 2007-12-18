@@ -238,18 +238,24 @@ void *thr_handlePort(void* v)
             continue;
         }
 
+        /* create an anonymous session with a valid socket */
+        session_node_t* asn = create_anonymous_session(newsock);
+        if (asn == NULL) {
+            close(newsock);
+            syslog_bus(0, DBG_ERROR, "Session create failed!");
+            continue;
+        }
+
         /* hand over client service to "thr_doClient()" from clientservice.c */
-        result = pthread_create(&ttid, NULL, thr_doClient,
-                (void *) (long int) newsock);
+        result = pthread_create(&ttid, NULL, thr_doClient, asn);
         if (result != 0) {
             syslog_bus(0, DBG_ERROR, "Create thread for network client "
                     "failed: %s (errno = %d). Terminating...\n",
                     strerror(result), result);
             close(newsock);
-            /*destroy_annonymous_session(asn);*/
-            exit(1);
+            destroy_anonymous_session(asn);
+            continue;
         }
-        pthread_detach(ttid);
     }
 
     /*run the cleanup routine*/
