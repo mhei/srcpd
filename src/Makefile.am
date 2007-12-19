@@ -87,5 +87,5 @@ INCLUDES = $(all_includes) $(XML_CPPFLAGS)
 DEFS = -D_REENTRANT -DSYSCONFDIR=\"$(sysconfdir)\" @DEFS@
 
 # the library search path.
-srcpd_LDFLAGS = $(all_libraries) `./systemtest` $(XML_LIBS)
+srcpd_LDFLAGS = $(all_libraries) `./systemtest`
 

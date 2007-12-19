@@ -96,9 +96,9 @@ dnl Checks for library functions.
 AC_FUNC_MEMCMP
 AC_CHECK_FUNCS(gettimeofday socket)
 
-AM_PATH_XML2([2.4.0], [HAVE_XML2=yes], [exit 1])
-CFLAGS="${CFLAGS} ${XML_CFLAGS}"
-LIBS="${LIBS} ${XML_LIBS}"
+AM_PATH_XML2([2.4.0],
+             [CFLAGS="$XML_CFLAGS $CFLAGS" LIBS="$XML_LIBS $LIBS"],
+             AC_MSG_ERROR(no matching library found))
 
 dnl Checks for host dependend library functions.
 case $host in
