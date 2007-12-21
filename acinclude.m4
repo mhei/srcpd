@@ -1,13 +1,15 @@
 dnl Configure paths for LIBXML2
+dnl Mike Hommey 2004-06-19
+dnl use CPPFLAGS instead of CFLAGS
 dnl Toshio Kuratomi 2001-04-21
 dnl Adapted from:
 dnl Configure paths for GLIB
 dnl Owen Taylor     97-11-3
 
 dnl AM_PATH_XML2([MINIMUM-VERSION, [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]]])
-dnl Test for XML, and define XML_CFLAGS and XML_LIBS
+dnl Test for XML, and define XML_CPPFLAGS and XML_LIBS
 dnl
-AC_DEFUN([AM_PATH_XML2],[
+AC_DEFUN([AM_PATH_XML2],[ 
 AC_ARG_WITH(xml-prefix,
             [  --with-xml-prefix=PFX   Prefix where libxml is installed (optional)],
             xml_config_prefix="$withval", xml_config_prefix="")
@@ -19,7 +21,7 @@ AC_ARG_ENABLE(xmltest,
               enable_xmltest=yes)
 
   if test x$xml_config_exec_prefix != x ; then
-     xml_config_args="$xml_config_args --exec-prefix=$xml_config_exec_prefix"
+     xml_config_args="$xml_config_args"
      if test x${XML2_CONFIG+set} != xset ; then
         XML2_CONFIG=$xml_config_exec_prefix/bin/xml2-config
      fi
@@ -38,7 +40,7 @@ AC_ARG_ENABLE(xmltest,
   if test "$XML2_CONFIG" = "no" ; then
     no_xml=yes
   else
-    XML_CFLAGS=`$XML2_CONFIG $xml_config_args --cflags`
+    XML_CPPFLAGS=`$XML2_CONFIG $xml_config_args --cflags`
     XML_LIBS=`$XML2_CONFIG $xml_config_args --libs`
     xml_config_major_version=`$XML2_CONFIG $xml_config_args --version | \
            sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
@@ -47,9 +49,9 @@ AC_ARG_ENABLE(xmltest,
     xml_config_micro_version=`$XML2_CONFIG $xml_config_args --version | \
            sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\3/'`
     if test "x$enable_xmltest" = "xyes" ; then
-      ac_save_CFLAGS="$CFLAGS"
+      ac_save_CPPFLAGS="$CPPFLAGS"
       ac_save_LIBS="$LIBS"
-      CFLAGS="$CFLAGS $XML_CFLAGS"
+      CPPFLAGS="$CPPFLAGS $XML_CPPFLAGS"
       LIBS="$XML_LIBS $LIBS"
 dnl
 dnl Now check if the installed libxml is sufficiently new.
@@ -59,9 +61,10 @@ dnl
       AC_TRY_RUN([
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <libxml/xmlversion.h>
 
-int
+int 
 main()
 {
   int xml_major_version, xml_minor_version, xml_micro_version;
@@ -97,9 +100,9 @@ main()
       printf("*** xml2-config (version %d.%d.%d)\n",
          $xml_config_major_version, $xml_config_minor_version, $xml_config_micro_version);
       return 1;
-    }
+    } 
 /* Compare the headers to the library to make sure we match */
-  /* Less than ideal -- doesn't provide us with return value feedback,
+  /* Less than ideal -- doesn't provide us with return value feedback, 
    * only exits if there's a serious mismatch between header and library.
    */
     LIBXML_TEST_VERSION;
@@ -131,14 +134,14 @@ main()
   return 1;
 }
 ],, no_xml=yes,[echo $ac_n "cross compiling; assumed OK... $ac_c"])
-       CFLAGS="$ac_save_CFLAGS"
+       CPPFLAGS="$ac_save_CPPFLAGS"
        LIBS="$ac_save_LIBS"
      fi
   fi
 
   if test "x$no_xml" = x ; then
      AC_MSG_RESULT(yes (version $xml_config_major_version.$xml_config_minor_version.$xml_config_micro_version))
-     ifelse([$2], , :, [$2])
+     ifelse([$2], , :, [$2])     
   else
      AC_MSG_RESULT(no)
      if test "$XML2_CONFIG" = "no" ; then
@@ -151,7 +154,7 @@ main()
         :
        else
           echo "*** Could not run libxml test program, checking why..."
-          CFLAGS="$CFLAGS $XML_CFLAGS"
+          CPPFLAGS="$CPPFLAGS $XML_CPPFLAGS"
           LIBS="$LIBS $XML_LIBS"
           AC_TRY_LINK([
 #include <libxml/xmlversion.h>
@@ -170,16 +173,16 @@ main()
           echo "*** exact error that occured. This usually means LIBXML was incorrectly installed"
           echo "*** or that you have moved LIBXML since it was installed. In the latter case, you"
           echo "*** may want to edit the xml2-config script: $XML2_CONFIG" ])
-          CFLAGS="$ac_save_CFLAGS"
+          CPPFLAGS="$ac_save_CPPFLAGS"
           LIBS="$ac_save_LIBS"
        fi
      fi
 
-     XML_CFLAGS=""
+     XML_CPPFLAGS=""
      XML_LIBS=""
      ifelse([$3], , :, [$3])
   fi
-  AC_SUBST(XML_CFLAGS)
+  AC_SUBST(XML_CPPFLAGS)
   AC_SUBST(XML_LIBS)
   rm -f conf.xmltest
 ])
