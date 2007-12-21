@@ -79,11 +79,6 @@ noinst_HEADERS = \
 	ttycygwin.h \
 	zimo.h
 
-# set the include path found by configure
-INCLUDES = $(all_includes) $(XML_CPPFLAGS)
 
 DEFS = -D_REENTRANT -DSYSCONFDIR=\"$(sysconfdir)\" @DEFS@
-
-# the library search path.
-srcpd_LDFLAGS = $(all_libraries)
 

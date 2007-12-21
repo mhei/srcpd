@@ -1,3 +1,11 @@
+2007-12-21 Guido Scholz <guido.scholz@bayernline.de>
+	* configure.in, acinclude.m4 src/Makefile.am: Updated libxml2
+	detection macro, now using CPPFLAGS.
+
+2007-12-19 Guido Scholz <guido.scholz@bayernline.de>
+	* configure.in, acinclude.m4 src/Makefile.am, systemtest: Threads
+	library detection macro added, obsolete systemtest file removed.
+
 2007-11-24 Matthias Trute <mtrute@users.sourceforge.net>
 	* imported most of the historical code from cvs to svn repository.
 

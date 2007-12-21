@@ -97,7 +97,7 @@ AC_FUNC_MEMCMP
 AC_CHECK_FUNCS(gettimeofday socket)
 
 AM_PATH_XML2([2.4.0],
-             [CFLAGS="$XML_CFLAGS $CFLAGS" LIBS="$XML_LIBS $LIBS"],
+             [CPPFLAGS="$XML_CPPFLAGS $CPPFLAGS" LIBS="$XML_LIBS $LIBS"],
              AC_MSG_ERROR(no matching library found))
 
 ACX_PTHREAD([LIBS="$PTHREAD_LIBS $LIBS"
