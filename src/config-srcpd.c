@@ -16,8 +16,6 @@
 #include <libxml/xmlmemory.h>
 #include <netdb.h>
 
-
-#include "stdincludes.h"
 #include "config-srcpd.h"
 #include "srcp-fb.h"
 #include "srcp-power.h"
@@ -69,6 +67,7 @@ int bus_has_devicegroup(bus_t bus, int dg)
 
 static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
 {
+    int result;
     bus_t current_bus = busnumber;
 
     if (xmlStrcmp(node->name, BAD_CAST "bus"))
@@ -110,8 +109,20 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
     strcpy(buses[current_bus].device.file.path, "/dev/null");
 
     /* Definition of thread synchronisation  */
-    pthread_mutex_init(&buses[current_bus].transmit_mutex, NULL);
-    pthread_cond_init(&buses[current_bus].transmit_cond, NULL);
+    /*TODO: this should be (privately) moved to each bus*/
+    result = pthread_mutex_init(&buses[current_bus].transmit_mutex, NULL);
+    if (result != 0) {
+        syslog_bus(current_bus, DBG_ERROR,
+                "pthread_mutex_init() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
+    result = pthread_cond_init(&buses[current_bus].transmit_cond, NULL);
+    if (result != 0) {
+        syslog_bus(current_bus, DBG_ERROR,
+                "pthread_cond_init() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
 
     xmlNodePtr child = node->children;
     xmlChar *txt = NULL;
@@ -331,8 +342,9 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
         }
 
         else
-            syslog_bus(0, DBG_ERROR,"WARNING, \"%s\" (bus %ld) is an unknown tag!\n",
-                   child->name, current_bus);
+            syslog_bus(0, DBG_ERROR,
+                    "WARNING, \"%s\" (bus %ld) is an unknown tag!\n",
+                    child->name, current_bus);
 
         child = child->next;
     }
@@ -401,14 +413,29 @@ int readConfig(char *filename)
  */
 void suspend_bus_thread(bus_t busnumber)
 {
-    syslog_bus(0, DBG_DEBUG, "Thread on bus %d is going to stop.", busnumber);
+    int result;
+
+    syslog_bus(busnumber, DBG_DEBUG, "Bus thread is going to stop.");
+
     /* Lock thread till new data to process arrives */
-    pthread_mutex_lock(&buses[busnumber].transmit_mutex);
+    result = pthread_mutex_lock(&buses[busnumber].transmit_mutex);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "pthread_mutex_lock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
     pthread_cond_wait(&buses[busnumber].transmit_cond,
             &buses[busnumber].transmit_mutex);
-     /* mutex released.       */
-    pthread_mutex_unlock(&buses[busnumber].transmit_mutex);
-    syslog_bus(0, DBG_DEBUG, "Thread on bus %d is working again.", busnumber);
+    
+    /* mutex released.       */
+    result = pthread_mutex_unlock(&buses[busnumber].transmit_mutex);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "pthread_mutex_unlock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+    syslog_bus(busnumber, DBG_DEBUG, "Bus thread is working again.");
 }
 
 /**
@@ -418,10 +445,23 @@ void suspend_bus_thread(bus_t busnumber)
  */
 void resume_bus_thread(bus_t busnumber)
 {
+    int result;
     /* Let thread process a feedback */
-    pthread_mutex_lock(&buses[busnumber].transmit_mutex);
+    result = pthread_mutex_lock(&buses[busnumber].transmit_mutex);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "pthread_mutex_lock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
     pthread_cond_signal(&buses[busnumber].transmit_cond);
-    pthread_mutex_unlock(&buses[busnumber].transmit_mutex);
+    
+    result = pthread_mutex_unlock(&buses[busnumber].transmit_mutex);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "pthread_mutex_lock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
     syslog_bus(0, DBG_DEBUG, "Thread on bus %d is woken up", busnumber);
 }
 
@@ -460,7 +500,7 @@ void create_all_bus_threads()
                    syslog(LOG_INFO, "Create interface thread for bus %ld "
                            "failed: %s (errno = %d)\n", i,
                            strerror(result), result);
-                    exit(1);
+                   exit(1);
                }
                buses[i].tid = ttid_tid;
         }

@@ -27,7 +27,8 @@ void restore_comport(bus_t bus);
 void save_comport(bus_t bus);
 void close_comport(bus_t bus);
 
-int socket_readline(int Socket, char *line, int len);
-int socket_writereply(int Socket, const char *line);
+ssize_t socket_readline(int Socket, char *line, int len);
+ssize_t writen(int fd, const void *vptr, size_t n);
+ssize_t writen_amlb(int fd, const char *line);
 
 #endif

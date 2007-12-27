@@ -5,7 +5,9 @@
  *
  */
 
-#include "stdincludes.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "config-srcpd.h"
 #include "srcp-error.h"

@@ -21,6 +21,7 @@ srcpd_SOURCES = \
 	m605x.c \
 	netservice.c \
 	portio.c \
+	queue.c \
 	selectrix.c \
 	srcp-command.c \
 	srcpd.c \
@@ -59,6 +60,7 @@ noinst_HEADERS = \
 	m605x.h \
 	netservice.h \
        	portio.h \
+       	queue.h \
 	selectrix.h \
 	srcp-command.h \
 	srcp-descr.h \
@@ -74,7 +76,6 @@ noinst_HEADERS = \
 	srcp-session.h \
 	srcp-sm.h \
 	srcp-time.h \
-	stdincludes.h \
 	syslogmessage.h \
 	ttycygwin.h \
 	zimo.h

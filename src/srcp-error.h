@@ -9,7 +9,7 @@
 #ifndef _SRCP_ERROR_H
 #define _SRCP_ERROR_H
 
-#include "stdincludes.h"
+#include <sys/time.h>
 
 
 /* Handshake */

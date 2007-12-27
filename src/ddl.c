@@ -1,24 +1,8 @@
 /* $Id$ */
 
-/* DDL:  Bus driver connected with a booster only without any special hardware.
- *
+/*
+ * DDL:  Bus driver connected with a booster only without any special hardware.
  */
-
-#include "stdincludes.h"
-#include "config-srcpd.h"
-
-#include "io.h"
-#include "ddl.h"
-#include "srcp-fb.h"
-#include "srcp-ga.h"
-#include "srcp-gl.h"
-#include "srcp-power.h"
-#include "srcp-server.h"
-#include "srcp-info.h"
-#include "srcp-error.h"
-#include <sys/utsname.h>
-
-#define __DDL ((DDL_DATA*)buses[busnumber].driverdata)
 
 /* +----------------------------------------------------------------------+ */
 /* | DDL - Digital Direct for Linux                                       | */
@@ -43,14 +27,28 @@
 /*    to control electric model railroads                      */
 /***************************************************************/
 
+#include <sys/utsname.h>
+
 #include "config-srcpd.h"
+#include "ddl.h"
 #include "ddl_maerklin.h"
 #include "ddl_nmra.h"
+#include "io.h"
+#include "srcp-error.h"
+#include "srcp-fb.h"
+#include "srcp-ga.h"
+#include "srcp-gl.h"
+#include "srcp-info.h"
+#include "srcp-power.h"
+#include "srcp-server.h"
 #include "syslogmessage.h"
+
+#define __DDL ((DDL_DATA*)buses[busnumber].driverdata)
 
 #ifdef __CYGWIN__
 #define TIOCOUTQ 0x5411
 #endif
+
 
 static int (*nanosleep_DDL)(const struct timespec *req, struct timespec *rem);
 
@@ -1250,10 +1248,11 @@ int init_bus_DDL(bus_t busnumber)
 /*thread cleanup routine for this bus*/
 static void end_bus_thread(bus_thread_t *btd)
 {
+    int result;
     /* store thread return value here */
     void *pThreadReturn;
-    /* send cancel to refresh cycle */
 
+    /* send cancel to refresh cycle */
     pthread_cancel(((DDL_DATA*)buses[btd->bus].driverdata)->refresh_ptid);
     /* wait until the refresh cycle has terminated */
     pthread_join(((DDL_DATA*)buses[btd->bus].driverdata)->refresh_ptid,
@@ -1265,7 +1264,21 @@ static void end_bus_thread(bus_thread_t *btd)
     if (buses[btd->bus].device.file.fd != -1)
         close(buses[btd->bus].device.file.fd);
 
-    syslog_bus(btd->bus, DBG_INFO, "DDL bus terminated");
+    result = pthread_mutex_destroy(&buses[btd->bus].transmit_mutex);
+    if (result != 0) {
+        syslog_bus(btd->bus, DBG_WARN,
+                "pthread_mutex_destroy() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
+    result = pthread_cond_destroy(&buses[btd->bus].transmit_cond);
+    if (result != 0) {
+        syslog_bus(btd->bus, DBG_WARN,
+                "pthread_mutex_init() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
+    syslog_bus(btd->bus, DBG_INFO, "DDL bus terminated.");
     free(buses[btd->bus].driverdata);
     free(btd);
 }

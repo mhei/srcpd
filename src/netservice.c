@@ -7,11 +7,11 @@
  */
 
 #include <arpa/inet.h>
+#include <errno.h>
 #include <grp.h>
 #include <pwd.h>
 #include <sys/socket.h>
 
-#include "stdincludes.h"
 #include "netservice.h"
 #include "clientservice.h"
 #include "srcp-server.h"
@@ -304,6 +304,6 @@ void cancel_netservice_thread()
                 "Netservice thread join failed: %s (errno = %d).",
                 strerror(result), result);
 
-    syslog_bus(0, DBG_INFO, "Netservice thread cancelled.");
+    syslog_bus(0, DBG_INFO, "Netservice thread terminated.");
 }
 

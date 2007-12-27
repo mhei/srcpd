@@ -17,19 +17,9 @@
 */
 #ifdef linux
 
-#include "stdincludes.h"
-
-#include "config-srcpd.h"
-#include "io.h"
-#include "srcp-fb.h"
-#include "srcp-ga.h"
-/*#include "srcp-gl.h"*/
-#include "srcp-power.h"
-#include "srcp-server.h"
-#include "srcp-info.h"
-#include "srcp-error.h"
-#include "syslogmessage.h"
-#include "i2c-dev.h"
+#include <errno.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
 
 #include <linux/version.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)
@@ -41,6 +31,17 @@
     #warning "Value for I2C_SLAVE defined due to a problem with system headers."
   #endif
 #endif
+
+#include "config-srcpd.h"
+#include "io.h"
+#include "srcp-fb.h"
+#include "srcp-ga.h"
+#include "srcp-power.h"
+#include "srcp-server.h"
+#include "srcp-info.h"
+#include "srcp-error.h"
+#include "syslogmessage.h"
+#include "i2c-dev.h"
 
 #define __i2cdev ((I2CDEV_DATA*)buses[busnumber].driverdata)
 
@@ -442,8 +443,25 @@ int init_bus_I2C_DEV(bus_t i)
 /*thread cleanup routine for this bus*/
 static void end_bus_thread(bus_thread_t *btd)
 {
+    int result;
+
     syslog_bus(btd->bus, DBG_INFO, "i2c-dev bus terminated.");
     close(buses[btd->bus].device.file.fd);
+
+    result = pthread_mutex_destroy(&buses[btd->bus].transmit_mutex);
+    if (result != 0) {
+        syslog_bus(btd->bus, DBG_WARN,
+                "pthread_mutex_destroy() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
+    result = pthread_cond_destroy(&buses[btd->bus].transmit_cond);
+    if (result != 0) {
+        syslog_bus(btd->bus, DBG_WARN,
+                "pthread_mutex_init() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
     free(buses[btd->bus].driverdata);
     free(btd);
 }

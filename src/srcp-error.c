@@ -6,7 +6,10 @@
  *
  */
 
+#include <stdio.h>
+
 #include "srcp-error.h"
+
 
 int srcp_fmt_msg(int errorcode, char *msg, struct timeval time)
 {

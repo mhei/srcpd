@@ -24,7 +24,11 @@
 
 */
 
-#include "stdincludes.h"
+#include <errno.h>
+#include <fcntl.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
 
 #include "config-srcpd.h"
 #include "io.h"
@@ -146,28 +150,50 @@ void close_comport(bus_t bus)
 
 /* Zeilenweises Lesen vom Socket      */
 /* nicht eben trivial!                */
-int isvalidchar(unsigned char c)
+static int isvalidchar(unsigned char c)
 {
     return ((c >= 0x20 && c <= 127) || c == 0x09 || c == '\n');
 }
 
-int socket_readline(int Socket, char *line, int len)
+/*
+ * Read a text line from socket descriptor.
+ * return values
+ *   -1: error
+ *    0: end of file (EOF), client terminated connection
+ *   >0: number of written characters
+ * */
+ssize_t socket_readline(int Socket, char *line, int len)
 {
     char c;
     int i = 0;
-    ssize_t bytes_read = read(Socket, &c, 1);
-    if (bytes_read <= 0) {
-        syslog_bus(0, DBG_ERROR,
-                "read from socket %d failed: %s (errno = %d)\n",
-                Socket, strerror(errno), errno);
-        return -1;
+    ssize_t bytes_read;
+
+again:
+    bytes_read = read(Socket, &c, 1);
+    if (bytes_read == -1) {
+
+        /* handle interrupt */
+        if (errno == EINTR)
+            goto again;
+
+        /* normal read error*/
+        else
+            return -1;
     }
+
+    /*EOF detected, client closed connection*/
+    else if (bytes_read == 0) {
+        return 0;
+    }
+
+    /*normal operation*/
     else {
         if (isvalidchar(c))
             line[i++] = c;
         /* die Reihenfolge beachten! */
+        /*TODO: handle (errno == EINTR), message part will get lost*/
         while (read(Socket, &c, 1) > 0) {
-            /* Ende beim Zeilenende */
+            /* stop at newline character */
             if (c == '\n')
                 break;
             if (isvalidchar(c) && (i < len - 1))
@@ -175,43 +201,64 @@ int socket_readline(int Socket, char *line, int len)
         }
     }
     line[i++] = 0x00;
-    syslog_bus(0, DBG_DEBUG, "socket %d, read %s", Socket, line);
-    return 0;
+    return (i - 1);
 }
 
-/**
- * noch ganz klar ein schoenwetter code!
- **/
-int socket_writereply(int Socket, const char *line)
+/* Write "n" bytes to a descriptor. Stevens, UNP;
+ * srcp messages must end with '\n' to use this function directly 
+ * return values:
+ *   -1: write error
+ *  >=0: number of written characters */
+ssize_t writen(int fd, const void *vptr, size_t n)
 {
-    ssize_t status = 0;
-    int linelen = strlen(line);
-    char chunk[MAXSRCPLINELEN], tmp[MAXSRCPLINELEN];
-    int i = 0;
+    size_t nleft;
+    ssize_t nwritten;
+    const char *ptr;
 
-    if (linelen <= 0)
-        return 0;
-
-    syslog_bus(0, DBG_INFO, "socket %d, write %s", Socket, line);
-
-    while (i <= linelen - MAXSRCPLINELEN - 1 && status >= 0) {
-        memset(tmp, 0, sizeof(tmp));
-        strncpy(tmp, line + i, MAXSRCPLINELEN - 2);
-        sprintf(chunk, "%s\\\n", tmp);
-        status = write(Socket, chunk, strlen(chunk));
-        if (status == -1) {
-            syslog_bus(0, DBG_ERROR,
-                    "write to socket %d failed: %s (errno = %d)\n",
-                    Socket, strerror(errno), errno);
-            return status;
+    ptr = vptr;
+    nleft = n;
+    while (nleft > 0) {
+        if ((nwritten = write(fd, ptr, nleft)) <= 0) {
+            /* if EINTR call write() again */
+            if (nwritten < 0 && errno == EINTR)
+                nwritten = 0;
+            /* a real error */
+            else
+                return (-1);
         }
-        i += MAXSRCPLINELEN - 2;
-    }
 
-    if (i < linelen && status >= 0) {
-        status = write(Socket, line + i, linelen - i);
+        nleft -= nwritten;
+        ptr   += nwritten;
     }
+    return n;
+}
 
-    syslog_bus(0, DBG_INFO, "Status from write: %d", status);
-    return status;
+/* Write string to descriptor.
+ * Check line length and add missing line break.
+ * return values:
+ *   -1: write error
+ *  >=0: number of written characters */
+ssize_t writen_amlb(int fd, const char *line)
+{
+    ssize_t result = 0;
+    const char *ptr;
+    const char c = '\n';
+    size_t mlen;
+    bool haslinebreak;
+
+    ptr = line;
+    mlen = strlen(line);
+
+    if (mlen > 0)
+        ptr += mlen - 1;
+    else 
+        return result;
+    
+    haslinebreak = (*ptr == c);
+    result = writen(fd, line, mlen);
+
+    if (!haslinebreak && result != -1)
+        result = writen(fd, &c, 1);
+    
+    return result;
 }

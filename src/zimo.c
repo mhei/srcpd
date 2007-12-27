@@ -1,13 +1,14 @@
 /* $Id$ */
 
-/* zimo: Zimo MX1 Treiber
- *
+/*
+ * zimo: Zimo MX1 Treiber
  */
 
+#include <errno.h>
+#include <fcntl.h>
 #include <sys/time.h>
 #include <time.h>
-
-#include "stdincludes.h"
+#include <sys/ioctl.h>
 
 #include "config-srcpd.h"
 #include "io.h"
@@ -63,7 +64,6 @@ int readanswer(bus_t bus, char cmd, char *buf, int maxbuflen,
             lc = c;
         }
         else
-            
             usleep(1);
     }
 }
@@ -161,7 +161,8 @@ int init_linezimo(bus_t bus, char *name)
             name);
     fd = open(name, O_RDWR);
     if (fd == -1) {
-        syslog_bus(bus, DBG_ERROR, "Open serial line failed: %s (errno = %d).\n",
+        syslog_bus(bus, DBG_ERROR,
+                "Open serial line failed: %s (errno = %d).\n",
                 strerror(errno), errno);
     }
     else {
@@ -195,10 +196,26 @@ int init_bus_ZIMO(bus_t bus)
 /*thread cleanup routine for this bus*/
 static void end_bus_thread(bus_thread_t *btd)
 {
+    int result;
+
     syslog_bus(btd->bus, DBG_INFO, "Zimo bus terminated.");
 
     if (buses[btd->bus].device.file.fd != -1)
         close(buses[btd->bus].device.file.fd);
+
+    result = pthread_mutex_destroy(&buses[btd->bus].transmit_mutex);
+    if (result != 0) {
+        syslog_bus(btd->bus, DBG_WARN,
+                "pthread_mutex_destroy() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
+    result = pthread_cond_destroy(&buses[btd->bus].transmit_cond);
+    if (result != 0) {
+        syslog_bus(btd->bus, DBG_WARN,
+                "pthread_mutex_init() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
 
     free(buses[btd->bus].driverdata);
     free(btd);

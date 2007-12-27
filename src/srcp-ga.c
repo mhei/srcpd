@@ -20,7 +20,8 @@
  *              Decoderadresse
  */
 
-#include "stdincludes.h"
+#include <string.h>
+#include <stdio.h>
 
 #include "config-srcpd.h"
 #include "srcp-session.h"

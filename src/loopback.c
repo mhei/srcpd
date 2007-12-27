@@ -4,8 +4,6 @@
  * loopback: simple bus driver without any hardware.
  **/
 
-#include "stdincludes.h"
-
 #include "config-srcpd.h"
 #include "io.h"
 #include "loopback.h"
@@ -179,7 +177,24 @@ int init_bus_LOOPBACK(bus_t i)
 /*thread cleanup routine for this bus*/
 static void end_bus_thread(bus_thread_t *btd)
 {
+    int result;
+
     syslog_bus(btd->bus, DBG_INFO, "Loopback bus terminated.");
+
+    result = pthread_mutex_destroy(&buses[btd->bus].transmit_mutex);
+    if (result != 0) {
+        syslog_bus(btd->bus, DBG_WARN,
+                "pthread_mutex_destroy() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
+    result = pthread_cond_destroy(&buses[btd->bus].transmit_cond);
+    if (result != 0) {
+        syslog_bus(btd->bus, DBG_WARN,
+                "pthread_mutex_init() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
     free(buses[btd->bus].driverdata);
     free(btd);
 }
