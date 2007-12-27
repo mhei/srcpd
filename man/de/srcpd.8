@@ -1,4 +1,4 @@
-.TH srcpd 8 "26. November 2007"
+.TH srcpd 8 "26. Dezember 2007"
 .\"
 .\"
 .SH "NAME"
@@ -43,6 +43,78 @@ Programms festgelegt und kann mit der Option \fB-h\fP angezeigt werden.
 .\"
 .\"
 .SH BEMERKUNGEN
+.SS Inbetriebnahme
+Der \fBsrcpd\fP hält sich an die Konventionen des Filesystem Hierarchy
+Standard (FHS, http://www.pathname.com/fhs/). Für weiterführende und
+spezielle Konfigurationsmöglichkeiten von \fISystemdiensten\fP nutzen
+Sie bitte die Dokumentation Ihres Betriebssystems. Die folgenden
+Informationen geben allgemein gültige Hinweise zur Konfiguration.
+
+Erstellen Sie zunächst eine zu ihrer Modellbahnsteuerung passende
+Konfigurationsdatei (\fIsrcpd.conf\fP). Speichern Sie diese dann mit
+Administrationsrechten im Verzeichnis für die systemweite Konfiguration
+(\fI/etc\fP) ab. Die mitgelieferte Beispieldatei muß dabei ersetzt bzw.
+überschrieben werden.
+
+Sobald die angepaßte Konfigurationsdatei vorliegt, kann der Daemon mit
+folgendem Befehl gestartet werden:
+
+.RS
+.nf
+/etc/init.d/srcpd start
+.fi
+.RE
+
+Läuft der srcpd-Daemon bereits, muß er zum Einlesen der neuen
+Konfiguration zunächst angehalten werden. Das Anhalten des Daemons
+erfolgt analog zum Startvorgang mit folgendem Befehl:
+
+.RS
+.nf
+/etc/init.d/srcpd stop
+.fi
+.RE
+
+Unter bestimmten Voraussetzungen kann der srcpd-Daemon auch im
+laufenden Betrieb, also ohne generellen Neustart, eine veränderte
+Konfigurationsdatei einlesen. Da der Zugriff auf Hardwareschnittstellen
+unter UNIXoiden Betriebssystemen über Berechtigungen geregelt wird,
+müssen die Rechte für den srcpd-Daemon in der Konfigurationsdatei
+(\fIsrcpd.conf\fP) so eingestellt werden, dass er jederzeit Zugriff auf
+die gewünschte Schnittstelle erhält.
+
+Für Modellbahnhardware, die über serielle Schnittstellen (USB, RS232)
+angeschlossen ist, reicht es, den srcpd-Daemon mit der entsprechenden
+Gruppenberechtigung (in der Regel »dialout«) zu betreiben. Beim
+»ddl-s88« Modul, das S88-Rückmeldungen über die parallele Schnittstelle
+einliest, wird eine Systemfunktion genutzt (ioperm), die immer
+root-Berechtigung benötigt. Daher muß in diesem Fall der srcpd-Daemon
+mit root-Berechtigung laufen. 
+
+Zum Neueinlesen der Konfigurationsdatei dient, unter der Voraussetzung,
+die oben geschilderten Bedingungen sind eingehalten, folgender Befehl:
+
+.RS
+.nf
+/etc/init.d/srcpd reload
+.fi
+.RE
+
+Zur Verfolgung von Fehlern beim Start oder im laufenden Betrieb, können
+Sie die Log-Datei des syslog-Systemdienstes (\fI/var/log/messages\fP)
+nutzen. Die Meldungen lassen sich mit Administrationsrechten
+beispielsweise in einem Terminalfenster mit folgendem Befehl beobachten:
+
+.RS
+.nf
+tail -f /var/log/messages
+.fi
+.RE
+
+Die Ausführlichkeit der dort erscheinenenden Meldungen läßt sich über
+Einstellungen in der \fIsrcpd.conf\fP anpassen. Nähere Informationen
+hierzu bietet das zugehörige Handbuch. 
+
 .SS Lenz USB-Interface
 .PP
 Um dieses USB-Gerät in Betrieb zu nehmen, muß das Kernelmodul
