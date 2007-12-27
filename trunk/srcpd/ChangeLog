@@ -1,6 +1,27 @@
+2007-12-25 Guido Scholz <guido.scholz@bayernline.de>
+	* stdincludes.h, *.c: obsolete stdincludes.h file removed.
+	* io.c, srcp-command.c, clientservice.c, loconet.c: handle
+	writing to socket more savely, also respecting client terminated
+	connections (not perfect). 
+
+2007-12-24 Guido Scholz <guido.scholz@bayernline.de>
+	* io.*, srcp-info.c, srcp-command.c, loconet.c, clientservice.c:
+	Substituted old code to write to a socket descriptor by a faster
+	and interrupt save version.
+
+2007-12-23 Guido Scholz <guido.scholz@bayernline.de>
+	* dll.c, dll-s88.c, hsi-s88.c, i2c-dev.c, ib.c, li100.c,
+	loconet.c, loopback.c, m605x.c, selectrix.c, zimo.c: Prevent bus
+	threads from eating mutexes and condition variables. Re-reading
+	the config file now should be possible without wasting system
+	resources.
+
 2007-12-21 Guido Scholz <guido.scholz@bayernline.de>
 	* configure.in, acinclude.m4 src/Makefile.am: Updated libxml2
 	detection macro, now using CPPFLAGS.
+	* clientservice.c, netservice.c, queue.*, srcp-gm.c,
+	srcp-info.*, srcp-session.*: Individual queues for sessions to
+	get generic messages (GM) deliverable to certain info sessions.
 
 2007-12-19 Guido Scholz <guido.scholz@bayernline.de>
 	* configure.in, acinclude.m4 src/Makefile.am, systemtest: Threads
