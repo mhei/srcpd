@@ -96,7 +96,7 @@ für die es jeweils wieder eine eigene Grundstruktur gibt:
 .SS Allgemeines
 
 .PP
-Der erste konfigurierte Bus sollte der für den Server selbst sein. Die
+Der erste konfigurierte Bus muss der für den Server selbst sein. Die
 Reihenfolge und die Anzahl der weiteren Busse sind beliebig. Es sollten
 nur Busse konfiguriert werden, die auch tatsächlich beim Betrieb des
 Daemons Verwendung finden. Nicht benötigte Busse können beispielsweise
@@ -110,6 +110,9 @@ Daemons Verwendung finden. Nicht benötigte Busse können beispielsweise
     -->
 .fi
 
+.PP
+Hierbei ist zu beachten, das die Nummern der nachfolgenden Busse
+sich entsprechend verschieben.
 .PP
 Die folgenden Konfigurationsoptionen lassen sich für alle Busse
 jeweils individuell festlegen.
