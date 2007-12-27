@@ -16,22 +16,23 @@
  ***************************************************************************/
 
 /*
-   This code manages INFO SESSIONs. Every hardware driver must call
-   (directly or via set<devicegroup> functions) the queueInfoMessage().
-   This function copies the preformated string into an internal buffer
-   (allocated) and adjusts the current writer position (variable »in«).
-   To avoid memory access confusion, a mutex protects the writing
-   process.
+   This code manages INFO SESSIONs. Every hardware driver, alias »bus
+   process«, must call (directly or via set<devicegroup> functions) the
+   queueInfoMessage() function. This function copies the preformated
+   string into the session specific message queues. To avoid memory
+   access confusion, a mutex protects the reading and writing processes.
 
-   On the other end of the pipe are numerous threads waiting to read new
-   data.  Each of these threads maintains its own reader position
-   (parameter »current«) to unqueue the recently added messages.
+   On the other end of each session queue the information session
+   process is waiting for new enqueued messages to write them to the
+   socket file descriptor. It is blocked by a condition variable to only
+   be bussy when real work has to be done.
 
-   When a new INFO sessions starts, it will first send all savailable
-   status data and then enter the reader cycle.
+   When a new INFO sessions starts, it will first send all available
+   status data and then enter the wait for new messages state.
  */
 
-#include "stdincludes.h"
+#include <string.h>
+#include <stdlib.h>
 
 #include "io.h"
 #include "config-srcpd.h"
@@ -48,115 +49,81 @@
 #include "syslogmessage.h"
 
 
-#define QUEUELENGTH_INFO 1000
-
-static char *info_queue[QUEUELENGTH_INFO];
-static int in = 0;
-
-static pthread_mutex_t queue_mutex_info = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t info_available = PTHREAD_COND_INITIALIZER;
-
-/* queue a pre-formatted message */
+/* Enqueue a pre-formatted message */
 int queueInfoMessage(char *msg)
 {
-    pthread_mutex_lock(&queue_mutex_info);
-    /* Queue contains copies of all message strings */
-    free(info_queue[in]);
-    info_queue[in] = calloc(strlen(msg) + 1, 1);
-    strcpy(info_queue[in], msg);
-    /* now increase the in value, the readers may see new data! */
-    in++;
-    if (in == QUEUELENGTH_INFO)
-        in = 0;
-
-    /*tell all waiting info clients about new message*/
-    pthread_cond_broadcast(&info_available);
-    pthread_mutex_unlock(&queue_mutex_info);
+    session_enqueue_info_message(0, msg);
     return SRCP_OK;
 }
 
-
-static int queueIsEmptyInfo(int current)
-{
-    return (in == current);
-}
-
-/* returns value for next item or -1, resets fifo buffer pointer! */
-static int unqueueNextInfo(int current, char *info)
-{
-    if (in == current)
-        return -1;
-
-    pthread_mutex_lock(&queue_mutex_info);
-    strcpy(info, info_queue[current]);
-    pthread_mutex_unlock(&queue_mutex_info);
-
-    /* calculation can be outside of lock because "current" is local
-     * to socket sender thread */
-    current++;
-    if (current == QUEUELENGTH_INFO)
-        current = 0;
-    return current;
-}
-
-/*clear info message queue and level indicator*/
+/* There is nothing to do here. */
 int startup_INFO(void)
 {
-    in = 0;
-    memset(info_queue, 0, sizeof(info_queue));
     return SRCP_OK;
 }
 
-void unlock_info_queue_mutex()
+/* Dequeue info message; write message to socket and free message
+ * memory.
+ * return values:
+ *      -1 if write to file descriptor failed
+ *       0 if all is OK
+ */
+static ssize_t process_queue_messages(session_node_t* sn)
 {
-    int result;
-    result = pthread_mutex_unlock(&queue_mutex_info);
-    if (result != 0)
-        syslog_bus(0, DBG_WARN, "Mutex unlock failed: %s (errno = %d).",
-                strerror(result), result);
+    ssize_t result = 0;
+    qitem_t qi;
+
+    pthread_mutex_lock(&sn->queue_mutex);
+    while (!queue_is_empty(&sn->queue) && result != -1) {
+        dequeue(&qi, &sn->queue);
+        result = writen_amlb(sn->socket, qi.message);
+        free(qi.message);
+    }
+    pthread_mutex_unlock(&sn->queue_mutex);
+    return result;
 }
 
+    
 /**
- * Endless loop for new info mode client
- * terminates on write failure
+ * Handler for info mode client thread;
+ * terminates on write failure or if cancelled externaly
  **/
 int doInfoClient(session_node_t* sn)
 {
-    int i, current, number, value;
+    int i, number, value;
     char reply[1000], description[1000];
-
-    /* send start up-information to a new client */
     struct timeval cmp_time;
     bus_t busnumber;
-    current = in;
-    syslog_session(sn->session, DBG_DEBUG, "New INFO client requested");
+    syslog_session(sn->session, DBG_DEBUG, "New INFO client requested.");
 
+    /* send start up-information to a new client */
     for (busnumber = 0; busnumber <= num_buses; busnumber++) {
         pthread_testcancel();
-        syslog_bus(busnumber, DBG_DEBUG,
-            "send all data for bus number %d to new client", busnumber);
+        syslog_session(sn->session, DBG_DEBUG,
+            "Send all data for bus number %d to new client.", busnumber);
+
         /* first some global bus data */
         /* send Descriptions for buses */
         describeBus(busnumber, reply);
-        if (socket_writereply(sn->socket, reply) < 0)
+        if (writen_amlb(sn->socket, reply) < 0)
             return -1;
         strcpy(description, reply);
         *reply = 0x00;
         
         if (strstr(description, "POWER")) {
             infoPower(busnumber, reply);
-            if (socket_writereply(sn->socket, reply) < 0)
+            if (writen_amlb(sn->socket, reply) < 0)
                 return -1;
             *reply = 0x00;
         }
         
         if (strstr(description, "TIME")) {
             describeTIME(reply);
-            if (socket_writereply(sn->socket, reply) < 0)
+            if (writen_amlb(sn->socket, reply) < 0)
                 return -1;
             *reply = 0x00;
             infoTIME(reply);
-            if (socket_writereply(sn->socket, reply) < 0)
+            if (writen_amlb(sn->socket, reply) < 0)
                 return -1;
             *reply = 0x00;
         }
@@ -168,17 +135,17 @@ int doInfoClient(session_node_t* sn)
                 if (isInitializedGL(busnumber, i)) {
                     sessionid_t lockid;
                     cacheDescribeGL(busnumber, i, reply);
-                    if (socket_writereply(sn->socket, reply) < 0)
+                    if (writen_amlb(sn->socket, reply) < 0)
                         return -1;
                     *reply = 0x00;
                     cacheInfoGL(busnumber, i, reply);
-                    if (socket_writereply(sn->socket, reply) < 0)
+                    if (writen_amlb(sn->socket, reply) < 0)
                         return -1;
                     *reply = 0x00;
                     cacheGetLockGL(busnumber, i, &lockid);
                     if (lockid != 0) {
                         describeLOCKGL(busnumber, i, reply);
-                        if (socket_writereply(sn->socket, reply) < 0)
+                        if (writen_amlb(sn->socket, reply) < 0)
                             return -1;
                         *reply = 0x00;
                     }
@@ -194,13 +161,13 @@ int doInfoClient(session_node_t* sn)
                     sessionid_t lockid;
                     int rc, port;
                     describeGA(busnumber, i, reply);
-                    if (socket_writereply(sn->socket, reply) < 0)
+                    if (writen_amlb(sn->socket, reply) < 0)
                         return -1;
                     *reply = 0x00;
                     for (port = 0; port <= 1; port++) {
                         rc = infoGA(busnumber, i, port, reply);
                         if ((rc == SRCP_INFO)) {
-                            if (socket_writereply(sn->socket, reply) < 0)
+                            if (writen_amlb(sn->socket, reply) < 0)
                                 return -1;
                             *reply = 0x00;
                         }
@@ -208,7 +175,7 @@ int doInfoClient(session_node_t* sn)
                     getlockGA(busnumber, i, &lockid);
                     if (lockid != 0) {
                         describeLOCKGA(busnumber, i, reply);
-                        if (socket_writereply(sn->socket, reply) < 0)
+                        if (writen_amlb(sn->socket, reply) < 0)
                             return -1;
                         *reply = 0x00;
                     }
@@ -223,36 +190,34 @@ int doInfoClient(session_node_t* sn)
                 int rc = getFB(busnumber, i, &cmp_time, &value);
                 if (rc == SRCP_OK && value != 0) {
                     infoFB(busnumber, i, reply);
-                    if (socket_writereply(sn->socket, reply) < 0)
+                    if (writen_amlb(sn->socket, reply) < 0)
                         return -1;
                     *reply = 0x00;
                 }
             }
         }
     }
-    syslog_bus(0, DBG_DEBUG, "All messages send to new INFO client "
-            "(session: %ld)\n", sn->session);
+    syslog_session(sn->session, DBG_DEBUG,
+            "All messages send to new INFO client.\n");
 
-    /* There is a kind of race condition: Newly queued messages may be
-     * ignored until we reach this point. But there is no message loss
-     * because the following while loop will detect and send them.
+    /* There is a kind of race condition: Newly enqueued messages may
+     * be ignored until we reach this point. But there is no message
+     * loss because the following while loop will detect and send them.
      */
     
     while (1) {
         pthread_testcancel();
 
         /*get mutex lock and wait for new messages*/
-        pthread_mutex_lock(&queue_mutex_info);
-        while (queueIsEmptyInfo(current))
-            pthread_cond_wait(&info_available, &queue_mutex_info);
-        pthread_mutex_unlock(&queue_mutex_info);
+        /*TODO: socket close by client should be detected some how*/
+        pthread_mutex_lock(&sn->queue_mutex);
+        while (queue_is_empty(&sn->queue))
+            pthread_cond_wait(&sn->queue_cond, &sn->queue_mutex);
+        pthread_mutex_unlock(&sn->queue_mutex);
 
-        /* loop to send all new messages to SRCP client */
-        while (!queueIsEmptyInfo(current)) {
-            current = unqueueNextInfo(current, reply);
-            if (socket_writereply(sn->socket, reply) < 0)
-                return -1;
-        }
+        /* send all new messages to SRCP client */
+        if (-1 == process_queue_messages(sn))
+            return (-1);
     }
     return 0;
 }

@@ -13,8 +13,6 @@
  *              SRCP_DEVICELOCKED
  */
 
-#include "stdincludes.h"
-
 #include "clientservice.h"
 #include "io.h"
 #include "srcp-error.h"
@@ -22,6 +20,11 @@
 #include "srcp-info.h"
 #include "srcp-server.h"
 #include "syslogmessage.h"
+#include "queue.h"
+
+#include <errno.h>
+#include <sys/socket.h>
+
 
 /* SRCP server welcome message */
 const char *WELCOME_MSG =
@@ -34,39 +37,113 @@ const char *WELCOME_MSG =
  */
 void end_client_thread(session_node_t *sn)
 {
-    syslog_session(sn->session, DBG_INFO, "Session cancelled (mode = %d).",
-            sn->mode);
+    int result;
+    sessionid_t session;
 
-    if (sn->mode == smInfo)
-        unlock_info_queue_mutex();
-    stop_session(sn->session);
+    session = sn->session;
+    syslog_session(session, DBG_INFO,
+            "Session entered cancel state (mode = %d).", sn->mode);
+
+    if (sn->mode == smInfo) {
+        result = pthread_mutex_unlock(&sn->queue_mutex);
+        if (result != 0) {
+            syslog_session(session, DBG_ERROR,
+                    "pthread_mutex_unlock() failed: %s (errno = %d).",
+                    strerror(result), result);
+        }
+    }
+
+    /*prevent receiving new messages*/
+    sn->mode = smUndefined;
+    
     if (sn->socket != -1)
         close(sn->socket);
+    
+    result = pthread_cond_destroy(&sn->queue_cond);
+    if (result != 0) {
+        syslog_session(session, DBG_WARN,
+                "pthread_cond_destroy() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+    
+    result = pthread_mutex_destroy(&sn->queue_mutex);
+    if (result != 0) {
+        syslog_session(session, DBG_WARN,
+                "pthread_mutex_destroy() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
 
-    destroy_session(sn->session);
+    clear_queue(&sn->queue);
+    destroy_session(session);
+
+    /*at last tell all remaining sessions about this one to leave*/
+    stop_session(session);
+    syslog_session(session, DBG_INFO, "Session sucessfully cancelled.");
 }
 
 /* handle connected SRCP clients, start with shake hand phase. */
 void* thr_doClient(void* v)
 {
-    session_node_t* sn = (session_node_t*) v;
-    sn->thread = pthread_self();
-    pthread_detach(sn->thread);
-    sn->mode = smCommand;
-
     char line[MAXSRCPLINELEN], cmd[MAXSRCPLINELEN],
         parameter[MAXSRCPLINELEN], reply[MAXSRCPLINELEN];
     int rc, nelem;
     struct timeval time;
     int last_cancel_state, last_cancel_type;
+    int result;
+    ssize_t sresult;
 
-    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
-    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &last_cancel_type);
+    session_node_t* sn = (session_node_t*) v;
+    sn->thread = pthread_self();
+
+    result = pthread_detach(sn->thread);
+    if (result != 0) {
+        syslog_session(sn->session, DBG_WARN,
+                "pthread_detach() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
+    sn->mode = smCommand;
+    initialize_queue(&sn->queue);
+
+    result = pthread_mutex_init(&sn->queue_mutex, NULL);
+    if (result != 0) {
+        syslog_session(sn->session, DBG_WARN,
+                "pthread_mutex_init() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+    result = pthread_cond_init(&sn->queue_cond, NULL);
+    if (result != 0) {
+        syslog_session(sn->session, DBG_WARN,
+                "pthread_cond_init() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+    result = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
+    if (result != 0) {
+        syslog_session(sn->session, DBG_WARN,
+                "pthread_setcancelstate() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+    result = pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &last_cancel_type);
+    if (result != 0) {
+        syslog_session(sn->session, DBG_WARN,
+                "pthread_setcanceltype() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
 
     /*register cleanup routine*/
     pthread_cleanup_push((void *) end_client_thread, (void *) sn);
 
-    if (socket_writereply(sn->socket, WELCOME_MSG) < 0) {
+    sresult = writen_amlb(sn->socket, WELCOME_MSG);
+    if (-1 == sresult) {
+        syslog_session(sn->session, DBG_ERROR,
+                "Socket write failed: %s (errno = %d)\n",
+                strerror(errno), errno);
+        pthread_exit((void*) 1);
+    }
+    else if (0 == sresult) {
+        syslog_session(sn->session, DBG_WARN,
+                "Socket write failed (connection terminated by client).\n");
+        shutdown(sn->socket, SHUT_RDWR);
         pthread_exit((void*) 1);
     }
 
@@ -76,7 +153,20 @@ void* thr_doClient(void* v)
         reply[0] = 0x00;
         memset(line, 0, sizeof(line));
 
-        if (socket_readline(sn->socket, line, sizeof(line) - 1) < 0) {
+        sresult = socket_readline(sn->socket, line, sizeof(line) - 1);
+
+        /* client terminated connection */
+        /* TODO:
+        if (0 == sresult) {
+            shutdown(sn->socket, SHUT_RDWR);
+            break;
+        }*/
+
+        /* read errror */
+        /*else*/ if (-1 == sresult) {
+            syslog_session(sn->session, DBG_ERROR,
+                    "Socket read failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
             break;
         }
 
@@ -94,9 +184,22 @@ void* thr_doClient(void* v)
                 gettimeofday(&time, NULL);
                 sprintf(reply, "%lu.%.3lu 200 OK GO %ld\n", time.tv_sec,
                         time.tv_usec / 1000, sn->session);
-                if (socket_writereply(sn->socket, reply) < 0) {
+
+                sresult = writen_amlb(sn->socket, reply);
+                if (-1 == sresult) {
+                    syslog_session(sn->session, DBG_ERROR,
+                            "Socket write failed: %s (errno = %d)\n",
+                            strerror(errno), errno);
                     pthread_exit((void*) 1);
                 }
+                else if (0 == sresult) {
+                    syslog_session(sn->session, DBG_WARN,
+                            "Socket write failed (connection terminated "
+                            "by client).\n");
+                    shutdown(sn->socket, SHUT_RDWR);
+                    pthread_exit((void*) 1);
+                }
+
                 start_session(sn);
 
                 switch (sn->mode) {
@@ -108,7 +211,7 @@ void* thr_doClient(void* v)
                         break;
                 }
                 /*exit while loop*/
-                break;
+                pthread_exit((void*) 0);
             }
 
             else if (strncasecmp(cmd, "SET", 3) == 0) {
@@ -141,7 +244,18 @@ void* thr_doClient(void* v)
         gettimeofday(&time, NULL);
         srcp_fmt_msg(rc, reply, time);
 
-        if (socket_writereply(sn->socket, reply) < 0) {
+        sresult = writen_amlb(sn->socket, reply);
+        if (-1 == sresult) {
+            syslog_session(sn->session, DBG_ERROR,
+                    "Socket write failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+            break;
+        }
+        else if (0 == sresult) {
+            syslog_session(sn->session, DBG_WARN,
+                    "Socket write failed (connection terminated "
+                    "by client).\n");
+            shutdown(sn->socket, SHUT_RDWR);
             break;
         }
     }

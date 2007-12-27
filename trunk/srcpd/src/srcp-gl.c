@@ -4,7 +4,9 @@
  *
  */
 
-#include "stdincludes.h"
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "config-srcpd.h"
 #include "srcp-gl.h"
@@ -33,8 +35,8 @@ static int queue_isfull(bus_t busnumber);
  */
 int isValidGL(bus_t busnumber, int addr)
 {
-    syslog_bus(busnumber, DBG_INFO, "GL VALID: %d %d (from %d to %d)", busnumber,
-        addr, /*num_buses */ 1, gl[busnumber].numberOfGl /*- 1*/ );
+    syslog_bus(busnumber, DBG_DEBUG, "GL VALID: %d %d (from %d to %d)",
+            busnumber, addr, 1, gl[busnumber].numberOfGl /*- 1*/);
 
     /* in bus 0 GL are not allowed */
     /* only num_buses are configured */

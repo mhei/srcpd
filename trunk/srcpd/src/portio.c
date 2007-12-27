@@ -16,8 +16,11 @@
  */
 
 #include <string.h> /* for strerror() */
+#include <errno.h>  /* for errno */
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
 
-#include "stdincludes.h"
 #include "config-srcpd.h"
 #include "ttycygwin.h"
 #include "portio.h"

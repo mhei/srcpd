@@ -4,9 +4,18 @@
  * loconet: loconet/srcp gateway
  */
 
+#include <errno.h>
+#include <fcntl.h>
 #include <netdb.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
 
-#include "stdincludes.h"
+#include "config.h"
+#ifdef HAVE_LINUX_SERIAL_H
+#include "linux/serial.h"
+#else
+#warning "MS100 support for Linux only!"
+#endif
 
 #include "config-srcpd.h"
 #include "io.h"
@@ -21,12 +30,6 @@
 #include "srcp-session.h"
 #include "srcp-error.h"
 #include "syslogmessage.h"
-
-#ifdef HAVE_LINUX_SERIAL_H
-#include "linux/serial.h"
-#else
-#warning "MS100 support for Linux only!"
-#endif
 
 #define __loconet ((LOCONET_DATA*)buses[busnumber].driverdata)
 #define __loconett ((LOCONET_DATA*)buses[btd->bus].driverdata)
@@ -179,6 +182,7 @@ static int init_lineLOCONET_lbserver(bus_t busnumber) {
     int sockfd;
     struct sockaddr_in serv_addr;
     struct hostent *server;
+    ssize_t sresult;
 
     char msg[256];
     server = gethostbyname (buses[busnumber].device.net.hostname);
@@ -187,6 +191,7 @@ static int init_lineLOCONET_lbserver(bus_t busnumber) {
         syslog_bus(busnumber, DBG_ERROR,
                 "Socket creation failed: %s (errno = %d).\n",
                 strerror(errno), errno);
+        /*TODO: What to do now? Return some error value?*/
     }
 
     bzero((char *) &serv_addr, sizeof(serv_addr));
@@ -195,10 +200,31 @@ static int init_lineLOCONET_lbserver(bus_t busnumber) {
 	  (char *) &serv_addr.sin_addr.s_addr, server->h_length);
     serv_addr.sin_port = htons(buses[busnumber].device.net.port);
     alarm(30);
-    if ( connect(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
+
+    if (connect(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
 	syslog_bus(busnumber, DBG_ERROR, "ERROR connecting: %d", errno);
+        /*TODO: What to do now? Return some error value?*/
     alarm(0);
-    socket_readline(sockfd, msg, sizeof(msg)-1);
+    
+    sresult = socket_readline(sockfd, msg, sizeof(msg) - 1);
+
+    /* client terminated connection */
+    /* TODO:
+    if (0 == sresult) {
+        shutdown(sockfd, SHUT_RDWR);
+        return 0;
+    }
+    */
+
+    /* read errror */
+    /*else */
+    if (-1 == sresult) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "Socket read failed: %s (errno = %d)\n",
+                strerror(errno), errno);
+        return (-1);
+    }
+
     syslog_bus(busnumber, DBG_INFO, "connected to %s", msg);
     buses[busnumber].device.net.sockfd = sockfd;
     return 1;
@@ -244,6 +270,8 @@ int init_bus_LOCONET(bus_t busnumber)
         syslog_bus(busnumber, DBG_INFO, "Loconet bus %ld open device %s",
             busnumber, buses[busnumber].device.file.path);
         init_lineLOCONET(busnumber);
+        /*TODO: Check return value of line initialization and trigger
+         * proper error action. */
     }
     syslog_bus(busnumber, DBG_INFO, "Loconet bus %ld init done", busnumber);
     return 0;
@@ -329,6 +357,10 @@ static int ln_read_serial(bus_t busnumber, unsigned char *cmd, int len)
             __loconet->recv_packets++;
         }
     }
+    else if (retval == -1) {
+        syslog_bus(busnumber, DBG_ERROR, "Select failed: %s (errno = %d)\n",
+               strerror(errno), errno);
+    }
 
     return retval;
 }
@@ -340,30 +372,53 @@ static int ln_read_lbserver(bus_t busnumber, unsigned char *cmd, int len) {
     struct timeval t = { 0, 0 };
     int retval = 0;
     char line[256];
+    ssize_t result;
     
     FD_ZERO(&fds);
     FD_SET(fd, &fds);
     retval = select(fd + 1, &fds, NULL, NULL, &t);
+
     if (retval > 0 && FD_ISSET(fd, &fds)) {
-	socket_readline(fd, line, sizeof(line)-1);
+        result = socket_readline(fd, line, sizeof(line) - 1);
+
+        /* client terminated connection */
+        /*if (0 == result) {
+            shutdown(fd, SHUT_RDWR);
+            return 0;
+        }*/
+
+        /* read errror */
+        /*else*/ if (-1 == result) {
+            syslog_bus(busnumber, DBG_ERROR,
+                    "Socket read failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+            return (-1);
+        }
+
 	/* line may begin with 
 	    SENT message: last command was sent (or not)
 	    RECEIVE message: new message from Loconet
 	    VERSION text: VERSION information about the server */
-	if(strstr(line, "RECEIVE ")) {
+
+	if (strstr(line, "RECEIVE ")) {
 	    /* we have a fixed format */
 	    size_t len = strlen(line) - 7;
 	    int pktlen = len / 3;
 	    int i;
 	    char *d;
-	    syslog_bus(busnumber, DBG_DEBUG, " * message '%s' %d bytes", line+7, pktlen);
-	    for(i=0; i<pktlen; i++) {
+	    syslog_bus(busnumber, DBG_DEBUG, " * message '%s' %d bytes",
+                    line+7, pktlen);
+	    for (i=0; i<pktlen; i++) {
 		cmd[i] = strtol(line+7+3*i, &d, 16);
 		/* syslog_bus(busnumber, DBG_DEBUG, " * %d %d ", i, cmd[i]); */
 	    }
 	    retval = pktlen;
 	}
         __loconet->recv_packets++;
+    }
+    else if (retval == -1) {
+        syslog_bus(busnumber, DBG_ERROR, "Select failed: %s (errno = %d)\n",
+               strerror(errno), errno);
     }
     return retval;
 }
@@ -392,7 +447,7 @@ static int ln_write_lbserver(long int busnumber, const unsigned char *cmd,
 	strcat(msg, tmp);
     }
     strcat(msg, "\r\n");
-    socket_writereply(buses[busnumber].device.net.sockfd, msg);
+    writen_amlb(buses[busnumber].device.net.sockfd, msg);
     syslog_bus(busnumber, DBG_DEBUG,
 	"sent Loconet packet with OPC 0x%02x, %d bytes (%s)", cmd[0], len, msg);
     __loconet->sent_packets++;
@@ -454,6 +509,8 @@ static int ln_opc_peer_xfer_read(bus_t busnumber,
 /*thread cleanup routine for this bus*/
 static void end_bus_thread(bus_thread_t *btd)
 {
+    int result;
+
     syslog_bus(btd->bus, DBG_INFO, "Loconet bus terminated.");
 
     switch (buses[btd->bus].devicetype) {
@@ -469,6 +526,20 @@ static void end_bus_thread(bus_thread_t *btd)
     syslog_bus(btd->bus, DBG_INFO,
         "Loconet bus: %u packets sent, %u packets received",
         __loconett->sent_packets, __loconett->recv_packets);
+
+    result = pthread_mutex_destroy(&buses[btd->bus].transmit_mutex);
+    if (result != 0) {
+        syslog_bus(btd->bus, DBG_WARN,
+                "pthread_mutex_destroy() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
+    result = pthread_cond_destroy(&buses[btd->bus].transmit_cond);
+    if (result != 0) {
+        syslog_bus(btd->bus, DBG_WARN,
+                "pthread_mutex_init() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
 
     free(buses[btd->bus].driverdata);
     free(btd);

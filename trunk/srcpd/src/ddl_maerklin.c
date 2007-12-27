@@ -50,7 +50,6 @@
 
 **********************************************************************/
 
-#include "stdincludes.h"
 #include "ddl.h"
 #include "ddl_maerklin.h"
 #include "srcp-gl.h"

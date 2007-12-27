@@ -15,7 +15,9 @@
  *                                                                        *
  **************************************************************************/
 
-#include "stdincludes.h"
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "srcp-session.h"
 #include "srcp-ga.h"
@@ -36,7 +38,7 @@ static sessionid_t lastsession = 0;
 static unsigned int runningsessions = 0;
 static session_node_t* session_list = NULL;
 static pthread_mutex_t session_list_mutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t session_run_cond = PTHREAD_COND_INITIALIZER;
+static pthread_cond_t session_list_cond = PTHREAD_COND_INITIALIZER;
 
 static pthread_mutex_t cb_mutex[MAX_BUSES];
 static pthread_cond_t cb_cond[MAX_BUSES];
@@ -94,7 +96,7 @@ static pthread_t list_search_thread_by_sessionid(session_node_t **n,
 }
 
 /* search valid info sessionid, return 1 if found, 0 if not found */
-static int list_search_info_sessionid(session_node_t **n,
+static int list_has_info_sessionid(session_node_t **n,
         sessionid_t sid) {
     int returnvalue = 0;
 
@@ -144,7 +146,7 @@ void destroy_anonymous_session(session_node_t* n)
     pthread_mutex_lock(&session_list_mutex);
     list_remove(&n);
     runningsessions--;
-    pthread_cond_signal(&session_run_cond);
+    pthread_cond_signal(&session_list_cond);
     pthread_mutex_unlock(&session_list_mutex);
 }
 
@@ -154,7 +156,7 @@ void destroy_session(sessionid_t session)
     pthread_mutex_lock(&session_list_mutex);
     list_remove(list_search_session(&session_list, session));
     runningsessions--;
-    pthread_cond_signal(&session_run_cond);
+    pthread_cond_signal(&session_list_cond);
     pthread_mutex_unlock(&session_list_mutex);
 }
 
@@ -172,9 +174,55 @@ int is_valid_info_session(sessionid_t session)
 {
     int isvalid;
     pthread_mutex_lock(&session_list_mutex);
-    isvalid = list_search_info_sessionid(&session_list, session);
+    isvalid = list_has_info_sessionid(&session_list, session);
     pthread_mutex_unlock(&session_list_mutex);
     return isvalid;
+}
+
+/* enqueue a new info message to the appropriate session queue */
+void session_enqueue_info_message(sessionid_t sid, char* message)
+{
+    session_node_t** n;
+    qitem_t qi;
+        
+    /*return immediately, if no session is running*/
+    if (NULL == session_list)
+        return;
+
+    /*enqueue message for all info sessions*/
+    if (sid == 0) {
+        session_node_t* node = session_list;   
+        pthread_mutex_lock(&session_list_mutex);
+
+        while (node != NULL) {
+            if (node->mode == smInfo) {
+                qi.message = (char*) malloc(strlen(message) + 1);
+                strcpy(qi.message, message);
+                pthread_mutex_lock(&node->queue_mutex);
+                enqueue(qi, &node->queue);
+                pthread_cond_signal(&node->queue_cond);
+                pthread_mutex_unlock(&node->queue_mutex);
+            }
+            node = node->next;
+        }
+        pthread_mutex_unlock(&session_list_mutex);
+    }
+
+    /*enqueue message for single info session*/
+    else {
+        pthread_mutex_lock(&session_list_mutex);
+        n = list_search_session(&session_list, sid);
+
+        if (*n != NULL && (*n)->mode == smInfo) {
+            qi.message = (char*) malloc(strlen(message) + 1);
+            strcpy(qi.message, message);
+            pthread_mutex_lock(&(*n)->queue_mutex);
+            enqueue(qi, &(*n)->queue);
+            pthread_cond_signal(&(*n)->queue_cond);
+            pthread_mutex_unlock(&(*n)->queue_mutex);
+        }
+        pthread_mutex_unlock(&session_list_mutex);
+    }
 }
 
 /* terminate a session by cancellation of client thread */
@@ -206,7 +254,7 @@ void terminate_all_sessions()
 
     /*... then wait for complete termination*/
     while (runningsessions != 0)
-        pthread_cond_wait(&session_run_cond, &session_list_mutex);
+        pthread_cond_wait(&session_list_cond, &session_list_mutex);
     pthread_mutex_unlock(&session_list_mutex);
     syslog_bus(0, DBG_INFO, "Session thread termination completed.");
 }

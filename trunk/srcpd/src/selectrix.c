@@ -27,7 +27,8 @@
  *   (Control centre of MUT and Uwe Magnus are CC-2000 compatible).
  */
 
-#include "stdincludes.h"
+#include <unistd.h>
+
 #include "portio.h"
 #include "config-srcpd.h"
 #include "srcp-power.h"
@@ -445,10 +446,27 @@ void writeSXbus(bus_t busnumber, int SXadres, int SXdata)
 /*thread cleanup routine for this bus*/
 static void end_bus_thread(bus_thread_t *btd)
 {
+    int result;
+
     syslog_bus(btd->bus, DBG_INFO, "Selectrix bus terminated.");
     if (buses[btd->bus].device.file.fd != -1) {
         close_port(btd->bus);
     }
+
+    result = pthread_mutex_destroy(&buses[btd->bus].transmit_mutex);
+    if (result != 0) {
+        syslog_bus(btd->bus, DBG_WARN,
+                "pthread_mutex_destroy() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
+    result = pthread_cond_destroy(&buses[btd->bus].transmit_cond);
+    if (result != 0) {
+        syslog_bus(btd->bus, DBG_WARN,
+                "pthread_mutex_init() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
     free(buses[btd->bus].driverdata);
     free(btd);
 }

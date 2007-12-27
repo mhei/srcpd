@@ -3,9 +3,10 @@
 /*
  * Vorliegende Software unterliegt der General Public License,
  * Version 2, 1991. (c) Matthias Trute, 2000-2001.
- *
  */
-#include "stdincludes.h"
+
+#include <stdio.h>
+
 #include "srcp-descr.h"
 #include "srcp-error.h"
 #include "config-srcpd.h"

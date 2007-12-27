@@ -24,13 +24,15 @@ email                : frank.schmischke@t-online.de
  *                                                                         *
  ***************************************************************************/
 
-#include "stdincludes.h"
+#include <errno.h>
+#include <fcntl.h>
+#include <string.h>
+#include <unistd.h>
 
 #ifdef linux
 #include <linux/serial.h>
 #include <sys/io.h>
 #endif
-
 
 #include "config-srcpd.h"
 #include "ib.h"
@@ -265,9 +267,26 @@ int init_bus_IB( bus_t busnumber )
 /*thread cleanup routine for this bus*/
 static void end_bus_thread(bus_thread_t *btd)
 {
+    int result;
+
     syslog_bus(btd->bus, DBG_INFO, "Intellibox bus terminated.");
     ((IB_DATA*)buses[btd->bus].driverdata)->working_IB = 0;
     close_comport(btd->bus);
+
+    result = pthread_mutex_destroy(&buses[btd->bus].transmit_mutex);
+    if (result != 0) {
+        syslog_bus(btd->bus, DBG_WARN,
+                "pthread_mutex_destroy() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
+    result = pthread_cond_destroy(&buses[btd->bus].transmit_cond);
+    if (result != 0) {
+        syslog_bus(btd->bus, DBG_WARN,
+                "pthread_mutex_init() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
     free(buses[btd->bus].driverdata);
     free(btd);
 }
@@ -292,7 +311,7 @@ void *thr_sendrec_IB( void *v )
     /*register cleanup routine*/
     pthread_cleanup_push((void *) end_bus_thread, (void *) btd);
 
-    syslog_bus(btd->bus, DBG_INFO, "Intellibox bus startet (device = %s).",
+    syslog_bus(btd->bus, DBG_INFO, "Intellibox bus started (device = %s).",
         buses[btd->bus].device.file.path);
 
     /* initialize tga-structure */

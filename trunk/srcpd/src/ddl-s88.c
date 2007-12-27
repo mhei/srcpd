@@ -18,22 +18,23 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "stdincludes.h"
+#include <string.h>
+#include <unistd.h>
 
 #ifdef linux
-#include <linux/lp.h>
-#include <sys/io.h>
+  #include <linux/lp.h>
+  #include <sys/io.h>
 #else
-#ifdef __CYGWIN__
-#include <sys/io.h>
-#else
-#if __FreeBSD__
-#include <dev/ppbus/ppi.h>
-#include <dev/ppbus/ppbconf.h>
+  #ifdef __CYGWIN__
+    #include <sys/io.h>
+  #else
+    #if __FreeBSD__
+      #include <dev/ppbus/ppi.h>
+      #include <dev/ppbus/ppbconf.h>
 /* #else */
 /* #error This driver is not usable on your operation system. Sorry. */
-#endif
-#endif
+    #endif
+  #endif
 #endif
 
 #if defined(linux) || defined(__CYGWIN__) || defined(__FreeBSD__)
@@ -396,12 +397,28 @@ void s88load(bus_t busnumber)
 /*thread cleanup routine for this bus*/
 static void end_bus_thread(bus_thread_t *btd)
 {
+    int result;
+
     syslog_bus(btd->bus, DBG_INFO, "DDL-S88 bus terminated.");
 
 #ifdef __FreeBSD__
     if (((DDL_S88_DATA *) buses[busnumber].driverdata)->Fd != -1)
         close(((DDL_S88_DATA *) buses[busnumber].driverdata)->Fd);
 #endif
+
+    result = pthread_mutex_destroy(&buses[btd->bus].transmit_mutex);
+    if (result != 0) {
+        syslog_bus(btd->bus, DBG_WARN,
+                "pthread_mutex_destroy() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
+    result = pthread_cond_destroy(&buses[btd->bus].transmit_cond);
+    if (result != 0) {
+        syslog_bus(btd->bus, DBG_WARN,
+                "pthread_mutex_init() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
 
     free(buses[btd->bus].driverdata);
     free(btd);

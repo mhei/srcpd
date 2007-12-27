@@ -14,8 +14,10 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <errno.h>
+#include <fcntl.h>
 #include <syslog.h>
-#include "stdincludes.h"
+#include <signal.h>
 
 #include "config-srcpd.h"
 #include "netservice.h"
@@ -169,7 +171,7 @@ void sigio_handler(int status)
 
     /* something strange happened, report error */
     if (retval == -1) {
-        syslog(LOG_INFO, "Select failed: %s (errno = %d)\n",
+        syslog_bus(0, DBG_ERROR, "Select failed: %s (errno = %d)\n",
                strerror(errno), errno);
     }
 

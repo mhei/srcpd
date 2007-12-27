@@ -15,7 +15,8 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "stdincludes.h"
+#include <errno.h>
+#include <stdio.h>
 
 #include "config-srcpd.h"
 #include "srcp-error.h"

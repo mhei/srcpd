@@ -15,6 +15,12 @@ email                : frank.schmischke@t-online.de
  *                                                                         *
  ***************************************************************************/
 
+#include <errno.h>
+#include <fcntl.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+
 #include "syslogmessage.h"
 
 
@@ -294,6 +300,8 @@ static void end_bus_usb_thread(bus_thread_t *btd)
 static void end_bus_rs232_thread(bus_thread_t *btd)
 #endif
 {
+    int result;
+
 #ifdef LI100_USB
     syslog_bus(btd->bus, DBG_INFO, "LI100 bus (usb) terminated.");
 #else
@@ -301,6 +309,21 @@ static void end_bus_rs232_thread(bus_thread_t *btd)
 #endif
     __li100t->working_LI100 = 0;
     close_comport(btd->bus);
+
+    result = pthread_mutex_destroy(&buses[btd->bus].transmit_mutex);
+    if (result != 0) {
+        syslog_bus(btd->bus, DBG_WARN,
+                "pthread_mutex_destroy() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
+    result = pthread_cond_destroy(&buses[btd->bus].transmit_cond);
+    if (result != 0) {
+        syslog_bus(btd->bus, DBG_WARN,
+                "pthread_mutex_init() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
     free(buses[btd->bus].driverdata);
     free(btd);
 }

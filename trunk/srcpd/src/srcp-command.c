@@ -4,7 +4,9 @@
  *
  */
 
+#include <errno.h>
 #include <string.h>
+#include <sys/socket.h>
 
 #include "config-srcpd.h"
 #include "io.h"
@@ -652,21 +654,43 @@ int handleRESET(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
  */
 int doCmdClient(session_node_t* sn)
 {
-    char line[MAXSRCPLINELEN], reply[MAXSRCPLINELEN];
-    char cbus[MAXSRCPLINELEN], command[MAXSRCPLINELEN],
-        devicegroup[MAXSRCPLINELEN], parameter[MAXSRCPLINELEN];
+    /*TODO: Optimize memory usage; these buffers occupy 6 kB stack
+     *      memory.
+     */
+    char line[MAXSRCPLINELEN];
+    char reply[MAXSRCPLINELEN];
+    char cbus[MAXSRCPLINELEN];
+    char command[MAXSRCPLINELEN];
+    char devicegroup[MAXSRCPLINELEN];
+    char parameter[MAXSRCPLINELEN];
     bus_t bus;
     long int rc, nelem;
     struct timeval akt_time;
+    ssize_t result;
 
     syslog_session(sn->session, DBG_INFO, "Command mode starting.");
 
     while (1) {
         pthread_testcancel();
         memset(line, 0, sizeof(line));
-        if (socket_readline(sn->socket, line, sizeof(line) - 1) < 0) {
-            return -1;
+
+        result = socket_readline(sn->socket, line, sizeof(line) - 1);
+
+        /* client terminated connection */
+        /* TODO:
+        if (0 == result) {
+            shutdown(sn->socket, SHUT_RDWR);
+            break;
+        }*/
+
+        /* read errror */
+        /*else*/ if (-1 == result) {
+            syslog_session(sn->session, DBG_ERROR,
+                    "Socket read failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+            break;
         }
+
         memset(command, 0, sizeof(command));
         memset(devicegroup, 0, sizeof(devicegroup));
         memset(parameter, 0, sizeof(parameter));
@@ -700,7 +724,7 @@ int doCmdClient(session_node_t* sn)
                             parameter, reply);
                     /*special option for session termination (?)*/
                     if (rc < 0) {
-                        if (socket_writereply(sn->socket, reply) < 0) {
+                        if (writen_amlb(sn->socket, reply) < 0) {
                             break;
                         }
                         break;
@@ -732,7 +756,7 @@ int doCmdClient(session_node_t* sn)
             srcp_fmt_msg(rc, reply, akt_time);
         }
 
-        if (socket_writereply(sn->socket, reply) < 0) {
+        if (writen_amlb(sn->socket, reply) < 0) {
             break;
         }
     }
