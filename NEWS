@@ -1,26 +1,55 @@
+srcpd-2.0.11 (200?-??-??)
+  Fixed Bugs
+    o Fixed Â»switch power onÂ« bug for DDL module
+    o Fixed microsecond value for GA initialization.
+    o Fixed wrong milli-second format for INFO GA (was e.g. Â»x.6Â«
+      instead of Â»x.006Â«)
+    o Disabled writing to 'stderr' during normal operation, this fixes
+      broken debian package updates and srcpd misbehavior in SuSEs
+      runlevel editor.
+    o Fixed daemonization, process now is detached from controlling
+      terminal properly.
+    o Fixed a lot of not closed file descriptors, free memory allocated
+      for configuration data, free used mutexes and condition variables.
+      This prevents srcpd from eating system resources.
+
+  New Features
+    o Add 115200 as value for speed for LI101F (Lenz).
+    o New man page srcpd.conf.5
+    o Translated man pages for German users.
+    o Enabled configuration file re-read by using SIGHUP.
+    o Support for Generic Messages added.
+
+  General Changes
+    o Change Â»p_timeÂ« to Â»fb_delay_time_0Â« for li100, ib and hsi-s88
+    o Threads library detection macro added.
+    o Updated libxml2 detection macro.
+    o A lot of internal code reorganisation and optimization.
+
+
 Version 2.0 
 	- SRCP 0.8
 	- Konfiguration im XML Format
 	- Redesign: Framework mit Modulen
-	- Unterstützung der Gerätegruppe SM bei passender Hardware
+	- UnterstÃ¼tzung der GerÃ¤tegruppe SM bei passender Hardware
 	- viel mehr und neue Hardware, auch mehrere gleichartige 
-	  gleichzeitig: Intellibox, Märklin 605x, HSI S88, S88 am
+	  gleichzeitig: Intellibox, MÃ¤rklin 605x, HSI S88, S88 am
           Parallelport, I2C (Eigenbau), RS232 (via Booster)
 	- Portierung auf FreeBSD
-	- Loopbackbus für Modellbahner ohne Anlage(nanschluß), auch als
-	  Ausgangspunkt für eigene Entwicklungen geeignet (kann alles,
+	- Loopbackbus fÃ¼r Modellbahner ohne Anlage(nanschluÃŸ), auch als
+	  Ausgangspunkt fÃ¼r eigene Entwicklungen geeignet (kann alles,
           was ein "richtiger" Bus kann!)
-	- Warteschlangen für Befehle und Rückmeldungen, nichts geht mehr
+	- Warteschlangen fÃ¼r Befehle und RÃ¼ckmeldungen, nichts geht mehr
           verloren
 	
-Version 1.2 (nie veröffentlicht)
-        - FIFO's für die Befehle.
+Version 1.2 (nie verÃ¶ffentlicht)
+        - FIFO's fÃ¼r die Befehle.
 	
 Version 1.1 (SRCP 0.7.3 fork) Maerz 2002
         - RPM's (und deb)
 	- Bugfixes
 	- Neue Hardware: HSI-S88 von Littfinski, 
-	- Kernelmodul für die Intellibox
+	- Kernelmodul fÃ¼r die Intellibox
 
 Version 1.0
         - hmm. vergessen....
