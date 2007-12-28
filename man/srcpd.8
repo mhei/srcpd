@@ -19,9 +19,10 @@ home page at http://srcpd.sourceforge.net for full documentation!
 is a UNIX daemon speaking the simple railroad command protocol
 (SRCP).
 
-Upon start up it reads in a configuration file named \fBsrcpd.conf\fP
-from the usual places. The SRCP itself is specified on 
-http://srcpd.sourceforge.net/srcp.
+Upon start up it reads in the system wide configuration file named
+\fBsrcpd.conf\fP. Contents and Stucture of this XML-file is explained
+in detail in the \fBsrcpd.conf (5)\fP man page. The SRCP specification
+is published on http://srcpd.sourceforge.net/srcp.
 .\"
 .\"
 .SH OPTIONS
@@ -39,6 +40,74 @@ value will be defined at compile time and can be displayed using the
 .\"
 .\"
 .SH NOTES
+.SS Getting started
+The \fBsrcpd\fP system service (daemon) is compliant to the Filesystem
+Hierarchy Standard (FHS, http://www.pathname.com/fhs/). For more
+information and special options about daemon usage please refer to to
+your system documentation. The following instructions are on a general
+level of information.
+
+Please first start assembling a configuration file (\fIsrcpd.conf\fP)
+fitting exactly your needs to connect to your model railway controller
+interface. Save this file to the directory for host specific system
+configuration (\fI/etc\fP). The default configuration file delivered
+with this software must be replaced by the new one.
+
+As soon as the adapted configuration file is at the right place, the
+daemon can be started using this command:
+
+.RS
+.nf
+/etc/init.d/srcpd start
+.fi
+.RE
+
+If the \fBsrcpd\fP is already running, it first must be stoped to get
+it aware of the new setup. Stoping the daemon is executed in analogy to
+the start command:
+
+.RS
+.nf
+/etc/init.d/srcpd stop
+.fi
+.RE
+
+Under certain conditions it is also possible to get the daemon re-read
+its configuration file without stopping it. With respect to hardware
+access rules unter UNIXlike systems, the group and/or user rights must
+be properly set in \fIsrcpd.conf\fP to let the daemon access the
+appropriate hardware resouces at any time.
+
+Common model railway interfaces will require access rights for serial
+lines (RS232, USB), which can be achieved using the proper group rights
+(e.g. »dialout«). The »ddl-s88« module uses a special system function
+(ioperm) which needs allways root rights to perform successfully.
+
+To let srcpd re-read its confuguration file, assumed the setup
+mentioned before is correct, the following command can be used:
+
+.RS
+.nf
+/etc/init.d/srcpd reload
+.fi
+.RE
+
+The log file \fI/var/log/messages\fP of the syslog daemon can be used
+to monitor occuring errors on daemon start or during current operation.
+With root rights the upcomming messages can be continously watched in a
+separate terminal:
+
+.RS
+.nf
+tail -f /var/log/messages
+.fi
+.RE
+
+The verbosity of these messages can be adjusted using the configuration
+file \fIsrcpd.conf\fP. For more information refer to the adequate man
+page.
+.\"
+.\"
 .SS Lenz USB Interfaces
 .PP
 It is very important that you have kernel modul ftdi_sio available.
@@ -71,7 +140,10 @@ developer mailing list.
 .\"
 .\"
 .SH AUTHORS
-The srcpd team on sourceforge.
+This man page was written by
+Matthias Trute (mtrute@users.sourceforge.net),
+Frank Schimschke (schmischi@users.sourceforge.net) and
+Guido Scholz (gscholz@users.sourceforge.net).
 .\"
 .\"
 .SH LICENSE

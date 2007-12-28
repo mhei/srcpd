@@ -120,8 +120,8 @@ hierzu bietet das zugehörige Handbuch.
 Um dieses USB-Gerät in Betrieb zu nehmen, muß das Kernelmodul
 \fBftdi_sio\fP verfügbar sein. Bei den gängigen Linux-Distributionen
 ist das in der Regel ohne zusätzliche Konfigurationseinstellungen der
-Fall. Due to concept of Lenz, there you get different return values
-after start.
+Fall. Das Modul für die Lenz-Geräte erzeugt beim Starten
+unterschiedliche Rückgabewerte. Diese haben die folgende Bedeutung:
 .TP
 .BI 0
 Das Gerät ist betriebsbereit.
@@ -155,7 +155,10 @@ Entwickler-Mailingliste auf http://srcpd.sourceforge.net/.
 .\"
 .\"
 .SH "AUTOREN"
-Das srcpd-Team auf sourceforge.
+Dieses Handbuch wurde geschrieben von
+Matthias Trute (mtrute@users.sourceforge.net),
+Frank Schimschke (schmischi@users.sourceforge.net) und
+Guido Scholz (gscholz@users.sourceforge.net).
 .\"
 .\"
 .SH "LIZENZ"

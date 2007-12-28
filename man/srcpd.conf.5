@@ -220,10 +220,11 @@ with 8 inputs, 2 modules are counted as one.
 fb_delay_time_0
 This is the time an feedback input must be zero, before zero is delivered to
 clients. Time is milliseconds. With this feature you can compensate bad
-feedback in a specific range.
+feedback in a specific range. The default value is 0 ms.
 .TP
 refresh
-The time in microseconds after srcpd will read feedback from HSI-88.
+The time in microseconds after srcpd will read feedback from HSI-88. The
+default value is 10000 µs.
 .\"
 .\"
 .SS i2c-dev
