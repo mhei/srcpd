@@ -1,4 +1,4 @@
-.TH srcpd.conf 5
+.TH srcpd.conf 5 "28. Dezember 2007"
 .\"
 .\"
 .SH "NAME"
@@ -93,8 +93,7 @@ für die es jeweils wieder eine eigene Grundstruktur gibt:
 .fi
 .\"
 .\"
-.SS Allgemeines
-
+.SS Allgemeine Hinweise
 .PP
 Der erste konfigurierte Bus muss der für den Server selbst sein. Die
 Reihenfolge und die Anzahl der weiteren Busse sind beliebig. Es sollten
@@ -113,6 +112,9 @@ Daemons Verwendung finden. Nicht benötigte Busse können beispielsweise
 .PP
 Hierbei ist zu beachten, das die Nummern der nachfolgenden Busse
 sich entsprechend verschieben.
+.\"
+.\"
+.SS Allgemeingültige Optionen
 .PP
 Die folgenden Konfigurationsoptionen lassen sich für alle Busse
 jeweils individuell festlegen.
@@ -124,7 +126,9 @@ Betriebs mehr oder weniger ausführliche Protokollmeldungen zum aktuellen
 Geschehen. Mit dem Wert 0 erfolgt nur eine minimale Ausgabe, mit höheren
 Werten steigt auch die Ausführlichkeit dieser Meldetätigkeit. Für die
 Fehlersuche sollte der Wert möglichst hoch, bei störungsfreiem Betrieb
-möglichst niedrig gewählt werden.
+möglichst niedrig gewählt werden. Die Meldungen lassen sich über die
+Log-Datei des Syslog-Daemons \fI/var/log/messages\fP verfolgen; nähere
+Informationen hierzu befinden sich im Handbuch \fBsrcpd (8)\fP.
 .\"
 .TP
 device
@@ -137,7 +141,7 @@ auto_power_on
 Hiermit wird festgelegt, ob beim Start des Daemons automatisch der
 Digitalstrom des Busses eingeschaltet wird. Gültige Werte sind »yes«
 oder »no«. Die Busse \fBserver\fP und \fBloopback\fP benötigen diesen
-Eintrag nicht.
+Eintrag nicht. Der voreingestellte Wert ist »no«.
 .\"
 .\"
 .SS server
@@ -166,6 +170,58 @@ Voreingestellt ist \fBnobody\fP.
 groupname
 Gruppenkennung unter der \fBsrcpd\fP auf dem System läuft. Voreingestellt
 ist \fBnogroup\fP.
+.\"
+.\"
+.SS ddl
+.PP
+Digital Direct für Linux über die serielle Schnittstelle (RS232).
+.TP
+number_ga
+.TP
+number_gl
+.TP
+enable_ringindicator_checking
+.TP
+enable_checkshort_checking
+.TP
+inverse_dsr_handling
+.TP
+enable_maerklin
+.TP
+enable_nmradcc
+.TP
+improve_nmradcc_timing
+.TP
+shortcut_failure_delay
+.TP
+nmradcc_translation_routine
+.TP
+enable_usleep_patch
+.TP
+usleep_usec
+.\"
+.\"
+.SS ddl-s88
+.PP
+Digital Direct für Linux S88 über die parallele Schnittstelle (IEEE 1284).
+.TP
+ioport
+Eingabe/Ausgabe-Adresse des Druckeranschlusses. Der voreingestellte Wert
+ist 0x0378.
+.TP
+clockscale
+.TP
+refresh
+.TP
+p_time
+.TP
+number_fb_1
+.TP
+number_fb_2
+.TP
+number_fb_3
+.TP
+number_fb_4
 .\"
 .\"
 .SS hsi-88
@@ -204,6 +260,19 @@ feedback signals in a specific range.
 .TP
 refresh
 The time in microseconds after srcpd will read feedback from HSI-88.
+.\"
+.\"
+.SS i2c-dev
+.PP
+Bustreiber für das i2c-dev-Interface des Linux Kernels. Er kann
+beispielsweise mit der unter http://www.matronix.de/ zu findenden
+Hardware genutzt werden.
+.TP
+multiplex_buses
+.TP
+ga_hardware_inverters
+.TP
+ga_reset_device
 .\"
 .\"
 .SS intellibox
@@ -363,10 +432,34 @@ Please note that 6088 modules attached to other devices (memory)
 cannot be accessed.
 .\"
 .\"
+.SS selectrix
+.PP
+Selectrix CC-2000 und Rautenhaus SLX852.
+.TP
+number_ga
+.TP
+number_gl
+.TP
+number_fb
+.TP
+controller
+.\"
+.\"
+.SS zimo
+.PP
+Zimo MX1
+.TP
+number_ga
+.TP
+number_gl
+.TP
+number_fb
+.TP
+p_time
 .SH "DATEIEN"
 .I /etc/srcpd.conf
 .\"
 .\"
 .SH "SIEHE AUCH"
-srcpd (8)
+.BR srcpd\ (8)
 
