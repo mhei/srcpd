@@ -1,13 +1,11 @@
 Bugs to fix
 -----------
-* fix memory leaks of bus driver data
-* fix missing cleanup for used sockets and file descriptors
+* Timely termination of INFO sessions no more connected to a client.
 
 
 Features to implement
 ---------------------
 * SRCP server reset
-* proper response for SIGHUP
 * SIGIO (event) driven code for all modules using serial device
   communication
 
