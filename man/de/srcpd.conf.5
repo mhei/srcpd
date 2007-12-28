@@ -2,13 +2,13 @@
 .\"
 .\"
 .SH "NAME"
-srcpd.conf \- Die Konfigurationsdatei fÃ¼r den srcpd Deamon
+srcpd.conf \- Die Konfigurationsdatei für den srcpd Deamon
 .\"
 .\"
 .SH "BESCHREIBUNG"
 Die Datei \fIsrcpd.conf\fP wird vom SRCP-Daemon \fBsrcpd\fP als
 systemweite Konfigurationsdatei genutzt. Sie bescheibt die
-fÃ¼r die Laufzeit des Systemsdienstes entscheidenden Einstellungen zum
+für die Laufzeit des Systemsdienstes entscheidenden Einstellungen zum
 Verhalten des Daemons selbst, sowie die Anzahl, Art und Betriebsweise
 der angeschlossenen Schnittstellen zur Modellbahn. Weitere Details zum
 Betrieb beschreibt das Handbuch
@@ -19,8 +19,8 @@ des Daemons.
 .SH "STANDARD KONFIGURATIONSDATEI"
 .\"
 .PP
-Die dem \fBsrcpd\fP mitgelieferte Standardkonfigurationsdatei enthÃ¤lt
-beispielhafte Einstellungen sowohl fÃ¼r den Server als auch fÃ¼r einen
+Die dem \fBsrcpd\fP mitgelieferte Standardkonfigurationsdatei enthält
+beispielhafte Einstellungen sowohl für den Server als auch für einen
 vorkonfigurierten Bus. Sie hat den folgenden Aufbau:
 .PP
 .RS
@@ -55,21 +55,21 @@ vorkonfigurierten Bus. Sie hat den folgenden Aufbau:
 Die Konfigurationsdatei wird im XML-Format abgespeichert. Da es sich bei
 XML-Dateien um ein reines Textformat handelt, kann ein erfahrener
 Benutzer solche Dateien mit einem beliebigen Texteditor bearbeiten.
-Weniger erfahrenen Benutzern sei empfohlen, VerÃ¤nderungen in der Datei
+Weniger erfahrenen Benutzern sei empfohlen, Veränderungen in der Datei
 mit einem speziellen Programm vorzunehmen, damit der Inhalt der Datei
-stets korrektes XML enthÃ¤lt.
+stets korrektes XML enthält.
 .PP
 Treten beim Lesen der Konfigurationsdatei Fehler auf, sendet \fBsrcpd\fP
-entsprechende Fehlermeldungen an den syslog-Daemon. Diese kÃ¶nnen Ã¼ber
+entsprechende Fehlermeldungen an den syslog-Daemon. Diese können über
 die Datei \fI/var/log/messages\fP verfolgt werden.
 .\"
 .PP
 Aktuell gibt es keine Dokumententypspezifikation (DTD), mit der der
-Inhalt der Konfigurationsdatei auf seine GÃ¼ltigkeit hin Ã¼berprÃ¼ft werden
+Inhalt der Konfigurationsdatei auf seine Gültigkeit hin überprüft werden
 kann.
 .\"
 .PP
-Jede Konfigurationsdatei muÃŸ die folgende Grundstruktur enthalten:
+Jede Konfigurationsdatei muß die folgende Grundstruktur enthalten:
 .\"
 .PP
 .nf
@@ -81,7 +81,7 @@ Jede Konfigurationsdatei muÃŸ die folgende Grundstruktur enthalten:
 
 .PP
 Innerhalb dieser Struktur (...) werden die verwendeten Busse angelegt,
-fÃ¼r die es jeweils wieder eine eigene Grundstruktur gibt:
+für die es jeweils wieder eine eigene Grundstruktur gibt:
 .PP
 .nf
     <bus>
@@ -96,11 +96,11 @@ fÃ¼r die es jeweils wieder eine eigene Grundstruktur gibt:
 .SS Allgemeines
 
 .PP
-Der erste konfigurierte Bus muss der fÃ¼r den Server selbst sein. Die
+Der erste konfigurierte Bus muss der für den Server selbst sein. Die
 Reihenfolge und die Anzahl der weiteren Busse sind beliebig. Es sollten
-nur Busse konfiguriert werden, die auch tatsÃ¤chlich beim Betrieb des
-Daemons Verwendung finden. Nicht benÃ¶tigte Busse kÃ¶nnen beispielsweise
-Ã¼ber Kommentarzeichen ausgeklammert werden:
+nur Busse konfiguriert werden, die auch tatsächlich beim Betrieb des
+Daemons Verwendung finden. Nicht benötigte Busse können beispielsweise
+über Kommentarzeichen ausgeklammert werden:
 .PP
 .nf
     <!--
@@ -114,57 +114,57 @@ Daemons Verwendung finden. Nicht benÃ¶tigte Busse kÃ¶nnen beispielsweise
 Hierbei ist zu beachten, das die Nummern der nachfolgenden Busse
 sich entsprechend verschieben.
 .PP
-Die folgenden Konfigurationsoptionen lassen sich fÃ¼r alle Busse
+Die folgenden Konfigurationsoptionen lassen sich für alle Busse
 jeweils individuell festlegen.
 .\"
 .TP
 verbosity
-AbhÃ¤ngig von diesem Zahlenwert (0..7) erzeugt \fBsrcpd\fP wÃ¤hrend des
-Betriebs mehr oder weniger ausfÃ¼hrliche Protokollmeldungen zum aktuellen
-Geschehen. Mit dem Wert 0 erfolgt nur eine minimale Ausgabe, mit hÃ¶heren
-Werten steigt auch die AusfÃ¼hrlichkeit dieser MeldetÃ¤tigkeit. FÃ¼r die
-Fehlersuche sollte der Wert mÃ¶glichst hoch, bei stÃ¶rungsfreiem Betrieb
-mÃ¶glichst niedrig gewÃ¤hlt werden.
+Abhängig von diesem Zahlenwert (0..7) erzeugt \fBsrcpd\fP während des
+Betriebs mehr oder weniger ausführliche Protokollmeldungen zum aktuellen
+Geschehen. Mit dem Wert 0 erfolgt nur eine minimale Ausgabe, mit höheren
+Werten steigt auch die Ausführlichkeit dieser Meldetätigkeit. Für die
+Fehlersuche sollte der Wert möglichst hoch, bei störungsfreiem Betrieb
+möglichst niedrig gewählt werden.
 .\"
 .TP
 device
 Hiermit wird der Name der angesteuerten Schnittstelle (z.B. /dev/ttyS0)
-festgelegt. Die Busse \fBserver\fP und \fBloopback\fP benÃ¶tigen diesen
+festgelegt. Die Busse \fBserver\fP und \fBloopback\fP benötigen diesen
 Eintrag nicht.
 .\"
 .TP
 auto_power_on
 Hiermit wird festgelegt, ob beim Start des Daemons automatisch der
-Digitalstrom des Busses eingeschaltet wird. GÃ¼ltige Werte sind Â»yesÂ«
-oder Â»noÂ«. Die Busse \fBserver\fP und \fBloopback\fP benÃ¶tigen diesen
+Digitalstrom des Busses eingeschaltet wird. Gültige Werte sind »yes«
+oder »no«. Die Busse \fBserver\fP und \fBloopback\fP benötigen diesen
 Eintrag nicht.
 .\"
 .\"
 .SS server
 .\"
 .PP
-Dieser Bus darf in keiner Konfigurationsdatei fehlen. Er verfÃ¼gt Ã¼ber
-die folgenden EinstellmÃ¶glichkeiten:
+Dieser Bus darf in keiner Konfigurationsdatei fehlen. Er verfügt über
+die folgenden Einstellmöglichkeiten:
 .\"
 .TP
 tcp-port
-Mit diesem Wert wird die Netzwerkportnummer fÃ¼r die TCP/IP-Kommunikation
+Mit diesem Wert wird die Netzwerkportnummer für die TCP/IP-Kommunikation
 zwischen \fBsrcpd\fP und den SRCP-Clients festgelegt. Die Voreinstellung
-hierfÃ¼r ist der von der IANA festgelegte Wert \fB4303\fP.
+hierfür ist der von der IANA festgelegte Wert \fB4303\fP.
 .\"
 .TP
 pid-file
 Name der Datei, in der \fBsrcpd\fP die Prozess-ID abspeichert. Der
-voreingestellte Wert hierfÃ¼r ist \fI/var/run/srcpd.pid\fP.
+voreingestellte Wert hierfür ist \fI/var/run/srcpd.pid\fP.
 .\"
 .TP
 username
-Benutzerkennung, unter der \fBsrcpd\fP auf dem System lÃ¤uft.
+Benutzerkennung, unter der \fBsrcpd\fP auf dem System läuft.
 Voreingestellt ist \fBnobody\fP.
 .\"
 .TP
 groupname
-Gruppenkennung unter der \fBsrcpd\fP auf dem System lÃ¤uft. Voreingestellt
+Gruppenkennung unter der \fBsrcpd\fP auf dem System läuft. Voreingestellt
 ist \fBnogroup\fP.
 .\"
 .\"
@@ -287,25 +287,25 @@ Default is 256 (LI-USB 512).
 .SS loopback
 .\"
 .PP
-Dieser Bus stellt keine Verbindung zu einem existierenden SteuergerÃ¤t
-her. Er ist primÃ¤r fÃ¼r Entwicklungzwecke gedacht kann aber auch 
-bei betriebsfÃ¤hgien Installationen nÃ¼tzlich sein. Jedes Kommando auf
+Dieser Bus stellt keine Verbindung zu einem existierenden Steuergerät
+her. Er ist primär für Entwicklungzwecke gedacht kann aber auch 
+bei betriebsfähgien Installationen nützlich sein. Jedes Kommando auf
 diesem Bus bewirkt lediglich ein entsprechendes Echo bei den
-INFO-Sitzungen. Dieser Bus kann also fÃ¼r Kommunikationszwecke genutzt
+INFO-Sitzungen. Dieser Bus kann also für Kommunikationszwecke genutzt
 werden.
 .\"
 .TP
 number_ga
-Anzahl der adressierbaren GA-GerÃ¤te. Die Voreinstellung ist 256.
+Anzahl der adressierbaren GA-Geräte. Die Voreinstellung ist 256.
 .\"
 .TP
 number_gl
-Anzahl der adressierbaren GL-GerÃ¤te. Die Voreinstellung ist 80.
+Anzahl der adressierbaren GL-Geräte. Die Voreinstellung ist 80.
 .\"
 .TP
 number_fb
-Anzahl der adressierbaren RÃ¼ckmeldekontakte. Die Voreintsellung ist 0
-(keine RÃ¼ckmeldemodule vorhanden).
+Anzahl der adressierbaren Rückmeldekontakte. Die Voreintsellung ist 0
+(keine Rückmeldemodule vorhanden).
 .\"
 .\"
 .SS m605x
