@@ -327,7 +327,7 @@ number_fb
 Dieser Wert legt die Anzahl der an der IB angeschlossenen
 S88-Rückmeldemodule fest. Gültig sind Werte von 0 bis 31 (bei Modulen
 mit 16 Kontakten). Der voreingestellte Wert beträgt 0 (keine Module sind
-angeschlossen. Über Loconet angeschlossene Module werden gegenwärtig
+angeschlossen). Über Loconet angeschlossene Module werden gegenwärtig
 nicht unterstützt.
 .\"
 .\"
@@ -336,7 +336,7 @@ nicht unterstützt.
 .PP
 Dieses Modul unterstützt den Betrieb mit den Lenz-Geräten LI100, LI100F,
 LI101F und LI-USB, angeschlossen über die serielle Schnittstelle (RS232)
-oder den Universal Serial Bus (USB). Ein USB/Seriell-Konvertierer sollte
+bzw. den Universal Serial Bus (USB). Ein USB/Seriell-Konvertierer sollte
 nicht verwendet werde. Die möglichen Geschwindigkeiten der seriellen
 Schnittstelle sind vom verwendeten Gerät abhängig. Für das LI-USB ist
 sie fest auf 57600 Baud eingestellt, ohne Möglichkeit, das zu verändern.
@@ -362,9 +362,10 @@ Wert beträgt 99, beim LI-USB 9999.
 .\"
 .TP
 number_gl
-Like the number of GA this number gives the maximum address. Supported range
-is 0..9999. A value of 0 means no GL available.
-Default is 99 (LI-USB 9999).
+Dieser Wert legt den maximalen Adressbereich für die verwendeten
+Lokdecoder (GL) fest. Gültig sind Werte von 0 bis 9999. Ein Wert von 0 
+bedeutet, dass keine Lokdecoder verwendet werden. Der voreingestellte 
+Wert beträgt 99, beim LI-USB 9999.
 .\"
 .TP
 number_fb
@@ -377,11 +378,11 @@ LI-USB 512.
 .SS loopback
 .\"
 .PP
-Dieser Bus stellt keine Verbindung zu einem existierenden Steuergerät
-her. Er ist primär für Entwicklungzwecke gedacht kann aber auch 
-bei betriebsfähgien Installationen nützlich sein. Jedes Kommando auf
-diesem Bus bewirkt lediglich ein entsprechendes Echo bei den
-INFO-Sitzungen. Dieser Bus kann also auch für Kommunikationszwecke
+Dieser Bus stellt keine Verbindung zu einem tatsächlich existierenden
+Steuergerät her. Er ist primär für Entwicklungzwecke gedacht kann
+aber auch bei betriebsfähgien Installationen nützlich sein. Jedes
+Kommando auf diesem Bus bewirkt lediglich ein entsprechendes Echo bei
+den INFO-Sitzungen. Dieser Bus kann also auch für Kommunikationszwecke
 genutzt werden.
 .\"
 .TP
@@ -401,56 +402,67 @@ Voreinstellung ist 0 (keine Rückmeldemodule vorhanden).
 .SS m605x
 .\"
 .PP
-This driver connects with the 6051 or 6050 devices from Marklin connected
-via the serial port. An USB2Serial converter should work fine. The serial
-line settings are fixed to 2400 8N2 and cannot be changed.
+Dieses Modul unterstützt den Betrieb mit einem Märklin 6051 oder 6050,
+das über die serielle Schnittstelle angeschlossen ist. Auch der Anschluß
+über einen USB/Seriell-Konvertierer sollte problemlos möglich sein. Die
+Einstellungen der Schnittstelle sind festgelegt auf 2400 Baud, 8N2 und
+können nicht verändert werden.
 .\"
 .TP
 m6020mode
-In this mode the srcpd does not sent the 4 functions. This
-is a feature of the 6021 only.
+Bei Aktivierung dieses Modus werden die 4 Funktionen nicht gesendet.
+Dieses Funktionalität wird nur vom 6021 unterstützt. Gültige Werte sind
+»yes« oder »no«. Der voreingestellte Wert ist »no«.
 .\"
 .TP
 p_time
-This is the time the driver code waits until it recognized the input
-change in milliseconds. This feature may support a debounce found in
-the hardware.
+Dieser Wert in Millisekunden legt fest, wie lange ein Rückmeldekontakt
+auf Null liegen muß, bevor er als gültiger Wert weitergeleitet wird.
+Hiermit lassen sich schlechte Rückmeldungen (Wackler) in begrenztem
+Umfang entprellen. Der voreingestellte Wert beträgt 0 ms.
 .\"
 .TP
 ga_min_activetime
-The time in milliseconds a GA device needs to be in active state. The
-absolute minimum is 75 ms and is needed for stable communication with
-the 6051.
+Dieser Wert in Millisekunden legt fest, wie lange ein Magnetartikel im
+aktiv Status sein muß. Für einen stabilen Betreib mit einem 6051 sind
+75 ms das absolute Minimum. Der voreingestellte Wert ist 75 ms.
 .\"
 .TP
 pause_between_commands
-This is the time between two commands the drivers must wait. The exact
-values should be hand tuned. If the system does not respond or drops
-commands try to increase this value. Default is 200 (milliseconds).
+Mit diesem Wert wird die Verzögerungszeit in Millisekungen eingestellt,
+nach der ein weiterer Befehl an die angeschlossenen Zentrale gesendet
+wird. Der optimale Wert muß händisch ermittelt werden. Wenn die Zentrale
+nicht reagiert, oder Befehlte ignoriert, sollte der Wert erhöht werden.
+Der voreingestellte Wert beträgt 200 ms.
 .\"
 .TP
 pause_between_bytes
-This is the time the driver waits between 2 bytes in multi-byte commands.
-The hardware handshake does not work with all devices so this parameter
-was introduced to support it. The default is 2 (milliseconds)
+Mit diesem Wert wird die Verzögerungszeit in Millisekungen eingestellt,
+die zwischen dem Versenden von zwei Bytes bei Multi-Byte-Befehlen
+gewartet wird. Hardware-Handshake funktioniert nicht mit allen Geräten,
+so dass dieser Parameter eingeführt wurde, um diesen zu ermöglichen. Der
+voreingestellte Wert beträgt 2 ms.
 .\"
 .TP
 number_ga
-This is the number of GA. This parameter does not have a real effect
-since the interface supports the addresses 1...256 only. Keep the
-default untouched.
+Dieser Wert legt den maximalen Adressbereich für die verwendeten
+Magnetartikel (GA) fest. Dieser Parameter hat keinen wirklichen Effekt,
+da das Interface nur die Adressen von 1 bis 256 unterstützt. Der
+voreingestellte Wert beträgt 256; bitte unverändert lassen.
 .\"
 .TP
 number_gl
-Like the number of GA this number gives the maximum address. Since this
-number is limited to 80, keep the default untouched.
+Dieser Wert legt den maximalen Adressbereich für die verwendeten
+Lokdecoder (GL) fest. Der voreingestellte Wert entspricht dem maximal
+gültigen Wert von 80; bitte unverändert lassen.
 .\"
 .TP
 number_fb
-This is the number of 6088 modules attached to the 6051/6050 device.
-It can be as large as 31. The default is 0 (no modules are attached).
-Please note that 6088 modules attached to other devices (memory)
-cannot be accessed.
+Dieser Wert legt die Anzahl der am 6051/6050 angeschlossenen 6088
+Rückmeldemodule fest. Gültig sind Werte von 0 bis 31. Der
+voreingestellte Wert beträgt 0 (keine Module sind angeschlossen).
+Bitte beachten Sie, dass auf 6088 Module, die an anderen Geräten
+angeschlossen sind (Memory) nicht zugegriffen werden kann.
 .\"
 .\"
 .SS selectrix
@@ -485,4 +497,10 @@ p_time
 .\"
 .SH "SIEHE AUCH"
 .BR srcpd\ (8)
+.\"
+.\"
+.SH "AUTOREN"
+Die deutsche Übersetzung wurde von Guido Scholz
+(gscholz@users.sourceforge.net) unter Mitwirkung von Matthias Trute
+(mtrute@users.sourceforge.net) angefertigt.
 
