@@ -1,4 +1,4 @@
-.TH srcpd.conf 5
+.TH srcpd.conf 5 "December 28, 2007"
 .SH "NAME"
 srcpd.conf \- The configuration file for the srcpd deamon
 .SH "DESCRIPTION"
@@ -50,11 +50,13 @@ The configuration file for srcpd is stored in XML format. As XML
 files are plain text, experienced users can manipulate such files with
 the help of a text editor. Less experienced users should select an
 external configuration tool to ensure a syntactically correct format.
-
 .PP
-Currently there is no document type definition available, to validate the
-format of a user created configuration file.
-
+If there are errors during configuration file reading the daemon will
+send appropriate notifications to the syslog daemon. These messages can
+be watched using the \fI/var/log/messages\fP file.
+.PP
+Currently there is no document type definition (DTD) available, to
+validate the format of a user created configuration file.
 .PP
 Each configuration file must contain the following structure:
 
@@ -65,50 +67,133 @@ Each configuration file must contain the following structure:
     </srcpd>
 .fi
 
-
+.PP
+Within this structure (...) the needed busses are configured, each using a
+separate substructure:
+.PP
+.nf
+    <bus>
+    ...
+    </bus>
+    <bus>
+    ...
+    </bus>
+.fi
+.\"
+.\"
 .SS General hints
 .PP
-The first configured bus should be the server-bus.
+The first configured bus should be the server-bus. Sequence and number
+of the following buses are any desired. Only buses that are actually
+used with the daemon should be filed. Not used buses can be commented
+out:
+.PP
+.nf
+    <!--
+    <bus>
+    ...
+    </bus>
+    -->
+.fi
 
+.PP
+Please bear in mind the numbering of the following buses will be changed
+accordingly.
+.\"
+.\"
 .SS Universal options
 .PP
-These options are usable for all used bus sections.
+The following options are usable for all used bus sections.
 .TP
 verbosity
 Depending on this number (valid range: 0..5) the bus will tell you less
 or more about what is happening. The 0 value gives a minimum output.
-This option is mainly used for debugging reasons.
-
+This option is mainly used for debugging reasons. Watch these messages
+using the syslog daemon file \fI/var/log/messages\fP; see \fBsrcpd
+(8)\fP for more informations.
 .TP
 device
 This is physical address of device (like /dev/ttyS0). If bus is
 \fBserver\fP or \fBloopback\fP no assignment is necessary.
-
+.TP
+auto_power_on
+This option enables/disables automatical power on for a bus on server
+daemon start. Valid input values are »yes« or »no«. This option
+is not necessary for \fBserver\fP and \fBloopback\fP buses. The default
+value is »no«.
+.\"
+.\"
 .SS server
 .PP
 This bus is needed everytime. General parameters will be discribed here.
-
 .TP
 tcp-port
 This is TCP/IP port for communication between srcpd and clients.
 Default is 4303 (this port is assigned to srcpd by IANA).
-
 .TP
 pid-file
 File, where srcpd is storing it's process-id. Default is
 \fI/var/run/srcpd.pid\fP.
-
 .TP
 username
 srcpd runs under this user.
 Default is \fBnobody\fP.
-
 .TP
 groupname
-srcpd runs under this group.
-Default is \fBnogroup\fP.
-
-
+srcpd runs under this group. Default is \fBnogroup\fP.
+.\"
+.\"
+.SS ddl
+.PP
+Digital Direct for Linux via serial line (RS232).
+.TP
+number_ga
+.TP
+number_gl
+.TP
+enable_ringindicator_checking
+.TP
+enable_checkshort_checking
+.TP
+inverse_dsr_handling
+.TP
+enable_maerklin
+.TP
+enable_nmradcc
+.TP
+improve_nmradcc_timing
+.TP
+shortcut_failure_delay
+.TP
+nmradcc_translation_routine
+.TP
+enable_usleep_patch
+.TP
+usleep_usec
+.\"
+.\"
+.SS ddl-s88
+.PP
+Digital Direct for Linux S88 via parport (IEEE 1284).
+.TP
+ioport
+Line printer port input/output address. Default value is 0x0378.
+.TP
+clockscale
+.TP
+refresh
+.TP
+p_time
+.TP
+number_fb_1
+.TP
+number_fb_2
+.TP
+number_fb_3
+.TP
+number_fb_4
+.\"
+.\"
 .SS hsi-88
 .PP
 This driver supports the HSI-88 device from Littfinski connected
@@ -139,10 +224,21 @@ feedback in a specific range.
 .TP
 refresh
 The time in microseconds after srcpd will read feedback from HSI-88.
-
-
+.\"
+.\"
+.SS i2c-dev
+.PP
+Bus driver for i2c-dev interface of the Linux kernel, can be used to
+access hardware found on http://www.matronix.de/.
+.TP
+multiplex_buses
+.TP
+ga_hardware_inverters
+.TP
+ga_reset_device
+.\"
+.\"
 .SS intellibox
-
 .PP
 This driver supports the Intellibox device from Uhlenbrock connected
 via the serial port. Only extended mode commands are used. Programming
@@ -172,7 +268,8 @@ number_fb
 This is the number of S88 modules attached to the Intellibox device.
 It can be as large as 31. The default is 0 (no modules are attached).
 Please note that Loconet is currently not supported.
-
+.\"
+.\"
 .SS li100, li100usb
 .PP
 This driver connects with the LI100, LI100F, LI101F or LI-USB devices from
@@ -204,7 +301,8 @@ This is the number of RS modules attached to the Lenz device.
 It can be as large as 512. It's assumed, that one modul has 8 inputs.
 A value of 0 means no FB available.
 Default is 256 (LI-USB 512).
-
+.\"
+.\"
 .SS loopback
 .PP
 This bus does not connect to real hardware. It is used primarily
@@ -212,76 +310,93 @@ for development tasks but may be useful for real installations too.
 Every command on this bus does only have an echo effect on the INFO
 sessions. The devices may be used as virtual devices for communication
 tasks.
-
 .TP
 number_ga
 This is the number of GA devices. Default is 256.
-
 .TP
 number_gl
 Like the number of GA this number gives the maximum address.
 Default is 80
-
 .TP
 number_fb
 This is the number of feedback devices. Default is 0 (no device).
-
+.\"
+.\"
 .SS m605x
 .PP
 This driver connects with the 6051 or 6050 devices from Marklin connected
 via the serial port. An USB2Serial converter should work fine. The serial
 line settings are fixed to 2400 8N2 and cannot be changed.
-
 .TP
 m6020mode
 In this mode the srcpd does not sent the 4 functions. This
 is a feature of the 6021 only.
-
 .TP
 p_time
 This is the time the driver code waits until it recognized the input
 change in milliseconds. This feature may support a debounce found in
 the hardware.
-
 .TP
 ga_min_activetime
 The time in milliseconds a GA device needs to be in active state. The
 absolute minimum is 75 ms and is needed for stable communication with
 the 6051.
-
 .TP
 pause_between_commands
 This is the time between two commands the drivers must wait. The exact
 values should be hand tuned. If the system does not respond or drops
 commands try to increase this value. Default is 200 (milliseconds).
-
 .TP
 pause_between_bytes
 This is the time the driver waits between 2 bytes in multi-byte commands.
 The hardware handshake does not work with all devices so this parameter
 was introduced to support it. The default is 2 (milliseconds)
-
 .TP
 number_ga
 This is the number of GA. This parameter does not have a real effect
 since the interface supports the addresses 1..256 only. Keep the
 default untouched.
-
 .TP
 number_gl
 Like the number of GA this number gives the maximum address. Since this
 number is limited to 80, keep the default untouched.
-
 .TP
 number_fb
 This is the number of 6088 modules attached to the 6051/6050 device.
 The valid range is from 0..31. The default value is 0 (no modules are
 attached). Please note that 6088 modules attached to other devices
 (memory) cannot be accessed.
-
+.\"
+.\"
+.SS selectrix
+.PP
+Selectrix CC-2000 and Rautenhaus SLX852.
+.TP
+number_ga
+.TP
+number_gl
+.TP
+number_fb
+.TP
+controller
+.\"
+.\"
+.SS zimo
+.PP
+Zimo MX1
+.TP
+number_ga
+.TP
+number_gl
+.TP
+number_fb
+.TP
+p_time
+.\"
+.\"
 .SH FILES
 .I /etc/srcpd.conf
+.\"
 .SH "SEE ALSO"
 .BR srcpd\ (8)
-
 
