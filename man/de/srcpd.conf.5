@@ -284,13 +284,14 @@ ga_reset_device
 .\"
 .PP
 Dieses Modul unterstüzt den Betrieb mit einer Uhlenbrock Intellibox (IB),
-die über eine serielle Schnittstelle angeschlossen ist. Von den zur
-Verfügung stehenden IB-Protokollen werden nur Kommandos im erweiterten
-Modus genutzt. Beim Betrieb mit protokollkompatiblen Zentralen anderer
-Hersteller ist das gegebenenfalls zu berücksichtigen. Das Programmieren
-von Decodern ist zur Zeit nur für DCC implementiert. Als
-Schnittstellengeschwindigkeit sind die folgenden Varianten möglich: 2400
-Baud, 4800 Baud, 9600 Baud, 19200 Baud und 38400 Baud.
+die über eine serielle Schnittstelle angeschlossen ist. Die Ansteuerung
+der IB erfolgt über das P50X-Protokoll, zum geringeren Teil mit der
+analogen und zum größeren Teil mit der binären Variante. Beim Betrieb mit
+protokollkompatiblen Zentralen anderer Hersteller ist das gegebenenfalls
+zu berücksichtigen. Das Programmieren von Decodern ist zur Zeit nur
+für DCC implementiert. Als Schnittstellengeschwindigkeit sind die
+folgenden Varianten möglich: 2400 Baud, 4800 Baud, 9600 Baud, 19200
+Baud und 38400 Baud.
 .\"
 .TP
 fb_delay_time_0
@@ -333,26 +334,31 @@ nicht unterstützt.
 .SS li100, li100usb
 .\"
 .PP
-This driver connects with the LI100, LI100F, LI101F or LI-USB devices from
-LENZ connected via the serial port/USB-interface. An USB2Serial converter
-should not be used. The serial line settings are depending on type of
-interface. For LI-USB it's fixed to 57600baud with no chance to change.
-Autodetection of serial port interface speed is currently under
-construction. If connection fails, try restart of srcpd with an other
-speed. Possible values can be 9600baud, 19200baud, 38400baud, 57600baud and
-115200baud (depending on your interface).
+Dieses Modul unterstützt den Betrieb mit den Lenz-Geräten LI100, LI100F,
+LI101F und LI-USB, angeschlossen über die serielle Schnittstelle (RS232)
+oder den Universal Serial Bus (USB). Ein USB/Seriell-Konvertierer sollte
+nicht verwendet werde. Die möglichen Geschwindigkeiten der seriellen
+Schnittstelle sind vom verwendeten Gerät abhängig. Für das LI-USB ist
+sie fest auf 57600 Baud eingestellt, ohne Möglichkeit, das zu verändern.
+Ein automatisches Erkennen der richtigen Geschwindikeit ist derzeit in
+Arbeit. Wenn die Verbindungsaufnahme scheitert, versuchen Sie mit einer
+anderen Geschwindigkeitseinstellung zurecht zu kommen. Erlaubte Werte
+sind, abhängig vom verwendeten Gerät, 9600 Baud, 19200 Baud, 38400 Baud,
+57600 Baud und 115200 Baud.
 .\"
 .TP
 fb_delay_time_0
-This is the time an feedback input must be zero, before zero is delivered to
-clients. Time is milliseconds. With this feature you can compensate bad
-feedback in a specific range.
+Dieser Wert in Millisekunden legt fest, wie lange ein Rückmeldekontakt
+auf Null liegen muß, bevor er als gültiger Wert weitergeleitet wird.
+Hiermit lassen sich schlechte Rückmeldungen (Wackler) in begrenztem
+Umfang entprellen. Der voreingestellte Wert beträgt 0 ms.
 .\"
 .TP
 number_ga
-This is the number of GA. Supported range is 0..1024. A value of 0 means no
-GA available.
-Default is 99 (LI-USB 9999).
+Dieser Wert legt den maximalen Adressbereich für die verwendeten
+Magnetartikel (GA) fest. Gültig sind Werte von 0 bis 1024. Ein Wert von 0
+bedeutet, dass keine Magnetartikel verwendet werden. Der voreingestellte
+Wert beträgt 99, beim LI-USB 9999.
 .\"
 .TP
 number_gl
@@ -362,10 +368,10 @@ Default is 99 (LI-USB 9999).
 .\"
 .TP
 number_fb
-This is the number of RS modules attached to the Lenz device.
-It can be as large as 512. It's assumed, that one modul has 8 inputs.
-A value of 0 means no FB available.
-Default is 256 (LI-USB 512).
+Dieser Wert legt die Anzahl der angeschlossenen RS-Module fest. Gültig
+sind Werte von 0 bis 512 (bei Modulen mit 8 Kontakten); 0 bedeutet, keine
+Module sind angeschlossen. Der voreingestellte Wert beträgt 256, beim
+LI-USB 512.
 .\"
 .\"
 .SS loopback
@@ -375,21 +381,21 @@ Dieser Bus stellt keine Verbindung zu einem existierenden Steuergerät
 her. Er ist primär für Entwicklungzwecke gedacht kann aber auch 
 bei betriebsfähgien Installationen nützlich sein. Jedes Kommando auf
 diesem Bus bewirkt lediglich ein entsprechendes Echo bei den
-INFO-Sitzungen. Dieser Bus kann also für Kommunikationszwecke genutzt
-werden.
+INFO-Sitzungen. Dieser Bus kann also auch für Kommunikationszwecke
+genutzt werden.
 .\"
 .TP
 number_ga
-Anzahl der adressierbaren GA-Geräte. Die Voreinstellung ist 256.
+Anzahl der adressierbaren Magnetartikel (GA). Die Voreinstellung ist 256.
 .\"
 .TP
 number_gl
-Anzahl der adressierbaren GL-Geräte. Die Voreinstellung ist 80.
+Anzahl der adressierbaren Lokdecoder (GL). Die Voreinstellung ist 80.
 .\"
 .TP
 number_fb
-Anzahl der adressierbaren Rückmeldekontakte. Die Voreintsellung ist 0
-(keine Rückmeldemodule vorhanden).
+Anzahl der adressierbaren Rückmeldemodule mit je 16 Kontakten. Die
+Voreinstellung ist 0 (keine Rückmeldemodule vorhanden).
 .\"
 .\"
 .SS m605x
