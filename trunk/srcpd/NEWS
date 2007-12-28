@@ -15,9 +15,10 @@ srcpd-2.0.11 (200?-??-??)
 
   New Features
     o Add 115200 as value for speed for LI101F (Lenz).
+    o More comprehensive man page srcpd.8
     o New man page srcpd.conf.5
-    o Translated man pages for German users.
-    o Enabled configuration file re-read by using SIGHUP.
+    o Man pages translated to German.
+    o Enabled signal triggered configuration file re-read using SIGHUP.
     o Support for Generic Messages added.
 
   General Changes
@@ -25,6 +26,7 @@ srcpd-2.0.11 (200?-??-??)
     o Threads library detection macro added.
     o Updated libxml2 detection macro.
     o A lot of internal code reorganisation and optimization.
+    o Debian control files are removed from distribution.
 
 
 Version 2.0 
