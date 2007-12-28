@@ -227,39 +227,44 @@ number_fb_4
 .SS hsi-88
 .\"
 .PP
-This driver connects with the HSI-88 device from Littfinski connected
-via the serial port. An USB2Serial converter should work fine. The serial
-line settings are fixed to 9600baud and cannot be changed. Sum of all
-feedback-modules must be less or equal to 31, otherwise you will get an
-errormessage.
+Dieses Modul unterstützt den Betrieb eines Littfinski HSI-88, das an
+eine serielle Schnittstelle angeschlossen ist. Auch der Anschluß über
+einen USB/Seriell-Konvertierer sollte problemlos möglich sein. Die
+Geschwindigkeitseinstellung für die serielle Schnittstelle ist fest auf
+9600 Baud eingestellt und kann nicht verändert werden.
+
+Das HSI-88 verfügt über drei Kanäle zum Anschluß von
+S88-Rückmeldemodulen. Die Summe der pro Kanal angeschlossenen Module
+(mit 16 Kontakten) darf maximal 31 betragen, sonst erfolgt die Ausgabe
+einer Fehlermeldung. Bei der Verwendung von Modulen mit 8 Kontakten
+zählen 2 Module wie eines mit 16 Kontakten.
 .\"
 .TP
 number_fb_left
-HSI-88 has three lines for S88-bus. This value is number of feedback-modules
-(with 16 inputs) connected to line called \fBleft\fP. If you use
-feedback-modules with 8 inputs, 2 modules are counted as one.
+Diese Angabe legt die Anzahl der am Kanal mit der Bezeichnung
+\fBlinks\fP angeschlossenen Rückmeldemodule fest.
 .\"
 .TP
 number_fb_center
-HSI-88 has three lines for S88-bus. This value is number of feedback-modules
-(with 16 inputs) connected to line called \fBcenter\fP. If you use
-feedback-modules with 8 inputs, 2 modules are counted as one.
+Diese Angabe legt die Anzahl der am Kanal mit der Bezeichnung
+\fBmitte\fP angeschlossenen Rückmeldemodule fest.
 .\"
 .TP
 number_fb_right
-HSI-88 has three lines for S88-bus. This value is number of feedback-modules
-(with 16 inputs) connected to line called \fBright\fP. If you use
-feedback-modules with 8 inputs, 2 modules are counted as one.
+Diese Angabe legt die Anzahl der am Kanal mit der Bezeichnung
+\fBrechts\fP angeschlossenen Rückmeldemodule fest.
 .\"
 .TP
 fb_delay_time_0
-This is the time in milliseconds an feedback input must be zero, before
-zero is delivered to clients. With this feature you can compensate bad
-feedback signals in a specific range.
+Dieser Wert in Millisekunden legt fest, wie lange ein Rückmeldekontakt
+auf Null liegen muß, bevor er als gültiger Wert weitergeleitet wird.
+Hiermit lassen sich schlechte Rückmeldungen (Wackler) in begrenztem
+Umfang entprellen. Der voreingestellte Wert beträgt 0 ms.
 .\"
 .TP
 refresh
-The time in microseconds after srcpd will read feedback from HSI-88.
+Wartezeit in Mikrosekungen nach der die Rückmeldungen des Geräts erneut
+eingelesen werden. Der voreingestellte Wert beträgt 10000 µs.
 .\"
 .\"
 .SS i2c-dev
@@ -278,41 +283,51 @@ ga_reset_device
 .SS intellibox
 .\"
 .PP
-This driver connects with the Intellibox device from Uhlenbrock connected
-via the serial port. Only extended mode commands are used. Program of
-decoders is currently implemented for DCC only.
-Possible values for speed of serial port are 2400baud, 4800baud, 9600baud,
-19200baud and 38400baud.
+Dieses Modul unterstüzt den Betrieb mit einer Uhlenbrock Intellibox (IB),
+die über eine serielle Schnittstelle angeschlossen ist. Von den zur
+Verfügung stehenden IB-Protokollen werden nur Kommandos im erweiterten
+Modus genutzt. Beim Betrieb mit protokollkompatiblen Zentralen anderer
+Hersteller ist das gegebenenfalls zu berücksichtigen. Das Programmieren
+von Decodern ist zur Zeit nur für DCC implementiert. Als
+Schnittstellengeschwindigkeit sind die folgenden Varianten möglich: 2400
+Baud, 4800 Baud, 9600 Baud, 19200 Baud und 38400 Baud.
 .\"
 .TP
 fb_delay_time_0
-This is the time an feedback input must be zero, before zero is delivered to
-clients. Time is milliseconds. With this feature you can compensate bad
-feedback in a specific range.
+Dieser Wert in Millisekunden legt fest, wie lange ein Rückmeldekontakt
+auf Null liegen muß, bevor er als gültiger Wert weitergeleitet wird.
+Hiermit lassen sich schlechte Rückmeldungen (Wackler) in begrenztem
+Umfang entprellen. Der voreingestellte Wert beträgt 0 ms.
 .\"
 .TP
 pause_between_commands
-This is the time between two commands the drivers must wait. The exact
-values should be hand tuned. If the system does not respond or drops
-commands try to increase this value. Default is 250 (milliseconds).
+Mit diesem Wert wird die Verzögerungszeit in Millisekungen eingestellt,
+nach der ein weiterer Befehl an die angeschlossenen Zentrale gesendet
+wird. Der optimale Wert muß händisch ermittelt werden. Wenn die Zentrale
+nicht reagiert, oder Befehlte ignoriert, sollte der Wert erhöht werden.
+Der voreingestellte Wert beträgt 250 ms.
 .\"
 .TP
 number_ga
-This is the number of GA. Supported range is 0..1024. A value of 0 means no
-GA available.
-Default is 256.
+Dieser Wert legt den maximalen Adressbereich für die verwendeten
+Magnetartikel (GA) fest. Gültig sind Werte von 0 bis 1024. Ein Wert von 0
+bedeutet, dass keine Magnetartikel verwendet werden. Der voreingestellte
+Wert beträgt 256.
 .\"
 .TP
 number_gl
-Like the number of GA this number gives the maximum address. Supported range
-is 0..10239. A value of 0 means no GL available.
-Default is 80.
+Dieser Wert legt den maximalen Adressbereich für die verwendeten
+Lokdecoder (GL) fest. Gültig sind Werte von 0 bis 10239. Ein Wert von 0 
+bedeutet, dass keine Lokdecoder verwendet werden. Der voreingestellte 
+Wert beträgt 80.
 .\"
 .TP
 number_fb
-This is the number of S88 modules attached to the Intellibox device.
-It can be as large as 31. The default is 0 (no modules are attached).
-Please note that Loconet is currently not supported.
+Dieser Wert legt die Anzahl der an der IB angeschlossenen
+S88-Rückmeldemodule fest. Gültig sind Werte von 0 bis 31 (bei Modulen
+mit 16 Kontakten). Der voreingestellte Wert beträgt 0 (keine Module sind
+angeschlossen. Über Loconet angeschlossene Module werden gegenwärtig
+nicht unterstützt.
 .\"
 .\"
 .SS li100, li100usb
@@ -456,6 +471,8 @@ number_gl
 number_fb
 .TP
 p_time
+.\"
+.\"
 .SH "DATEIEN"
 .I /etc/srcpd.conf
 .\"
