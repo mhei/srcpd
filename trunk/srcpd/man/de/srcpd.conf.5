@@ -1,4 +1,4 @@
-.TH srcpd.conf 5 "28. Dezember 2007"
+.TH srcpd.conf 5 "29. Dezember 2007"
 .\"
 .\"
 .SH "NAME"
@@ -11,9 +11,7 @@ systemweite Konfigurationsdatei genutzt. Sie bescheibt die
 für die Laufzeit des Systemsdienstes entscheidenden Einstellungen zum
 Verhalten des Daemons selbst, sowie die Anzahl, Art und Betriebsweise
 der angeschlossenen Schnittstellen zur Modellbahn. Weitere Details zum
-Betrieb beschreibt das Handbuch
-.BR srcpd (8)
-des Daemons.
+Betrieb beschreibt das Handbuch \fBsrcpd (8)\fP des Daemons.
 .\"
 .\"
 .SH "STANDARD KONFIGURATIONSDATEI"
@@ -134,7 +132,7 @@ Informationen hierzu befinden sich im Handbuch \fBsrcpd (8)\fP.
 device
 Hiermit wird der Name der angesteuerten Schnittstelle (z.B. /dev/ttyS0)
 festgelegt. Die Busse \fBserver\fP und \fBloopback\fP benötigen diesen
-Eintrag nicht.
+Eintrag nicht. Der voreingestellte Wert ist »/dev/null«.
 .\"
 .TP
 auto_power_on
@@ -231,7 +229,7 @@ Dieses Modul unterstützt den Betrieb eines Littfinski HSI-88, das an
 eine serielle Schnittstelle angeschlossen ist. Auch der Anschluß über
 einen USB/Seriell-Konvertierer sollte problemlos möglich sein. Die
 Geschwindigkeitseinstellung für die serielle Schnittstelle ist fest auf
-9600 Baud eingestellt und kann nicht verändert werden.
+9600\ Baud eingestellt und kann nicht verändert werden.
 
 Das HSI-88 verfügt über drei Kanäle zum Anschluß von
 S88-Rückmeldemodulen. Die Summe der pro Kanal angeschlossenen Module
@@ -259,12 +257,12 @@ fb_delay_time_0
 Dieser Wert in Millisekunden legt fest, wie lange ein Rückmeldekontakt
 auf Null liegen muß, bevor er als gültiger Wert weitergeleitet wird.
 Hiermit lassen sich schlechte Rückmeldungen (Wackler) in begrenztem
-Umfang entprellen. Der voreingestellte Wert beträgt 0 ms.
+Umfang entprellen. Der voreingestellte Wert beträgt 0\ ms.
 .\"
 .TP
 refresh
 Wartezeit in Mikrosekungen nach der die Rückmeldungen des Geräts erneut
-eingelesen werden. Der voreingestellte Wert beträgt 10000 µs.
+eingelesen werden. Der voreingestellte Wert beträgt 10000\ µs.
 .\"
 .\"
 .SS i2c-dev
@@ -290,23 +288,23 @@ analogen und zum größeren Teil mit der binären Variante. Beim Betrieb mit
 protokollkompatiblen Zentralen anderer Hersteller ist das gegebenenfalls
 zu berücksichtigen. Das Programmieren von Decodern ist zur Zeit nur
 für DCC implementiert. Als Schnittstellengeschwindigkeit sind die
-folgenden Varianten möglich: 2400 Baud, 4800 Baud, 9600 Baud, 19200
-Baud und 38400 Baud.
+folgenden Varianten möglich: 2400\ Baud, 4800\ Baud, 9600\ Baud,
+19200\ Baud und 38400\ Baud.
 .\"
 .TP
 fb_delay_time_0
 Dieser Wert in Millisekunden legt fest, wie lange ein Rückmeldekontakt
 auf Null liegen muß, bevor er als gültiger Wert weitergeleitet wird.
 Hiermit lassen sich schlechte Rückmeldungen (Wackler) in begrenztem
-Umfang entprellen. Der voreingestellte Wert beträgt 0 ms.
+Umfang entprellen. Der voreingestellte Wert beträgt 0\ ms.
 .\"
 .TP
 pause_between_commands
 Mit diesem Wert wird die Verzögerungszeit in Millisekungen eingestellt,
-nach der ein weiterer Befehl an die angeschlossenen Zentrale gesendet
+nach der ein weiterer Befehl an die angeschlossene Zentrale gesendet
 wird. Der optimale Wert muß händisch ermittelt werden. Wenn die Zentrale
 nicht reagiert, oder Befehlte ignoriert, sollte der Wert erhöht werden.
-Der voreingestellte Wert beträgt 250 ms.
+Der voreingestellte Wert beträgt 250\ ms.
 .\"
 .TP
 number_ga
@@ -337,21 +335,21 @@ nicht unterstützt.
 Dieses Modul unterstützt den Betrieb mit den Lenz-Geräten LI100, LI100F,
 LI101F und LI-USB, angeschlossen über die serielle Schnittstelle (RS232)
 bzw. den Universal Serial Bus (USB). Ein USB/Seriell-Konvertierer sollte
-nicht verwendet werde. Die möglichen Geschwindigkeiten der seriellen
+nicht verwendet werden. Die möglichen Geschwindigkeiten der seriellen
 Schnittstelle sind vom verwendeten Gerät abhängig. Für das LI-USB ist
-sie fest auf 57600 Baud eingestellt, ohne Möglichkeit, das zu verändern.
+sie fest auf 57600\ Baud eingestellt, ohne Möglichkeit, das zu verändern.
 Ein automatisches Erkennen der richtigen Geschwindikeit ist derzeit in
 Arbeit. Wenn die Verbindungsaufnahme scheitert, versuchen Sie mit einer
 anderen Geschwindigkeitseinstellung zurecht zu kommen. Erlaubte Werte
-sind, abhängig vom verwendeten Gerät, 9600 Baud, 19200 Baud, 38400 Baud,
-57600 Baud und 115200 Baud.
+sind, abhängig vom verwendeten Gerät, 9600\ Baud, 19200\ Baud, 38400\ Baud,
+57600\ Baud und 115200\ Baud.
 .\"
 .TP
 fb_delay_time_0
 Dieser Wert in Millisekunden legt fest, wie lange ein Rückmeldekontakt
 auf Null liegen muß, bevor er als gültiger Wert weitergeleitet wird.
 Hiermit lassen sich schlechte Rückmeldungen (Wackler) in begrenztem
-Umfang entprellen. Der voreingestellte Wert beträgt 0 ms.
+Umfang entprellen. Der voreingestellte Wert beträgt 0\ ms.
 .\"
 .TP
 number_ga
@@ -379,7 +377,7 @@ LI-USB 512.
 .\"
 .PP
 Dieser Bus stellt keine Verbindung zu einem tatsächlich existierenden
-Steuergerät her. Er ist primär für Entwicklungzwecke gedacht kann
+Steuergerät her. Er ist primär für Entwicklungzwecke gedacht, kann
 aber auch bei betriebsfähgien Installationen nützlich sein. Jedes
 Kommando auf diesem Bus bewirkt lediglich ein entsprechendes Echo bei
 den INFO-Sitzungen. Dieser Bus kann also auch für Kommunikationszwecke
@@ -405,7 +403,7 @@ Voreinstellung ist 0 (keine Rückmeldemodule vorhanden).
 Dieses Modul unterstützt den Betrieb mit einem Märklin 6051 oder 6050,
 das über die serielle Schnittstelle angeschlossen ist. Auch der Anschluß
 über einen USB/Seriell-Konvertierer sollte problemlos möglich sein. Die
-Einstellungen der Schnittstelle sind festgelegt auf 2400 Baud, 8N2 und
+Einstellungen der Schnittstelle sind festgelegt auf 2400\ Baud, 8N2 und
 können nicht verändert werden.
 .\"
 .TP
@@ -419,21 +417,21 @@ p_time
 Dieser Wert in Millisekunden legt fest, wie lange ein Rückmeldekontakt
 auf Null liegen muß, bevor er als gültiger Wert weitergeleitet wird.
 Hiermit lassen sich schlechte Rückmeldungen (Wackler) in begrenztem
-Umfang entprellen. Der voreingestellte Wert beträgt 0 ms.
+Umfang entprellen. Der voreingestellte Wert beträgt 0\ ms.
 .\"
 .TP
 ga_min_activetime
 Dieser Wert in Millisekunden legt fest, wie lange ein Magnetartikel im
-aktiv Status sein muß. Für einen stabilen Betreib mit einem 6051 sind
-75 ms das absolute Minimum. Der voreingestellte Wert ist 75 ms.
+aktiv Status sein muß. Für einen stabilen Betrieb mit einem 6051 sind
+75\ ms das absolute Minimum. Der voreingestellte Wert beträgt 75\ ms.
 .\"
 .TP
 pause_between_commands
 Mit diesem Wert wird die Verzögerungszeit in Millisekungen eingestellt,
-nach der ein weiterer Befehl an die angeschlossenen Zentrale gesendet
+nach der ein weiterer Befehl an die angeschlossene Zentrale gesendet
 wird. Der optimale Wert muß händisch ermittelt werden. Wenn die Zentrale
-nicht reagiert, oder Befehlte ignoriert, sollte der Wert erhöht werden.
-Der voreingestellte Wert beträgt 200 ms.
+nicht reagiert, oder Befehle ignoriert, sollte der Wert erhöht werden.
+Der voreingestellte Wert beträgt 200\ ms.
 .\"
 .TP
 pause_between_bytes
@@ -441,7 +439,7 @@ Mit diesem Wert wird die Verzögerungszeit in Millisekungen eingestellt,
 die zwischen dem Versenden von zwei Bytes bei Multi-Byte-Befehlen
 gewartet wird. Hardware-Handshake funktioniert nicht mit allen Geräten,
 so dass dieser Parameter eingeführt wurde, um diesen zu ermöglichen. Der
-voreingestellte Wert beträgt 2 ms.
+voreingestellte Wert beträgt 2\ ms.
 .\"
 .TP
 number_ga
