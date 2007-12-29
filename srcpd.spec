@@ -67,13 +67,26 @@ fi
 %{_sbindir}/%{name}
 %{_sbindir}/rcsrcpd
 %{_sysconfdir}/init.d/%{name}
-%docdir %{_mandir}/man8/*
+%{_sysconfdir}/udev/rules.d/*
+%docdir %{_mandir}/*
 %{_mandir}/man8/*
+%{_mandir}/de/man8/*
+%{_mandir}/man5/*
+%{_mandir}/de/man5/*
 %config(noreplace) %{_sysconfdir}/%{name}.conf
 %doc COPYING AUTHORS README NEWS DESIGN PROGRAMMING-HOWTO
 %doc README.ibox README.freebsd README.selectrix TODO
 
 %changelog
+* Sat Dec 29 2007 Guido Scholz <guido.scholz@bayernline.de>
+- update to version 2.0.11
+- man page (man5) added
+- translated man pages added
+- udev rules file added
+
+* Sat Dec 09 2006 Guido Scholz <guido.scholz@bayernline.de>
+- update to version 2.0.10
+
 * Sun Dec 11 2005 Guido Scholz <guido.scholz@bayernline.de>
 - dist tag added, hard coded packager removed
 
