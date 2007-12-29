@@ -1,5 +1,5 @@
 '\" t
-.TH srcpd 8 "November 26, 2007"
+.TH srcpd 8 "December 29, 2007"
 .\"
 .\"
 .SH NAME
@@ -16,11 +16,11 @@ This is not a complete manual. You have to consult the project
 home page at http://srcpd.sourceforge.net for full documentation!
 
 .B srcpd
-is a UNIX daemon speaking the simple railroad command protocol
+is a UNIX daemon speaking the Simple Railroad Command Protocol
 (SRCP).
 
 Upon start up it reads in the system wide configuration file named
-\fBsrcpd.conf\fP. Contents and Stucture of this XML-file is explained
+\fBsrcpd.conf\fP. Contents and stucture of this XML-file is explained
 in detail in the \fBsrcpd.conf (5)\fP man page. The SRCP specification
 is published on http://srcpd.sourceforge.net/srcp.
 .\"
@@ -28,15 +28,15 @@ is published on http://srcpd.sourceforge.net/srcp.
 .SH OPTIONS
 .TP
 .BI \-h
-prints some useful help about command line options and exit
+Prints some useful help about command line options and exit
 .TP
 .BI \-v
-print program version, SRCP Level and exit
+Print program version, SRCP level and exit
 .TP
 .BI \-f\ <filename>
-use the specified filename as the configuration file. The default
+Use the specified filename as the configuration file. The default
 value will be defined at compile time and can be displayed using the
--h parameter.
+\fB-h\fP parameter.
 .\"
 .\"
 .SH NOTES
@@ -62,9 +62,9 @@ daemon can be started using this command:
 .fi
 .RE
 
-If the \fBsrcpd\fP is already running, it first must be stoped to get
-it aware of the new setup. Stoping the daemon is executed in analogy to
-the start command:
+If the \fBsrcpd\fP is already running, the daemon first must be stoped
+to get it aware of the new setup. Stoping the daemon is executed in
+analogy to the start command:
 
 .RS
 .nf
@@ -81,7 +81,7 @@ appropriate hardware resouces at any time.
 Common model railway interfaces will require access rights for serial
 lines (RS232, USB), which can be achieved using the proper group rights
 (e.g. »dialout«). The »ddl-s88« module uses a special system function
-(ioperm) which needs allways root rights to perform successfully.
+(ioperm) which allways needs root rights to perform successfully.
 
 To let srcpd re-read its confuguration file, assumed the setup
 mentioned before is correct, the following command can be used:
