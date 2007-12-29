@@ -16,7 +16,6 @@ Requires: libxml2
 BuildRequires: libxml2-devel
 
 %description
-
 The srcpd is a server daemon that enables you to control and play with 
 a digital model railroad using any SRCP client. Currently it supports many
 interface (both self made and commercally) and direct signal generation.
@@ -65,13 +64,26 @@ fi
 %defattr(-,root,root)
 %{_sbindir}/%{name}
 %{_sysconfdir}/init.d/%{name}
-%docdir %{_mandir}/man8/*
+%{_sysconfdir}/udev/rules.d/*
+%docdir %{_mandir}/*
 %{_mandir}/man8/*
+%{_mandir}/de/man8/*
+%{_mandir}/man5/*
+%{_mandir}/de/man5/*
 %config(noreplace) %{_sysconfdir}/%{name}.conf
 %doc COPYING AUTHORS README NEWS DESIGN PROGRAMMING-HOWTO
 %doc README.ibox README.freebsd README.selectrix TODO
 
 %changelog
+* Sat Dec 29 2007 Guido Scholz <guido.scholz@bayernline.de>
+- update to version 2.0.11
+- man page (man5) added
+- translated man pages added
+- udev rules file added
+
+* Sat Dec 09 2006 Guido Scholz <guido.scholz@bayernline.de>
+- update to version 2.0.10
+
 * Mon Dec 26 2005 Guido Scholz <guido.scholz@bayernline.de>
 - adaptation to redhat/fedora style
 
