@@ -12,6 +12,7 @@
 #include "config-srcpd.h"
 #include <sys/time.h>
 
+/* reserve 16 bit of space (short int) for 1 bit of information, two times */
 typedef struct _FBSTATE
 {
   struct timeval timestamp;
