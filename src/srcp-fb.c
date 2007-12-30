@@ -18,13 +18,13 @@
 
 /* one array for all buses             */
 /* not visible outside of this module   */
-static struct _FB fb[MAX_BUSES];
+static fb_t fb[MAX_BUSES];
 static int min_time[MAX_BUSES];
 
 #define QUEUELENGTH_FB 1000
 
 /* reset fb queue */
-static struct _RESET_FB reset_queue[MAX_BUSES][QUEUELENGTH_FB];
+static fb_reset_t reset_queue[MAX_BUSES][QUEUELENGTH_FB];
 static pthread_mutex_t queue_mutex_fb, queue_mutex_reset[MAX_BUSES];
 static int out[MAX_BUSES], in[MAX_BUSES];
 
@@ -58,7 +58,7 @@ int queueIsEmptyFB(bus_t busnumber)
 }
 
 /** returns next entry and >=0, or -1 */
-static int getNextFB(bus_t busnumber, struct _RESET_FB *info)
+static int getNextFB(bus_t busnumber, fb_reset_t *info)
 {
     if (in[busnumber] == out[busnumber])
         return -1;
@@ -292,7 +292,7 @@ int get_number_fb(bus_t bus)
 
 void check_reset_fb(bus_t busnumber)
 {
-    struct _RESET_FB reset_fb;
+    fb_reset_t reset_fb;
     struct timeval cmp_time, diff_time;
 
     while (getNextFB(busnumber, &reset_fb) != -1) {

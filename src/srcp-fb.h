@@ -23,13 +23,13 @@ typedef struct _FB
 {
   int numberOfFb;
   fb_state_t *fbstate;
-} FB;
+} fb_t;
 
 typedef struct _RESET_FB
 {
   int port;
   struct timeval timestamp;
-} reset_FB;
+} fb_reset_t;
 
 int startup_FB(void);
 int init_FB(bus_t bus, int number);
