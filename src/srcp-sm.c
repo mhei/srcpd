@@ -64,7 +64,7 @@ int queueInfoSM( bus_t busnumber, int addr, int type, int typeaddr,
 
   if ( return_code == 0 )
   {
-    sprintf( buffer, "%ld.%ld 100 INFO %ld SM %d",
+    sprintf( buffer, "%lu.%.3lu 100 INFO %ld SM %d",
              akt_time->tv_sec, akt_time->tv_usec / 1000,
              busnumber, addr );
     switch ( type )
@@ -85,7 +85,7 @@ int queueInfoSM( bus_t busnumber, int addr, int type, int typeaddr,
   }
   else
   {
-    sprintf( buffer, "%ld.%ld 600 ERROR %ld SM %d %d",
+    sprintf( buffer, "%lu.%.3lu 600 ERROR %ld SM %d %d",
              akt_time->tv_sec, akt_time->tv_usec / 1000,
              busnumber, addr, return_code );
     switch ( return_code )
@@ -253,13 +253,13 @@ int infoSM( bus_t busnumber, int command, int type, int addr,
   if ( session_wait( busnumber, 90, &result ) == ETIMEDOUT )
   {
     gettimeofday( &now, NULL );
-    sprintf( info, "%ld.%ld 417 ERROR timeout\n", now.tv_sec,
+    sprintf( info, "%lu.%.3lu 417 ERROR timeout\n", now.tv_sec,
              now.tv_usec / 1000 );
   }
   else
   {
     gettimeofday( &now, NULL );
-    sprintf( info, "%ld.%ld 100 INFO %ld SM %d CV %d %d\n", now.tv_sec,
+    sprintf( info, "%lu.%.3lu 100 INFO %ld SM %d CV %d %d\n", now.tv_sec,
              now.tv_usec / 1000, busnumber, addr, typeaddr, result );
   }
   session_cleanupwait( busnumber );
