@@ -1,3 +1,6 @@
+2008-01-02 André Schenk <andre@melior.s.bawue.de>
+	* srcp-sm.c: Fixed time format for SM messages.
+
 2008-01-02 Guido Scholz <guido.scholz@bayernline.de>
 	* README.ibox: Outdated file removed.
 
