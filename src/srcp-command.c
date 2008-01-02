@@ -668,7 +668,7 @@ int doCmdClient(session_node_t* sn)
     struct timeval akt_time;
     ssize_t result;
 
-    syslog_session(sn->session, DBG_INFO, "Command mode starting.");
+    syslog_session(sn->session, DBG_INFO, "Command mode started.");
 
     while (1) {
         pthread_testcancel();
@@ -749,8 +749,8 @@ int doCmdClient(session_node_t* sn)
         }
         /* nelem < 3 */
         else {
-            syslog_bus(0, DBG_DEBUG, "list too short in session %ld: %d",
-                sn->session, nelem);
+            syslog_session(sn->session, DBG_DEBUG,
+                    "List too short: %d", nelem);
             rc = SRCP_LISTTOOSHORT;
             gettimeofday(&akt_time, NULL);
             srcp_fmt_msg(rc, reply, akt_time);
