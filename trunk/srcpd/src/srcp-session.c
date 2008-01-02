@@ -71,12 +71,24 @@ static void list_remove(session_node_t **p)
     }
 }
 
-/* search sessionid in list, return pointer to node */
+/* search sessionid in list, return pointer to node pointer*/
 static session_node_t** list_search_session(session_node_t **n,
         sessionid_t sid) {
     while (*n != NULL) {
         if ((*n)->session == sid) {
             return n;
+        }
+        n = &(*n)->next;
+    }
+    return NULL;
+}
+
+/* search sessionid in list, return pointer to node */
+static session_node_t* list_search_session_node(session_node_t **n,
+        sessionid_t sid) {
+    while (*n != NULL) {
+        if ((*n)->session == sid) {
+            return *n;
         }
         n = &(*n)->next;
     }
@@ -180,9 +192,9 @@ int is_valid_info_session(sessionid_t session)
 }
 
 /* enqueue a new info message to the appropriate session queue */
-void session_enqueue_info_message(sessionid_t sid, char* message)
+void session_enqueue_info_message(sessionid_t sid, const char* message)
 {
-    session_node_t** n;
+    session_node_t* n;
     qitem_t qi;
         
     /*return immediately, if no session is running*/
@@ -191,19 +203,19 @@ void session_enqueue_info_message(sessionid_t sid, char* message)
 
     /*enqueue message for all info sessions*/
     if (sid == 0) {
-        session_node_t* node = session_list;   
+        n = session_list;   
         pthread_mutex_lock(&session_list_mutex);
 
-        while (node != NULL) {
-            if (node->mode == smInfo) {
+        while (n != NULL) {
+            if (n->mode == smInfo) {
                 qi.message = (char*) malloc(strlen(message) + 1);
                 strcpy(qi.message, message);
-                pthread_mutex_lock(&node->queue_mutex);
-                enqueue(qi, &node->queue);
-                pthread_cond_signal(&node->queue_cond);
-                pthread_mutex_unlock(&node->queue_mutex);
+                pthread_mutex_lock(&n->queue_mutex);
+                enqueue(qi, &n->queue);
+                pthread_cond_signal(&n->queue_cond);
+                pthread_mutex_unlock(&n->queue_mutex);
             }
-            node = node->next;
+            n = n->next;
         }
         pthread_mutex_unlock(&session_list_mutex);
     }
@@ -211,15 +223,15 @@ void session_enqueue_info_message(sessionid_t sid, char* message)
     /*enqueue message for single info session*/
     else {
         pthread_mutex_lock(&session_list_mutex);
-        n = list_search_session(&session_list, sid);
+        n = list_search_session_node(&session_list, sid);
 
-        if (*n != NULL && (*n)->mode == smInfo) {
+        if (n != NULL && n->mode == smInfo) {
             qi.message = (char*) malloc(strlen(message) + 1);
             strcpy(qi.message, message);
-            pthread_mutex_lock(&(*n)->queue_mutex);
-            enqueue(qi, &(*n)->queue);
-            pthread_cond_signal(&(*n)->queue_cond);
-            pthread_mutex_unlock(&(*n)->queue_mutex);
+            pthread_mutex_lock(&n->queue_mutex);
+            enqueue(qi, &n->queue);
+            pthread_cond_signal(&n->queue_cond);
+            pthread_mutex_unlock(&n->queue_mutex);
         }
         pthread_mutex_unlock(&session_list_mutex);
     }
