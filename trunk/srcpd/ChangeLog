@@ -1,3 +1,6 @@
+2008-01-02 Guido Scholz <guido.scholz@bayernline.de>
+	* README.ibox: Outdated file removed.
+
 2007-12-25 Guido Scholz <guido.scholz@bayernline.de>
 	* stdincludes.h, *.c: obsolete stdincludes.h file removed.
 	* io.c, srcp-command.c, clientservice.c, loconet.c: handle

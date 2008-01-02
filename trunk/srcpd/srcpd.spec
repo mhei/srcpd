@@ -75,7 +75,7 @@ fi
 %{_mandir}/de/man5/*
 %config(noreplace) %{_sysconfdir}/%{name}.conf
 %doc COPYING AUTHORS README NEWS DESIGN PROGRAMMING-HOWTO
-%doc README.ibox README.freebsd README.selectrix TODO
+%doc README.freebsd README.selectrix TODO
 
 %changelog
 * Sat Dec 29 2007 Guido Scholz <guido.scholz@bayernline.de>

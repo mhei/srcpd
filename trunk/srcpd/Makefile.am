@@ -5,7 +5,7 @@
 SUBDIRS = src man
 
 EXTRA_DIST = AUTHORS COPYING TODO NEWS ChangeLog INSTALL DESIGN \
-	README README.freebsd README.ibox README.selectrix \
+	README README.freebsd README.selectrix \
 	PROGRAMMING-HOWTO srcpd.lsm srcpd.spec srcpd.redhat.spec \
         init.d.suse init.d.redhat init.d.lsb
 
