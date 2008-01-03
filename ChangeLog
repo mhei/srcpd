@@ -1,3 +1,6 @@
+2008-01-03 André Schenk <andre@melior.s.bawue.de>
+	* loopback.c: Service Mode (SM) for loopback bus added.
+
 2008-01-02 André Schenk <andre@melior.s.bawue.de>
 	* srcp-sm.c: Fixed time format for SM messages.
 
