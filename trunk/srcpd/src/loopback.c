@@ -10,6 +10,7 @@
 #include "srcp-fb.h"
 #include "srcp-ga.h"
 #include "srcp-gl.h"
+#include "srcp-sm.h"
 #include "srcp-power.h"
 #include "srcp-server.h"
 #include "srcp-info.h"
@@ -17,6 +18,8 @@
 #include "syslogmessage.h"
 
 #define __loopback ((LOOPBACK_DATA*)buses[busnumber].driverdata)
+
+#define MAX_CV_NUMBER 255
 
 int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
@@ -34,7 +37,7 @@ int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     buses[busnumber].init_gl_func = &init_gl_LOOPBACK;
     buses[busnumber].init_ga_func = &init_ga_LOOPBACK;
     strcpy(buses[busnumber].description,
-           "GA GL FB POWER LOCK DESCRIPTION");
+           "GA GL FB SM POWER LOCK DESCRIPTION");
 
     __loopback->number_fb = 0;  /* max 31 */
     __loopback->number_ga = 256;
@@ -204,9 +207,10 @@ void *thr_sendrec_LOOPBACK(void *v)
 {
     gl_state_t gltmp, glakt;
     ga_state_t gatmp;
+    struct _SM smtmp;
     int addr;
     int last_cancel_state, last_cancel_type;
-
+    int cv[MAX_CV_NUMBER + 1];
     bus_t bus = (bus_t) v;
 
     bus_thread_t* btd = (bus_thread_t*) malloc(sizeof(bus_thread_t));
@@ -252,6 +256,7 @@ void *thr_sendrec_LOOPBACK(void *v)
             cacheSetGL(bus, addr, gltmp);
         }
         buses[bus].watchdog = 4;
+
         if (!queue_GA_isempty(bus)) {
             unqueueNextGA(bus, &gatmp);
             addr = gatmp.id;
@@ -261,6 +266,29 @@ void *thr_sendrec_LOOPBACK(void *v)
             setGA(bus, addr, gatmp);
             buses[bus].watchdog = 6;
         }
+
+        if (!queue_SM_isempty(bus)) {
+            unqueueNextSM(bus, &smtmp);
+
+            if (smtmp.command == GET) {
+                if ((smtmp.typeaddr >= 0) &&
+                        (smtmp.typeaddr <= MAX_CV_NUMBER)) {
+                    smtmp.value = cv[smtmp.typeaddr];
+                }
+            }
+
+            else if (smtmp.command == SET) {
+                if ((smtmp.typeaddr >= 0) &&
+                        (smtmp.typeaddr <= MAX_CV_NUMBER)) {
+                    cv[smtmp.typeaddr] = smtmp.value;
+                }
+                setSM(bus, smtmp.type, smtmp.addr, smtmp.typeaddr,
+                        smtmp.bit, cv[smtmp.typeaddr], 0);
+            }
+
+            session_endwait(bus, smtmp.value);
+        }
+
         usleep(1000);
     }
 
