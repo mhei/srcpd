@@ -1,9 +1,10 @@
-srcpd-2.0.11 (200?-??-??)
+srcpd-2.0.11 (2008-??-??)
   Fixed Bugs
     o Fixed »switch power on« bug for DDL module
     o Fixed microsecond value for GA initialization.
     o Fixed wrong milli-second format for INFO GA (was e.g. »x.6«
       instead of »x.006«)
+    o Fixed wrong server time format for SM messages (same as above)
     o Disabled writing to 'stderr' during normal operation, this fixes
       broken debian package updates and srcpd misbehavior in SuSEs
       runlevel editor.
@@ -20,6 +21,8 @@ srcpd-2.0.11 (200?-??-??)
     o Man pages translated to German.
     o Enabled signal triggered configuration file re-read using SIGHUP.
     o Support for Generic Messages added.
+    o Allow Selectix protocol (S) usage on loopback device.
+    o Enabled Service Mode (SM) on loopback device.
 
   General Changes
     o Change »p_time« to »fb_delay_time_0« for li100, ib and hsi-s88
@@ -27,6 +30,7 @@ srcpd-2.0.11 (200?-??-??)
     o Updated libxml2 detection macro.
     o A lot of internal code reorganisation and optimization.
     o Debian control files are removed from distribution.
+    o Outdated README.ibox removed from distribution.
 
 
 Version 2.0 
