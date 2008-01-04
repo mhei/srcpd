@@ -407,7 +407,7 @@ int readConfig(char *filename)
 
 /**
  * suspend_bus_thread: Holds the thread until a resume command is given.
-        The thread waits in this routines
+        The bus thread waits in this routine.
  * @param busnumber
        bus_t given the bus which thread has to be stopped.
  */
@@ -425,8 +425,13 @@ void suspend_bus_thread(bus_t busnumber)
                 strerror(result), result);
     }
 
-    pthread_cond_wait(&buses[busnumber].transmit_cond,
+    result = pthread_cond_wait(&buses[busnumber].transmit_cond,
             &buses[busnumber].transmit_mutex);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "pthread_cond_wait() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
     
     /* mutex released.       */
     result = pthread_mutex_unlock(&buses[busnumber].transmit_mutex);
@@ -454,7 +459,12 @@ void resume_bus_thread(bus_t busnumber)
                 strerror(result), result);
     }
 
-    pthread_cond_signal(&buses[busnumber].transmit_cond);
+    result = pthread_cond_signal(&buses[busnumber].transmit_cond);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "pthread_cond_signal() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
     
     result = pthread_mutex_unlock(&buses[busnumber].transmit_mutex);
     if (result != 0) {
