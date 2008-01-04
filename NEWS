@@ -15,7 +15,7 @@ srcpd-2.0.11 (2008-??-??)
       This prevents srcpd from eating system resources.
 
   New Features
-    o Add 115200 as value for speed for LI101F (Lenz).
+    o Added 115200 as a new speed configuration value for LI101F (Lenz).
     o More comprehensive man page srcpd.8
     o New man page srcpd.conf.5
     o Man pages translated to German.
@@ -23,12 +23,18 @@ srcpd-2.0.11 (2008-??-??)
     o Support for Generic Messages added.
     o Allow Selectix protocol (S) usage on loopback device.
     o Enabled Service Mode (SM) on loopback device.
+    o Busy waiting of active information sessions is substituted by an
+      event driven programming model. This leads to lower CPU time
+      usage.
+    0 Timely detection of closed information sessions.
 
   General Changes
-    o Change »p_time« to »fb_delay_time_0« for li100, ib and hsi-s88
+    o Change configuration option »p_time« to »fb_delay_time_0« for all
+      feedback handling buses
     o Threads library detection macro added.
     o Updated libxml2 detection macro.
-    o A lot of internal code reorganisation and optimization.
+    o A lot of internal code reorganisation and optimization including
+      more expressive error messages for system calls.
     o Debian control files are removed from distribution.
     o Outdated README.ibox removed from distribution.
 
