@@ -167,7 +167,7 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
             }
         }
 
-        else if (xmlStrcmp(child->name, BAD_CAST "p_time") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "fb_delay_time_0") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 set_min_time(busnumber, atoi((char *) txt));
