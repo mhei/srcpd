@@ -56,15 +56,23 @@ static int (*nanosleep_DDL)(const struct timespec *req, struct timespec *rem);
 
 void queue_init(bus_t busnumber)
 {
-    int error, i;
+    int result, i;
 
-    error = pthread_mutex_init(&__DDL->queue_mutex, NULL);
-    if (error) {
-        syslog_bus(0, DBG_ERROR, "DDL Engine: Cannot create mutex. Abort!");
+    result = pthread_mutex_init(&__DDL->queue_mutex, NULL);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "pthread_mutex_init() failed: %s (errno = %d).",
+                strerror(result), result);
         exit(1);
     }
 
-    pthread_mutex_lock(&__DDL->queue_mutex);
+    result = pthread_mutex_lock(&__DDL->queue_mutex);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "pthread_mutex_lock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
     for (i = 0; i < QSIZE; i++) {
         __DDL->QData[i].packet_type = QNOVALIDPKT;
         __DDL->QData[i].addr = 0;
@@ -72,9 +80,15 @@ void queue_init(bus_t busnumber)
     }
     __DDL->queue_in = 0;
     __DDL->queue_out = 0;
-
     __DDL->queue_initialized = TRUE;
-    pthread_mutex_unlock(&__DDL->queue_mutex);
+
+    result = pthread_mutex_unlock(&__DDL->queue_mutex);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "pthread_mutex_unlock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
 }
 
 int queue_empty(bus_t busnumber)
@@ -85,7 +99,15 @@ int queue_empty(bus_t busnumber)
 void queue_add(bus_t busnumber, int addr, char *const packet,
                int packet_type, int packet_size)
 {
-    pthread_mutex_lock(&__DDL->queue_mutex);
+    int result;
+
+    result = pthread_mutex_lock(&__DDL->queue_mutex);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "pthread_mutex_lock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+    
     memset(__DDL->QData[__DDL->queue_in].packet, 0, PKTSIZE);
     memcpy(__DDL->QData[__DDL->queue_in].packet, packet, packet_size);
     __DDL->QData[__DDL->queue_in].packet_type = packet_type;
@@ -94,18 +116,31 @@ void queue_add(bus_t busnumber, int addr, char *const packet,
     __DDL->queue_in++;
     if (__DDL->queue_in == QSIZE)
         __DDL->queue_in = 0;
-    pthread_mutex_unlock(&__DDL->queue_mutex);
+
+    result = pthread_mutex_unlock(&__DDL->queue_mutex);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "pthread_mutex_unlock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
 }
 
 int queue_get(bus_t busnumber, int *addr, char *packet,
               int *packet_size)
 {
     int rtc;
+    int result;
 
     if (!__DDL->queue_initialized || queue_empty(busnumber))
         return QEMPTY;
 
-    pthread_mutex_lock(&__DDL->queue_mutex);
+    result = pthread_mutex_lock(&__DDL->queue_mutex);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "pthread_mutex_lock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+    
     memcpy(packet, __DDL->QData[__DDL->queue_out].packet, PKTSIZE);
     rtc = __DDL->QData[__DDL->queue_out].packet_type;
     *packet_size = __DDL->QData[__DDL->queue_out].packet_size;
@@ -114,7 +149,13 @@ int queue_get(bus_t busnumber, int *addr, char *packet,
     __DDL->queue_out++;
     if (__DDL->queue_out == QSIZE)
         __DDL->queue_out = 0;
-    pthread_mutex_unlock(&__DDL->queue_mutex);
+
+    result = pthread_mutex_unlock(&__DDL->queue_mutex);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "pthread_mutex_unlock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
 
     return rtc;
 }
@@ -325,14 +366,22 @@ int init_lineDDL(bus_t busnumber)
 void init_MaerklinPacketPool(bus_t busnumber)
 {
     int i, j;
+    int result;
 
-    if (pthread_mutex_init(&__DDL->maerklin_pktpool_mutex, NULL)) {
+    result = pthread_mutex_init(&__DDL->maerklin_pktpool_mutex, NULL);
+    if (result != 0) {
         syslog_bus(busnumber, DBG_ERROR,
-            "cannot create mutex (Maerklin packet pool). Abort!");
+            "pthread_mutex_init() failed: %s (errno = %d). Abort!",
+            strerror(result), result);
         exit(1);
     }
 
-    pthread_mutex_lock(&__DDL->maerklin_pktpool_mutex);
+    result = pthread_mutex_lock(&__DDL->maerklin_pktpool_mutex);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "pthread_mutex_lock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
 
     for (i = 0; i <= MAX_MARKLIN_ADDRESS; i++)
         __DDL->MaerklinPacketPool.knownAdresses[i] = 0;
@@ -360,7 +409,12 @@ void init_MaerklinPacketPool(bus_t busnumber)
         }
     }
 
-    pthread_mutex_unlock(&__DDL->maerklin_pktpool_mutex);
+    result = pthread_mutex_unlock(&__DDL->maerklin_pktpool_mutex);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "pthread_mutex_unlock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
 }
 
 char *get_maerklin_packet(bus_t busnumber, int adr, int fx)
@@ -374,6 +428,7 @@ void update_MaerklinPacketPool(bus_t busnumber, int adr,
                                char const *const f3, char const *const f4)
 {
     int i, found;
+    int result;
 
     syslog_bus(busnumber, DBG_INFO, "update MM Packet Pool: %d", adr);
     found = 0;
@@ -382,13 +437,25 @@ void update_MaerklinPacketPool(bus_t busnumber, int adr,
         if (__DDL->MaerklinPacketPool.knownAdresses[i] == adr)
             found = TRUE;
 
-    pthread_mutex_lock(&__DDL->maerklin_pktpool_mutex);
+    result = pthread_mutex_lock(&__DDL->maerklin_pktpool_mutex);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "pthread_mutex_lock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
     memcpy(__DDL->MaerklinPacketPool.packets[adr].packet, sd_packet, 18);
     memcpy(__DDL->MaerklinPacketPool.packets[adr].f_packets[0], f1, 18);
     memcpy(__DDL->MaerklinPacketPool.packets[adr].f_packets[1], f2, 18);
     memcpy(__DDL->MaerklinPacketPool.packets[adr].f_packets[2], f3, 18);
     memcpy(__DDL->MaerklinPacketPool.packets[adr].f_packets[3], f4, 18);
-    pthread_mutex_unlock(&__DDL->maerklin_pktpool_mutex);
+    
+    result = pthread_mutex_unlock(&__DDL->maerklin_pktpool_mutex);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "pthread_mutex_unlock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
 
     if (__DDL->MaerklinPacketPool.NrOfKnownAdresses == 1
         && __DDL->MaerklinPacketPool.knownAdresses[0] == 81)
@@ -415,18 +482,29 @@ void init_NMRAPacketPool(bus_t busnumber)
     result = pthread_mutex_init(&__DDL->nmra_pktpool_mutex, NULL);
     if (result != 0) {
         syslog_bus(busnumber, DBG_ERROR,
-            "pthread_mutex_init failed: %s (error = %d). Terminating!\n",
+            "pthread_mutex_init() failed: %s (error = %d). Terminating!\n",
             strerror(result), result);
         exit(1);
     }
 
-    pthread_mutex_lock(&__DDL->nmra_pktpool_mutex);
+    result = pthread_mutex_lock(&__DDL->nmra_pktpool_mutex);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "pthread_mutex_lock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
     for (i = 0; i <= MAX_NMRA_ADDRESS; i++)
         __DDL->NMRAPacketPool.knownAdresses[i] = 0;
 
     __DDL->NMRAPacketPool.NrOfKnownAdresses = 0;
 
-    pthread_mutex_unlock(&__DDL->nmra_pktpool_mutex);
+    result = pthread_mutex_unlock(&__DDL->nmra_pktpool_mutex);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "pthread_mutex_unlock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
 
     /* put idle packet in packet pool */
     j = translateBitstream2Packetstream(__DDL->NMRADCC_TR_V, idle_packet,
@@ -446,6 +524,7 @@ void update_NMRAPacketPool(bus_t busnumber, int adr,
                            char const *const fx_packet, int fx_packet_size)
 {
     int i, found;
+    int result;
 
     found = 0;
     for (i = 0; i <= __DDL->NMRAPacketPool.NrOfKnownAdresses && !found;
@@ -453,13 +532,25 @@ void update_NMRAPacketPool(bus_t busnumber, int adr,
         if (__DDL->NMRAPacketPool.knownAdresses[i] == adr)
             found = TRUE;
 
-    pthread_mutex_lock(&__DDL->nmra_pktpool_mutex);
+    result = pthread_mutex_lock(&__DDL->nmra_pktpool_mutex);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "pthread_mutex_lock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
     memcpy(__DDL->NMRAPacketPool.packets[adr].packet, packet, packet_size);
     __DDL->NMRAPacketPool.packets[adr].packet_size = packet_size;
     memcpy(__DDL->NMRAPacketPool.packets[adr].fx_packet, fx_packet,
            fx_packet_size);
     __DDL->NMRAPacketPool.packets[adr].fx_packet_size = fx_packet_size;
-    pthread_mutex_unlock(&__DDL->nmra_pktpool_mutex);
+
+    result = pthread_mutex_unlock(&__DDL->nmra_pktpool_mutex);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "pthread_mutex_unlock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
 
     if (__DDL->NMRAPacketPool.NrOfKnownAdresses == 1
         && __DDL->NMRAPacketPool.knownAdresses[0] == 255)
@@ -1266,15 +1357,15 @@ static void end_bus_thread(bus_thread_t *btd)
 
     result = pthread_mutex_destroy(&buses[btd->bus].transmit_mutex);
     if (result != 0) {
-        syslog_bus(btd->bus, DBG_WARN,
+        syslog_bus(btd->bus, DBG_ERROR,
                 "pthread_mutex_destroy() failed: %s (errno = %d).",
                 strerror(result), result);
     }
 
     result = pthread_cond_destroy(&buses[btd->bus].transmit_cond);
     if (result != 0) {
-        syslog_bus(btd->bus, DBG_WARN,
-                "pthread_mutex_init() failed: %s (errno = %d).",
+        syslog_bus(btd->bus, DBG_ERROR,
+                "pthread_cond_destroy() failed: %s (errno = %d).",
                 strerror(result), result);
     }
 

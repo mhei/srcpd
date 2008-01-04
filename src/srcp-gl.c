@@ -115,6 +115,7 @@ int isInitializedGL(bus_t busnumber, int addr)
 int queueGL(bus_t busnumber, int addr, int dir, int speed, int maxspeed,
             const int f)
 {
+    int result;
     struct timeval akt_time;
 
     if (isValidGL(busnumber, addr)) {
@@ -128,7 +129,13 @@ int queueGL(bus_t busnumber, int addr, int dir, int speed, int maxspeed,
             return SRCP_TEMPORARILYPROHIBITED;
         }
 
-        pthread_mutex_lock(&queue_mutex[busnumber]);
+        result = pthread_mutex_lock(&queue_mutex[busnumber]);
+        if (result != 0) {
+            syslog_bus(busnumber, DBG_ERROR,
+                    "pthread_mutex_lock() failed: %s (errno = %d).",
+                    strerror(result), result);
+        }
+
         /* Protokollbezeichner und sonstige INIT Werte in die Queue kopieren! */
         queue[busnumber][in[busnumber]].protocol =
             gl[busnumber].glstate[addr].protocol;
@@ -147,7 +154,13 @@ int queueGL(bus_t busnumber, int addr, int dir, int speed, int maxspeed,
         if (in[busnumber] == QUEUELEN)
             in[busnumber] = 0;
 
-        pthread_mutex_unlock(&queue_mutex[busnumber]);
+        result = pthread_mutex_unlock(&queue_mutex[busnumber]);
+        if (result != 0) {
+            syslog_bus(busnumber, DBG_ERROR,
+                    "pthread_mutex_unlock() failed: %s (errno = %d).",
+                    strerror(result), result);
+        }
+
         /* Restart thread to send GL command */
         resume_bus_thread(busnumber);
         return SRCP_OK;
@@ -461,13 +474,22 @@ void unlock_gl_bytime(void)
  */
 int startup_GL(void)
 {
+    int result;
     int i;
+
     for (i = 0; i < MAX_BUSES; i++) {
         in[i] = 0;
         out[i] = 0;
         gl[i].numberOfGl = 0;
         gl[i].glstate = NULL;
-        pthread_mutex_init(&queue_mutex[i], NULL);
+
+        result = pthread_mutex_init(&queue_mutex[i], NULL);
+        if (result != 0) {
+            syslog_bus(0, DBG_ERROR,
+                    "pthread_mutex_init() failed: %s (errno = %d).",
+                    strerror(result), result);
+        }
+
     }
     return 0;
 }

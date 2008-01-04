@@ -457,8 +457,14 @@ void terminate_all_sessions()
     }
 
     /*... then wait for complete termination*/
-    while (runningsessions != 0)
-        pthread_cond_wait(&session_list_cond, &session_list_mutex);
+    while (runningsessions != 0) {
+        result = pthread_cond_wait(&session_list_cond, &session_list_mutex);
+        if (result != 0) {
+            syslog_bus(0, DBG_ERROR,
+                    "pthread_cond_wait() failed: %s (errno = %d).",
+                    strerror(result), result);
+        }
+    }
 
     result = pthread_mutex_unlock(&session_list_mutex);
     if (result != 0) {
@@ -526,21 +532,37 @@ int termSESSION(bus_t bus, sessionid_t sessionid, sessionid_t termsessionid,
     return SRCP_FORBIDDEN;
 }
 
-int session_preparewait(bus_t busnumber)
+int session_preparewait(bus_t bus)
 {
-    syslog_bus(busnumber, DBG_DEBUG, "SESSION prepare wait for bus.");
-    return pthread_mutex_lock(&cb_mutex[busnumber]);
+    int result;
+
+    syslog_bus(bus, DBG_DEBUG, "SESSION prepare wait for bus.");
+    result = pthread_mutex_lock(&cb_mutex[bus]);
+    if (result != 0) {
+        syslog_bus(bus, DBG_ERROR,
+                "pthread_mutex_lock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+    return result;
 }
 
-int session_cleanupwait(bus_t busnumber)
+int session_cleanupwait(bus_t bus)
 {
-    syslog_bus(busnumber, DBG_DEBUG, "SESSION cleanup wait for bus.");
-    return pthread_mutex_unlock(&cb_mutex[busnumber]);
+    int result;
+
+    syslog_bus(bus, DBG_DEBUG, "SESSION cleanup wait for bus.");
+    result = pthread_mutex_unlock(&cb_mutex[bus]);
+    if (result != 0) {
+        syslog_bus(bus, DBG_ERROR,
+                "pthread_mutex_unlock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+    return result;
 }
 
-int session_wait(bus_t busnumber, unsigned int timeout, int *result)
+int session_wait(bus_t bus, unsigned int timeout, int *value)
 {
-    int rc;
+    int result;
     struct timespec stimeout;
     struct timeval now;
 
@@ -548,30 +570,59 @@ int session_wait(bus_t busnumber, unsigned int timeout, int *result)
     stimeout.tv_sec = now.tv_sec + timeout;
     stimeout.tv_nsec = now.tv_usec * 1000;
 
-    syslog_bus(busnumber, DBG_DEBUG, "SESSION start wait1");
-    rc = pthread_cond_timedwait(&cb_cond[busnumber], &cb_mutex[busnumber],
+    syslog_bus(bus, DBG_DEBUG, "SESSION start wait1");
+
+    result = pthread_cond_timedwait(&cb_cond[bus], &cb_mutex[bus],
                                 &stimeout);
-    *result = cb_data[busnumber];
-    syslog_bus(busnumber, DBG_DEBUG, "SESSION start wait2");
-    return rc;
+    if (result != 0) {
+        syslog_bus(bus, DBG_ERROR,
+                "pthread_cond_timedwait() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
+    *value = cb_data[bus];
+    syslog_bus(bus, DBG_DEBUG, "SESSION start wait2");
+    return result;
 }
 
-int session_endwait(bus_t busnumber, int returnvalue)
+int session_endwait(bus_t bus, int returnvalue)
 {
-    syslog_bus(busnumber, DBG_DEBUG, "SESSION end wait1 for bus.");
-    cb_data[busnumber] = returnvalue;
-    pthread_cond_broadcast(&cb_cond[busnumber]);
-    pthread_mutex_unlock(&cb_mutex[busnumber]);
-    syslog_bus(busnumber, DBG_DEBUG, "SESSION end wait2 for bus.");
+    int result;
+
+    syslog_bus(bus, DBG_DEBUG, "SESSION end wait1 for bus.");
+    cb_data[bus] = returnvalue;
+
+    result = pthread_cond_broadcast(&cb_cond[bus]);
+    if (result != 0) {
+        syslog_bus(bus, DBG_ERROR,
+                "pthread_cond_broadcast() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
+    result = pthread_mutex_unlock(&cb_mutex[bus]);
+    if (result != 0) {
+        syslog_bus(bus, DBG_ERROR,
+                "pthread_mutex_unlock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
+    syslog_bus(bus, DBG_DEBUG, "SESSION end wait2 for bus.");
     return returnvalue;
 }
 
-int session_processwait(bus_t busnumber)
+int session_processwait(bus_t bus)
 {
-    int rc;
+    int result;
 
-    syslog_bus(busnumber, DBG_DEBUG, "SESSION process wait1 for bus.");
-    rc = pthread_mutex_lock(&cb_mutex[busnumber]);
-    syslog_bus(busnumber, DBG_DEBUG, "SESSION process wait2 for bus.");
-    return rc;
+    syslog_bus(bus, DBG_DEBUG, "SESSION process wait1 for bus.");
+
+    result = pthread_mutex_lock(&cb_mutex[bus]);
+    if (result != 0) {
+        syslog_bus(bus, DBG_ERROR,
+                "pthread_mutex_lock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
+    syslog_bus(bus, DBG_DEBUG, "SESSION process wait2 for bus.");
+    return result;
 }

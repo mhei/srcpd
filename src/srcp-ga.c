@@ -53,6 +53,7 @@ int get_number_ga(bus_t busnumber)
 int queueGA(bus_t busnumber, int addr, int port, int action,
             long int activetime)
 {
+    int result;
     struct timeval akt_time;
     int number_ga = get_number_ga(busnumber);
 
@@ -62,7 +63,13 @@ int queueGA(bus_t busnumber, int addr, int port, int action,
             return SRCP_TEMPORARILYPROHIBITED;
         }
 
-        pthread_mutex_lock(&queue_mutex[busnumber]);
+        result = pthread_mutex_lock(&queue_mutex[busnumber]);
+        if (result != 0) {
+            syslog_bus(busnumber, DBG_ERROR,
+                    "pthread_mutex_lock() failed: %s (errno = %d).",
+                    strerror(result), result);
+        }
+
         queue[busnumber][in[busnumber]].protocol =
             ga[busnumber].gastate[addr].protocol;
         queue[busnumber][in[busnumber]].action = action;
@@ -75,7 +82,12 @@ int queueGA(bus_t busnumber, int addr, int port, int action,
         if (in[busnumber] == QUEUELEN)
             in[busnumber] = 0;
 
-        pthread_mutex_unlock(&queue_mutex[busnumber]);
+        result = pthread_mutex_unlock(&queue_mutex[busnumber]);
+        if (result != 0) {
+            syslog_bus(busnumber, DBG_ERROR,
+                    "pthread_mutex_unlock() failed: %s (errno = %d).",
+                    strerror(result), result);
+        }
         /* Restart thread to send GL command */
         resume_bus_thread(busnumber);
     }
@@ -322,13 +334,21 @@ void unlock_ga_bytime(void)
 
 int startup_GA(void)
 {
+    int result;
     int i;
+
     for (i = 0; i < MAX_BUSES; i++) {
         in[i] = 0;
         out[i] = 0;
         ga[i].numberOfGa = 0;
         ga[i].gastate = NULL;
-        pthread_mutex_init(&queue_mutex[i], NULL);
+
+        result = pthread_mutex_init(&queue_mutex[i], NULL);
+        if (result != 0) {
+            syslog_bus(0, DBG_ERROR,
+                    "pthread_mutex_init() failed: %s (errno = %d).",
+                    strerror(result), result);
+        }
     }
     return 0;
 }

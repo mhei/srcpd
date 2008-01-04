@@ -17,6 +17,7 @@
 
 #include <errno.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "config-srcpd.h"
 #include "srcp-error.h"
@@ -144,7 +145,9 @@ int queueInfoSM( bus_t busnumber, int addr, int type, int typeaddr,
 int queueSM( bus_t busnumber, int command, int type, int addr,
              int typeaddr, int bit, int value )
 {
-  struct timeval akt_time;
+    int result;
+    struct timeval akt_time;
+
   syslog_bus( busnumber, DBG_INFO, "queueSM for %i (in=%d out=%d)", addr,
        in[ busnumber ], out[ busnumber ] );
   /* addr == -1 means using separate program-track */
@@ -156,7 +159,12 @@ int queueSM( bus_t busnumber, int command, int type, int addr,
     return SRCP_TEMPORARILYPROHIBITED;
   }
 
-  pthread_mutex_lock( &queue_mutex[ busnumber ] );
+  result = pthread_mutex_lock( &queue_mutex[ busnumber ] );
+  if (result != 0) {
+      syslog_bus(busnumber, DBG_ERROR,
+              "pthread_mutex_lock() failed: %s (errno = %d).",
+              strerror(result), result);
+  }
 
   queue[ busnumber ][ in[ busnumber ] ].bit = bit;
   queue[ busnumber ][ in[ busnumber ] ].type = type;
@@ -170,7 +178,13 @@ int queueSM( bus_t busnumber, int command, int type, int addr,
   if ( in[ busnumber ] == QUEUELEN )
     in[ busnumber ] = 0;
 
-  pthread_mutex_unlock( &queue_mutex[ busnumber ] );
+  result = pthread_mutex_unlock( &queue_mutex[ busnumber ] );
+  if (result != 0) {
+      syslog_bus(busnumber, DBG_ERROR,
+              "pthread_mutex_unlock() failed: %s (errno = %d).",
+              strerror(result), result);
+  }
+
   syslog_bus( busnumber, DBG_DEBUG, "SM queued" );
   return SRCP_OK;
 }
