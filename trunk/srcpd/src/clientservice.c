@@ -20,7 +20,6 @@
 #include "srcp-info.h"
 #include "srcp-server.h"
 #include "syslogmessage.h"
-#include "queue.h"
 
 #include <errno.h>
 #include <sys/socket.h>
