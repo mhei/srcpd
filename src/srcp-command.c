@@ -131,30 +131,32 @@ static int handle_setcheck(sessionid_t sessionid, bus_t bus, char *device,
 
         ctype = malloc(MAXSRCPLINELEN);
         if (ctype == NULL) {
-            /* TODO: proper action if malloc returns NULL*/
+            rc = SRCP_OUTOFRESOURCES;
         }
-        sscanf(parameter, "%ld %s %ld %ld %ld", &addr, ctype, &value1,
-               &value2, &value3);
-        type = -1;
-        if (strcasecmp(ctype, "REG") == 0)
-            type = REGISTER;
-        else if (strcasecmp(ctype, "CV") == 0)
-            type = CV;
-        else if (strcasecmp(ctype, "CVBIT") == 0)
-            type = CV_BIT;
-        else if (strcasecmp(ctype, "PAGE") == 0)
-            type = PAGE;
-
-        free(ctype);
-        if (type == -1)
-            rc = SRCP_WRONGVALUE;
         else {
-            if (type == CV_BIT)
-                rc = infoSM(bus, SET, type, addr, value1, value2, value3,
+            sscanf(parameter, "%ld %s %ld %ld %ld", &addr, ctype,
+                    &value1, &value2, &value3);
+            type = -1;
+            if (strcasecmp(ctype, "REG") == 0)
+                type = REGISTER;
+            else if (strcasecmp(ctype, "CV") == 0)
+                type = CV;
+            else if (strcasecmp(ctype, "CVBIT") == 0)
+                type = CV_BIT;
+            else if (strcasecmp(ctype, "PAGE") == 0)
+                type = PAGE;
+
+            free(ctype);
+            if (type == -1)
+                rc = SRCP_WRONGVALUE;
+            else {
+                if (type == CV_BIT)
+                    rc = infoSM(bus, SET, type, addr, value1, value2,
+                            value3, reply);
+                else
+                    rc = infoSM(bus, SET, type, addr, value1, 0, value2,
                             reply);
-            else
-                rc = infoSM(bus, SET, type, addr, value1, 0, value2,
-                            reply);
+            }
         }
     }
 
@@ -302,21 +304,26 @@ int handleGET(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
 
         ctype = malloc(MAXSRCPLINELEN);
         if (ctype == NULL) {
-            /* TODO: proper action if malloc returns NULL*/
+            rc = SRCP_OUTOFRESOURCES;
         }
-        sscanf(parameter, "%ld %s %ld %ld", &addr, ctype, &value1,
-               &value2);
-        type = CV;
-        if (strcasecmp(ctype, "REG") == 0)
-            type = REGISTER;
-        else if (strcasecmp(ctype, "CVBIT") == 0)
-            type = CV_BIT;
-        else if (strcasecmp(ctype, "PAGE") == 0)
-            type = PAGE;
-        free(ctype);
-        if (type != CV_BIT)
-            value2 = 0;
-        rc = infoSM(bus, GET, type, addr, value1, value2, 0, reply);
+        else {
+            sscanf(parameter, "%ld %s %ld %ld", &addr, ctype, &value1,
+                    &value2);
+            type = CV;
+            
+            if (strcasecmp(ctype, "REG") == 0)
+                type = REGISTER;
+            else if (strcasecmp(ctype, "CVBIT") == 0)
+                type = CV_BIT;
+            else if (strcasecmp(ctype, "PAGE") == 0)
+                type = PAGE;
+
+            free(ctype);
+            
+            if (type != CV_BIT)
+                value2 = 0;
+            rc = infoSM(bus, GET, type, addr, value1, value2, 0, reply);
+        }
     }
 
     else if (bus_has_devicegroup(bus, DG_POWER)
@@ -668,7 +675,7 @@ int doCmdClient(session_node_t* sn)
     struct timeval akt_time;
     ssize_t result;
 
-    syslog_session(sn->session, DBG_INFO, "Command mode started.");
+    syslog_session(sn->session, DBG_INFO, "Command mode starting.");
 
     while (1) {
         pthread_testcancel();
@@ -724,7 +731,10 @@ int doCmdClient(session_node_t* sn)
                             parameter, reply);
                     /*special option for session termination (?)*/
                     if (rc < 0) {
-                        if (writen_amlb(sn->socket, reply) < 0) {
+                        if (writen_amlb(sn->socket, reply) == -1) {
+                            syslog_session(sn->session, DBG_ERROR,
+                                    "Socket write failed: %s (errno = %d)\n",
+                                    strerror(errno), errno);
                             break;
                         }
                         break;
@@ -749,14 +759,17 @@ int doCmdClient(session_node_t* sn)
         }
         /* nelem < 3 */
         else {
-            syslog_session(sn->session, DBG_DEBUG,
-                    "List too short: %d", nelem);
+            syslog_session(sn->session, DBG_DEBUG, "List too short: %d",
+                    nelem);
             rc = SRCP_LISTTOOSHORT;
             gettimeofday(&akt_time, NULL);
             srcp_fmt_msg(rc, reply, akt_time);
         }
 
-        if (writen_amlb(sn->socket, reply) < 0) {
+        if (writen_amlb(sn->socket, reply) == -1) {
+            syslog_session(sn->session, DBG_ERROR,
+                    "Socket write failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
             break;
         }
     }

@@ -19,8 +19,8 @@
 
 /* HandShake */
 #define SRCP_HS_WRONGPROTOCOL   400
-#define SRCP_HS_WRONGCONNMODE  401
-#define SRCP_HS_NODATA    402
+#define SRCP_HS_WRONGCONNMODE   401
+#define SRCP_HS_NODATA          402
 
 /* COMMAND MODE */
 #define SRCP_INFO                       100
@@ -40,6 +40,9 @@
 #define SRCP_UNSUPPORTEDDEVICEGROUP     422
 #define SRCP_UNSUPPORTEDOPERATION       423
 #define SRCP_DEVICEREINITIALIZED        424
+
+#define SRCP_OUTOFRESOURCES             500
+
 
 int srcp_fmt_msg(int errorcode, char *msg, struct timeval);
 

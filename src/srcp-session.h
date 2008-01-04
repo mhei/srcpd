@@ -18,10 +18,10 @@
 #ifndef _SRCP_SESSION_H
 #define _SRCP_SESSION_H
 
+#include <stdbool.h>
 #include <pthread.h>
 
 #include "config-srcpd.h"
-#include "queue.h"
 
 /*session modes, should be enum type*/
 #define smUndefined 0
@@ -35,9 +35,7 @@ typedef struct sn {
     pthread_t thread;
     int socket;
     int mode;
-    queue_t queue;
-    pthread_mutex_t queue_mutex;
-    pthread_cond_t queue_cond;
+    int pipefd[2];
     struct sn *next;
 } session_node_t;
 
@@ -49,8 +47,8 @@ void register_session(session_node_t*);
 void destroy_anonymous_session(session_node_t*);
 void destroy_session(sessionid_t);
 void terminate_all_sessions();
-int is_valid_info_session(sessionid_t);
-void session_enqueue_info_message(sessionid_t, const char*);
+bool is_valid_info_session(sessionid_t);
+void session_enqueue_info_message(sessionid_t, char*);
 
 int start_session(session_node_t*);
 int stop_session(sessionid_t);

@@ -18,21 +18,23 @@
 /*
    This code manages INFO SESSIONs. Every hardware driver, alias »bus
    process«, must call (directly or via set<devicegroup> functions) the
-   queueInfoMessage() function. This function copies the preformated
-   string into the session specific message queues. To avoid memory
-   access confusion, a mutex protects the reading and writing processes.
+   queueInfoMessage() function. This function is delegated to the
+   session function session_enqueue_info_message() which writes the
+   preformated string into the session specific message pipes.
 
-   On the other end of each session queue the information session
-   process is waiting for new enqueued messages to write them to the
-   socket file descriptor. It is blocked by a condition variable to only
+   On the other end of each session pipe the information session process
+   is waiting for new enqueued messages to write them to the socket file
+   descriptor. The process is blocked by the select() function to only
    be bussy when real work has to be done.
 
-   When a new INFO sessions starts, it will first send all available
+   When a new INFO session starts, it will first send all available
    status data and then enter the wait for new messages state.
  */
 
+#include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "io.h"
 #include "config-srcpd.h"
@@ -48,6 +50,8 @@
 #include "srcp-session.h"
 #include "syslogmessage.h"
 
+#define max(a,b)   ((a) > (b) ? (a) : (b))
+
 
 /* Enqueue a pre-formatted message */
 int queueInfoMessage(char *msg)
@@ -62,91 +66,112 @@ int startup_INFO(void)
     return SRCP_OK;
 }
 
-/* Dequeue info message; write message to socket and free message
- * memory.
- * return values:
- *      -1 if write to file descriptor failed
- *       0 if all is OK
- */
-static ssize_t process_queue_messages(session_node_t* sn)
-{
-    ssize_t result = 0;
-    qitem_t qi;
-
-    pthread_mutex_lock(&sn->queue_mutex);
-    while (!queue_is_empty(&sn->queue) && result != -1) {
-        dequeue(&qi, &sn->queue);
-        result = writen_amlb(sn->socket, qi.message);
-        free(qi.message);
-    }
-    pthread_mutex_unlock(&sn->queue_mutex);
-    return result;
-}
-
-    
 /**
  * Handler for info mode client thread;
  * terminates on write failure or if cancelled externaly
  **/
 int doInfoClient(session_node_t* sn)
 {
-    int i, number, value;
-    char reply[1000], description[1000];
+    int i, number, value, result;
+    char reply[MAXSRCPLINELEN], description[MAXSRCPLINELEN];
     struct timeval cmp_time;
-    bus_t busnumber;
+    bus_t bus;
+    fd_set rset;
+    int maxfdp1;
+    ssize_t rwresult = 0;
+
+    result = pipe(sn->pipefd);
+    if (-1 == result) {
+        syslog_session(sn->session, DBG_ERROR,
+                "Pipe create failed: %s (errno = %d)\n",
+                strerror(errno), errno);
+        return (-1);
+    }
+
+    maxfdp1 = max(sn->socket, sn->pipefd[0]) + 1;
+    FD_ZERO(&rset);
+
     syslog_session(sn->session, DBG_DEBUG, "New INFO client requested.");
 
     /* send start up-information to a new client */
-    for (busnumber = 0; busnumber <= num_buses; busnumber++) {
+    for (bus = 0; bus <= num_buses; bus++) {
         pthread_testcancel();
         syslog_session(sn->session, DBG_DEBUG,
-            "Send all data for bus number %d to new client.", busnumber);
+            "Send all data for bus number %d to new client.", bus);
 
         /* first some global bus data */
         /* send Descriptions for buses */
-        describeBus(busnumber, reply);
-        if (writen_amlb(sn->socket, reply) < 0)
+        describeBus(bus, reply);
+        if (writen_amlb(sn->socket, reply) == -1) {
+            syslog_session(sn->session, DBG_ERROR,
+                    "Socket write failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
             return -1;
+        }
         strcpy(description, reply);
         *reply = 0x00;
         
         if (strstr(description, "POWER")) {
-            infoPower(busnumber, reply);
-            if (writen_amlb(sn->socket, reply) < 0)
+            infoPower(bus, reply);
+            if (writen_amlb(sn->socket, reply) == -1) {
+                syslog_session(sn->session, DBG_ERROR,
+                        "Socket write failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
                 return -1;
+            }
             *reply = 0x00;
         }
         
         if (strstr(description, "TIME")) {
             describeTIME(reply);
-            if (writen_amlb(sn->socket, reply) < 0)
+            if (writen_amlb(sn->socket, reply) == -1) {
+                syslog_session(sn->session, DBG_ERROR,
+                        "Socket write failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
                 return -1;
+            }
             *reply = 0x00;
             infoTIME(reply);
-            if (writen_amlb(sn->socket, reply) < 0)
+            if (writen_amlb(sn->socket, reply) == -1) {
+                syslog_session(sn->session, DBG_ERROR,
+                        "Socket write failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
                 return -1;
+            }
             *reply = 0x00;
         }
 
         /* send all needed generic locomotives */
         if (strstr(description, "GL")) {
-            number = getMaxAddrGL(busnumber);
+            number = getMaxAddrGL(bus);
             for (i = 1; i <= number; i++) {
-                if (isInitializedGL(busnumber, i)) {
+                if (isInitializedGL(bus, i)) {
                     sessionid_t lockid;
-                    cacheDescribeGL(busnumber, i, reply);
-                    if (writen_amlb(sn->socket, reply) < 0)
+                    cacheDescribeGL(bus, i, reply);
+                    if (writen_amlb(sn->socket, reply) == -1) {
+                        syslog_session(sn->session, DBG_ERROR,
+                                "Socket write failed: %s (errno = %d)\n",
+                                strerror(errno), errno);
                         return -1;
+                    }
                     *reply = 0x00;
-                    cacheInfoGL(busnumber, i, reply);
-                    if (writen_amlb(sn->socket, reply) < 0)
+                    cacheInfoGL(bus, i, reply);
+                    if (writen_amlb(sn->socket, reply) == -1) {
+                        syslog_session(sn->session, DBG_ERROR,
+                                "Socket write failed: %s (errno = %d)\n",
+                                strerror(errno), errno);
                         return -1;
+                    }
                     *reply = 0x00;
-                    cacheGetLockGL(busnumber, i, &lockid);
+                    cacheGetLockGL(bus, i, &lockid);
                     if (lockid != 0) {
-                        describeLOCKGL(busnumber, i, reply);
-                        if (writen_amlb(sn->socket, reply) < 0)
+                        describeLOCKGL(bus, i, reply);
+                        if (writen_amlb(sn->socket, reply) == -1) {
+                            syslog_session(sn->session, DBG_ERROR,
+                                    "Socket write failed: %s (errno = %d)\n",
+                                    strerror(errno), errno);
                             return -1;
+                        }
                         *reply = 0x00;
                     }
                 }
@@ -155,28 +180,40 @@ int doInfoClient(session_node_t* sn)
         
         /* send all needed generic assesoires */
         if (strstr(description, "GA")) {
-            number = get_number_ga(busnumber);
+            number = get_number_ga(bus);
             for (i = 1; i <= number; i++) {
-                if (isInitializedGA(busnumber, i)) {
+                if (isInitializedGA(bus, i)) {
                     sessionid_t lockid;
                     int rc, port;
-                    describeGA(busnumber, i, reply);
-                    if (writen_amlb(sn->socket, reply) < 0)
+                    describeGA(bus, i, reply);
+                    if (writen_amlb(sn->socket, reply) == -1) {
+                        syslog_session(sn->session, DBG_ERROR,
+                                "Socket write failed: %s (errno = %d)\n",
+                                strerror(errno), errno);
                         return -1;
+                    }
                     *reply = 0x00;
                     for (port = 0; port <= 1; port++) {
-                        rc = infoGA(busnumber, i, port, reply);
-                        if ((rc == SRCP_INFO)) {
-                            if (writen_amlb(sn->socket, reply) < 0)
+                        rc = infoGA(bus, i, port, reply);
+                        if (rc == SRCP_INFO) {
+                            if (writen_amlb(sn->socket, reply) == -1) {
+                                syslog_session(sn->session, DBG_ERROR,
+                                        "Socket write failed: %s (errno = %d)\n",
+                                        strerror(errno), errno);
                                 return -1;
+                            }
                             *reply = 0x00;
                         }
                     }
-                    getlockGA(busnumber, i, &lockid);
+                    getlockGA(bus, i, &lockid);
                     if (lockid != 0) {
-                        describeLOCKGA(busnumber, i, reply);
-                        if (writen_amlb(sn->socket, reply) < 0)
+                        describeLOCKGA(bus, i, reply);
+                        if (writen_amlb(sn->socket, reply) == -1) {
+                            syslog_session(sn->session, DBG_ERROR,
+                                    "Socket write failed: %s (errno = %d)\n",
+                                    strerror(errno), errno);
                             return -1;
+                        }
                         *reply = 0x00;
                     }
                 }
@@ -185,13 +222,17 @@ int doInfoClient(session_node_t* sn)
 
         /* send all needed feedbacks */
         if (strstr(description, "FB")) {
-            number = get_number_fb(busnumber);
+            number = get_number_fb(bus);
             for (i = 1; i <= number; i++) {
-                int rc = getFB(busnumber, i, &cmp_time, &value);
+                int rc = getFB(bus, i, &cmp_time, &value);
                 if (rc == SRCP_OK && value != 0) {
-                    infoFB(busnumber, i, reply);
-                    if (writen_amlb(sn->socket, reply) < 0)
+                    infoFB(bus, i, reply);
+                    if (writen_amlb(sn->socket, reply) == -1) {
+                        syslog_session(sn->session, DBG_ERROR,
+                                "Socket write failed: %s (errno = %d)\n",
+                                strerror(errno), errno);
                         return -1;
+                    }
                     *reply = 0x00;
                 }
             }
@@ -200,24 +241,103 @@ int doInfoClient(session_node_t* sn)
     syslog_session(sn->session, DBG_DEBUG,
             "All messages send to new INFO client.\n");
 
-    /* There is a kind of race condition: Newly enqueued messages may
+    /* 
+     * There is a kind of race condition: Newly enqueued messages may
      * be ignored until we reach this point. But there is no message
-     * loss because the following while loop will detect and send them.
+     * loss because the following action will properly detect and send
+     * them.
      */
-    
+
+    /*
+     * This while loop has two tasks:
+     *   1) Wait for enqueued info messages to send them to the
+     *      connected client.
+     *   2) Detect a client connection close in a timely manner.
+     *
+     *  The select() function helps to detect activities on these two
+     *  diffent communication channels each having its own file
+     *  descriptor.
+     */
     while (1) {
         pthread_testcancel();
 
-        /*get mutex lock and wait for new messages*/
-        /*TODO: socket close by client should be detected some how*/
-        pthread_mutex_lock(&sn->queue_mutex);
-        while (queue_is_empty(&sn->queue))
-            pthread_cond_wait(&sn->queue_cond, &sn->queue_mutex);
-        pthread_mutex_unlock(&sn->queue_mutex);
+        FD_SET(sn->pipefd[0], &rset);
+        FD_SET(sn->socket, &rset);
 
-        /* send all new messages to SRCP client */
-        if (-1 == process_queue_messages(sn))
-            return (-1);
+        if ((result = select(maxfdp1, &rset, NULL, NULL, NULL)) == -1) {
+            if (errno == EINTR)
+                continue;
+            else {
+                syslog_session(sn->session, DBG_ERROR,
+                        "Select failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
+                return (-1);
+            }
+        }
+        
+        /* some socket activity was detected */
+        if (FD_ISSET(sn->socket, &rset)) {
+            memset(reply, 0, sizeof(reply));
+            rwresult = read(sn->socket, &reply, MAXSRCPLINELEN);
+
+            if (0 == rwresult) {
+                syslog_session(sn->session, DBG_INFO,
+                        "Client terminated INFO session.\n");
+                return (-1);
+            }
+            
+            if (-1 == rwresult) {
+                syslog_session(sn->session, DBG_INFO,
+                        "Socket read failed: %s (errno = %d).\n",
+                        strerror(errno), errno);
+                return (-1);
+            }
+            
+            syslog_session(sn->session, DBG_INFO,
+                    "Unknown client message for INFO session: %s.\n",
+                    reply);
+        }
+
+        /* Message from enqueueing process arrived, dequeue piped info
+         * message and write message to socket. */
+        if (FD_ISSET(sn->pipefd[0], &rset)) {
+
+            rwresult = read(sn->pipefd[0], &reply, MAXSRCPLINELEN);
+
+            /* read error */
+            if (-1 == rwresult) {
+                syslog_session(sn->session, DBG_ERROR,
+                        "Pipe read failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
+                return -1;
+            }
+
+            /* EOF from other end of pipe */
+            if (0 == rwresult) {
+                syslog_session(sn->session, DBG_ERROR,
+                        "Pipe closed unexpectedly.\n");
+                return -1;
+            }
+
+            /* normal operation */
+            rwresult = writen_amlb(sn->socket, reply);
+
+            /* write error */
+            if (-1 == rwresult) {
+                syslog_session(sn->session, DBG_ERROR,
+                        "Socket write failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
+                return -1;
+            }
+
+            /* EOF, client terminated connection */
+            if (0 == rwresult) {
+                syslog_session(sn->session, DBG_WARN,
+                        "Socket write failed (connection terminated "
+                        "by client).\n");
+                return -1;
+            }
+        }
     }
     return 0;
 }
