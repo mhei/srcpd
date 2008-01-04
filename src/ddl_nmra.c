@@ -1446,24 +1446,34 @@ int waitUARTempty_scanACK(bus_t busnumber)
 
 void handleACK(bus_t busnumber, int sckt, int ack)
 {
-
+    ssize_t result;
     char buf[80];
 
     //set_SerialLine(SL_RI,ON);
     usleep(1000);
+    
+    /* ack not supported */
     if ((ack == 1) && (scanACK(busnumber) == 1))
-        sprintf(buf, "INFO GL SM 2\n"); /* ack not supported */
+        sprintf(buf, "INFO GL SM 2\n");
+    
+    /* ack supported ==> send to client */
     else
-        sprintf(buf, "INFO GL SM %d\n", ack);   /* ack supported ==> send to client */
+        sprintf(buf, "INFO GL SM %d\n", ack);
 
-    write(sckt, buf, strlen(buf));
+    result = write(sckt, buf, strlen(buf));
+    if (result == -1) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "write() failed: %s (errno = %d)\n",
+                strerror(errno), errno);
+    }
 }
 
 void protocol_nmra_sm_direct_cvbyte(bus_t busnumber, int sckt, int cv,
                                     int value, int verify)
 {
-    /* direct cv access */
+    ssize_t result;
 
+    /* direct cv access */
     char byte2[9];
     char byte3[9];
     char byte4[9];
@@ -1585,7 +1595,12 @@ void protocol_nmra_sm_direct_cvbyte(bus_t busnumber, int sckt, int cv,
 
     setSerialMode(busnumber, SDM_NMRA);
     tcflow(buses[busnumber].device.file.fd, TCOON);
-    write(buses[busnumber].device.file.fd, SendStream, l);
+    result = write(buses[busnumber].device.file.fd, SendStream, l);
+    if (result == -1) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "write() failed: %s (errno = %d)\n",
+                strerror(errno), errno);
+    }
     ack = waitUARTempty_scanACK(busnumber);
     tcflow(buses[busnumber].device.file.fd, TCOOFF);
     setSerialMode(busnumber, SDM_DEFAULT);
@@ -1608,8 +1623,9 @@ void protocol_nmra_sm_verify_cvbyte(bus_t bus, int sckt, int cv,
 void protocol_nmra_sm_write_cvbit(bus_t bus, int sckt, int cv, int bit,
                                   int value)
 {
-    /* direct cv access */
+    ssize_t result;
 
+    /* direct cv access */
     char byte2[9];
     char byte3[9];
     char byte4[9];
@@ -1722,7 +1738,12 @@ void protocol_nmra_sm_write_cvbit(bus_t bus, int sckt, int cv, int bit,
 
     setSerialMode(bus, SDM_NMRA);
     tcflow(buses[bus].device.file.fd, TCOON);
-    write(buses[bus].device.file.fd, SendStream, l);
+    result = write(buses[bus].device.file.fd, SendStream, l);
+    if (result == -1) {
+        syslog_bus(bus, DBG_ERROR,
+                "write() failed: %s (errno = %d)\n",
+                strerror(errno), errno);
+    }
     ack = waitUARTempty_scanACK(bus);
     tcflow(buses[bus].device.file.fd, TCOOFF);
     setSerialMode(bus, SDM_DEFAULT);
@@ -1865,7 +1886,14 @@ void protocol_nmra_sm_phregister(bus_t bus, int sckt, int reg,
 
     setSerialMode(bus, SDM_NMRA);
     tcflow(buses[bus].device.file.fd, TCOON);
+
     l = write(buses[bus].device.file.fd, SendStream, y);
+    if (l == -1) {
+        syslog_bus(bus, DBG_ERROR,
+                "write() failed: %s (errno = %d)\n",
+                strerror(errno), errno);
+    }
+    
     ack = waitUARTempty_scanACK(bus);
     tcflow(buses[bus].device.file.fd, TCOOFF);
     setSerialMode(bus, SDM_DEFAULT);

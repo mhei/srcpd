@@ -697,6 +697,7 @@ int checkShortcut(bus_t busnumber)
 void send_packet(bus_t busnumber, int addr, char *packet,
                  int packet_size, int packet_type, int refresh)
 {
+    ssize_t result;
     int i, laps;
     /* arguments for nanosleep and Maerklin loco decoders (19KHz) */
     struct timespec rqtp_btw19K = { 0, 1250000 };     /* ==> busy waiting */
@@ -718,10 +719,20 @@ void send_packet(bus_t busnumber, int addr, char *packet,
             laps = 4;           /* YYTV 9 */
         for (i = 0; i < laps; i++) {
             nanosleep_DDL(&rqtp_end19K, &__DDL->rmtp);
-            write(buses[busnumber].device.file.fd, packet, 18);
+            result = write(buses[busnumber].device.file.fd, packet, 18);
+            if (result == -1) {
+                syslog_bus(busnumber, DBG_ERROR,
+                        "write() failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
+            }
             waitUARTempty(busnumber);
             nanosleep_DDL(&rqtp_btw19K, &__DDL->rmtp);
-            write(buses[busnumber].device.file.fd, packet, 18);
+            result = write(buses[busnumber].device.file.fd, packet, 18);
+            if (result == -1) {
+                syslog_bus(busnumber, DBG_ERROR,
+                        "write() failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
+            }
             waitUARTempty(busnumber);
         }
         break;
@@ -734,10 +745,20 @@ void send_packet(bus_t busnumber, int addr, char *packet,
             laps = 3;           /* YYTV 6 */
         for (i = 0; i < laps; i++) {
             nanosleep_DDL(&rqtp_end19K, &__DDL->rmtp);
-            write(buses[busnumber].device.file.fd, packet, 18);
+            result = write(buses[busnumber].device.file.fd, packet, 18);
+            if (result == -1) {
+                syslog_bus(busnumber, DBG_ERROR,
+                        "write() failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
+            }
             waitUARTempty(busnumber);
             nanosleep_DDL(&rqtp_btw19K, &__DDL->rmtp);
-            write(buses[busnumber].device.file.fd, packet, 18);
+            result = write(buses[busnumber].device.file.fd, packet, 18);
+            if (result == -1) {
+                syslog_bus(busnumber, DBG_ERROR,
+                        "write() failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
+            }
             waitUARTempty(busnumber);
         }
         break;
@@ -747,10 +768,20 @@ void send_packet(bus_t busnumber, int addr, char *packet,
             return;
         for (i = 0; i < 2; i++) {
             nanosleep_DDL(&rqtp_end38K, &__DDL->rmtp);
-            write(buses[busnumber].device.file.fd, packet, 9);
+            result = write(buses[busnumber].device.file.fd, packet, 9);
+            if (result == -1) {
+                syslog_bus(busnumber, DBG_ERROR,
+                        "write() failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
+            }
             waitUARTempty(busnumber);
             nanosleep_DDL(&rqtp_btw38K, &__DDL->rmtp);
-            write(buses[busnumber].device.file.fd, packet, 9);
+            result = write(buses[busnumber].device.file.fd, packet, 9);
+            if (result == -1) {
+                syslog_bus(busnumber, DBG_ERROR,
+                        "write() failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
+            }
             waitUARTempty(busnumber);
         }
         break;
@@ -769,11 +800,24 @@ void send_packet(bus_t busnumber, int addr, char *packet,
                                   packet_size);
         }
         else {
-            write(buses[busnumber].device.file.fd, packet, packet_size);
+            result = write(buses[busnumber].device.file.fd, packet,
+                    packet_size);
+            if (result == -1) {
+                syslog_bus(busnumber, DBG_ERROR,
+                        "write() failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
+            }
             waitUARTempty(busnumber);
-            write(buses[busnumber].device.file.fd, __DDL->NMRA_idle_data, 13);
+            result = write(buses[busnumber].device.file.fd,
+                    __DDL->NMRA_idle_data, 13);
             waitUARTempty(busnumber);
-            write(buses[busnumber].device.file.fd, packet, packet_size);
+            result = write(buses[busnumber].device.file.fd,
+                    packet, packet_size);
+            if (result == -1) {
+                syslog_bus(busnumber, DBG_ERROR,
+                        "write() failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
+            }
         }
         break;
     }
@@ -786,6 +830,7 @@ void send_packet(bus_t busnumber, int addr, char *packet,
 void improve_nmradcc_write(bus_t busnumber, char *packet,
                            int packet_size)
 {
+    ssize_t result;
     /* Idea: NMRA runs with 17000 Baud */
     /* 115200 Baud / 7 = 16457 Baud */
     /* -> every Bit 7 times send */
@@ -796,8 +841,13 @@ void improve_nmradcc_write(bus_t busnumber, char *packet,
             improve_nmradcc_packet[i * 7 + j] = packet[i];
         }
     }
-    write(buses[busnumber].device.file.fd, improve_nmradcc_packet,
-            (packet_size * 7));
+    result = write(buses[busnumber].device.file.fd,
+            improve_nmradcc_packet, (packet_size * 7));
+    if (result == -1) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "write() failed: %s (errno = %d)\n",
+                strerror(errno), errno);
+    }
 }
 
 void refresh_loco(bus_t busnumber)
@@ -1007,6 +1057,7 @@ int krnl26_nanosleep(const struct timespec *req, struct timespec *rem) {
 
 void *thr_refresh_cycle(void *v)
 {
+    ssize_t result;
     struct sched_param sparam;
     int policy;
     int packet_size;
@@ -1041,7 +1092,12 @@ void *thr_refresh_cycle(void *v)
     /* some boosters like the Maerklin 6017 must be initialized */
     tcflow(buses[busnumber].device.file.fd, TCOON);
     set_SerialLine(busnumber, SL_DTR, ON);
-    write(buses[busnumber].device.file.fd, "SRCP-DAEMON", 11);
+    result = write(buses[busnumber].device.file.fd, "SRCP-DAEMON", 11);
+    if (result == -1) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "write() failed: %s (errno = %d)\n",
+                strerror(errno), errno);
+    }
     tcflush(buses[busnumber].device.file.fd, TCOFLUSH);
 
     /* now set some serial lines */
@@ -1057,7 +1113,13 @@ void *thr_refresh_cycle(void *v)
     for (;;) {
         if (check_lines(busnumber))
             continue;
-        write(buses[busnumber].device.file.fd, __DDL->idle_data, MAXDATA);
+        result = write(buses[busnumber].device.file.fd,
+                __DDL->idle_data, MAXDATA);
+        if (result == -1) {
+            syslog_bus(busnumber, DBG_ERROR,
+                    "write() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+        }
         packet_type = queue_get(busnumber, &addr, packet, &packet_size);
         /*now,look at commands */
         if (packet_type > QNOVALIDPKT) {
@@ -1067,9 +1129,15 @@ void *thr_refresh_cycle(void *v)
                     continue;
                 send_packet(busnumber, addr, packet, packet_size,
                             packet_type, FALSE);
-                if (__DDL->ENABLED_PROTOCOLS == (EP_MAERKLIN | EP_NMRADCC))
-                    write(buses[busnumber].device.file.fd,
+                if (__DDL->ENABLED_PROTOCOLS == (EP_MAERKLIN | EP_NMRADCC)) {
+                    result = write(buses[busnumber].device.file.fd,
                             __DDL->NMRA_idle_data, 13);
+                    if (result == -1) {
+                        syslog_bus(busnumber, DBG_ERROR,
+                                "write() failed: %s (errno = %d)\n",
+                                strerror(errno), errno);
+                    }
+                }
                 packet_type =
                     queue_get(busnumber, &addr, packet, &packet_size);
             }
