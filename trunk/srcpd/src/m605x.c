@@ -291,6 +291,7 @@ void *thr_sendrec_M6051(void *v)
 {
     unsigned char SendByte;
     int akt_S88, addr, temp, number_fb;
+    int result;
     char c;
     unsigned char rr;
     gl_state_t gltmp, glakt;
@@ -323,7 +324,13 @@ void *thr_sendrec_M6051(void *v)
     akt_S88 = 1;
     buses[btd->bus].watchdog = 1;
 
-    ioctl(buses[btd->bus].device.file.fd, FIONREAD, &temp);
+    result = ioctl(buses[btd->bus].device.file.fd, FIONREAD, &temp);
+    if (result == -1) {
+        syslog_bus(btd->bus, DBG_ERROR,
+                "ioctl() failed: %s (errno = %d)\n",
+                strerror(errno), errno);
+    }
+
     if (((M6051_DATA *) buses[btd->bus].driverdata)->cmd32_pending) {
         SendByte = 32;
         writeByte(btd->bus, SendByte, pause_between_cmd);
@@ -331,7 +338,13 @@ void *thr_sendrec_M6051(void *v)
     }
     while (temp > 0) {
         readByte(btd->bus, 0, &rr);
-        ioctl(buses[btd->bus].device.file.fd, FIONREAD, &temp);
+        result = ioctl(buses[btd->bus].device.file.fd, FIONREAD, &temp);
+        if (result == -1) {
+            syslog_bus(btd->bus, DBG_ERROR,
+                    "ioctl() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+        }
+
         syslog_bus(btd->bus, DBG_INFO, "Ignoring unread byte: %d ", rr);
     }
 
@@ -441,10 +454,24 @@ void *thr_sendrec_M6051(void *v)
         /* read every single S88 state */
         if ((number_fb > 0)
             && !((M6051_DATA *) buses[btd->bus].driverdata)->cmd32_pending) {
-            ioctl(buses[btd->bus].device.file.fd, FIONREAD, &temp);
+
+            result = ioctl(buses[btd->bus].device.file.fd, FIONREAD, &temp);
+            if (result == -1) {
+                syslog_bus(btd->bus, DBG_ERROR,
+                        "ioctl() failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
+            }
+
             while (temp > 0) {
                 readByte(btd->bus, 0, &rr);
-                ioctl(buses[btd->bus].device.file.fd, FIONREAD, &temp);
+                
+                result = ioctl(buses[btd->bus].device.file.fd, FIONREAD, &temp);
+                if (result == -1) {
+                    syslog_bus(btd->bus, DBG_ERROR,
+                            "ioctl() failed: %s (errno = %d)\n",
+                            strerror(errno), errno);
+                }
+
                 syslog_bus(btd->bus, DBG_INFO,
                     "FB M6051: oops; ignoring unread byte: %d ", rr);
             }

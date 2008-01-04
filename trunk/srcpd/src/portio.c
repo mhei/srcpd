@@ -153,8 +153,14 @@ unsigned int read_port(bus_t bus)
 int check_port(bus_t bus)
 {
         int temp;
+        int result;
 
-        ioctl(buses[bus].device.file.fd, FIONREAD, &temp);
+        result = ioctl(buses[bus].device.file.fd, FIONREAD, &temp);
+        if (result == -1) {
+            syslog_bus(bus, DBG_ERROR,
+                    "ioctl() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+        }
         return (temp > 0 ? -1 : 0);
 }
 

@@ -16,12 +16,11 @@
  ***************************************************************************/
 
 /*
-	changes:
+  changes:
 
-	25.11.2007 Frank Schmischke
-			in isvalidchar() change 'char' to 'unsigned char' to avoid compiler
+    25.11.2007 Frank Schmischke
+    in isvalidchar() change 'char' to 'unsigned char' to avoid compiler
 			warning
-
 */
 
 #include <errno.h>
@@ -49,9 +48,9 @@ int readByte(bus_t bus, int wait, unsigned char *the_byte)
     }
     else {
         status = ioctl(buses[bus].device.file.fd, FIONREAD, &i);
-        if (status < 0) {
+        if (status == -1) {
             syslog_bus(bus, DBG_ERROR,
-                "readbyte(): ioctl failed: %s (errno = %d)\n",
+                "readbyte(): ioctl() failed: %s (errno = %d)\n",
                 strerror(errno), errno);
             return -1;
         }
@@ -61,9 +60,9 @@ int readByte(bus_t bus, int wait, unsigned char *the_byte)
         /* read only, if there is really an input */
         if ((i > 0) || (wait == 1)) {
             i = read(buses[bus].device.file.fd, the_byte, 1);
-            if (i < 0) {
+            if (i == -1) {
                 syslog_bus(bus, DBG_ERROR,
-                    "readbyte(): read failed: %s (errno = %d)\n",
+                    "readbyte(): read() failed: %s (errno = %d)\n",
                     strerror(errno), errno);
             }
             if (i > 0)
@@ -96,7 +95,7 @@ void writeByte(bus_t bus, unsigned char b, unsigned long msecs)
 
 void writeString(bus_t bus, unsigned char *s, unsigned long msecs)
 {
-    int l = strlen((char *) s);
+    size_t l = strlen((char *) s);
     int i;
     for (i = 0; i < l; i++) {
         writeByte(bus, s[i], msecs);
@@ -126,7 +125,8 @@ void restore_comport(bus_t bus)
         buses[bus].device.file.path);
     fd = open(buses[bus].device.file.path, O_RDWR);
     if (fd == -1) {
-        syslog_bus(bus, DBG_ERROR, "Open serial line failed: %s (errno = %d).\n",
+        syslog_bus(bus, DBG_ERROR,
+                "Open serial line failed: %s (errno = %d).\n",
                 strerror(errno), errno);
     }
     else {

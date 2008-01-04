@@ -50,22 +50,22 @@ static int write_PCF8574(bus_t bus, int addr, __u8 byte)
 {
 
     int busfd = buses[bus].device.file.fd;
-    int ret;
+    int result;
 
-    ret = ioctl(busfd, I2C_SLAVE, addr);
+    result = ioctl(busfd, I2C_SLAVE, addr);
 
-    if (ret < 0) {
+    if (result < 0) {
         syslog_bus(bus, DBG_INFO, "Couldn't access address %d (%s)",
             addr, strerror(errno));
-        return (ret);
+        return (result);
     }
 
     /* ret = i2c_smbus_write_byte(busfd, byte); */
 
-    if (ret < 0) {
+    if (result < 0) {
         syslog_bus(bus, DBG_INFO, "Couldn't send byte %d to address %d (%s)",
             byte, addr, strerror(errno));
-        return (ret);
+        return (result);
     }
 
     syslog_bus(bus, DBG_DEBUG, "Sent byte %d to address %d", byte, addr);
@@ -375,7 +375,7 @@ void select_bus(int mult_busnum, int busfd, bus_t busnumber)
         value = 64;
     value = value | (mult_busnum % 9);
     write_PCF8574(busnumber, (addr >> 1), value);
-    /*  ioctl(busfd, I2C_SLAVE, (addr >> 1));
+    /*  result = ioctl(busfd, I2C_SLAVE, (addr >> 1));
        writeByte(busnumber, value, 1); */
 }
 
