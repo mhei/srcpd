@@ -337,6 +337,8 @@ static int ln_read_serial(bus_t busnumber, unsigned char *cmd, int len)
     fd_set fds;
     struct timeval t = { 0, 0 };
     int retval;
+    int result;
+
     FD_ZERO(&fds);
     FD_SET(fd, &fds);
     retval = select(fd + 1, &fds, NULL, NULL, &t);
@@ -350,8 +352,15 @@ static int ln_read_serial(bus_t busnumber, unsigned char *cmd, int len)
            and contains one or more bytes <0x80.
          */
         do {
-            read(fd, &c, 1);
+            result = read(fd, &c, 1);
+            if (result == -1) {
+                syslog_bus(busnumber, DBG_ERROR,
+                        "read() failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
+                /*TODO: appropriate action*/
+            }
         } while (c < 0x80);
+
         switch (c & 0xe0) {
         case 0x80:
             pktlen = 2;
@@ -363,13 +372,28 @@ static int ln_read_serial(bus_t busnumber, unsigned char *cmd, int len)
             pktlen = 6;
             break;
         case 0xe0:
-            read(fd, &pktlen, 1);
+            result = read(fd, &pktlen, 1);
+            if (result == -1) {
+                syslog_bus(busnumber, DBG_ERROR,
+                        "read() failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
+                /*TODO: appropriate action*/
+            }
             cmd[1] = pktlen;
             index = 2;
             break;
         }
+
         cmd[0] = c;
-        read(fd, &cmd[index], pktlen - 1);
+        
+        result = read(fd, &cmd[index], pktlen - 1);
+        if (result == -1) {
+            syslog_bus(busnumber, DBG_ERROR,
+                    "read() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+            /*TODO: appropriate action*/
+        }
+
         retval = pktlen;
         if (ln_isecho(busnumber, cmd, pktlen)) {
             __loconet->ln_msglen = 0;
