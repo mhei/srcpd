@@ -184,7 +184,8 @@ int init_serinfo(int fd, int divisor, struct serial_struct **serinfo)
 
 int set_customdivisor(int fd, struct serial_struct *serinfo)
 {
-  if (ioctl(fd, TIOCSSERIAL, serinfo) < 0) return -1;
+  if (ioctl(fd, TIOCSSERIAL, serinfo) < 0)
+      return -1;
   return 0;
 }
 
@@ -564,29 +565,45 @@ void update_NMRAPacketPool(bus_t busnumber, int adr,
 }
 
 
+/* busy wait until UART is empty, without delay */
 void waitUARTempty_COMMON(bus_t busnumber)
 {
+    int value;
     int result;
-    do {                        /* wait until UART is empty */
+
+    do {
 #if linux
-        ioctl(buses[busnumber].device.file.fd, TIOCSERGETLSR, &result);
+        result = ioctl(buses[busnumber].device.file.fd, TIOCSERGETLSR, &value);
 #else
-        ioctl(buses[busnumber].device.file.fd, TCSADRAIN, &result);
+        result = ioctl(buses[busnumber].device.file.fd, TCSADRAIN, &value);
 #endif
-    } while (!result);
+        if (result == -1) {
+            syslog_bus(busnumber, DBG_ERROR,
+                    "ioctl() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+        }
+    } while (!value);
 }
 
+/* busy wait until UART is empty, with delay */
 void waitUARTempty_COMMON_USLEEPPATCH(bus_t busnumber)
 {
+    int value;
     int result;
-    do {                        /* wait until UART is empty */
+
+    do {
 #if linux
-        ioctl(buses[busnumber].device.file.fd, TIOCSERGETLSR, &result);
+        result = ioctl(buses[busnumber].device.file.fd, TIOCSERGETLSR, &value);
 #else
-        ioctl(buses[busnumber].device.file.fd, TCSADRAIN, &result);
+        result = ioctl(buses[busnumber].device.file.fd, TCSADRAIN, &value);
 #endif
+        if (result == -1) {
+            syslog_bus(busnumber, DBG_ERROR,
+                    "ioctl() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+        }
         usleep(__DDL->WAITUART_USLEEP_USEC);
-    } while (!result);
+    } while (!value);
 }
 
 /* new Version of waitUARTempty() for a clean NMRA-DCC signal */
@@ -597,9 +614,15 @@ void waitUARTempty_COMMON_USLEEPPATCH(bus_t busnumber)
 void waitUARTempty_CLEANNMRADCC(bus_t busnumber)
 {
     int outbytes;
+    int result;
 
     /* look how many bytes are in UART's out buffer */
-    ioctl(buses[busnumber].device.file.fd, TIOCOUTQ, &outbytes);
+    result = ioctl(buses[busnumber].device.file.fd, TIOCOUTQ, &outbytes);
+    if (result == -1) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "ioctl() failed: %s (errno = %d)\n",
+                strerror(errno), errno);
+    }
 
     if (outbytes > NUMBUFFERBYTES) {
         struct timespec sleeptime;
@@ -615,18 +638,20 @@ void waitUARTempty_CLEANNMRADCC(bus_t busnumber)
 int checkRingIndicator(bus_t busnumber)
 {
     int result, arg;
+
     result = ioctl(buses[busnumber].device.file.fd, TIOCMGET, &arg);
     if (result >= 0) {
         if (arg & TIOCM_RI) {
             syslog_bus(busnumber, DBG_INFO,
-                "ring indicator alert. Power on tracks stopped!");
+                "Ring indicator alert. Power on tracks stopped!");
             return 1;
         }
         return 0;
     }
     else {
         syslog_bus(busnumber, DBG_ERROR,
-            "ioctl() call failed. Power on tracks stopped!");
+            "ioctl() failed: %s (errno = %d). Power on tracks stopped!",
+            strerror(errno), errno);
         return 1;
     }
 }
@@ -651,7 +676,7 @@ int checkShortcut(bus_t busnumber)
             if (__DDL->SHORTCUTDELAY <=
                 (short_now - __DDL->short_detected)) {
                 syslog_bus(busnumber, DBG_INFO,
-                    "shortcut detected. Power on tracks stopped!");
+                    "Shortcut detected. Power on tracks stopped!");
                 return 1;
             }
         }
@@ -662,7 +687,8 @@ int checkShortcut(bus_t busnumber)
     }
     else {
         syslog_bus(busnumber, DBG_INFO,
-            "ioctl() call failed. Power on tracks stopped!");
+            "ioctl() failed: %s (errno = %d). Power on tracks stopped!",
+            strerror(errno), errno);
         return 1;
     }
     return 0;
@@ -770,7 +796,8 @@ void improve_nmradcc_write(bus_t busnumber, char *packet,
             improve_nmradcc_packet[i * 7 + j] = packet[i];
         }
     }
-    write(buses[busnumber].device.file.fd, improve_nmradcc_packet, (packet_size * 7));
+    write(buses[busnumber].device.file.fd, improve_nmradcc_packet,
+            (packet_size * 7));
 }
 
 void refresh_loco(bus_t busnumber)
@@ -892,8 +919,8 @@ void set_SerialLine(bus_t busnumber, int line, int mode)
     }
     if (result < 0)
         syslog_bus(busnumber, DBG_ERROR,
-            "ioctl() call failed. Serial line not set! (%d: %d)", line,
-            mode);
+            "ioctl() failed: %s (errno = %d). Serial line not set! (%d: %d)",
+            strerror(errno), errno, line, mode);
 }
 
 /* ************************************************ */
@@ -1041,7 +1068,8 @@ void *thr_refresh_cycle(void *v)
                 send_packet(busnumber, addr, packet, packet_size,
                             packet_type, FALSE);
                 if (__DDL->ENABLED_PROTOCOLS == (EP_MAERKLIN | EP_NMRADCC))
-                    write(buses[busnumber].device.file.fd, __DDL->NMRA_idle_data, 13);
+                    write(buses[busnumber].device.file.fd,
+                            __DDL->NMRA_idle_data, 13);
                 packet_type =
                     queue_get(busnumber, &addr, packet, &packet_size);
             }

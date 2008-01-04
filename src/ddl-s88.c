@@ -552,11 +552,11 @@ int FBSD_ioperm(int Port, int KeineAhnung, int DesiredAccess,
 }
 
 
+/* Look out! Manchmal wird das Datenport, manchmal die Steuer */
+/* leitungen angesprochen! */
 unsigned char FBSD_inb(int Woher, bus_t busnumber)
 {
-    /* Look out! Manchmal wird das Datenport, manchmal die Steuer */
-    /* leitungen angesprochen! */
-
+    int result;
     unsigned char i = 0;
     int WelchesPort;
     int WelcherIoctl;
@@ -585,15 +585,20 @@ unsigned char FBSD_inb(int Woher, bus_t busnumber)
                     "port %04X requested, not applicable!", Woher);
             return 0;
     }
-    ioctl(__ddl_s88->Fd, WelcherIoctl, &i);
+    result = ioctl(__ddl_s88->Fd, WelcherIoctl, &i);
+    if (result == -1) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "ioctl() failed: %s (errno = %d)\n",
+                strerror(errno), errno);
+    }
     /* syslog_bus(busnumber, DBG_DEBUG, "FBSD DDL-S88 InB finished Data %02X",i); */
     return i;
 }
 
+/* Find ioctl() matching the parallel port address */
 unsigned char FBSD_outb(unsigned char Data, int Wohin, bus_t busnumber)
 {
-    /* suchen wir uns den richtigen ioctl zur richtigen Adresse... */
-
+    int result;
     int WelchesPort;
     int WelcherIoctl;
 
@@ -622,7 +627,12 @@ unsigned char FBSD_outb(unsigned char Data, int Wohin, bus_t busnumber)
                     "port %04X requested, not applicable!", Wohin);
             return 0;
     }
-    ioctl(__ddl_s88->Fd, WelcherIoctl, &Data);
+    result = ioctl(__ddl_s88->Fd, WelcherIoctl, &Data);
+    if (result == -1) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "ioctl() failed: %s (errno = %d)\n",
+                strerror(errno), errno);
+    }
     /* syslog_bus(busnumber, DBG_DEBUG, "FBSD DDL-S88 OutB finished"); */
     return Data;
 }

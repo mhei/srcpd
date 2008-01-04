@@ -117,6 +117,7 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
 static int init_lineLOCONET_serial(bus_t busnumber) {
     int fd;
+    int result;
     struct termios interface;
 
     fd = open(buses[busnumber].device.file.path,
@@ -131,14 +132,26 @@ static int init_lineLOCONET_serial(bus_t busnumber) {
     if( (__loconet->flags & LN_FLAG_MS100) == 1 ) {
 	  struct serial_struct serial;
 	  struct termios tios;
-	  int rc;
 	  unsigned int cm;
 
-	ioctl(fd, TIOCGSERIAL, &serial);
+	result = ioctl(fd, TIOCGSERIAL, &serial);
+        if (result == -1) {
+            syslog_bus(busnumber, DBG_ERROR,
+                    "ioctl() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+        }
+
 	serial.custom_divisor=7;
 	serial.flags &= ~ASYNC_USR_MASK;
 	serial.flags |= ASYNC_SPD_CUST | ASYNC_LOW_LATENCY;
-	rc=ioctl(fd, TIOCSSERIAL, &serial);
+
+	result = ioctl(fd, TIOCSSERIAL, &serial);
+        if (result == -1) {
+            syslog_bus(busnumber, DBG_ERROR,
+                    "ioctl() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+        }
+
 	tcgetattr(fd, &tios);
         tios.c_iflag = IGNBRK | IGNPAR;
 	tios.c_oflag = 0;
@@ -150,10 +163,21 @@ static int init_lineLOCONET_serial(bus_t busnumber) {
         tcflow(fd, TCOON);
 	tcflow(fd, TCION);
 
-        ioctl(fd, TIOCMGET, &cm);
+        result = ioctl(fd, TIOCMGET, &cm);
+        if (result == -1) {
+            syslog_bus(busnumber, DBG_ERROR,
+                    "ioctl() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+        }
+
 	cm &= ~TIOCM_DTR;
         cm |= TIOCM_RTS | TIOCM_CTS;
-	ioctl(fd, TIOCMSET, &cm);
+	result = ioctl(fd, TIOCMSET, &cm);
+        if (result == -1) {
+            syslog_bus(busnumber, DBG_ERROR,
+                    "ioctl() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+        }
 
         tcflush(fd, TCOFLUSH);
         tcflush(fd, TCIFLUSH);

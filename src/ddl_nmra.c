@@ -1409,7 +1409,14 @@ void sm_init(bus_t busnumber)
 int scanACK(bus_t busnumber)
 {
     int result, arg;
+    
     result = ioctl(buses[busnumber].device.file.fd, TIOCMGET, &arg);
+    if (result == -1) {
+        syslog_bus(busnumber, DBG_ERROR,
+                "ioctl() failed: %s (errno = %d)\n",
+                strerror(errno), errno);
+    }
+    
     if ((result >= 0) && (!(arg & TIOCM_RI)))
         return 1;
     return 0;
@@ -1417,17 +1424,23 @@ int scanACK(bus_t busnumber)
 
 int waitUARTempty_scanACK(bus_t busnumber)
 {
+    int value;
     int result;
     int ack = 0;
     do {                        /* wait until UART is empty */
         if (scanACK(busnumber))
             ack = 1;            /* scan ACK */
 #if linux
-        ioctl(buses[busnumber].device.file.fd, TIOCSERGETLSR, &result);
+        result = ioctl(buses[busnumber].device.file.fd, TIOCSERGETLSR, &value);
 #else
-        ioctl(buses[busnumber].device.file.fd, TCSADRAIN, &result);
+        result = ioctl(buses[busnumber].device.file.fd, TCSADRAIN, &value);
 #endif
-    } while (!result);
+        if (result == -1) {
+            syslog_bus(busnumber, DBG_ERROR,
+                    "ioctl() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+        }
+    } while (!value);
     return ack;
 }
 

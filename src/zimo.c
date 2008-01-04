@@ -35,15 +35,20 @@ static long tdiff(struct timeval t1, struct timeval t2)
 int readanswer(bus_t bus, char cmd, char *buf, int maxbuflen,
                long timeout_ms)
 {
-    int i, status, cnt = 0;
+    int i, cnt = 0;
+    int result;
     char c, lc = 13;
     struct timeval ts, tn;
 
     gettimeofday(&ts, NULL);
     while (1) {
-        status = ioctl(buses[bus].device.file.fd, FIONREAD, &i);
-        if (status < 0)
+        result = ioctl(buses[bus].device.file.fd, FIONREAD, &i);
+        if (result == -1) {
+            syslog_bus(bus, DBG_ERROR,
+                    "ioctl() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
             return -1;
+        }
         if (i) {
             readByte(bus, 0, (unsigned char *) &c);
             syslog_bus(bus, DBG_INFO, "zimo read %02X", c);
@@ -226,6 +231,7 @@ void *thr_sendrec_ZIMO(void *v)
     gl_state_t gltmp, glakt;
     struct _SM smtmp;
     int addr, temp, i;
+    int result;
     char msg[20];
     char rr;
     char databyte1, databyte2, databyte3;
@@ -294,10 +300,24 @@ void *thr_sendrec_ZIMO(void *v)
                         13);
                 syslog_bus(btd->bus, DBG_INFO, "%s", msg);
                 writeString(btd->bus, (unsigned char *) msg, 0);
-                ioctl(buses[btd->bus].device.file.fd, FIONREAD, &temp);
+
+                result = ioctl(buses[btd->bus].device.file.fd,
+                        FIONREAD, &temp);
+                if (result == -1) {
+                    syslog_bus(btd->bus, DBG_ERROR,
+                            "ioctl() failed: %s (errno = %d)\n",
+                            strerror(errno), errno);
+                }
                 while (temp > 0) {
                     readByte(btd->bus, 0, (unsigned char *) &rr);
-                    ioctl(buses[btd->bus].device.file.fd, FIONREAD, &temp);
+
+                    result = ioctl(buses[btd->bus].device.file.fd,
+                            FIONREAD, &temp);
+                    if (result == -1) {
+                        syslog_bus(btd->bus, DBG_ERROR,
+                                "ioctl() failed: %s (errno = %d)\n",
+                                strerror(errno), errno);
+                    }
                     syslog_bus(btd->bus, DBG_INFO,
                             "ignoring unread byte: %d (%c)", rr, rr);
                 }
