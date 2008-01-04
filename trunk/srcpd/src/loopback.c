@@ -282,8 +282,6 @@ void *thr_sendrec_LOOPBACK(void *v)
                         (smtmp.typeaddr <= MAX_CV_NUMBER)) {
                     cv[smtmp.typeaddr] = smtmp.value;
                 }
-                setSM(bus, smtmp.type, smtmp.addr, smtmp.typeaddr,
-                        smtmp.bit, cv[smtmp.typeaddr], 0);
             }
 
             session_endwait(bus, smtmp.value);
