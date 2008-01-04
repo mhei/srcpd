@@ -31,54 +31,51 @@ const char *WELCOME_MSG =
     "srcpd V" VERSION "; SRCP 0.8.3; SRCPOTHER 0.8.4-wip\n";
 
 
-/* Cleanup routine for network client thread. Info threads must release
- * the queue mutex when they are cancelled in pthread_cond_wait(), not
- * to block themselves trying to queue their termination message.
- */
+/* Cleanup routine for network client thread. */
 void end_client_thread(session_node_t *sn)
 {
     int result;
-    sessionid_t session;
+    int mode;
+    sessionid_t sid;
 
-    session = sn->session;
-    syslog_session(session, DBG_INFO,
+    /* first prevent receiving new messages*/
+    mode = sn->mode;
+    sn->mode = smUndefined;
+    sid = sn->session;
+
+    syslog_session(sid, DBG_INFO,
             "Session entered cancel state (mode = %d).", sn->mode);
 
-    if (sn->mode == smInfo) {
-        result = pthread_mutex_unlock(&sn->queue_mutex);
+    if (mode == smInfo) {
+        result = close(sn->pipefd[0]);
         if (result != 0) {
-            syslog_session(session, DBG_ERROR,
-                    "pthread_mutex_unlock() failed: %s (errno = %d).",
-                    strerror(result), result);
+            syslog_session(sid, DBG_ERROR,
+                    "Pipe close fd[0] failed: %s (errno = %d).",
+                    strerror(errno), errno);
+        }
+        result = close(sn->pipefd[1]);
+        if (result != 0) {
+            syslog_session(sid, DBG_ERROR,
+                    "Pipe close fd[1] failed: %s (errno = %d).",
+                    strerror(errno), errno);
         }
     }
-
-    /*prevent receiving new messages*/
-    sn->mode = smUndefined;
     
-    if (sn->socket != -1)
-        close(sn->socket);
-    
-    result = pthread_cond_destroy(&sn->queue_cond);
-    if (result != 0) {
-        syslog_session(session, DBG_WARN,
-                "pthread_cond_destroy() failed: %s (errno = %d).",
-                strerror(result), result);
+    if (sn->socket != -1) {
+        shutdown(sn->socket, SHUT_RDWR);
+        result = close(sn->socket);
+        if (result != 0) {
+            syslog_session(sid, DBG_ERROR,
+                    "Socket close  failed: %s (errno = %d).",
+                    strerror(errno), errno);
+        }
     }
     
-    result = pthread_mutex_destroy(&sn->queue_mutex);
-    if (result != 0) {
-        syslog_session(session, DBG_WARN,
-                "pthread_mutex_destroy() failed: %s (errno = %d).",
-                strerror(result), result);
-    }
-
-    clear_queue(&sn->queue);
-    destroy_session(session);
+    destroy_session(sid);
 
     /*at last tell all remaining sessions about this one to leave*/
-    stop_session(session);
-    syslog_session(session, DBG_INFO, "Session sucessfully cancelled.");
+    stop_session(sid);
+    syslog_session(sid, DBG_INFO, "Session sucessfully cancelled.");
 }
 
 /* handle connected SRCP clients, start with shake hand phase. */
@@ -102,21 +99,6 @@ void* thr_doClient(void* v)
                 strerror(result), result);
     }
 
-    sn->mode = smCommand;
-    initialize_queue(&sn->queue);
-
-    result = pthread_mutex_init(&sn->queue_mutex, NULL);
-    if (result != 0) {
-        syslog_session(sn->session, DBG_WARN,
-                "pthread_mutex_init() failed: %s (errno = %d).",
-                strerror(result), result);
-    }
-    result = pthread_cond_init(&sn->queue_cond, NULL);
-    if (result != 0) {
-        syslog_session(sn->session, DBG_WARN,
-                "pthread_cond_init() failed: %s (errno = %d).",
-                strerror(result), result);
-    }
     result = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
     if (result != 0) {
         syslog_session(sn->session, DBG_WARN,
@@ -141,9 +123,9 @@ void* thr_doClient(void* v)
         pthread_exit((void*) 1);
     }
     else if (0 == sresult) {
+        shutdown(sn->socket, SHUT_RDWR);
         syslog_session(sn->session, DBG_WARN,
                 "Socket write failed (connection terminated by client).\n");
-        shutdown(sn->socket, SHUT_RDWR);
         pthread_exit((void*) 1);
     }
 
@@ -193,10 +175,10 @@ void* thr_doClient(void* v)
                     pthread_exit((void*) 1);
                 }
                 else if (0 == sresult) {
+                    shutdown(sn->socket, SHUT_RDWR);
                     syslog_session(sn->session, DBG_WARN,
                             "Socket write failed (connection terminated "
                             "by client).\n");
-                    shutdown(sn->socket, SHUT_RDWR);
                     pthread_exit((void*) 1);
                 }
 
@@ -255,7 +237,6 @@ void* thr_doClient(void* v)
             syslog_session(sn->session, DBG_WARN,
                     "Socket write failed (connection terminated "
                     "by client).\n");
-            shutdown(sn->socket, SHUT_RDWR);
             break;
         }
     }

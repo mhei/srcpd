@@ -17,10 +17,10 @@ int setGM(sessionid_t sid, sessionid_t rid, char *msg)
     char *msgtmp;
     syslog_bus(0, DBG_DEBUG, "GM message: %s", msg);
 
-    if (sid != 0 && is_valid_info_session(sid) == 0)
+    if (sid != 0 && is_valid_info_session(sid))
         return SRCP_WRONGVALUE;
 
-    if (rid != 0 && is_valid_info_session(rid) == 0)
+    if (rid != 0 && is_valid_info_session(rid))
         return SRCP_WRONGVALUE;
 
     /*

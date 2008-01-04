@@ -15,9 +15,11 @@
  *                                                                        *
  **************************************************************************/
 
+#include <errno.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "srcp-session.h"
 #include "srcp-ga.h"
@@ -46,34 +48,45 @@ static int cb_data[MAX_BUSES];
 
 
 
-/*add new session data node to list with socket*/
+/*add new session data node to list with a valid socket*/
 static session_node_t *list_add(session_node_t **p, int s)
 {
-    session_node_t *n = (session_node_t *)malloc(sizeof(session_node_t));
-    if (n == NULL)
-        return n;
+    session_node_t *n;
+
+    n = (session_node_t *)malloc(sizeof(session_node_t));
+
+    if (NULL == n)
+        return NULL;
+    
     n->next = *p;
     *p = n;
     n->session = 0;
     n->socket = s;
     n->thread = 0;
-    n->mode = 0;
+    n->mode = smUndefined;
+    n->pipefd[0] = -1;
+    n->pipefd[1] = -1;
     return n;
 }
 
-/*remove session data node from list*/
-static void list_remove(session_node_t **p)
+/*remove session data node from list, returns "true" for success*/
+static bool list_remove(session_node_t **p)
 {
+    bool returnvalue = false;
+
     if (*p != NULL) {
         session_node_t *n = *p;
         *p = (*p)->next;
         free(n);
+        returnvalue = true;
     }
+    return returnvalue;
 }
 
-/* search sessionid in list, return pointer to node pointer*/
+/* search sessionid in list, return pointer to node pointer */
 static session_node_t** list_search_session(session_node_t **n,
-        sessionid_t sid) {
+        sessionid_t sid)
+{
     while (*n != NULL) {
         if ((*n)->session == sid) {
             return n;
@@ -85,7 +98,8 @@ static session_node_t** list_search_session(session_node_t **n,
 
 /* search sessionid in list, return pointer to node */
 static session_node_t* list_search_session_node(session_node_t **n,
-        sessionid_t sid) {
+        sessionid_t sid)
+{
     while (*n != NULL) {
         if ((*n)->session == sid) {
             return *n;
@@ -97,7 +111,8 @@ static session_node_t* list_search_session_node(session_node_t **n,
 
 /* search thread id by sessionid, return thread id */
 static pthread_t list_search_thread_by_sessionid(session_node_t **n,
-        sessionid_t sid) {
+        sessionid_t sid)
+{
     while (*n != NULL) {
         if ((*n)->session == sid) {
             return (*n)->thread;
@@ -107,14 +122,14 @@ static pthread_t list_search_thread_by_sessionid(session_node_t **n,
     return 0;
 }
 
-/* search valid info sessionid, return 1 if found, 0 if not found */
-static int list_has_info_sessionid(session_node_t **n,
-        sessionid_t sid) {
-    int returnvalue = 0;
+/* search valid info sessionid, return "true" if found */
+static bool list_has_info_sessionid(session_node_t **n, sessionid_t sid)
+{
+    bool returnvalue = false;
 
     while (*n != NULL) {
         if ((*n)->session == sid && (*n)->mode == smInfo) {
-            returnvalue = 1;
+            returnvalue = true;
             break;
         }
         n = &(*n)->next;
@@ -127,76 +142,194 @@ static int list_has_info_sessionid(session_node_t **n,
  */
 int startup_SESSION(void)
 {
+    int result;
     int i;
+
     for (i = 0; i < MAX_BUSES; i++) {
-        pthread_mutex_init(&cb_mutex[i], NULL);
-        pthread_cond_init(&cb_cond[i], NULL);
+        result = pthread_mutex_init(&cb_mutex[i], NULL);
+        if (result != 0) {
+            syslog_bus(0, DBG_ERROR,
+                    "pthread_mutex_init() failed: %s (errno = %d).",
+                    strerror(result), result);
+        }
+
+        result = pthread_cond_init(&cb_cond[i], NULL);
+        if (result != 0) {
+            syslog_bus(0, DBG_ERROR,
+                    "pthread_cond_init() failed: %s (errno = %d).",
+                    strerror(result), result);
+        }
     }
     return 0;
 }
 
-/*create a node with a anonymous session*/
+/*create a node with an anonymous session*/
 session_node_t* create_anonymous_session(int s)
 {
+    int result;
     session_node_t* node = NULL;
 
-    pthread_mutex_lock(&session_list_mutex);
-    node = list_add(&session_list, s);
-    if (NULL != node) {
-        runningsessions++;
+    result = pthread_mutex_lock(&session_list_mutex);
+    if (result != 0) {
+        syslog_session(s, DBG_ERROR,
+                "pthread_mutex_lock() failed: %s (errno = %d).",
+                strerror(result), result);
     }
-    pthread_mutex_unlock(&session_list_mutex);
+
+    node = list_add(&session_list, s);
+    if (NULL != node)
+        runningsessions++;
+    else
+        syslog_session(s, DBG_ERROR,
+                "Could not add session node.");
+
+    result = pthread_mutex_unlock(&session_list_mutex);
+    if (result != 0) {
+        syslog_session(s, DBG_ERROR,
+                "pthread_mutex_unlock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
     return node;
 }
 
-/*destroy a node with a anonymous session*/
+/*destroy a node with an anonymous session*/
 void destroy_anonymous_session(session_node_t* n)
 {
+    int result;
+    sessionid_t sid;
+
     if (n == NULL)
         return;
 
-    pthread_mutex_lock(&session_list_mutex);
-    list_remove(&n);
-    runningsessions--;
-    pthread_cond_signal(&session_list_cond);
-    pthread_mutex_unlock(&session_list_mutex);
+    sid = n->session;
+    result = pthread_mutex_lock(&session_list_mutex);
+    if (result != 0) {
+        syslog_session(sid, DBG_ERROR,
+                "pthread_mutex_lock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
+    if (list_remove(&n))
+        runningsessions--;
+    else
+        syslog_session(sid, DBG_ERROR,
+                "Could not remove session node.");
+    
+    result = pthread_cond_signal(&session_list_cond);
+    if (result != 0) {
+        syslog_session(n->session, DBG_ERROR,
+                "pthread_cond_signal() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+    
+    result = pthread_mutex_unlock(&session_list_mutex);
+    if (result != 0) {
+        syslog_session(n->session, DBG_ERROR,
+                "pthread_mutex_unlock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
 }
 
 /*destroy a fully funtionalized session*/
-void destroy_session(sessionid_t session)
+void destroy_session(sessionid_t sid)
 {
-    pthread_mutex_lock(&session_list_mutex);
-    list_remove(list_search_session(&session_list, session));
-    runningsessions--;
-    pthread_cond_signal(&session_list_cond);
-    pthread_mutex_unlock(&session_list_mutex);
+    int result;
+
+    result = pthread_mutex_lock(&session_list_mutex);
+    if (result != 0) {
+        syslog_session(sid, DBG_ERROR,
+                "pthread_mutex_lock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
+    if (list_remove(list_search_session(&session_list, sid)))
+        runningsessions--;
+    else 
+        syslog_session(sid, DBG_ERROR,
+                "Could not remove session node.");
+    
+    result = pthread_cond_signal(&session_list_cond);
+    if (result != 0) {
+        syslog_session(sid, DBG_ERROR,
+                "pthread_cond_signal() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+    
+    result = pthread_mutex_unlock(&session_list_mutex);
+    if (result != 0) {
+        syslog_session(sid, DBG_ERROR,
+                "pthread_mutex_unlock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
 }
 
 /*register a new session id*/
 void register_session(session_node_t* n)
 {
-    pthread_mutex_lock(&session_list_mutex);
+    int result;
+
+    if (NULL == n)
+        return;
+
+    result = pthread_mutex_lock(&session_list_mutex);
+    if (result != 0) {
+        syslog_session(lastsession + 1, DBG_ERROR,
+                "pthread_mutex_lock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
     lastsession++;
     n->session = lastsession;
-    pthread_mutex_unlock(&session_list_mutex);
+
+    /*set default mode if mode was not set explicitly*/
+    if (n->mode == smUndefined)
+        n->mode = smCommand;
+
+    result = pthread_mutex_unlock(&session_list_mutex);
+    if (result != 0) {
+        syslog_session(n->session, DBG_ERROR,
+                "pthread_mutex_unlock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
 }
 
 /* search for valid session id */
-int is_valid_info_session(sessionid_t session)
+bool is_valid_info_session(sessionid_t session)
 {
-    int isvalid;
-    pthread_mutex_lock(&session_list_mutex);
+    int result;
+    bool isvalid;
+
+    result = pthread_mutex_lock(&session_list_mutex);
+    if (result != 0) {
+        syslog_session(session, DBG_ERROR,
+                "pthread_mutex_lock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
     isvalid = list_has_info_sessionid(&session_list, session);
-    pthread_mutex_unlock(&session_list_mutex);
+    
+    result = pthread_mutex_unlock(&session_list_mutex);
+    if (result != 0) {
+        syslog_session(session, DBG_ERROR,
+                "pthread_mutex_unlock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
     return isvalid;
 }
 
-/* enqueue a new info message to the appropriate session queue */
-void session_enqueue_info_message(sessionid_t sid, const char* message)
+/* 
+ * Enqueue a new info message to the appropriate session pipe.
+ * 
+ * There is no write locking because writing to pipes is atomic as
+ * far as MAXSRCPLEN < PIPE_BUF and pipe write access is blocking (see
+ * "man 3 write" for more details).
+ */
+void session_enqueue_info_message(sessionid_t sid, char* msg)
 {
     session_node_t* n;
-    qitem_t qi;
-        
+    int result;
+    ssize_t nwritten;
+
     /*return immediately, if no session is running*/
     if (NULL == session_list)
         return;
@@ -204,70 +337,135 @@ void session_enqueue_info_message(sessionid_t sid, const char* message)
     /*enqueue message for all info sessions*/
     if (sid == 0) {
         n = session_list;   
-        pthread_mutex_lock(&session_list_mutex);
+        result = pthread_mutex_lock(&session_list_mutex);
+        if (result != 0) {
+            syslog_session(sid, DBG_ERROR,
+                    "pthread_mutex_lock() failed: %s (errno = %d).",
+                    strerror(result), result);
+        }
 
         while (n != NULL) {
-            if (n->mode == smInfo) {
-                qi.message = (char*) malloc(strlen(message) + 1);
-                strcpy(qi.message, message);
-                pthread_mutex_lock(&n->queue_mutex);
-                enqueue(qi, &n->queue);
-                pthread_cond_signal(&n->queue_cond);
-                pthread_mutex_unlock(&n->queue_mutex);
+            if (n->mode == smInfo && n->pipefd[1] != -1) {
+                nwritten = write(n->pipefd[1], msg, strlen(msg) + 1);
+                if (nwritten == -1) {
+                    syslog_session(n->session, DBG_ERROR,
+                            "Write to pipe failed: %s (errno = %d).",
+                            strerror(errno), errno);
+                }
             }
             n = n->next;
         }
-        pthread_mutex_unlock(&session_list_mutex);
+
+        result = pthread_mutex_unlock(&session_list_mutex);
+        if (result != 0) {
+            syslog_session(sid, DBG_ERROR,
+                    "pthread_mutex_unlock() failed: %s (errno = %d).",
+                    strerror(result), result);
+        }
     }
 
-    /*enqueue message for single info session*/
+    /*enqueue message for a single info session*/
     else {
-        pthread_mutex_lock(&session_list_mutex);
+        result = pthread_mutex_lock(&session_list_mutex);
+        if (result != 0) {
+            syslog_session(sid, DBG_ERROR,
+                    "pthread_mutex_lock() failed: %s (errno = %d).",
+                    strerror(result), result);
+        }
+
         n = list_search_session_node(&session_list, sid);
 
-        if (n != NULL && n->mode == smInfo) {
-            qi.message = (char*) malloc(strlen(message) + 1);
-            strcpy(qi.message, message);
-            pthread_mutex_lock(&n->queue_mutex);
-            enqueue(qi, &n->queue);
-            pthread_cond_signal(&n->queue_cond);
-            pthread_mutex_unlock(&n->queue_mutex);
+        if (n != NULL && n->mode == smInfo && n->pipefd[1] != -1) {
+            nwritten = write(n->pipefd[1], msg, strlen(msg) + 1);
+            if (nwritten == -1) {
+                syslog_session(n->session, DBG_ERROR,
+                        "Write to pipe failed: %s (errno = %d).",
+                        strerror(errno), errno);
+            }
         }
-        pthread_mutex_unlock(&session_list_mutex);
+
+        result = pthread_mutex_unlock(&session_list_mutex);
+        if (result != 0) {
+            syslog_session(sid, DBG_ERROR,
+                    "pthread_mutex_unlock() failed: %s (errno = %d).",
+                    strerror(result), result);
+        }
     }
 }
 
 /* terminate a session by cancellation of client thread */
 void session_terminate(sessionid_t session)
 {
+    int result;
     pthread_t pc;
 
-    pthread_mutex_lock(&session_list_mutex);
+    result = pthread_mutex_lock(&session_list_mutex);
+    if (result != 0) {
+        syslog_session(session, DBG_ERROR,
+                "pthread_mutex_lock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
     pc = list_search_thread_by_sessionid(&session_list, session);
-    pthread_mutex_unlock(&session_list_mutex);
-    if (0 != pc)
-        pthread_cancel(pc);
+
+    result = pthread_mutex_unlock(&session_list_mutex);
+    if (result != 0) {
+        syslog_session(session, DBG_ERROR,
+                "pthread_mutex_unlock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
+    if (0 != pc) {
+        result = pthread_cancel(pc);
+        if (result != 0) {
+            syslog_session(session, DBG_ERROR,
+                    "pthread_cancel() failed: %s (errno = %d).",
+                    strerror(result), result);
+        }
+    }
+    else
+        syslog_session(session, DBG_ERROR,
+                "Found unvalid thread id to cancel.");
 }
 
 /* terminate all active sessions */
 void terminate_all_sessions()
 {
+    int result;
+
     if (session_list == NULL)
         return;
 
     session_node_t* node = session_list;   
 
     /*first cancel all session threads ...*/
-    pthread_mutex_lock(&session_list_mutex);
+    result = pthread_mutex_lock(&session_list_mutex);
+    if (result != 0) {
+        syslog_bus(0, DBG_ERROR,
+                "pthread_mutex_lock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
+
     while (node != NULL) {
-        pthread_cancel(node->thread);
+        result = pthread_cancel(node->thread);
+        if (result != 0) {
+            syslog_bus(0, DBG_ERROR,
+                    "pthread_cancel() failed: %s (errno = %d).",
+                    strerror(result), result);
+        }
         node = node->next;
     }
 
     /*... then wait for complete termination*/
     while (runningsessions != 0)
         pthread_cond_wait(&session_list_cond, &session_list_mutex);
-    pthread_mutex_unlock(&session_list_mutex);
+
+    result = pthread_mutex_unlock(&session_list_mutex);
+    if (result != 0) {
+        syslog_bus(0, DBG_ERROR,
+                "pthread_mutex_unlock() failed: %s (errno = %d).",
+                strerror(result), result);
+    }
     syslog_bus(0, DBG_INFO, "Session thread termination completed.");
 }
 
@@ -292,18 +490,18 @@ int start_session(session_node_t* sn)
  * this funtion is called by clientservice when the client thread
  * terminates
  */
-int stop_session(sessionid_t sessionid)
+int stop_session(sessionid_t sid)
 {
     char msg[1000];
     struct timeval akt_time;
     gettimeofday(&akt_time, NULL);
 
     /* clean all locks */
-    unlock_ga_bysessionid(sessionid);
-    unlock_gl_bysessionid(sessionid);
+    unlock_ga_bysessionid(sid);
+    unlock_gl_bysessionid(sid);
 
     sprintf(msg, "%lu.%.3lu 102 INFO 0 SESSION %lu\n", akt_time.tv_sec,
-            akt_time.tv_usec / 1000, sessionid);
+            akt_time.tv_usec / 1000, sid);
     queueInfoMessage(msg);
 
     return SRCP_OK;
@@ -345,6 +543,7 @@ int session_wait(bus_t busnumber, unsigned int timeout, int *result)
     int rc;
     struct timespec stimeout;
     struct timeval now;
+
     gettimeofday(&now, NULL);
     stimeout.tv_sec = now.tv_sec + timeout;
     stimeout.tv_nsec = now.tv_usec * 1000;
@@ -370,6 +569,7 @@ int session_endwait(bus_t busnumber, int returnvalue)
 int session_processwait(bus_t busnumber)
 {
     int rc;
+
     syslog_bus(busnumber, DBG_DEBUG, "SESSION process wait1 for bus.");
     rc = pthread_mutex_lock(&cb_mutex[busnumber]);
     syslog_bus(busnumber, DBG_DEBUG, "SESSION process wait2 for bus.");

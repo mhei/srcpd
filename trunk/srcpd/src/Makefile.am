@@ -21,7 +21,6 @@ srcpd_SOURCES = \
 	m605x.c \
 	netservice.c \
 	portio.c \
-	queue.c \
 	selectrix.c \
 	srcp-command.c \
 	srcpd.c \
@@ -59,8 +58,7 @@ noinst_HEADERS = \
 	loopback.h \
 	m605x.h \
 	netservice.h \
-       	portio.h \
-       	queue.h \
+	portio.h \
 	selectrix.h \
 	srcp-command.h \
 	srcp-descr.h \

@@ -115,6 +115,10 @@ int srcp_fmt_msg(int errorcode, char *msg, struct timeval time)
             sprintf(msg, "%lu.%.3lu %d ERROR device reinitialized\n",
                     time.tv_sec, time.tv_usec / 1000, errorcode);
             break;
+        case 500:
+            sprintf(msg, "%lu.%.3lu %d ERROR out of resources\n",
+                    time.tv_sec, time.tv_usec / 1000, errorcode);
+            break;
         default:
             sprintf(msg, "%lu.%.3lu 600 ERROR internal error %d, "
                     "please report to srcpd-devel@srcpd.sorceforge.net\n",

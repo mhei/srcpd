@@ -1,3 +1,12 @@
+2008-01-04 Guido Scholz <guido.scholz@bayernline.de>
+	* srcp-error.*, srcp-command.c: »Out of resources« error message
+	added.
+
+2008-01-03 Guido Scholz <guido.scholz@bayernline.de>
+	* srcp-session.*, srcp-info.*: Queueing info messages is done
+	using pipes, info client initiated connection termination is
+	detected timely.
+
 2008-01-03 André Schenk <andre@melior.s.bawue.de>
 	* loopback.c: Service Mode (SM) for loopback bus added.
 
