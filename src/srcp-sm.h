@@ -27,20 +27,19 @@ enum COMMAND {
     VERIFY,
     INIT,
     TERM
-};
+} sm_command_t;
 
 enum TYPE {
     REGISTER = 0,
     PAGE,
     CV,
     CV_BIT
-};
+} sm_type_t;
 
 /* Loco decoder */
-struct _SM {
-    char protocol[6];        /* currently only NMRA is supported */
-    /* (for IB, but not completely) */
-    /* (work in progress) */
+typedef struct _SM {
+    char protocol[6];  /* currently only NMRA is supported */
+                       /* (for IB, but not completely, work in progress) */
     int type;
     int command;
     int protocolversion;
@@ -49,14 +48,14 @@ struct _SM {
     int bit;                    /* bit to set/get for CVBIT */
     int value;
     struct timeval tv;          /* time of change */
-} SM;
+} sm_t;
 
 int queueSM(bus_t busnumber, int command, int type, int addr, int typeaddr,
             int bit, int value);
 int queue_SM_isempty(bus_t busnumber);
-int unqueueNextSM(bus_t busnumber, struct _SM *l);
+int unqueueNextSM(bus_t, sm_t*);
 
-int getSM(bus_t busnumber, int addr, struct _SM *l);
+int getSM(bus_t busnumber, int addr, sm_t*);
 int setSM(bus_t busnumber, int type, int addr, int typeaddr, int bit,
           int value, int return_value);
 int infoSM(bus_t busnumber, int command, int type, int addr, int typeaddr,
