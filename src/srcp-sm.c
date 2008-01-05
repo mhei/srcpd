@@ -53,229 +53,228 @@ static pthread_mutex_t queue_mutex[MAX_BUSES];
 static volatile int out[MAX_BUSES], in[MAX_BUSES];
 
 /* internal functions */
-static int queue_len( bus_t busnumber );
-static int queue_isfull( bus_t busnumber );
+static int queue_len(bus_t busnumber);
+static int queue_isfull(bus_t busnumber);
 
-int queueInfoSM( bus_t busnumber, int addr, int type, int typeaddr,
-                 int bit, int value, int return_code,
-                 struct timeval *akt_time )
+int queueInfoSM(bus_t busnumber, int addr, int type, int typeaddr,
+                int bit, int value, int return_code,
+                struct timeval *akt_time)
 {
-  char buffer[ 1000 ], msg[ 1000 ];
-  char tmp[ 100 ];
+    char buffer[1000], msg[1000];
+    char tmp[100];
 
-  if ( return_code == 0 )
-  {
-    sprintf( buffer, "%lu.%.3lu 100 INFO %ld SM %d",
-             akt_time->tv_sec, akt_time->tv_usec / 1000,
-             busnumber, addr );
-    switch ( type )
-    {
-      case REGISTER:
-        sprintf( tmp, "REG %d %d", typeaddr, value );
-        break;
-      case CV:
-        sprintf( tmp, "CV %d %d", typeaddr, value );
-        break;
-      case CV_BIT:
-        sprintf( tmp, "CVBIT %d %d %d", typeaddr, bit, value );
-        break;
-      case PAGE:
-        sprintf( tmp, "PAGE %d %d", typeaddr, value );
-        break;
+    if (return_code == 0) {
+        sprintf(buffer, "%lu.%.3lu 100 INFO %ld SM %d",
+                akt_time->tv_sec, akt_time->tv_usec / 1000,
+                busnumber, addr);
+        switch (type) {
+            case REGISTER:
+                sprintf(tmp, "REG %d %d", typeaddr, value);
+                break;
+            case CV:
+                sprintf(tmp, "CV %d %d", typeaddr, value);
+                break;
+            case CV_BIT:
+                sprintf(tmp, "CVBIT %d %d %d", typeaddr, bit, value);
+                break;
+            case PAGE:
+                sprintf(tmp, "PAGE %d %d", typeaddr, value);
+                break;
+        }
     }
-  }
-  else
-  {
-    sprintf( buffer, "%lu.%.3lu 600 ERROR %ld SM %d %d",
-             akt_time->tv_sec, akt_time->tv_usec / 1000,
-             busnumber, addr, return_code );
-    switch ( return_code )
-    {
-      case 0xF2:
-        sprintf( tmp, "Cannot terminate task " );
-        break;
-      case 0xF3:
-        sprintf( tmp, "No task to terminate" );
-        break;
-      case 0xF4:
-        sprintf( tmp, "Task terminated" );
-        break;
-      case 0xF6:
-        sprintf( tmp, "XPT_DCCQD: Not Ok (direct bit read mode "
-                 "is (probably) not supported)" );
-        break;
-      case 0xF7:
-        sprintf( tmp, "XPT_DCCQD: Ok (direct bit read mode is "
-                 "(probably) supported)" );
-        break;
-      case 0xF8:
-        sprintf( tmp, "Error during Selectrix read" );
-        break;
-      case 0xF9:
-        sprintf( tmp, "No acknowledge to paged operation "
-                 "(paged r/w not supported?)" );
-        break;
-      case 0xFA:
-        sprintf( tmp, "Error during DCC direct bit mode operation" );
-        break;
-      case 0xFB:
-        sprintf( tmp, "Generic Error" );
-        break;
-      case 0xFC:
-        sprintf( tmp, "No decoder detected" );
-        break;
-      case 0xFD:
-        sprintf( tmp, "Short! (on the PT)" );
-        break;
-      case 0xFE:
-        sprintf( tmp, "No acknowledge from decoder (but a write "
-                 "maybe was successful)" );
-        break;
-      case 0xFF:
-        sprintf( tmp, "Timeout" );
-        break;
+    else {
+        sprintf(buffer, "%lu.%.3lu 600 ERROR %ld SM %d %d",
+                akt_time->tv_sec, akt_time->tv_usec / 1000,
+                busnumber, addr, return_code);
+        switch (return_code) {
+            case 0xF2:
+                sprintf(tmp, "Cannot terminate task ");
+                break;
+            case 0xF3:
+                sprintf(tmp, "No task to terminate");
+                break;
+            case 0xF4:
+                sprintf(tmp, "Task terminated");
+                break;
+            case 0xF6:
+                sprintf(tmp, "XPT_DCCQD: Not Ok (direct bit read mode "
+                        "is (probably) not supported)");
+                break;
+            case 0xF7:
+                sprintf(tmp, "XPT_DCCQD: Ok (direct bit read mode is "
+                        "(probably) supported)");
+                break;
+            case 0xF8:
+                sprintf(tmp, "Error during Selectrix read");
+                break;
+            case 0xF9:
+                sprintf(tmp, "No acknowledge to paged operation "
+                        "(paged r/w not supported?)");
+                break;
+            case 0xFA:
+                sprintf(tmp, "Error during DCC direct bit mode operation");
+                break;
+            case 0xFB:
+                sprintf(tmp, "Generic Error");
+                break;
+            case 0xFC:
+                sprintf(tmp, "No decoder detected");
+                break;
+            case 0xFD:
+                sprintf(tmp, "Short! (on the PT)");
+                break;
+            case 0xFE:
+                sprintf(tmp, "No acknowledge from decoder (but a write "
+                        "maybe was successful)");
+                break;
+            case 0xFF:
+                sprintf(tmp, "Timeout");
+                break;
+        }
     }
-  }
-  sprintf( msg, "%s %s\n", buffer, tmp );
-  queueInfoMessage( msg );
-  return SRCP_OK;
+    sprintf(msg, "%s %s\n", buffer, tmp);
+    queueInfoMessage(msg);
+    return SRCP_OK;
 }
 
 /* queue SM after some checks */
-int queueSM( bus_t busnumber, int command, int type, int addr,
-             int typeaddr, int bit, int value )
+int queueSM(bus_t busnumber, int command, int type, int addr,
+            int typeaddr, int bit, int value)
 {
     int result;
     struct timeval akt_time;
 
-  syslog_bus( busnumber, DBG_INFO, "queueSM for %i (in=%d out=%d)", addr,
-       in[ busnumber ], out[ busnumber ] );
-  /* addr == -1 means using separate program-track */
-  /* addr != -1 means programming on the main (only available with CV) */
-  /* if ((addr == -1) || ((addr > 0) && (addr <= number_sm) && (type == CV))) */
-  if ( queue_isfull( busnumber ) )
-  {
-    syslog_bus( busnumber, DBG_DEBUG, "SM Queue is full" );
-    return SRCP_TEMPORARILYPROHIBITED;
-  }
+    syslog_bus(busnumber, DBG_INFO, "queueSM for %i (in=%d out=%d)", addr,
+               in[busnumber], out[busnumber]);
+    /* 
+     * addr values:
+     *    -1: using separate program-track
+     *  > -1: programming on the main (only available with CV)
+    */
 
-  result = pthread_mutex_lock( &queue_mutex[ busnumber ] );
-  if (result != 0) {
-      syslog_bus(busnumber, DBG_ERROR,
-              "pthread_mutex_lock() failed: %s (errno = %d).",
-              strerror(result), result);
-  }
+    /* if ((addr == -1) || ((addr > 0)
+     *  && (addr <= number_sm) && (type == CV))) */
 
-  queue[ busnumber ][ in[ busnumber ] ].bit = bit;
-  queue[ busnumber ][ in[ busnumber ] ].type = type;
-  queue[ busnumber ][ in[ busnumber ] ].value = value;
-  queue[ busnumber ][ in[ busnumber ] ].typeaddr = typeaddr;
-  queue[ busnumber ][ in[ busnumber ] ].command = command;
-  gettimeofday( &akt_time, NULL );
-  queue[ busnumber ][ in[ busnumber ] ].tv = akt_time;
-  queue[ busnumber ][ in[ busnumber ] ].addr = addr;
-  in[ busnumber ] ++;
-  if ( in[ busnumber ] == QUEUELEN )
-    in[ busnumber ] = 0;
+    if (queue_isfull(busnumber)) {
+        syslog_bus(busnumber, DBG_DEBUG, "SM Queue is full");
+        return SRCP_TEMPORARILYPROHIBITED;
+    }
 
-  result = pthread_mutex_unlock( &queue_mutex[ busnumber ] );
-  if (result != 0) {
-      syslog_bus(busnumber, DBG_ERROR,
-              "pthread_mutex_unlock() failed: %s (errno = %d).",
-              strerror(result), result);
-  }
+    result = pthread_mutex_lock(&queue_mutex[busnumber]);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                   "pthread_mutex_lock() failed: %s (errno = %d).",
+                   strerror(result), result);
+    }
 
-  syslog_bus( busnumber, DBG_DEBUG, "SM queued" );
-  return SRCP_OK;
+    queue[busnumber][in[busnumber]].bit = bit;
+    queue[busnumber][in[busnumber]].type = type;
+    queue[busnumber][in[busnumber]].value = value;
+    queue[busnumber][in[busnumber]].typeaddr = typeaddr;
+    queue[busnumber][in[busnumber]].command = command;
+    gettimeofday(&akt_time, NULL);
+    queue[busnumber][in[busnumber]].tv = akt_time;
+    queue[busnumber][in[busnumber]].addr = addr;
+    in[busnumber]++;
+    if (in[busnumber] == QUEUELEN)
+        in[busnumber] = 0;
+
+    result = pthread_mutex_unlock(&queue_mutex[busnumber]);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                   "pthread_mutex_unlock() failed: %s (errno = %d).",
+                   strerror(result), result);
+    }
+
+    syslog_bus(busnumber, DBG_DEBUG, "SM queued");
+    return SRCP_OK;
 }
 
-int queue_SM_isempty( bus_t busnumber )
+int queue_SM_isempty(bus_t busnumber)
 {
-  return ( in[ busnumber ] == out[ busnumber ] );
+    return (in[busnumber] == out[busnumber]);
 }
 
-static int queue_len( bus_t busnumber )
+static int queue_len(bus_t busnumber)
 {
-  if ( in[ busnumber ] >= out[ busnumber ] )
-    return in[ busnumber ] - out[ busnumber ];
-  else
-    return QUEUELEN + in[ busnumber ] - out[ busnumber ];
+    if (in[busnumber] >= out[busnumber])
+        return in[busnumber] - out[busnumber];
+    else
+        return QUEUELEN + in[busnumber] - out[busnumber];
 }
 
 /* maybe, 1 element in the queue cannot be used.. */
-static int queue_isfull( bus_t busnumber )
+static int queue_isfull(bus_t busnumber)
 {
-  return queue_len( busnumber ) >= QUEUELEN - 1;
+    return queue_len(busnumber) >= QUEUELEN - 1;
 }
 
 /** return next entry with rc >=0, or return -1, if no more entries */
-int getNextSM( bus_t busnumber, struct _SM *l )
+int getNextSM(bus_t busnumber, struct _SM *l)
 {
-  if ( in[ busnumber ] == out[ busnumber ] )
-    return -1;
-  *l = queue[ busnumber ][ out[ busnumber ] ];
-  return out[ busnumber ];
+    if (in[busnumber] == out[busnumber])
+        return -1;
+    *l = queue[busnumber][out[busnumber]];
+    return out[busnumber];
 }
 
 /** return next entry or -1, set fifo pointer to new position! */
-int unqueueNextSM( bus_t busnumber, struct _SM *l )
+int unqueueNextSM(bus_t busnumber, struct _SM *l)
 {
-  if ( in[ busnumber ] == out[ busnumber ] )
-    return -1;
+    if (in[busnumber] == out[busnumber])
+        return -1;
 
-  *l = queue[ busnumber ][ out[ busnumber ] ];
-  out[ busnumber ] ++;
-  if ( out[ busnumber ] == QUEUELEN )
-    out[ busnumber ] = 0;
-  return out[ busnumber ];
+    *l = queue[busnumber][out[busnumber]];
+    out[busnumber]++;
+    if (out[busnumber] == QUEUELEN)
+        out[busnumber] = 0;
+    return out[busnumber];
 }
 
-int setSM( bus_t busnumber, int type, int addr, int typeaddr, int bit,
-           int value, int return_code )
+int setSM(bus_t busnumber, int type, int addr, int typeaddr, int bit,
+          int value, int return_code)
 {
-  struct timeval tv;
+    struct timeval tv;
 
-  syslog_bus( busnumber, DBG_DEBUG,
-       "CV: %d         BIT: %d         VALUE: 0x%02x", typeaddr, bit,
-       value );
-  if ( addr == -1 )
-  {
-    gettimeofday( &tv, NULL );
-    if ( type == CV_BIT )
-      value = ( value & ( 1 << bit ) ) ? 1 : 0;
-    queueInfoSM( busnumber, addr, type, typeaddr, bit, value,
-                 return_code, &tv );
-    return SRCP_OK;
-  }
-  else
-  {
-    return SRCP_NODATA;
-  }
+    syslog_bus(busnumber, DBG_DEBUG,
+               "CV: %d         BIT: %d         VALUE: 0x%02x", typeaddr,
+               bit, value);
+    if (addr == -1) {
+        gettimeofday(&tv, NULL);
+        if (type == CV_BIT)
+            value = (value & (1 << bit)) ? 1 : 0;
+        queueInfoSM(busnumber, addr, type, typeaddr, bit, value,
+                    return_code, &tv);
+        return SRCP_OK;
+    }
+    else {
+        return SRCP_NODATA;
+    }
 }
 
-int infoSM( bus_t busnumber, int command, int type, int addr,
-            int typeaddr, int bit, int value, char *info )
+int infoSM(bus_t busnumber, int command, int type, int addr,
+           int typeaddr, int bit, int value, char *info)
 {
-  int status, result;
-  struct timeval now;
+    int status, result;
+    struct timeval now;
 
-  syslog_bus( busnumber, DBG_INFO, "TYPE: %d, CV: %d, BIT: %d, VALUE: 0x%02x",
-       type, typeaddr, bit, value );
-  session_preparewait( busnumber );
-  status = queueSM( busnumber, command, type, addr, typeaddr, bit, value );
+    syslog_bus(busnumber, DBG_INFO,
+               "TYPE: %d, CV: %d, BIT: %d, VALUE: 0x%02x", type, typeaddr,
+               bit, value);
+    session_preparewait(busnumber);
+    status = queueSM(busnumber, command, type, addr, typeaddr, bit, value);
 
-  if ( session_wait( busnumber, 90, &result ) == ETIMEDOUT )
-  {
-    gettimeofday( &now, NULL );
-    sprintf( info, "%lu.%.3lu 417 ERROR timeout\n", now.tv_sec,
-             now.tv_usec / 1000 );
-  }
-  else
-  {
-    gettimeofday( &now, NULL );
-    sprintf( info, "%lu.%.3lu 100 INFO %ld SM %d CV %d %d\n", now.tv_sec,
-             now.tv_usec / 1000, busnumber, addr, typeaddr, result );
-  }
-  session_cleanupwait( busnumber );
-  return status;
+    if (session_wait(busnumber, 90, &result) == ETIMEDOUT) {
+        gettimeofday(&now, NULL);
+        sprintf(info, "%lu.%.3lu 417 ERROR timeout\n", now.tv_sec,
+                now.tv_usec / 1000);
+    }
+    else {
+        gettimeofday(&now, NULL);
+        sprintf(info, "%lu.%.3lu 100 INFO %ld SM %d CV %d %d\n",
+                now.tv_sec, now.tv_usec / 1000, busnumber, addr, typeaddr,
+                result);
+    }
+    session_cleanupwait(busnumber);
+    return status;
 }
