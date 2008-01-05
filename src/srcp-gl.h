@@ -48,7 +48,7 @@ int isValidGL(bus_t busnumber, int addr);
 
 int queueGL(bus_t busnumber, int addr, int dir, int speed, int maxspeed, int f);
 int queue_GL_isempty(bus_t busnumber);
-int unqueueNextGL(bus_t busnumber, gl_state_t *l);
+int dequeueNextGL(bus_t busnumber, gl_state_t *l);
 
 int cacheGetGL(bus_t busnumber, int addr, gl_state_t *l);
 int cacheSetGL(bus_t busnumber, int addr, gl_state_t l);

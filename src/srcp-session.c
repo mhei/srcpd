@@ -532,8 +532,7 @@ int termSESSION(bus_t bus, sessionid_t sessionid, sessionid_t termsessionid,
     return SRCP_FORBIDDEN;
 }
 
-/*session_lock_bus_sm()*/
-int session_processwait(bus_t bus)
+int session_lock_wait(bus_t bus)
 {
     int result;
 
@@ -550,8 +549,7 @@ int session_processwait(bus_t bus)
     return result;
 }
 
-/*session_unlock_bus_sm()*/
-int session_cleanupwait(bus_t bus)
+int session_unlock_wait(bus_t bus)
 {
     int result;
 
@@ -565,8 +563,7 @@ int session_cleanupwait(bus_t bus)
     return result;
 }
 
-/*session_cond_timedwait_bus_sm()*/
-int session_wait(bus_t bus, unsigned int timeout, int *value)
+int session_condt_wait(bus_t bus, unsigned int timeout, int *value)
 {
     int result;
     struct timespec stimeout;
@@ -591,7 +588,6 @@ int session_wait(bus_t bus, unsigned int timeout, int *value)
     return result;
 }
 
-/*session_cond_broadcast_bus_sm()*/
 int session_endwait(bus_t bus, int returnvalue)
 {
     int result;

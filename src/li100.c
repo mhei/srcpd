@@ -468,7 +468,7 @@ void send_command_ga_LI100_SERIAL( bus_t busnumber )
   /* Decoder switch on */
   if ( !queue_GA_isempty( busnumber ) )
   {
-    unqueueNextGA( busnumber, &gatmp );
+    dequeueNextGA( busnumber, &gatmp );
     addr = gatmp.id;
     temp = addr;
     temp--;
@@ -551,7 +551,7 @@ void send_command_gl_LI100_SERIAL( bus_t busnumber )
 
   if ( !queue_GL_isempty( busnumber ) )
   {
-    unqueueNextGL( busnumber, &gltmp );
+    dequeueNextGL( busnumber, &gltmp );
     addr = gltmp.id;
     cacheGetGL( busnumber, addr, &glakt );
 
@@ -1155,7 +1155,7 @@ void send_command_sm_LI100_SERIAL( bus_t busnumber )
 
   if ( !queue_SM_isempty( busnumber ) )
   {
-    unqueueNextSM( busnumber, &smakt );
+    dequeueNextSM( busnumber, &smakt );
 
     __li100->last_type = smakt.type;
     __li100->last_typeaddr = smakt.typeaddr;

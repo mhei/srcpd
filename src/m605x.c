@@ -374,7 +374,7 @@ void *thr_sendrec_M6051(void *v)
         /* locomotive decoder */
         if (!((M6051_DATA *) buses[btd->bus].driverdata)->cmd32_pending) {
             if (!queue_GL_isempty(btd->bus)) {
-                unqueueNextGL(btd->bus, &gltmp);
+                dequeueNextGL(btd->bus, &gltmp);
                 addr = gltmp.id;
                 cacheGetGL(btd->bus, addr, &glakt);
 
@@ -416,7 +416,7 @@ void *thr_sendrec_M6051(void *v)
         /* Magnetantriebe, die muessen irgendwann sehr bald
            abgeschaltet werden */
         if (!queue_GA_isempty(btd->bus)) {
-            unqueueNextGA(btd->bus, &gatmp);
+            dequeueNextGA(btd->bus, &gatmp);
             addr = gatmp.id;
             if (gatmp.action == 1) {
                 gettimeofday(&gatmp.tv[gatmp.port], NULL);

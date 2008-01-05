@@ -53,7 +53,7 @@ typedef struct _SM {
 int queueSM(bus_t busnumber, int command, int type, int addr, int typeaddr,
             int bit, int value);
 int queue_SM_isempty(bus_t busnumber);
-int unqueueNextSM(bus_t, sm_t*);
+int dequeueNextSM(bus_t, sm_t*);
 
 int getSM(bus_t busnumber, int addr, sm_t*);
 int setSM(bus_t busnumber, int type, int addr, int typeaddr, int bit,

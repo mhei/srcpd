@@ -450,7 +450,7 @@ void send_command_ga_IB( bus_t busnumber )
   /* switch on decoder */
   if ( !queue_GA_isempty( busnumber ) )
   {
-    unqueueNextGA( busnumber, &gatmp );
+    dequeueNextGA( busnumber, &gatmp );
     addr = gatmp.id;
     byte2send = 0x90;
     writeByte( busnumber, byte2send, 0 );
@@ -518,7 +518,7 @@ void send_command_gl_IB( bus_t busnumber )
   /* send only if new data is available */
   if ( !queue_GL_isempty( busnumber ) )
   {
-    unqueueNextGL( busnumber, &gltmp );
+    dequeueNextGL( busnumber, &gltmp );
     addr = gltmp.id;
     cacheGetGL( busnumber, addr, &glakt );
 
@@ -821,7 +821,7 @@ void send_command_sm_IB( bus_t busnumber )
   /* send only if data is available */
   if ( !queue_SM_isempty( busnumber ) )
   {
-    unqueueNextSM( busnumber, &smakt );
+    dequeueNextSM( busnumber, &smakt );
 
     __ib->last_type = smakt.type;
     __ib->last_typeaddr = smakt.typeaddr;

@@ -684,7 +684,7 @@ void *thr_sendrec_LOCONET(void *v)
             }
             else if (!queue_GA_isempty(btd->bus)) {
                 ga_state_t gatmp;
-                unqueueNextGA(btd->bus, &gatmp);
+                dequeueNextGA(btd->bus, &gatmp);
                 addr = gatmp.id-1;
                 ln_packetlen = 4;
                 ln_packet[0] = OPC_SW_REQ;
@@ -704,8 +704,8 @@ void *thr_sendrec_LOCONET(void *v)
 
             else if (!queue_SM_isempty(btd->bus)) {
                 struct _SM smtmp;
-                session_processwait(btd->bus);
-                unqueueNextSM(btd->bus, &smtmp);
+                session_lock_wait(btd->bus);
+                dequeueNextSM(btd->bus, &smtmp);
                 addr = smtmp.addr;
                 switch (smtmp.command) {
                     case SET:
