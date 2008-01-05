@@ -211,12 +211,11 @@ void *thr_sendrec_LOOPBACK(void *v)
     int addr;
     int last_cancel_state, last_cancel_type;
     int cv[MAX_CV_NUMBER + 1];
-    bus_t bus = (bus_t) v;
 
     bus_thread_t* btd = (bus_thread_t*) malloc(sizeof(bus_thread_t));
     if (btd == NULL)
         pthread_exit((void*) 1);
-    btd->bus = bus;
+    btd->bus = (bus_t) v;
     btd->fd = -1;
 
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
@@ -225,50 +224,56 @@ void *thr_sendrec_LOOPBACK(void *v)
     /*register cleanup routine*/
     pthread_cleanup_push((void *) end_bus_thread, (void *) btd);
 
-    syslog_bus(bus, DBG_INFO, "Loopback bus started (device = %s).",
-        buses[bus].device.file.path);
+    syslog_bus(btd->bus, DBG_INFO, "Loopback bus started (device = %s).",
+        buses[btd->bus].device.file.path);
 
-    buses[bus].watchdog = 1;
+    buses[btd->bus].watchdog = 1;
 
+    /*enter endless loop to process work tasks*/
     while (1) {
-        if (buses[bus].power_changed == 1) {
-            buses[bus].power_changed = 0;
+        
+        /*POWER action arrived*/
+        if (buses[btd->bus].power_changed == 1) {
+            buses[btd->bus].power_changed = 0;
             /*
             char msg[110];
             infoPower(bus, msg);
             queueInfoMessage(msg);
             */
         }
-        if (buses[bus].power_state == 0) {
+        if (buses[btd->bus].power_state == 0) {
             usleep(1000);
             continue;
         }
 
-        if (!queue_GL_isempty(bus)) {
-            unqueueNextGL(bus, &gltmp);
+        /*GL action arrived*/
+        if (!queue_GL_isempty(btd->bus)) {
+            unqueueNextGL(btd->bus, &gltmp);
             addr = gltmp.id;
-            cacheGetGL(bus, addr, &glakt);
+            cacheGetGL(btd->bus, addr, &glakt);
 
             if (gltmp.direction == 2) {
                 gltmp.speed = 0;
                 gltmp.direction = !glakt.direction;
             }
-            cacheSetGL(bus, addr, gltmp);
+            cacheSetGL(btd->bus, addr, gltmp);
         }
-        buses[bus].watchdog = 4;
+        buses[btd->bus].watchdog = 4;
 
-        if (!queue_GA_isempty(bus)) {
-            unqueueNextGA(bus, &gatmp);
+        /*GA action arrived*/
+        if (!queue_GA_isempty(btd->bus)) {
+            unqueueNextGA(btd->bus, &gatmp);
             addr = gatmp.id;
             if (gatmp.action == 1) {
                 gettimeofday(&gatmp.tv[gatmp.port], NULL);
             }
-            setGA(bus, addr, gatmp);
-            buses[bus].watchdog = 6;
+            setGA(btd->bus, addr, gatmp);
+            buses[btd->bus].watchdog = 6;
         }
 
-        if (!queue_SM_isempty(bus)) {
-            unqueueNextSM(bus, &smtmp);
+        /*SM action arrived*/
+        if (!queue_SM_isempty(btd->bus)) {
+            unqueueNextSM(btd->bus, &smtmp);
 
             if (smtmp.command == GET) {
                 if ((smtmp.typeaddr >= 0) &&
@@ -284,9 +289,13 @@ void *thr_sendrec_LOOPBACK(void *v)
                 }
             }
 
-            session_endwait(bus, smtmp.value);
+            session_endwait(btd->bus, smtmp.value);
         }
 
+        /*FB action arrived*/
+        /* currently nothing to do here */
+
+        /* busy wait and continue loop */
         usleep(1000);
     }
 
