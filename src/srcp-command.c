@@ -652,7 +652,7 @@ int handleINIT(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
             result = sscanf(parameter, "%s", protocol);
             if (result < 1)
                 rc = SRCP_LISTTOOSHORT;
-            else if (strcasecmp(protocol, "NMRA") == 0) 
+            else if (strcasecmp(protocol, "NMRA", 4) == 0) 
                 rc = infoSM(bus, INIT, 0, -1, 0, 0, 0, reply);
             else
                 rc = SRCP_WRONGVALUE;
