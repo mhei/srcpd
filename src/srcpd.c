@@ -317,7 +317,6 @@ int main(int argc, char **argv)
                         "configuration file '%s'.\n", conffile);
         exit(1);
     }
-    /*TODO: change privileges should be right _here_*/
 
     /* do not daemonize if in debug mode */
     if (buses[0].debuglevel < DBG_DEBUG) {
@@ -330,6 +329,7 @@ int main(int argc, char **argv)
 
     }
 
+    /*TODO: copy pid file name to local variable*/
     CreatePIDFile(getpid());
     syslog(LOG_INFO, "%s", WELCOME_MSG);
     install_signal_handlers();
