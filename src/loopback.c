@@ -240,12 +240,12 @@ void *thr_sendrec_LOOPBACK(void *v)
             infoPower(bus, msg);
             queueInfoMessage(msg);
             */
+            buses[btd->bus].watchdog++;
         }
         if (buses[btd->bus].power_state == 0) {
             usleep(1000);
             continue;
         }
-        buses[btd->bus].watchdog++;
 
         /*GL action arrived*/
         if (!queue_GL_isempty(btd->bus)) {
@@ -296,6 +296,7 @@ void *thr_sendrec_LOOPBACK(void *v)
 
         /*FB action arrived*/
         /* currently nothing to do here */
+        buses[btd->bus].watchdog++;
 
         /* busy wait and continue loop */
         usleep(1000);
