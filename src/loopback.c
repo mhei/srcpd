@@ -227,11 +227,11 @@ void *thr_sendrec_LOOPBACK(void *v)
     syslog_bus(btd->bus, DBG_INFO, "Loopback bus started (device = %s).",
         buses[btd->bus].device.file.path);
 
-    buses[btd->bus].watchdog = 1;
-
     /*enter endless loop to process work tasks*/
     while (1) {
         
+        buses[btd->bus].watchdog = 1;
+
         /*POWER action arrived*/
         if (buses[btd->bus].power_changed == 1) {
             buses[btd->bus].power_changed = 0;
@@ -245,6 +245,7 @@ void *thr_sendrec_LOOPBACK(void *v)
             usleep(1000);
             continue;
         }
+        buses[btd->bus].watchdog++;
 
         /*GL action arrived*/
         if (!queue_GL_isempty(btd->bus)) {
@@ -257,8 +258,8 @@ void *thr_sendrec_LOOPBACK(void *v)
                 gltmp.direction = !glakt.direction;
             }
             cacheSetGL(btd->bus, addr, gltmp);
+            buses[btd->bus].watchdog++;
         }
-        buses[btd->bus].watchdog = 4;
 
         /*GA action arrived*/
         if (!queue_GA_isempty(btd->bus)) {
@@ -268,7 +269,7 @@ void *thr_sendrec_LOOPBACK(void *v)
                 gettimeofday(&gatmp.tv[gatmp.port], NULL);
             }
             setGA(btd->bus, addr, gatmp);
-            buses[btd->bus].watchdog = 6;
+            buses[btd->bus].watchdog++;
         }
 
         /*SM action arrived*/
@@ -290,6 +291,7 @@ void *thr_sendrec_LOOPBACK(void *v)
             }
 
             session_endwait(btd->bus, smtmp.value);
+            buses[btd->bus].watchdog++;
         }
 
         /*FB action arrived*/
