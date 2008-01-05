@@ -107,7 +107,7 @@ static int handle_setcheck(sessionid_t sessionid, bus_t bus, char *device,
         }
     }
 
-    /*SET 0 GM <send_to_id> <reply_to_id> <message_type> <message>*/
+    /* SET 0 GM "<send_to_id> <reply_to_id> <message_type> <message>" */
     else if (bus_has_devicegroup(bus, DG_GM)
         && strncasecmp(device, "GM", 2) == 0) {
         sessionid_t sendto, replyto;
@@ -123,10 +123,12 @@ static int handle_setcheck(sessionid_t sessionid, bus_t bus, char *device,
             rc = setGM(sendto, replyto, msg);
     }
 
+    /* SET <bus> SM "<decoderaddress> <type> <1 or more values>" */
     else if (bus_has_devicegroup(bus, DG_SM)
         && strncasecmp(device, "SM", 2) == 0) {
         long addr, value1, value2, value3;
         int type;
+        int result;
         char *ctype;
 
         ctype = malloc(MAXSRCPLINELEN);
@@ -134,29 +136,33 @@ static int handle_setcheck(sessionid_t sessionid, bus_t bus, char *device,
             rc = SRCP_OUTOFRESOURCES;
         }
         else {
-            sscanf(parameter, "%ld %s %ld %ld %ld", &addr, ctype,
+            result = sscanf(parameter, "%ld %s %ld %ld %ld", &addr, ctype,
                     &value1, &value2, &value3);
-            type = -1;
-            if (strcasecmp(ctype, "REG") == 0)
-                type = REGISTER;
-            else if (strcasecmp(ctype, "CV") == 0)
-                type = CV;
-            else if (strcasecmp(ctype, "CVBIT") == 0)
-                type = CV_BIT;
-            else if (strcasecmp(ctype, "PAGE") == 0)
-                type = PAGE;
-
-            free(ctype);
-            if (type == -1)
-                rc = SRCP_WRONGVALUE;
+            if (result < 3)
+                rc = SRCP_LISTTOOSHORT;
             else {
-                if (type == CV_BIT)
-                    rc = infoSM(bus, SET, type, addr, value1, value2,
-                            value3, reply);
-                else
-                    rc = infoSM(bus, SET, type, addr, value1, 0, value2,
-                            reply);
+                type = -1;
+                if (strcasecmp(ctype, "REG") == 0)
+                    type = REGISTER;
+                else if (strcasecmp(ctype, "CV") == 0)
+                    type = CV;
+                else if (strcasecmp(ctype, "CVBIT") == 0)
+                    type = CV_BIT;
+                else if (strcasecmp(ctype, "PAGE") == 0)
+                    type = PAGE;
+
+                if (type == -1)
+                    rc = SRCP_WRONGVALUE;
+                else {
+                    if (type == CV_BIT)
+                        rc = infoSM(bus, SET, type, addr, value1,
+                                value2, value3, reply);
+                    else
+                        rc = infoSM(bus, SET, type, addr, value1, 0,
+                                value2, reply);
+                }
             }
+            free(ctype);
         }
     }
 
