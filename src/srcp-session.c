@@ -532,20 +532,25 @@ int termSESSION(bus_t bus, sessionid_t sessionid, sessionid_t termsessionid,
     return SRCP_FORBIDDEN;
 }
 
-int session_preparewait(bus_t bus)
+/*session_lock_bus_sm()*/
+int session_processwait(bus_t bus)
 {
     int result;
 
-    syslog_bus(bus, DBG_DEBUG, "SESSION prepare wait for bus.");
+    syslog_bus(bus, DBG_DEBUG, "SESSION process wait1 for bus.");
+
     result = pthread_mutex_lock(&cb_mutex[bus]);
     if (result != 0) {
         syslog_bus(bus, DBG_ERROR,
                 "pthread_mutex_lock() failed: %s (errno = %d).",
                 strerror(result), result);
     }
+
+    syslog_bus(bus, DBG_DEBUG, "SESSION process wait2 for bus.");
     return result;
 }
 
+/*session_unlock_bus_sm()*/
 int session_cleanupwait(bus_t bus)
 {
     int result;
@@ -560,6 +565,7 @@ int session_cleanupwait(bus_t bus)
     return result;
 }
 
+/*session_cond_timedwait_bus_sm()*/
 int session_wait(bus_t bus, unsigned int timeout, int *value)
 {
     int result;
@@ -585,6 +591,7 @@ int session_wait(bus_t bus, unsigned int timeout, int *value)
     return result;
 }
 
+/*session_cond_broadcast_bus_sm()*/
 int session_endwait(bus_t bus, int returnvalue)
 {
     int result;
@@ -610,19 +617,3 @@ int session_endwait(bus_t bus, int returnvalue)
     return returnvalue;
 }
 
-int session_processwait(bus_t bus)
-{
-    int result;
-
-    syslog_bus(bus, DBG_DEBUG, "SESSION process wait1 for bus.");
-
-    result = pthread_mutex_lock(&cb_mutex[bus]);
-    if (result != 0) {
-        syslog_bus(bus, DBG_ERROR,
-                "pthread_mutex_lock() failed: %s (errno = %d).",
-                strerror(result), result);
-    }
-
-    syslog_bus(bus, DBG_DEBUG, "SESSION process wait2 for bus.");
-    return result;
-}

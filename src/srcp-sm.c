@@ -262,7 +262,7 @@ int infoSM(bus_t busnumber, int command, int type, int addr,
     syslog_bus(busnumber, DBG_INFO,
                "TYPE: %d, CV: %d, BIT: %d, VALUE: 0x%02x", type, typeaddr,
                bit, value);
-    session_preparewait(busnumber);
+    session_processwait(busnumber);
     status = queueSM(busnumber, command, type, addr, typeaddr, bit, value);
 
     if (session_wait(busnumber, 90, &result) == ETIMEDOUT) {
