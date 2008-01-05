@@ -145,8 +145,8 @@ int queueSM(bus_t busnumber, int command, int type, int addr,
     int result;
     struct timeval akt_time;
 
-    syslog_bus(busnumber, DBG_INFO, "queueSM for %i (in=%d out=%d)", addr,
-               in[busnumber], out[busnumber]);
+    syslog_bus(busnumber, DBG_INFO, "queueSM for %i (in = %d, out = %d)",
+            addr, in[busnumber], out[busnumber]);
     /* 
      * addr values:
      *    -1: using separate program-track
@@ -187,7 +187,8 @@ int queueSM(bus_t busnumber, int command, int type, int addr,
                    strerror(result), result);
     }
 
-    syslog_bus(busnumber, DBG_DEBUG, "SM queued");
+    syslog_bus(busnumber, DBG_INFO, "SM enqueued (in = %d, out = %d)",
+            in[busnumber], out[busnumber]);
     return SRCP_OK;
 }
 
@@ -220,7 +221,7 @@ int getNextSM(bus_t busnumber, sm_t *l)
 }
 
 /** return next entry or -1, set fifo pointer to new position! */
-int unqueueNextSM(bus_t busnumber, sm_t *l)
+int dequeueNextSM(bus_t busnumber, sm_t *l)
 {
     if (in[busnumber] == out[busnumber])
         return -1;
@@ -262,10 +263,10 @@ int infoSM(bus_t busnumber, int command, int type, int addr,
     syslog_bus(busnumber, DBG_INFO,
                "TYPE: %d, CV: %d, BIT: %d, VALUE: 0x%02x", type, typeaddr,
                bit, value);
-    session_processwait(busnumber);
+    session_lock_wait(busnumber);
     status = queueSM(busnumber, command, type, addr, typeaddr, bit, value);
 
-    if (session_wait(busnumber, 90, &result) == ETIMEDOUT) {
+    if (session_condt_wait(busnumber, 90, &result) == ETIMEDOUT) {
         gettimeofday(&now, NULL);
         sprintf(info, "%lu.%.3lu 417 ERROR timeout\n", now.tv_sec,
                 now.tv_usec / 1000);
@@ -276,6 +277,6 @@ int infoSM(bus_t busnumber, int command, int type, int addr,
                 now.tv_sec, now.tv_usec / 1000, busnumber, addr, typeaddr,
                 result);
     }
-    session_cleanupwait(busnumber);
+    session_unlock_wait(busnumber);
     return status;
 }

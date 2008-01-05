@@ -117,7 +117,7 @@ static int queue_isfull(bus_t busnumber)
 }
 
 /** liefert naechsten Eintrag oder -1, setzt fifo pointer neu! */
-int unqueueNextGA(bus_t busnumber, ga_state_t *a)
+int dequeueNextGA(bus_t busnumber, ga_state_t *a)
 {
     if (in[busnumber] == out[busnumber])
         return -1;

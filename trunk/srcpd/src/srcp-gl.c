@@ -190,7 +190,7 @@ static int queue_isfull(bus_t busnumber)
 }
 
 /** liefert n�hsten Eintrag oder -1, setzt fifo pointer neu! */
-int unqueueNextGL(bus_t busnumber, gl_state_t *l)
+int dequeueNextGL(bus_t busnumber, gl_state_t *l)
 {
     if (in[busnumber] == out[busnumber])
         return -1;

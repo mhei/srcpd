@@ -265,7 +265,7 @@ void *thr_sendrec_ZIMO(void *v)
             queueInfoMessage(msg);
         }
         if (!queue_GL_isempty(btd->bus)) {
-            unqueueNextGL(btd->bus, &gltmp);
+            dequeueNextGL(btd->bus, &gltmp);
             addr = gltmp.id;
             cacheGetGL(btd->bus, addr, &glakt);
             databyte1 = (gltmp.direction ? 0 : 32);
@@ -326,7 +326,7 @@ void *thr_sendrec_ZIMO(void *v)
         }
         if (!queue_SM_isempty(btd->bus)) {
             int returnvalue = -1;
-            unqueueNextSM(btd->bus, &smtmp);
+            dequeueNextSM(btd->bus, &smtmp);
             /* syslog_bus(btd->bus, DBG_INFO, "UNQUEUE SM, cmd:%d addr:%d type:%d typeaddr:%d bit:%04X ",smtmp.command,smtmp.addr,smtmp.type,smtmp.typeaddr,smtmp.bit); */
             addr = smtmp.addr;
             if (addr == 0 && smtmp.type == CV
@@ -338,7 +338,7 @@ void *thr_sendrec_ZIMO(void *v)
                         sprintf(msg, "RN%02X%02X%c", smtmp.typeaddr,
                                 smtmp.value, 13);
                         writeString(btd->bus, (unsigned char *) msg, 0);
-                        session_processwait(btd->bus);
+                        session_lock_wait(btd->bus);
                         if (readanswer(btd->bus, 'Q', msg, 20, 1000) > 3) {
                             sscanf(&msg[1], "%2X%2X%2X", &error, &cv, &val);
                             if (!error && cv == smtmp.typeaddr
@@ -354,7 +354,7 @@ void *thr_sendrec_ZIMO(void *v)
                         syslog_bus(btd->bus, DBG_INFO, "SM GET #%d", smtmp.typeaddr);
                         sprintf(msg, "Q%02X%c", smtmp.typeaddr, 13);
                         writeString(btd->bus, (unsigned char *) msg, 0);
-                        session_processwait(btd->bus);
+                        session_lock_wait(btd->bus);
                         if (readanswer(btd->bus, 'Q', msg, 20, 10000) > 3) {
                             /* sscanf(&msg[1],"%2X%2X%2X",&error,&cv,&val); */
                             sscanf(&msg[1], "%*3c%2X%2X", &cv, &val);

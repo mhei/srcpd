@@ -46,7 +46,7 @@ int get_number_ga(bus_t busnumber);
 
 int queueGA(bus_t busnumber, int addr, int port, int action,
             long int activetime);
-int unqueueNextGA(bus_t busnumber, ga_state_t *);
+int dequeueNextGA(bus_t busnumber, ga_state_t *);
 int queue_GA_isempty(bus_t busnumber);
 
 int getGA(bus_t busnumber, int addr, ga_state_t *a);

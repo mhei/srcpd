@@ -242,39 +242,11 @@ void *thr_sendrec_LOOPBACK(void *v)
             */
             buses[btd->bus].watchdog++;
         }
-        if (buses[btd->bus].power_state == 0) {
-            usleep(1000);
-            continue;
-        }
 
-        /*GL action arrived*/
-        if (!queue_GL_isempty(btd->bus)) {
-            unqueueNextGL(btd->bus, &gltmp);
-            addr = gltmp.id;
-            cacheGetGL(btd->bus, addr, &glakt);
-
-            if (gltmp.direction == 2) {
-                gltmp.speed = 0;
-                gltmp.direction = !glakt.direction;
-            }
-            cacheSetGL(btd->bus, addr, gltmp);
-            buses[btd->bus].watchdog++;
-        }
-
-        /*GA action arrived*/
-        if (!queue_GA_isempty(btd->bus)) {
-            unqueueNextGA(btd->bus, &gatmp);
-            addr = gatmp.id;
-            if (gatmp.action == 1) {
-                gettimeofday(&gatmp.tv[gatmp.port], NULL);
-            }
-            setGA(btd->bus, addr, gatmp);
-            buses[btd->bus].watchdog++;
-        }
-
-        /*SM action arrived*/
+        /*SM action arrived (process with and without power)*/
         if (!queue_SM_isempty(btd->bus)) {
-            unqueueNextSM(btd->bus, &smtmp);
+            dequeueNextSM(btd->bus, &smtmp);
+            session_lock_wait(btd->bus);
 
             if (smtmp.command == GET) {
                 if ((smtmp.typeaddr >= 0) &&
@@ -289,8 +261,40 @@ void *thr_sendrec_LOOPBACK(void *v)
                     cv[smtmp.typeaddr] = smtmp.value;
                 }
             }
-
             session_endwait(btd->bus, smtmp.value);
+
+            buses[btd->bus].watchdog++;
+        }
+
+        /* loop shortcut to prevent processing of GA, GL (and FB) without
+         * power on */
+        if (buses[btd->bus].power_state == 0) {
+            usleep(1000);
+            continue;
+        }
+
+        /*GL action arrived*/
+        if (!queue_GL_isempty(btd->bus)) {
+            dequeueNextGL(btd->bus, &gltmp);
+            addr = gltmp.id;
+            cacheGetGL(btd->bus, addr, &glakt);
+
+            if (gltmp.direction == 2) {
+                gltmp.speed = 0;
+                gltmp.direction = !glakt.direction;
+            }
+            cacheSetGL(btd->bus, addr, gltmp);
+            buses[btd->bus].watchdog++;
+        }
+
+        /*GA action arrived*/
+        if (!queue_GA_isempty(btd->bus)) {
+            dequeueNextGA(btd->bus, &gatmp);
+            addr = gatmp.id;
+            if (gatmp.action == 1) {
+                gettimeofday(&gatmp.tv[gatmp.port], NULL);
+            }
+            setGA(btd->bus, addr, gatmp);
             buses[btd->bus].watchdog++;
         }
 

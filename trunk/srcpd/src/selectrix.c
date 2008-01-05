@@ -532,7 +532,7 @@ void *thr_commandSelectrix(void *v)
                 if (!queue_GL_isempty(btd->bus)) {
                         state = 2;
                         buses[btd->bus].watchdog = 6;
-                        unqueueNextGL(btd->bus, &gltmp);
+                        dequeueNextGL(btd->bus, &gltmp);
                         /* Address of the engine */
                         addr = gltmp.id;
                         /* Check if valid address */
@@ -587,7 +587,7 @@ void *thr_commandSelectrix(void *v)
                 if (!queue_GA_isempty(btd->bus)) {
                         state = 3;
                         buses[btd->bus].watchdog = 8;
-                        unqueueNextGA(btd->bus, &gatmp);
+                        dequeueNextGA(btd->bus, &gatmp);
                         addr = gatmp.id;
                         if (__selectrixt->max_address > addr) {
                                 data = __selectrixt->bus_data[addr];

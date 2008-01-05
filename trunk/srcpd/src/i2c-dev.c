@@ -528,7 +528,7 @@ void *thr_sendrec_I2C_DEV(void *v)
 
         /* process GA commands */
         if (!queue_GA_isempty(btd->bus)) {
-            unqueueNextGA(btd->bus, &gatmp);
+            dequeueNextGA(btd->bus, &gatmp);
             handle_i2c_set_ga(btd->bus, &gatmp);
             setGA(btd->bus, gatmp.id, gatmp);
             select_bus(0, buses[btd->bus].device.file.fd, btd->bus);

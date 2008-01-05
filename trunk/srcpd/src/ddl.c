@@ -1516,7 +1516,7 @@ void *thr_sendrec_DDL(void *v)
             int speed;
             int direction;
 
-            unqueueNextGL(btd->bus, &gltmp);
+            dequeueNextGL(btd->bus, &gltmp);
             p = gltmp.protocol;
             /* need to compute from the n_fs and n_func parameters */
             pv = gltmp.protocolversion;
@@ -1654,7 +1654,7 @@ void *thr_sendrec_DDL(void *v)
 
         if (!queue_GA_isempty(btd->bus)) {
             char p;
-            unqueueNextGA(btd->bus, &gatmp);
+            dequeueNextGA(btd->bus, &gatmp);
             addr = gatmp.id;
             p = gatmp.protocol;
             syslog_bus(btd->bus, DBG_DEBUG, "next GA command: %c (%x) %d", p, p,
