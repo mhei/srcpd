@@ -29,32 +29,33 @@
 
 #define QUEUELEN 2
 
-/*  Important:
-    - only NMRA is supported at this time
-    - set address of decoder only available at programming track
-    - every GET/VERIFY only available at programming track
-    - address = -1, means to use program-track
-    - address > 0, means to use pom (only available with CV)
-
-    for instance:
-      SET 1 SM -1 CV 29 2         - write 2 into CV 29 at program-track
-      SET 1 SM 1210 CV 29 2       - write 2 into CV 29 of decoder with
-                                    address 1210 on the main-line
-      SET 1 SM -1 CVBIT 29 1 1    - set the 2-nd bit of CV 29 at program-track
-      SET 1 SM -1 REG 5 2         - same as first, but using register-mode
-
-    - the answer of GET is delivered via INFO-port!
-*/
+/*
+ * Important:
+ *   - Only NMRA is supported at this time
+ *   - Set address of decoder is only available at programming track
+ *   - Every GET/VERIFY only available at programming track
+ *   - The answer of GET is delivered via INFO-port!
+ *   - Address = -1, means to use program-track
+ *   - Address > 0, means to use pom (only available with CV)
+ *
+ *   For instance:
+ *     SET 1 SM -1 CV 29 2        write 2 into CV 29 at program-track
+ *     SET 1 SM 1210 CV 29 2      write 2 into CV 29 of decoder with
+ *                                address 1210 on the main-line
+ *     SET 1 SM -1 CVBIT 29 1 1   set the 2-nd bit of CV 29 at program-track
+ *     SET 1 SM -1 REG 5 2        same as first, but using register-mode
+ */
 
 
 /* Command queues pro Bus */
-static struct _SM queue[MAX_BUSES][QUEUELEN];
+static sm_t queue[MAX_BUSES][QUEUELEN];
 static pthread_mutex_t queue_mutex[MAX_BUSES];
 static volatile int out[MAX_BUSES], in[MAX_BUSES];
 
 /* internal functions */
 static int queue_len(bus_t busnumber);
 static int queue_isfull(bus_t busnumber);
+
 
 int queueInfoSM(bus_t busnumber, int addr, int type, int typeaddr,
                 int bit, int value, int return_code,
@@ -137,7 +138,7 @@ int queueInfoSM(bus_t busnumber, int addr, int type, int typeaddr,
     return SRCP_OK;
 }
 
-/* queue SM after some checks */
+/* enqueue SM after some checks */
 int queueSM(bus_t busnumber, int command, int type, int addr,
             int typeaddr, int bit, int value)
 {
@@ -210,7 +211,7 @@ static int queue_isfull(bus_t busnumber)
 }
 
 /** return next entry with rc >=0, or return -1, if no more entries */
-int getNextSM(bus_t busnumber, struct _SM *l)
+int getNextSM(bus_t busnumber, sm_t *l)
 {
     if (in[busnumber] == out[busnumber])
         return -1;
@@ -219,7 +220,7 @@ int getNextSM(bus_t busnumber, struct _SM *l)
 }
 
 /** return next entry or -1, set fifo pointer to new position! */
-int unqueueNextSM(bus_t busnumber, struct _SM *l)
+int unqueueNextSM(bus_t busnumber, sm_t *l)
 {
     if (in[busnumber] == out[busnumber])
         return -1;
