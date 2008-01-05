@@ -628,7 +628,8 @@ int handleINIT(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
 
     else if (bus_has_devicegroup(bus, DG_TIME)
         && strncasecmp(device, "TIME", 4) == 0) {
-        long rx, ry, nelem;
+        int nelem;
+        long rx, ry;
         nelem = sscanf(parameter, "%ld %ld", &rx, &ry);
         if (nelem >= 2) {
             rc = initTIME(rx, ry);      /* checks also values! */
@@ -638,9 +639,26 @@ int handleINIT(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
         }
     }
 
+    /* INIT <bus> SM "<protocol>" */
     else if (bus_has_devicegroup(bus, DG_SM)
         && strncasecmp(device, "SM", 2) == 0) {
-        rc = infoSM(bus, INIT, 0, -1, 0, 0, 0, reply);
+        int result;
+        char *protocol;
+
+        protocol = malloc(MAXSRCPLINELEN);
+        if (protocol == NULL)
+            rc = SRCP_OUTOFRESOURCES;
+        else {
+            result = sscanf(parameter, "%s", protocol);
+            if (result < 1)
+                rc = SRCP_LISTTOOSHORT;
+            else if (strcasecmp(protocol, "NMRA") == 0) 
+                rc = infoSM(bus, INIT, 0, -1, 0, 0, 0, reply);
+            else
+                rc = SRCP_WRONGVALUE;
+
+            free(protocol);
+        }
     }
 
     gettimeofday(&time, NULL);
