@@ -626,6 +626,11 @@ int handleINIT(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
         }
     }
 
+    else if (bus_has_devicegroup(bus, DG_POWER)
+        && strncasecmp(device, "POWER", 5) == 0) {
+        rc = initPower(bus);
+    }
+
     else if (bus_has_devicegroup(bus, DG_TIME)
         && strncasecmp(device, "TIME", 4) == 0) {
         int nelem;
