@@ -9,6 +9,7 @@
 #ifndef _SRCP_GA_H
 #define _SRCP_GA_H
 
+#include <stdbool.h>
 #include <sys/time.h>
 
 #include "config-srcpd.h"
@@ -17,19 +18,19 @@
 
 #define MAXGAPORT 2
 
-/* Schaltdekoder */
+/* accessory decoder */
 typedef struct _GASTATE {
     int state;                  /* 0==dead, 1==living, 2==terminating */
     char protocol;              /* Protocol Id */
-    int id;                     /* Der Identifier */
-    int port;                   /* Portnumber     */
+    int id;                     /* Identification */
+    int port;                   /* Port number     */
     int action;                 /* 0, 1, 2, 3...  */
     long activetime;            /* Aktivierungszeit in msec bis das 
                                    automatische AUS kommen soll */
     struct timeval inittime;
-    struct timeval tv[MAXGAPORT];   /* Zeitpunkt der letzten Aktivierungen,
-                                       ein Wert pro Port */
-    struct timeval t;           /* Auschaltzeitpunkt */
+    struct timeval tv[MAXGAPORT];   /* time of last activation, each port 
+                                       gets its own time value */
+    struct timeval t;           /* switch off time */
     struct timeval locktime;
     sessionid_t locked_by;      /* who has the LOCK? */
     long int lockduration;
@@ -55,7 +56,7 @@ int initGA(bus_t busnumber, int addr, const char protocol);
 int describeGA(bus_t busnumber, int addr, char *msg);
 int infoGA(bus_t busnumber, int addr, int port, char *msg);
 int cmpGA(ga_state_t a, ga_state_t b);
-int isInitializedGA(bus_t busnumber, int addr);
+bool isInitializedGA(bus_t busnumber, int addr);
 
 int lockGA(bus_t busnumber, int addr, long int duration,
            sessionid_t sessionid);

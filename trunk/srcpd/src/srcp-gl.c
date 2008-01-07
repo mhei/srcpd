@@ -96,13 +96,13 @@ static int calcspeed(int vs, int vmax, int n_fs)
 /* checks whether a GL is already initialized or not
  * returns false even, if it is an invalid address!
  */
-int isInitializedGL(bus_t busnumber, int addr)
+bool isInitializedGL(bus_t busnumber, int addr)
 {
     if (isValidGL(busnumber, addr)) {
         return (gl[busnumber].glstate[addr].state == 1);
     }
     else {
-        return 1 == 0;
+        return false;
     }
 }
 
