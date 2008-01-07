@@ -67,9 +67,6 @@ typedef unsigned long int sessionid_t;
 #define FB_4_PORTS            0x0800 /* used for Lenz, sening 2x4 ports instead 8 at once */
 
 /* useful constants */
-#define TRUE (1==1)
-#define FALSE (1==0)
-
 #define HW_UNDEFINED 0
 #define HW_FILENAME  1
 #define HW_NETWORK   2

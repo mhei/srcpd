@@ -391,7 +391,7 @@ int translateBitstream2Packetstream_v1(char *Bitstream, char *Packetstream,
     memset(Packetstream, 0, PKTSIZE);
     i = DataCnt - 1;
     if (!translateabel(Buffer)) {
-        pBs[strlen(pBs) - 1] = 0;     /* The last bit of the bitstream is always '1'. */
+        pBs[strlen(pBs) - 1] = 0;   /* The last bit of the bitstream is always '1'. */
         correction = 1;
     }
     bufsize = strlen(Buffer);
@@ -485,7 +485,7 @@ int translateBitstream2Packetstream_v2(char *Bitstream, char *Packetstream)
             if (j > 0) {        /* last level avail.?  */
                 j--;            /* go back             */
                 i = stack[j];
-                Bitstream -= TranslateData[i].patternlength;    /* corrections      */
+                Bitstream -= TranslateData[i].patternlength; /* corrections */
                 i--;
 
             }
@@ -519,18 +519,18 @@ int translateBitstream2Packetstream_v3(char *Bitstream, char *Packetstream)
     /* this routine assumes, that any Bitstream starts with a 1 Bit. */
     /* This could be changed, if necessary */
 
-    char Buffer[BUFFERSIZE + 20];       /* keep room for additional pre and postamble */
-    char *read_ptr = Buffer + 1;        /* here the real sequence starts */
+    char Buffer[BUFFERSIZE + 20];    /* keep room for additional pre and postamble */
+    char *read_ptr = Buffer + 1;     /* here the real sequence starts */
 
-    char *restart_read = Buffer;        /* one more 1 in the beginning for successful restart */
-    char *last_restart = Buffer - 1;    /* this necessary, only to verify our assumptions */
+    char *restart_read = Buffer;     /* one more 1 in the beginning for successful restart */
+    char *last_restart = Buffer - 1; /* this necessary, only to verify our assumptions */
 
     char *buf_end;
 
     int restart_packet = 0;
     int generate_packet = 0;
 
-    int second_try = FALSE;
+    int second_try = false;
     int act_six;
 
     read_ptr = strcpy(Buffer, "11");
@@ -554,7 +554,7 @@ int translateBitstream2Packetstream_v3(char *Bitstream, char *Packetstream)
             /*did we reach an untranslatable value */
             /* try again from last position, where a shorter translation */
             /* could be chosen                                          */
-            second_try = TRUE;
+            second_try = true;
             generate_packet = restart_packet;
             if (restart_read == last_restart)
                 syslog(LOG_INFO, "Sorry, restart algorithm doesn't "
@@ -576,7 +576,7 @@ int translateBitstream2Packetstream_v3(char *Bitstream, char *Packetstream)
             TranslateData_v3[act_six >> 1][second_try ? 1 : 0].
             patternlength;
         generate_packet++;
-        second_try = FALSE;
+        second_try = false;
     }
 
     return generate_packet;     /* return number of bytes in packetstream */
@@ -893,9 +893,9 @@ int comp_nmra_accessory(bus_t busnumber, int nr, int output,
     char packetstream[PKTSIZE];
     char *p_packetstream;
 
-    int address = 0;            /* of the decoder                           */
+    int address = 0;            /* of the decoder                */
     char rest[3];
-    int pairnr = 0;             /* decoders have pair of outputs            */
+    int pairnr = 0;             /* decoders have pair of outputs */
 
     int j;
 
@@ -934,7 +934,7 @@ int comp_nmra_accessory(bus_t busnumber, int nr, int output,
         strcat(bitstream, "1");
 
         j = translateBitstream2Packetstream(busnumber, bitstream,
-                                            packetstream, TRUE);
+                                            packetstream, true);
 #if 0                           /* GA Packet Cache */
     }
 #endif
@@ -988,7 +988,7 @@ int comp_nmra_baseline(bus_t busnumber, int address, int direction,
     strcat(bitstream, "1");
 
     j = translateBitstream2Packetstream(busnumber, bitstream, packetstream,
-                                        FALSE);
+                                        false);
 
     if (j > 0) {
         update_NMRAPacketPool(busnumber, adr, packetstream, j,
@@ -1068,9 +1068,9 @@ int comp_nmra_f4b7s28(bus_t busnumber, int address, int direction,
     strcat(bitstream2, "1");
 
     j = translateBitstream2Packetstream(busnumber, bitstream, packetstream,
-                                        FALSE);
+                                        false);
     jj = translateBitstream2Packetstream(busnumber, bitstream2,
-                                         packetstream2, FALSE);
+                                         packetstream2, false);
 
     if (j > 0 && jj > 0) {
         update_NMRAPacketPool(busnumber, adr, packetstream, j,
@@ -1156,9 +1156,9 @@ int comp_nmra_f4b7s128(bus_t busnumber, int address, int direction,
     strcat(bitstream2, "1");
 
     j = translateBitstream2Packetstream(busnumber, bitstream, packetstream,
-                                        FALSE);
+                                        false);
     jj = translateBitstream2Packetstream(busnumber, bitstream2,
-                                         packetstream2, FALSE);
+                                         packetstream2, false);
 
     if (j > 0 && jj > 0) {
         update_NMRAPacketPool(busnumber, adr, packetstream, j,
@@ -1248,9 +1248,9 @@ int comp_nmra_f4b14s28(bus_t busnumber, int address, int direction,
     strcat(bitstream2, "1");
 
     j = translateBitstream2Packetstream(busnumber, bitstream, packetstream,
-                                        FALSE);
+                                        false);
     jj = translateBitstream2Packetstream(busnumber, bitstream2,
-                                         packetstream2, FALSE);
+                                         packetstream2, false);
 
     if (j > 0 && jj > 0) {
         update_NMRAPacketPool(busnumber, adr + ADDR14BIT_OFFSET,
@@ -1346,9 +1346,9 @@ int comp_nmra_f4b14s128(bus_t busnumber, int address, int direction,
     strcat(bitstream2, "1");
 
     j = translateBitstream2Packetstream(busnumber, bitstream, packetstream,
-                                        FALSE);
+                                        false);
     jj = translateBitstream2Packetstream(busnumber, bitstream2,
-                                         packetstream2, FALSE);
+                                         packetstream2, false);
 
     if (j > 0 && jj > 0) {
         update_NMRAPacketPool(busnumber, adr + ADDR14BIT_OFFSET,
@@ -1372,7 +1372,7 @@ int comp_nmra_f4b14s128(bus_t busnumber, int address, int direction,
  * service mode functions.
  **/
 
-static int sm_initialized = FALSE;
+static int sm_initialized = false;
 
 static char resetstream[PKTSIZE];
 static int rs_size = 0;
@@ -1394,16 +1394,16 @@ void sm_init(bus_t busnumber)
     memset(resetstream, 0, PKTSIZE);
     rs_size =
         translateBitstream2Packetstream(busnumber, reset_packet,
-                                        resetstream, FALSE);
+                                        resetstream, false);
     memset(idlestream, 0, PKTSIZE);
     is_size =
         translateBitstream2Packetstream(busnumber, idle_packet, idlestream,
-                                        FALSE);
+                                        false);
     memset(pagepresetstream, 0, PKTSIZE);
     ps_size =
         translateBitstream2Packetstream(busnumber, page_preset_packet,
-                                        pagepresetstream, TRUE);
-    sm_initialized = TRUE;
+                                        pagepresetstream, true);
+    sm_initialized = true;
 }
 
 int scanACK(bus_t busnumber)
@@ -1570,7 +1570,7 @@ void protocol_nmra_sm_direct_cvbyte(bus_t busnumber, int sckt, int cv,
     strcat(bitstream, "1");
 
     j = translateBitstream2Packetstream(busnumber, bitstream, packetstream,
-                                        FALSE);
+                                        false);
 
     memset(SendStream, 0, 2048);
 
@@ -1611,13 +1611,13 @@ void protocol_nmra_sm_direct_cvbyte(bus_t busnumber, int sckt, int cv,
 void protocol_nmra_sm_write_cvbyte(bus_t bus, int sckt, int cv,
                                    int value)
 {
-    protocol_nmra_sm_direct_cvbyte(bus, sckt, cv, value, FALSE);
+    protocol_nmra_sm_direct_cvbyte(bus, sckt, cv, value, false);
 }
 
 void protocol_nmra_sm_verify_cvbyte(bus_t bus, int sckt, int cv,
                                     int value)
 {
-    protocol_nmra_sm_direct_cvbyte(bus, sckt, cv, value, TRUE);
+    protocol_nmra_sm_direct_cvbyte(bus, sckt, cv, value, true);
 }
 
 void protocol_nmra_sm_write_cvbit(bus_t bus, int sckt, int cv, int bit,
@@ -1725,7 +1725,7 @@ void protocol_nmra_sm_write_cvbit(bus_t bus, int sckt, int cv, int bit,
     strcat(bitstream, "1");
 
     j = translateBitstream2Packetstream(bus, bitstream, packetstream,
-                                        FALSE);
+                                        false);
 
     memset(SendStream, 0, 2048);
     for (l = 0; l < 50; l++)
@@ -1839,7 +1839,7 @@ void protocol_nmra_sm_phregister(bus_t bus, int sckt, int reg,
 
     memset(packetstream, 0, PKTSIZE);
     j = translateBitstream2Packetstream(bus, bitstream, packetstream,
-                                        TRUE);
+                                        true);
 
     memset(SendStream, 0, 4096);
 
@@ -1904,11 +1904,11 @@ void protocol_nmra_sm_phregister(bus_t bus, int sckt, int reg,
 void protocol_nmra_sm_write_phregister(bus_t bus, int sckt, int reg,
                                        int value)
 {
-    protocol_nmra_sm_phregister(bus, sckt, reg, value, FALSE);
+    protocol_nmra_sm_phregister(bus, sckt, reg, value, false);
 }
 
 void protocol_nmra_sm_verify_phregister(bus_t bus, int sckt, int reg,
                                         int value)
 {
-    protocol_nmra_sm_phregister(bus, sckt, reg, value, TRUE);
+    protocol_nmra_sm_phregister(bus, sckt, reg, value, true);
 }

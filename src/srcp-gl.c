@@ -1,7 +1,6 @@
 /*
  * Vorliegende Software unterliegt der General Public License,
  * Version 2, 1991. (c) Matthias Trute & the srcpd team, 2000-2003.
- *
  */
 
 #include <string.h>
@@ -16,16 +15,16 @@
 
 #define QUEUELEN 50
 
-/* aktueller Stand */
+/* current state */
 static struct _GL gl[MAX_BUSES];
 
-/* Kommandoqueues pro Bus */
+/* command queues for each bus */
 static gl_state_t queue[MAX_BUSES][QUEUELEN];
 static pthread_mutex_t queue_mutex[MAX_BUSES];
-/* Schreibposition fr die Writer der Queue */
+/* write position for queue writers */
 static int out[MAX_BUSES], in[MAX_BUSES];
 
-/* internal functions */
+/* forward declaration of internal functions */
 static int queue_len(bus_t busnumber);
 static int queue_isfull(bus_t busnumber);
 

@@ -28,6 +28,7 @@
  */
 
 #include <unistd.h>
+#include <stdbool.h>
 
 #include "portio.h"
 #include "config-srcpd.h"
@@ -798,12 +799,12 @@ void sig_processSelectrix(bus_t busnumber)
         } else if (__checkSXflag(Rautenhaus_MODE + Rautenhaus_FDBCK)) {
                 if (__checkSXflag(Rautenhaus_ADR)) {
                         /* 1: SX-bus address */
-                        found = TRUE;
+                        found = true;
                         __selectrix->currentFB = 1;
-                        while ((found == TRUE) &&
+                        while ((found == true) &&
                                  !(__selectrix->currentFB > __selectrix->number_fb)) {
                                 if (data == __selectrix->fb_adresses[__selectrix->currentFB]) {
-                                        found = FALSE;
+                                        found = false;
                                         __selectrix->SXflags &= ~Rautenhaus_ADR;
                                 } else {
                                         __selectrix->currentFB++;

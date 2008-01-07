@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <netdb.h>
+#include <stdbool.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 
@@ -317,17 +318,17 @@ static int ln_isecho(bus_t busnumber, const unsigned char *ln_packet,
     int i;
     /* do we check for echos? */
     if( (__loconet->flags & LN_FLAG_ECHO) == 0) {
-	return FALSE;
+	return false;
     }
 
     if (__loconet->ln_msglen == 0)
-        return FALSE;
+        return false;
     for (i = 0; i < ln_packetlen; i++) {
         if (ln_packet[i] != __loconet->ln_message[i])
-            return FALSE;
+            return false;
     }
 
-    return TRUE;
+    return true;
 }
 
 static int ln_read_serial(bus_t busnumber, unsigned char *cmd, int len)

@@ -28,6 +28,7 @@
 /***************************************************************/
 
 #include <sys/utsname.h>
+#include <stdbool.h>
 
 #include "config-srcpd.h"
 #include "ddl.h"
@@ -80,7 +81,7 @@ void queue_init(bus_t busnumber)
     }
     __DDL->queue_in = 0;
     __DDL->queue_out = 0;
-    __DDL->queue_initialized = TRUE;
+    __DDL->queue_initialized = true;
 
     result = pthread_mutex_unlock(&__DDL->queue_mutex);
     if (result != 0) {
@@ -436,7 +437,7 @@ void update_MaerklinPacketPool(bus_t busnumber, int adr,
     for (i = 0; i < __DDL->MaerklinPacketPool.NrOfKnownAdresses && !found;
          i++)
         if (__DDL->MaerklinPacketPool.knownAdresses[i] == adr)
-            found = TRUE;
+            found = true;
 
     result = pthread_mutex_lock(&__DDL->maerklin_pktpool_mutex);
     if (result != 0) {
@@ -509,7 +510,7 @@ void init_NMRAPacketPool(bus_t busnumber)
 
     /* put idle packet in packet pool */
     j = translateBitstream2Packetstream(__DDL->NMRADCC_TR_V, idle_packet,
-                                        idle_pktstr, FALSE);
+                                        idle_pktstr, false);
     update_NMRAPacketPool(busnumber, 255, idle_pktstr, j, idle_pktstr, j);
 
     /* generate and override idle_data */
@@ -531,7 +532,7 @@ void update_NMRAPacketPool(bus_t busnumber, int adr,
     for (i = 0; i <= __DDL->NMRAPacketPool.NrOfKnownAdresses && !found;
          i++)
         if (__DDL->NMRAPacketPool.knownAdresses[i] == adr)
-            found = TRUE;
+            found = true;
 
     result = pthread_mutex_lock(&__DDL->nmra_pktpool_mutex);
     if (result != 0) {
@@ -862,12 +863,12 @@ void refresh_loco(bus_t busnumber)
         if (__DDL->last_refreshed_maerklin_fx < 0)
             send_packet(busnumber, adr,
                         __DDL->MaerklinPacketPool.packets[adr].packet, 18,
-                        QM2LOCOPKT, TRUE);
+                        QM2LOCOPKT, true);
         else
             send_packet(busnumber, adr,
                         __DDL->MaerklinPacketPool.packets[adr].
                         f_packets[__DDL->last_refreshed_maerklin_fx], 18,
-                        QM2FXPKT, TRUE);
+                        QM2FXPKT, true);
         __DDL->last_refreshed_maerklin_fx++;
         if (__DDL->last_refreshed_maerklin_fx == 4) {
             __DDL->last_refreshed_maerklin_fx = -1;
@@ -886,14 +887,14 @@ void refresh_loco(bus_t busnumber)
                 send_packet(busnumber, adr,
                             __DDL->NMRAPacketPool.packets[adr].packet,
                             __DDL->NMRAPacketPool.packets[adr].packet_size,
-                            QNBLOCOPKT, TRUE);
+                            QNBLOCOPKT, true);
                 __DDL->last_refreshed_nmra_fx = 0;
             }
             else {
                 send_packet(busnumber, adr,
                             __DDL->NMRAPacketPool.packets[adr].fx_packet,
                             __DDL->NMRAPacketPool.packets[adr].
-                            fx_packet_size, QNBLOCOPKT, TRUE);
+                            fx_packet_size, QNBLOCOPKT, true);
                 __DDL->last_refreshed_nmra_fx = 1;
             }
         }
@@ -1128,7 +1129,7 @@ void *thr_refresh_cycle(void *v)
                 if (check_lines(busnumber))
                     continue;
                 send_packet(busnumber, addr, packet, packet_size,
-                            packet_type, FALSE);
+                            packet_type, false);
                 if (__DDL->ENABLED_PROTOCOLS == (EP_MAERKLIN | EP_NMRADCC)) {
                     result = write(buses[busnumber].device.file.fd,
                             __DDL->NMRA_idle_data, 13);
@@ -1225,9 +1226,9 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     __DDL->number_gl = 81;
     __DDL->number_ga = 324;
 
-    __DDL->RI_CHECK = FALSE;    /* ring indicator checking      */
-    __DDL->CHECKSHORT = FALSE;  /* default no shortcut checking */
-    __DDL->DSR_INVERSE = FALSE; /* controls how DSR is used to  */
+    __DDL->RI_CHECK = false;    /* ring indicator checking      */
+    __DDL->CHECKSHORT = false;  /* default no shortcut checking */
+    __DDL->DSR_INVERSE = false; /* controls how DSR is used to  */
                                 /* check short-circuits         */
     __DDL->SHORTCUTDELAY = 0;   /* usecs shortcut delay         */
     __DDL->NMRADCC_TR_V = 3;    /* version of the NMRA dcc      */
@@ -1269,7 +1270,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __DDL->RI_CHECK =
-                    (xmlStrcmp(txt, BAD_CAST "yes") == 0) ? TRUE : FALSE;
+                    (xmlStrcmp(txt, BAD_CAST "yes") == 0) ? true : false;
                 xmlFree(txt);
             }
         }
@@ -1279,7 +1280,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __DDL->CHECKSHORT =
-                    (xmlStrcmp(txt, BAD_CAST "yes") == 0) ? TRUE : FALSE;
+                    (xmlStrcmp(txt, BAD_CAST "yes") == 0) ? true : false;
                 xmlFree(txt);
             }
         }
@@ -1287,7 +1288,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         else if (xmlStrcmp(child->name, BAD_CAST "inverse_dsr_handling") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             __DDL->DSR_INVERSE =
-                (xmlStrcmp(txt, BAD_CAST "yes") == 0) ? TRUE : FALSE;
+                (xmlStrcmp(txt, BAD_CAST "yes") == 0) ? true : false;
             xmlFree(txt);
         }
 
@@ -1320,7 +1321,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
             if (txt != NULL) {
                 __DDL->IMPROVE_NMRADCC_TIMING = (xmlStrcmp(txt,
                                                            BAD_CAST "yes")
-                                                 == 0) ? TRUE : FALSE;
+                                                 == 0) ? true : false;
                 xmlFree(txt);
             }
         }
@@ -1347,7 +1348,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
             if (txt != NULL) {
                 __DDL->WAITUART_USLEEP_PATCH = (xmlStrcmp(txt,
                                                           BAD_CAST "yes")
-                                                == 0) ? TRUE : FALSE;
+                                                == 0) ? true : false;
                 xmlFree(txt);
             }
         }
@@ -1394,7 +1395,7 @@ int init_bus_DDL(bus_t busnumber)
 
     __DDL->short_detected = 0;
 
-    __DDL->queue_initialized = FALSE;
+    __DDL->queue_initialized = false;
     __DDL->queue_out = 0;
     __DDL->queue_in = 0;
     queue_init(busnumber);
