@@ -48,3 +48,11 @@ int initPower(bus_t bus)
 {
     return SRCP_OK;
 }
+
+int termPower(bus_t bus)
+{
+    if (1 == getPower(bus))
+        return setPower(bus, 0 , "Device Termination");
+
+    return SRCP_OK;
+}

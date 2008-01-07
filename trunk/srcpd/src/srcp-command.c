@@ -549,6 +549,11 @@ int handleTERM(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
         }
     }
 
+    else if (bus_has_devicegroup(bus, DG_POWER)
+        && strncasecmp(device, "POWER", 5) == 0) {
+        rc = termPower(bus);
+    }
+
     else if (bus_has_devicegroup(bus, DG_SERVER)
         && strncasecmp(device, "SERVER", 6) == 0) {
         rc = SRCP_OK;
