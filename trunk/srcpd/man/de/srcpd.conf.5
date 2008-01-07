@@ -129,10 +129,29 @@ Log-Datei des Syslog-Daemons \fI/var/log/messages\fP verfolgen; nähere
 Informationen hierzu befinden sich im Handbuch \fBsrcpd (8)\fP.
 .\"
 .TP
+use_watchdog
+Einige Busse bieten die Möglichkeit, die Aktivität des Busses zu
+überwachen und einen blockierten Bus wieder zu aktivieren.  Gültige
+Werte sind »yes« oder »no«. Der voreingestellte Wert ist »no«..\"
+.\"
+.TP
+restore_device_settings
+Einige Busse bieten die Möglichkeit, die Einstellungen der seriellen
+Schnittstelle wieder auf den Ausgangswert zurück zu stellen. Gültige
+Werte sind »yes« oder »no«. Der voreingestellte Wert ist »no«.
+.\"
+.TP
 device
 Hiermit wird der Name der angesteuerten Schnittstelle (z.B. /dev/ttyS0)
 festgelegt. Die Busse \fBserver\fP und \fBloopback\fP benötigen diesen
 Eintrag nicht. Der voreingestellte Wert ist »/dev/null«.
+.\"
+.TP
+speed
+Bei Bussen, die eine serielle Schnittstelle nutzen, ist es möglich, die
+Schnittstellengeschwindigkeit zu wählen, soweit diese nicht fest
+eingestellt ist. Mögliche Zahlenwerte sind folgende: 2400, 4800, 9600,
+19200, 38400, 57600 and 11520\ baud. Voereingestellt ist 2400\ Baud
 .\"
 .TP
 auto_power_on
