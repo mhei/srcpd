@@ -106,6 +106,7 @@ accordingly.
 .SS Universal options
 .PP
 The following options are usable for all used bus sections.
+.\"
 .TP
 verbosity
 Depending on this number (valid range: 0..5) the bus will tell you less
@@ -113,17 +114,35 @@ or more about what is happening. The 0 value gives a minimum output.
 This option is mainly used for debugging reasons. You can watch these
 messages using the syslog daemon file \fI/var/log/messages\fP; see
 \fBsrcpd\ (8)\fP for more informations.
+.\"
+.TP
+use_watchdog
+Some buses provide a watchdog feature to cancel a blocked bus thread.
+Valid input values are »yes« or »no«. The default value is »no«.
+.\"
+.TP
+restore_device_settings
+Some buses provide a feature to restore serial device settings.
+Valid input values are »yes« or »no«. The default value is »no«.
+.\"
 .TP
 device
 This is the name of the connected device (like /dev/ttyS0). If bus is
 \fBserver\fP or \fBloopback\fP no assignment is necessary. The default
 value is »/dev/null«.
+.\"
 .TP
 auto_power_on
 This option enables/disables automatical power on for a bus on server
-daemon start. Valid input values are »yes« or »no«. This option
+daemon start.  This option
 is not necessary for \fBserver\fP and \fBloopback\fP buses. The default
 value is »no«.
+.\"
+.TP
+speed
+Buses using serial devices with a not fixed transfer speed allow to
+adjust this parameter. Possible values are 2400, 4800, 9600, 19200,
+38400, 57600 and 11520\ baud.
 .\"
 .\"
 .SS server
