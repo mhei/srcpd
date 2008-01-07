@@ -44,16 +44,16 @@ char conffile[MAXPATHLEN];
 extern int server_shutdown_state;
 extern int server_reset_state;
 extern const char *WELCOME_MSG;
+extern char PIDFILENAME;
 
 
 void CreatePIDFile(int pid)
 {
     FILE *f;
-    f = fopen(((SERVER_DATA *) buses[0].driverdata)->PIDFILE, "wb");
+    f = fopen(&PIDFILENAME, "wb");
     if (f == NULL)
         syslog(LOG_INFO, "Opening pid file '%s' failed: %s (errno = %d)\n",
-               ((SERVER_DATA *) buses[0].driverdata)->PIDFILE,
-               strerror(errno), errno);
+               &PIDFILENAME, strerror(errno), errno);
     else {
         fprintf(f, "%d\n", pid);
         fflush(f);
@@ -64,10 +64,10 @@ void CreatePIDFile(int pid)
 void DeletePIDFile()
 {
     int result;
-    result = unlink(((SERVER_DATA *) buses[0].driverdata)->PIDFILE);
+    result = unlink(&PIDFILENAME);
     if (result != 0)
-        syslog(LOG_INFO, "Unlinking pid file failed: %s (errno = %d)\n",
-               strerror(errno), errno);
+        syslog(LOG_INFO, "Unlinking pid file '%s' failed: %s (errno = %d)\n",
+               &PIDFILENAME, strerror(errno), errno);
 }
 
 /* initialisize all found buses, communication line devices are opened */
