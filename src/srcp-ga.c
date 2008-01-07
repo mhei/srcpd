@@ -32,17 +32,18 @@
 
 #define QUEUELEN 50
 
-/* aktueller Stand */
+/* current state state */
 static volatile struct _GA ga[MAX_BUSES];
 
-/* Kommandoqueues pro Bus */
+/* command queues for each bus */
 static ga_state_t queue[MAX_BUSES][QUEUELEN];
 static pthread_mutex_t queue_mutex[MAX_BUSES];
 static int out[MAX_BUSES], in[MAX_BUSES];
 
-/* internal functions */
+/* forward declaration of internal functions */
 static int queue_len(bus_t busnumber);
 static int queue_isfull(bus_t busnumber);
+
 
 int get_number_ga(bus_t busnumber)
 {
@@ -142,7 +143,7 @@ int getGA(bus_t busnumber, int addr, ga_state_t *a)
     }
 }
 
-int isInitializedGA(bus_t busnumber, int addr)
+bool isInitializedGA(bus_t busnumber, int addr)
 {
     return ga[busnumber].gastate[addr].protocol != 0x00;
 }
