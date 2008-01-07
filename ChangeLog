@@ -1,3 +1,10 @@
+2008-01-07 Guido Scholz <guido.scholz@bayernline.de>
+	* srcp-power.*, srcp-command.c: Support for TERM <bus> POWER
+	added.
+
+2008-01-06 Guido Scholz <guido.scholz@bayernline.de>
+	* srcp-command.c: Support for INIT <bus> POWER added.
+
 2008-01-04 Guido Scholz <guido.scholz@bayernline.de>
 	* srcp-error.*, srcp-command.c: »Out of resources« error message
 	added.

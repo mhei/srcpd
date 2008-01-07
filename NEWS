@@ -27,6 +27,8 @@ srcpd-2.0.11 (2008-??-??)
       event driven programming model. This leads to lower CPU time
       usage.
     0 Timely detection of closed information sessions.
+    0 Support for the SRCP commands »INIT <bus> POWER« and
+      »TERM <bus> POWER« added.
 
   General Changes
     o Change configuration option »p_time« to »fb_delay_time_0« for all
