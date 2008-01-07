@@ -13,6 +13,9 @@
  *              SRCP_DEVICELOCKED
  */
 
+#include <errno.h>
+#include <sys/socket.h>
+
 #include "clientservice.h"
 #include "io.h"
 #include "srcp-error.h"
@@ -20,10 +23,7 @@
 #include "srcp-info.h"
 #include "srcp-server.h"
 #include "syslogmessage.h"
-
-#include <errno.h>
-#include <sys/socket.h>
-
+#include "config.h" /*for VERSION*/
 
 /* SRCP server welcome message */
 const char *WELCOME_MSG =

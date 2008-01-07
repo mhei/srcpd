@@ -14,6 +14,7 @@
 #include "syslogmessage.h"
 
 
+char PIDFILENAME[MAXPATHLEN] = "/var/run/srcpd.pid";
 int server_reset_state;
 int server_shutdown_state;
 
@@ -46,7 +47,6 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     } else {
 	__server->TCPPORT = ntohs(serviceentry->s_port);
     }
-    strcpy(__server->PIDFILE, "/var/run/srcpd.pid");
     __server->groupname = NULL;
     __server->username = NULL;
     __server->listenip = NULL;
@@ -81,8 +81,8 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         else if (xmlStrcmp(child->name, BAD_CAST "pid-file") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
-                strncpy(__server->PIDFILE, (char *) txt, MAXPATHLEN - 2);
-                __server->PIDFILE[MAXPATHLEN - 1] = 0x00;
+                strncpy((char *) &PIDFILENAME, (char *) txt, MAXPATHLEN - 2);
+                PIDFILENAME[MAXPATHLEN - 1] = 0x00;
                 xmlFree(txt);
             }
         }
@@ -93,7 +93,8 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                 xmlFree(__server->username);
                 __server->username = malloc(strlen((char *) txt) + 1);
                 if (__server->username == NULL) {
-                    syslog_bus(busnumber, DBG_ERROR, "Cannot allocate memory\n");
+                    syslog_bus(busnumber, DBG_ERROR,
+                            "Cannot allocate memory\n");
                     exit(1);
                 }
                 strcpy(__server->username, (char *) txt);
@@ -107,7 +108,8 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                 xmlFree(__server->groupname);
                 __server->groupname = malloc(strlen((char *) txt) + 1);
                 if (__server->groupname == NULL) {
-                    syslog_bus(busnumber, DBG_ERROR, "Cannot allocate memory\n");
+                    syslog_bus(busnumber, DBG_ERROR,
+                            "Cannot allocate memory\n");
                     exit(1);
                 }
                 strcpy(__server->groupname, (char *) txt);
