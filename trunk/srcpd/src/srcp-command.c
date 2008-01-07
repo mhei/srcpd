@@ -239,8 +239,8 @@ static int handle_setcheck(sessionid_t sessionid, bus_t bus, char *device,
 /**
  * SET
  */
-int handleSET(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
-              char *reply)
+int handleSET(sessionid_t sessionid, bus_t bus, char *device,
+        char *parameter, char *reply)
 {
     return handle_setcheck(sessionid, bus, device, parameter, reply, 1);
 }
@@ -248,8 +248,8 @@ int handleSET(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
 /***
  * CHECK -- like SET but no command must be sent
  */
-int handleCHECK(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
-                char *reply)
+int handleCHECK(sessionid_t sessionid, bus_t bus, char *device,
+        char *parameter, char *reply)
 {
     return handle_setcheck(sessionid, bus, device, parameter, reply, 0);
 }
@@ -257,8 +257,8 @@ int handleCHECK(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
 /**
  * GET
  */
-int handleGET(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
-              char *reply)
+int handleGET(sessionid_t sessionid, bus_t bus, char *device,
+        char *parameter, char *reply)
 {
     struct timeval akt_time;
     int rc = SRCP_UNSUPPORTEDDEVICEGROUP;
@@ -414,8 +414,8 @@ int handleGET(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
 /**
  * WAIT
  */
-int handleWAIT(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
-               char *reply)
+int handleWAIT(sessionid_t sessionid, bus_t bus, char *device,
+        char *parameter, char *reply)
 {
     struct timeval time;
     int rc = SRCP_UNSUPPORTEDDEVICEGROUP;
@@ -501,8 +501,8 @@ int handleVERIFY(sessionid_t sessionid, bus_t bus, char *device,
 /**
  * TERM
  * negative return code (rc) will terminate current session! */
-int handleTERM(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
-               char *reply)
+int handleTERM(sessionid_t sessionid, bus_t bus, char *device,
+        char *parameter, char *reply)
 {
     struct timeval akt_time;
     int rc = SRCP_UNSUPPORTEDDEVICEGROUP;
@@ -584,8 +584,8 @@ int handleTERM(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
 /**
  * INIT
  */
-int handleINIT(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
-               char *reply)
+int handleINIT(sessionid_t sessionid, bus_t bus, char *device,
+        char *parameter, char *reply)
 {
     struct timeval time;
     int rc = SRCP_UNSUPPORTEDDEVICEGROUP;
@@ -679,8 +679,8 @@ int handleINIT(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
 /**
  * RESET
  */
-int handleRESET(sessionid_t sessionid, bus_t bus, char *device, char *parameter,
-                char *reply)
+int handleRESET(sessionid_t sessionid, bus_t bus, char *device,
+        char *parameter, char *reply)
 {
     struct timeval time;
     int rc = SRCP_UNSUPPORTEDOPERATION;

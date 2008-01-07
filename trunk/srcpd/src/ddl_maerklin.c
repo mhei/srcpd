@@ -912,8 +912,8 @@ int comp_maerklin_5(bus_t busnumber, int address, int direction,
     int sFS1, sFS2;
     int rtc;
     int speed_old;
-    int two_commands = FALSE;
-    int acceleration = FALSE;
+    int two_commands = false;
+    int acceleration = false;
     gl_state_t loco;
 
     /* no special error handling, it's job of the clients */
@@ -959,7 +959,7 @@ int comp_maerklin_5(bus_t busnumber, int address, int direction,
     acceleration = (speed_old < speed);
 
     if ((acceleration && (speed % 2)) || (!acceleration && !(speed % 2)))
-        two_commands = TRUE;
+        two_commands = true;
 
     if (speed > 0) {
         if (two_commands) {     /* two commands necessary */
