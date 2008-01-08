@@ -386,11 +386,11 @@ void init_MaerklinPacketPool(bus_t busnumber)
     }
 
     for (i = 0; i <= MAX_MARKLIN_ADDRESS; i++)
-        __DDL->MaerklinPacketPool.knownAdresses[i] = 0;
+        __DDL->MaerklinPacketPool.knownAddresses[i] = 0;
 
-    __DDL->MaerklinPacketPool.NrOfKnownAdresses = 1;
-    __DDL->MaerklinPacketPool.knownAdresses[__DDL->MaerklinPacketPool.
-                                            NrOfKnownAdresses - 1] = 81;
+    __DDL->MaerklinPacketPool.NrOfKnownAddresses = 1;
+    __DDL->MaerklinPacketPool.knownAddresses[__DDL->MaerklinPacketPool.
+                                            NrOfKnownAddresses - 1] = 81;
     /* generate idle packet */
     for (i = 0; i < 4; i++) {
         __DDL->MaerklinPacketPool.packets[81].packet[2 * i] = HI;
@@ -434,9 +434,9 @@ void update_MaerklinPacketPool(bus_t busnumber, int adr,
 
     syslog_bus(busnumber, DBG_INFO, "update MM Packet Pool: %d", adr);
     found = 0;
-    for (i = 0; i < __DDL->MaerklinPacketPool.NrOfKnownAdresses && !found;
+    for (i = 0; i < __DDL->MaerklinPacketPool.NrOfKnownAddresses && !found;
          i++)
-        if (__DDL->MaerklinPacketPool.knownAdresses[i] == adr)
+        if (__DDL->MaerklinPacketPool.knownAddresses[i] == adr)
             found = true;
 
     result = pthread_mutex_lock(&__DDL->maerklin_pktpool_mutex);
@@ -459,14 +459,14 @@ void update_MaerklinPacketPool(bus_t busnumber, int adr,
                 strerror(result), result);
     }
 
-    if (__DDL->MaerklinPacketPool.NrOfKnownAdresses == 1
-        && __DDL->MaerklinPacketPool.knownAdresses[0] == 81)
-        __DDL->MaerklinPacketPool.NrOfKnownAdresses = 0;
+    if (__DDL->MaerklinPacketPool.NrOfKnownAddresses == 1
+        && __DDL->MaerklinPacketPool.knownAddresses[0] == 81)
+        __DDL->MaerklinPacketPool.NrOfKnownAddresses = 0;
 
     if (!found) {
-        __DDL->MaerklinPacketPool.knownAdresses[__DDL->MaerklinPacketPool.
-                                                NrOfKnownAdresses] = adr;
-        __DDL->MaerklinPacketPool.NrOfKnownAdresses++;
+        __DDL->MaerklinPacketPool.knownAddresses[__DDL->MaerklinPacketPool.
+                                                NrOfKnownAddresses] = adr;
+        __DDL->MaerklinPacketPool.NrOfKnownAddresses++;
     }
 }
 
@@ -497,9 +497,9 @@ void init_NMRAPacketPool(bus_t busnumber)
     }
 
     for (i = 0; i <= MAX_NMRA_ADDRESS; i++)
-        __DDL->NMRAPacketPool.knownAdresses[i] = 0;
+        __DDL->NMRAPacketPool.knownAddresses[i] = 0;
 
-    __DDL->NMRAPacketPool.NrOfKnownAdresses = 0;
+    __DDL->NMRAPacketPool.NrOfKnownAddresses = 0;
 
     result = pthread_mutex_unlock(&__DDL->nmra_pktpool_mutex);
     if (result != 0) {
@@ -529,9 +529,9 @@ void update_NMRAPacketPool(bus_t busnumber, int adr,
     int result;
 
     found = 0;
-    for (i = 0; i <= __DDL->NMRAPacketPool.NrOfKnownAdresses && !found;
+    for (i = 0; i <= __DDL->NMRAPacketPool.NrOfKnownAddresses && !found;
          i++)
-        if (__DDL->NMRAPacketPool.knownAdresses[i] == adr)
+        if (__DDL->NMRAPacketPool.knownAddresses[i] == adr)
             found = true;
 
     result = pthread_mutex_lock(&__DDL->nmra_pktpool_mutex);
@@ -554,14 +554,14 @@ void update_NMRAPacketPool(bus_t busnumber, int adr,
                 strerror(result), result);
     }
 
-    if (__DDL->NMRAPacketPool.NrOfKnownAdresses == 1
-        && __DDL->NMRAPacketPool.knownAdresses[0] == 255)
-        __DDL->NMRAPacketPool.NrOfKnownAdresses = 0;
+    if (__DDL->NMRAPacketPool.NrOfKnownAddresses == 1
+        && __DDL->NMRAPacketPool.knownAddresses[0] == 255)
+        __DDL->NMRAPacketPool.NrOfKnownAddresses = 0;
 
     if (!found) {
-        __DDL->NMRAPacketPool.knownAdresses[__DDL->NMRAPacketPool.
-                                            NrOfKnownAdresses] = adr;
-        __DDL->NMRAPacketPool.NrOfKnownAdresses++;
+        __DDL->NMRAPacketPool.knownAddresses[__DDL->NMRAPacketPool.
+                                            NrOfKnownAddresses] = adr;
+        __DDL->NMRAPacketPool.NrOfKnownAddresses++;
     }
 }
 
@@ -857,7 +857,7 @@ void refresh_loco(bus_t busnumber)
 
     if (__DDL->maerklin_refresh) {
         adr =
-            __DDL->MaerklinPacketPool.knownAdresses[__DDL->
+            __DDL->MaerklinPacketPool.knownAddresses[__DDL->
                                                     last_refreshed_maerklin_loco];
         tcflush(buses[busnumber].device.file.fd, TCOFLUSH);
         if (__DDL->last_refreshed_maerklin_fx < 0)
@@ -874,13 +874,13 @@ void refresh_loco(bus_t busnumber)
             __DDL->last_refreshed_maerklin_fx = -1;
             __DDL->last_refreshed_maerklin_loco++;
             if (__DDL->last_refreshed_maerklin_loco >=
-                __DDL->MaerklinPacketPool.NrOfKnownAdresses)
+                __DDL->MaerklinPacketPool.NrOfKnownAddresses)
                 __DDL->last_refreshed_maerklin_loco = 0;
         }
     }
     else {
         adr =
-            __DDL->NMRAPacketPool.knownAdresses[__DDL->
+            __DDL->NMRAPacketPool.knownAddresses[__DDL->
                                                 last_refreshed_nmra_loco];
         if (adr >= 0) {
             if (__DDL->last_refreshed_nmra_fx < 0) {
@@ -902,7 +902,7 @@ void refresh_loco(bus_t busnumber)
             __DDL->last_refreshed_nmra_loco++;
             __DDL->last_refreshed_nmra_fx = -1;
             if (__DDL->last_refreshed_nmra_loco >=
-                __DDL->NMRAPacketPool.NrOfKnownAdresses)
+                __DDL->NMRAPacketPool.NrOfKnownAddresses)
                 __DDL->last_refreshed_nmra_loco = 0;
         }
     }

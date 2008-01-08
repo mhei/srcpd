@@ -55,8 +55,8 @@ typedef struct _tMaerklinPacket {
 
 typedef struct _tMaerklinPacketPool {
    tMaerklinPacket packets[MAX_MARKLIN_ADDRESS+1];
-   int             knownAdresses[MAX_MARKLIN_ADDRESS+1];
-   int             NrOfKnownAdresses;
+   int             knownAddresses[MAX_MARKLIN_ADDRESS+1];
+   int             NrOfKnownAddresses;
 } tMaerklinPacketPool;
 
 /* data types for NMRA packet pool */
@@ -69,8 +69,8 @@ typedef struct _tNMRAPacket {
 
 typedef struct _tNMRAPacketPool {
    tNMRAPacket     packets[MAX_NMRA_ADDRESS+1];
-   int             knownAdresses[MAX_NMRA_ADDRESS+1];
-   int             NrOfKnownAdresses;
+   int             knownAddresses[MAX_NMRA_ADDRESS+1];
+   int             NrOfKnownAddresses;
 } tNMRAPacketPool;
 
 typedef struct _DDL_DATA {
