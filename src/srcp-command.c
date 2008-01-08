@@ -590,6 +590,7 @@ int handleINIT(sessionid_t sessionid, bus_t bus, char *device,
     struct timeval time;
     int rc = SRCP_UNSUPPORTEDDEVICEGROUP;
 
+    /*INIT <bus> GL "<addr> <protocol> <optional further parameters>"*/
     if (bus_has_devicegroup(bus, DG_GL)
         && strncasecmp(device, "GL", 2) == 0) {
         long addr, protversion, n_fs, n_func, nelem;
