@@ -157,7 +157,8 @@ static int isvalidchar(unsigned char c)
 }
 
 /*
- * Read a text line from socket descriptor.
+ * Read a text line from socket descriptor including newline character
+ * (like fgets()).
  * return values
  *   -1: error
  *    0: end of file (EOF), client terminated connection
@@ -194,11 +195,11 @@ again:
         /* die Reihenfolge beachten! */
         /*TODO: handle (errno == EINTR), message part will get lost*/
         while (read(Socket, &c, 1) > 0) {
+            if (isvalidchar(c) && (i < len - 1))
+                line[i++] = c;
             /* stop at newline character */
             if (c == '\n')
                 break;
-            if (isvalidchar(c) && (i < len - 1))
-                line[i++] = c;
         }
     }
     line[i++] = 0x00;

@@ -329,7 +329,6 @@ int main(int argc, char **argv)
 
     }
 
-    /*TODO: copy pid file name to local variable*/
     CreatePIDFile(getpid());
     syslog(LOG_INFO, "%s", WELCOME_MSG);
     install_signal_handlers();

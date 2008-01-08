@@ -234,15 +234,12 @@ static int init_lineLOCONET_lbserver(bus_t busnumber) {
     sresult = socket_readline(sockfd, msg, sizeof(msg) - 1);
 
     /* client terminated connection */
-    /* TODO:
     if (0 == sresult) {
         shutdown(sockfd, SHUT_RDWR);
         return 0;
     }
-    */
 
     /* read errror */
-    /*else */
     if (-1 == sresult) {
         syslog_bus(busnumber, DBG_ERROR,
                 "Socket read failed: %s (errno = %d)\n",
