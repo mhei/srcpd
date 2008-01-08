@@ -718,14 +718,13 @@ int doCmdClient(session_node_t* sn)
         result = socket_readline(sn->socket, line, sizeof(line) - 1);
 
         /* client terminated connection */
-        /* TODO:
         if (0 == result) {
             shutdown(sn->socket, SHUT_RDWR);
             break;
-        }*/
+        }
 
         /* read errror */
-        /*else*/ if (-1 == result) {
+        if (-1 == result) {
             syslog_session(sn->session, DBG_ERROR,
                     "Socket read failed: %s (errno = %d)\n",
                     strerror(errno), errno);

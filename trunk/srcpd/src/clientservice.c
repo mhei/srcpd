@@ -137,14 +137,13 @@ void* thr_doClient(void* v)
         sresult = socket_readline(sn->socket, line, sizeof(line) - 1);
 
         /* client terminated connection */
-        /* TODO:
         if (0 == sresult) {
             shutdown(sn->socket, SHUT_RDWR);
             break;
-        }*/
+        }
 
         /* read errror */
-        /*else*/ if (-1 == sresult) {
+        if (-1 == sresult) {
             syslog_session(sn->session, DBG_ERROR,
                     "Socket read failed: %s (errno = %d)\n",
                     strerror(errno), errno);
