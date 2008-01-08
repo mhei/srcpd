@@ -70,7 +70,7 @@ case "$1" in
   *)
         N=/etc/init.d/$NAME
         # echo "Usage: $N {start|stop|restart|reload|force-reload}" >&2
-        log_success_msg "Usage: $N {start|stop|restart|force-reload}"
+        log_success_msg "Usage: $N {start|stop|restart|reload|force-reload}"
         exit 1
         ;;
 esac
