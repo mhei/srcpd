@@ -237,8 +237,8 @@ void *thr_sendrec_LOOPBACK(void *v)
             buses[btd->bus].power_changed = 0;
             /*
             char msg[110];
-            infoPower(bus, msg);
-            queueInfoMessage(msg);
+            infoPower(btd->bus, msg);
+            enqueueInfoMessage(msg);
             */
             buses[btd->bus].watchdog++;
         }

@@ -51,7 +51,7 @@ int get_number_ga(bus_t busnumber)
 }
 
 /* Uebernehme die neuen Angaben fuer die Weiche, einige wenige Pruefungen */
-int queueGA(bus_t busnumber, int addr, int port, int action,
+int enqueueGA(bus_t busnumber, int addr, int port, int action,
             long int activetime)
 {
     int result;
@@ -165,7 +165,7 @@ int setGA(bus_t busnumber, int addr, ga_state_t a)
                      tv[ga[busnumber].gastate[addr].port], NULL);
 
         infoGA(busnumber, addr, a.port, msg);
-        queueInfoMessage(msg);
+        enqueueInfoMessage(msg);
         return SRCP_OK;
     }
     else {
@@ -238,7 +238,7 @@ int initGA(bus_t busnumber, int addr, const char protocol)
         if (rc == SRCP_OK) {
             ga[busnumber].gastate[addr].state = 1;
             describeGA(busnumber, addr, msg);
-            queueInfoMessage(msg);
+            enqueueInfoMessage(msg);
         }
         return rc;
     }
@@ -257,7 +257,7 @@ int lockGA(bus_t busnumber, int addr, long int duration,
         ga[busnumber].gastate[addr].lockduration = duration;
         gettimeofday(&ga[busnumber].gastate[addr].locktime, NULL);
         describeLOCKGA(busnumber, addr, msg);
-        queueInfoMessage(msg);
+        enqueueInfoMessage(msg);
         return SRCP_OK;
     }
     else {
@@ -295,7 +295,7 @@ int unlockGA(bus_t busnumber, int addr, sessionid_t sessionid)
                 ga[busnumber].gastate[addr].locktime.tv_sec,
                 ga[busnumber].gastate[addr].locktime.tv_usec / 1000,
                 busnumber, addr, sessionid);
-        queueInfoMessage(msg);
+        enqueueInfoMessage(msg);
         return SRCP_OK;
     }
     else {

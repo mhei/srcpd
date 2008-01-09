@@ -455,12 +455,15 @@ void *thr_sendrec_S88(void *v)
             char msg[110];
             buses[btd->bus].power_changed = 0;
             infoPower(btd->bus, msg);
-            queueInfoMessage(msg);
+            enqueueInfoMessage(msg);
         }
+
+        /*do nothing if power is off*/
         if (buses[btd->bus].power_state == 0) {
             usleep(1000);
             continue;
         }
+
         check_reset_fb(btd->bus);
         usleep(sleepusec);
         s88load(btd->bus);

@@ -57,7 +57,7 @@ static int queue_len(bus_t busnumber);
 static int queue_isfull(bus_t busnumber);
 
 
-int queueInfoSM(bus_t busnumber, int addr, int type, int typeaddr,
+int enqueueInfoSM(bus_t busnumber, int addr, int type, int typeaddr,
                 int bit, int value, int return_code,
                 struct timeval *akt_time)
 {
@@ -134,18 +134,18 @@ int queueInfoSM(bus_t busnumber, int addr, int type, int typeaddr,
         }
     }
     sprintf(msg, "%s %s\n", buffer, tmp);
-    queueInfoMessage(msg);
+    enqueueInfoMessage(msg);
     return SRCP_OK;
 }
 
 /* enqueue SM after some checks */
-int queueSM(bus_t busnumber, int command, int type, int addr,
+int enqueueSM(bus_t busnumber, int command, int type, int addr,
             int typeaddr, int bit, int value)
 {
     int result;
     struct timeval akt_time;
 
-    syslog_bus(busnumber, DBG_INFO, "queueSM for %i (in = %d, out = %d)",
+    syslog_bus(busnumber, DBG_INFO, "enqueueSM for %i (in = %d, out = %d)",
             addr, in[busnumber], out[busnumber]);
     /* 
      * addr values:
@@ -245,7 +245,7 @@ int setSM(bus_t busnumber, int type, int addr, int typeaddr, int bit,
         gettimeofday(&tv, NULL);
         if (type == CV_BIT)
             value = (value & (1 << bit)) ? 1 : 0;
-        queueInfoSM(busnumber, addr, type, typeaddr, bit, value,
+        enqueueInfoSM(busnumber, addr, type, typeaddr, bit, value,
                     return_code, &tv);
         return SRCP_OK;
     }
@@ -264,7 +264,7 @@ int infoSM(bus_t busnumber, int command, int type, int addr,
                "TYPE: %d, CV: %d, BIT: %d, VALUE: 0x%02x", type, typeaddr,
                bit, value);
     session_lock_wait(busnumber);
-    status = queueSM(busnumber, command, type, addr, typeaddr, bit, value);
+    status = enqueueSM(busnumber, command, type, addr, typeaddr, bit, value);
 
     if (session_condt_wait(busnumber, 90, &result) == ETIMEDOUT) {
         gettimeofday(&now, NULL);

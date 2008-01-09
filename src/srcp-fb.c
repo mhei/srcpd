@@ -32,11 +32,11 @@ static int out[MAX_BUSES], in[MAX_BUSES];
 
 /* internal functions */
 
-static int queueInfoFB(bus_t busnumber, int port)
+static int enqueueInfoFB(bus_t busnumber, int port)
 {
     char msg[1000];
     infoFB(busnumber, port, msg);
-    queueInfoMessage(msg);
+    enqueueInfoMessage(msg);
     return SRCP_OK;
 }
 
@@ -184,7 +184,7 @@ int updateFB(bus_t bus, int port, int value)
                 fb[bus].fbstate[port_t].state = value;
                 fb[bus].fbstate[port_t].timestamp = akt_time;
                 fb[bus].fbstate[port_t].change = 0;
-                queueInfoFB(bus, port);
+                enqueueInfoFB(bus, port);
             }
             else {
                 result = pthread_mutex_lock(&queue_mutex_fb);
@@ -230,7 +230,7 @@ int updateFB(bus_t bus, int port, int value)
                 }
 
                 /* queue changes for writing info-message */
-                queueInfoFB(bus, port);
+                enqueueInfoFB(bus, port);
             }
         }
     }
@@ -408,7 +408,7 @@ void check_reset_fb(bus_t busnumber)
                             "pthread_mutex_unlock() failed: %s (errno = %d).",
                             strerror(result), result);
                 }
-                queueInfoFB(busnumber, reset_fb.port + 1);
+                enqueueInfoFB(busnumber, reset_fb.port + 1);
             }
         }
     }

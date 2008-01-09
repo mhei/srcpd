@@ -45,7 +45,7 @@ int startup_GA(void);
 int init_GA(bus_t busnumber, int number);
 int get_number_ga(bus_t busnumber);
 
-int queueGA(bus_t busnumber, int addr, int port, int action,
+int enqueueGA(bus_t busnumber, int addr, int port, int action,
             long int activetime);
 int dequeueNextGA(bus_t busnumber, ga_state_t *);
 int queue_GA_isempty(bus_t busnumber);

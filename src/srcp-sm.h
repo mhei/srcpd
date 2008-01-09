@@ -50,7 +50,7 @@ typedef struct _SM {
     struct timeval tv;          /* time of change */
 } sm_t;
 
-int queueSM(bus_t busnumber, int command, int type, int addr, int typeaddr,
+int enqueueSM(bus_t busnumber, int command, int type, int addr, int typeaddr,
             int bit, int value);
 int queue_SM_isempty(bus_t busnumber);
 int dequeueNextSM(bus_t, sm_t*);

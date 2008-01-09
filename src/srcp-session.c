@@ -485,7 +485,7 @@ int start_session(session_node_t* sn)
     sprintf(msg, "%lu.%.3lu 101 INFO 0 SESSION %lu %s\n", akt_time.tv_sec,
             akt_time.tv_usec / 1000, sn->session,
             (sn->mode == 1 ? "COMMAND" : "INFO"));
-    queueInfoMessage(msg);
+    enqueueInfoMessage(msg);
 
     syslog_session(sn->session, DBG_INFO,
             "Session started (mode = %d).", sn->mode);
@@ -508,7 +508,7 @@ int stop_session(sessionid_t sid)
 
     sprintf(msg, "%lu.%.3lu 102 INFO 0 SESSION %lu\n", akt_time.tv_sec,
             akt_time.tv_usec / 1000, sid);
-    queueInfoMessage(msg);
+    enqueueInfoMessage(msg);
 
     return SRCP_OK;
 }

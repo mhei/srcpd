@@ -265,7 +265,6 @@ int main(int argc, char **argv)
     int sleep_ctr;
     char c;
 
-
     /* First: Init the device data used internally */
     startup_GL();
     startup_GA();
@@ -323,7 +322,7 @@ int main(int argc, char **argv)
 
         /*daemonize process*/
         if (0 != daemon_init()) {
-            syslog_bus(0, DBG_ERROR,"Daemonization failed!\n");
+            syslog_bus(0, DBG_ERROR, "Daemonization failed!\n");
             exit(1);
         }
 

@@ -510,9 +510,10 @@ void *thr_sendrec_I2C_DEV(void *v)
             select_bus(0, buses[btd->bus].device.file.fd, btd->bus);
             buses[btd->bus].power_changed = 0;
             infoPower(btd->bus, msg);
-            queueInfoMessage(msg);
+            enqueueInfoMessage(msg);
 
-            if ((ga_reset_devices == 1) && (buses[btd->bus].power_state == 1)) {
+            if ((ga_reset_devices == 1)
+                    && (buses[btd->bus].power_state == 1)) {
                 reset_ga(btd->bus, buses[btd->bus].device.file.fd);
             }
 
