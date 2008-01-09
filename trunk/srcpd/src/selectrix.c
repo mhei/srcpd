@@ -516,7 +516,7 @@ void *thr_commandSelectrix(void *v)
                                 writeSXbus(btd->bus, SXcontrol, 0x00);
                         }
                         infoPower(btd->bus, msg);
-                        queueInfoMessage(msg);
+                        enqueueInfoMessage(msg);
                         syslog_bus(btd->bus, DBG_DEBUG,
                                 "Selectrix had a power change.");
                         buses[btd->bus].power_changed = 0;

@@ -26,7 +26,7 @@ int setPower(bus_t bus, int state, char *msg)
     resume_bus_thread(bus);
     char reply[200];
     infoPower(bus, reply);
-    queueInfoMessage(reply);
+    enqueueInfoMessage(reply);
     return SRCP_OK;
 }
 

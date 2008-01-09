@@ -44,7 +44,7 @@ int initTIME(int fx, int fy)
     vtime.ratio_y = fy;
     gettimeofday(&vtime.inittime, NULL);
     describeTIME(msg);
-    queueInfoMessage(msg);
+    enqueueInfoMessage(msg);
     return SRCP_OK;
 }
 
@@ -114,7 +114,7 @@ void *thr_clock(void *v)
             char msg[100];
             sendinfo = 0;
             infoTIME(msg);
-            queueInfoMessage(msg);
+            enqueueInfoMessage(msg);
         }
         /* syslog(LOG_INFO, "time: %d %d %d %d %d %d", vtime.day, vtime.hour, vtime.min, vtime.sec,  vtime.ratio_x, vtime.ratio_y); */
     }

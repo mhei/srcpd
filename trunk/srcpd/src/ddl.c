@@ -999,7 +999,7 @@ int check_lines(bus_t busnumber)
             buses[busnumber].power_changed = 1;
             strcpy(buses[busnumber].power_msg, "SHORTCUT DETECTED");
             infoPower(busnumber, msg);
-            queueInfoMessage(msg);
+            enqueueInfoMessage(msg);
         }
     if (__DDL->RI_CHECK)
         if (checkRingIndicator(busnumber) == 1) {
@@ -1007,7 +1007,7 @@ int check_lines(bus_t busnumber)
             buses[busnumber].power_changed = 1;
             strcpy(buses[busnumber].power_msg, "RINGINDICATOR DETECTED");
             infoPower(busnumber, msg);
-            queueInfoMessage(msg);
+            enqueueInfoMessage(msg);
         }
 
     if (buses[busnumber].power_changed == 1) {
@@ -1021,7 +1021,7 @@ int check_lines(bus_t busnumber)
         }
         buses[busnumber].power_changed = 0;
         infoPower(busnumber, msg);
-        queueInfoMessage(msg);
+        enqueueInfoMessage(msg);
     }
 
     if (buses[busnumber].power_state == 0) {

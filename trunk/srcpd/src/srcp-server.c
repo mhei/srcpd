@@ -151,7 +151,7 @@ void server_reset()
     char msg[100];
     server_reset_state = 1;
     infoSERVER(msg);
-    queueInfoMessage(msg);
+    enqueueInfoMessage(msg);
 }
 
 void server_shutdown()
@@ -159,7 +159,7 @@ void server_shutdown()
     char msg[100];
     server_shutdown_state = 1;
     infoSERVER(msg);
-    queueInfoMessage(msg);
+    enqueueInfoMessage(msg);
 }
 
 int infoSERVER(char *msg)

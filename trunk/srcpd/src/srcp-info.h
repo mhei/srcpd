@@ -22,6 +22,6 @@
 
 int doInfoClient(session_node_t*);
 int startup_INFO(void);
-int queueInfoMessage(char *);
+int enqueueInfoMessage(char *);
 
 #endif

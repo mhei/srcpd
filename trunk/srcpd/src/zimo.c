@@ -262,7 +262,7 @@ void *thr_sendrec_ZIMO(void *v)
             writeString(btd->bus, (unsigned char *) msg, 0);
             buses[btd->bus].power_changed = 0;
             infoPower(btd->bus, msg);
-            queueInfoMessage(msg);
+            enqueueInfoMessage(msg);
         }
         if (!queue_GL_isempty(btd->bus)) {
             dequeueNextGL(btd->bus, &gltmp);

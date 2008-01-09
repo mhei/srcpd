@@ -361,7 +361,7 @@ void *thr_sendrec_M6051(void *v)
             writeByte(btd->bus, SendByte, pause_between_cmd);
             buses[btd->bus].power_changed = 0;
             infoPower(btd->bus, msg);
-            queueInfoMessage(msg);
+            enqueueInfoMessage(msg);
         }
 
         /* do nothing, if power off */

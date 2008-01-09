@@ -44,8 +44,8 @@ int init_GL(bus_t busnumber, int number);
 int getMaxAddrGL(bus_t busnumber);
 bool isInitializedGL(bus_t busnumber, int addr);
 int isValidGL(bus_t busnumber, int addr);
-int queueGL(bus_t busnumber, int addr, int dir, int speed, int maxspeed,
-            int f);
+int enqueueGL(bus_t busnumber, int addr, int dir, int speed,
+        int maxspeed, int f);
 int queue_GL_isempty(bus_t busnumber);
 int dequeueNextGL(bus_t busnumber, gl_state_t * l);
 int cacheGetGL(bus_t busnumber, int addr, gl_state_t * l);

@@ -630,13 +630,13 @@ void *thr_sendrec_LOCONET(void *v)
                     buses[btd->bus].power_state = 0;
                     strcpy(buses[btd->bus].power_msg, "from Loconet");
                     infoPower(btd->bus, msg);
-                    queueInfoMessage(msg);
+                    enqueueInfoMessage(msg);
                     break;
                 case OPC_GPON:
                     buses[btd->bus].power_state = 1;
                     strcpy(buses[btd->bus].power_msg, "from Loconet");
                     infoPower(btd->bus, msg);
-                    queueInfoMessage(msg);
+                    enqueueInfoMessage(msg);
                     break;
                 case OPC_SW_REQ: /* B0 */
                     addr = (((unsigned int) ln_packet[1] & 0x007f) |
@@ -678,7 +678,7 @@ void *thr_sendrec_LOCONET(void *v)
                 ln_packetlen = 2;
                 buses[btd->bus].power_changed = 0;
                 infoPower(btd->bus, msg);
-                queueInfoMessage(msg);
+                enqueueInfoMessage(msg);
             }
             else if (!queue_GA_isempty(btd->bus)) {
                 ga_state_t gatmp;

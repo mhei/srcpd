@@ -111,7 +111,7 @@ bool isInitializedGL(bus_t busnumber, int addr)
    ist das nicht angebracht (Notstop)
 */
 
-int queueGL(bus_t busnumber, int addr, int dir, int speed, int maxspeed,
+int enqueueGL(bus_t busnumber, int addr, int dir, int speed, int maxspeed,
             const int f)
 {
     int result;
@@ -236,7 +236,7 @@ int cacheSetGL(bus_t busnumber, int addr, gl_state_t l)
         else {
             cacheInfoGL(busnumber, addr, msg);
         }
-        queueInfoMessage(msg);
+        enqueueInfoMessage(msg);
         return SRCP_OK;
     }
     else {
@@ -266,8 +266,8 @@ int cacheInitGL(bus_t busnumber, int addr, const char protocol,
             gl[busnumber].glstate[addr] = tgl;
             gl[busnumber].glstate[addr].state = 1;
             cacheDescribeGL(busnumber, addr, msg);
-            queueInfoMessage(msg);
-            queueGL(busnumber, addr, 0, 0, 1, 0);
+            enqueueInfoMessage(msg);
+            enqueueGL(busnumber, addr, 0, 0, 1, 0);
         }
     }
     else {
@@ -281,7 +281,7 @@ int cacheTermGL(bus_t busnumber, int addr)
 {
     if (isInitializedGL(busnumber, addr)) {
         gl[busnumber].glstate[addr].state = 2;
-        queueGL(busnumber, addr, 0, 0, 1, 0);
+        enqueueGL(busnumber, addr, 0, 0, 1, 0);
         return SRCP_OK;
     }
     else {
@@ -296,7 +296,7 @@ int cacheTermGL(bus_t busnumber, int addr)
 int resetGL(bus_t busnumber, int addr)
 {
     if (isInitializedGL(busnumber, addr)) {
-        queueGL(busnumber, addr, 0, 0, 1, 0);
+        enqueueGL(busnumber, addr, 0, 0, 1, 0);
         return SRCP_OK;
     }
     else {
@@ -367,7 +367,7 @@ int cacheLockGL(bus_t busnumber, int addr, long int duration,
             gl[busnumber].glstate[addr].lockduration = duration;
             gettimeofday(&gl[busnumber].glstate[addr].locktime, NULL);
             describeLOCKGL(busnumber, addr, msg);
-            queueInfoMessage(msg);
+            enqueueInfoMessage(msg);
             return SRCP_OK;
         }
         else {
@@ -420,7 +420,7 @@ int cacheUnlockGL(bus_t busnumber, int addr, sessionid_t sessionid)
                     gl[busnumber].glstate[addr].locktime.tv_sec,
                     gl[busnumber].glstate[addr].locktime.tv_usec / 1000,
                     busnumber, addr, sessionid);
-            queueInfoMessage(msg);
+            enqueueInfoMessage(msg);
             return SRCP_OK;
         }
         else {

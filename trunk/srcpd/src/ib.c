@@ -373,7 +373,7 @@ void *thr_sendrec_IB( void *v )
                 if ( buses[ btd->bus ].power_state == 1 )
                     __ibt->emergency_on_ib = 0;
                 infoPower( btd->bus, msg );
-                queueInfoMessage( msg );
+                enqueueInfoMessage( msg );
             }
         }
 

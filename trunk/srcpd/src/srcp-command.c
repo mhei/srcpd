@@ -58,7 +58,7 @@ static int handle_setcheck(sessionid_t sessionid, bus_t bus, char *device,
             if (lockid == 0 || lockid == sessionid || direction == 2) {
                 rc = SRCP_OK;
                 if (setorcheck == 1)
-                    rc = queueGL(bus, laddr, direction, speed, maxspeed,
+                    rc = enqueueGL(bus, laddr, direction, speed, maxspeed,
                                  func);
             }
             else {
@@ -85,7 +85,7 @@ static int handle_setcheck(sessionid_t sessionid, bus_t bus, char *device,
             if (lockid == 0 || lockid == sessionid) {
                 rc = SRCP_OK;
                 if (setorcheck == 1)
-                    rc = queueGA(bus, gaddr, port, aktion, delay);
+                    rc = enqueueGA(bus, gaddr, port, aktion, delay);
             }
             else {
                 rc = SRCP_DEVICELOCKED;

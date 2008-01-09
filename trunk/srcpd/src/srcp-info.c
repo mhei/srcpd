@@ -18,7 +18,7 @@
 /*
    This code manages INFO SESSIONs. Every hardware driver, alias »bus
    process«, must call (directly or via set<devicegroup> functions) the
-   queueInfoMessage() function. This function is delegated to the
+   enqueueInfoMessage() function. This function is delegated to the
    session function session_enqueue_info_message() which writes the
    preformated string into the session specific message pipes.
 
@@ -54,7 +54,7 @@
 
 
 /* Enqueue a pre-formatted message */
-int queueInfoMessage(char *msg)
+int enqueueInfoMessage(char *msg)
 {
     session_enqueue_info_message(0, msg);
     return SRCP_OK;
