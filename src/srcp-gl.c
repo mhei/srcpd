@@ -144,6 +144,12 @@ int enqueueGL(bus_t busnumber, int addr, int dir, int speed, int maxspeed,
         queue[busnumber][in[busnumber]].speed =
             calcspeed(speed, maxspeed, gl[busnumber].glstate[addr].n_fs);
 
+        queue[busnumber][in[busnumber]].n_fs = 
+            gl[busnumber].glstate[addr].n_fs;
+
+        queue[busnumber][in[busnumber]].n_func =
+            gl[busnumber].glstate[addr].n_func;
+
         queue[busnumber][in[busnumber]].direction = dir;
         queue[busnumber][in[busnumber]].funcs = f;
         gettimeofday(&akt_time, NULL);
@@ -225,6 +231,8 @@ int cacheSetGL(bus_t busnumber, int addr, gl_state_t l)
         gl[busnumber].glstate[addr].direction = l.direction;
         gl[busnumber].glstate[addr].speed = l.speed;
         gl[busnumber].glstate[addr].funcs = l.funcs;
+        gl[busnumber].glstate[addr].n_fs = l.n_fs;
+        gl[busnumber].glstate[addr].n_func = l.n_func;
         gettimeofday(&gl[busnumber].glstate[addr].tv, NULL);
         if (gl[busnumber].glstate[addr].state == 2) {
             sprintf(msg, "%lu.%.3lu 102 INFO %ld GL %d",
