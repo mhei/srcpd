@@ -385,13 +385,13 @@ int translateBitstream2Packetstream_v1(char *Bitstream, char *Packetstream,
     int correction = 0;
     size_t bufsize = 0;
     int highest_level = 0;      /* highest recursion level reached during algo.  */
-    const int max_level_delta = 7;  /* additional recursion base, speeds up */
+    const int max_level_delta = 7;      /* additional recursion base, speeds up */
 
     pBs = strncpy(Buffer, Bitstream, BUFFERSIZE - 1);
     memset(Packetstream, 0, PKTSIZE);
     i = DataCnt - 1;
     if (!translateabel(Buffer)) {
-        pBs[strlen(pBs) - 1] = 0;   /* The last bit of the bitstream is always '1'. */
+        pBs[strlen(pBs) - 1] = 0;       /* The last bit of the bitstream is always '1'. */
         correction = 1;
     }
     bufsize = strlen(Buffer);
@@ -435,7 +435,8 @@ int translateBitstream2Packetstream_v1(char *Bitstream, char *Packetstream,
         }
         if (j <= 0 || pstack < 0 || pstack > NMRA_STACKSIZE - 1) {
             /* it's nasty, but a try: */
-            strcat(Buffer, "1");        /* leading 1's don't make problems */
+            /* leading 1's don't make problems */
+            strcat(Buffer, "1");
             bufsize++;
             pBs = Buffer;
             j = 0;
@@ -455,10 +456,10 @@ int translateBitstream2Packetstream_v1(char *Bitstream, char *Packetstream,
 int translateBitstream2Packetstream_v2(char *Bitstream, char *Packetstream)
 {
 
-    int i = DataCnt - 1;        /* decision of each recursion level           */
-    int j = 0;                  /* index of Packetstream, level of recursion  */
-    int found;                  /* flag                                       */
-    int stack[PKTSIZE];         /* stack for the i's                          */
+    int i = DataCnt - 1;        /* decision of each recursion level          */
+    int j = 0;                  /* index of Packetstream, level of recursion */
+    int found;                  /* flag                                      */
+    int stack[PKTSIZE];         /* stack for the i's                         */
 
     memset(Packetstream, 0, PKTSIZE);
     while (*Bitstream) {
@@ -485,7 +486,7 @@ int translateBitstream2Packetstream_v2(char *Bitstream, char *Packetstream)
             if (j > 0) {        /* last level avail.?  */
                 j--;            /* go back             */
                 i = stack[j];
-                Bitstream -= TranslateData[i].patternlength; /* corrections */
+                Bitstream -= TranslateData[i].patternlength;    /* corrections */
                 i--;
 
             }
@@ -519,11 +520,11 @@ int translateBitstream2Packetstream_v3(char *Bitstream, char *Packetstream)
     /* this routine assumes, that any Bitstream starts with a 1 Bit. */
     /* This could be changed, if necessary */
 
-    char Buffer[BUFFERSIZE + 20];    /* keep room for additional pre and postamble */
-    char *read_ptr = Buffer + 1;     /* here the real sequence starts */
+    char Buffer[BUFFERSIZE + 20];       /* keep room for additional pre and postamble */
+    char *read_ptr = Buffer + 1;        /* here the real sequence starts */
 
-    char *restart_read = Buffer;     /* one more 1 in the beginning for successful restart */
-    char *last_restart = Buffer - 1; /* this necessary, only to verify our assumptions */
+    char *restart_read = Buffer;        /* one more 1 in the beginning for successful restart */
+    char *last_restart = Buffer - 1;    /* this necessary, only to verify our assumptions */
 
     char *buf_end;
 
@@ -558,7 +559,7 @@ int translateBitstream2Packetstream_v3(char *Bitstream, char *Packetstream)
             generate_packet = restart_packet;
             if (restart_read == last_restart)
                 syslog(LOG_INFO, "Sorry, restart algorithm doesn't "
-                        "work as expected for NMRA-Packet %s", Bitstream);
+                       "work as expected for NMRA-Packet %s", Bitstream);
             last_restart = restart_read;
             read_ptr = restart_read;
             act_six = read_next_six_bits(read_ptr);
@@ -880,8 +881,7 @@ void xor_two_bytes(char *byte, char *byte1, char *byte2)
 
 /*** functions to generate NMRA-DCC data packets ***/
 
-int comp_nmra_accessory(bus_t busnumber, int nr, int output,
-                        int activate)
+int comp_nmra_accessory(bus_t busnumber, int nr, int output, int activate)
 {
     /* command: NA <nr [0001-4096]> <outp [0,1]> <activate [0,1]>
        example: NA 0012 0 1  */
@@ -900,7 +900,7 @@ int comp_nmra_accessory(bus_t busnumber, int nr, int output,
     int j;
 
     syslog_bus(busnumber, DBG_DEBUG,
-        "command for NMRA protocol for accessory decoders (NA) received");
+               "command for NMRA protocol for accessory decoders (NA) received");
 
     /* no special error handling, it's job of the clients */
     if (nr < 1 || nr > 4096 || output < 0 || output > 1 ||
@@ -963,7 +963,7 @@ int comp_nmra_baseline(bus_t busnumber, int address, int direction,
     int j;
 
     syslog_bus(busnumber, DBG_DEBUG,
-        "command for NMRA protocol baseline (NB) received");
+               "command for NMRA protocol baseline (NB) received");
 
     adr = address;
 
@@ -1021,7 +1021,7 @@ int comp_nmra_f4b7s28(bus_t busnumber, int address, int direction,
     int i, j, jj;
 
     syslog_bus(busnumber, DBG_DEBUG,
-        "command for NMRA protocol 4f7b28fs (N1) received");
+               "command for NMRA protocol 4f7b28fs (N1) received");
 
     adr = address;
     f[0] = func;
@@ -1106,7 +1106,7 @@ int comp_nmra_f4b7s128(bus_t busnumber, int address, int direction,
     int i, j, jj;
 
     syslog_bus(busnumber, DBG_DEBUG,
-        "command for NMRA protocol 4f7b128fs (N2) received");
+               "command for NMRA protocol 4f7b128fs (N2) received");
 
     adr = address;
     f[0] = func;
@@ -1194,7 +1194,7 @@ int comp_nmra_f4b14s28(bus_t busnumber, int address, int direction,
     int i, j, jj;
 
     syslog_bus(busnumber, DBG_DEBUG,
-        "command for NMRA protocol 4f14b28fs (N3) received");
+               "command for NMRA protocol 4f14b28fs (N3) received");
 
     adr = address;
     f[0] = func;
@@ -1290,7 +1290,7 @@ int comp_nmra_f4b14s128(bus_t busnumber, int address, int direction,
     int i, j, jj;
 
     syslog_bus(busnumber, DBG_DEBUG,
-        "command for NMRA protocol 4f14b128fs (N4) received");
+               "command for NMRA protocol 4f14b128fs (N4) received");
 
     adr = address;
     f[0] = func;
@@ -1409,14 +1409,14 @@ void sm_init(bus_t busnumber)
 int scanACK(bus_t busnumber)
 {
     int result, arg;
-    
+
     result = ioctl(buses[busnumber].device.file.fd, TIOCMGET, &arg);
     if (result == -1) {
         syslog_bus(busnumber, DBG_ERROR,
-                "ioctl() failed: %s (errno = %d)\n",
-                strerror(errno), errno);
+                   "ioctl() failed: %s (errno = %d)\n",
+                   strerror(errno), errno);
     }
-    
+
     if ((result >= 0) && (!(arg & TIOCM_RI)))
         return 1;
     return 0;
@@ -1431,14 +1431,15 @@ int waitUARTempty_scanACK(bus_t busnumber)
         if (scanACK(busnumber))
             ack = 1;            /* scan ACK */
 #if linux
-        result = ioctl(buses[busnumber].device.file.fd, TIOCSERGETLSR, &value);
+        result =
+            ioctl(buses[busnumber].device.file.fd, TIOCSERGETLSR, &value);
 #else
         result = ioctl(buses[busnumber].device.file.fd, TCSADRAIN, &value);
 #endif
         if (result == -1) {
             syslog_bus(busnumber, DBG_ERROR,
-                    "ioctl() failed: %s (errno = %d)\n",
-                    strerror(errno), errno);
+                       "ioctl() failed: %s (errno = %d)\n",
+                       strerror(errno), errno);
         }
     } while (!value);
     return ack;
@@ -1451,11 +1452,11 @@ void handleACK(bus_t busnumber, int sckt, int ack)
 
     //set_SerialLine(SL_RI,ON);
     usleep(1000);
-    
+
     /* ack not supported */
     if ((ack == 1) && (scanACK(busnumber) == 1))
         sprintf(buf, "INFO GL SM 2\n");
-    
+
     /* ack supported ==> send to client */
     else
         sprintf(buf, "INFO GL SM %d\n", ack);
@@ -1463,8 +1464,8 @@ void handleACK(bus_t busnumber, int sckt, int ack)
     result = write(sckt, buf, strlen(buf));
     if (result == -1) {
         syslog_bus(busnumber, DBG_ERROR,
-                "write() failed: %s (errno = %d)\n",
-                strerror(errno), errno);
+                   "write() failed: %s (errno = %d)\n",
+                   strerror(errno), errno);
     }
 }
 
@@ -1485,7 +1486,7 @@ void protocol_nmra_sm_direct_cvbyte(bus_t busnumber, int sckt, int cv,
     int i, j, l, ack;
 
     syslog_bus(busnumber, DBG_DEBUG,
-        "command for NMRA service mode instruction (SMDWY) received");
+               "command for NMRA service mode instruction (SMDWY) received");
 
     /* no special error handling, it's job of the clients */
     if (cv < 0 || cv > 1024 || value < 0 || value > 255)
@@ -1598,8 +1599,8 @@ void protocol_nmra_sm_direct_cvbyte(bus_t busnumber, int sckt, int cv,
     result = write(buses[busnumber].device.file.fd, SendStream, l);
     if (result == -1) {
         syslog_bus(busnumber, DBG_ERROR,
-                "write() failed: %s (errno = %d)\n",
-                strerror(errno), errno);
+                   "write() failed: %s (errno = %d)\n",
+                   strerror(errno), errno);
     }
     ack = waitUARTempty_scanACK(busnumber);
     tcflow(buses[busnumber].device.file.fd, TCOOFF);
@@ -1608,14 +1609,12 @@ void protocol_nmra_sm_direct_cvbyte(bus_t busnumber, int sckt, int cv,
     handleACK(busnumber, sckt, ack);
 }
 
-void protocol_nmra_sm_write_cvbyte(bus_t bus, int sckt, int cv,
-                                   int value)
+void protocol_nmra_sm_write_cvbyte(bus_t bus, int sckt, int cv, int value)
 {
     protocol_nmra_sm_direct_cvbyte(bus, sckt, cv, value, false);
 }
 
-void protocol_nmra_sm_verify_cvbyte(bus_t bus, int sckt, int cv,
-                                    int value)
+void protocol_nmra_sm_verify_cvbyte(bus_t bus, int sckt, int cv, int value)
 {
     protocol_nmra_sm_direct_cvbyte(bus, sckt, cv, value, true);
 }
@@ -1637,7 +1636,7 @@ void protocol_nmra_sm_write_cvbit(bus_t bus, int sckt, int cv, int bit,
     int i, j, l, ack;
 
     syslog_bus(bus, DBG_DEBUG,
-        "command for NMRA service mode instruction (SMDWB) received");
+               "command for NMRA service mode instruction (SMDWB) received");
 
     /* no special error handling, it's job of the clients */
     if (cv < 0 || cv > 1023 || bit < 0 || bit > 7 || value < 0
@@ -1741,8 +1740,8 @@ void protocol_nmra_sm_write_cvbit(bus_t bus, int sckt, int cv, int bit,
     result = write(buses[bus].device.file.fd, SendStream, l);
     if (result == -1) {
         syslog_bus(bus, DBG_ERROR,
-                "write() failed: %s (errno = %d)\n",
-                strerror(errno), errno);
+                   "write() failed: %s (errno = %d)\n",
+                   strerror(errno), errno);
     }
     ack = waitUARTempty_scanACK(bus);
     tcflow(buses[bus].device.file.fd, TCOOFF);
@@ -1766,7 +1765,7 @@ void protocol_nmra_sm_phregister(bus_t bus, int sckt, int reg,
     int i, j, l, y, ack;
 
     syslog_bus(bus, DBG_DEBUG,
-        "command for NMRA service mode instruction (SMPRA) received");
+               "command for NMRA service mode instruction (SMPRA) received");
 
     /* no special error handling, it's job of the clients */
     if (reg < 1 || reg > 8 || value < 0 || value > 255)
@@ -1890,10 +1889,10 @@ void protocol_nmra_sm_phregister(bus_t bus, int sckt, int reg,
     l = write(buses[bus].device.file.fd, SendStream, y);
     if (l == -1) {
         syslog_bus(bus, DBG_ERROR,
-                "write() failed: %s (errno = %d)\n",
-                strerror(errno), errno);
+                   "write() failed: %s (errno = %d)\n",
+                   strerror(errno), errno);
     }
-    
+
     ack = waitUARTempty_scanACK(bus);
     tcflow(buses[bus].device.file.fd, TCOOFF);
     setSerialMode(bus, SDM_DEFAULT);
