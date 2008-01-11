@@ -1,3 +1,10 @@
+2008-01-11 Jörg Rottland <rottland@users.sourceforge.net>
+	* srcp-command.c, srcp-sm.c: Support for VERIFY <bus> SM added,
+	stricter SM parameter control.
+
+2008-01-10 Jörg Rottland <rottland@users.sourceforge.net>
+	* srcp-gl.c: Fixed missing attributes of enqueued GLs.
+
 2008-01-07 Guido Scholz <guido.scholz@bayernline.de>
 	* srcp-power.*, srcp-command.c: Support for TERM <bus> POWER
 	added.
@@ -11,8 +18,8 @@
 
 2008-01-03 Guido Scholz <guido.scholz@bayernline.de>
 	* srcp-session.*, srcp-info.*: Queueing info messages is done
-	using pipes, info client initiated connection termination is
-	detected timely.
+	using pipes, information client initiated connection termination
+	is detected timely.
 
 2008-01-03 André Schenk <andre@melior.s.bawue.de>
 	* loopback.c: Service Mode (SM) for loopback bus added.
@@ -24,10 +31,10 @@
 	* README.ibox: Outdated file removed.
 
 2007-12-25 Guido Scholz <guido.scholz@bayernline.de>
-	* stdincludes.h, *.c: obsolete stdincludes.h file removed.
-	* io.c, srcp-command.c, clientservice.c, loconet.c: handle
+	* stdincludes.h, *.c: Obsolete stdincludes.h file removed.
+	* io.c, srcp-command.c, clientservice.c, loconet.c: Handle
 	writing to socket more savely, also respecting client terminated
-	connections (not perfect). 
+	connections. 
 
 2007-12-24 Guido Scholz <guido.scholz@bayernline.de>
 	* io.*, srcp-info.c, srcp-command.c, loconet.c, clientservice.c:
