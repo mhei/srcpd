@@ -66,8 +66,8 @@ int enqueueInfoSM(bus_t busnumber, int addr, int type, int typeaddr,
 
     if (return_code == 0) {
         sprintf(buffer, "%lu.%.3lu 100 INFO %ld SM %d",
-                akt_time->tv_sec, akt_time->tv_usec / 1000,
-                busnumber, addr);
+                akt_time->tv_sec, akt_time->tv_usec / 1000, busnumber,
+                addr);
         switch (type) {
             case REGISTER:
                 sprintf(tmp, "REG %d %d", typeaddr, value);
@@ -273,9 +273,16 @@ int infoSM(bus_t busnumber, int command, int type, int addr,
     }
     else {
         gettimeofday(&now, NULL);
-        sprintf(info, "%lu.%.3lu 100 INFO %ld SM %d CV %d %d\n",
-                now.tv_sec, now.tv_usec / 1000, busnumber, addr, typeaddr,
-                result);
+        if (command == VERIFY && value != result) {
+            sprintf(info, "%lu.%.3lu 412 ERROR wrong value\n", now.tv_sec,
+                    now.tv_usec / 1000);
+            status = SRCP_WRONGVALUE;
+        }
+        else {
+            sprintf(info, "%lu.%.3lu 100 INFO %ld SM %d CV %d %d\n",
+                    now.tv_sec, now.tv_usec / 1000, busnumber, addr,
+                    typeaddr, result);
+        }
     }
     session_unlock_wait(busnumber);
     return status;

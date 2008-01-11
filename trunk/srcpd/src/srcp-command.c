@@ -139,7 +139,7 @@ static int handle_setcheck(sessionid_t sessionid, bus_t bus, char *device,
         else {
             result = sscanf(parameter, "%ld %s %ld %ld %ld", &addr, ctype,
                             &value1, &value2, &value3);
-            if (result < 3)
+            if (result < 4)
                 rc = SRCP_LISTTOOSHORT;
             else {
                 type = -1;
@@ -306,17 +306,17 @@ int handleGET(sessionid_t sessionid, bus_t bus, char *device,
     else if (bus_has_devicegroup(bus, DG_SM)
              && strncasecmp(device, "SM", 2) == 0) {
         long addr, value1, value2;
+        int nelem;
         int type;
-        char *ctype;
+        char ctype[MAXSRCPLINELEN];
 
-        ctype = malloc(MAXSRCPLINELEN);
-        if (ctype == NULL) {
-            rc = SRCP_OUTOFRESOURCES;
+        nelem = sscanf(parameter, "%ld %s %ld %ld", &addr, ctype, &value1,
+                       &value2);
+        if (nelem < 3) {
+            rc = SRCP_LISTTOOSHORT;
         }
         else {
-            sscanf(parameter, "%ld %s %ld %ld", &addr, ctype, &value1,
-                   &value2);
-            type = CV;
+            type = -1;
 
             if (strcasecmp(ctype, "REG") == 0)
                 type = REGISTER;
@@ -324,12 +324,23 @@ int handleGET(sessionid_t sessionid, bus_t bus, char *device,
                 type = CV_BIT;
             else if (strcasecmp(ctype, "PAGE") == 0)
                 type = PAGE;
+            else if (strcasecmp(ctype, "CV") == 0)
+                type = CV;
 
-            free(ctype);
-
-            if (type != CV_BIT)
-                value2 = 0;
-            rc = infoSM(bus, GET, type, addr, value1, value2, 0, reply);
+            if (type == -1) {
+                rc = SRCP_WRONGVALUE;
+            }
+            else {
+                if (type != CV_BIT)
+                    value2 = 0;
+                if (type == CV_BIT && nelem < 4) {
+                    rc = SRCP_LISTTOOSHORT;
+                }
+                else {
+                    rc = infoSM(bus, GET, type, addr, value1, value2, 0,
+                                reply);
+                }
+            }
         }
     }
 
@@ -497,6 +508,48 @@ int handleVERIFY(sessionid_t sessionid, bus_t bus, char *device,
     int rc = SRCP_UNSUPPORTEDOPERATION;
     struct timeval time;
     gettimeofday(&time, NULL);
+
+    /* SET <bus> SM "<decoderaddress> <type> <1 or more values>" */
+    if (bus_has_devicegroup(bus, DG_SM)
+        && strncasecmp(device, "SM", 2) == 0) {
+        long addr, value1, value2, value3;
+        int type;
+        int result;
+        char ctype[MAXSRCPLINELEN];
+
+        result = sscanf(parameter, "%ld %s %ld %ld %ld", &addr, ctype,
+                        &value1, &value2, &value3);
+        if (result < 4)
+            rc = SRCP_LISTTOOSHORT;
+        else {
+            type = -1;
+            if (strcasecmp(ctype, "REG") == 0)
+                type = REGISTER;
+            else if (strcasecmp(ctype, "CV") == 0)
+                type = CV;
+            else if (strcasecmp(ctype, "CVBIT") == 0)
+                type = CV_BIT;
+            else if (strcasecmp(ctype, "PAGE") == 0)
+                type = PAGE;
+
+            if (type == -1)
+                rc = SRCP_WRONGVALUE;
+            else {
+                if (type == CV_BIT) {
+                    if (result < 5) {
+                        rc = SRCP_LISTTOOSHORT;
+                    }
+                    else {
+                        rc = infoSM(bus, VERIFY, type, addr, value1,
+                                    value2, value3, reply);
+                    }
+                }
+                else
+                    rc = infoSM(bus, VERIFY, type, addr, value1, 0,
+                                value2, reply);
+            }
+        }
+    }
     srcp_fmt_msg(rc, reply, time);
     return rc;
 }

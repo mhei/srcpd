@@ -1,10 +1,10 @@
-srcpd-2.0.11 (2008-??-??)
+srcpd-2.0.11 (2008-01-??)
   Fixed Bugs
-    o Fixed »switch power on« bug for DDL module
+    o Fixed »switch power on« bug for DDL module.
     o Fixed microsecond value for GA initialization.
     o Fixed wrong milli-second format for INFO GA (was e.g. »x.6«
       instead of »x.006«)
-    o Fixed wrong server time format for SM messages (same as above)
+    o Fixed wrong server time format for SM messages (same as above).
     o Disabled writing to 'stderr' during normal operation, this fixes
       broken debian package updates and srcpd misbehavior in SuSEs
       runlevel editor.
@@ -16,29 +16,30 @@ srcpd-2.0.11 (2008-??-??)
 
   New Features
     o Added 115200 as a new speed configuration value for LI101F (Lenz).
-    o More comprehensive man page srcpd.8
-    o New man page srcpd.conf.5
+    o More comprehensive man page srcpd.8.
+    o New man page srcpd.conf.5.
     o Man pages translated to German.
     o Enabled signal triggered configuration file re-read using SIGHUP.
-    o Support for Generic Messages added.
+    o Support for Generic Messages (GM) added.
     o Allow Selectix protocol (S) usage on loopback device.
     o Enabled Service Mode (SM) on loopback device.
     o Busy waiting of active information sessions is substituted by an
-      event driven programming model. This leads to lower CPU time
-      usage.
-    0 Timely detection of closed information sessions.
-    0 Support for the SRCP commands »INIT <bus> POWER« and
+      event driven programming model resulting in lower CPU time usage
+      and better responsiveness.
+    o Timely detection of closed information sessions.
+    o Support for the SRCP commands »INIT <bus> POWER« and
       »TERM <bus> POWER« added.
+    o Support for SRCP command »VERIFY <bus> SM« added.
 
   General Changes
-    o Change configuration option »p_time« to »fb_delay_time_0« for all
-      feedback handling buses
+    o Configuration option »p_time« is changed to »fb_delay_time_0« for
+      all feedback handling buses.
     o Threads library detection macro added.
     o Updated libxml2 detection macro.
     o A lot of internal code reorganisation and optimization including
       more expressive error messages for system calls.
     o Debian control files are removed from distribution.
-    o Outdated README.ibox removed from distribution.
+    o Outdated README.ibox file removed from distribution.
 
 
 Version 2.0 
