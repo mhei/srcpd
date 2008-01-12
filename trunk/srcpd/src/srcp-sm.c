@@ -176,6 +176,13 @@ int enqueueSM(bus_t busnumber, int command, int type, int addr,
     gettimeofday(&akt_time, NULL);
     queue[busnumber][in[busnumber]].tv = akt_time;
     queue[busnumber][in[busnumber]].addr = addr;
+    /* SRCP 0.8.x has not yet defined a protocolversion for SM
+       which is needed for programming on the main
+       (at least for access to the lower 127 addresses of 14-bit addresses)
+       defaults to protocol 1 (short addresses)
+     */
+    queue[busnumber][in[busnumber]].protocolversion = 1;
+    strcpy(queue[busnumber][in[busnumber]].protocol, "NMRA");
     in[busnumber]++;
     if (in[busnumber] == QUEUELEN)
         in[busnumber] = 0;

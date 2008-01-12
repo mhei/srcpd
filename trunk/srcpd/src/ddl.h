@@ -1,7 +1,7 @@
 /* $Id$ */
 
-#ifndef _DDL_H
-#define _DDL_H
+#ifndef DDL_H
+#define DDL_H
 
 #include <syslog.h>
 #include <errno.h>
@@ -34,7 +34,8 @@
 #include "netservice.h"
 
 #define QSIZE       2000
-#define PKTSIZE     40
+/* large packet size reserved for F0-F28 packets */
+#define PKTSIZE     120
 #define MAXDATA     20
 
 typedef struct _tQData {
@@ -82,9 +83,11 @@ typedef struct _DDL_DATA {
     int SERIAL_DEVICE_MODE;
     int RI_CHECK;               /* ring indicator checking      */
     int CHECKSHORT;             /* default no shortcut checking */
-    int DSR_INVERSE;            /* controls how DSR is used to check shorts */
+    int DSR_INVERSE;            /* controls how DSR is used to  */
+    /*                             check shorts                 */
     time_t SHORTCUTDELAY;       /* usecs shortcut delay         */
-    int NMRADCC_TR_V;           /* nmra translation routine version (1 or 2) */
+    int NMRADCC_TR_V;           /* version of the nmra dcc      */
+    /*                             translation routine(1,2 or 3) */
     int ENABLED_PROTOCOLS;      /* enabled p's                  */
     int IMPROVE_NMRADCC_TIMING; /* NMRA DCC: improve timing     */
 
@@ -161,9 +164,6 @@ int queue_empty(bus_t busnumber);
 void queue_add(bus_t busnumber, int addr, char *const packet,
                int packet_type, int packet_size);
 int queue_get(bus_t busnumber, int *addr, char *packet, int *packet_size);
-
-/* internal offset of the long addresses */
-#define ADDR14BIT_OFFSET 128
 
 
 void init_MaerklinPacketPool(bus_t busnumber);

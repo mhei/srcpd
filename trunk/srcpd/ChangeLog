@@ -1,3 +1,13 @@
+2008-01-12 Jörg Rottland <rottland@users.sourceforge.net>
+	* loopback.c: Support for VERIFY <bus> SM added.
+	* ddl.*, ddl_nmra.*, srcp-sm.c: Implemented ddl_nmra support for
+	srcp 0.8.x (only GL and SM parts have been adapted).
+	Re-activated decoder programming; re-activated decoder support
+	for protocol type 2 and for more than 28 speed steps. Support
+	for more controller functions added (up to 28, tested only from
+	F0 to F12). Support for Operations Mode Programming (programming
+	on main, POM) added.
+
 2008-01-12 André Schenk <andre@melior.s.bawue.de>
 	* ib.*: P50X command set completed.
 
