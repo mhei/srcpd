@@ -248,18 +248,27 @@ void *thr_sendrec_LOOPBACK(void *v)
             dequeueNextSM(btd->bus, &smtmp);
             session_lock_wait(btd->bus);
 
-            if (smtmp.command == GET) {
-                if ((smtmp.typeaddr >= 0) &&
-                        (smtmp.typeaddr <= MAX_CV_NUMBER)) {
-                    smtmp.value = cv[smtmp.typeaddr];
-                }
-            }
-
-            else if (smtmp.command == SET) {
-                if ((smtmp.typeaddr >= 0) &&
-                        (smtmp.typeaddr <= MAX_CV_NUMBER)) {
-                    cv[smtmp.typeaddr] = smtmp.value;
-                }
+            switch (smtmp.command) {
+                case GET:
+                    if ((smtmp.typeaddr >= 0) &&
+                            (smtmp.typeaddr <= MAX_CV_NUMBER)) {
+                        smtmp.value = cv[smtmp.typeaddr];
+                    }
+                    break;
+                case SET:
+                    if ((smtmp.typeaddr >= 0) &&
+                            (smtmp.typeaddr <= MAX_CV_NUMBER)) {
+                        cv[smtmp.typeaddr] = smtmp.value;
+                    }
+                    break;
+                case VERIFY:
+                    if ((smtmp.typeaddr >= 0) &&
+                            (smtmp.typeaddr <= MAX_CV_NUMBER)) {
+                        if (smtmp.value != cv[smtmp.typeaddr]) {
+                            smtmp.value = 0;
+                        }
+                    }
+                    break;
             }
             session_endwait(btd->bus, smtmp.value);
 
