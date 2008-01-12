@@ -51,8 +51,12 @@ void send_command_sm_IB(bus_t busnumber);
 void check_status_IB(bus_t busnumber);
 void check_status_pt_IB(bus_t busnumber);
 
+#define P50X_ONLY "xZzA1"
+
+/* general purpose P50Xb commands */
 
 #define XLok        0x80
+#define XLkDisp     0x83
 #define XLokSts     0x84
 #define XLokCfg     0x85
 #define XFunc       0x88
@@ -70,15 +74,15 @@ void check_status_pt_IB(bus_t busnumber);
 #define Xs88PTim    0x9E
 #define Xs88Cnt     0x9F
 #define XVer        0xA0
-#define XP50C       0xA1
+#define XP50XCh     0xA1
 #define XStatus     0xA2
+#define XSOSet      0xA3
 #define XSOGet      0xA4
 #define XHalt       0xA5
 #define XPwrOff     0xA6
 #define XPwrOn      0xA7
 #define XLokoNet    0xC0
 #define XNOP        0xC4
-#define XDummy      0xC4
 #define XP50Len1    0xC6
 #define XP50Len2    0xC7
 #define XEvent      0xC8
@@ -86,9 +90,47 @@ void check_status_pt_IB(bus_t busnumber);
 #define XEvtTrn     0xCA
 #define XEvtSen     0xCB
 #define XEvtIR      0xCC
+#define XEvtLN      0xCD
+#define XEvtPT      0xCE
 #define XEvtTkR     0xCF
 #define XEvtMem     0xD0
-#define XCR         0x0D
+
+/* programming track P50X commands */
+
+#define XPT_DCCEWr  0xDC
+#define XPT_FMZEWr  0xDD
+#define XDCC_PD     0xDE
+#define XDCC_PA     0xDF
+#define XPT_Sts     0xE0
+#define XPT_On      0xE1
+#define XPT_Off     0xE2
+#define XPT_SXRd    0xE4
+#define XPT_SXWr    0xE5
+#define XPT_SXSr    0xE6
+#define XPT_FMZSr   0xE7
+#define XPT_FMZWr   0xE8
+#define XPT_MrkSr   0xE9
+#define XPT_DCCSr   0xEA
+#define XPT_DCCQA   0xEB
+#define XPT_DCCRR   0xEC
+#define XPT_DCCWR   0xED
+#define XPT_DCCRP   0xEE
+#define XPT_DCCWP   0xEF
+#define XPT_DCCRD   0xF0
+#define XPT_DCCWD   0xF1
+#define XPT_DCCRB   0xF2
+#define XPT_DCCWB   0xF3
+#define XPT_DCCQD   0xF4
+#define XPT_DCCRL   0xF5
+#define XPT_DCCWL   0xF6
+#define XPT_DCCRA   0xF7
+#define XPT_DCCWA   0xF8
+#define XPT_U750    0xF9
+#define XPT_U755    0xFA
+#define XPT_U760    0xFB
+#define XPT_Src     0xFC
+#define XPT_Ctrl    0xFD
+#define XPT_Term    0xFE
 
 /* IB error codes */
 

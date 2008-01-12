@@ -1,3 +1,6 @@
+2008-01-03 André Schenk <andre@melior.s.bawue.de>
+	* ib.c: P50X command set completed.
+
 2008-01-11 Jörg Rottland <rottland@users.sourceforge.net>
 	* srcp-command.c, srcp-sm.c: Support for VERIFY <bus> SM added,
 	stricter SM parameter control.
