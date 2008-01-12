@@ -333,7 +333,7 @@ void *thr_sendrec_IB( void *v )
                 syslog_bus( btd->bus, DBG_INFO,
                         "send power off to IB off while emergency-stop" );
                 __ibt->emergency_on_ib = 2;
-                byte2send = 0xA6;
+                byte2send = XPwrOff;
                 writeByte( btd->bus, byte2send, __ibt->pause_between_cmd );
                 status = readByte( btd->bus, 1, &rr );
                 while ( status == -1 )
@@ -353,7 +353,7 @@ void *thr_sendrec_IB( void *v )
                     continue;
                 }
                 char msg[ 110 ];
-                byte2send = buses[ btd->bus ].power_state ? 0xA7 : 0xA6;
+                byte2send = buses[ btd->bus ].power_state ? XPwrOn : XPwrOff;
                 writeByte(btd->bus, byte2send, __ibt->pause_between_cmd );
                 status = readByte_IB( btd->bus, 1, &rr );
                 while ( status == -1 )
@@ -425,7 +425,7 @@ void send_command_ga_IB( bus_t busnumber )
       {
         gatmp = __ib->tga[ i ];
         addr = gatmp.id;
-        byte2send = 0x90;
+        byte2send = XTrnt;
         writeByte( busnumber, byte2send, 0 );
         temp = gatmp.id;
         temp &= 0x00FF;
@@ -452,7 +452,7 @@ void send_command_ga_IB( bus_t busnumber )
   {
     dequeueNextGA( busnumber, &gatmp );
     addr = gatmp.id;
-    byte2send = 0x90;
+    byte2send = XTrnt;
     writeByte( busnumber, byte2send, 0 );
     temp = gatmp.id;
     temp &= 0x00FF;
@@ -527,7 +527,7 @@ void send_command_gl_IB( bus_t busnumber )
          ( gltmp.speed != glakt.speed ) || ( gltmp.funcs != glakt.funcs ) )
     {
       /* send loco command */
-      byte2send = 0x80;
+      byte2send = XLok;
       writeByte( busnumber, byte2send, 0 );
       /* send low byte of address */
       temp = gltmp.id;
@@ -585,7 +585,7 @@ int read_register_IB( bus_t busnumber, int reg )
   unsigned char byte2send;
   unsigned char status;
 
-  byte2send = 0xEC;
+  byte2send = XPT_DCCRR;
   writeByte( busnumber, byte2send, 0 );
   byte2send = reg;
   writeByte( busnumber, byte2send, 0 );
@@ -602,7 +602,7 @@ int write_register_IB( bus_t busnumber, int reg, int value )
   unsigned char byte2send;
   unsigned char status;
 
-  byte2send = 0xED;
+  byte2send = XPT_DCCWR;
   writeByte( busnumber, byte2send, 0 );
   byte2send = reg;
   writeByte( busnumber, byte2send, 0 );
@@ -622,7 +622,7 @@ int read_page_IB( bus_t busnumber, int cv )
   unsigned char status;
   int tmp;
 
-  byte2send = 0xEE;
+  byte2send = XPT_DCCRP;
   writeByte( busnumber, byte2send, 0 );
   /* low-byte of cv */
   tmp = cv & 0xFF;
@@ -644,7 +644,7 @@ int write_page_IB( bus_t busnumber, int cv, int value )
   unsigned char status;
   int tmp;
 
-  byte2send = 0xEF;
+  byte2send = XPT_DCCWP;
   writeByte( busnumber, byte2send, 0 );
   /* low-byte of cv */
   tmp = cv & 0xFF;
@@ -666,7 +666,7 @@ int read_cv_IB( bus_t busnumber, int cv )
   unsigned char status;
   int tmp;
 
-  byte2send = 0xF0;
+  byte2send = XPT_DCCRD;
   writeByte( busnumber, byte2send, 0 );
   /* low-byte of cv */
   tmp = cv & 0xFF;
@@ -688,7 +688,7 @@ int write_cv_IB( bus_t busnumber, int cv, int value )
   unsigned char status;
   int tmp;
 
-  byte2send = 0xF1;
+  byte2send = XPT_DCCWD;
   writeByte( busnumber, byte2send, 0 );
   /* low-byte of cv */
   tmp = cv & 0xFF;
@@ -712,7 +712,7 @@ int read_cvbit_IB( bus_t busnumber, int cv, int bit )
   unsigned char status;
   int tmp;
 
-  byte2send = 0xF2;
+  byte2send = XPT_DCCRB;
   writeByte( busnumber, byte2send, 0 );
   /* low-byte of cv */
   tmp = cv & 0xFF;
@@ -734,7 +734,7 @@ int write_cvbit_IB( bus_t busnumber, int cv, int bit, int value )
   unsigned char status;
   int tmp;
 
-  byte2send = 0xF3;
+  byte2send = XPT_DCCWB;
   writeByte( busnumber, byte2send, 0 );
   /* low-byte of cv */
   tmp = cv & 0xFF;
@@ -763,7 +763,7 @@ int send_pom_IB( bus_t busnumber, int addr, int cv, int value )
   int tmp;
 
   /* send pom-command */
-  byte2send = 0xDE;
+  byte2send = XDCC_PD;
   writeByte( busnumber, byte2send, 0 );
   /* low-byte of decoder-address */
   tmp = addr & 0xFF;
@@ -799,7 +799,7 @@ int term_pgm_IB( bus_t busnumber )
   int ret_val;
 
   /* send command turn off PT */
-  byte2send = 0xE2;
+  byte2send = XPT_Off;
   writeByte( busnumber, byte2send, 0 );
 
   readByte( busnumber, 1, &status );
@@ -900,7 +900,7 @@ void check_status_IB( bus_t busnumber )
 
   /* #warning add loconet */
 
-  byte2send = 0xC8;
+  byte2send = XEvent;
   writeByte( busnumber, byte2send, 0 );
   xevnt2 = 0x00;
   xevnt3 = 0x00;
@@ -917,7 +917,7 @@ void check_status_IB( bus_t busnumber )
   /* mindestens eine Lok wurde von Hand gesteuert */
   if ( xevnt1 & 0x01 )
   {
-    byte2send = 0xC9;
+    byte2send = XEvtLok;
     writeByte( busnumber, byte2send, 0 );
     readByte_IB( busnumber, 1, &rr );
     while ( rr != 0x80 )
@@ -980,7 +980,7 @@ void check_status_IB( bus_t busnumber )
   /* some feedback state has changed */
   if ( xevnt1 & 0x04 )
   {
-    byte2send = 0xCB;
+    byte2send = XEvtSen;
     writeByte( busnumber, byte2send, 0 );
     readByte_IB( busnumber, 1, &rr );
     while ( rr != 0x00 )
@@ -998,7 +998,7 @@ void check_status_IB( bus_t busnumber )
   /* some turnout was switched by hand */
   if ( xevnt1 & 0x20 )
   {
-    byte2send = 0xCA;
+    byte2send = XEvtTrn;
     writeByte( busnumber, byte2send, 0 );
     readByte_IB( busnumber, 1, &rr );
     temp = rr;
@@ -1046,7 +1046,7 @@ void check_status_IB( bus_t busnumber )
   /* we should send an XStatus-command */
   if ( ( xevnt1 & 0x08 ) || ( xevnt2 & 0x40 ) )
   {
-    byte2send = 0xA2;
+    byte2send = XStatus;
     writeByte( busnumber, byte2send, 0 );
     readByte_IB( busnumber, 1, &rr );
     if ( !( rr & 0x08 ) )
@@ -1098,7 +1098,7 @@ void check_status_pt_IB( bus_t busnumber )
     i = readByte( busnumber, 0, &rr[ 0 ] );
   }
 
-  byte2send = 0xCE;
+  byte2send = XEvtPT;
   i = -1;
   while ( i == -1 )
   {
@@ -1281,7 +1281,7 @@ static int init_lineIB( bus_t busnumber )
     printf( "open_comport() failed\n" );
     return ( -1 );
   }
-  byte2send = 0xC4;
+  byte2send = XNOP;
   writeByte( busnumber, byte2send, 0 );
   status = readByte_IB( busnumber, 1, &rr );
   if ( status == -1 )
@@ -1398,7 +1398,7 @@ speed_t checkBaudrate( const int fd, const bus_t busnumber )
         return B0;
     }
 
-    out = 0xC4;
+    out = XNOP;
     writeByte( busnumber, out, 0 );
     usleep( 200000 );         /* 200 ms */
 
@@ -1510,7 +1510,7 @@ static int resetBaudrate( const speed_t speed, const bus_t busnumber )
 static int switchOffP50Command( const bus_t busnumber )
 {
   unsigned char byte2send;
-  unsigned char *sendString = (unsigned char *)"xZzA1";
+  unsigned char *sendString = (unsigned char *) P50X_ONLY;
   int status;
 
   syslog_bus( busnumber, DBG_INFO, "Switching off P50-commands\n" );
