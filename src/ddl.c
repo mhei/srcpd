@@ -39,6 +39,7 @@
 #include "srcp-fb.h"
 #include "srcp-ga.h"
 #include "srcp-gl.h"
+#include "srcp-sm.h"
 #include "srcp-info.h"
 #include "srcp-power.h"
 #include "srcp-server.h"
@@ -510,7 +511,7 @@ void init_NMRAPacketPool(bus_t busnumber)
     }
 
     /* put idle packet in packet pool */
-    j = translateBitstream2Packetstream(__DDL->NMRADCC_TR_V, idle_packet,
+    j = translateBitstream2Packetstream(busnumber, idle_packet,
                                         idle_pktstr, false);
     update_NMRAPacketPool(busnumber, 255, idle_pktstr, j, idle_pktstr, j);
 
@@ -798,14 +799,12 @@ void send_packet(bus_t busnumber, int addr, char *packet,
             if (setSerialMode(busnumber, SDM_NMRA) < 0)
                 return;
             if (__DDL->IMPROVE_NMRADCC_TIMING) {
-                improve_nmradcc_write(buses[busnumber].device.file.fd,
-                                      packet, packet_size);
+                improve_nmradcc_write(busnumber, packet, packet_size);
                 waitUARTempty(busnumber);
-                improve_nmradcc_write(buses[busnumber].device.file.fd,
+                improve_nmradcc_write(busnumber,
                                       __DDL->NMRA_idle_data, 13);
                 waitUARTempty(busnumber);
-                improve_nmradcc_write(buses[busnumber].device.file.fd,
-                                      packet, packet_size);
+                improve_nmradcc_write(busnumber, packet, packet_size);
             }
             else {
                 result = write(buses[busnumber].device.file.fd, packet,
@@ -1221,7 +1220,8 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     buses[busnumber].thr_func = &thr_sendrec_DDL;
 
-    strcpy(buses[busnumber].description, "GA GL POWER LOCK DESCRIPTION");
+    strcpy(buses[busnumber].description,
+           "GA GL SM POWER LOCK DESCRIPTION");
     __DDL->oslevel = 1;         /* kernel 2.6 */
 
     /* we need to check for kernel version below 2.6 or below */
@@ -1242,9 +1242,10 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     __DDL->RI_CHECK = false;    /* ring indicator checking      */
     __DDL->CHECKSHORT = false;  /* default no shortcut checking */
     __DDL->DSR_INVERSE = false; /* controls how DSR is used to  */
-    /* check short-circuits         */
+    /*                             check short-circuits         */
     __DDL->SHORTCUTDELAY = 0;   /* usecs shortcut delay         */
-    __DDL->NMRADCC_TR_V = 3;    /* NMRA translation routine version (1 or 2) */
+    __DDL->NMRADCC_TR_V = 3;    /* version of the NMRA dcc      */
+    /*                             translation routine(1, 2 or 3) */
     __DDL->ENABLED_PROTOCOLS = (EP_MAERKLIN | EP_NMRADCC);      /* enabled p's */
     __DDL->IMPROVE_NMRADCC_TIMING = 0;  /* NMRA DCC: improve timing    */
 
@@ -1495,6 +1496,7 @@ static void end_bus_thread(bus_thread_t * btd)
 
 void *thr_sendrec_DDL(void *v)
 {
+    struct _SM smakt;
     gl_state_t gltmp;
     ga_state_t gatmp;
     int addr, error;
@@ -1604,118 +1606,134 @@ void *thr_sendrec_DDL(void *v)
                 case 'N':      /* NMRA / DCC Codes */
                     if (speed == 1)
                         speed++;
-                    switch (pv) {
-                        case 1:
-                            if (direction != 2)
-                                comp_nmra_baseline(btd->bus, addr,
-                                                   direction, speed);
-                            else
-                                /* emergency halt: FS 1 */
-                                comp_nmra_baseline(btd->bus, addr, 0, 1);
-                            break;
-                        case 2:
-                            if (direction != 2)
-                                comp_nmra_f4b7s28(btd->bus, addr,
-                                                  direction, speed,
-                                                  gltmp.funcs & 0x01,
-                                                  ((gltmp.
-                                                    funcs >> 1) & 0x01),
-                                                  ((gltmp.
-                                                    funcs >> 2) & 0x01),
-                                                  ((gltmp.
-                                                    funcs >> 3) & 0x01),
-                                                  ((gltmp.
-                                                    funcs >> 4) & 0x01));
-                            else        /* emergency halt: FS 1 */
-                                comp_nmra_f4b7s28(btd->bus, addr, 0, 1,
-                                                  gltmp.funcs & 0x01,
-                                                  ((gltmp.
-                                                    funcs >> 1) & 0x01),
-                                                  ((gltmp.
-                                                    funcs >> 2) & 0x01),
-                                                  ((gltmp.
-                                                    funcs >> 3) & 0x01),
-                                                  ((gltmp.
-                                                    funcs >> 4) & 0x01));
-                            break;
-                        case 3:
-                            if (direction != 2)
-                                comp_nmra_f4b7s128(btd->bus, addr,
-                                                   direction, speed,
-                                                   gltmp.funcs & 0x01,
-                                                   ((gltmp.
-                                                     funcs >> 1) & 0x01),
-                                                   ((gltmp.
-                                                     funcs >> 2) & 0x01),
-                                                   ((gltmp.
-                                                     funcs >> 3) & 0x01),
-                                                   ((gltmp.
-                                                     funcs >> 4) & 0x01));
-                            else        /* emergency halt: FS 1 */
-                                comp_nmra_f4b7s128(btd->bus, addr, 0, 1,
-                                                   gltmp.funcs & 0x01,
-                                                   ((gltmp.
-                                                     funcs >> 1) & 0x01),
-                                                   ((gltmp.
-                                                     funcs >> 2) & 0x01),
-                                                   ((gltmp.
-                                                     funcs >> 3) & 0x01),
-                                                   ((gltmp.
-                                                     funcs >> 4) & 0x01));
-                            break;
-                        case 4:
-                            if (direction != 2)
-                                comp_nmra_f4b14s28(btd->bus, addr,
-                                                   direction, speed,
-                                                   gltmp.funcs & 0x01,
-                                                   ((gltmp.
-                                                     funcs >> 1) & 0x01),
-                                                   ((gltmp.
-                                                     funcs >> 2) & 0x01),
-                                                   ((gltmp.
-                                                     funcs >> 3) & 0x01),
-                                                   ((gltmp.
-                                                     funcs >> 4) & 0x01));
-                            else        /* emergency halt: FS 1 */
-                                comp_nmra_f4b14s28(btd->bus, addr, 0, 1,
-                                                   gltmp.funcs & 0x01,
-                                                   ((gltmp.
-                                                     funcs >> 1) & 0x01),
-                                                   ((gltmp.
-                                                     funcs >> 2) & 0x01),
-                                                   ((gltmp.
-                                                     funcs >> 3) & 0x01),
-                                                   ((gltmp.
-                                                     funcs >> 4) & 0x01));
-                            break;
-                        case 5:
-                            if (direction != 2)
-                                comp_nmra_f4b14s128(btd->bus, addr,
-                                                    direction, speed,
-                                                    gltmp.funcs & 0x01,
-                                                    ((gltmp.
-                                                      funcs >> 1) & 0x01),
-                                                    ((gltmp.
-                                                      funcs >> 2) & 0x01),
-                                                    ((gltmp.
-                                                      funcs >> 3) & 0x01),
-                                                    ((gltmp.
-                                                      funcs >> 4) & 0x01));
-                            else        /* emergency halt: FS 1 */
-                                comp_nmra_f4b14s128(btd->bus, addr, 0, 1,
-                                                    gltmp.funcs & 0x01,
-                                                    ((gltmp.
-                                                      funcs >> 1) & 0x01),
-                                                    ((gltmp.
-                                                      funcs >> 2) & 0x01),
-                                                    ((gltmp.
-                                                      funcs >> 3) & 0x01),
-                                                    ((gltmp.
-                                                      funcs >> 4) & 0x01));
-                            break;
-                    }
+                    if (direction != 2)
+                        comp_nmra_multi_func(btd->bus, addr, direction,
+                                             speed, gltmp.funcs,
+                                             gltmp.n_fs, gltmp.n_func, pv);
+                    else
+                        /* emergency halt: FS 1 */
+                        comp_nmra_multi_func(btd->bus, addr, 0,
+                                             1, gltmp.funcs, gltmp.n_fs,
+                                             gltmp.n_func, pv);
+                    break;
             }
             cacheSetGL(btd->bus, addr, gltmp);
+        }
+        if (!queue_SM_isempty(btd->bus)) {
+            dequeueNextSM(btd->bus, &smakt);
+            int rc = -1;
+            if (!strncmp(smakt.protocol, "NMRA", 4)) {
+                switch (smakt.command) {
+                    case SET:
+                        /* addr 0 and -1 are considered as programming track */
+                        /* larger addresses will by considered as PoM */
+                        if (smakt.addr <= 0) {
+                            switch (smakt.type) {
+                                case REGISTER:
+                                    rc = protocol_nmra_sm_write_phregister
+                                        (btd->bus, smakt.typeaddr,
+                                         smakt.value);
+                                    break;
+                                case CV:
+                                    rc = protocol_nmra_sm_write_cvbyte
+                                        (btd->bus, smakt.typeaddr,
+                                         smakt.value);
+                                    break;
+                                case CV_BIT:
+                                    rc = protocol_nmra_sm_write_cvbit(btd->
+                                                                      bus,
+                                                                      smakt.
+                                                                      typeaddr,
+                                                                      smakt.
+                                                                      bit,
+                                                                      smakt.
+                                                                      value);
+                                    break;
+                            }
+                        }
+                        else {
+                            int mode = 1;
+                            /* HACK protocolversion is not yet set in SM */
+                            if (smakt.addr > 127)
+                                mode = 2;
+                            switch (smakt.type) {
+                                case CV:
+                                    rc = protocol_nmra_sm_write_cvbyte_pom
+                                        (btd->bus, smakt.addr,
+                                         smakt.typeaddr, smakt.value,
+                                         mode);
+                                    break;
+                                case CV_BIT:
+                                    rc = protocol_nmra_sm_write_cvbit_pom
+                                        (btd->bus, smakt.addr,
+                                         smakt.typeaddr, smakt.bit,
+                                         smakt.value, mode);
+                            }
+                        }
+                        break;
+                    case GET:
+                        if (smakt.addr <= 0) {
+                            switch (smakt.type) {
+                                case REGISTER:
+                                    rc = protocol_nmra_sm_get_phregister
+                                        (btd->bus, smakt.typeaddr);
+                                    break;
+                                case CV:
+                                    rc = protocol_nmra_sm_get_cvbyte(btd->
+                                                                     bus,
+                                                                     smakt.
+                                                                     typeaddr);
+                                    break;
+                                case CV_BIT:
+                                    rc = protocol_nmra_sm_verify_cvbit
+                                        (btd->bus, smakt.typeaddr,
+                                         smakt.bit, 1);
+                                    break;
+                            }
+                        }
+                        break;
+                    case VERIFY:
+                        if (smakt.addr <= 0) {
+                            int my_rc = 0;
+                            switch (smakt.type) {
+                                case REGISTER:
+                                    my_rc =
+                                        protocol_nmra_sm_verify_phregister
+                                        (btd->bus, smakt.typeaddr,
+                                         smakt.value);
+                                    break;
+                                case CV:
+                                    my_rc =
+                                        protocol_nmra_sm_verify_cvbyte
+                                        (btd->bus, smakt.typeaddr,
+                                         smakt.value);
+                                    break;
+                                case CV_BIT:
+                                    my_rc =
+                                        protocol_nmra_sm_verify_cvbit(btd->
+                                                                      bus,
+                                                                      smakt.
+                                                                      typeaddr,
+                                                                      smakt.
+                                                                      bit,
+                                                                      smakt.
+                                                                      value);
+                                    break;
+                            }
+                            if (my_rc == 1) {
+                                rc = smakt.value;
+                            }
+                        }
+                        break;
+                    case TERM:
+                        rc = 0;
+                        break;
+                    case INIT:
+                        rc = 0;
+                        break;
+                }
+            }
+            session_endwait(btd->bus, rc);
         }
         buses[btd->bus].watchdog = 4;
 

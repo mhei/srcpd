@@ -29,51 +29,36 @@
  *                                                             *
  ***************************************************************/
 
-#ifndef __NMRA_H__
-#define __NMRA_H__
+#ifndef DDL_NMRA_H
+#define DDL_NMRA_H
 
-int translateBitstream2Packetstream(int dccversion, char *Bitstream,
+int translateBitstream2Packetstream(bus_t busnumber, char *Bitstream,
                                     char *Packetstream,
                                     int force_translation);
 
 /* signal generating functions for nmra dcc */
 
-/* NMRA standard decoder */
-int comp_nmra_baseline(bus_t busnumber, int address, int direction,
-                       int speed);
-
-/* 4-func, 7-bit-addr, 28 sp-st.*/
-int comp_nmra_f4b7s28(bus_t busnumber, int address, int direction,
-                      int speed, int func, int f1, int f2, int f3, int f4);
-
-/* 4-func, 7-bit-addr, 128 sp-st*/
-int comp_nmra_f4b7s128(bus_t busnumber, int address, int direction,
-                       int speed, int func, int f1, int f2, int f3,
-                       int f4);
-
-/* 4-func, 14-bit-addr, 28 sp-st*/
-int comp_nmra_f4b14s28(bus_t busnumber, int address, int direction,
-                       int speed, int func, int f1, int f2, int f3,
-                       int f4);
-
-/* 4-func, 14-bit-addr, 128 sp-st*/
-int comp_nmra_f4b14s128(bus_t busnumber, int address, int direction,
-                        int speed, int func, int f1, int f2, int f3,
-                        int f4);
-
-/* NMRA accessory decoder */
+/* NMRA multi function decoder */
+int comp_nmra_multi_func(bus_t busnumber, int address, int direction,
+                         int speed, int func, int nspeed, int nfuncs,
+                         int mode);
+/* NMRA accessory decoder     */
 int comp_nmra_accessory(bus_t busnumber, int nr, int output, int activate);
 
 /* service mode functions */
-void protocol_nmra_sm_write_cvbyte(bus_t busnumber, int sckt, int cv,
-                                   int value);
-void protocol_nmra_sm_verify_cvbyte(bus_t busnumber, int sckt, int cv,
-                                    int value);
-void protocol_nmra_sm_write_cvbit(bus_t busnumber, int sckt, int cv,
-                                  int bit, int value);
-void protocol_nmra_sm_write_phregister(bus_t busnumber, int sckt, int reg,
+int protocol_nmra_sm_write_cvbyte(bus_t busnumber, int cv, int value);
+int protocol_nmra_sm_verify_cvbyte(bus_t busnumber, int cv, int value);
+int protocol_nmra_sm_get_cvbyte(bus_t busnumber, int cv);
+int protocol_nmra_sm_write_cvbit(bus_t busnumber, int cv, int bit,
+                                 int value);
+int protocol_nmra_sm_verify_cvbit(bus_t busnumber, int cv, int bit,
+                                  int value);
+int protocol_nmra_sm_write_phregister(bus_t busnumber, int reg, int value);
+int protocol_nmra_sm_verify_phregister(bus_t busnumber, int reg,
                                        int value);
-void protocol_nmra_sm_verify_phregister(bus_t busnumber, int sckt, int reg,
-                                        int value);
-
+int protocol_nmra_sm_get_phregister(bus_t busnumber, int reg);
+int protocol_nmra_sm_write_cvbyte_pom(bus_t busnumber, int addr, int cv,
+                                      int value, int mode);
+int protocol_nmra_sm_write_cvbit_pom(bus_t busnumber, int addr, int cv,
+                                     int bit, int value, int mode);
 #endif
