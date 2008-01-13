@@ -52,16 +52,21 @@ email                : frank.schmischke@t-online.de
 #define __ib ((IB_DATA*)buses[busnumber].driverdata)
 #define __ibt ((IB_DATA*)buses[btd->bus].driverdata)
 
+/* forward declaration of some IB helper functions */
 static int init_lineIB( bus_t busnumber );
-
-/* IB helper functions */
 static int sendBreak( const int fd,  bus_t busnumber );
 static int switchOffP50Command( const  bus_t busnumber );
-static int readAnswer_IB( const  bus_t busnumber,
+static int readAnswer_IB( const bus_t busnumber,
                           const int generatePrintf );
 static int readByte_IB(  bus_t bus, int wait, unsigned char *the_byte );
 static speed_t checkBaudrate( const int fd, const  bus_t busnumber );
 static int resetBaudrate( const speed_t speed, const bus_t busnumber );
+static void check_status_IB( bus_t busnumber);
+static void check_status_pt_IB( bus_t busnumber );
+static void send_command_ga_IB(bus_t busnumber);
+static void send_command_gl_IB(bus_t busnumber);
+static void send_command_sm_IB(bus_t busnumber);
+
 
 int readConfig_IB( xmlDocPtr doc, xmlNodePtr node, bus_t busnumber )
 {
@@ -154,7 +159,6 @@ int readConfig_IB( xmlDocPtr doc, xmlNodePtr node, bus_t busnumber )
       syslog_bus( busnumber, DBG_WARN,
            "WARNING, unknown tag found: \"%s\"!\n",
            child->name );
-    ;
 
     child = child->next;
   }
@@ -162,6 +166,7 @@ int readConfig_IB( xmlDocPtr doc, xmlNodePtr node, bus_t busnumber )
   return ( 1 );
 }
 
+/*also used in li100-main.c*/
 int cmpTime( struct timeval *t1, struct timeval *t2 )
 {
   int result;
@@ -398,7 +403,7 @@ void *thr_sendrec_IB( void *v )
     return NULL;
 }
 
-void send_command_ga_IB( bus_t busnumber )
+static void send_command_ga_IB( bus_t busnumber )
 {
   int i, i1;
   int temp;
@@ -505,7 +510,7 @@ void send_command_ga_IB( bus_t busnumber )
   }
 }
 
-void send_command_gl_IB( bus_t busnumber )
+static void send_command_gl_IB( bus_t busnumber )
 {
   int temp;
   int addr = 0;
@@ -580,7 +585,7 @@ void send_command_gl_IB( bus_t busnumber )
   }
 }
 
-int read_register_IB( bus_t busnumber, int reg )
+static int read_register_IB( bus_t busnumber, int reg )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -597,7 +602,7 @@ int read_register_IB( bus_t busnumber, int reg )
   return status;
 }
 
-int write_register_IB( bus_t busnumber, int reg, int value )
+static int write_register_IB( bus_t busnumber, int reg, int value )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -616,7 +621,7 @@ int write_register_IB( bus_t busnumber, int reg, int value )
   return status;
 }
 
-int read_page_IB( bus_t busnumber, int cv )
+static int read_page_IB( bus_t busnumber, int cv )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -638,7 +643,7 @@ int read_page_IB( bus_t busnumber, int cv )
   return status;
 }
 
-int write_page_IB( bus_t busnumber, int cv, int value )
+static int write_page_IB( bus_t busnumber, int cv, int value )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -660,7 +665,7 @@ int write_page_IB( bus_t busnumber, int cv, int value )
   return status;
 }
 
-int read_cv_IB( bus_t busnumber, int cv )
+static int read_cv_IB( bus_t busnumber, int cv )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -682,7 +687,7 @@ int read_cv_IB( bus_t busnumber, int cv )
   return status;
 }
 
-int write_cv_IB( bus_t busnumber, int cv, int value )
+static int write_cv_IB( bus_t busnumber, int cv, int value )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -706,7 +711,7 @@ int write_cv_IB( bus_t busnumber, int cv, int value )
   return status;
 }
 
-int read_cvbit_IB( bus_t busnumber, int cv, int bit )
+static int read_cvbit_IB( bus_t busnumber, int cv, int bit )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -728,7 +733,7 @@ int read_cvbit_IB( bus_t busnumber, int cv, int bit )
   return status;
 }
 
-int write_cvbit_IB( bus_t busnumber, int cv, int bit, int value )
+static int write_cvbit_IB( bus_t busnumber, int cv, int bit, int value )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -755,7 +760,7 @@ int write_cvbit_IB( bus_t busnumber, int cv, int bit, int value )
 }
 
 /* program decoder on the main */
-int send_pom_IB( bus_t busnumber, int addr, int cv, int value )
+static int send_pom_IB( bus_t busnumber, int addr, int cv, int value )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -792,7 +797,7 @@ int send_pom_IB( bus_t busnumber, int addr, int cv, int value )
   return ret_val;
 }
 
-int term_pgm_IB( bus_t busnumber )
+static int term_pgm_IB( bus_t busnumber )
 {
   unsigned char byte2send;
   unsigned char status;
@@ -810,7 +815,7 @@ int term_pgm_IB( bus_t busnumber )
   return ret_val;
 }
 
-void send_command_sm_IB( bus_t busnumber )
+static void send_command_sm_IB( bus_t busnumber )
 {
   /* unsigned char byte2send; */
   /* unsigned char status; */
@@ -883,7 +888,7 @@ void send_command_sm_IB( bus_t busnumber )
   }
 }
 
-void check_status_IB( bus_t busnumber )
+static void check_status_IB( bus_t busnumber )
 {
   int i;
   int temp;
@@ -1081,7 +1086,7 @@ void check_status_IB( bus_t busnumber )
     check_status_pt_IB( busnumber );
 }
 
-void check_status_pt_IB( bus_t busnumber )
+static void check_status_pt_IB( bus_t busnumber )
 {
   int i;
   /* int temp; */
