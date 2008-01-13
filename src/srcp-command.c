@@ -44,8 +44,8 @@ static int handle_setcheck(sessionid_t sessionid, bus_t bus, char *device,
         /* We could provide a maximum of 32 on/off functions,
            but for now 28+1 will be good enough */
         anzparms = sscanf(parameter, "%ld %ld %ld %ld %ld %ld %ld %ld "
-                          "%ld %ld %ld %ld %ld %ld %ld %ld %ld"
-                          "%ld %ld %ld %ld %ld %ld %ld %ld"
+                          "%ld %ld %ld %ld %ld %ld %ld %ld %ld "
+                          "%ld %ld %ld %ld %ld %ld %ld %ld "
                           "%ld %ld %ld %ld %ld %ld %ld %ld",
                           &laddr, &direction, &speed, &maxspeed, &f[0],
                           &f[1], &f[2], &f[3], &f[4], &f[5], &f[6], &f[7],
