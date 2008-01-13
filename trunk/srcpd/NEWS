@@ -30,6 +30,10 @@ srcpd-2.0.11 (2008-01-??)
     o Support for the SRCP commands »INIT <bus> POWER« and
       »TERM <bus> POWER« added.
     o Support for SRCP command »VERIFY <bus> SM« added.
+    o Operations Mode Programming and Service Mode Programming for DDL
+      bus rewritten respectively implemented. This includes support for
+      decoders with more than 28 speed steps.
+    o Support for GL functions up to F28 added.
 
   General Changes
     o Configuration option »p_time« is changed to »fb_delay_time_0« for

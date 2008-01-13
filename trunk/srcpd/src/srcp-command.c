@@ -38,16 +38,21 @@ static int handle_setcheck(sessionid_t sessionid, bus_t bus, char *device,
 
     if (bus_has_devicegroup(bus, DG_GL)
         && strncasecmp(device, "GL", 2) == 0) {
-        long laddr, direction, speed, maxspeed, f[13];
+        long laddr, direction, speed, maxspeed, f[29];
         int func, i, anzparms;
         func = 0;
         /* We could provide a maximum of 32 on/off functions,
-           but for now 12+1 will be good enough */
+           but for now 28+1 will be good enough */
         anzparms = sscanf(parameter, "%ld %ld %ld %ld %ld %ld %ld %ld "
-                          "%ld %ld %ld %ld %ld %ld %ld %ld %ld",
+                          "%ld %ld %ld %ld %ld %ld %ld %ld %ld"
+                          "%ld %ld %ld %ld %ld %ld %ld %ld"
+                          "%ld %ld %ld %ld %ld %ld %ld %ld",
                           &laddr, &direction, &speed, &maxspeed, &f[0],
                           &f[1], &f[2], &f[3], &f[4], &f[5], &f[6], &f[7],
-                          &f[8], &f[9], &f[10], &f[11], &f[12]);
+                          &f[8], &f[9], &f[10], &f[11], &f[12], &f[13],
+                          &f[14], &f[15], &f[16], &f[17], &f[18], &f[19],
+                          &f[20], &f[21], &f[22], &f[23], &f[24], &f[25],
+                          &f[26], &f[27], &f[28]);
         for (i = 0; i < anzparms - 4; i++) {
             func += (f[i] ? 1 : 0) << i;
         }
