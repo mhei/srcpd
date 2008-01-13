@@ -26,13 +26,6 @@
 #if linux
 #include <sys/io.h>
 #include <linux/serial.h>
-
-#include <linux/version.h>
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
-   #define OSLEVEL 0
-#else
-   #define OSLEVEL 1
-#endif
 #endif
 
 #include <libxml/tree.h>        /*xmlDocPtr, xmlNodePtr */
