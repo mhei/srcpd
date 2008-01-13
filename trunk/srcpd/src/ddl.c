@@ -1604,7 +1604,7 @@ void *thr_sendrec_DDL(void *v)
                     }
                     break;
                 case 'N':      /* NMRA / DCC Codes */
-                    if (speed == 1)
+                    if (speed)
                         speed++;
                     if (direction != 2)
                         comp_nmra_multi_func(btd->bus, addr, direction,

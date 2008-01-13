@@ -1137,7 +1137,7 @@ int comp_nmra_multi_func(bus_t busnumber, int address, int direction,
     }
     /* no special error handling, it's job of the clients */
     if (address < 1 || address > 10239 || direction < 0 || direction > 1 ||
-        speed < 0 || speed > nspeed || (address > 127 && mode == 1))
+        speed < 0 || speed > (nspeed + 1) || (address > 127 && mode == 1))
         return 1;
 
     if (speed > 127) {
