@@ -20,8 +20,7 @@
 #include <libxml/tree.h> /*xmlDocPtr, xmlNodePtr*/
 
 
-typedef struct _IB_DATA
-{
+typedef struct _IB_DATA {
     int number_ga;
     int number_gl;
     int number_fb;
@@ -36,20 +35,11 @@ typedef struct _IB_DATA
 } IB_DATA;
 
 int readConfig_IB(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber);
-
-
 int init_bus_IB(bus_t busnumber);
 int term_bus_IB(bus_t busnumber);
 int init_gl_IB(gl_state_t *gl);
 int init_ga_IB(ga_state_t *ga);
-
 void* thr_sendrec_IB(void *);
-
-void send_command_ga_IB(bus_t busnumber);
-void send_command_gl_IB(bus_t busnumber);
-void send_command_sm_IB(bus_t busnumber);
-void check_status_IB(bus_t busnumber);
-void check_status_pt_IB(bus_t busnumber);
 
 #define P50X_ONLY "xZzA1"
 

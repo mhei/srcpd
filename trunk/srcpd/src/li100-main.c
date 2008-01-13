@@ -36,6 +36,7 @@ email                : frank.schmischke@t-online.de
 #define __li100 ((LI100_DATA*)buses[busnumber].driverdata)
 #define __li100t ((LI100_DATA*)buses[btd->bus].driverdata)
 
+/* implementation see ib.c*/
 int cmpTime( struct timeval *t1, struct timeval *t2 );
 
 #define LI100_USB
