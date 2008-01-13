@@ -27,6 +27,7 @@
 /*    to control electric model railroads                      */
 /***************************************************************/
 
+#include <sys/utsname.h>
 #include <stdbool.h>
 
 #include "config-srcpd.h"
@@ -1087,10 +1088,11 @@ void *thr_refresh_cycle(void *v)
         && !(__DDL->ENABLED_PROTOCOLS & EP_MAERKLIN))
         waitUARTempty = waitUARTempty_CLEANNMRADCC;
 
-    if (__DDL->oslevel == 1)
+    nanosleep_DDL = nanosleep;
+    if (__DDL->oslevel == 1) {
         nanosleep_DDL = krnl26_nanosleep;
-    else
-        nanosleep_DDL = nanosleep;
+    }
+
 
     pthread_getschedparam(pthread_self(), &policy, &sparam);
     sparam.sched_priority = 10;
@@ -1200,6 +1202,9 @@ int init_ga_DDL(ga_state_t * ga)
 
 int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
+    struct utsname utsBuffer;
+    char buf[3];
+
     buses[busnumber].driverdata = malloc(sizeof(struct _DDL_DATA));
 
     if (buses[busnumber].driverdata == NULL) {
@@ -1217,11 +1222,19 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     strcpy(buses[busnumber].description,
            "GA GL SM POWER LOCK DESCRIPTION");
-    __DDL->oslevel = 1;         /* kernel > 2.6.0 as default */
+    __DDL->oslevel = 1;         /* kernel 2.6 */
 
-#ifdef linux
-    __DDL->oslevel = OSLEVEL;   /* kernel version as detected */
-#endif
+    /* we need to check for kernel version below 2.6 or below */
+    /* the following code breaks if a kernel version 2.10 will ever occur */
+    uname(&utsBuffer);
+    sprintf(buf, "%c%c", utsBuffer.release[0], utsBuffer.release[2]);
+
+    if (atoi(buf) > 25) {
+        __DDL->oslevel = 1;     /* kernel 2.6 or later */
+    }
+    else {
+        __DDL->oslevel = 0;     /* kernel 2.5 or earlier */
+    }
 
     __DDL->number_gl = 81;
     __DDL->number_ga = 324;
