@@ -1,3 +1,6 @@
+2008-01-13 Jörg Rottland <rottland@users.sourceforge.net>
+	* srcp-command.c: Support for GL functions up to F28 added.
+
 2008-01-12 Jörg Rottland <rottland@users.sourceforge.net>
 	* loopback.c: Support for VERIFY <bus> SM added.
 	* ddl.*, ddl_nmra.*, srcp-sm.c: Implemented ddl_nmra support for
