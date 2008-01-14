@@ -317,15 +317,10 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    /* do not daemonize if in debug mode */
-    if (buses[0].debuglevel < DBG_DEBUG) {
-
-        /*daemonize process*/
-        if (0 != daemon_init()) {
-            syslog_bus(0, DBG_ERROR, "Daemonization failed!\n");
-            exit(1);
-        }
-
+    /*daemonize process*/
+    if (0 != daemon_init()) {
+        syslog_bus(0, DBG_ERROR, "Daemonization failed!\n");
+        exit(1);
     }
 
     CreatePIDFile(getpid());
