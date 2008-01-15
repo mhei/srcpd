@@ -149,7 +149,7 @@ int init_bus_LI100_SERIAL( bus_t busnumber )
   if ( init_GA( busnumber, __li100->number_ga ) )
   {
     __li100->number_ga = 0;
-    syslog_bus( busnumber, DBG_ERROR, "Can't create array for assesoirs" );
+    syslog_bus( busnumber, DBG_ERROR, "Can't create array for accessories" );
   }
 
   if ( init_GL( busnumber, __li100->number_gl ) )

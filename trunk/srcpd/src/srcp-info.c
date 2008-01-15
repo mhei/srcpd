@@ -178,7 +178,7 @@ int doInfoClient(session_node_t* sn)
             }
         }
         
-        /* send all needed generic assesoires */
+        /* send all needed generic accessories */
         if (strstr(description, "GA")) {
             number = get_number_ga(bus);
             for (i = 1; i <= number; i++) {

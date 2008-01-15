@@ -1392,7 +1392,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     if (init_GA(busnumber, __DDL->number_ga)) {
         __DDL->number_ga = 0;
         syslog_bus(busnumber, DBG_ERROR,
-                   "Can't create array for assesoirs");
+                   "Can't create array for accessories");
     }
 
     if (init_GL(busnumber, __DDL->number_gl)) {
