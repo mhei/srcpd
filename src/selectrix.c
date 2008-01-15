@@ -215,7 +215,7 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                 if (init_GA(busnumber, __selectrix->number_ga)) {
                         __selectrix->number_ga = 0;
                         syslog_bus(busnumber, DBG_ERROR, "Can't create array "
-                                                  "for assesoirs");
+                                                  "for accessories");
                 }
                 if (init_FB(busnumber, __selectrix->number_fb * 8)) {
                         __selectrix->number_fb = 0;

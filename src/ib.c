@@ -217,7 +217,7 @@ int init_bus_IB( bus_t busnumber )
   if ( init_GA( busnumber, __ib->number_ga ) )
   {
     __ib->number_ga = 0;
-    syslog_bus( busnumber, DBG_ERROR, "Can't create array for assesoirs" );
+    syslog_bus( busnumber, DBG_ERROR, "Can't create array for accessories" );
   }
 
   if ( init_GL( busnumber, __ib->number_gl ) )

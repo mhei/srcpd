@@ -153,7 +153,7 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     if (init_GA(busnumber, __m6051->number_ga)) {
         __m6051->number_ga = 0;
-        syslog_bus(busnumber, DBG_ERROR, "Can't create array for assesoirs");
+        syslog_bus(busnumber, DBG_ERROR, "Can't create array for accessories");
     }
 
     if (init_GL(busnumber, __m6051->number_gl)) {
