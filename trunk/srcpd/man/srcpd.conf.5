@@ -142,7 +142,7 @@ value is »no«.
 speed
 Buses using serial devices with a not fixed transfer speed allow to
 adjust this parameter. Possible values are 2400, 4800, 9600, 19200,
-38400, 57600 and 11520\ baud.
+38400, 57600 and 115200\ baud.
 .\"
 .\"
 .SS server
@@ -279,11 +279,13 @@ wait. The exact value should be hand tuned. If the system does not
 respond or drops commands try to increase this value. Default is 250\ ms.
 .TP
 number_ga
-This is the number of GA. Supported range is 0..1024. A value of 0 means no
-GA available. Default is 256.
+This is the maximal address number of Generic Accessory decoders (GA).
+Supported range is 0..1024. A value of 0 means no GA available. Default
+is 256.
 .TP
 number_gl
-Like the number of GA this number gives the maximum address. Supported range
+Like the number of GA this number limits the maximum address of the
+Generic Locomotive decoders (GL). Supported range
 is 0..10239. A value of 0 means no GL available. Default is 80.
 .TP
 number_fb
@@ -331,11 +333,12 @@ sessions. This device may be used as virtual device for communication
 tasks.
 .TP
 number_ga
-This is the number of GA devices. Default is 256.
+This is the maximal address number of Generic Accessory (GA) devices.
+Default is 256.
 .TP
 number_gl
-Like the number of GA this number gives the maximum address.
-Default is 80
+This number gives the maximum valid address number of the Generic
+Locomotive (GL) devices. Default is 80
 .TP
 number_fb
 This is the number of feedback devices. Default is 0 (no device).
@@ -378,8 +381,8 @@ since the interface supports the addresses 1..256 only. Keep the
 default value 256 untouched.
 .TP
 number_gl
-Like the number of GA this number gives the maximum address. Since this
-number is limited to 80, keep the default value 80 untouched.
+Like the number of GA this number gives the maximum GL address. Since
+this number is limited to 80, keep the default value 80 untouched.
 .TP
 number_fb
 This is the number of 6088 modules attached to the 6051/6050 device.
