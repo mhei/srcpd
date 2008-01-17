@@ -390,6 +390,18 @@ void selRautenhaus(bus_t busnumber, int adres)
 /*******************************************************
 *     Base communication with the interface (Selectrix)
 ********************************************************/
+/* Read decoder data to the SX-bus */
+void readSXDecoder(bus_t busnumber)
+{
+	
+}
+
+/* Write data on SX-bus to the decoder */
+void writeSXDecoder(bus_t busnumber)
+{
+	
+}
+
 /* Read data from the SX-bus (8 bits) */
 int readSXbus(bus_t busnumber)
 {
