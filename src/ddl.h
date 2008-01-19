@@ -94,6 +94,7 @@ typedef struct _DDL_DATA {
     int WAITUART_USLEEP_PATCH;  /* enable/disbable usleep patch */
     int WAITUART_USLEEP_USEC;   /* usecs for usleep patch       */
 
+    int PROGRAM_TRACK;          /* 0: suppress SM commands to PT address */
     struct termios maerklin_dev_termios;
     struct termios nmra_dev_termios;
 
@@ -113,6 +114,7 @@ typedef struct _DDL_DATA {
 
     unsigned char idle_data[MAXDATA];
     char NMRA_idle_data[PKTSIZE];
+    int NMRA_idle_data_size;
 
     int last_refreshed_maerklin_loco;
     int last_refreshed_maerklin_fx;
@@ -128,16 +130,12 @@ typedef struct _DDL_DATA {
     pthread_mutex_t maerklin_pktpool_mutex;
     tMaerklinPacketPool MaerklinPacketPool;
     int oslevel;                /* 0: ancient linux 2.4, 1 linux 2.6 */
+    int program_track;          /* 0: suppress SM commands to PT address */
 
 } DDL_DATA;
 
 int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber);
-int init_lineDDL(bus_t busnumber);
 int init_bus_DDL(bus_t busnumber);
-int init_gl_DDL(gl_state_t *);
-int init_ga_DDL(ga_state_t *);
-int getDescription_DDL(char *reply);
-void *thr_sendrec_DDL(void *);
 
 #define  EP_MAERKLIN  1         /* maerklin protocol */
 #define  EP_NMRADCC   2         /* nmra dcc protocol */
@@ -159,37 +157,20 @@ int setSerialMode(bus_t busnumber, int mode);
 #define QNBLOCOPKT  6
 #define QNBACCPKT   7
 
-void queue_init(bus_t busnumber);
-int queue_empty(bus_t busnumber);
 void queue_add(bus_t busnumber, int addr, char *const packet,
                int packet_type, int packet_size);
-int queue_get(bus_t busnumber, int *addr, char *packet, int *packet_size);
 
-
-void init_MaerklinPacketPool(bus_t busnumber);
 char *get_maerklin_packet(bus_t busnumber, int adr, int fx);
 void update_MaerklinPacketPool(bus_t busnumber, int adr,
                                char const *const sd_packet,
                                char const *const f1, char const *const f2,
                                char const *const f3, char const *const f4);
-void init_NMRAPacketPool(bus_t busnumber);
 void update_NMRAPacketPool(bus_t busnumber, int adr,
                            char const *const packet, int packet_size,
                            char const *const fx_packet,
                            int fx_packet_size);
 
 void (*waitUARTempty) (bus_t busnumber);
-int checkRingIndicator(bus_t busnumber);
-int checkShortcut(bus_t busnumber);
-void send_packet(bus_t busnumber, int addr, char *packet,
-                 int packet_size, int packet_type, int refresh);
-void improve_nmradcc_write(bus_t busnumber, char *packet, int packet_size);
-void refresh_loco(bus_t busnumber);
-long int compute_delta(struct timeval tv1, struct timeval tv2);
-void set_SerialLine(bus_t busnumber, int line, int mode);
-int check_lines(bus_t busnumber);
-void set_lines_off(bus_t busnumber);
-void *thr_refresh_cycle(void *v);
 
 /* serial line modes: */
 #define ON  1

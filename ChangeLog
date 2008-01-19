@@ -1,3 +1,7 @@
+2008-01-19 Jörg Rottland <rottland@users.sourceforge.net>
+        * ddl.c: Re-activated improved timing
+        additional config parameter to allow filtering of SM commands
+
 2008-01-13 Jörg Rottland <rottland@users.sourceforge.net>
 	* srcp-command.c: Support for GL functions up to F28 added.
 
