@@ -280,15 +280,38 @@ int infoSM(bus_t busnumber, int command, int type, int addr,
     }
     else {
         gettimeofday(&now, NULL);
-        if (command == VERIFY && value != result) {
+        if ((result == -1) || (command == VERIFY && value != result)) {
             sprintf(info, "%lu.%.3lu 412 ERROR wrong value\n", now.tv_sec,
                     now.tv_usec / 1000);
             status = SRCP_WRONGVALUE;
         }
         else {
-            sprintf(info, "%lu.%.3lu 100 INFO %ld SM %d CV %d %d\n",
-                    now.tv_sec, now.tv_usec / 1000, busnumber, addr,
-                    typeaddr, result);
+            switch (type) {
+                case CV:
+                    sprintf(info,
+                            "%lu.%.3lu 100 INFO %ld SM %d CV %d %d\n",
+                            now.tv_sec, now.tv_usec / 1000, busnumber,
+                            addr, typeaddr, result);
+                    break;
+                case REGISTER:
+                    sprintf(info,
+                            "%lu.%.3lu 100 INFO %ld SM %d REG %d %d\n",
+                            now.tv_sec, now.tv_usec / 1000, busnumber,
+                            addr, typeaddr, result);
+                    break;
+                case PAGE:
+                    sprintf(info,
+                            "%lu.%.3lu 100 INFO %ld SM %d PAGE %d %d\n",
+                            now.tv_sec, now.tv_usec / 1000, busnumber,
+                            addr, typeaddr, result);
+                    break;
+                case CV_BIT:
+                    sprintf(info,
+                            "%lu.%.3lu 100 INFO %ld SM %d CVBIT %d %d %d\n",
+                            now.tv_sec, now.tv_usec / 1000, busnumber,
+                            addr, typeaddr, bit, result);
+                    break;
+            }
         }
     }
     session_unlock_wait(busnumber);

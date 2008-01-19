@@ -156,8 +156,11 @@ static int handle_setcheck(sessionid_t sessionid, bus_t bus, char *device,
                 rc = SRCP_WRONGVALUE;
             else {
                 if (type == CV_BIT)
-                    rc = infoSM(bus, SET, type, addr, value1,
-                                value2, value3, reply);
+                    if (result < 5)
+                        rc = SRCP_LISTTOOSHORT;
+                    else
+                        rc = infoSM(bus, SET, type, addr, value1,
+                                    value2, value3, reply);
                 else
                     rc = infoSM(bus, SET, type, addr, value1, 0,
                                 value2, reply);
