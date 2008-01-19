@@ -183,14 +183,29 @@ enable_maerklin
 enable_nmradcc
 .TP
 improve_nmradcc_timing
+The default baudrate of DDL is 19200, which is slightly higher than allowed
+by NMRA DCC standard. With a UART 16550A you can change the baudrate to 
+16457, which is within the specification. Only needed if you have timing
+problems with the default.
+Valid input values are »yes« or »no«. The default value is »no«.
+»no« will give you 19200 baud.
 .TP
 shortcut_failure_delay
 .TP
 nmradcc_translation_routine
+There are 3 implementations for converting the logical command bits into
+serial line commands, considering the start and stop bits of the serial
+line. (Valid values are 1, 2 and 3). Default value is 3.
 .TP
 enable_usleep_patch
 .TP
 usleep_usec
+.TP
+program_track
+This parameter allows you to supress commands which are issued for a
+program track. This parameter should only be used on your main.
+Valid input values are »yes« or »no«. The default value is »yes«, i.e.
+all program track commands will be executed by default.
 .\"
 .\"
 .SS ddl-s88

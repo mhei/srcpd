@@ -54,10 +54,11 @@
 
 static int (*nanosleep_DDL) (const struct timespec * req,
                              struct timespec * rem);
+static void *thr_sendrec_DDL(void *);
 
 /********* Q U E U E *****************/
 
-void queue_init(bus_t busnumber)
+static void queue_init(bus_t busnumber)
 {
     int result, i;
 
@@ -94,7 +95,7 @@ void queue_init(bus_t busnumber)
 
 }
 
-int queue_empty(bus_t busnumber)
+static int queue_empty(bus_t busnumber)
 {
     return (__DDL->queue_in == __DDL->queue_out);
 }
@@ -128,7 +129,7 @@ void queue_add(bus_t busnumber, int addr, char *const packet,
     }
 }
 
-int queue_get(bus_t busnumber, int *addr, char *packet, int *packet_size)
+static int queue_get(bus_t busnumber, int *addr, char *packet, int *packet_size)
 {
     int rtc;
     int result;
@@ -166,7 +167,7 @@ int queue_get(bus_t busnumber, int *addr, char *packet, int *packet_size)
 /* functions to open, initialize and close comport */
 
 #if linux
-int init_serinfo(int fd, int divisor, struct serial_struct **serinfo)
+static int init_serinfo(int fd, int divisor, struct serial_struct **serinfo)
 {
     if (*serinfo == NULL) {
         *serinfo = malloc(sizeof(struct serial_struct));
@@ -176,6 +177,9 @@ int init_serinfo(int fd, int divisor, struct serial_struct **serinfo)
 
     if (ioctl(fd, TIOCGSERIAL, *serinfo) < 0)
         return -1;
+    /* check baud_base - for other baud_base values change the divisor */	
+    if ((*serinfo)->baud_base != 115200)
+        return -1;
 
     (*serinfo)->custom_divisor = divisor;
     (*serinfo)->flags = ASYNC_SPD_CUST | ASYNC_SKIP_TEST;
@@ -183,25 +187,22 @@ int init_serinfo(int fd, int divisor, struct serial_struct **serinfo)
     return 0;
 }
 
-int set_customdivisor(int fd, struct serial_struct *serinfo)
+static int set_customdivisor(int fd, struct serial_struct *serinfo)
 {
     if (ioctl(fd, TIOCSSERIAL, serinfo) < 0)
         return -1;
     return 0;
 }
 
-int reset_customdivisor(int fd)
+static int reset_customdivisor(int fd)
 {
-    struct serial_struct *serinfo = NULL;
+    struct serial_struct serinfo;
 
-    serinfo = malloc(sizeof(struct serial_struct));
-    if (!serinfo)
-        return -1;
-    if (ioctl(fd, TIOCGSERIAL, serinfo) < 0)
+    if (ioctl(fd, TIOCGSERIAL, &serinfo) < 0)
         return -2;
-    (serinfo)->custom_divisor = 0;
-    (serinfo)->flags = 0;
-    if (ioctl(fd, TIOCSSERIAL, serinfo) < 0)
+    serinfo.custom_divisor = 0;
+    serinfo.flags = 0;
+    if (ioctl(fd, TIOCSSERIAL, &serinfo) < 0)
         return -3;
     return 0;
 }
@@ -326,8 +327,29 @@ int init_lineDDL(bus_t busnumber)
     __DDL->nmra_dev_termios.c_cflag &= ~(CSIZE | PARENB);
     __DDL->nmra_dev_termios.c_cflag |= CS8;     /* 8 data bits      */
     if (__DDL->IMPROVE_NMRADCC_TIMING) {
-        cfsetospeed(&__DDL->nmra_dev_termios, B115200); /* baud rate: 115200 */
-        cfsetispeed(&__DDL->nmra_dev_termios, B115200); /* baud rate: 115200 */
+    /* IMPROVE_NMRADCC_TIMING
+       With 19200 baud we are already outside of the specification of NMRA.
+       19200 baud means we have pulses of 52 microseconds - the specification
+       for generating DCC signals is in the range between 55 and 61 
+       microseconds.
+       Decoders are expected to accept signals with a length between 52 
+       and 66 microseconds (all this timigs are for one half of a logical 1).
+       Actually most decoders accept an even wider range than specified by
+       NMRA, thus 19200 baud normaly works.
+       If you have communication problems here is the method to reduce the
+       speed of your serial line to 16457 baud (i.e. 60.8 microseconds),
+       which is inside the NMRA specification.
+       
+       On linux this is done in an odd way:
+       You have to set your baudrate to 38400 and set the flag 
+       ASYNC_SPD_CUST (see init_serinfo), this actualy sets the speed of
+       the line to Baud_base / custom_devisor
+       Baud_base is 115200 on "normal" serial lines (using the chip 16550A)
+       therefore a custom_devisor of 7 is needed for 16457 baud
+       and a custom_devisor of 3 will give you 38400 baud (maerklin)
+    */   
+        cfsetospeed(&__DDL->nmra_dev_termios, B38400); /* baud rate: 38400 */
+        cfsetispeed(&__DDL->nmra_dev_termios, B38400); /* baud rate: 38400 */
     }
     else {
         cfsetospeed(&__DDL->nmra_dev_termios, B19200);  /* baud rate: 19200 */
@@ -367,7 +389,7 @@ int init_lineDDL(bus_t busnumber)
 
 /****** routines for Maerklin packet pool *********************/
 
-void init_MaerklinPacketPool(bus_t busnumber)
+static void init_MaerklinPacketPool(bus_t busnumber)
 {
     int i, j;
     int result;
@@ -476,10 +498,10 @@ void update_MaerklinPacketPool(bus_t busnumber, int adr,
 
 /****** routines for NMRA packet pool *********************/
 
-void init_NMRAPacketPool(bus_t busnumber)
+static void init_NMRAPacketPool(bus_t busnumber)
 {
     int i, j;
-    char idle_packet[] = "11111111111111101111111100000000001111111110";
+    char idle_packet[] = "1111111111111110111111110000000000111111111";
     char idle_pktstr[PKTSIZE];
     int result;
 
@@ -514,13 +536,13 @@ void init_NMRAPacketPool(bus_t busnumber)
     j = translateBitstream2Packetstream(busnumber, idle_packet,
                                         idle_pktstr, false);
     update_NMRAPacketPool(busnumber, 255, idle_pktstr, j, idle_pktstr, j);
-
     /* generate and override idle_data */
-    for (i = 0; i < MAXDATA; i++)
-        __DDL->idle_data[i] = idle_pktstr[i % j];
-    for (i = (MAXDATA / j) * j; i < MAXDATA; i++)
-        __DDL->idle_data[i] = 0xC6;
+    /* insert the NMRA idle packetstream (the standard idle stream was all
+    '1' which is OK for NMRA, so keep the rest of the idle string) */
+    for (i = 0; i < (MAXDATA / j) * j; i++)
+       	__DDL->idle_data[i] = idle_pktstr[i % j];
     memcpy(__DDL->NMRA_idle_data, idle_pktstr, j);
+    __DDL->NMRA_idle_data_size=j;
 }
 
 void update_NMRAPacketPool(bus_t busnumber, int adr,
@@ -569,7 +591,7 @@ void update_NMRAPacketPool(bus_t busnumber, int adr,
 
 
 /* busy wait until UART is empty, without delay */
-void waitUARTempty_COMMON(bus_t busnumber)
+static void waitUARTempty_COMMON(bus_t busnumber)
 {
     int value;
     int result;
@@ -590,7 +612,7 @@ void waitUARTempty_COMMON(bus_t busnumber)
 }
 
 /* busy wait until UART is empty, with delay */
-void waitUARTempty_COMMON_USLEEPPATCH(bus_t busnumber)
+static void waitUARTempty_COMMON_USLEEPPATCH(bus_t busnumber)
 {
     int value;
     int result;
@@ -616,7 +638,7 @@ void waitUARTempty_COMMON_USLEEPPATCH(bus_t busnumber)
 #define SLEEPFACTOR 48000l      /* used in waitUARTempty() */
 #define NUMBUFFERBYTES 1024     /* used in waitUARTempty() */
 
-void waitUARTempty_CLEANNMRADCC(bus_t busnumber)
+static void waitUARTempty_CLEANNMRADCC(bus_t busnumber)
 {
     int outbytes;
     int result;
@@ -640,7 +662,7 @@ void waitUARTempty_CLEANNMRADCC(bus_t busnumber)
     }
 }
 
-int checkRingIndicator(bus_t busnumber)
+static int checkRingIndicator(bus_t busnumber)
 {
     int result, arg;
 
@@ -661,7 +683,7 @@ int checkRingIndicator(bus_t busnumber)
     }
 }
 
-int checkShortcut(bus_t busnumber)
+static int checkShortcut(bus_t busnumber)
 {
     int result, arg;
     time_t short_now = 0;
@@ -699,7 +721,7 @@ int checkShortcut(bus_t busnumber)
     return 0;
 }
 
-void send_packet(bus_t busnumber, int addr, char *packet,
+static void send_packet(bus_t busnumber, int addr, char *packet,
                  int packet_size, int packet_type, int refresh)
 {
     ssize_t result;
@@ -798,33 +820,24 @@ void send_packet(bus_t busnumber, int addr, char *packet,
         case QNBACCPKT:
             if (setSerialMode(busnumber, SDM_NMRA) < 0)
                 return;
-            if (__DDL->IMPROVE_NMRADCC_TIMING) {
-                improve_nmradcc_write(busnumber, packet, packet_size);
-                waitUARTempty(busnumber);
-                improve_nmradcc_write(busnumber,
-                                      __DDL->NMRA_idle_data, 13);
-                waitUARTempty(busnumber);
-                improve_nmradcc_write(busnumber, packet, packet_size);
+            result = write(buses[busnumber].device.file.fd, packet,
+            		   packet_size);
+            if (result == -1) {
+            	syslog_bus(busnumber, DBG_ERROR,
+            		   "write() failed: %s (errno = %d)\n",
+            		   strerror(errno), errno);
             }
-            else {
-                result = write(buses[busnumber].device.file.fd, packet,
-                               packet_size);
-                if (result == -1) {
-                    syslog_bus(busnumber, DBG_ERROR,
-                               "write() failed: %s (errno = %d)\n",
-                               strerror(errno), errno);
-                }
-                waitUARTempty(busnumber);
-                result = write(buses[busnumber].device.file.fd,
-                               __DDL->NMRA_idle_data, 13);
-                waitUARTempty(busnumber);
-                result = write(buses[busnumber].device.file.fd,
-                               packet, packet_size);
-                if (result == -1) {
-                    syslog_bus(busnumber, DBG_ERROR,
-                               "write() failed: %s (errno = %d)\n",
-                               strerror(errno), errno);
-                }
+            waitUARTempty(busnumber);
+            result = write(buses[busnumber].device.file.fd,
+            		   __DDL->NMRA_idle_data, 
+	    		   __DDL->NMRA_idle_data_size);
+            waitUARTempty(busnumber);
+            result = write(buses[busnumber].device.file.fd,
+            		   packet, packet_size);
+            if (result == -1) {
+            	syslog_bus(busnumber, DBG_ERROR,
+            		   "write() failed: %s (errno = %d)\n",
+            		   strerror(errno), errno);
             }
             break;
     }
@@ -834,29 +847,7 @@ void send_packet(bus_t busnumber, int addr, char *packet,
         return;
 }
 
-void improve_nmradcc_write(bus_t busnumber, char *packet, int packet_size)
-{
-    ssize_t result;
-    /* Idea: NMRA runs with 17000 Baud */
-    /* 115200 Baud / 7 = 16457 Baud */
-    /* -> every Bit 7 times send */
-    char improve_nmradcc_packet[packet_size * 7];
-    int i, j;
-    for (i = 0; i < packet_size; i++) {
-        for (j = 0; j < 7; j++) {
-            improve_nmradcc_packet[i * 7 + j] = packet[i];
-        }
-    }
-    result = write(buses[busnumber].device.file.fd,
-                   improve_nmradcc_packet, (packet_size * 7));
-    if (result == -1) {
-        syslog_bus(busnumber, DBG_ERROR,
-                   "write() failed: %s (errno = %d)\n",
-                   strerror(errno), errno);
-    }
-}
-
-void refresh_loco(bus_t busnumber)
+static void refresh_loco(bus_t busnumber)
 {
     int adr;
 
@@ -915,7 +906,7 @@ void refresh_loco(bus_t busnumber)
         __DDL->maerklin_refresh = !__DDL->maerklin_refresh;
 }
 
-long int compute_delta(struct timeval tv1, struct timeval tv2)
+static long int compute_delta(struct timeval tv1, struct timeval tv2)
 {
     long int delta_sec;
     long int delta_usec;
@@ -934,7 +925,7 @@ long int compute_delta(struct timeval tv1, struct timeval tv2)
     return delta_usec;
 }
 
-void set_SerialLine(bus_t busnumber, int line, int mode)
+static void set_SerialLine(bus_t busnumber, int line, int mode)
 {
     int result, arg;
     result = ioctl(buses[busnumber].device.file.fd, TIOCMGET, &arg);
@@ -982,13 +973,13 @@ void set_SerialLine(bus_t busnumber, int line, int mode)
 
 /* ************************************************ */
 
-void set_lines_on(bus_t busnumber)
+static void set_lines_on(bus_t busnumber)
 {
     set_SerialLine(busnumber, SL_DTR, ON);
     tcflow(buses[busnumber].device.file.fd, TCOON);
 }
 
-void set_lines_off(bus_t busnumber)
+static void set_lines_off(bus_t busnumber)
 {
     /* set interface lines to the off state */
     tcflush(buses[busnumber].device.file.fd, TCOFLUSH);
@@ -996,7 +987,7 @@ void set_lines_off(bus_t busnumber)
     set_SerialLine(busnumber, SL_DTR, OFF);
 }
 
-int check_lines(bus_t busnumber)
+static int check_lines(bus_t busnumber)
 {
     char msg[110];
     if (__DDL->CHECKSHORT)
@@ -1038,7 +1029,7 @@ int check_lines(bus_t busnumber)
 }
 
 /* tvo 2005-12-03 */
-int krnl26_nanosleep(const struct timespec *req, struct timespec *rem)
+static int krnl26_nanosleep(const struct timespec *req, struct timespec *rem)
 {
     struct timeval start_tv, stop_tv;
     struct timezone start_tz, stop_tz;
@@ -1064,7 +1055,7 @@ int krnl26_nanosleep(const struct timespec *req, struct timespec *rem)
 }
 
 
-void *thr_refresh_cycle(void *v)
+static void *thr_refresh_cycle(void *v)
 {
     ssize_t result;
     struct sched_param sparam;
@@ -1140,7 +1131,8 @@ void *thr_refresh_cycle(void *v)
                             packet_type, false);
                 if (__DDL->ENABLED_PROTOCOLS == (EP_MAERKLIN | EP_NMRADCC)) {
                     result = write(buses[busnumber].device.file.fd,
-                                   __DDL->NMRA_idle_data, 13);
+                                   __DDL->NMRA_idle_data, 
+				   __DDL->NMRA_idle_data_size);
                     if (result == -1) {
                         syslog_bus(busnumber, DBG_ERROR,
                                    "write() failed: %s (errno = %d)\n",
@@ -1169,7 +1161,7 @@ void *thr_refresh_cycle(void *v)
     return NULL;
 }
 
-int init_gl_DDL(gl_state_t * gl)
+static int init_gl_DDL(gl_state_t * gl)
 {
     switch (gl->protocol) {
         case 'M':              /* Motorola Codes */
@@ -1186,7 +1178,7 @@ int init_gl_DDL(gl_state_t * gl)
     return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
 }
 
-int init_ga_DDL(ga_state_t * ga)
+static int init_ga_DDL(ga_state_t * ga)
 {
     switch (ga->protocol) {
         case 'M':              /* Motorola Codes */
@@ -1251,6 +1243,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     __DDL->WAITUART_USLEEP_PATCH = 0;   /* enable/disable usleep patch */
     __DDL->WAITUART_USLEEP_USEC = 0;    /* usecs for usleep patch      */
+    __DDL->PROGRAM_TRACK = 1;          /* usecs for usleep patch      */
 
     __DDL->SERIAL_DEVICE_MODE = SDM_NOTINITIALIZED;
 
@@ -1381,6 +1374,14 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
             }
         }
 
+        else if (xmlStrcmp(child->name, BAD_CAST "program_track") == 0) {
+            txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+            if (txt != NULL) {
+                __DDL->PROGRAM_TRACK = (xmlStrcmp(txt, BAD_CAST "yes")
+                                                 == 0) ? true : false;
+                xmlFree(txt);
+            }
+        }
         else
             syslog_bus(busnumber, DBG_WARN,
                        "WARNING, unknown tag found: \"%s\"!\n",
@@ -1427,6 +1428,7 @@ int init_bus_DDL(bus_t busnumber)
         __DDL->idle_data[i] = 0x55;     /* 0x55 = 01010101 */
     for (i = 0; i < PKTSIZE; i++)
         __DDL->NMRA_idle_data[i] = 0x55;
+    __DDL->NMRA_idle_data_size=PKTSIZE;
 
     /*
      * ATTENTION:
@@ -1494,7 +1496,7 @@ static void end_bus_thread(bus_thread_t * btd)
     free(btd);
 }
 
-void *thr_sendrec_DDL(void *v)
+static void *thr_sendrec_DDL(void *v)
 {
     struct _SM smakt;
     gl_state_t gltmp;
@@ -1553,6 +1555,8 @@ void *thr_sendrec_DDL(void *v)
             direction = gltmp.direction;
             syslog_bus(btd->bus, DBG_DEBUG, "next command: %c (%x) %d %d",
                        p, p, pv, addr);
+            if (addr > 127)
+                pv = 2;
             switch (p) {
                 case 'M':      /* Motorola Codes */
                     if (speed == 1)
@@ -1627,7 +1631,9 @@ void *thr_sendrec_DDL(void *v)
                     case SET:
                         /* addr 0 and -1 are considered as programming track */
                         /* larger addresses will by considered as PoM */
-                        if (smakt.addr <= 0) {
+                        if (smakt.addr <= 0 &&
+                            (((DDL_DATA *)
+			    buses[btd->bus].driverdata)->PROGRAM_TRACK)) {
                             switch (smakt.type) {
                                 case REGISTER:
                                     rc = protocol_nmra_sm_write_phregister
