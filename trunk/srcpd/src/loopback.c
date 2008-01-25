@@ -240,11 +240,9 @@ void *thr_sendrec_LOOPBACK(void *v)
         /*POWER action arrived */
         if (buses[btd->bus].power_changed == 1) {
             buses[btd->bus].power_changed = 0;
-            /*
-               char msg[110];
-               infoPower(btd->bus, msg);
-               enqueueInfoMessage(msg);
-             */
+            char msg[110];
+            infoPower(btd->bus, msg);
+            enqueueInfoMessage(msg);
             buses[btd->bus].watchdog++;
         }
 

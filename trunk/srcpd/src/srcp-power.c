@@ -24,9 +24,6 @@ int setPower(bus_t bus, int state, char *msg)
     /* buses[bus].power_changed = 1; */
     /* Resume thread to transmit power change */
     resume_bus_thread(bus);
-    char reply[200];
-    infoPower(bus, reply);
-    enqueueInfoMessage(reply);
     return SRCP_OK;
 }
 
