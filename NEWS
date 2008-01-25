@@ -13,6 +13,7 @@ srcpd-2.0.11 (2008-01-??)
     o Fixed a lot of not closed file descriptors, free memory allocated
       for configuration data, free used mutexes and condition variables.
       This prevents srcpd from eating system resources.
+    o Fixed system freeze on Linux 2.4 kernels using ddl-module.
 
   New Features
     o Added 115200 as a new speed configuration value for LI101F (Lenz).

@@ -1,3 +1,7 @@
+2008-01-25 Guido Scholz <guido.scholz@bayernline.de>
+	* ddl.c: Fixed system freeze on Linux 2.4 kernels using
+	ddl-module.
+
 2008-01-19 Jörg Rottland <rottland@users.sourceforge.net>
         * ddl.c: Re-activated improved timing
         additional config parameter to allow filtering of SM commands
