@@ -1082,12 +1082,12 @@ static void *thr_refresh_cycle(void *v)
     nanosleep_DDL = nanosleep;
     if (__DDL->oslevel == 1) {
         nanosleep_DDL = krnl26_nanosleep;
+
+        pthread_getschedparam(pthread_self(), &policy, &sparam);
+        sparam.sched_priority = 10;
+        pthread_setschedparam(pthread_self(), SCHED_FIFO, &sparam);
     }
 
-
-    pthread_getschedparam(pthread_self(), &policy, &sparam);
-    sparam.sched_priority = 10;
-    pthread_setschedparam(pthread_self(), SCHED_FIFO, &sparam);
 
     /* some boosters like the Maerklin 6017 must be initialized */
     tcflow(buses[busnumber].device.file.fd, TCOON);
