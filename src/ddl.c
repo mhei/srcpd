@@ -906,6 +906,8 @@ static void refresh_loco(bus_t busnumber)
         __DDL->maerklin_refresh = !__DDL->maerklin_refresh;
 }
 
+/* calculate difference between two time values and return the
+ * difference in microseconds */ 
 static long int compute_delta(struct timeval tv1, struct timeval tv2)
 {
     long int delta_sec;
@@ -1088,7 +1090,6 @@ static void *thr_refresh_cycle(void *v)
         pthread_setschedparam(pthread_self(), SCHED_FIFO, &sparam);
     }
 
-
     /* some boosters like the Maerklin 6017 must be initialized */
     tcflow(buses[busnumber].device.file.fd, TCOON);
     set_SerialLine(busnumber, SL_DTR, ON);
@@ -1120,8 +1121,9 @@ static void *thr_refresh_cycle(void *v)
                        "write() failed: %s (errno = %d)\n",
                        strerror(errno), errno);
         }
+
+        /* Check if there are new commands and send them. */
         packet_type = queue_get(busnumber, &addr, packet, &packet_size);
-        /*now,look at commands */
         if (packet_type > QNOVALIDPKT) {
             tcflush(buses[busnumber].device.file.fd, TCOFLUSH);
             while (packet_type > QNOVALIDPKT) {
@@ -1143,12 +1145,14 @@ static void *thr_refresh_cycle(void *v)
                     queue_get(busnumber, &addr, packet, &packet_size);
             }
         }
-        /* no commands? Then we do a refresh */
+
+        /* If there are no new commands, send a loco state refresch; but
+         * only if the last refresh was applied more than 100 ms ago. */
         else {
             if (check_lines(busnumber))
                 continue;
             gettimeofday(&tv2, &tz);
-            /* but not every time! */
+
             if (compute_delta(tv1, tv2) > 100000) {
                 refresh_loco(busnumber);
                 gettimeofday(&tv1, &tz);
