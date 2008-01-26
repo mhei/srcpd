@@ -41,7 +41,7 @@
  protocol formats:
 
  N: NMRA multi function decoder with 7/14-bit address, 14/28/128 speed steps
- (implemented, tested with up to 12 functions - F13-F28 untested)
+ (implemented)
 
  NA: accessory digital decoders
  (implemented)
@@ -56,7 +56,7 @@
 
  service mode instruction packets for address-only mode
  (verify address contents, write address contents)
- (NOT implemented)
+ (implemented)
 
  service mode instruction packets for physical register addressing
  (verify register contents, write register contents)
@@ -64,7 +64,7 @@
 
  service mode instruction packets paged cv addressing
  (verify/write register/cv contents)
- (NOT implemented)
+ (implemented)
 
  general notes:
 
@@ -263,6 +263,7 @@
 #define hHHl        0xF5
 #define hHHHl       0xd5
 
+#include <time.h>
 
 #include "ddl.h"
 #include "ddl_nmra.h"
@@ -339,8 +340,8 @@ static const tTranslateData_v3 TranslateData_v3[32][2] = {
 static char *preamble = "111111111111111";
 static const int NMRA_STACKSIZE = 200;
 
-/* 300 is needed for all functions F0-F28 */
-static const int BUFFERSIZE = 300;
+/* 230 is needed for all functions F0-F28 */
+static const int BUFFERSIZE = 230;
 
 /* internal offset of the long addresses */
 static const int ADDR14BIT_OFFSET = 128;
@@ -523,13 +524,13 @@ static int translateBitstream2Packetstream_v3(char *Bitstream,
 
     /* keep room for additional pre and postamble */
     char Buffer[BUFFERSIZE + 20];
-    
+
     /* here the real sequence starts */
     char *read_ptr = Buffer + 1;
 
     /* one more 1 in the beginning for successful restart */
     char *restart_read = Buffer;
-    
+
     /* this necessary, only to verify our assumptions */
     char *last_restart = Buffer - 1;
 
@@ -656,13 +657,13 @@ static void calc_baseline_speed_byte(char *byte, int direction, int speed,
 static void calc_28spst_speed_byte(char *byte, int direction, int speed)
 {
     /* last significant speed bit is at pos 3 */
-    
+
     if (speed > 1) {
         speed += 2;
         calc_singe_byte(byte, 0x40 | (direction << 5) | (speed >> 1));
         if (speed & 1) {
             byte[3] = '1';
-        }  
+        }
     } else {
         calc_singe_byte(byte, 0x40 | (direction << 5) | speed);
     }
@@ -684,13 +685,13 @@ static void calc_function_group_one_byte(char *byte, int func)
 static void calc_function_group_two_byte(char *byte, int func, int lower)
 {
     if (lower) {
-       /* shift func bits to lower 4 bits and mask them */
-       func = (func >> 5) & 0xf;
-       /* set command for F5 to F8 */
-       func |= 0xb0;
+        /* shift func bits to lower 4 bits and mask them */
+        func = (func >> 5) & 0xf;
+        /* set command for F5 to F8 */
+        func |= 0xb0;
     } else {
-       func = (func >> 9) & 0xf;
-       func |= 0xa0;
+        func = (func >> 9) & 0xf;
+        func |= 0xa0;
     }
     calc_singe_byte(byte, func);
 }
@@ -876,31 +877,42 @@ int comp_nmra_accessory(bus_t busnumber, int nr, int output, int activate)
 /**
   Calculate up to 4 command sequences depending on the number of possible 
   functions (taken from INIT <BUS> GL ...) for up to 28 Functions
+  due to the long bitstream in case of 28 functions the bitstream is
+  split into to parts.
   @par Input: char *addrerrbyte Error detection code for address bytes(s)
               char *addrstream "bitstream" for preamble and the address byte(s)
               int func function bits
               int nfuncs number of functions
   @par Output: char* bitstream the resulting "bitstream"
+  @par Output: char* bitstream2 the second  "bitstream"
 */
-static void calc_function_stream(char *bitstream, char *addrerrbyte,
-                                 char *addrstream, int func, int nfuncs)
+static void calc_function_stream(char *bitstream, char *bitstream2,
+                                 char *addrerrbyte, char *addrstream,
+                                 int func, int nfuncs)
 {
     char funcbyte[9];
     char errdbyte[9];
+    /* between two commands to the same address there has to be a gap
+       of at least 5ms. 5ms are 10 packet bytes. one packet byte can take
+       5 logical "1" (0x55) ==> 50 logical "1" are needed between 2 packets.
+       The preamble holds 15 "1"s, so only 35 additional are needed
+     */
+    char wait[40] = "11111111111111111111111111111111111";
 
     calc_function_group_one_byte(funcbyte, func);
     xor_two_bytes(errdbyte, addrerrbyte, funcbyte);
 
     /* putting all together in a 'bitstream' (char array) (functions) */
-    memset(bitstream, 0, BUFFERSIZE);
-    strcat(bitstream, addrstream);
-    strcat(bitstream, funcbyte);
-    strcat(bitstream, "0");
-    strcat(bitstream, errdbyte);
-    strcat(bitstream, "1");
+    memset(bitstream2, 0, BUFFERSIZE);
+    strcat(bitstream2, addrstream);
+    strcat(bitstream2, funcbyte);
+    strcat(bitstream2, "0");
+    strcat(bitstream2, errdbyte);
+    strcat(bitstream2, "1");
     if (nfuncs > 5) {
         calc_function_group_two_byte(funcbyte, func, true);
         xor_two_bytes(errdbyte, addrerrbyte, funcbyte);
+        strcat(bitstream, wait);
         strcat(bitstream, addrstream);
         strcat(bitstream, funcbyte);
         strcat(bitstream, "0");
@@ -910,11 +922,12 @@ static void calc_function_stream(char *bitstream, char *addrerrbyte,
         if (nfuncs > 8) {
             calc_function_group_two_byte(funcbyte, func, false);
             xor_two_bytes(errdbyte, addrerrbyte, funcbyte);
-            strcat(bitstream, addrstream);
-            strcat(bitstream, funcbyte);
-            strcat(bitstream, "0");
-            strcat(bitstream, errdbyte);
-            strcat(bitstream, "1");
+            strcat(bitstream2, wait);
+            strcat(bitstream2, addrstream);
+            strcat(bitstream2, funcbyte);
+            strcat(bitstream2, "0");
+            strcat(bitstream2, errdbyte);
+            strcat(bitstream2, "1");
             if (nfuncs > 12) {
                 char funcbyte2[9];
                 strncpy(funcbyte2, "11011110", 8);
@@ -922,6 +935,7 @@ static void calc_function_stream(char *bitstream, char *addrerrbyte,
                 calc_singe_byte(funcbyte, func >> 13);
                 xor_two_bytes(errdbyte, addrerrbyte, funcbyte2);
                 xor_two_bytes(errdbyte, errdbyte, funcbyte);
+                strcat(bitstream, wait);
                 strcat(bitstream, addrstream);
                 strcat(bitstream, funcbyte2);
                 strcat(bitstream, "0");
@@ -930,17 +944,18 @@ static void calc_function_stream(char *bitstream, char *addrerrbyte,
                 strcat(bitstream, errdbyte);
                 strcat(bitstream, "1");
                 if (nfuncs > 20) {
-                    funcbyte2[7] = 1;
-                    calc_singe_byte(funcbyte, func >> 21);
+                    funcbyte2[7] = '1';
                     xor_two_bytes(errdbyte, addrerrbyte, funcbyte2);
+                    calc_singe_byte(funcbyte, func >> 21);
                     xor_two_bytes(errdbyte, errdbyte, funcbyte);
-                    strcat(bitstream, addrstream);
-                    strcat(bitstream, funcbyte2);
-                    strcat(bitstream, "0");
-                    strcat(bitstream, funcbyte);
-                    strcat(bitstream, "0");
-                    strcat(bitstream, errdbyte);
-                    strcat(bitstream, "1");
+                    strcat(bitstream2, wait);
+                    strcat(bitstream2, addrstream);
+                    strcat(bitstream2, funcbyte2);
+                    strcat(bitstream2, "0");
+                    strcat(bitstream2, funcbyte);
+                    strcat(bitstream2, "0");
+                    strcat(bitstream2, errdbyte);
+                    strcat(bitstream2, "1");
                 }
             }
         }
@@ -1146,12 +1161,10 @@ int comp_nmra_multi_func(bus_t busnumber, int address, int direction,
     calc_address_stream(addrstream, addrerrbyte, address, mode);
     if (nspeed > 29) {
         calc_128spst_adv_op_bytes(spdrbyte, spdrbyte2, direction, speed);
-    }
-    else {
+    } else {
         if (nspeed < 15) {
             calc_baseline_speed_byte(spdrbyte, direction, speed, func);
-        }
-        else {
+        } else {
             calc_28spst_speed_byte(spdrbyte, direction, speed);
         }
     }
@@ -1170,19 +1183,19 @@ int comp_nmra_multi_func(bus_t busnumber, int address, int direction,
     strcat(bitstream, errdbyte);
     strcat(bitstream, "1");
 
-    j = translateBitstream2Packetstream(busnumber, bitstream, packetstream,
-                                        false);
     if (nfuncs && (nspeed > 14)) {
-        calc_function_stream(bitstream2, addrerrbyte, addrstream, func,
-                             nfuncs);
+        calc_function_stream(bitstream, bitstream2, addrerrbyte,
+                             addrstream, func, nfuncs);
+        j = translateBitstream2Packetstream(busnumber, bitstream,
+                                            packetstream, false);
         jj = translateBitstream2Packetstream(busnumber, bitstream2,
                                              packetstream2, false);
-    }
-    else {
+    } else {
+        j = translateBitstream2Packetstream(busnumber, bitstream,
+                                            packetstream, false);
         packetstream2 = packetstream;
         jj = j;
     }
-
     if (j > 0 && jj > 0) {
         update_NMRAPacketPool(busnumber, adr, packetstream, j,
                               packetstream2, jj);
@@ -1325,11 +1338,11 @@ static int ps_size = 0;
 
 static char *longpreamble = "111111111111111111111111111111";
 static char reset_packet[] =
-    "11111111111111111111111111111100000000000000000000000000010";
+    "1111111111111111111111111111110000000000000000000000000001";
 static char page_preset_packet[] =
-    "11111111111111111111111111111100111110100000000100111110010";
+    "1111111111111111111111111111110011111010000000010011111001";
 static char idle_packet[] =
-    "11111111111111111111111111111101111111100000000001111111110";
+    "1111111111111111111111111111110111111110000000000111111111";
 
 static void sm_init(bus_t busnumber)
 {
@@ -1376,17 +1389,27 @@ static int scanACK(bus_t busnumber)
 */
 static int waitUARTempty_scanACK(bus_t busnumber)
 {
-    int value;
-    int result;
+    int value = 0;
+    int result = 0;
     int ack = 0;
+    clock_t start = clock();
     do {                        /* wait until UART is empty */
         if (scanACK(busnumber))
             ack = 1;            /* scan ACK */
         /* prevent endless loop in case somone turned the power on */
         if (buses[busnumber].power_state) {
-            waitUARTempty(busnumber);
-            value = 1;
-            result = -1;
+            clock_t now = clock();
+            float diff = (now - start);
+            diff /= CLOCKS_PER_SEC;
+            if (ack) {
+                value = 1;
+                waitUARTempty(busnumber);
+            }
+            /* wait 300ms */
+            if (diff > 0.3) {
+                waitUARTempty(busnumber);
+                value = 1;
+            }
         }
         else {
 #if linux
@@ -1420,14 +1443,279 @@ static int waitUARTempty_scanACK(bus_t busnumber)
 */
 static int handleACK(bus_t busnumber, int ack)
 {
-    usleep(1000);
+    usleep(5000);
     /* ack not supported */
-    if ((ack == 1) && (scanACK(busnumber) == 1))
+    if ((ack == 1) && (scanACK(busnumber) == 1)) {
         return 0;
-
+    }
     /* ack supported ==> send to client */
     else
         return ack;
+}
+
+/**
+  Generate command stream to access a physical register
+  @par Input: bus_t bus
+              int reg
+              int value
+              int verify
+  @par Output:char *packetstream
+  @return length of packetstream
+*/
+static int calc_reg_stream(bus_t bus, int reg, int value, int verify,
+                           char *packetstream)
+{
+
+    char byte1[9];
+    char byte2[9];
+    char byte3[9];
+    char bitstream[BUFFERSIZE];
+    int j;
+
+    /* calculating byte1: 0111CRRR (instruction and number of register) */
+    calc_singe_byte(byte1, 0x78 | reg);
+    if (verify) {
+        byte1[4] = '0';
+    }
+
+    /* calculating byte2: DDDDDDDD (data) */
+    calc_singe_byte(byte2, value);
+
+    /* calculating byte3 (error detection byte) */
+    xor_two_bytes(byte3, byte1, byte2);
+
+    /* putting all together in a 'bitstream' (char array) */
+    memset(bitstream, 0, BUFFERSIZE);
+    strcat(bitstream, longpreamble);
+    strcat(bitstream, "0");
+    strcat(bitstream, byte1);
+    strcat(bitstream, "0");
+    strcat(bitstream, byte2);
+    strcat(bitstream, "0");
+    strcat(bitstream, byte3);
+    strcat(bitstream, "1");
+
+    memset(packetstream, 0, PKTSIZE);
+    j = translateBitstream2Packetstream(bus, bitstream, packetstream,
+                                        true);
+    return j;
+}
+
+/**
+  Write or verify a byte of a physical register
+  special case: a write to register 1 is the address only command
+  0111C000 0AAAAAAA
+  @par Input: bus_t bus
+              int reg
+              int value
+              int verify
+  @return 1 if successful, 0 otherwise
+*/
+static int protocol_nmra_sm_phregister(bus_t bus, int reg, int value,
+                                       int verify)
+{
+    /* physical register addressing */
+
+    char packetstream[PKTSIZE];
+    char SendStream[4096];
+
+    int j, l, y, ack;
+
+    syslog_bus(bus, DBG_DEBUG,
+               "command for NMRA service mode instruction (SMPRA) received"
+               " REG %d, Value %d", reg, value);
+
+    /* no special error handling, it's job of the clients */
+    if (reg < 1 || reg > 8 || value < 0 || value > 255)
+        return -1;
+
+    if (!sm_initialized)
+        sm_init(bus);
+
+    reg -= 1;
+    j = calc_reg_stream(bus, reg, value, verify, packetstream);
+
+    memset(SendStream, 0, 4096);
+
+    if (!verify) {
+        /* power-on cycle, at least 20 valid packets */
+        for (l = 0; l < 50; l++)
+            strcat(SendStream, idlestream);
+        /* 3 or more reset packets */
+        for (l = 0; l < 6; l++)
+            strcat(SendStream, resetstream);
+        /* 5 or more page preset packets */
+        for (l = 0; l < 10; l++)
+            strcat(SendStream, pagepresetstream);
+        /* 6 or more reset packets */
+        for (l = 0; l < 12; l++)
+            strcat(SendStream, resetstream);
+        /* 3 or more reset packets */
+        for (l = 0; l < 12; l++)
+            strcat(SendStream, resetstream);
+        /* 5 or more write packets */
+        for (l = 0; l < 20; l++)
+            strcat(SendStream, packetstream);
+        /* 6 or more reset or identical write packets */
+        for (l = 0; l < 24; l++)
+            strcat(SendStream, packetstream);
+        /* 3 or more reset packets */
+        for (l = 0; l < 24; l++)
+            strcat(SendStream, resetstream);
+
+        y = 50 * is_size + 54 * rs_size + 44 * j + 10 * ps_size;
+    }
+    else {
+        /* power-on cycle, at least 20 valid packets */
+        for (l = 0; l < 30; l++)
+            strcat(SendStream, idlestream);
+        /* 3 or more reset packets */
+        for (l = 0; l < 5; l++)
+            strcat(SendStream, resetstream);
+        /* 7 or more verify packets */
+        for (l = 0; l < 20; l++)
+            strcat(SendStream, packetstream);
+        y = 30 * is_size + 5 * rs_size + 20 * j + 0;
+    }
+
+    setSerialMode(bus, SDM_NMRA);
+    tcflow(buses[bus].device.file.fd, TCOON);
+
+    l = write(buses[bus].device.file.fd, SendStream, y);
+    if (l == -1) {
+        syslog_bus(bus, DBG_ERROR,
+                   "write() failed: %s (errno = %d)\n",
+                   strerror(errno), errno);
+    }
+
+    ack = waitUARTempty_scanACK(bus);
+    setSerialMode(bus, SDM_DEFAULT);
+
+    return handleACK(bus, ack);
+}
+
+/**
+  Write or verify a byte of a physical register using paged mode addressing
+  @par Input: bus_t bus
+              int page
+              int reg
+              int value
+              int verify
+  @return 1 if successful, 0 otherwise
+*/
+static int protocol_nmra_sm_page(bus_t bus, int page, int reg, int value,
+                                 int verify)
+{
+    /* physical register addressing */
+
+    char packetstream[PKTSIZE];
+    char packetstream_page[PKTSIZE];
+    char SendStream[4096];
+
+    int j, k, l, y, ack;
+
+    syslog_bus(bus, DBG_DEBUG,
+               "command for NMRA service mode instruction (SMPRA) received"
+               " PAGE %d, REG %d, Value %d", page, reg, value);
+
+    /* no special error handling, it's job of the clients */
+    if (reg < 1 || reg > 4 || page < 0 || page > 255 || value < 0
+        || value > 255)
+        return -1;
+
+    if (!sm_initialized)
+        sm_init(bus);
+
+    reg -= 1;
+    j = calc_reg_stream(bus, reg, value, verify, packetstream);
+    /* set page to register 6 (number 5) */
+    k = calc_reg_stream(bus, 5, page, false, packetstream_page);
+
+    memset(SendStream, 0, 4096);
+
+    /* power-on cycle, at least 20 valid packets */
+    for (l = 0; l < 50; l++)
+        strcat(SendStream, idlestream);
+    /* 3 or more reset packets */
+    for (l = 0; l < 6; l++)
+        strcat(SendStream, resetstream);
+    /* 5 or more writes to the page register */
+    for (l = 0; l < 10; l++)
+        strcat(SendStream, packetstream_page);
+    /* 6 or more reset packets */
+    for (l = 0; l < 12; l++)
+        strcat(SendStream, resetstream);
+    /* 3 or more reset packets */
+    for (l = 0; l < 12; l++)
+        strcat(SendStream, resetstream);
+    /* 5 or more write packets */
+    for (l = 0; l < 15; l++)
+        strcat(SendStream, packetstream);
+    /* 6 or more reset or identical write packets */
+    for (l = 0; l < 15; l++)
+        strcat(SendStream, packetstream);
+    /* 3 or more reset packets */
+    for (l = 0; l < 24; l++)
+        strcat(SendStream, resetstream);
+
+    y = 50 * is_size + 54 * rs_size + 30 * j + 10 * k;
+
+    setSerialMode(bus, SDM_NMRA);
+    tcflow(buses[bus].device.file.fd, TCOON);
+
+    l = write(buses[bus].device.file.fd, SendStream, y);
+    if (l == -1) {
+        syslog_bus(bus, DBG_ERROR,
+                   "write() failed: %s (errno = %d)\n",
+                   strerror(errno), errno);
+    }
+
+    ack = waitUARTempty_scanACK(bus);
+    setSerialMode(bus, SDM_DEFAULT);
+
+    return handleACK(bus, ack);
+}
+
+/**
+  Write a byte to a physical register
+  @par Input: bus_t bus
+              int reg
+              int value
+  @return 1 if successful, 0 otherwise
+*/
+int protocol_nmra_sm_write_phregister(bus_t bus, int reg, int value)
+{
+    return protocol_nmra_sm_phregister(bus, reg, value, false);
+}
+
+/**
+  Check the contens of a physical register
+  @par Input: bus_t bus
+              int reg
+              int value
+  @return 1 if the contens of the register equals reg, 0 otherwise
+*/
+int protocol_nmra_sm_verify_phregister(bus_t bus, int reg, int value)
+{
+    return protocol_nmra_sm_phregister(bus, reg, value, true);
+}
+
+/**
+  Get the contens of a physical register
+  @par Input: bus_t bus
+              int reg
+  @return the value of the register
+*/
+int protocol_nmra_sm_get_phregister(bus_t bus, int reg)
+{
+    int rc;
+    int i;
+    for (i = 0; i < 256; i++) {
+        rc = protocol_nmra_sm_phregister(bus, reg, i, true);
+        if (rc)
+            break;
+    }
+    return i;
 }
 
 /**
@@ -1459,6 +1747,11 @@ static int protocol_nmra_sm_direct_cvbyte(bus_t busnumber, int cv,
     if (cv < 0 || cv > 1024 || value < 0 || value > 255)
         return -1;
 
+    /* address only mode */
+    if (!cv && (value < 128)) {
+        return protocol_nmra_sm_phregister(busnumber, 1, value, verify);
+    }
+
     if (!sm_initialized)
         sm_init(busnumber);
     /* putting all together in a 'bitstream' (char array) */
@@ -1477,22 +1770,22 @@ static int protocol_nmra_sm_direct_cvbyte(bus_t busnumber, int cv,
     memset(SendStream, 0, 2048);
 
     if (!verify) {
-        for (l = 0; l < 50; l++)
+        for (l = 0; l < 30; l++)
             strcat(SendStream, idlestream);
         for (l = 0; l < 15; l++)
             strcat(SendStream, resetstream);
         for (l = 0; l < 20; l++)
             strcat(SendStream, packetstream);
-        l = 50 * is_size + 15 * rs_size + 20 * j;
+        l = 30 * is_size + 15 * rs_size + 20 * j;
     }
     else {
-        for (l = 0; l < 50; l++)
+        for (l = 0; l < 30; l++)
             strcat(SendStream, idlestream);
         for (l = 0; l < 5; l++)
             strcat(SendStream, resetstream);
-        for (l = 0; l < 11; l++)
+        for (l = 0; l < 20; l++)
             strcat(SendStream, packetstream);
-        l = 50 * is_size + 5 * rs_size + 11 * j;
+        l = 30 * is_size + 5 * rs_size + 20 * j;
     }
 
     setSerialMode(busnumber, SDM_NMRA);
@@ -1505,7 +1798,6 @@ static int protocol_nmra_sm_direct_cvbyte(bus_t busnumber, int cv,
     }
     ack = waitUARTempty_scanACK(busnumber);
     setSerialMode(busnumber, SDM_DEFAULT);
-
     return handleACK(busnumber, ack);
 }
 
@@ -1583,13 +1875,13 @@ static int protocol_nmra_sm_direct_cvbit(bus_t bus, int cv, int bit,
                                         false);
 
     memset(SendStream, 0, 2048);
-    for (l = 0; l < 50; l++)
+    for (l = 0; l < 30; l++)
         strcat(SendStream, idlestream);
     for (l = 0; l < 15; l++)
         strcat(SendStream, resetstream);
     for (l = 0; l < 20; l++)
         strcat(SendStream, packetstream);
-    l = 50 * is_size + 15 * rs_size + 20 * j;
+    l = 30 * is_size + 15 * rs_size + 20 * j;
 
     setSerialMode(bus, SDM_NMRA);
     tcflow(buses[bus].device.file.fd, TCOON);
@@ -1648,162 +1940,57 @@ int protocol_nmra_sm_get_cvbyte(bus_t busnumber, int cv)
     return rc;
 }
 
-
 /**
-  Write or verify a byte of a physical register
-  @par Input: bus_t bus
-              int reg
-              int value
-              int verify
-  @return 1 if successful, 0 otherwise
+  Calclulate the page number for a given cv
+  @par Input: int cv
+  @return the page number
 */
-static int protocol_nmra_sm_phregister(bus_t bus, int reg, int value,
-                                       int verify)
+static int calc_page(int cv)
 {
-    /* physical register addressing */
-
-    char byte1[9];
-    char byte2[9];
-    char byte3[9];
-    char bitstream[BUFFERSIZE];
-    char packetstream[PKTSIZE];
-    char SendStream[4096];
-
-    int j, l, y, ack;
-
-    syslog_bus(bus, DBG_DEBUG,
-               "command for NMRA service mode instruction (SMPRA) received");
-
-    /* no special error handling, it's job of the clients */
-    if (reg < 1 || reg > 8 || value < 0 || value > 255)
-        return -1;
-
-    if (!sm_initialized)
-        sm_init(bus);
-
-    reg -= 1;
-    /* calculating byte1: 0111CRRR (instruction and number of register) */
-    calc_singe_byte(byte1, 0x78 | reg);
-    if (verify) {
-        byte1[4] = '0';
-    }
-
-    /* calculating byte2: DDDDDDDD (data) */
-    calc_singe_byte(byte2, value);
-
-    /* calculating byte3 (error detection byte) */
-    xor_two_bytes(byte3, byte1, byte2);
-
-    /* putting all together in a 'bitstream' (char array) */
-    memset(bitstream, 0, BUFFERSIZE);
-    strcat(bitstream, longpreamble);
-    strcat(bitstream, "0");
-    strcat(bitstream, byte1);
-    strcat(bitstream, "0");
-    strcat(bitstream, byte2);
-    strcat(bitstream, "0");
-    strcat(bitstream, byte3);
-    strcat(bitstream, "10");
-
-    memset(packetstream, 0, PKTSIZE);
-    j = translateBitstream2Packetstream(bus, bitstream, packetstream,
-                                        true);
-
-    memset(SendStream, 0, 4096);
-
-    if (!verify) {
-        /* power-on cycle, at least 20 valid packets */
-        for (l = 0; l < 50; l++)
-            strcat(SendStream, idlestream);
-        /* 3 or more reset packets */
-        for (l = 0; l < 6; l++)
-            strcat(SendStream, resetstream);
-        /* 5 or more page preset packets */
-        for (l = 0; l < 10; l++)
-            strcat(SendStream, pagepresetstream);
-        /* 6 or more reset packets */
-        for (l = 0; l < 12; l++)
-            strcat(SendStream, resetstream);
-        /* 3 or more reset packets */
-        for (l = 0; l < 12; l++)
-            strcat(SendStream, resetstream);
-        /* 5 or more write packets */
-        for (l = 0; l < 20; l++)
-            strcat(SendStream, packetstream);
-        /* 6 or more reset or identical write packets */
-        for (l = 0; l < 24; l++)
-            strcat(SendStream, packetstream);
-        /* 3 or more reset packets */
-        for (l = 0; l < 24; l++)
-            strcat(SendStream, resetstream);
-
-        y = 50 * is_size + 54 * rs_size + 44 * j + 10 * ps_size;
-    }
-    else {
-        /* power-on cycle, at least 20 valid packets */
-        for (l = 0; l < 50; l++)
-            strcat(SendStream, idlestream);
-        /* 3 or more reset packets */
-        for (l = 0; l < 5; l++)
-            strcat(SendStream, resetstream);
-        /* 7 or more verify packets */
-        for (l = 0; l < 11; l++)
-            strcat(SendStream, packetstream);
-        y = 50 * is_size + 5 * rs_size + 11 * j + 0;
-    }
-
-    setSerialMode(bus, SDM_NMRA);
-    tcflow(buses[bus].device.file.fd, TCOON);
-
-    l = write(buses[bus].device.file.fd, SendStream, y);
-    if (l == -1) {
-        syslog_bus(bus, DBG_ERROR,
-                   "write() failed: %s (errno = %d)\n",
-                   strerror(errno), errno);
-    }
-
-    ack = waitUARTempty_scanACK(bus);
-    setSerialMode(bus, SDM_DEFAULT);
-
-    return handleACK(bus, ack);
+    int page = (cv - 1) / 4 + 1;
+    return page;
 }
 
 /**
-  Write a byte to a physical register
+  Write a configuration variable (cv) using paged mode addressing
   @par Input: bus_t bus
-              int reg
+              int cv
               int value
   @return 1 if successful, 0 otherwise
 */
-int protocol_nmra_sm_write_phregister(bus_t bus, int reg, int value)
+int protocol_nmra_sm_write_page(bus_t busnumber, int cv, int value)
 {
-    return protocol_nmra_sm_phregister(bus, reg, value, false);
+    int page = calc_page(cv);
+    return protocol_nmra_sm_page(busnumber, page, cv & 3, value, false);
 }
 
 /**
-  Check the contens of a physical register
+  Verify the contens of a cv using paged mode addressing
   @par Input: bus_t bus
-              int reg
-              int value
-  @return 1 if the contens of the register equals reg, 0 otherwise
+              int cv
+	      int value
+  @return 1 if the value matches, 0 otherwise
 */
-int protocol_nmra_sm_verify_phregister(bus_t bus, int reg, int value)
+
+int protocol_nmra_sm_verify_page(bus_t busnumber, int cv, int value)
 {
-    return protocol_nmra_sm_phregister(bus, reg, value, true);
+    int page = calc_page(cv);
+    return protocol_nmra_sm_page(busnumber, page, cv & 3, value, true);
 }
 
 /**
-  Get the contens of a physical register
+  Get the contens of a cv using paged mode addressing
   @par Input: bus_t bus
-              int reg
-  @return the value of the register
+              int cv
+  @return the value of the configuration variable (cv)
 */
-int protocol_nmra_sm_get_phregister(bus_t bus, int reg)
+int protocol_nmra_sm_get_page(bus_t busnumber, int cv)
 {
+    int page = calc_page(cv);
     int rc;
     int i;
     for (i = 0; i < 256; i++) {
-        rc = protocol_nmra_sm_phregister(bus, reg, i, true);
+        rc = protocol_nmra_sm_page(busnumber, page, cv & 3, i, true);
         if (rc)
             break;
     }

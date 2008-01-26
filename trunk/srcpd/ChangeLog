@@ -1,3 +1,7 @@
+2008-01-26 Jörg Rottland <rottland@users.sourceforge.net>
+        * ddl.c, ddl_nmra.c: Support for PAGE mode
+        fix for functions F21-F28
+
 2008-01-25 Guido Scholz <guido.scholz@bayernline.de>
 	* ddl.c: Fixed system freeze on Linux 2.4 kernels using
 	ddl-module.

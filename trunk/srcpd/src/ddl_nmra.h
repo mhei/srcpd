@@ -61,4 +61,8 @@ int protocol_nmra_sm_write_cvbyte_pom(bus_t busnumber, int addr, int cv,
                                       int value, int mode);
 int protocol_nmra_sm_write_cvbit_pom(bus_t busnumber, int addr, int cv,
                                      int bit, int value, int mode);
+int protocol_nmra_sm_write_page(bus_t busnumber, int cv, int value);
+int protocol_nmra_sm_verify_page(bus_t busnumber, int cv, int value);
+int protocol_nmra_sm_get_page(bus_t busnumber, int cv);
+
 #endif
