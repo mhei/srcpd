@@ -35,7 +35,7 @@
 
 #define QSIZE       2000
 /* large packet size reserved for F0-F28 packets */
-#define PKTSIZE     120
+#define PKTSIZE     80
 #define MAXDATA     20
 
 typedef struct _tQData {

@@ -129,7 +129,8 @@ void queue_add(bus_t busnumber, int addr, char *const packet,
     }
 }
 
-static int queue_get(bus_t busnumber, int *addr, char *packet, int *packet_size)
+static int queue_get(bus_t busnumber, int *addr, char *packet,
+                     int *packet_size)
 {
     int rtc;
     int result;
@@ -167,7 +168,8 @@ static int queue_get(bus_t busnumber, int *addr, char *packet, int *packet_size)
 /* functions to open, initialize and close comport */
 
 #if linux
-static int init_serinfo(int fd, int divisor, struct serial_struct **serinfo)
+static int init_serinfo(int fd, int divisor,
+                        struct serial_struct **serinfo)
 {
     if (*serinfo == NULL) {
         *serinfo = malloc(sizeof(struct serial_struct));
@@ -177,7 +179,7 @@ static int init_serinfo(int fd, int divisor, struct serial_struct **serinfo)
 
     if (ioctl(fd, TIOCGSERIAL, *serinfo) < 0)
         return -1;
-    /* check baud_base - for other baud_base values change the divisor */	
+    /* check baud_base - for other baud_base values change the divisor */
     if ((*serinfo)->baud_base != 115200)
         return -1;
 
@@ -327,29 +329,29 @@ int init_lineDDL(bus_t busnumber)
     __DDL->nmra_dev_termios.c_cflag &= ~(CSIZE | PARENB);
     __DDL->nmra_dev_termios.c_cflag |= CS8;     /* 8 data bits      */
     if (__DDL->IMPROVE_NMRADCC_TIMING) {
-    /* IMPROVE_NMRADCC_TIMING
-       With 19200 baud we are already outside of the specification of NMRA.
-       19200 baud means we have pulses of 52 microseconds - the specification
-       for generating DCC signals is in the range between 55 and 61 
-       microseconds.
-       Decoders are expected to accept signals with a length between 52 
-       and 66 microseconds (all this timigs are for one half of a logical 1).
-       Actually most decoders accept an even wider range than specified by
-       NMRA, thus 19200 baud normaly works.
-       If you have communication problems here is the method to reduce the
-       speed of your serial line to 16457 baud (i.e. 60.8 microseconds),
-       which is inside the NMRA specification.
-       
-       On linux this is done in an odd way:
-       You have to set your baudrate to 38400 and set the flag 
-       ASYNC_SPD_CUST (see init_serinfo), this actualy sets the speed of
-       the line to Baud_base / custom_devisor
-       Baud_base is 115200 on "normal" serial lines (using the chip 16550A)
-       therefore a custom_devisor of 7 is needed for 16457 baud
-       and a custom_devisor of 3 will give you 38400 baud (maerklin)
-    */   
-        cfsetospeed(&__DDL->nmra_dev_termios, B38400); /* baud rate: 38400 */
-        cfsetispeed(&__DDL->nmra_dev_termios, B38400); /* baud rate: 38400 */
+        /* IMPROVE_NMRADCC_TIMING
+           With 19200 baud we are already outside of the specification of NMRA.
+           19200 baud means we have pulses of 52 microseconds - the specification
+           for generating DCC signals is in the range between 55 and 61 
+           microseconds.
+           Decoders are expected to accept signals with a length between 52 
+           and 66 microseconds (all this timigs are for one half of a logical 1).
+           Actually most decoders accept an even wider range than specified by
+           NMRA, thus 19200 baud normaly works.
+           If you have communication problems here is the method to reduce the
+           speed of your serial line to 16457 baud (i.e. 60.8 microseconds),
+           which is inside the NMRA specification.
+
+           On linux this is done in an odd way:
+           You have to set your baudrate to 38400 and set the flag 
+           ASYNC_SPD_CUST (see init_serinfo), this actualy sets the speed of
+           the line to Baud_base / custom_devisor
+           Baud_base is 115200 on "normal" serial lines (using the chip 16550A)
+           therefore a custom_devisor of 7 is needed for 16457 baud
+           and a custom_devisor of 3 will give you 38400 baud (maerklin)
+         */
+        cfsetospeed(&__DDL->nmra_dev_termios, B38400);  /* baud rate: 38400 */
+        cfsetispeed(&__DDL->nmra_dev_termios, B38400);  /* baud rate: 38400 */
     }
     else {
         cfsetospeed(&__DDL->nmra_dev_termios, B19200);  /* baud rate: 19200 */
@@ -538,11 +540,11 @@ static void init_NMRAPacketPool(bus_t busnumber)
     update_NMRAPacketPool(busnumber, 255, idle_pktstr, j, idle_pktstr, j);
     /* generate and override idle_data */
     /* insert the NMRA idle packetstream (the standard idle stream was all
-    '1' which is OK for NMRA, so keep the rest of the idle string) */
+       '1' which is OK for NMRA, so keep the rest of the idle string) */
     for (i = 0; i < (MAXDATA / j) * j; i++)
-       	__DDL->idle_data[i] = idle_pktstr[i % j];
+        __DDL->idle_data[i] = idle_pktstr[i % j];
     memcpy(__DDL->NMRA_idle_data, idle_pktstr, j);
-    __DDL->NMRA_idle_data_size=j;
+    __DDL->NMRA_idle_data_size = j;
 }
 
 void update_NMRAPacketPool(bus_t busnumber, int adr,
@@ -722,7 +724,7 @@ static int checkShortcut(bus_t busnumber)
 }
 
 static void send_packet(bus_t busnumber, int addr, char *packet,
-                 int packet_size, int packet_type, int refresh)
+                        int packet_size, int packet_type, int refresh)
 {
     ssize_t result;
     int i, laps;
@@ -821,23 +823,23 @@ static void send_packet(bus_t busnumber, int addr, char *packet,
             if (setSerialMode(busnumber, SDM_NMRA) < 0)
                 return;
             result = write(buses[busnumber].device.file.fd, packet,
-            		   packet_size);
+                           packet_size);
             if (result == -1) {
-            	syslog_bus(busnumber, DBG_ERROR,
-            		   "write() failed: %s (errno = %d)\n",
-            		   strerror(errno), errno);
+                syslog_bus(busnumber, DBG_ERROR,
+                           "write() failed: %s (errno = %d)\n",
+                           strerror(errno), errno);
             }
             waitUARTempty(busnumber);
             result = write(buses[busnumber].device.file.fd,
-            		   __DDL->NMRA_idle_data, 
-	    		   __DDL->NMRA_idle_data_size);
+                           __DDL->NMRA_idle_data,
+                           __DDL->NMRA_idle_data_size);
             waitUARTempty(busnumber);
             result = write(buses[busnumber].device.file.fd,
-            		   packet, packet_size);
+                           packet, packet_size);
             if (result == -1) {
-            	syslog_bus(busnumber, DBG_ERROR,
-            		   "write() failed: %s (errno = %d)\n",
-            		   strerror(errno), errno);
+                syslog_bus(busnumber, DBG_ERROR,
+                           "write() failed: %s (errno = %d)\n",
+                           strerror(errno), errno);
             }
             break;
     }
@@ -1031,7 +1033,8 @@ static int check_lines(bus_t busnumber)
 }
 
 /* tvo 2005-12-03 */
-static int krnl26_nanosleep(const struct timespec *req, struct timespec *rem)
+static int krnl26_nanosleep(const struct timespec *req,
+                            struct timespec *rem)
 {
     struct timeval start_tv, stop_tv;
     struct timezone start_tz, stop_tz;
@@ -1133,8 +1136,8 @@ static void *thr_refresh_cycle(void *v)
                             packet_type, false);
                 if (__DDL->ENABLED_PROTOCOLS == (EP_MAERKLIN | EP_NMRADCC)) {
                     result = write(buses[busnumber].device.file.fd,
-                                   __DDL->NMRA_idle_data, 
-				   __DDL->NMRA_idle_data_size);
+                                   __DDL->NMRA_idle_data,
+                                   __DDL->NMRA_idle_data_size);
                     if (result == -1) {
                         syslog_bus(busnumber, DBG_ERROR,
                                    "write() failed: %s (errno = %d)\n",
@@ -1247,7 +1250,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     __DDL->WAITUART_USLEEP_PATCH = 0;   /* enable/disable usleep patch */
     __DDL->WAITUART_USLEEP_USEC = 0;    /* usecs for usleep patch      */
-    __DDL->PROGRAM_TRACK = 1;          /* usecs for usleep patch      */
+    __DDL->PROGRAM_TRACK = 1;   /* usecs for usleep patch      */
 
     __DDL->SERIAL_DEVICE_MODE = SDM_NOTINITIALIZED;
 
@@ -1382,7 +1385,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __DDL->PROGRAM_TRACK = (xmlStrcmp(txt, BAD_CAST "yes")
-                                                 == 0) ? true : false;
+                                        == 0) ? true : false;
                 xmlFree(txt);
             }
         }
@@ -1432,7 +1435,7 @@ int init_bus_DDL(bus_t busnumber)
         __DDL->idle_data[i] = 0x55;     /* 0x55 = 01010101 */
     for (i = 0; i < PKTSIZE; i++)
         __DDL->NMRA_idle_data[i] = 0x55;
-    __DDL->NMRA_idle_data_size=PKTSIZE;
+    __DDL->NMRA_idle_data_size = PKTSIZE;
 
     /*
      * ATTENTION:
@@ -1635,9 +1638,10 @@ static void *thr_sendrec_DDL(void *v)
                     case SET:
                         /* addr 0 and -1 are considered as programming track */
                         /* larger addresses will by considered as PoM */
-                        if (smakt.addr <= 0 &&
-                            (((DDL_DATA *)
-			    buses[btd->bus].driverdata)->PROGRAM_TRACK)) {
+                        if (smakt.addr <= 0 && (((DDL_DATA *)
+                                                 buses[btd->bus].
+                                                 driverdata)->
+                                                PROGRAM_TRACK)) {
                             switch (smakt.type) {
                                 case REGISTER:
                                     rc = protocol_nmra_sm_write_phregister
@@ -1658,6 +1662,11 @@ static void *thr_sendrec_DDL(void *v)
                                                                       bit,
                                                                       smakt.
                                                                       value);
+                                    break;
+                                case PAGE:
+                                    rc = protocol_nmra_sm_write_page
+                                        (btd->bus, smakt.typeaddr,
+                                         smakt.value);
                                     break;
                             }
                         }
@@ -1699,6 +1708,10 @@ static void *thr_sendrec_DDL(void *v)
                                         (btd->bus, smakt.typeaddr,
                                          smakt.bit, 1);
                                     break;
+                                case PAGE:
+                                    rc = protocol_nmra_sm_get_page
+                                        (btd->bus, smakt.typeaddr);
+                                    break;
                             }
                         }
                         break;
@@ -1728,6 +1741,11 @@ static void *thr_sendrec_DDL(void *v)
                                                                       bit,
                                                                       smakt.
                                                                       value);
+                                    break;
+                                case PAGE:
+                                    my_rc = protocol_nmra_sm_verify_page
+                                        (btd->bus, smakt.typeaddr,
+                                         smakt.value);
                                     break;
                             }
                             if (my_rc == 1) {
