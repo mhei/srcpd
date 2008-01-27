@@ -1,4 +1,4 @@
-srcpd-2.0.11 (2008-01-??)
+srcpd-2.0.11 (2008-01-27)
   Fixed Bugs
     o Fixed »switch power on« bug for DDL module.
     o Fixed microsecond value for GA initialization.
