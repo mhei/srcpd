@@ -1,13 +1,16 @@
-#! /bin/sh
-#
-# skeleton      example file to build /etc/init.d/ scripts.
-#               This file should be used to construct scripts for /etc/init.d.
-#
-#               Written by Miquel van Smoorenburg <miquels@cistron.nl>.
-#               Modified for Debian 
-#               by Ian Murdock <imurdock@gnu.ai.mit.edu>.
-#
-# Version:      @(#)skeleton  1.9  26-Feb-2001  miquels@cistron.nl
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          srcpd
+# Required-Start:    $network $local_fs $remote_fs $syslog $time
+# Required-Stop:     $network $local_fs $remote_fs $syslog $time
+# Default-Start:     2 3 4 5
+# Default-Stop:      S 0 1 6
+# Short-Description: SRCP server daemon
+# Description:       Simple Railroad Command Protocol (SRCP) server
+#                    daemon to control model railway systems.
+### END INIT INFO
+
+# Author: Guido Scholz <guido.scholz@bayernline.de>
 #
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
@@ -69,7 +72,6 @@ case "$1" in
         ;;
   *)
         N=/etc/init.d/$NAME
-        # echo "Usage: $N {start|stop|restart|reload|force-reload}" >&2
         log_success_msg "Usage: $N {start|stop|restart|reload|force-reload}"
         exit 1
         ;;
