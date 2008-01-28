@@ -118,25 +118,27 @@ messages using the syslog daemon file \fI/var/log/messages\fP; see
 .TP
 use_watchdog
 Some buses provide a watchdog feature to cancel a blocked bus thread.
-Valid input values are »yes« or »no«. The default value is »no«.
+Valid input values are \fByes\fR or \fBno\fR. The default value is
+\fBno\fR.
 .\"
 .TP
 restore_device_settings
 Some buses provide a feature to restore serial device settings.
-Valid input values are »yes« or »no«. The default value is »no«.
+Valid input values are \fByes\fR or \fBno\fR. The default value is
+\fBno\fR.
 .\"
 .TP
 device
 This is the name of the connected device (like /dev/ttyS0). If bus is
 \fBserver\fP or \fBloopback\fP no assignment is necessary. The default
-value is »/dev/null«.
+value is \fI/dev/null\fR.
 .\"
 .TP
 auto_power_on
 This option enables/disables automatical power on for a bus on server
 daemon start.  This option
 is not necessary for \fBserver\fP and \fBloopback\fP buses. The default
-value is »no«.
+value is \fBno\fR.
 .\"
 .TP
 speed
@@ -187,7 +189,8 @@ The default baudrate of DDL is 19200\ baud, which is slightly higher
 than allowed by NMRA DCC standard. With a UART 16550A you can change the
 baudrate to  16457\ baud, which is within the specification. This is
 only needed if you have timing problems with the default.
-Valid input values are »yes« or »no«. The default value is »no«, which
+Valid input values are \fByes\fR or \fBno\fR. The default value is
+\fBno\fR, which
 corresponds to 19200\ baud.
 .TP
 shortcut_failure_delay
@@ -203,9 +206,9 @@ usleep_usec
 .TP
 program_track
 This parameter allows you to supress commands which are issued for a
-program track. This parameter should only be used on your main.
-Valid input values are »yes« or »no«. The default value is »yes«, i.e.
-all program track commands will be executed by default.
+program track. This parameter should only be used on your main.  Valid
+input values are \fByes\fR or \fBno\fR. The default value is \fByes\fR,
+i.e. all program track commands will be executed by default.
 .\"
 .\"
 .SS ddl-s88
@@ -259,8 +262,8 @@ clients. Time is milliseconds. With this feature you can compensate bad
 feedback in a specific range. The default value is 0\ ms.
 .TP
 refresh
-The time in microseconds after srcpd will read feedback from HSI-88. The
-default value is 10000\ µs.
+The time in microseconds (us) after srcpd will read feedback from
+HSI-88. The default value is 10000\ us.
 .\"
 .\"
 .SS i2c-dev
