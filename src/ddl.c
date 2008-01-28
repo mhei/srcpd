@@ -1,7 +1,7 @@
 /* $Id$ */
 
 /*
- * DDL:  Bus driver connected with a booster only without any special hardware.
+ * DDL: Bus driver connected with a booster only without any special hardware.
  */
 
 /* +----------------------------------------------------------------------+ */
@@ -17,14 +17,39 @@
 /* | obtain it through the world-wide-web, please send a note to          | */
 /* | gpl-license@vogt-it.com so we can mail you a copy immediately.       | */
 /* +----------------------------------------------------------------------+ */
-/* | Authors:   Torsten Vogt vogt@vogt-it.com                             | */
-/* |                                                                      | */
-/* +----------------------------------------------------------------------+ */
 
 /***************************************************************/
 /* erddcd - Electric Railroad Direct Digital Command Daemon    */
 /*    generates without any other hardware digital commands    */
 /*    to control electric model railroads                      */
+/*                                                             */
+/* Authors of the old erddcd part:                             */
+/*                                                             */
+/* 1999 - 2002 Torsten Vogt <vogt@vogt-it.com>                 */
+/*                                                             */
+/* Thanks to:                                                  */
+/*                                                             */
+/* Kurt Harders: i8255 implementation.                         */
+/*                                                             */
+/* Dieter Schaefer: s88 implementation                         */
+/*                  additional code for marklin acc. decoders  */
+/*                                                             */
+/* Olaf Schlachter: debugging                                  */
+/*                                                             */
+/* Michael Peschel: new nmra dcc translation routine           */
+/*                                                             */
+/* Markus Gietzen: debugging and corrections                   */
+/*                                                             */
+/* Martin Wolf: re-implementation and enhancements of the s88  */
+/*              support and the implementation of ga_manager   */
+/*                                                             */
+/* Sim IJskes: patch for a better port handling                */
+/*                                                             */
+/* Martin Schönbeck: third version of nmra dcc translation rtn.*/
+/*                                                             */
+/* Harald Barth: debugging and corrections                     */
+/*                                                             */
+/* Berthold Benning: usleep patch for SuSE kernels             */
 /***************************************************************/
 
 #include <sys/utsname.h>
