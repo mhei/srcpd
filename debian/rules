@@ -47,7 +47,8 @@ clean:
 	rm -f build-stamp 
 
 	# Add here commands to clean up after the build process.
-	-$(MAKE) distclean
+	[ ! -f Makefile ] || $(MAKE) distclean
+
 ifneq "$(wildcard /usr/share/misc/config.sub)" ""
 	cp -f /usr/share/misc/config.sub config.sub
 endif
@@ -62,7 +63,7 @@ install: build
 	dh_testdir
 	dh_testroot
 	dh_clean -k 
-	dh_installdirs
+	#dh_installdirs
 
 	# Add here commands to install the package into debian/srcpd.
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/srcpd
