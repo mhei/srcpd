@@ -18,8 +18,12 @@
 #include "syslogmessage.h"
 
 #define __loopback ((LOOPBACK_DATA*)buses[busnumber].driverdata)
+#define __loopbackt ((LOOPBACK_DATA*)buses[btd->bus].driverdata)
 
 #define MAX_CV_NUMBER 255
+
+int cmpTime( struct timeval *t1, struct timeval *t2 );
+
 
 int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
@@ -210,7 +214,8 @@ void *thr_sendrec_LOOPBACK(void *v)
     gl_state_t gltmp, glakt;
     ga_state_t gatmp;
     struct _SM smtmp;
-    int addr;
+    struct timeval akt_time, cmp_time;
+    int addr, ctr;
     int last_cancel_state, last_cancel_type;
     int cv[MAX_CV_NUMBER + 1];
     /* registers 1-4 == CV#1-4; reg5 == CV#29; reg 7-8 == CV#7-8 */
@@ -228,6 +233,10 @@ void *thr_sendrec_LOOPBACK(void *v)
 
     /*register cleanup routine */
     pthread_cleanup_push((void *) end_bus_thread, (void *) btd);
+
+ /* initialize tga-structure */
+  for ( ctr = 0; ctr < 50; ctr++ )
+    __loopbackt->tga[ ctr ].id = 0;
 
     syslog_bus(btd->bus, DBG_INFO, "Loopback bus started (device = %s).",
                buses[btd->bus].device.file.path);
@@ -267,14 +276,52 @@ void *thr_sendrec_LOOPBACK(void *v)
             buses[btd->bus].watchdog++;
         }
 
+    gettimeofday( &akt_time, NULL );
+    /* first switch of decoders */
+    for ( ctr = 0; ctr < 50; ctr++ )
+    {
+      if ( __loopbackt->tga[ ctr ].id )
+      {
+        cmp_time = __loopbackt->tga[ ctr ].t;
+
+        /* switch off time reached? */
+        if ( cmpTime( &cmp_time, &akt_time ) )
+        {
+          gatmp = __loopbackt->tga[ ctr ];
+          addr = gatmp.id;
+          gatmp.action = 0;
+          setGA( btd->bus, addr, gatmp );
+          __loopbackt->tga[ ctr ].id = 0;
+        }
+      }
+    }
+
         /*GA action arrived */
         if (!queue_GA_isempty(btd->bus)) {
             dequeueNextGA(btd->bus, &gatmp);
             addr = gatmp.id;
-            if (gatmp.action == 1) {
-                gettimeofday(&gatmp.tv[gatmp.port], NULL);
+
+      gettimeofday( &gatmp.tv[gatmp.port], NULL );
+      setGA(btd->bus, addr, gatmp);
+      if ( gatmp.action && ( gatmp.activetime > 0 ) )
+      {
+        for ( ctr = 0; ctr < 50; ctr++ )
+        {
+          if ( __loopbackt->tga[ ctr ].id == 0 )
+          {
+            gatmp.t = akt_time;
+            gatmp.t.tv_sec += gatmp.activetime / 1000;
+            gatmp.t.tv_usec += ( gatmp.activetime % 1000 ) * 1000;
+            if ( gatmp.t.tv_usec > 1000000 )
+            {
+              gatmp.t.tv_sec++;
+              gatmp.t.tv_usec -= 1000000;
             }
-            setGA(btd->bus, addr, gatmp);
+            __loopbackt->tga[ ctr ] = gatmp;
+            break;
+          }
+        }
+            }
             buses[btd->bus].watchdog++;
         }
 

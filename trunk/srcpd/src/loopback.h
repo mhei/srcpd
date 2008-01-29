@@ -9,6 +9,7 @@ typedef struct _LOOPBACK_DATA {
     int number_ga;
     int number_gl;
     int number_fb;
+    ga_state_t tga[50];
 } LOOPBACK_DATA;
 
 int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber);
