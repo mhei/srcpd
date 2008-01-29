@@ -85,10 +85,12 @@ AC_ARG_ENABLE(debug,
         AC_HELP_STRING([--enable-debug], [enable debug mode [default=no]]),
  enable_debug=$enableval, enable_debug=no)
 if test "x$enable_debug" = "xyes"; then
-   CFLAGS="-g -Wall -Wextra"
+   CFLAGS="$CFLAGS -g -Wall -Wextra"
    AC_MSG_RESULT(debug)
 else
-   CFLAGS="-O2 -Wall"
+   if test "x$CFLAGS" = "x"; then
+      CFLAGS="-O2 -Wall"
+   fi
    AC_MSG_RESULT(release)
 fi
 
