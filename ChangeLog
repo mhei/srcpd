@@ -1,3 +1,8 @@
+2008-01-29 Guido Scholz <guido.scholz@bayernline.de>
+	* configure.in: Fixed override of user defined CFLAGS variable.
+
+2008-01-28 Guido Scholz <guido.scholz@bayernline.de>
+	* man/srcpd.8, man/srcpd.conf.5: Fixed non ASCII characters.
 
 --- Release 2.0.11 ----
 
