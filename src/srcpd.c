@@ -146,7 +146,7 @@ void sighup_handler(int s)
     create_all_threads();
 }
 
-/* signal SIGTERM(15)/SIGABRT/SIGINT caught */
+/* signal SIGTERM(15) caught */
 void sigterm_handler(int s)
 {
     syslog(LOG_INFO, "SIGTERM(15) received! Terminating ...");
@@ -198,8 +198,6 @@ void install_signal_handlers()
     struct sigaction saio;
 
     signal(SIGTERM, sigterm_handler);
-    signal(SIGABRT, sigterm_handler);
-    signal(SIGINT, sigterm_handler);
     signal(SIGHUP, sighup_handler);
     /* important, because write() on sockets should return errors */
     signal(SIGPIPE, SIG_IGN);
