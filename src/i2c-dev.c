@@ -252,7 +252,7 @@ int readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
            }
          */
 
-        else if (xmlStrcmp(child->name, BAD_CAST "multiplex_buses") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "multiplex_busses") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __i2cdev->multiplex_buses = atoi((char *) txt);
@@ -269,7 +269,7 @@ int readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
             }
         }
 
-        else if (xmlStrcmp(child->name, BAD_CAST "ga_reset_device") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "ga_reset_devices") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __i2cdev->ga_reset_devices = atoi((char *) txt);
