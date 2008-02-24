@@ -622,7 +622,7 @@ int translateBitstream2Packetstream(bus_t busnumber, char *Bitstream,
   @par Input: int value
   @par Output: char* byte
 */
-static void calc_singe_byte(char *byte, int value)
+static void calc_single_byte(char *byte, int value)
 {
     int i;
     int bit = 0x1;
@@ -640,15 +640,15 @@ static void calc_singe_byte(char *byte, int value)
 /* calculating address bytes: 11AAAAAA AAAAAAAA */
 static void calc_14bit_address_byte(char *byte1, char *byte2, int address)
 {
-    calc_singe_byte(byte2, address);
-    calc_singe_byte(byte1, 0xc0 | (address >> 8));
+    calc_single_byte(byte2, address);
+    calc_single_byte(byte1, 0xc0 | (address >> 8));
 }
 
 /* calculating speed byte2: 01DUSSSS  */
 static void calc_baseline_speed_byte(char *byte, int direction, int speed,
                                      int func)
 {
-    calc_singe_byte(byte, 0x40 | (direction << 5) | speed);
+    calc_single_byte(byte, 0x40 | (direction << 5) | speed);
     if (func & 1)
         byte[3] = '1';
 }
@@ -660,12 +660,12 @@ static void calc_28spst_speed_byte(char *byte, int direction, int speed)
 
     if (speed > 1) {
         speed += 2;
-        calc_singe_byte(byte, 0x40 | (direction << 5) | (speed >> 1));
+        calc_single_byte(byte, 0x40 | (direction << 5) | (speed >> 1));
         if (speed & 1) {
             byte[3] = '1';
         }
     } else {
-        calc_singe_byte(byte, 0x40 | (direction << 5) | speed);
+        calc_single_byte(byte, 0x40 | (direction << 5) | speed);
     }
 }
 
@@ -674,7 +674,7 @@ static void calc_function_group_one_byte(char *byte, int func)
 {
     /* mask out lower 5 function bits */
     func &= 0x1f;
-    calc_singe_byte(byte, 0x80 | (func >> 1));
+    calc_single_byte(byte, 0x80 | (func >> 1));
 
     /* F0 or FL is out of order */
     if (func & 1)
@@ -693,99 +693,16 @@ static void calc_function_group_two_byte(char *byte, int func, int lower)
         func = (func >> 9) & 0xf;
         func |= 0xa0;
     }
-    calc_singe_byte(byte, func);
+    calc_single_byte(byte, func);
 }
 
 static void calc_128spst_adv_op_bytes(char *byte1, char *byte2,
                                       int direction, int speed)
 {
     strcpy(byte1, "00111111");
-    calc_singe_byte(byte2, speed);
+    calc_single_byte(byte2, speed);
     if (direction == 1)
         byte2[0] = '1';
-}
-
-/* calculating address byte: 10AAAAAA, returning rest */
-static void calc_acc_address_byte(char *byte, char *rest, int address)
-{
-    int i, j;
-    char dummy[10];
-
-    memset(dummy, 0, 10);
-    for (i = 8; i >= 0; i--) {
-        j = address % 2;
-        address = address / 2;
-        switch (j) {
-            case 0:
-                dummy[i] = '0';
-                break;
-            case 1:
-                dummy[i] = '1';
-                break;
-        }
-    }
-    memset(byte, 0, 9);
-    byte[0] = '1';
-    byte[1] = '0';
-    for (i = 8; i > 2; i--) {
-        byte[i - 1] = dummy[i];
-    }
-    memset(rest, 0, 3);
-    for (i = 2; i >= 0; i--)
-        rest[i] = dummy[i];
-}
-
-static void calc_acc_instr_byte(char *byte, char *rest, int activate,
-                                int pairnr, int output)
-{
-
-    int i;
-
-    memset(byte, 0, 9);
-    if (output)
-        byte[7] = '1';
-    else
-        byte[7] = '0';
-    if (activate)
-        byte[4] = '1';
-    else
-        byte[4] = '0';
-    switch (pairnr) {
-        case 0:
-            byte[6] = '0';
-            byte[5] = '0';
-            break;
-        case 1:
-            byte[6] = '1';
-            byte[5] = '0';
-            break;
-        case 2:
-            byte[6] = '0';
-            byte[5] = '1';
-            break;
-        case 3:
-            byte[6] = '1';
-            byte[5] = '1';
-            break;
-        default:
-            byte[6] = '0';
-            byte[5] = '0';
-            break;
-    }
-    for (i = 3; i > 0; i--) {
-        switch (rest[i - 1]) {
-            case '0':
-                byte[i] = '1';
-                break;
-            case '1':
-                byte[i] = '0';
-                break;
-            default:
-                byte[i] = '1';
-                break;
-        }
-    }
-    byte[0] = '1';
 }
 
 static void xor_two_bytes(char *byte, char *byte1, char *byte2)
@@ -817,7 +734,6 @@ int comp_nmra_accessory(bus_t busnumber, int nr, int output, int activate)
     char *p_packetstream;
 
     int address = 0;            /* of the decoder                */
-    char rest[3];
     int pairnr = 0;             /* decoders have pair of outputs */
 
     int j;
@@ -830,39 +746,39 @@ int comp_nmra_accessory(bus_t busnumber, int nr, int output, int activate)
     if (nr < 1 || nr > 4096 || output < 0 || output > 1 ||
         activate < 0 || activate > 1)
         return 1;
-#if 0                           /* GA Packet Cache */
-    /* get the calculated packet if available */
-    j = getNMRAGaPacket(nr, output, activate, &p_packetstream);
-    if (j == 0) {
-#endif
-        /* packet is not available */
-        p_packetstream = packetstream;
 
-        /* calculate the real address of the decoder and the pair number 
-         * of the switch */
-        address = ((nr - 1) / 4) + 1;   /* valid decoder addresses: 1..1023 */
-        pairnr = (nr - 1) % 4;
+    /* packet is not available */
+    p_packetstream = packetstream;
 
-        calc_acc_address_byte(byte1, rest, address);
-        calc_acc_instr_byte(byte2, rest, activate, pairnr, output);
-        xor_two_bytes(byte3, byte2, byte1);
+    /* calculate the real address of the decoder and the pair number 
+     * of the switch */
+    /* valid decoder addresses: 0..1023 */
+    address = ((nr - 1) / 4);
+    pairnr = (((nr - 1) % 4) << 1) + output;
+    activate <<= 3;
 
-        /* putting all together in a 'bitstream' (char array) */
-        memset(bitstream, 0, BUFFERSIZE);
-        strcat(bitstream, preamble);
-        strcat(bitstream, "0");
-        strcat(bitstream, byte1);
-        strcat(bitstream, "0");
-        strcat(bitstream, byte2);
-        strcat(bitstream, "0");
-        strcat(bitstream, byte3);
-        strcat(bitstream, "1");
+    /* address byte: 10AAAAAA (lower 6 bits) */
+    calc_single_byte(byte1, 0x80 | (address & 0x3f));
 
-        j = translateBitstream2Packetstream(busnumber, bitstream,
-                                            packetstream, true);
-#if 0                           /* GA Packet Cache */
-    }
-#endif
+    /* address and data 1AAACDDO upper 3 address bits are inverted */
+    /* C =  activate, DD = pairnr */
+    calc_single_byte(byte2,
+                     0x80 | ((~address) & 0x1c0) >> 2 | activate | pairnr);
+    xor_two_bytes(byte3, byte2, byte1);
+
+    /* putting all together in a 'bitstream' (char array) */
+    memset(bitstream, 0, BUFFERSIZE);
+    strcat(bitstream, preamble);
+    strcat(bitstream, "0");
+    strcat(bitstream, byte1);
+    strcat(bitstream, "0");
+    strcat(bitstream, byte2);
+    strcat(bitstream, "0");
+    strcat(bitstream, byte3);
+    strcat(bitstream, "1");
+
+    j = translateBitstream2Packetstream(busnumber, bitstream,
+                                        packetstream, true);
     if (j > 0) {
         queue_add(busnumber, address, p_packetstream, QNBACCPKT, j);
 #if 0                           /* GA Packet Cache */
@@ -932,7 +848,7 @@ static void calc_function_stream(char *bitstream, char *bitstream2,
                 char funcbyte2[9];
                 strncpy(funcbyte2, "11011110", 8);
                 funcbyte2[8] = 0;
-                calc_singe_byte(funcbyte, func >> 13);
+                calc_single_byte(funcbyte, func >> 13);
                 xor_two_bytes(errdbyte, addrerrbyte, funcbyte2);
                 xor_two_bytes(errdbyte, errdbyte, funcbyte);
                 strcat(bitstream, wait);
@@ -946,7 +862,7 @@ static void calc_function_stream(char *bitstream, char *bitstream2,
                 if (nfuncs > 20) {
                     funcbyte2[7] = '1';
                     xor_two_bytes(errdbyte, addrerrbyte, funcbyte2);
-                    calc_singe_byte(funcbyte, func >> 21);
+                    calc_single_byte(funcbyte, func >> 21);
                     xor_two_bytes(errdbyte, errdbyte, funcbyte);
                     strcat(bitstream2, wait);
                     strcat(bitstream2, addrstream);
@@ -983,23 +899,23 @@ static void calc_byte_program_stream(char *progstream, char *addrerrbyte,
 
     memset(progstream, 0, BUFFERSIZE);
     /* calculating byte3: AAAAAAAA (rest of CV#) */
-    calc_singe_byte(byte3, cv);
+    calc_single_byte(byte3, cv);
     cv >>= 8;
 
     if (pom) {
         /* calculating byte2: 1110C1AA (instruction byte1) */
-        calc_singe_byte(byte2, 0xec | (cv >> 8));
+        calc_single_byte(byte2, 0xec | (cv >> 8));
     }
     else {
         /* calculating byte2: 011110AA (instruction byte1) */
-        calc_singe_byte(byte2, 0x7c | (cv >> 8));
+        calc_single_byte(byte2, 0x7c | (cv >> 8));
     }
     if (verify) {
         byte2[4] = '0';
     }
 
     /* calculating byte4: DDDDDDDD (data) */
-    calc_singe_byte(byte4, value);
+    calc_single_byte(byte4, value);
 
     /* calculating byte5: EEEEEEEE (error detection byte) */
     xor_two_bytes(byte5, addrerrbyte, byte2);
@@ -1037,19 +953,19 @@ static void calc_bit_program_stream(char *progstream, char *addrerrbyte,
 
     memset(progstream, 0, BUFFERSIZE);
     /* calculating byte3: AAAAAAAA (rest of CV#) */
-    calc_singe_byte(byte3, cv);
+    calc_single_byte(byte3, cv);
 
     if (pom) {
         /* calculating byte2: 111010AA (instruction byte1) */
-        calc_singe_byte(byte2, 0xe8 | (cv >> 8));
+        calc_single_byte(byte2, 0xe8 | (cv >> 8));
     }
     else {
         /* calculating byte2: 011110AA (instruction byte1) */
-        calc_singe_byte(byte2, 0x78 | (cv >> 8));
+        calc_single_byte(byte2, 0x78 | (cv >> 8));
     }
 
     /* calculating byte4: 111CDBBB (data) */
-    calc_singe_byte(byte4, 0xf0 | (value << 3) | bit);
+    calc_single_byte(byte4, 0xf0 | (value << 3) | bit);
     if (verify) {
         byte4[3] = '0';
     }
@@ -1085,7 +1001,7 @@ static void calc_address_stream(char *addrstream, char *addrerrbyte,
     char addrbyte2[9];
     if (mode == 1) {
         /* calc 7 bit address - leading bit is zero */
-        calc_singe_byte(addrbyte, address & 0x7f);
+        calc_single_byte(addrbyte, address & 0x7f);
         /* no second byte => error detection byte = addressbyte */
         memcpy(addrerrbyte, addrbyte, 9);
 
@@ -1473,13 +1389,13 @@ static int calc_reg_stream(bus_t bus, int reg, int value, int verify,
     int j;
 
     /* calculating byte1: 0111CRRR (instruction and number of register) */
-    calc_singe_byte(byte1, 0x78 | reg);
+    calc_single_byte(byte1, 0x78 | reg);
     if (verify) {
         byte1[4] = '0';
     }
 
     /* calculating byte2: DDDDDDDD (data) */
-    calc_singe_byte(byte2, value);
+    calc_single_byte(byte2, value);
 
     /* calculating byte3 (error detection byte) */
     xor_two_bytes(byte3, byte1, byte2);
