@@ -78,7 +78,10 @@ int doInfoClient(session_node_t* sn)
     bus_t bus;
     fd_set rset;
     int maxfdp1;
-    ssize_t rwresult = 0;
+    ssize_t rresult = 0;
+    ssize_t wresult = 0;
+    ssize_t written;
+    char* line;
 
     result = pipe(sn->pipefd);
     if (-1 == result) {
@@ -278,15 +281,15 @@ int doInfoClient(session_node_t* sn)
         /* some socket activity was detected */
         if (FD_ISSET(sn->socket, &rset)) {
             memset(reply, 0, sizeof(reply));
-            rwresult = read(sn->socket, &reply, MAXSRCPLINELEN);
+            rresult = read(sn->socket, &reply, MAXSRCPLINELEN);
 
-            if (0 == rwresult) {
+            if (0 == rresult) {
                 syslog_session(sn->session, DBG_INFO,
                         "Client terminated INFO session.\n");
                 return (-1);
             }
             
-            if (-1 == rwresult) {
+            if (-1 == rresult) {
                 syslog_session(sn->session, DBG_INFO,
                         "Socket read failed: %s (errno = %d).\n",
                         strerror(errno), errno);
@@ -302,10 +305,10 @@ int doInfoClient(session_node_t* sn)
          * message and write message to socket. */
         if (FD_ISSET(sn->pipefd[0], &rset)) {
 
-            rwresult = read(sn->pipefd[0], &reply, MAXSRCPLINELEN);
+            rresult = read(sn->pipefd[0], &reply, MAXSRCPLINELEN);
 
             /* read error */
-            if (-1 == rwresult) {
+            if (-1 == rresult) {
                 syslog_session(sn->session, DBG_ERROR,
                         "Pipe read failed: %s (errno = %d)\n",
                         strerror(errno), errno);
@@ -313,17 +316,25 @@ int doInfoClient(session_node_t* sn)
             }
 
             /* EOF from other end of pipe */
-            if (0 == rwresult) {
+            if (0 == rresult) {
                 syslog_session(sn->session, DBG_ERROR,
                         "Pipe closed unexpectedly.\n");
                 return -1;
             }
 
             /* normal operation */
-            rwresult = writen_amlb(sn->socket, reply);
+            line = &reply[0];
+            written = 0;
+
+            do {
+                wresult = writen_amlb(sn->socket, line);
+                written = written + wresult + 1;
+                line = line + wresult + 1;
+            }
+            while (written < rresult);
 
             /* write error */
-            if (-1 == rwresult) {
+            if (-1 == wresult) {
                 syslog_session(sn->session, DBG_ERROR,
                         "Socket write failed: %s (errno = %d)\n",
                         strerror(errno), errno);
@@ -331,7 +342,7 @@ int doInfoClient(session_node_t* sn)
             }
 
             /* EOF, client terminated connection */
-            if (0 == rwresult) {
+            if (0 == wresult) {
                 syslog_session(sn->session, DBG_WARN,
                         "Socket write failed (connection terminated "
                         "by client).\n");
