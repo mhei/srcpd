@@ -1,3 +1,7 @@
+2008-03-03 Guido Scholz <guido.scholz@bayernline.de>
+	* srcp-info.c: Fixed loss of info messages if they are send
+	close one after another.
+
 2008-01-29 Guido Scholz <guido.scholz@bayernline.de>
 	* configure.in: Fixed override of user defined CFLAGS variable.
 
