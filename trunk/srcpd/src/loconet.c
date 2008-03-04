@@ -4,6 +4,7 @@
  * loconet: loconet/srcp gateway
  */
 
+#include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <netdb.h>

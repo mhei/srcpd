@@ -21,6 +21,11 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
+#ifdef __CYGWIN__
+#include <sys/socket.h> /*for FIONREAD*/
+#endif
+
+
 #include "config-srcpd.h"
 #include "ttycygwin.h"
 #include "portio.h"

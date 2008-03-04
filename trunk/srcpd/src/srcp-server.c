@@ -5,6 +5,7 @@
  * Version 2, 1991. (c) Matthias Trute, 2000-2001.
  */
 
+#include <arpa/inet.h>
 #include <netdb.h>
 
 #include "config-srcpd.h"

@@ -11,7 +11,9 @@
 
 #include <termios.h>
 
-#include "config.h"
+#include "ttycygwin.h"
+
+
 
 /* cfmakeraw() support for cygwin */
 #ifdef NO_CFMAKERAW
