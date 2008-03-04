@@ -12,6 +12,8 @@
 #ifndef TTYCYGWIN_H
 #define TTYCYGWIN_H
 
+#include "config.h"
+
 #ifdef NO_CFMAKERAW
 int cfmakeraw(struct termios *termios_p);
 #endif

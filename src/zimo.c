@@ -10,6 +10,10 @@
 #include <time.h>
 #include <sys/ioctl.h>
 
+#ifdef __CYGWIN__
+#include <sys/socket.h> /*for FIONREAD*/
+#endif
+
 #include "config-srcpd.h"
 #include "io.h"
 #include "zimo.h"
