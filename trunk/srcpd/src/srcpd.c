@@ -160,7 +160,7 @@ void sigio_handler(int status)
 {
     struct timeval tv;
     int retval;
-    long int i;
+    bus_t i;
 
     /* Don't wait */
     tv.tv_sec = 0;
