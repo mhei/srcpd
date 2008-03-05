@@ -235,7 +235,7 @@ int cacheSetGL(bus_t busnumber, int addr, gl_state_t l)
         gl[busnumber].glstate[addr].n_func = l.n_func;
         gettimeofday(&gl[busnumber].glstate[addr].tv, NULL);
         if (gl[busnumber].glstate[addr].state == 2) {
-            sprintf(msg, "%lu.%.3lu 102 INFO %ld GL %d",
+            sprintf(msg, "%lu.%.3lu 102 INFO %ld GL %d\n",
                     gl[busnumber].glstate[addr].tv.tv_sec,
                     gl[busnumber].glstate[addr].tv.tv_usec / 1000,
                     busnumber, addr);
@@ -334,6 +334,7 @@ int cacheInfoGL(bus_t busnumber, int addr, char *msg)
 {
     int i;
     char *tmp;
+
     if (isInitializedGL(busnumber, addr)) {
         sprintf(msg, "%lu.%.3lu 100 INFO %ld GL %d %d %d %d %d",
                 gl[busnumber].glstate[addr].tv.tv_sec,
@@ -368,6 +369,7 @@ int cacheLockGL(bus_t busnumber, int addr, long int duration,
            sessionid_t sessionid)
 {
     char msg[256];
+
     if (isInitializedGL(busnumber, addr)) {
         if (gl[busnumber].glstate[addr].locked_by == sessionid
             || gl[busnumber].glstate[addr].locked_by == 0) {
@@ -445,8 +447,10 @@ int cacheUnlockGL(bus_t busnumber, int addr, sessionid_t sessionid)
  */
 void unlock_gl_bysessionid(sessionid_t sessionid)
 {
-    int i, j;
+    bus_t i;
+    int j;
     int number;
+
     syslog_session(sessionid, DBG_DEBUG, "Unlocking GLs by session-id");
     for (i = 0; i <= num_buses; i++) {
         number = getMaxAddrGL(i);
@@ -463,8 +467,10 @@ void unlock_gl_bysessionid(sessionid_t sessionid)
  */
 void unlock_gl_bytime(void)
 {
-    int i, j;
+    bus_t i;
+    int j;
     int number;
+
     for (i = 0; i <= num_buses; i++) {
         number = getMaxAddrGL(i);
         for (j = 1; j <= number; j++) {
@@ -482,7 +488,7 @@ void unlock_gl_bytime(void)
 int startup_GL(void)
 {
     int result;
-    int i;
+    bus_t i;
 
     for (i = 0; i < MAX_BUSES; i++) {
         in[i] = 0;
