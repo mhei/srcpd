@@ -577,10 +577,10 @@ void run_bus_watchdog()
     pthread_t ttid_tid;
 
     for (bus = 1; bus <= num_buses; bus++) {
-        if (buses[bus].watchdog == 0
-                && !queue_GL_isempty(bus)
-                && !queue_GA_isempty(bus)
-                && (buses[bus].flags & USE_WATCHDOG)) {
+        if ((buses[bus].flags & USE_WATCHDOG)
+                    && buses[bus].watchdog == 0
+                    && !queue_GL_isempty(bus)
+                    && !queue_GA_isempty(bus)) {
             syslog_bus(bus, DBG_ERROR, "Oops: Interface thread "
                     "hangs, restarting (old tid = %ld, %d).",
                     (long) buses[bus].tid, buses[bus].watchdog);
