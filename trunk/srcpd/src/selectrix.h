@@ -15,6 +15,7 @@
 /* Read and Write command for the interface (Send with the address) */
 #define SXread      0x00    /* Read command on the Selectrixbus */
 #define SXwrite     0x80    /* Write command on the Selectrixbus */
+#define SXempty     0x5a    /* Fill character for reception */
 
 /* Maximum number off addresses on the SX-bus */
 #define SXmax       112   /* Number of addresses on the SX-bus */
@@ -31,8 +32,8 @@
 
 /* Satus bits */
 #define SXstpower   0x80  /* Power on track */
-#define SXstprogram 0x40  /* Programming mode active */
-#define SXstready   0x20  /* CC2000 ready */
+#define SXstready   0x40  /* CC2000 ready */
+#define SXstprogram 0x20  /* Programming ready */
 #define SXstshort   0x10  /* Track shorted */
 #define SXstmode    0x0f  /* Function mode (internal) */
 
@@ -66,6 +67,9 @@
 #define Rautenhaus_DBL    0x0020    /* Two busses are controlled */
 #define Rautenhaus_ADR    0x0040    /* Last byte was an address */
 #define Rautenhaus_RTBS   0x0080    /* Last selected bus */
+
+#define Connection        0x0100    /* Got a replay from the interface */
+
 /* Array with the size of two SX-busses */
 /* typedef int SX_BUS[SXmax]; */
 typedef int SX_BUS[256];            /* Space for addresses/data on the SX-bus */
@@ -79,7 +83,7 @@ typedef struct _SELECTRIX_DATA {
     int SXflags;
     SX_BUS fb_adresses;
     SX_BUS bus_data;
-    int startFB;                    /* Counter for address of feedback */
+    int stateInterface;             /* Reply state of the interface */
     int currentFB;                  /* holds current number of the feedback */
 } SELECTRIX_DATA;
 
