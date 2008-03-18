@@ -30,7 +30,7 @@
 #define SXprog2     105   /* Program parameter 2 */
 #define SXprog1     104   /* Program parameter 1 */
 
-/* Satus bits */
+/* Status bits */
 #define SXstpower   0x80  /* Power on track */
 #define SXstready   0x40  /* CC2000 ready */
 #define SXstprogram 0x20  /* Programming ready */
