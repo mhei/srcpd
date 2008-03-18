@@ -28,7 +28,7 @@
 #define SXstatus    109   /* Status address */
 #define SXcommand   106   /* Command address */
 #define SXprog2     105   /* Program parameter 2 */
-#define SXporg1     104   /* Program parameter 1 */
+#define SXprog1     104   /* Program parameter 1 */
 
 /* Satus bits */
 #define SXstpower   0x80  /* Power on track */
@@ -42,7 +42,7 @@
 #define SXcmdprog   0x40  /* Start programming */
                    /* bit 5 - 4 must be 0x00 */
 #define SXcmddcod   0x08  /* 0= read 1= write */
-#define SXcmdmodus  /* Bit 2 - 1 001 = Selectrix */
+#define SXcmdmodus  0x01  /* Bit 2 - 1 001 = Selectrix */
 
 /* Control addresses for a SLX852 */
 #define RautenhsCC  126   /* Rautenhaus control address */
