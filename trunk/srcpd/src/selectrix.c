@@ -486,47 +486,111 @@ int syncSXbus(bus_t busnumber)
         return syncError;
 }
 
-/* Read decoder data to the SX-bus */
-void readSXDecoder(bus_t busnumber)
+/*******************************************************
+*     Decoder programming (Selectrix)
+********************************************************/
+int chkCC2000Status(bus_t busnumber, int step, int statFlag)
 {
-        /* Check if power off */
+        /* Get status byte of the CC2000 */
         commandreadSXbus(busnumber, SXstatus);
-        __selectrix->stateInterface = 10;
-        while (__selectrix->stateInterface < 11) {
+        __selectrix->stateInterface = step;
+        while (__selectrix->stateInterface < (step + 1)) {
                 usleep(500);
         }
-        if ((readSXbus(busnumber) & SXstready) != SXstready) {
-                commandreadSXbus(busnumber, SXstatus);
-                __selectrix->stateInterface = 12;
-                while (__selectrix->stateInterface < 12) {
-                        usleep(500);
-                }
-                if ((readSXbus(busnumber) & SXstpower) != SXstpower) {
-                        writeSXbus(busnumber, SXcommand, SXcmdprog);
-                        commandreadSXbus(busnumber, SXstatus);
-                        __selectrix->stateInterface = 14;
-                        while (__selectrix->stateInterface < 15) {
-                                usleep(500);
-                        }
-                        if ((readSXbus(busnumber) & SXstready) != SXstready) {
+        /* Check flag in status byte */
+        return (((readSXbus(busnumber) & statFlag) == statFlag) ? 0 : 1);
+}
 
-                        }
+/* Configure CC200 for reading/writing decoders */
+int chkCC2000Ready(bus_t busnumber)
+{
+        int readyCC2000;
+
+        /* Check if ready */
+        if (chkCC2000Status(busnumber, 10, SXstready)) {
+                /* Check if power off */
+                if (!chkCC2000Status(busnumber, 10, SXstpower)) {
+                        /* Now CC2000 ready */
+                        readyCC2000 = 0;
                 } else {
                         syslog_bus(busnumber, DBG_DEBUG,
                                 "Selectrix on bus %ld, power stil on the track.",
                                 busnumber);
+                        readyCC2000 = 2;
                 }
         } else {
                 syslog_bus(busnumber, DBG_DEBUG,
                         "Selectrix on bus %ld, interface not ready.",
                         busnumber);
+                readyCC2000 = 1;
         }
+        return readyCC2000;
+}
+
+/* Read decoder data to the SX-bus */
+int readSXDecoder(bus_t busnumber)
+{
+        int SXdecoder;
+        int waitCount;
+
+        /* Check if ready */
+        if (chkCC2000Ready(busnumber) == 0) {
+                /* Start reading in Selectrix mode */
+                writeSXbus(busnumber, SXcommand, SXcmdstart + SXcmdprog + SXcmdmodus);
+                sleep(250000);
+                /* Stop reading */
+                writeSXbus(busnumber, SXcommand, SXcmdstart + SXcmdmodus);
+                /* Get lowerbyte of decoder data */
+                commandreadSXbus(busnumber, SXprog1);
+                __selectrix->stateInterface = 12;
+                waitCount = 10;
+                while ((__selectrix->stateInterface < (13)) || (waitCount == 0)) {
+                        usleep(500);
+                        waitCount--;
+                }
+                if (waitCount > 0) {
+                        SXdecoder = readSXbus(busnumber);
+                        /* Get higherbyte of decoder data */
+                        commandreadSXbus(busnumber, SXprog2);
+                        __selectrix->stateInterface = 12;
+                        waitCount = 10;
+                        while ((__selectrix->stateInterface < (13)) || (waitCount == 0)) {
+                                usleep(500);
+                                waitCount--;
+                        }
+                        if (waitCount > 0) {
+                                return SXdecoder + 256 * readSXbus(busnumber);
+                        }
+                }
+        }
+        return -1; /* Invalid decoder data */
 }
 
 /* Write data on SX-bus to the decoder */
-void writeSXDecoder(bus_t busnumber)
+void writeSXDecoder(bus_t busnumber, int SXdecoder)
 {
+        int timeout;
 
+        /* Check if ready */
+        if (chkCC2000Ready(busnumber) == 0) {
+                /* Write decoderdata to SX-bus (lower half) */
+                writeSXbus(busnumber, SXprog1, SXdecoder & 0xff);
+                /* Write decoderdata to SX-bus (upper half) */
+                writeSXbus(busnumber, SXprog2, (SXdecoder / 256) & 0xff);
+                /* Start Programming in Selectrix mode */
+                writeSXbus(busnumber, SXcommand, SXcmdstart + SXcmdprog + SXcmddcod + SXcmdmodus);
+                timeout = 10;
+                while (timeout > 0) {
+                       if (chkCC2000Status(busnumber, 14, SXstready) == 0) {
+                               timeout = 0;
+                       } else {
+                               timeout--;
+                               usleep(500);
+                       }
+                }
+                /* Stop programming */
+                writeSXbus(busnumber, SXcommand, SXcmdstart + SXcmdmodus);
+        }
 }
 
 /*******************************************************
@@ -629,7 +693,6 @@ void *thr_commandSelectrix(void *v)
                                                 "Selectrix engine "
                                                 "with address %d is removed",
                                                 addr);
-                                        __selectrixt->number_gl--;
                                 } else {
                                         /* Direction */
                                         switch (gltmp.direction) {
