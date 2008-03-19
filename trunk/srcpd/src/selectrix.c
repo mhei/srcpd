@@ -36,6 +36,7 @@
 #include "srcp-info.h"
 #include "srcp-server.h"
 #include "srcp-error.h"
+#include "srcp-sm.h"
 #include "srcp-gl.h"
 #include "srcp-ga.h"
 #include "srcp-fb.h"
@@ -487,18 +488,22 @@ int syncSXbus(bus_t busnumber)
 }
 
 /*******************************************************
-*     Decoder programming (Selectrix)
+*     Decoder reading/programming (Selectrix)
 ********************************************************/
 int chkCC2000Status(bus_t busnumber, int step, int statFlag)
 {
+        int wait;
+
         /* Get status byte of the CC2000 */
         commandreadSXbus(busnumber, SXstatus);
         __selectrix->stateInterface = step;
-        while (__selectrix->stateInterface < (step + 1)) {
+        wait = 10;
+        while ((__selectrix->stateInterface < (step + 1)) || (wait == 0)) {
                 usleep(500);
+                wait--;
         }
         /* Check flag in status byte */
-        return (((readSXbus(busnumber) & statFlag) == statFlag) ? 0 : 1);
+        return (((readSXbus(busnumber) & statFlag) == statFlag) ? -1 : 0);
 }
 
 /* Configure CC200 for reading/writing decoders */
@@ -559,7 +564,8 @@ int readSXDecoder(bus_t busnumber)
                                 waitCount--;
                         }
                         if (waitCount > 0) {
-                                return SXdecoder + 256 * readSXbus(busnumber);
+                                SXdecoder = SXdecoder + 256 * readSXbus(busnumber);
+                                return SXdecoder;
                         }
                 }
         }
@@ -579,7 +585,8 @@ void writeSXDecoder(bus_t busnumber, int SXdecoder)
                 writeSXbus(busnumber, SXprog2, (SXdecoder / 256) & 0xff);
                 /* Start Programming in Selectrix mode */
                 writeSXbus(busnumber, SXcommand, SXcmdstart + SXcmdprog + SXcmddcod + SXcmdmodus);
-                timeout = 10;
+                usleep(3000000);  /*  Wait 3 seconds */
+                timeout = 1000;
                 while (timeout > 0) {
                        if (chkCC2000Status(busnumber, 14, SXstready) == 0) {
                                timeout = 0;
@@ -626,36 +633,36 @@ static void end_bus_thread(bus_thread_t *btd)
 
 void *thr_commandSelectrix(void *v)
 {
-    int addr, data, state;
-    gl_state_t gltmp;
-    ga_state_t gatmp;
-    int last_cancel_state, last_cancel_type;
+        int addr, data, state;
+        struct _SM smtmp;
+        gl_state_t gltmp;
+        ga_state_t gatmp;
+        int last_cancel_state, last_cancel_type;
 
-    state = 0;
-    bus_thread_t* btd = (bus_thread_t*) malloc(sizeof(bus_thread_t));
-    if (btd == NULL)
-        pthread_exit((void*) 1);
-    btd->bus =  (bus_t) v;
-    btd->fd = -1;
+        bus_thread_t* btd = (bus_thread_t*) malloc(sizeof(bus_thread_t));
+        if (btd == NULL)
+               pthread_exit((void*) 1); /* Exit thread */
+        btd->bus =  (bus_t) v;
+        btd->fd = -1;
 
-    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
-    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &last_cancel_type);
+        pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
+        pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &last_cancel_type);
 
-    /*register cleanup routine*/
-    pthread_cleanup_push((void *) end_bus_thread, (void *) btd);
+        /* register cleanup routine */
+        pthread_cleanup_push((void *) end_bus_thread, (void *) btd);
 
-    syslog_bus(btd->bus, DBG_INFO,
-            "Selectrix bus command thread started.");
-    buses[btd->bus].watchdog = 0;
-
-    while (1) {
-        pthread_testcancel();
+        syslog_bus(btd->bus, DBG_INFO,
+                 "Selectrix bus command thread started.");
+        buses[btd->bus].watchdog = 0;
+        while (1) {
+                state = 0;
+                pthread_testcancel();
                 buses[btd->bus].watchdog = 1;
                 /* Start/Stop */
                 if (buses[btd->bus].power_changed != 0) {
                         state = 1;
-                        char msg[1000];
                         buses[btd->bus].watchdog = 2;
+                        char msg[1000];
                         if ((buses[btd->bus].power_state)) {
                                 /* Turn power on */
                                 writeSXbus(btd->bus, SXcontrol, 0x80);
@@ -670,18 +677,34 @@ void *thr_commandSelectrix(void *v)
                                 "Selectrix had a power change.");
                         buses[btd->bus].power_changed = 0;
                 }
-                buses[btd->bus].watchdog = 3;
-                /* Do nothing, if power off (maybe programming) */
+                /* Programming */
+                /* Only programming if power is off */
                 if (buses[btd->bus].power_state == 0) {
-                        buses[btd->bus].watchdog = 4;
-                        usleep(100000);
-                        continue;
+                        if (!queue_SM_isempty(btd->bus))
+                        {
+                                state = 2;
+                                buses[btd->bus].watchdog = 3;
+                                dequeueNextSM(btd->bus, &smtmp);
+                                session_lock_wait(btd->bus);
+                                switch (smtmp.command )
+                                {
+                                case SET:
+                                        /* Write data to decoder */
+                                        writeSXDecoder(btd->bus, smtmp.value)
+                                        break;
+                                case GET:
+                                case VERIFY:
+                                        /* Read data from decoder */
+                                        smtmp.value = readSXDecoder(btd->bus);
+                                        break;
+                                }
+                                session_endwait(btd->bus, smtmp.value);
+                        }
                 }
                 /* Loco decoders */
-                buses[btd->bus].watchdog = 5;
                 if (!queue_GL_isempty(btd->bus)) {
-                        state = 2;
-                        buses[btd->bus].watchdog = 6;
+                        state = 3;
+                        buses[btd->bus].watchdog = 4;
                         dequeueNextGL(btd->bus, &gltmp);
                         /* Address of the engine */
                         addr = gltmp.id;
@@ -731,11 +754,10 @@ void *thr_commandSelectrix(void *v)
                                         addr);
                         }
                 }
-                buses[btd->bus].watchdog = 7;
-                /* drives solenoids and signals */
+                /* Drives solenoids and signals */
                 if (!queue_GA_isempty(btd->bus)) {
-                        state = 3;
-                        buses[btd->bus].watchdog = 8;
+                        state = 4;
+                        buses[btd->bus].watchdog = 5;
                         dequeueNextGA(btd->bus, &gatmp);
                         addr = gatmp.id;
                         if (__selectrixt->max_address > addr) {
@@ -825,12 +847,11 @@ void *thr_commandSelectrix(void *v)
                                         addr);
                         }
                 }
-                buses[btd->bus].watchdog = 9;
                 /* Feed back contacts */
                 if ((__selectrixt->number_fb > 0) &&
                      (__selectrixt->stateInterface == 1)) {
-                        state = 4;
-                        buses[btd->bus].watchdog = 10;
+                        state = 5;
+                        buses[btd->bus].watchdog = 6;
                         /* Fetch the module address */
                         addr = __selectrixt->fb_adresses[__selectrixt->currentFB];
                         if (__selectrixt->max_address > addr) {
