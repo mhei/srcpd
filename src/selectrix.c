@@ -690,7 +690,27 @@ void *thr_commandSelectrix(void *v)
                                 {
                                 case SET:
                                         /* Write data to decoder */
-                                        writeSXDecoder(btd->bus, smtmp.value)
+                                        writeSXDecoder(btd->bus, smtmp.value);
+                                        break;
+                                case GET:
+                                case VERIFY:
+                                        /* Read data from decoder */
+                                        smtmp.value = readSXDecoder(btd->bus);
+                                        break;
+                                }
+                                session_endwait(btd->bus, smtmp.value);
+                        }
+                        if (!queue_SM_isempty(btd->bus))
+                        {
+                                state = 2;
+                                buses[btd->bus].watchdog = 3;
+                                dequeueNextSM(btd->bus, &smtmp);
+                                session_lock_wait(btd->bus);
+                                switch (smtmp.command )
+                                {
+                                case SET:
+                                        /* Write data to decoder */
+                                        writeSXDecoder(btd->bus, smtmp.value);
                                         break;
                                 case GET:
                                 case VERIFY:
