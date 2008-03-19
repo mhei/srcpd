@@ -196,7 +196,10 @@ int cmpTime( struct timeval *t1, struct timeval *t2 )
 int init_gl_IB( gl_state_t *gl )
 {
   gl->n_fs = 126;
-  gl->n_func = 5;
+  if ( gl->n_func > 17 )
+  {
+    return SRCP_WRONGVALUE;
+  }
   gl->protocol = 'P';
   return SRCP_OK;
 }
@@ -573,13 +576,43 @@ static void send_command_gl_IB( bus_t busnumber )
       byte2send |= 0xc0;
       if ( gltmp.direction )
       {
-        byte2send |= 0x20;
+	byte2send |= 0x20;
       }
       writeByte( busnumber, byte2send, 0 );
       readByte_IB( busnumber, 1, &status );
       if ( ( status == 0 ) || ( status == 0x41 ) || ( status == 0x42 ) )
       {
-        cacheSetGL( busnumber, addr, gltmp );
+	if ( gltmp.n_func > 5 )
+	{
+	  writeByte( busnumber, XFunc, 0 );
+
+	  /* send low byte of address */
+	  writeByte( busnumber, gltmp.id & 0xFF, 0 );
+
+	  /* send high byte of address */
+	  writeByte( busnumber, gltmp.id >> 8, 0 );
+
+	  /* send F1 ... F8 */
+	  writeByte( busnumber, ( gltmp.funcs >> 1 ) & 0xFF, 0 );
+
+	  readByte_IB( busnumber, 1, &status );
+	}
+	if ( gltmp.n_func > 9 )
+	{
+	  writeByte( busnumber, XFuncX, 0 );
+
+	  /* send low byte of address */
+	  writeByte( busnumber, gltmp.id & 0xFF, 0 );
+
+	  /* send high byte of address */
+	  writeByte( busnumber, gltmp.id >> 8, 0 );
+
+	  /* send F9 ... F16 */
+	  writeByte( busnumber, ( gltmp.funcs >> 16 ) & 0xFF, 0 );
+
+	  readByte_IB( busnumber, 1, &status );
+	}
+	cacheSetGL( busnumber, addr, gltmp );
       }
     }
   }
