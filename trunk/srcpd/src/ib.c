@@ -608,7 +608,7 @@ static void send_command_gl_IB( bus_t busnumber )
 	  writeByte( busnumber, gltmp.id >> 8, 0 );
 
 	  /* send F9 ... F16 */
-	  writeByte( busnumber, ( gltmp.funcs >> 16 ) & 0xFF, 0 );
+	  writeByte( busnumber, ( gltmp.funcs >> 9 ) & 0xFF, 0 );
 
 	  readByte_IB( busnumber, 1, &status );
 	}
