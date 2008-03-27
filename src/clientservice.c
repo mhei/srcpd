@@ -150,6 +150,11 @@ void* thr_doClient(void* v)
             break;
         }
 
+        /*remove terminating line break*/
+        size_t linelen = strlen(line);
+        if (linelen > 1 && (line[linelen - 1] == '\n'))
+            line[linelen - 1] = '\0';
+
         memset(cmd, 0, sizeof(cmd));
         memset(parameter, 0, sizeof(parameter));
         nelem = sscanf(line, "%s %1000c", cmd, parameter);

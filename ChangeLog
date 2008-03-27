@@ -1,3 +1,9 @@
+2008-03-27 Guido Scholz <guido.scholz@bayernline.de>
+	* srcp-gm.c: Fixed session id check for GM delivery.
+	* srcp-command.c, clientservice.c: Terminating line break of
+	incoming socket strings removed.
+	* srcp-session.h: Session mode variable changed to enum type.
+
 2008-03-04 Guido Scholz <guido.scholz@bayernline.de>
 	* io.c, li100.c, loconet.c, m605x.c, portio.c, srcp-server.c,
 	ttycygwin.*, zimo.c: Fixed some Cygwin compile issues.

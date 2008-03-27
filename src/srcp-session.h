@@ -24,17 +24,20 @@
 #include "config-srcpd.h"
 
 /*session modes, should be enum type*/
+/*
 #define smUndefined 0
 #define smCommand   1
 #define smInfo      2
+*/
 
+typedef enum {smUndefined = 0, smCommand, smInfo} SessionMode;
 
 /*session list node to store session data*/
 typedef struct sn {
     sessionid_t session;
     pthread_t thread;
     int socket;
-    int mode;
+    SessionMode mode;
     int pipefd[2];
     struct sn *next;
 } session_node_t;
