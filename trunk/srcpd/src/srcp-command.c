@@ -782,6 +782,11 @@ int doCmdClient(session_node_t * sn)
             break;
         }
 
+        /*remove terminating line break*/
+        size_t linelen = strlen(line);
+        if (linelen > 1 && (line[linelen - 1] == '\n'))
+            line[linelen - 1] = '\0';
+
         memset(command, 0, sizeof(command));
         memset(devicegroup, 0, sizeof(devicegroup));
         memset(parameter, 0, sizeof(parameter));
