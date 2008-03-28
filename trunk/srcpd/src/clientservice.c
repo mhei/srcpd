@@ -194,6 +194,10 @@ void* thr_doClient(void* v)
                     case smInfo:
                         rc = doInfoClient(sn);
                         break;
+                    default:
+                        syslog_session(sn->session, DBG_ERROR,
+                                "Session mode not set.\n");
+                        break;
                 }
                 /*exit while loop*/
                 pthread_exit((void*) 0);
