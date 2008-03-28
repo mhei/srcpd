@@ -46,12 +46,14 @@ void end_client_thread(session_node_t *sn)
             "Session entered cancel state (mode = %d).", sn->mode);
 
     if (mode == smInfo) {
+        /* read side of pipe was closed by fclose()
         result = close(sn->pipefd[0]);
         if (result != 0) {
             syslog_session(sid, DBG_ERROR,
                     "Pipe close fd[0] failed: %s (errno = %d).",
                     strerror(errno), errno);
         }
+        */
         result = close(sn->pipefd[1]);
         if (result != 0) {
             syslog_session(sid, DBG_ERROR,

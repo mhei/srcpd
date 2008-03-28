@@ -82,7 +82,6 @@ int doInfoClient(session_node_t* sn)
     ssize_t rresult = 0;
     ssize_t wresult = 0;
     FILE* pstream;
-    char* pbuffer;
 
     result = pipe(sn->pipefd);
     if (-1 == result) {
@@ -316,17 +315,7 @@ int doInfoClient(session_node_t* sn)
          * message and write message to socket. */
         if (FD_ISSET(sn->pipefd[0], &rset)) {
 
-            do {
-                pbuffer = fgets(reply, sizeof(reply), pstream);
-
-                /* read error */
-                if (NULL == pbuffer) {
-                    syslog_session(sn->session, DBG_ERROR,
-                            "fgets() failed: %s (errno = %d)\n",
-                            strerror(errno), errno);
-                    fclose(pstream);
-                    return -1;
-                }
+            while (fgets(reply, sizeof(reply), pstream) != NULL) {
 
                 /* normal operation */
                 wresult = writen(sn->socket, reply, strlen(reply));
@@ -348,7 +337,7 @@ int doInfoClient(session_node_t* sn)
                     fclose(pstream);
                     return -1;
                 }
-            } while (feof(pstream) == 0);
+            }
         }
     }
     fclose(pstream);
