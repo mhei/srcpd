@@ -117,6 +117,7 @@ int doInfoClient(session_node_t* sn)
             syslog_session(sn->session, DBG_ERROR,
                     "Socket write failed: %s (errno = %d)\n",
                     strerror(errno), errno);
+            fclose(pstream);
             return -1;
         }
         strcpy(description, reply);
@@ -128,6 +129,7 @@ int doInfoClient(session_node_t* sn)
                 syslog_session(sn->session, DBG_ERROR,
                         "Socket write failed: %s (errno = %d)\n",
                         strerror(errno), errno);
+                fclose(pstream);
                 return -1;
             }
             *reply = 0x00;
@@ -139,6 +141,7 @@ int doInfoClient(session_node_t* sn)
                 syslog_session(sn->session, DBG_ERROR,
                         "Socket write failed: %s (errno = %d)\n",
                         strerror(errno), errno);
+                fclose(pstream);
                 return -1;
             }
             *reply = 0x00;
@@ -147,6 +150,7 @@ int doInfoClient(session_node_t* sn)
                 syslog_session(sn->session, DBG_ERROR,
                         "Socket write failed: %s (errno = %d)\n",
                         strerror(errno), errno);
+                fclose(pstream);
                 return -1;
             }
             *reply = 0x00;
@@ -163,6 +167,7 @@ int doInfoClient(session_node_t* sn)
                         syslog_session(sn->session, DBG_ERROR,
                                 "Socket write failed: %s (errno = %d)\n",
                                 strerror(errno), errno);
+                        fclose(pstream);
                         return -1;
                     }
                     *reply = 0x00;
@@ -171,6 +176,7 @@ int doInfoClient(session_node_t* sn)
                         syslog_session(sn->session, DBG_ERROR,
                                 "Socket write failed: %s (errno = %d)\n",
                                 strerror(errno), errno);
+                        fclose(pstream);
                         return -1;
                     }
                     *reply = 0x00;
@@ -181,6 +187,7 @@ int doInfoClient(session_node_t* sn)
                             syslog_session(sn->session, DBG_ERROR,
                                     "Socket write failed: %s (errno = %d)\n",
                                     strerror(errno), errno);
+                            fclose(pstream);
                             return -1;
                         }
                         *reply = 0x00;
@@ -201,6 +208,7 @@ int doInfoClient(session_node_t* sn)
                         syslog_session(sn->session, DBG_ERROR,
                                 "Socket write failed: %s (errno = %d)\n",
                                 strerror(errno), errno);
+                        fclose(pstream);
                         return -1;
                     }
                     *reply = 0x00;
@@ -211,6 +219,7 @@ int doInfoClient(session_node_t* sn)
                                 syslog_session(sn->session, DBG_ERROR,
                                         "Socket write failed: %s (errno = %d)\n",
                                         strerror(errno), errno);
+                                fclose(pstream);
                                 return -1;
                             }
                             *reply = 0x00;
@@ -223,6 +232,7 @@ int doInfoClient(session_node_t* sn)
                             syslog_session(sn->session, DBG_ERROR,
                                     "Socket write failed: %s (errno = %d)\n",
                                     strerror(errno), errno);
+                            fclose(pstream);
                             return -1;
                         }
                         *reply = 0x00;
@@ -242,6 +252,7 @@ int doInfoClient(session_node_t* sn)
                         syslog_session(sn->session, DBG_ERROR,
                                 "Socket write failed: %s (errno = %d)\n",
                                 strerror(errno), errno);
+                        fclose(pstream);
                         return -1;
                     }
                     *reply = 0x00;
@@ -282,6 +293,7 @@ int doInfoClient(session_node_t* sn)
                 syslog_session(sn->session, DBG_ERROR,
                         "Select failed: %s (errno = %d)\n",
                         strerror(errno), errno);
+                fclose(pstream);
                 return (-1);
             }
         }
