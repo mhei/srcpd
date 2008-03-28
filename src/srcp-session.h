@@ -23,13 +23,7 @@
 
 #include "config-srcpd.h"
 
-/*session modes, should be enum type*/
-/*
-#define smUndefined 0
-#define smCommand   1
-#define smInfo      2
-*/
-
+/*session modes*/
 typedef enum {smUndefined = 0, smCommand, smInfo} SessionMode;
 
 /*session list node to store session data*/
