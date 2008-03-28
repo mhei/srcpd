@@ -1,3 +1,22 @@
+srcpd-2.0.12 (2008-??-??)
+  Fixed Bugs
+    o Fixed some non ASCII characters in English man pages.
+    o Fixed missing time controlled back switching of GA ports in
+      loopback module.
+    o Fixed accessory address calculation for lower four addresses in
+      DDL NMRA module.
+    o Fixed potential loss of INFO messages if they are send close one
+      after another (e.g. FB messages).
+    o Fixed some Cygwin compile issues.
+
+  New Features
+    o Decoder programming for Selectrix module added.
+    o Support for switching of GL F5..F16 added to IB module.
+
+  General Changes
+    o Some old copyright references for DDL module added.
+
+
 srcpd-2.0.11 (2008-01-27)
   Fixed Bugs
     o Fixed »switch power on« bug for DDL module.
