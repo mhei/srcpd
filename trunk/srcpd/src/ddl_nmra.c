@@ -1075,11 +1075,19 @@ int comp_nmra_multi_func(bus_t busnumber, int address, int direction,
         speed = 127;
     }
     calc_address_stream(addrstream, addrerrbyte, address, mode);
-    if (nspeed > 29) {
-        calc_128spst_adv_op_bytes(spdrbyte, spdrbyte2, direction, speed);
+    if (speed < 2 || nspeed < 15) {
+        /* commands for stop and emergency stop are identical for
+           14 and 28 speed steps. All decoders supporting 128
+           speed steps also have to support 14/28 speed step commands
+           ==> results in shorter refresh cycle if there are many 128
+               speed steps decoders with speed=0, and a slightly faster 
+               emergency stop for these decoders.
+        */
+        calc_baseline_speed_byte(spdrbyte, direction, speed, func);
     } else {
-        if (nspeed < 15) {
-            calc_baseline_speed_byte(spdrbyte, direction, speed, func);
+        if (nspeed > 29) {
+            calc_128spst_adv_op_bytes(spdrbyte, spdrbyte2, direction,
+                                      speed);
         } else {
             calc_28spst_speed_byte(spdrbyte, direction, speed);
         }
@@ -1091,7 +1099,7 @@ int comp_nmra_multi_func(bus_t busnumber, int address, int direction,
     strcat(bitstream, addrstream);
     strcat(bitstream, spdrbyte);
     strcat(bitstream, "0");
-    if (nspeed > 29) {
+    if (nspeed > 29 && speed > 1) {
         strcat(bitstream, spdrbyte2);
         strcat(bitstream, "0");
         xor_two_bytes(errdbyte, errdbyte, spdrbyte2);
