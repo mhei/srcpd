@@ -1542,14 +1542,13 @@ static int protocol_nmra_sm_page(bus_t bus, int page, int reg, int value,
                " PAGE %d, REG %d, Value %d", page, reg, value);
 
     /* no special error handling, it's job of the clients */
-    if (reg < 1 || reg > 4 || page < 0 || page > 255 || value < 0
+    if (reg < 0 || reg > 3 || page < 0 || page > 255 || value < 0
         || value > 255)
         return -1;
 
     if (!sm_initialized)
         sm_init(bus);
 
-    reg -= 1;
     j = calc_reg_stream(bus, reg, value, verify, packetstream);
     /* set page to register 6 (number 5) */
     k = calc_reg_stream(bus, 5, page, false, packetstream_page);
@@ -1884,7 +1883,8 @@ static int calc_page(int cv)
 int protocol_nmra_sm_write_page(bus_t busnumber, int cv, int value)
 {
     int page = calc_page(cv);
-    return protocol_nmra_sm_page(busnumber, page, cv & 3, value, false);
+    return protocol_nmra_sm_page(busnumber, page, (cv - 1) & 3, value,
+                                 false);
 }
 
 /**
@@ -1898,7 +1898,8 @@ int protocol_nmra_sm_write_page(bus_t busnumber, int cv, int value)
 int protocol_nmra_sm_verify_page(bus_t busnumber, int cv, int value)
 {
     int page = calc_page(cv);
-    return protocol_nmra_sm_page(busnumber, page, cv & 3, value, true);
+    return protocol_nmra_sm_page(busnumber, page, (cv - 1) & 3, value,
+                                 true);
 }
 
 /**
@@ -1913,7 +1914,7 @@ int protocol_nmra_sm_get_page(bus_t busnumber, int cv)
     int rc;
     int i;
     for (i = 0; i < 256; i++) {
-        rc = protocol_nmra_sm_page(busnumber, page, cv & 3, i, true);
+        rc = protocol_nmra_sm_page(busnumber, page, (cv - 1) & 3, i, true);
         if (rc)
             break;
     }
