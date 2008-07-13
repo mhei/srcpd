@@ -900,7 +900,6 @@ static void calc_byte_program_stream(char *progstream, char *addrerrbyte,
     memset(progstream, 0, BUFFERSIZE);
     /* calculating byte3: AAAAAAAA (rest of CV#) */
     calc_single_byte(byte3, cv);
-    cv >>= 8;
 
     if (pom) {
         /* calculating byte2: 1110C1AA (instruction byte1) */
