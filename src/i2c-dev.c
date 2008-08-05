@@ -24,6 +24,7 @@
 #include <linux/version.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)
   #include <linux/i2c.h>
+  #include <linux/i2c-dev.h>
 #else
   #include <linux/i2c-dev.h>
   #ifndef I2C_SLAVE
