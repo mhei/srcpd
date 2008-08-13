@@ -334,7 +334,7 @@ int doInfoClient(session_node_t* sn)
                 total += swritten + 1;
                 buffer = &reply[swritten + 1];
             }
-            while (total < rwresult || swritten <= 0);
+            while (total < rwresult && swritten > 0);
 
             /* write error */
             if (-1 == swritten) {
