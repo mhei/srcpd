@@ -115,7 +115,7 @@ void* thr_doClient(void* v)
     /*register cleanup routine*/
     pthread_cleanup_push((void *) end_client_thread, (void *) sn);
 
-    sresult = writen_amlb(sn->socket, WELCOME_MSG);
+    sresult = writen(sn->socket, WELCOME_MSG, strlen(WELCOME_MSG));
     if (-1 == sresult) {
         syslog_session(sn->session, DBG_ERROR,
                 "Socket write failed: %s (errno = %d)\n",
@@ -171,7 +171,7 @@ void* thr_doClient(void* v)
                 sprintf(reply, "%lu.%.3lu 200 OK GO %ld\n", time.tv_sec,
                         time.tv_usec / 1000, sn->session);
 
-                sresult = writen_amlb(sn->socket, reply);
+                sresult = writen(sn->socket, reply, strlen(reply));
                 if (-1 == sresult) {
                     syslog_session(sn->session, DBG_ERROR,
                             "Socket write failed: %s (errno = %d)\n",
@@ -234,7 +234,7 @@ void* thr_doClient(void* v)
         gettimeofday(&time, NULL);
         srcp_fmt_msg(rc, reply, time);
 
-        sresult = writen_amlb(sn->socket, reply);
+        sresult = writen(sn->socket, reply, strlen(reply));
         if (-1 == sresult) {
             syslog_session(sn->session, DBG_ERROR,
                     "Socket write failed: %s (errno = %d)\n",
