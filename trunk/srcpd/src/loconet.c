@@ -487,6 +487,7 @@ static int ln_write_lbserver(long int busnumber, const unsigned char *cmd,
 		    unsigned char len)
 {
     unsigned char i;
+    ssize_t result;
     char msg[256], tmp[10];
     sprintf(msg, "SEND");
     for (i = 0; i < len; i++) {
@@ -494,7 +495,12 @@ static int ln_write_lbserver(long int busnumber, const unsigned char *cmd,
 	strcat(msg, tmp);
     }
     strcat(msg, "\r\n");
-    writen_amlb(buses[busnumber].device.net.sockfd, msg);
+    result = writen(buses[busnumber].device.net.sockfd, msg, strlen(msg));
+    if (result == -1)
+        syslog_bus(busnumber, DBG_ERROR,
+                "Socket write failed: %s (errno = %d)\n",
+                strerror(errno), errno);
+
     syslog_bus(busnumber, DBG_DEBUG,
 	"sent Loconet packet with OPC 0x%02x, %d bytes (%s)", cmd[0], len, msg);
     __loconet->sent_packets++;

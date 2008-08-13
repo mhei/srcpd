@@ -105,7 +105,7 @@ int doInfoClient(session_node_t* sn)
         /* first some global bus data */
         /* send Descriptions for buses */
         describeBus(bus, reply);
-        if (writen_amlb(sn->socket, reply) == -1) {
+        if (writen(sn->socket, reply, strlen(reply)) == -1) {
             syslog_session(sn->session, DBG_ERROR,
                     "Socket write failed: %s (errno = %d)\n",
                     strerror(errno), errno);
@@ -116,7 +116,7 @@ int doInfoClient(session_node_t* sn)
         
         if (strstr(description, "POWER")) {
             infoPower(bus, reply);
-            if (writen_amlb(sn->socket, reply) == -1) {
+            if (writen(sn->socket, reply, strlen(reply)) == -1) {
                 syslog_session(sn->session, DBG_ERROR,
                         "Socket write failed: %s (errno = %d)\n",
                         strerror(errno), errno);
@@ -127,7 +127,7 @@ int doInfoClient(session_node_t* sn)
         
         if (strstr(description, "TIME")) {
             describeTIME(reply);
-            if (writen_amlb(sn->socket, reply) == -1) {
+            if (writen(sn->socket, reply, strlen(reply)) == -1) {
                 syslog_session(sn->session, DBG_ERROR,
                         "Socket write failed: %s (errno = %d)\n",
                         strerror(errno), errno);
@@ -135,7 +135,7 @@ int doInfoClient(session_node_t* sn)
             }
             *reply = 0x00;
             infoTIME(reply);
-            if (writen_amlb(sn->socket, reply) == -1) {
+            if (writen(sn->socket, reply, strlen(reply)) == -1) {
                 syslog_session(sn->session, DBG_ERROR,
                         "Socket write failed: %s (errno = %d)\n",
                         strerror(errno), errno);
@@ -151,7 +151,7 @@ int doInfoClient(session_node_t* sn)
                 if (isInitializedGL(bus, i)) {
                     sessionid_t lockid;
                     cacheDescribeGL(bus, i, reply);
-                    if (writen_amlb(sn->socket, reply) == -1) {
+                    if (writen(sn->socket, reply, strlen(reply)) == -1) {
                         syslog_session(sn->session, DBG_ERROR,
                                 "Socket write failed: %s (errno = %d)\n",
                                 strerror(errno), errno);
@@ -159,7 +159,7 @@ int doInfoClient(session_node_t* sn)
                     }
                     *reply = 0x00;
                     cacheInfoGL(bus, i, reply);
-                    if (writen_amlb(sn->socket, reply) == -1) {
+                    if (writen(sn->socket, reply, strlen(reply)) == -1) {
                         syslog_session(sn->session, DBG_ERROR,
                                 "Socket write failed: %s (errno = %d)\n",
                                 strerror(errno), errno);
@@ -169,7 +169,7 @@ int doInfoClient(session_node_t* sn)
                     cacheGetLockGL(bus, i, &lockid);
                     if (lockid != 0) {
                         describeLOCKGL(bus, i, reply);
-                        if (writen_amlb(sn->socket, reply) == -1) {
+                        if (writen(sn->socket, reply, strlen(reply)) == -1) {
                             syslog_session(sn->session, DBG_ERROR,
                                     "Socket write failed: %s (errno = %d)\n",
                                     strerror(errno), errno);
@@ -189,7 +189,7 @@ int doInfoClient(session_node_t* sn)
                     sessionid_t lockid;
                     int rc, port;
                     describeGA(bus, i, reply);
-                    if (writen_amlb(sn->socket, reply) == -1) {
+                    if (writen(sn->socket, reply, strlen(reply)) == -1) {
                         syslog_session(sn->session, DBG_ERROR,
                                 "Socket write failed: %s (errno = %d)\n",
                                 strerror(errno), errno);
@@ -199,7 +199,7 @@ int doInfoClient(session_node_t* sn)
                     for (port = 0; port <= 1; port++) {
                         rc = infoGA(bus, i, port, reply);
                         if (rc == SRCP_INFO) {
-                            if (writen_amlb(sn->socket, reply) == -1) {
+                            if (writen(sn->socket, reply, strlen(reply)) == -1) {
                                 syslog_session(sn->session, DBG_ERROR,
                                         "Socket write failed: %s (errno = %d)\n",
                                         strerror(errno), errno);
@@ -211,7 +211,7 @@ int doInfoClient(session_node_t* sn)
                     getlockGA(bus, i, &lockid);
                     if (lockid != 0) {
                         describeLOCKGA(bus, i, reply);
-                        if (writen_amlb(sn->socket, reply) == -1) {
+                        if (writen(sn->socket, reply, strlen(reply)) == -1) {
                             syslog_session(sn->session, DBG_ERROR,
                                     "Socket write failed: %s (errno = %d)\n",
                                     strerror(errno), errno);
@@ -230,7 +230,7 @@ int doInfoClient(session_node_t* sn)
                 int rc = getFB(bus, i, &cmp_time, &value);
                 if (rc == SRCP_OK && value != 0) {
                     infoFB(bus, i, reply);
-                    if (writen_amlb(sn->socket, reply) == -1) {
+                    if (writen(sn->socket, reply, strlen(reply)) == -1) {
                         syslog_session(sn->session, DBG_ERROR,
                                 "Socket write failed: %s (errno = %d)\n",
                                 strerror(errno), errno);
@@ -330,7 +330,7 @@ int doInfoClient(session_node_t* sn)
              * contained more than one message string, which is
              * terminated by '\0' */
             do {
-                swritten = writen_amlb(sn->socket, buffer);
+                swritten = writen(sn->socket, buffer, strlen(buffer));
                 total += swritten + 1;
                 buffer = &reply[swritten + 1];
             }

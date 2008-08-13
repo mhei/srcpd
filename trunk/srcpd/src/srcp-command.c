@@ -820,7 +820,7 @@ int doCmdClient(session_node_t * sn)
                                     parameter, reply);
                     /*special option for session termination (?) */
                     if (rc < 0) {
-                        if (writen_amlb(sn->socket, reply) == -1) {
+                        if (writen(sn->socket, reply, strlen(reply)) == -1) {
                             syslog_session(sn->session, DBG_ERROR,
                                            "Socket write failed: %s (errno = %d)\n",
                                            strerror(errno), errno);
@@ -855,7 +855,7 @@ int doCmdClient(session_node_t * sn)
             srcp_fmt_msg(rc, reply, akt_time);
         }
 
-        if (writen_amlb(sn->socket, reply) == -1) {
+        if (writen(sn->socket, reply, strlen(reply)) == -1) {
             syslog_session(sn->session, DBG_ERROR,
                            "Socket write failed: %s (errno = %d)\n",
                            strerror(errno), errno);

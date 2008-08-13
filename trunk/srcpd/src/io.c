@@ -100,7 +100,7 @@ void writeByte(bus_t bus, unsigned char b, unsigned long msecs)
 void writeString(bus_t bus, unsigned char *s, unsigned long msecs)
 {
     size_t l = strlen((char *) s);
-    int i;
+    size_t i;
     for (i = 0; i < l; i++) {
         writeByte(bus, s[i], msecs);
     }
@@ -239,32 +239,3 @@ ssize_t writen(int fd, const void *vptr, size_t n)
     return n;
 }
 
-/* Write string to descriptor.
- * Check line length and add missing line break.
- * return values:
- *   -1: write error
- *  >=0: number of written characters */
-ssize_t writen_amlb(int fd, const char *line)
-{
-    ssize_t result = 0;
-    const char *ptr;
-    const char c = '\n';
-    size_t mlen;
-    bool haslinebreak;
-
-    ptr = line;
-    mlen = strlen(line);
-
-    if (mlen > 0)
-        ptr += mlen - 1;
-    else 
-        return result;
-    
-    haslinebreak = (*ptr == c);
-    result = writen(fd, line, mlen);
-
-    if (!haslinebreak && result != -1)
-        result = writen(fd, &c, 1);
-    
-    return result;
-}
