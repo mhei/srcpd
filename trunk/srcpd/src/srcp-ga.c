@@ -136,7 +136,8 @@ int getGA(bus_t busnumber, int addr, ga_state_t *a)
     int number_ga = get_number_ga(busnumber);
 
     if ((addr > 0) && (addr <= number_ga)) {
-        *a = ga[busnumber].gastate[addr];
+        /*a = ga[busnumber].gastate[addr];*/
+        memcpy(a, &ga[busnumber].gastate[addr], sizeof(*a));
         return SRCP_OK;
     }
     else {
