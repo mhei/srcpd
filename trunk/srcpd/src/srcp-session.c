@@ -346,7 +346,7 @@ void session_enqueue_info_message(sessionid_t sid, char* msg)
 
         while (n != NULL) {
             if (n->mode == smInfo && n->pipefd[1] != -1) {
-                nwritten = write(n->pipefd[1], msg, strlen(msg));
+                nwritten = write(n->pipefd[1], msg, strlen(msg) + 1);
                 if (nwritten == -1) {
                     syslog_session(n->session, DBG_ERROR,
                             "Write to pipe failed: %s (errno = %d).",
@@ -376,7 +376,7 @@ void session_enqueue_info_message(sessionid_t sid, char* msg)
         n = list_search_session_node(&session_list, sid);
 
         if (n != NULL && n->mode == smInfo && n->pipefd[1] != -1) {
-            nwritten = write(n->pipefd[1], msg, strlen(msg));
+            nwritten = write(n->pipefd[1], msg, strlen(msg) + 1);
             if (nwritten == -1) {
                 syslog_session(n->session, DBG_ERROR,
                         "Write to pipe failed: %s (errno = %d).",
