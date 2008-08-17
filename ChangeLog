@@ -1,3 +1,7 @@
+2008-08-17 Guido Scholz <guido.scholz@bayernline.de>
+	* loconet.c: Fixed address shift for INFO GA, reported by David
+	Rütti.
+
 2008-03-27 Guido Scholz <guido.scholz@bayernline.de>
 	* srcp-gm.c: Fixed session id check for GM delivery.
 	* srcp-command.c, clientservice.c: Terminating line break of
