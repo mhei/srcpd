@@ -702,7 +702,7 @@ void *thr_sendrec_LOCONET(void *v)
                 if(gatmp.action == 1) {
                     gettimeofday(&gatmp.tv[gatmp.port], NULL);
                 }
-                setGA(btd->bus, addr, gatmp);
+                setGA(btd->bus, gatmp.id, gatmp);
                 syslog_bus(btd->bus, DBG_DEBUG, "Loconet: GA SET #%d %02X",
                         gatmp.id, gatmp.action);
             }
