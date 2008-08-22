@@ -1,3 +1,7 @@
+2008-08-22 Guido Scholz <guido.scholz@bayernline.de>
+	* srcpd.c: Open syslog after daemonization to fix missing
+	logging under Cygwin.
+
 2008-08-17 Guido Scholz <guido.scholz@bayernline.de>
 	* loconet.c: Fixed address shift for INFO GA, reported by David
 	Rütti.
