@@ -28,7 +28,7 @@
    be bussy when real work has to be done.
 
    When a new INFO session starts, it will first send all available
-   status data and then enter the wait for new messages state.
+   status data and then wait for newly arriving messages.
  */
 
 #include <errno.h>
@@ -72,16 +72,19 @@ int startup_INFO(void)
  **/
 int doInfoClient(session_node_t* sn)
 {
-    int i, number, value, result;
+    int i, number, value, result, linelen, bufferlen;
     char reply[MAXSRCPLINELEN], description[MAXSRCPLINELEN];
-    char* buffer = &reply[0];
+    char pipebuffer[2048];
+    char* buffer = &pipebuffer[0];
+    char* bufferend = &pipebuffer[sizeof(pipebuffer) - 1];
+    char* linestart;
     struct timeval cmp_time;
     bus_t bus;
     fd_set rset;
     int maxfdp1;
     ssize_t rwresult = 0;
-    ssize_t total = 0;
     ssize_t swritten = 0;
+    ssize_t total = 0;
 
     result = pipe(sn->pipefd);
     if (-1 == result) {
@@ -245,7 +248,7 @@ int doInfoClient(session_node_t* sn)
             "All messages send to new INFO client.\n");
 
     /* 
-     * There is a kind of race condition: Newly enqueued messages may
+     * There is a kind of race condition: Newly piped messages may
      * be ignored until we reach this point. But there is no message
      * loss because the following action will properly detect and send
      * them.
@@ -301,56 +304,94 @@ int doInfoClient(session_node_t* sn)
                     reply);
         }
 
-        /* Message from enqueueing process arrived, dequeue piped info
-         * message and write message to socket. */
+        /* Message from enqueueing process arrived; dequeue piped info
+         * messages and write them to socket. Watch out for truncated
+         * messages if pipe or read buffer is completely full.*/
         if (FD_ISSET(sn->pipefd[0], &rset)) {
 
-            buffer = &reply[0];
-            total = 0;
-            swritten = 0;
+            linelen = 0;
 
-            rwresult = read(sn->pipefd[0], &reply, sizeof(reply));
-
-            /* read error */
-            if (-1 == rwresult) {
-                syslog_session(sn->session, DBG_ERROR,
-                        "Pipe read failed: %s (errno = %d)\n",
-                        strerror(errno), errno);
-                return -1;
-            }
-
-            /* EOF from other end of pipe */
-            if (0 == rwresult) {
-                syslog_session(sn->session, DBG_ERROR,
-                        "Pipe closed unexpectedly.\n");
-                return -1;
-            }
-
-            /* normal operation; write several times to socket if pipe
-             * contained more than one message string, which is
-             * terminated by '\0' */
             do {
-                swritten = writen(sn->socket, buffer, strlen(buffer));
-                total += swritten + 1;
-                buffer = &reply[swritten + 1];
-            }
-            while (total < rwresult && swritten > 0);
+                /* start of read buffer has an offset if there is a
+                 * truncated message from last read */
+                buffer = &pipebuffer[0] + linelen;
+                bufferlen = sizeof(pipebuffer) - linelen;
+                linelen = 0;
+                total = 0;
+                swritten = 0;
+                linestart = NULL;
 
-            /* write error */
-            if (-1 == swritten) {
-                syslog_session(sn->session, DBG_ERROR,
-                        "Socket write failed: %s (errno = %d)\n",
-                        strerror(errno), errno);
-                return -1;
-            }
+                rwresult = read(sn->pipefd[0], buffer, bufferlen);
 
-            /* EOF, client terminated connection */
-            if (0 == swritten) {
-                syslog_session(sn->session, DBG_WARN,
-                        "Socket write failed (connection terminated "
-                        "by client).\n");
-                return -1;
-            }
+                /* pipe read error */
+                if (-1 == rwresult) {
+                    syslog_session(sn->session, DBG_ERROR,
+                            "Pipe read failed: %s (errno = %d)\n",
+                            strerror(errno), errno);
+                    return -1;
+                }
+
+                /* EOF from other end of pipe */
+                if (0 == rwresult) {
+                    syslog_session(sn->session, DBG_ERROR,
+                            "Pipe closed unexpectedly.\n");
+                    return -1;
+                }
+
+                /* check if buffer is full and last line was truncated;
+                 * if truncated line found, search start of line */
+                if (rwresult == bufferlen && *bufferend != '\0') {
+                    linestart = bufferend - 1;
+                    while (linestart >= &pipebuffer[0]) {
+                        if (*linestart == '\0') {
+                            linelen = bufferend - linestart;
+                            linestart++;
+                            break;
+                        }
+                        linestart--;
+                    }
+                    if (linestart == &pipebuffer[0]) {
+                        syslog_session(sn->session, DBG_ERROR,
+                            "Pipe read buffer overfilled.");
+                        return -1;
+                    }
+                }
+
+                /* normal operation; write several times to socket if pipe
+                 * containes more than one message string, which is
+                 * terminated by '\0' */
+                buffer = &pipebuffer[0];
+                do {
+                    swritten = writen(sn->socket, buffer, strlen(buffer));
+                    total += swritten + 1;
+                    buffer += swritten + 1;
+
+                    /* if there is a truncated message, move it to start of
+                     * buffer to be used after next read*/
+                    if (buffer == linestart) {
+                        memmove(&pipebuffer[0], linestart, linelen);
+                        break;
+                    }
+                }
+                while (total < rwresult && swritten > 0);
+
+                /* socket write error */
+                if (-1 == swritten) {
+                    syslog_session(sn->session, DBG_ERROR,
+                            "Socket write failed: %s (errno = %d)\n",
+                            strerror(errno), errno);
+                    return -1;
+                }
+
+                /* EOF, client terminated connection */
+                if (0 == swritten) {
+                    syslog_session(sn->session, DBG_WARN,
+                            "Socket write failed (connection terminated "
+                            "by client).\n");
+                    return -1;
+                }
+
+            } while (linestart != NULL);
         }
     }
     return 0;
