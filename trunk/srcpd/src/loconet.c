@@ -603,7 +603,7 @@ void *thr_sendrec_LOCONET(void *v)
     unsigned char ln_packet[128];       /* max length is coded with 7 bit */
     unsigned char ln_packetlen = 2;
     unsigned int addr, timeoutcnt;
-    int value, port;
+    int value, port, speed;
     char msg[110];
     ga_state_t gatmp;
     int last_cancel_state, last_cancel_type;
@@ -655,7 +655,28 @@ void *thr_sendrec_LOCONET(void *v)
                     gatmp.port   = port;
                     setGA(btd->bus, addr, gatmp);
                     break;
-
+		case OPC_RQ_SL_DATA: /* BB */
+		    addr = (unsigned int) ln_packet[1] & 0x007f;
+		    syslog_bus(btd->bus, DBG_DEBUG,
+                        "Request SLOT DATA (OPC_RQ_SL_DATA: /* BB */)  #%d", addr);    
+		    break; 
+		case OPC_LOCO_ADR:  /* BF */
+		    addr = (unsigned int) ln_packet[2] & 0x007f;
+		    syslog_bus(btd->bus, DBG_DEBUG,
+                        "(OPC_LOCO_ADR:  /* BF */)  #%d", addr);    
+		    break;
+		case OPC_LOCO_SPD:  /* A0 */
+		    addr = (unsigned int) ln_packet[1] & 0x007f;
+		    speed = (unsigned int) ln_packet[2] & 0x007f;
+		    syslog_bus(btd->bus, DBG_DEBUG,
+                        "Set loco speed (OPC_LOCO_SPD:  /* A0 */) %d: %d", addr, speed);    
+		    break;
+		case OPC_LOCO_DIRF:  /* A1 */
+		    addr = (unsigned int) ln_packet[1] & 0x007f;
+		    speed = (unsigned int) ln_packet[2] & 0x007f;
+		    syslog_bus(btd->bus, DBG_DEBUG,
+                        "New flags for loco in slot (OPC_LOCO_DIRF:  /* A1 */) #%d: %d", addr, speed);    
+		    break;
                 case OPC_SW_REP:    /* B1 */
                     break;
                 case OPC_INPUT_REP: /* B2 */
@@ -667,11 +688,19 @@ void *thr_sendrec_LOCONET(void *v)
                     value = (ln_packet[2] & 0x10) >> 4;
                     updateFB(btd->bus, addr, value);
                     break;
-                case OPC_PEER_XFER:
-                    /* this one is difficult */
-                    ln_opc_peer_xfer_read(btd->bus, ln_packet);
-                    break;
+		case OPC_SL_RD_DATA: /* E7 */
+		    addr = (unsigned int) ln_packet[2] & 0x007f;
+		    speed = (unsigned int) ln_packet[4] & 0x007f;
+		    syslog_bus(btd->bus, DBG_DEBUG,
+                        "Slot read data #%d: %x", addr, speed);    
+		    break;
+//                case OPC_PEER_XFER:
+//                   /* this one is difficult */
+//                    ln_opc_peer_xfer_read(btd->bus, ln_packet);
+//                    break;
                 default:
+	            syslog_bus(btd->bus, DBG_DEBUG,
+                        "Unkown Loconet Message (%x)", ln_packet[0]);    
                     /* unknown Loconet packet received, ignored */
                     break;
             }
