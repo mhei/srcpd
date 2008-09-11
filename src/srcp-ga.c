@@ -252,6 +252,7 @@ int lockGA(bus_t busnumber, int addr, long int duration,
            sessionid_t sessionid)
 {
     char msg[256];
+
     if (ga[busnumber].gastate[addr].locked_by == sessionid ||
         ga[busnumber].gastate[addr].locked_by == 0) {
         ga[busnumber].gastate[addr].locked_by = sessionid;
@@ -306,8 +307,9 @@ int unlockGA(bus_t busnumber, int addr, sessionid_t sessionid)
 
 void unlock_ga_bysessionid(sessionid_t sessionid)
 {
-    int i, j;
-    int number;
+    unsigned int i;
+    int j, number;
+
     syslog_session(sessionid, DBG_DEBUG, "Unlocking GAs by session-id");
     for (i = 0; i < num_buses; i++) {
         number = get_number_ga(i);
@@ -322,8 +324,9 @@ void unlock_ga_bysessionid(sessionid_t sessionid)
 /* must be called exactly once per second */
 void unlock_ga_bytime(void)
 {
-    int i, j;
-    int number;
+    unsigned int i;
+    int j, number;
+
     for (i = 0; i < num_buses; i++) {
         number = get_number_ga(i);
         for (j = 1; j <= number; j++) {
@@ -337,7 +340,7 @@ void unlock_ga_bytime(void)
 int startup_GA(void)
 {
     int result;
-    int i;
+    unsigned int i;
 
     for (i = 0; i < MAX_BUSES; i++) {
         in[i] = 0;
