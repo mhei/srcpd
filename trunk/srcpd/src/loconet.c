@@ -38,7 +38,10 @@
 
 static int init_gl_LOCONET(gl_state_t *);
 static int init_ga_LOCONET(ga_state_t *);
-
+/**
+ * Read and analyze the XML subtree for the <loconet> configuration.
+ *
+ */
 int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
     xmlNodePtr child = node->children;
@@ -72,7 +75,6 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) {
             /* just do nothing, it is only a comment */
         }
-
         else if (xmlStrcmp(child->name, BAD_CAST "loconetID") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
@@ -80,7 +82,6 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                 xmlFree(txt);
             }
         }
-
         else if (xmlStrcmp(child->name, BAD_CAST "ms100") == 0) {
 #ifdef HAVE_LINUX_SERIAL_H
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
@@ -93,7 +94,6 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
             }
 #endif
         }
-
         else
             syslog_bus(busnumber, DBG_WARN,
                        "WARNING, unknown tag found: \"%s\"!\n",
@@ -186,7 +186,8 @@ static int init_lineLOCONET_serial(bus_t busnumber)
 
         tcflush(fd, TCOFLUSH);
         tcflush(fd, TCIFLUSH);
-    } else {
+    }
+    else {
 #endif
         tcgetattr(fd, &interface);
         interface.c_oflag = ONOCR;
@@ -263,12 +264,12 @@ static int init_lineLOCONET_lbserver(bus_t busnumber)
 static int init_lineLOCONET(bus_t busnumber)
 {
     switch (buses[busnumber].devicetype) {
-    case HW_FILENAME:
-        return init_lineLOCONET_serial(busnumber);
-        break;
-    case HW_NETWORK:
-        return init_lineLOCONET_lbserver(busnumber);
-        break;
+        case HW_FILENAME:
+            return init_lineLOCONET_serial(busnumber);
+            break;
+        case HW_NETWORK:
+            return init_lineLOCONET_lbserver(busnumber);
+            break;
     }
     return 0;
 }
@@ -371,26 +372,26 @@ static int ln_read_serial(bus_t busnumber, unsigned char *cmd, int len)
         while (c < 0x80);
 
         switch (c & 0xe0) {
-        case 0x80:
-            pktlen = 2;
-            break;
-        case 0xa0:
-            pktlen = 4;
-            break;
-        case 0xc0:
-            pktlen = 6;
-            break;
-        case 0xe0:
-            result = read(fd, &pktlen, 1);
-            if (result == -1) {
-                syslog_bus(busnumber, DBG_ERROR,
-                           "could not read number of bytes in loconet packet: %s (errno = %d)\n",
-                           strerror(errno), errno);
-                /*TODO: appropriate action */
-            }
-            cmd[1] = pktlen;
-            index = 2;
-            break;
+            case 0x80:
+                pktlen = 2;
+                break;
+            case 0xa0:
+                pktlen = 4;
+                break;
+            case 0xc0:
+                pktlen = 6;
+                break;
+            case 0xe0:
+                result = read(fd, &pktlen, 1);
+                if (result == -1) {
+                    syslog_bus(busnumber, DBG_ERROR,
+                               "could not read number of bytes in loconet packet: %s (errno = %d)\n",
+                               strerror(errno), errno);
+                    /*TODO: appropriate action */
+                }
+                cmd[1] = pktlen;
+                index = 2;
+                break;
         }
 
         cmd[0] = c;
@@ -410,10 +411,12 @@ static int ln_read_serial(bus_t busnumber, unsigned char *cmd, int len)
                        "this is the echo of the last "
                        "packet sent, clear to sent next command!");
             retval = 0;         /* we ignore echos */
-        } else {
+        }
+        else {
             __loconet->recv_packets++;
         }
-    } else if (retval == -1) {
+    }
+    else if (retval == -1) {
         syslog_bus(busnumber, DBG_ERROR,
                    "Select failed: %s (errno = %d)\n", strerror(errno),
                    errno);
@@ -453,7 +456,7 @@ static int ln_read_lbserver(bus_t busnumber, unsigned char *cmd, int len)
             return (-1);
         }
 
-        /* line may begin with 
+        /* line may begin with
            SENT message: last command was sent (or not)
            RECEIVE message: new message from Loconet
            VERSION text: VERSION information about the server */
@@ -473,7 +476,8 @@ static int ln_read_lbserver(bus_t busnumber, unsigned char *cmd, int len)
             retval = pktlen;
         }
         __loconet->recv_packets++;
-    } else if (retval == -1) {
+    }
+    else if (retval == -1) {
         syslog_bus(busnumber, DBG_ERROR,
                    "Select failed: %s (errno = %d)\n", strerror(errno),
                    errno);
@@ -484,12 +488,12 @@ static int ln_read_lbserver(bus_t busnumber, unsigned char *cmd, int len)
 static int ln_read(bus_t busnumber, unsigned char *cmd, int len)
 {
     switch (buses[busnumber].devicetype) {
-    case HW_FILENAME:
-        return ln_read_serial(busnumber, cmd, len);
-        break;
-    case HW_NETWORK:
-        return ln_read_lbserver(busnumber, cmd, len);
-        break;
+        case HW_FILENAME:
+            return ln_read_serial(busnumber, cmd, len);
+            break;
+        case HW_NETWORK:
+            return ln_read_lbserver(busnumber, cmd, len);
+            break;
     }
     return 0;
 }
@@ -544,12 +548,12 @@ static int
 ln_write(bus_t busnumber, const unsigned char *cmd, unsigned char len)
 {
     switch (buses[busnumber].devicetype) {
-    case HW_FILENAME:
-        return ln_write_serial(busnumber, cmd, len);
-        break;
-    case HW_NETWORK:
-        return ln_write_lbserver(busnumber, cmd, len);
-        break;
+        case HW_FILENAME:
+            return ln_write_serial(busnumber, cmd, len);
+            break;
+        case HW_NETWORK:
+            return ln_write_lbserver(busnumber, cmd, len);
+            break;
     }
     return 0;
 }
@@ -562,13 +566,13 @@ static void end_bus_thread(bus_thread_t * btd)
     syslog_bus(btd->bus, DBG_INFO, "Loconet bus terminated.");
 
     switch (buses[btd->bus].devicetype) {
-    case HW_FILENAME:
-        close(buses[btd->bus].device.file.fd);
-        break;
-    case HW_NETWORK:
-        shutdown(buses[btd->bus].device.net.sockfd, SHUT_RDWR);
-        close(buses[btd->bus].device.net.sockfd);
-        break;
+        case HW_FILENAME:
+            close(buses[btd->bus].device.file.fd);
+            break;
+        case HW_NETWORK:
+            shutdown(buses[btd->bus].device.net.sockfd, SHUT_RDWR);
+            close(buses[btd->bus].device.net.sockfd);
+            break;
     }
 
     syslog_bus(btd->bus, DBG_INFO,
@@ -629,84 +633,88 @@ void *thr_sendrec_LOCONET(void *v)
                                     sizeof(ln_packet))) > 0) {
 
             switch (ln_packet[0]) {
-            	/* basic operations, 2byte Commands on Loconet */
-            case OPC_GPOFF:
-                buses[btd->bus].power_state = 0;
-                strcpy(buses[btd->bus].power_msg, "from Loconet");
-                infoPower(btd->bus, msg);
-                enqueueInfoMessage(msg);
-                break;
-            case OPC_GPON:
-                buses[btd->bus].power_state = 1;
-                strcpy(buses[btd->bus].power_msg, "from Loconet");
-                infoPower(btd->bus, msg);
-                enqueueInfoMessage(msg);
-                break;
-             /* */
-            case OPC_SW_REQ:   /* B0 */
-                addr = (ln_packet[1] | (ln_packet[2] << 7)) + 1;
-                value = (ln_packet[2] & 0x10) >> 4;
-                port = (ln_packet[2] & 0x20) >> 5;
-                getGA(btd->bus, addr, &gatmp);
-                gatmp.action = value;
-                gatmp.port = port;
-                setGA(btd->bus, addr, gatmp);
-                break;
-            /* some commands on the loconet,  */
-            case OPC_RQ_SL_DATA:       /* BB, E7 Message follows */ 
-                addr = ln_packet[1];
-                syslog_bus(btd->bus, DBG_DEBUG,
-                           "Infomational: Request SLOT DATA (OPC_RQ_SL_DATA: /* BB */)  #%d",
-                           addr);
-                break;
-            case OPC_LOCO_ADR: /* BF, E7 Message follows */
-                addr = (ln_packet[1] << 7 ) | ln_packet[2];
-                syslog_bus(btd->bus, DBG_DEBUG,
-                           "Informational: request loco address (OPC_LOCO_ADR:  /* BF */)  #%d", addr);
-                break;
-                /* loco data, unfortunatly with slot addresses and not decoder addresses */             
-            case OPC_LOCO_SPD: /* A0 */
-                addr = ln_packet[1];
-                speed = ln_packet[2];
-                syslog_bus(btd->bus, DBG_DEBUG,
-                           "Set loco speed (OPC_LOCO_SPD:  /* A0 */) %d: %d",
-                           addr, speed);
-                break;
-            case OPC_LOCO_DIRF:        /* A1 */
-                addr = ln_packet[1];
-                speed = ln_packet[2];
-                syslog_bus(btd->bus, DBG_DEBUG,
-                           "New flags for loco in slot (OPC_LOCO_DIRF:  /* A1 */) #%d: %d",
-                           addr, speed);
-                break;
-                
-            case OPC_SW_REP:   /* B1 */
-                break;
-            case OPC_INPUT_REP:        /* B2 */
-                addr = ln_packet[1] | ((ln_packet[2] & 0x000f) << 7);
-                addr = 1 + addr * 2 + ((ln_packet[2] & 0x0020) >> 5);
-                value = (ln_packet[2] & 0x10) >> 4;
-                updateFB(btd->bus, addr, value);
-                break;
-            case OPC_SL_RD_DATA:       /* E7 */
-            	switch (ln_packet[1]) {
-            	case 0x0e:
-                	addr = ln_packet[4] | (ln_packet[9] << 7);
-                	speed = ln_packet[5];
-                    syslog_bus(btd->bus, DBG_DEBUG,
-                               "OPC_SL_RD_DATA: /* E7 %0X */ slot #%d: status = %0x addr=%d speed=%d",
-                               ln_packet[1], ln_packet[2], ln_packet[3], addr, speed);
+                    /* basic operations, 2byte Commands on Loconet */
+                case OPC_GPOFF:
+                    buses[btd->bus].power_state = 0;
+                    strcpy(buses[btd->bus].power_msg, "from Loconet");
+                    infoPower(btd->bus, msg);
+                    enqueueInfoMessage(msg);
                     break;
-            	default:
+                case OPC_GPON:
+                    buses[btd->bus].power_state = 1;
+                    strcpy(buses[btd->bus].power_msg, "from Loconet");
+                    infoPower(btd->bus, msg);
+                    enqueueInfoMessage(msg);
+                    break;
+                    /* */
+                case OPC_SW_REQ:       /* B0 */
+                    addr = (ln_packet[1] | (ln_packet[2] << 7)) + 1;
+                    value = (ln_packet[2] & 0x10) >> 4;
+                    port = (ln_packet[2] & 0x20) >> 5;
+                    getGA(btd->bus, addr, &gatmp);
+                    gatmp.action = value;
+                    gatmp.port = port;
+                    setGA(btd->bus, addr, gatmp);
+                    break;
+                    /* some commands on the loconet,  */
+                case OPC_RQ_SL_DATA:   /* BB, E7 Message follows */
+                    addr = ln_packet[1];
                     syslog_bus(btd->bus, DBG_DEBUG,
-                               "unknown OPC_SL_RD_DATA: /* E7 %0X */", ln_packet[1], ln_packet[2]);
-            	}
-            	break;
-            default:
-                syslog_bus(btd->bus, DBG_DEBUG,
-                           "Unkown Loconet Message (%x)", ln_packet[0]);
-                /* unknown Loconet packet received, ignored */
-                break;
+                               "Infomational: Request SLOT DATA (OPC_RQ_SL_DATA: /* BB */)  #%d",
+                               addr);
+                    break;
+                case OPC_LOCO_ADR:     /* BF, E7 Message follows */
+                    addr = (ln_packet[1] << 7) | ln_packet[2];
+                    syslog_bus(btd->bus, DBG_DEBUG,
+                               "Informational: request loco address (OPC_LOCO_ADR:  /* BF */)  #%d",
+                               addr);
+                    break;
+                    /* loco data, unfortunatly with slot addresses and not decoder addresses */
+                case OPC_LOCO_SPD:     /* A0 */
+                    addr = ln_packet[1];
+                    speed = ln_packet[2];
+                    syslog_bus(btd->bus, DBG_DEBUG,
+                               "Set loco speed (OPC_LOCO_SPD:  /* A0 */) %d: %d",
+                               addr, speed);
+                    break;
+                case OPC_LOCO_DIRF:    /* A1 */
+                    addr = ln_packet[1];
+                    speed = ln_packet[2];
+                    syslog_bus(btd->bus, DBG_DEBUG,
+                               "New flags for loco in slot (OPC_LOCO_DIRF:  /* A1 */) #%d: %d",
+                               addr, speed);
+                    break;
+
+                case OPC_SW_REP:       /* B1 */
+                    break;
+                case OPC_INPUT_REP:    /* B2 */
+                    addr = ln_packet[1] | ((ln_packet[2] & 0x000f) << 7);
+                    addr = 1 + addr * 2 + ((ln_packet[2] & 0x0020) >> 5);
+                    value = (ln_packet[2] & 0x10) >> 4;
+                    updateFB(btd->bus, addr, value);
+                    break;
+                case OPC_SL_RD_DATA:   /* E7 */
+                    switch (ln_packet[1]) {
+                        case 0x0e:
+                            addr = ln_packet[4] | (ln_packet[9] << 7);
+                            speed = ln_packet[5];
+                            syslog_bus(btd->bus, DBG_DEBUG,
+                                       "OPC_SL_RD_DATA: /* E7 %0X */ slot #%d: status = %0x addr=%d speed=%d",
+                                       ln_packet[1], ln_packet[2],
+                                       ln_packet[3], addr, speed);
+                            break;
+                        default:
+                            syslog_bus(btd->bus, DBG_DEBUG,
+                                       "unknown OPC_SL_RD_DATA: /* E7 %0X */",
+                                       ln_packet[1], ln_packet[2]);
+                    }
+                    break;
+                default:
+                    syslog_bus(btd->bus, DBG_DEBUG,
+                               "Unkown Loconet Message (%x)",
+                               ln_packet[0]);
+                    /* unknown Loconet packet received, ignored */
+                    break;
             }
         }
         if (__loconett->ln_msglen == 0) {
@@ -719,7 +727,8 @@ void *thr_sendrec_LOCONET(void *v)
                 buses[btd->bus].power_changed = 0;
                 infoPower(btd->bus, msg);
                 enqueueInfoMessage(msg);
-            } else if (!queue_GA_isempty(btd->bus)) {
+            }
+            else if (!queue_GA_isempty(btd->bus)) {
                 ga_state_t gatmp;
                 dequeueNextGA(btd->bus, &gatmp);
                 addr = gatmp.id - 1;
@@ -747,28 +756,28 @@ void *thr_sendrec_LOCONET(void *v)
                 dequeueNextSM(btd->bus, &smtmp);
                 addr = smtmp.addr;
                 switch (smtmp.command) {
-                case SET:
-                    syslog_bus(btd->bus, DBG_DEBUG,
-                               "Loconet: SM SET #%d %02X", smtmp.addr,
-                               smtmp.value);
-                    break;
-                case GET:
-                    syslog_bus(btd->bus, DBG_DEBUG,
-                               "Loconet SM GET #%d[%d]", smtmp.addr,
-                               smtmp.typeaddr);
-                    ln_packetlen = 16;
-                    ln_packet[0] = 0xe5;        /* OPC_PEER_XFER, old fashioned */
-                    ln_packet[1] = ln_packetlen;
-                    ln_packet[2] = __loconett->loconetID;       /* sender ID */
-                    ln_packet[3] = (unsigned char) smtmp.addr;  /* dest address */
-                    ln_packet[4] = 0x01;
-                    ln_packet[5] = 0x10;
-                    ln_packet[6] = 0x02;
-                    ln_packet[7] = (unsigned char) smtmp.typeaddr;
-                    ln_packet[8] = 0x00;
-                    ln_packet[9] = 0x00;
-                    ln_packet[10] = 0x00;
-                    break;
+                    case SET:
+                        syslog_bus(btd->bus, DBG_DEBUG,
+                                   "Loconet: SM SET #%d %02X", smtmp.addr,
+                                   smtmp.value);
+                        break;
+                    case GET:
+                        syslog_bus(btd->bus, DBG_DEBUG,
+                                   "Loconet SM GET #%d[%d]", smtmp.addr,
+                                   smtmp.typeaddr);
+                        ln_packetlen = 16;
+                        ln_packet[0] = 0xe5;    /* OPC_PEER_XFER, old fashioned */
+                        ln_packet[1] = ln_packetlen;
+                        ln_packet[2] = __loconett->loconetID;   /* sender ID */
+                        ln_packet[3] = (unsigned char) smtmp.addr;      /* dest address */
+                        ln_packet[4] = 0x01;
+                        ln_packet[5] = 0x10;
+                        ln_packet[6] = 0x02;
+                        ln_packet[7] = (unsigned char) smtmp.typeaddr;
+                        ln_packet[8] = 0x00;
+                        ln_packet[9] = 0x00;
+                        ln_packet[10] = 0x00;
+                        break;
                 }
             }
             ln_packet[ln_packetlen - 1] =
@@ -777,7 +786,8 @@ void *thr_sendrec_LOCONET(void *v)
                 ln_write(btd->bus, ln_packet, ln_packetlen);
                 timeoutcnt = 0;
             }
-        } else {
+        }
+        else {
             syslog_bus(btd->bus, DBG_DEBUG,
                        "Waiting for echo of last command (%d ms timeoutcount)",
                        timeoutcnt);
