@@ -218,6 +218,7 @@ int infoGA(bus_t busnumber, int addr, int port, char *msg)
 
 int initGA(bus_t busnumber, int addr, const char protocol)
 {
+    int i;
     int rc = SRCP_OK;
     int number_ga = get_number_ga(busnumber);
     syslog_bus(busnumber, DBG_INFO, "init GA: %d %c", addr, protocol);
@@ -227,12 +228,10 @@ int initGA(bus_t busnumber, int addr, const char protocol)
         gettimeofday(&ga[busnumber].gastate[addr].inittime, NULL);
         ga[busnumber].gastate[addr].activetime = 0;
         ga[busnumber].gastate[addr].action = 0;
-        /*TODO: change to loop over port count if MAXGAPORT > 2 */
-        ga[busnumber].gastate[addr].tv[0].tv_sec = 0;
-        ga[busnumber].gastate[addr].tv[0].tv_usec = 0;
-        ga[busnumber].gastate[addr].tv[1].tv_sec = 0;
-        ga[busnumber].gastate[addr].tv[1].tv_usec = 0;
-
+	for(i=0; i<MAXGAPORT; i++) {
+    	    ga[busnumber].gastate[addr].tv[i].tv_sec = 0;
+    	    ga[busnumber].gastate[addr].tv[i].tv_usec = 0;
+	}
         if (buses[busnumber].init_ga_func != NULL)
             rc = (*buses[busnumber].init_ga_func) (&ga[busnumber].
                                                     gastate[addr]);
