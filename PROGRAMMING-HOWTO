@@ -122,6 +122,14 @@ the updated information to all INFORMATION sessions.
 
 9. Naming Convention
 
+9.0 code style
+
+The code is formatted using the indent tool. Its settings
+should read as follows
+
+ -kr -br -nce -nut -cbi4 -cli4
+
+
 9.1 Function Names
 
 The thread functions have names prefixed with thr_. Functions related to
