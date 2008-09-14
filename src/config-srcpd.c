@@ -98,15 +98,8 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
     buses[current_bus].init_fb_func = NULL;
 
     /* Communication port to default values */
-    buses[current_bus].devicetype = HW_FILENAME;
-
-    /* FIXME: this will lead to a memory leak if initialization of
-     * (busnumber - 1) failed */
-    buses[current_bus].device.file.path = malloc(strlen("/dev/null") + 1);
-    if (buses[current_bus].device.file.path == NULL)
-        return current_bus;
-
-    strcpy(buses[current_bus].device.file.path, "/dev/null");
+    buses[current_bus].devicetype = HW_UNDEFINED;
+    buses[current_bus].device.file.path = NULL;
 
     /* Definition of thread synchronisation  */
     /*TODO: this should be (privately) moved to each bus*/
