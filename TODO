@@ -5,6 +5,6 @@ Bugs to fix
 Features to implement
 ---------------------
 * SRCP server reset
-* SIGIO (event) driven code for all modules using serial device
+* Event driven code for all modules using serial device
   communication
 
