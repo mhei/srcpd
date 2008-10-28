@@ -28,6 +28,7 @@ int setTIME(int d, int h, int m, int s)
 {
     if (d < 0 || h < 0 || h > 23 || m < 0 || m > 59 || s < 0 || s > 59)
         return SRCP_WRONGVALUE;
+
     vtime.day = d;
     vtime.hour = h;
     vtime.min = m;
@@ -37,9 +38,10 @@ int setTIME(int d, int h, int m, int s)
 
 int initTIME(int fx, int fy)
 {
-    char msg[100];
     if (fx < 0 || fy <= 0)
         return SRCP_WRONGVALUE;
+
+    char msg[100];
     vtime.ratio_x = fx;
     vtime.ratio_y = fy;
     gettimeofday(&vtime.inittime, NULL);
@@ -56,14 +58,18 @@ int getTIME(vtime_t *vt)
 
 int infoTIME(char *msg)
 {
-    struct timeval akt_time;
-    gettimeofday(&akt_time, NULL);
-    msg[0] = 0x00;
+    msg[0] = '\0';
+
     if (vtime.ratio_x == 0 && vtime.ratio_y == 0)
         return SRCP_NODATA;
+
+    struct timeval akt_time;
+    gettimeofday(&akt_time, NULL);
+    
     sprintf(msg, "%lu.%.3lu 100 INFO 0 TIME %d %d %d %d\n",
             akt_time.tv_sec, akt_time.tv_usec / 1000, vtime.day,
             vtime.hour, vtime.min, vtime.sec);
+    
     return SRCP_INFO;
 }
 
@@ -81,9 +87,10 @@ int describeTIME(char *reply)
 void *thr_clock(void *v)
 {
     vtime_t vt;
-    int sendinfo = 0;
+    bool sendinfo = false;
     vtime.ratio_x = 0;
     vtime.ratio_y = 0;
+
     while (1) {
         unsigned long sleeptime;
         if (vtime.ratio_x == 0 || vtime.ratio_y == 0) {
@@ -99,7 +106,7 @@ void *thr_clock(void *v)
         if (vt.sec >= 60) {
             vt.sec = 0;
             vt.min++;
-            sendinfo = 1;
+            sendinfo = true;
         }
         if (vt.min >= 60) {
             vt.hour++;
@@ -110,9 +117,9 @@ void *thr_clock(void *v)
             vt.hour = 0;
         }
         vtime = vt;
-        if (sendinfo == 1) {
+        if (sendinfo) {
+            sendinfo = false;
             char msg[100];
-            sendinfo = 0;
             infoTIME(msg);
             enqueueInfoMessage(msg);
         }
@@ -128,12 +135,12 @@ void create_time_thread()
 
     result = pthread_create(&time_tid, NULL, thr_clock, NULL);
     if (result != 0) {
-        syslog_bus(0, DBG_INFO, "Create time thread failed: %s "
+        syslog_bus(0, DBG_ERROR, "Create time thread failed: %s "
                 "(errno = %d)\n", strerror(result), result);
+        return;
     }
-    /*pthread_detach(time_tid);*/
 
-    syslog_bus(0, DBG_INFO, "Time thread created.");
+    syslog_bus(0, DBG_DEBUG, "Time thread created.");
 }
 
 /*cancel time/clock thread*/
@@ -149,10 +156,12 @@ void cancel_time_thread()
 
     /*wait until time thread terminates*/
     result = pthread_join(time_tid, NULL);
-    if (result != 0)
+    if (result != 0) {
         syslog_bus(0, DBG_ERROR,
                 "Time thread join failed: %s (errno = %d).",
                 strerror(result), result);
+        return;
+    }
 
     syslog_bus(0, DBG_DEBUG, "Time thread cancelled.");
 }
