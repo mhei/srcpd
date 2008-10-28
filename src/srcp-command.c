@@ -475,26 +475,35 @@ int handleWAIT(sessionid_t sessionid, bus_t bus, char *device,
     }
 
     else if (bus_has_devicegroup(bus, DG_TIME)
-             && strncasecmp(device, "TIME", 4) == 0) {
+            && strncasecmp(device, "TIME", 4) == 0) {
         long d, h, m, s;
         int nelem;
         nelem = sscanf(parameter, "%ld %ld %ld %ld", &d, &h, &m, &s);
-        if (vtime.ratio_x != 0 && vtime.ratio_y != 0) {
-            if (nelem >= 4) {
-                /* no calculation, der Zeitfluss ist nicht gleichmaessig! */
-                while ((((d * 24 + h) * 60 + m) * 60 + s) >=
-                       (((vtime.day * 24 + vtime.hour) * 60 +
-                         vtime.min) * 60 + vtime.sec)) {
-                    usleep(10000);      /* we wait 10ms real time.. */
+        if (nelem >= 4) {
+            vtime_t vt;
+            getTIME(&vt);
+            if (vt.ratio_x != 0 && vt.ratio_y != 0) {
+                bool mustwait;
+                do {
+                    mustwait = (((d * 24 + h) * 60 + m) * 60 + s) >=
+                        (((vt.day * 24 + vt.hour) * 60 +
+                          vt.min) * 60 + vt.sec);
+
+                    /* wait 10ms real time.. */
+                    if (mustwait) {
+                        usleep(10000);
+                        getTIME(&vt);
+                    }
                 }
+                while (mustwait);
                 rc = infoTIME(reply);
             }
             else {
-                rc = srcp_fmt_msg(SRCP_LISTTOOSHORT, reply, time);
+                rc = srcp_fmt_msg(SRCP_NODATA, reply, time);
             }
         }
         else {
-            rc = srcp_fmt_msg(SRCP_NODATA, reply, time);
+            rc = srcp_fmt_msg(SRCP_LISTTOOSHORT, reply, time);
         }
     }
     return rc;
