@@ -24,10 +24,6 @@ typedef struct _VTIME
   struct timeval inittime;
 } vtime_t;
 
-/*FIXME: this global variable can be accessed by several threads at the
- * same time and should be protected by a lock*/
-vtime_t vtime;
-
 int startup_TIME(void);
 int setTIME(int d, int h, int m, int s);
 int initTIME(int fx, int fy);
