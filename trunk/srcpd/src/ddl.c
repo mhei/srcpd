@@ -748,7 +748,7 @@ static int checkShortcut(bus_t busnumber)
     return 0;
 }
 
-static void send_packet(bus_t busnumber, int addr, char *packet,
+static void send_packet(bus_t busnumber, char *packet,
                         int packet_size, int packet_type, int refresh)
 {
     ssize_t result;
@@ -884,11 +884,11 @@ static void refresh_loco(bus_t busnumber)
                                                      last_refreshed_maerklin_loco];
         tcflush(buses[busnumber].device.file.fd, TCOFLUSH);
         if (__DDL->last_refreshed_maerklin_fx < 0)
-            send_packet(busnumber, adr,
+            send_packet(busnumber,
                         __DDL->MaerklinPacketPool.packets[adr].packet, 18,
                         QM2LOCOPKT, true);
         else
-            send_packet(busnumber, adr,
+            send_packet(busnumber,
                         __DDL->MaerklinPacketPool.packets[adr].
                         f_packets[__DDL->last_refreshed_maerklin_fx], 18,
                         QM2FXPKT, true);
@@ -907,14 +907,14 @@ static void refresh_loco(bus_t busnumber)
                                                  last_refreshed_nmra_loco];
         if (adr >= 0) {
             if (__DDL->last_refreshed_nmra_fx < 0) {
-                send_packet(busnumber, adr,
+                send_packet(busnumber,
                             __DDL->NMRAPacketPool.packets[adr].packet,
                             __DDL->NMRAPacketPool.packets[adr].packet_size,
                             QNBLOCOPKT, true);
                 __DDL->last_refreshed_nmra_fx = 0;
             }
             else {
-                send_packet(busnumber, adr,
+                send_packet(busnumber,
                             __DDL->NMRAPacketPool.packets[adr].fx_packet,
                             __DDL->NMRAPacketPool.packets[adr].
                             fx_packet_size, QNBLOCOPKT, true);
@@ -1157,7 +1157,7 @@ static void *thr_refresh_cycle(void *v)
             while (packet_type > QNOVALIDPKT) {
                 if (check_lines(busnumber))
                     continue;
-                send_packet(busnumber, addr, packet, packet_size,
+                send_packet(busnumber, packet, packet_size,
                             packet_type, false);
                 if (__DDL->ENABLED_PROTOCOLS == (EP_MAERKLIN | EP_NMRADCC)) {
                     result = write(buses[busnumber].device.file.fd,
