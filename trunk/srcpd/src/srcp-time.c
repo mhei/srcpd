@@ -17,7 +17,7 @@
 /*local variable for time thread*/
 static pthread_t time_tid;
 
-/*FIXME: this global variable can be accessed by several threads at the
+/*FIXME: this variable can be accessed by several threads at the
  * same time and should be protected by a lock*/
 static vtime_t vtime;
 
