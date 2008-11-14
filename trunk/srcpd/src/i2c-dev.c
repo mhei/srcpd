@@ -20,17 +20,19 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
+#include <linux/types.h>
 
-#include <linux/version.h>
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)
-  #include <linux/i2c.h>
-  #include <linux/i2c-dev.h>
-#else
-  #include <linux/i2c-dev.h>
-  #ifndef I2C_SLAVE
+#ifdef HAVE_LINUX_I2C_H
+#include <linux/i2c.h>
+#endif
+
+#ifdef HAVE_LINUX_I2C_DEV_H
+#include <linux/i2c-dev.h>
+#endif
+
+#ifndef I2C_SLAVE
     #define I2C_SLAVE 0x0703
     #warning "Value for I2C_SLAVE defined due to a problem with system headers."
-  #endif
 #endif
 
 #include "config-srcpd.h"
