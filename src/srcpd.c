@@ -313,12 +313,12 @@ int main(int argc, char **argv)
     }
 
     /*daemonize process*/
-    /*
+
     if (0 != daemon_init()) {
         fprintf(stderr, "Daemonization failed!\n");
         exit(1);
     }
-*/
+
     openlog("srcpd", LOG_PID, LOG_USER);
     CreatePIDFile(getpid());
     syslog(LOG_INFO, "%s", WELCOME_MSG);
