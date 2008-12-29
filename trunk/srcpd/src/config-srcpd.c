@@ -33,6 +33,16 @@
 #include "loconet.h"
 #include "syslogmessage.h"
 
+/* check if a bus type is actually available on the server */
+int bus_type_is_available(int type)
+{
+    int i = 0;
+    while (i < MAX_BUSES && buses[i].type != type)
+        i++;
+    if (i < MAX_BUSES)
+        return 1;               // true
+    return 0;                   // false
+}
 
 /* check if a bus has a device group or not */
 int bus_has_devicegroup(bus_t bus, int dg)
@@ -74,11 +84,11 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
         return busnumber;
 
     if (busnumber >= MAX_BUSES) {
-            syslog_bus(0, DBG_ERROR,
-               "Sorry, you have used an invalid bus number (%ld). "
-               "If this is greater than or equal to %d,\n"
-               "you need to recompile the sources.\n",
-               busnumber, MAX_BUSES);
+        syslog_bus(0, DBG_ERROR,
+                   "Sorry, you have used an invalid bus number (%ld). "
+                   "If this is greater than or equal to %d,\n"
+                   "you need to recompile the sources.\n",
+                   busnumber, MAX_BUSES);
         return busnumber;
     }
 
@@ -102,19 +112,19 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
     buses[current_bus].device.file.path = NULL;
 
     /* Definition of thread synchronisation  */
-    /*TODO: this should be (privately) moved to each bus*/
+    /*TODO: this should be (privately) moved to each bus */
     result = pthread_mutex_init(&buses[current_bus].transmit_mutex, NULL);
     if (result != 0) {
         syslog_bus(current_bus, DBG_ERROR,
-                "pthread_mutex_init() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_init() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
 
     result = pthread_cond_init(&buses[current_bus].transmit_cond, NULL);
     if (result != 0) {
         syslog_bus(current_bus, DBG_ERROR,
-                "pthread_cond_init() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_cond_init() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
 
     xmlNodePtr child = node->children;
@@ -132,8 +142,9 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
             if (busnumber == 0)
                 busnumber += readconfig_server(doc, child, busnumber);
             else
-                syslog_bus(0, DBG_ERROR, "Sorry, type=server is not allowed "
-                                "at bus %ld!\n", busnumber);
+                syslog_bus(0, DBG_ERROR,
+                           "Sorry, type=server is not allowed "
+                           "at bus %ld!\n", busnumber);
         }
 
         /* but the most important are not ;=)  */
@@ -165,8 +176,9 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
 #if defined(linux) || defined(__CYGWIN__) || defined(__FreeBSD__)
             busnumber += readconfig_DDL_S88(doc, child, busnumber);
 #else
-            syslog_bus(0, DBG_ERROR, "Sorry, DDL-S88 not (yet) available on "
-                            "this system.\n");
+            syslog_bus(0, DBG_ERROR,
+                       "Sorry, DDL-S88 not (yet) available on "
+                       "this system.\n");
 #endif
         }
 
@@ -191,7 +203,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
             busnumber += readconfig_I2C_DEV(doc, child, busnumber);
 #else
             syslog_bus(0, DBG_ERROR, "Sorry, I2C-DEV is only available on "
-                            "Linux (yet).\n");
+                       "Linux (yet).\n");
 #endif
         }
 
@@ -206,7 +218,8 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
             }
             else {
                 syslog_bus(0, DBG_ERROR, "WARNING, \"%s\" (bus %ld) is an "
-                     "unknown device specifier!\n", child->name, current_bus);
+                           "unknown device specifier!\n", child->name,
+                           current_bus);
             }
             free(txt2);
             txt = xmlNodeListGetString(doc, child->children, 1);
@@ -238,7 +251,8 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
                         if (txt2 != NULL) {
                             struct protoent *p;
                             p = getprotobyname((char *) txt2);
-                            buses[current_bus].device.net.protocol = p->p_proto;
+                            buses[current_bus].device.net.protocol =
+                                p->p_proto;
                             free(txt2);
                         }
                         else {
@@ -251,14 +265,14 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
             switch (buses[current_bus].devicetype) {
                 case HW_FILENAME:
                     syslog_bus(current_bus, DBG_DEBUG, "** Filename='%s'",
-                        buses[current_bus].device.file.path);
+                               buses[current_bus].device.file.path);
                     break;
                 case HW_NETWORK:
                     syslog_bus(current_bus, DBG_DEBUG,
-                        "** Network Host='%s', Protocol=%d Port=%d",
-                        buses[current_bus].device.net.hostname,
-                        buses[current_bus].device.net.protocol,
-                        buses[current_bus].device.net.port);
+                               "** Network Host='%s', Protocol=%d Port=%d",
+                               buses[current_bus].device.net.hostname,
+                               buses[current_bus].device.net.protocol,
+                               buses[current_bus].device.net.port);
                     break;
             }
         }
@@ -336,8 +350,8 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
 
         else
             syslog_bus(0, DBG_ERROR,
-                    "WARNING, \"%s\" (bus %ld) is an unknown tag!\n",
-                    child->name, current_bus);
+                       "WARNING, \"%s\" (bus %ld) is an unknown tag!\n",
+                       child->name, current_bus);
 
         child = child->next;
     }
@@ -383,7 +397,8 @@ int readConfig(char *filename)
     if (doc != NULL) {
         syslog_bus(0, DBG_DEBUG, "walking %s", filename);
         rb = walk_config_xml(doc);
-        syslog_bus(0, DBG_DEBUG, " done %s; found %ld buses", filename, rb);
+        syslog_bus(0, DBG_DEBUG, " done %s; found %ld buses", filename,
+                   rb);
         xmlFreeDoc(doc);
         /*
          *Free the global variables that may
@@ -393,7 +408,8 @@ int readConfig(char *filename)
     }
     else {
         syslog_bus(0, DBG_ERROR,
-            "Error, no XML document tree found parsing %s.\n", filename);
+                   "Error, no XML document tree found parsing %s.\n",
+                   filename);
     }
     return (rb > 0);
 }
@@ -414,24 +430,24 @@ void suspend_bus_thread(bus_t busnumber)
     result = pthread_mutex_lock(&buses[busnumber].transmit_mutex);
     if (result != 0) {
         syslog_bus(busnumber, DBG_ERROR,
-                "pthread_mutex_lock() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_lock() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
 
     result = pthread_cond_wait(&buses[busnumber].transmit_cond,
-            &buses[busnumber].transmit_mutex);
+                               &buses[busnumber].transmit_mutex);
     if (result != 0) {
         syslog_bus(busnumber, DBG_ERROR,
-                "pthread_cond_wait() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_cond_wait() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
-    
+
     /* mutex released.       */
     result = pthread_mutex_unlock(&buses[busnumber].transmit_mutex);
     if (result != 0) {
         syslog_bus(busnumber, DBG_ERROR,
-                "pthread_mutex_unlock() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_unlock() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
     syslog_bus(busnumber, DBG_DEBUG, "Bus thread is working again.");
 }
@@ -448,22 +464,22 @@ void resume_bus_thread(bus_t busnumber)
     result = pthread_mutex_lock(&buses[busnumber].transmit_mutex);
     if (result != 0) {
         syslog_bus(busnumber, DBG_ERROR,
-                "pthread_mutex_lock() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_lock() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
 
     result = pthread_cond_signal(&buses[busnumber].transmit_cond);
     if (result != 0) {
         syslog_bus(busnumber, DBG_ERROR,
-                "pthread_cond_signal() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_cond_signal() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
-    
+
     result = pthread_mutex_unlock(&buses[busnumber].transmit_mutex);
     if (result != 0) {
         syslog_bus(busnumber, DBG_ERROR,
-                "pthread_mutex_lock() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_lock() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
     syslog_bus(0, DBG_DEBUG, "Thread on bus %d is woken up", busnumber);
 }
@@ -476,41 +492,41 @@ void create_all_bus_threads()
     bus_t i;
 
     syslog_bus(0, DBG_INFO, "Starting %ld bus interface threads.",
-            num_buses);
+               num_buses);
 
     /* start threads for all buses */
     for (i = 1; i <= num_buses; i++) {
         syslog_bus(0, DBG_INFO,
-                "Starting interface thread number %ld (type = %d).",
-                i, buses[i].type);
+                   "Starting interface thread number %ld (type = %d).",
+                   i, buses[i].type);
 
         if (buses[i].thr_timer != NULL) {
-               result = pthread_create(&ttid_tid, NULL, buses[i].thr_timer,
-                                        (void *) i);
-               if (result != 0) {
-                   syslog(LOG_INFO, "Create timer thread for bus %ld "
-                           "failed: %s (errno = %d)\n", i,
-                           strerror(result), result);
-                   exit(1);
-               }
-               buses[i].tidtimer = ttid_tid;
+            result = pthread_create(&ttid_tid, NULL, buses[i].thr_timer,
+                                    (void *) i);
+            if (result != 0) {
+                syslog(LOG_INFO, "Create timer thread for bus %ld "
+                       "failed: %s (errno = %d)\n", i,
+                       strerror(result), result);
+                exit(1);
+            }
+            buses[i].tidtimer = ttid_tid;
         }
 
         if (buses[i].thr_func != NULL) {
-               result = pthread_create(&ttid_tid, NULL, buses[i].thr_func,
-                                        (void *) i);
-               if (result != 0) {
-                   syslog(LOG_INFO, "Create interface thread for bus %ld "
-                           "failed: %s (errno = %d)\n", i,
-                           strerror(result), result);
-                   exit(1);
-               }
-               buses[i].tid = ttid_tid;
+            result = pthread_create(&ttid_tid, NULL, buses[i].thr_func,
+                                    (void *) i);
+            if (result != 0) {
+                syslog(LOG_INFO, "Create interface thread for bus %ld "
+                       "failed: %s (errno = %d)\n", i,
+                       strerror(result), result);
+                exit(1);
+            }
+            buses[i].tid = ttid_tid;
         }
 
         syslog_bus(i, LOG_INFO, "Interface thread started successfully "
-                "(type =%d, tid = %u)", buses[i].type,
-                (unsigned int) (buses[i].tid));
+                   "(type =%d, tid = %u)", buses[i].type,
+                   (unsigned int) (buses[i].tid));
 
         if (((buses[i].flags & AUTO_POWER_ON) == AUTO_POWER_ON)) {
             setPower(i, 1, "AUTO POWER ON");
@@ -526,7 +542,7 @@ void cancel_all_bus_threads()
 {
     bus_t bus;
     int result = 0;
-    void* thr_result;
+    void *thr_result;
 
     for (bus = 1; bus <= num_buses; bus++) {
 
@@ -534,29 +550,29 @@ void cancel_all_bus_threads()
             result = pthread_cancel(buses[bus].tidtimer);
             if (result != 0)
                 syslog_bus(bus, DBG_ERROR,
-                        "Timer thread cancel failed: %s (errno = %d).",
-                        strerror(result), result);
+                           "Timer thread cancel failed: %s (errno = %d).",
+                           strerror(result), result);
 
-            /*wait until timer thread terminates*/
+            /*wait until timer thread terminates */
             result = pthread_join(buses[bus].tidtimer, &thr_result);
             if (result != 0)
                 syslog_bus(bus, DBG_ERROR,
-                        "Timer thread join failed: %s (errno = %d).",
-                        strerror(result), result);
+                           "Timer thread join failed: %s (errno = %d).",
+                           strerror(result), result);
         }
 
         result = pthread_cancel(buses[bus].tid);
         if (result != 0)
             syslog_bus(bus, DBG_ERROR,
-                    "Interface thread cancel failed: %s (errno = %d).",
-                    strerror(result), result);
+                       "Interface thread cancel failed: %s (errno = %d).",
+                       strerror(result), result);
 
-        /*wait until thread terminates*/
+        /*wait until thread terminates */
         result = pthread_join(buses[bus].tid, &thr_result);
         if (result != 0)
             syslog_bus(bus, DBG_ERROR,
-                    "Interface thread join failed: %s (errno = %d).",
-                    strerror(result), result);
+                       "Interface thread join failed: %s (errno = %d).",
+                       strerror(result), result);
 
         syslog_bus(bus, DBG_INFO, "Bus successfully cancelled.");
     }
@@ -571,20 +587,19 @@ void run_bus_watchdog()
 
     for (bus = 1; bus <= num_buses; bus++) {
         if ((buses[bus].flags & USE_WATCHDOG)
-                    && buses[bus].watchdog == 0
-                    && !queue_GL_isempty(bus)
-                    && !queue_GA_isempty(bus)) {
+            && buses[bus].watchdog == 0 && !queue_GL_isempty(bus)
+            && !queue_GA_isempty(bus)) {
             syslog_bus(bus, DBG_ERROR, "Oops: Interface thread "
-                    "hangs, restarting (old tid = %ld, %d).",
-                    (long) buses[bus].tid, buses[bus].watchdog);
+                       "hangs, restarting (old tid = %ld, %d).",
+                       (long) buses[bus].tid, buses[bus].watchdog);
             pthread_cancel(buses[bus].tid);
             pthread_join(buses[bus].tid, NULL);
             result = pthread_create(&ttid_tid, NULL,
-                    buses[bus].thr_func, (void *) bus);
+                                    buses[bus].thr_func, (void *) bus);
             if (result != 0) {
                 syslog(LOG_INFO, "Recreate interface thread "
-                        "failed: %s (errno = %d)\n",
-                        strerror(result), result);
+                       "failed: %s (errno = %d)\n",
+                       strerror(result), result);
                 break;
             }
             buses[bus].tid = ttid_tid;

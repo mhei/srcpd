@@ -138,6 +138,7 @@ void create_all_bus_threads();
 void cancel_all_bus_threads();
 void suspend_bus_thread(bus_t bus);
 void resume_bus_thread(bus_t bus);
+int bus_type_is_available(int type);
 
 #define DG_SESSION 1
 #define DG_TIME 2
