@@ -204,6 +204,12 @@ enable_usleep_patch
 .TP
 usleep_usec
 .TP
+nmra_ga_offset
+For backward compabilty and alternate usage of different CUs.
+If your ga decoders are shifted by 4 (i.e. you want to change switch 1, and
+you have to change switch 5 to do this), then you shoul use a value of 1 for
+this value. Valid values are 0 and 1. Default value is 0.
+.TP
 program_track
 This parameter allows you to supress commands which are issued for a
 program track. This parameter should only be used on your main.  Valid
