@@ -1,3 +1,7 @@
+2008-12-29 Joerg Rottland <rottland@users.sourceforge.net>
+        * DDL: Fixes from Torsten Vogt for simultaneous use of DCC and MM
+        * Configurable GA Adress shift (for backward compability)
+
 --- Release 2.0.12 ----
 
 2008-11-14 Guido Scholz <guido.scholz@bayernline.de>
