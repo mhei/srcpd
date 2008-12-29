@@ -76,6 +76,7 @@
 #define TIOCOUTQ 0x5411
 #endif
 
+void (*waitUARTempty_MM) (bus_t busnumber);
 
 static int (*nanosleep_DDL) (const struct timespec * req,
                              struct timespec * rem);
@@ -748,17 +749,19 @@ static int checkShortcut(bus_t busnumber)
     return 0;
 }
 
+/* arguments for nanosleep and Maerklin loco decoders (19KHz) */
+/* all using busy waiting */
+static struct timespec rqtp_btw19K = { 0, 1250000 };
+static struct timespec rqtp_end19K = { 0, 1700000 };  
+/* arguments for nanosleep and Maerklin solenoids/function decoders (38KHz) */
+static struct timespec rqtp_btw38K = { 0, 625000 };
+static struct timespec rqtp_end38K = { 0, 850000 };
+
 static void send_packet(bus_t busnumber, char *packet,
                         int packet_size, int packet_type, int refresh)
 {
     ssize_t result;
     int i, laps;
-    /* arguments for nanosleep and Maerklin loco decoders (19KHz) */
-    struct timespec rqtp_btw19K = { 0, 1250000 };       /* ==> busy waiting */
-    struct timespec rqtp_end19K = { 0, 1700000 };       /* ==> busy waiting */
-    /* arguments for nanosleep and Maerklin solenoids/function decoders (38KHz) */
-    struct timespec rqtp_btw38K = { 0, 625000 };        /* ==> busy waiting */
-    struct timespec rqtp_end38K = { 0, 850000 };        /* ==> busy waiting */
 
     waitUARTempty(busnumber);
 
@@ -780,7 +783,7 @@ static void send_packet(bus_t busnumber, char *packet,
                                "write() failed: %s (errno = %d)\n",
                                strerror(errno), errno);
                 }
-                waitUARTempty(busnumber);
+                waitUARTempty_MM(busnumber);
                 nanosleep_DDL(&rqtp_btw19K, &__DDL->rmtp);
                 result =
                     write(buses[busnumber].device.file.fd, packet, 18);
@@ -789,7 +792,7 @@ static void send_packet(bus_t busnumber, char *packet,
                                "write() failed: %s (errno = %d)\n",
                                strerror(errno), errno);
                 }
-                waitUARTempty(busnumber);
+                waitUARTempty_MM(busnumber);
             }
             break;
         case QM2FXPKT:
@@ -808,7 +811,7 @@ static void send_packet(bus_t busnumber, char *packet,
                                "write() failed: %s (errno = %d)\n",
                                strerror(errno), errno);
                 }
-                waitUARTempty(busnumber);
+                waitUARTempty_MM(busnumber);
                 nanosleep_DDL(&rqtp_btw19K, &__DDL->rmtp);
                 result =
                     write(buses[busnumber].device.file.fd, packet, 18);
@@ -817,7 +820,7 @@ static void send_packet(bus_t busnumber, char *packet,
                                "write() failed: %s (errno = %d)\n",
                                strerror(errno), errno);
                 }
-                waitUARTempty(busnumber);
+                waitUARTempty_MM(busnumber);
             }
             break;
         case QM1FUNCPKT:
@@ -832,7 +835,7 @@ static void send_packet(bus_t busnumber, char *packet,
                                "write() failed: %s (errno = %d)\n",
                                strerror(errno), errno);
                 }
-                waitUARTempty(busnumber);
+                waitUARTempty_COMMON(busnumber);
                 nanosleep_DDL(&rqtp_btw38K, &__DDL->rmtp);
                 result = write(buses[busnumber].device.file.fd, packet, 9);
                 if (result == -1) {
@@ -840,7 +843,7 @@ static void send_packet(bus_t busnumber, char *packet,
                                "write() failed: %s (errno = %d)\n",
                                strerror(errno), errno);
                 }
-                waitUARTempty(busnumber);
+                waitUARTempty_COMMON(busnumber);
             }
             break;
         case QNBLOCOPKT:
@@ -854,11 +857,11 @@ static void send_packet(bus_t busnumber, char *packet,
                            "write() failed: %s (errno = %d)\n",
                            strerror(errno), errno);
             }
-            waitUARTempty(busnumber);
+            waitUARTempty_CLEANNMRADCC(busnumber);
             result = write(buses[busnumber].device.file.fd,
                            __DDL->NMRA_idle_data,
                            __DDL->NMRA_idle_data_size);
-            waitUARTempty(busnumber);
+            waitUARTempty_CLEANNMRADCC(busnumber);
             result = write(buses[busnumber].device.file.fd,
                            packet, packet_size);
             if (result == -1) {
@@ -1102,12 +1105,8 @@ static void *thr_refresh_cycle(void *v)
     struct timespec rqtp_sleep = { 0, 2500000 };        /* ==> non-busy waiting */
 
     /* set the best waitUARTempty-Routine */
-    waitUARTempty = waitUARTempty_COMMON;
-    if (__DDL->WAITUART_USLEEP_PATCH)
-        waitUARTempty = waitUARTempty_COMMON_USLEEPPATCH;
-    if ((__DDL->ENABLED_PROTOCOLS & EP_NMRADCC)
-        && !(__DDL->ENABLED_PROTOCOLS & EP_MAERKLIN))
-        waitUARTempty = waitUARTempty_CLEANNMRADCC;
+    waitUARTempty = waitUARTempty_COMMON_USLEEPPATCH;
+    waitUARTempty_MM = waitUARTempty_COMMON_USLEEPPATCH;
 
     nanosleep_DDL = nanosleep;
     if (__DDL->oslevel == 1) {
@@ -1432,6 +1431,10 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         __DDL->number_gl = 0;
         syslog_bus(busnumber, DBG_ERROR,
                    "Can't create array for locomotives");
+    }
+    if (__DDL->IMPROVE_NMRADCC_TIMING && __DDL->oslevel == 1) {
+        syslog_bus(busnumber, DBG_NONE,
+                   "improve nmra dcc timing causes changes on comports custom divisor. This is deprecated on kernel 2.6 or later. You better disable this feature in srcpd.conf ");
     }
 
     return (1);
