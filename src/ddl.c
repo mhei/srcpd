@@ -1273,8 +1273,9 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     __DDL->IMPROVE_NMRADCC_TIMING = 0;  /* NMRA DCC: improve timing    */
 
     __DDL->WAITUART_USLEEP_PATCH = 0;   /* enable/disable usleep patch */
-    __DDL->WAITUART_USLEEP_USEC = 0;    /* usecs for usleep patch      */
-    __DDL->PROGRAM_TRACK = 1;   /* usecs for usleep patch      */
+    __DDL->WAITUART_USLEEP_USEC = 100;    /* usecs for usleep patch      */
+    __DDL->NMRA_GA_OFFSET = 0;    /* offset for ga base address 0 or 1  */
+    __DDL->PROGRAM_TRACK = 1;   /* 0: suppress SM commands to PT address */
 
     __DDL->SERIAL_DEVICE_MODE = SDM_NOTINITIALIZED;
 
@@ -1401,6 +1402,14 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __DDL->WAITUART_USLEEP_USEC = atoi((char *) txt);
+                xmlFree(txt);
+            }
+        }
+
+        else if (xmlStrcmp(child->name, BAD_CAST "nmra_ga_offset") == 0) {
+            txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+            if (txt != NULL) {
+                __DDL->NMRA_GA_OFFSET = atoi((char *) txt);
                 xmlFree(txt);
             }
         }
@@ -1795,6 +1804,7 @@ static void *thr_sendrec_DDL(void *v)
 
         if (!queue_GA_isempty(btd->bus)) {
             char p;
+            int busnumber = btd->bus;
             dequeueNextGA(btd->bus, &gatmp);
             addr = gatmp.id;
             p = gatmp.protocol;
@@ -1807,7 +1817,7 @@ static void *thr_sendrec_DDL(void *v)
                     break;
                 case 'N':
                     comp_nmra_accessory(btd->bus, addr, gatmp.port,
-                                        gatmp.action);
+                                        gatmp.action, __DDL->NMRA_GA_OFFSET);
                     break;
             }
             setGA(btd->bus, addr, gatmp);
@@ -1825,7 +1835,7 @@ static void *thr_sendrec_DDL(void *v)
                         break;
                     case 'N':
                         comp_nmra_accessory(btd->bus, addr, gatmp.port,
-                                            gatmp.action);
+                                            gatmp.action, __DDL->NMRA_GA_OFFSET);
                         break;
                 }
                 setGA(btd->bus, addr, gatmp);
