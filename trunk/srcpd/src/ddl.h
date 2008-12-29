@@ -93,6 +93,7 @@ typedef struct _DDL_DATA {
 
     int WAITUART_USLEEP_PATCH;  /* enable/disbable usleep patch */
     int WAITUART_USLEEP_USEC;   /* usecs for usleep patch       */
+    int NMRA_GA_OFFSET;         /* offset for ga base address 0/1*/
 
     int PROGRAM_TRACK;          /* 0: suppress SM commands to PT address */
     struct termios maerklin_dev_termios;
