@@ -162,21 +162,8 @@ void *thr_handlePort(void* v)
         fsaddr = (struct sockaddr *) &fsin;
         socklen = sizeof(sin);
     }
-   if (bus_type_is_available(SERVER_DDL)) {
-
-        /* syslog_bus(0, DBG_INFO, "DDL mode detected!\n"); */
-
-       /* DDL mode only works with root privileges */
-       setuid(0);
-       if (getuid() != 0) {
-          syslog_bus(0, DBG_ERROR, "DDL mode only works with root privileges! ABORTED!\n");
-          exit(1);
-       }
-    }
-    else {
-       if (getuid() == 0) {
-          change_privileges(0);
-       }
+    if (getuid() == 0) {
+        change_privileges(0);
     }
 
     sock_opt = 1;
