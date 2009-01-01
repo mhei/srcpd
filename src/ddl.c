@@ -1122,7 +1122,8 @@ static int krnl26_nanosleep(const struct timespec *req,
 
 static void *thr_refresh_cycle(void *v)
 {
-    ssize_t result;
+    ssize_t wresult;
+    int result;
     struct sched_param sparam;
     int policy;
     int packet_size;
@@ -1144,16 +1145,28 @@ static void *thr_refresh_cycle(void *v)
     if (__DDL->oslevel == 1) {
         nanosleep_DDL = krnl26_nanosleep;
 
-        pthread_getschedparam(pthread_self(), &policy, &sparam);
+        result = pthread_getschedparam(pthread_self(), &policy, &sparam);
+        if (result != 0) {
+            syslog_bus(busnumber, DBG_ERROR,
+                    "pthread_getschedparam() failed: %s (errno = %d).",
+                    strerror(result), result);
+            /*What to do now?*/
+        }
         sparam.sched_priority = 10;
-        pthread_setschedparam(pthread_self(), SCHED_FIFO, &sparam);
+        result = pthread_setschedparam(pthread_self(), SCHED_FIFO, &sparam);
+        if (result != 0) {
+            syslog_bus(busnumber, DBG_ERROR,
+                    "pthread_setschedparam() failed: %s (errno = %d).",
+                    strerror(result), result);
+            /*What to do now?*/
+        }
     }
 
     /* some boosters like the Maerklin 6017 must be initialized */
     tcflow(buses[busnumber].device.file.fd, TCOON);
     set_SerialLine(busnumber, SL_DTR, ON);
-    result = write(buses[busnumber].device.file.fd, "SRCP-DAEMON", 11);
-    if (result == -1) {
+    wresult = write(buses[busnumber].device.file.fd, "SRCP-DAEMON", 11);
+    if (wresult == -1) {
         syslog_bus(busnumber, DBG_ERROR,
                    "write() failed: %s (errno = %d)\n",
                    strerror(errno), errno);
@@ -1173,9 +1186,9 @@ static void *thr_refresh_cycle(void *v)
     for (;;) {
         if (check_lines(busnumber))
             continue;
-        result = write(buses[busnumber].device.file.fd,
+        wresult = write(buses[busnumber].device.file.fd,
                        __DDL->idle_data, MAXDATA);
-        if (result == -1) {
+        if (wresult == -1) {
             syslog_bus(busnumber, DBG_ERROR,
                        "write() failed: %s (errno = %d)\n",
                        strerror(errno), errno);
@@ -1191,10 +1204,10 @@ static void *thr_refresh_cycle(void *v)
                 send_packet(busnumber, packet, packet_size,
                             packet_type, false);
                 if (__DDL->ENABLED_PROTOCOLS == (EP_MAERKLIN | EP_NMRADCC)) {
-                    result = write(buses[busnumber].device.file.fd,
+                    wresult = write(buses[busnumber].device.file.fd,
                                    __DDL->NMRA_idle_data,
                                    __DDL->NMRA_idle_data_size);
-                    if (result == -1) {
+                    if (wresult == -1) {
                         syslog_bus(busnumber, DBG_ERROR,
                                    "write() failed: %s (errno = %d)\n",
                                    strerror(errno), errno);
