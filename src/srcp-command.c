@@ -57,7 +57,7 @@ static int handle_setcheck(sessionid_t sessionid, bus_t bus, char *device,
             func += (f[i] ? 1 : 0) << i;
         }
         if (anzparms >= 4) {
-            sessionid_t lockid;
+            sessionid_t lockid=0;
             /* Only if not locked or emergency stop !! */
             cacheGetLockGL(bus, laddr, &lockid);
             if (lockid == 0 || lockid == sessionid || direction == 2) {

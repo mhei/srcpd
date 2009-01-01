@@ -376,6 +376,7 @@ int init_GA(bus_t busnumber, int number)
             ga[busnumber].gastate[i].protocol = 0x00;
             ga[busnumber].gastate[i].locked_by = 0;
             ga[busnumber].gastate[i].action = 0;
+            ga[busnumber].gastate[i].lockduration = 0;
         }
     }
     return 0;
