@@ -1489,7 +1489,12 @@ int init_bus_DDL(bus_t busnumber)
     syslog_bus(busnumber, DBG_INFO, "DDL init with debug level %d",
                buses[busnumber].debuglevel);
     int i;
-
+    /* DDL mode only works with root privileges */
+    if (setuid(0)) {
+        syslog_bus(busnumber, DBG_ERROR,
+                   "DDL mode only works with root privileges! ABORTED!\n");
+        return -1;
+    } 
     buses[busnumber].device.file.fd = init_lineDDL(busnumber);
 
     __DDL->short_detected = 0;
