@@ -525,6 +525,29 @@ void update_MaerklinPacketPool(bus_t busnumber, int adr,
 /**********************************************************/
 
 /****** routines for NMRA packet pool *********************/
+static void reset_NMRAPacketPool(bus_t busnumber)
+{
+    int i;
+    int result;
+    result = pthread_mutex_lock(&__DDL->nmra_pktpool_mutex);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                   "pthread_mutex_lock() failed: %s (errno = %d).",
+                   strerror(result), result);
+    }
+    for (i = 0; i <= __DDL->NMRAPacketPool.NrOfKnownAddresses; i++) {
+      free(__DDL->NMRAPacketPool.packets[__DDL->NMRAPacketPool.knownAddresses[i]]);
+    }
+    /* free idle package */
+    free(__DDL->NMRAPacketPool.packets[255]);
+    result = pthread_mutex_unlock(&__DDL->nmra_pktpool_mutex);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                   "pthread_mutex_unlock() failed: %s (errno = %d).",
+                   strerror(result), result);
+    }
+
+}
 
 static void init_NMRAPacketPool(bus_t busnumber)
 {
@@ -548,8 +571,10 @@ static void init_NMRAPacketPool(bus_t busnumber)
                    strerror(result), result);
     }
 
-    for (i = 0; i <= MAX_NMRA_ADDRESS; i++)
+    for (i = 0; i <= MAX_NMRA_ADDRESS; i++) {
         __DDL->NMRAPacketPool.knownAddresses[i] = 0;
+        __DDL->NMRAPacketPool.packets[i] = 0;
+    }
 
     __DDL->NMRAPacketPool.NrOfKnownAddresses = 0;
 
@@ -592,19 +617,20 @@ void update_NMRAPacketPool(bus_t busnumber, int adr,
                    "pthread_mutex_lock() failed: %s (errno = %d).",
                    strerror(result), result);
     }
-
-    memcpy(__DDL->NMRAPacketPool.packets[adr].packet, packet, packet_size);
-    __DDL->NMRAPacketPool.packets[adr].packet_size = packet_size;
-    memcpy(__DDL->NMRAPacketPool.packets[adr].fx_packet, fx_packet,
-           fx_packet_size);
-    __DDL->NMRAPacketPool.packets[adr].fx_packet_size = fx_packet_size;
-
-    result = pthread_mutex_unlock(&__DDL->nmra_pktpool_mutex);
-    if (result != 0) {
+    if (!__DDL->NMRAPacketPool.packets[adr]) {
+      __DDL->NMRAPacketPool.packets[adr]=malloc(sizeof(tNMRAPacket));
+      if (__DDL->NMRAPacketPool.packets[adr] == NULL) {
         syslog_bus(busnumber, DBG_ERROR,
-                   "pthread_mutex_unlock() failed: %s (errno = %d).",
-                   strerror(result), result);
+                   "Memory allocation error in update_NMRAPacketPool");
+        return;
+      }
     }
+    memcpy(__DDL->NMRAPacketPool.packets[adr]->packet, packet, packet_size);
+    __DDL->NMRAPacketPool.packets[adr]->packet_size = packet_size;
+    memcpy(__DDL->NMRAPacketPool.packets[adr]->fx_packet, fx_packet,
+           fx_packet_size);
+    __DDL->NMRAPacketPool.packets[adr]->fx_packet_size = fx_packet_size;
+
 
     if (__DDL->NMRAPacketPool.NrOfKnownAddresses == 1
         && __DDL->NMRAPacketPool.knownAddresses[0] == 255)
@@ -615,13 +641,19 @@ void update_NMRAPacketPool(bus_t busnumber, int adr,
                                              NrOfKnownAddresses] = adr;
         __DDL->NMRAPacketPool.NrOfKnownAddresses++;
     }
+    result = pthread_mutex_unlock(&__DDL->nmra_pktpool_mutex);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                   "pthread_mutex_unlock() failed: %s (errno = %d).",
+                   strerror(result), result);
+    }
 }
 
 
 /* busy wait until UART is empty, without delay */
 static void waitUARTempty_COMMON(bus_t busnumber)
 {
-    int value;
+    int value=0;
     int result;
 
     do {
@@ -642,7 +674,7 @@ static void waitUARTempty_COMMON(bus_t busnumber)
 /* busy wait until UART is empty, with delay */
 static void waitUARTempty_COMMON_USLEEPPATCH(bus_t busnumber)
 {
-    int value;
+    int value=0;
     int result;
 
     do {
@@ -749,19 +781,19 @@ static int checkShortcut(bus_t busnumber)
     return 0;
 }
 
-/* arguments for nanosleep and Maerklin loco decoders (19KHz) */
-/* all using busy waiting */
-static struct timespec rqtp_btw19K = { 0, 1250000 };
-static struct timespec rqtp_end19K = { 0, 1700000 };  
-/* arguments for nanosleep and Maerklin solenoids/function decoders (38KHz) */
-static struct timespec rqtp_btw38K = { 0, 625000 };
-static struct timespec rqtp_end38K = { 0, 850000 };
 
 static void send_packet(bus_t busnumber, char *packet,
                         int packet_size, int packet_type, int refresh)
 {
     ssize_t result;
     int i, laps;
+    /* arguments for nanosleep and Maerklin loco decoders (19KHz) */
+    /* all using busy waiting */
+    static struct timespec rqtp_btw19K = { 0, 1250000 };
+    static struct timespec rqtp_end19K = { 0, 1700000 };
+    /* arguments for nanosleep and Maerklin solenoids/function decoders (38KHz)*/
+    static struct timespec rqtp_btw38K = { 0, 625000 };
+    static struct timespec rqtp_end38K = { 0, 850000 };
 
     waitUARTempty(busnumber);
 
@@ -911,15 +943,15 @@ static void refresh_loco(bus_t busnumber)
         if (adr >= 0) {
             if (__DDL->last_refreshed_nmra_fx < 0) {
                 send_packet(busnumber,
-                            __DDL->NMRAPacketPool.packets[adr].packet,
-                            __DDL->NMRAPacketPool.packets[adr].packet_size,
+                            __DDL->NMRAPacketPool.packets[adr]->packet,
+                            __DDL->NMRAPacketPool.packets[adr]->packet_size,
                             QNBLOCOPKT, true);
                 __DDL->last_refreshed_nmra_fx = 0;
             }
             else {
                 send_packet(busnumber,
-                            __DDL->NMRAPacketPool.packets[adr].fx_packet,
-                            __DDL->NMRAPacketPool.packets[adr].
+                            __DDL->NMRAPacketPool.packets[adr]->fx_packet,
+                            __DDL->NMRAPacketPool.packets[adr]->
                             fx_packet_size, QNBLOCOPKT, true);
                 __DDL->last_refreshed_nmra_fx = 1;
             }
@@ -1102,7 +1134,7 @@ static void *thr_refresh_cycle(void *v)
     struct timeval tv1, tv2;
     struct timezone tz;
     /* argument for nanosleep to do non-busy waiting */
-    struct timespec rqtp_sleep = { 0, 2500000 };        /* ==> non-busy waiting */
+    static struct timespec rqtp_sleep = { 0, 2500000 }; /* ==> non-busy waiting */
 
     /* set the best waitUARTempty-Routine */
     waitUARTempty = waitUARTempty_COMMON_USLEEPPATCH;
@@ -1493,6 +1525,7 @@ int init_bus_DDL(bus_t busnumber)
     }
     else {
         __DDL->maerklin_refresh = 0;
+        __DDL->MaerklinPacketPool.NrOfKnownAddresses = 0;
     }
     if (__DDL->ENABLED_PROTOCOLS & EP_NMRADCC) {
         init_NMRAPacketPool(busnumber);
@@ -1536,6 +1569,7 @@ static void end_bus_thread(bus_thread_t * btd)
     }
 
     syslog_bus(btd->bus, DBG_INFO, "DDL bus terminated.");
+    reset_NMRAPacketPool(btd->bus);
     free(buses[btd->bus].driverdata);
     free(btd);
 }

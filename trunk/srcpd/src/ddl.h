@@ -71,7 +71,7 @@ typedef struct _tNMRAPacket {
 } tNMRAPacket;
 
 typedef struct _tNMRAPacketPool {
-    tNMRAPacket packets[MAX_NMRA_ADDRESS + 1];
+    tNMRAPacket* packets[MAX_NMRA_ADDRESS + 1];
     int knownAddresses[MAX_NMRA_ADDRESS + 1];
     int NrOfKnownAddresses;
 } tNMRAPacketPool;
