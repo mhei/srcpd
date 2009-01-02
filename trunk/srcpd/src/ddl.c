@@ -300,6 +300,7 @@ int init_lineDDL(bus_t busnumber)
 
     int dev;
     int rc;
+    int result;
 
     /* open comport */
     dev = open(buses[busnumber].device.file.path, O_WRONLY);
@@ -314,25 +315,42 @@ int init_lineDDL(bus_t busnumber)
 #if linux
     if ((rc = reset_customdivisor(dev)) != 0) {
         syslog_bus(busnumber, DBG_FATAL,
-                   "error initializing device %s (reset custom divisor %d). Abort!",
+                   "Error initializing device %s (reset custom "
+                   "divisor %d). Abort!",
                    buses[busnumber].device.file.path, rc);
         exit(1);
     }
 #endif
 
-    tcflush(dev, TCOFLUSH);
-    tcflow(dev, TCOOFF);        /* suspend output */
-
-    if (tcgetattr(dev, &__DDL->maerklin_dev_termios) != 0) {
+    result = tcflush(dev, TCOFLUSH);
+    if (result == -1) {
         syslog_bus(busnumber, DBG_FATAL,
-                   "error initializing device %s. Abort!",
-                   buses[busnumber].device.file.path);
+                   "tcflush() failed: %s (errno = %d).",
+                   strerror(result), result);
         exit(1);
     }
-    if (tcgetattr(dev, &__DDL->nmra_dev_termios) != 0) {
+
+    result = tcflow(dev, TCOOFF);        /* suspend output */
+    if (result == -1) {
         syslog_bus(busnumber, DBG_FATAL,
-                   "error initializing device %s. Abort!",
-                   buses[busnumber].device.file.path);
+                   "tcflow() failed: %s (errno = %d).",
+                   strerror(result), result);
+        exit(1);
+    }
+
+    result = tcgetattr(dev, &__DDL->maerklin_dev_termios);
+    if (result == -1) {
+        syslog_bus(busnumber, DBG_FATAL,
+                   "tcgetattr() failed: %s (errno = %d, device = %s).",
+                   strerror(result), result, buses[busnumber].device.file.path);
+        exit(1);
+    }
+
+    result = tcgetattr(dev, &__DDL->nmra_dev_termios);
+    if (result == -1) {
+        syslog_bus(busnumber, DBG_FATAL,
+                   "tcgetattr() failed: %s (errno = %d, device = %s).",
+                   strerror(result), result, buses[busnumber].device.file.path);
         exit(1);
     }
 
@@ -912,12 +930,20 @@ static void send_packet(bus_t busnumber, char *packet,
 static void refresh_loco(bus_t busnumber)
 {
     int adr;
+    int result;
 
     if (__DDL->maerklin_refresh) {
         adr =
             __DDL->MaerklinPacketPool.knownAddresses[__DDL->
                                                      last_refreshed_maerklin_loco];
-        tcflush(buses[busnumber].device.file.fd, TCOFLUSH);
+        result = tcflush(buses[busnumber].device.file.fd, TCOFLUSH);
+        if (result == -1) {
+            syslog_bus(busnumber, DBG_FATAL,
+                    "tcflush() failed: %s (errno = %d).",
+                    strerror(result), result);
+            /*What to do now?*/
+        }
+
         if (__DDL->last_refreshed_maerklin_fx < 0)
             send_packet(busnumber,
                         __DDL->MaerklinPacketPool.packets[adr].packet, 18,
@@ -992,8 +1018,15 @@ static long int compute_delta(struct timeval tv1, struct timeval tv2)
 static void set_SerialLine(bus_t busnumber, int line, int mode)
 {
     int result, arg;
+
     result = ioctl(buses[busnumber].device.file.fd, TIOCMGET, &arg);
-    if (result >= 0) {
+    if (result == -1) {
+        syslog_bus(busnumber, DBG_ERROR,
+                   "ioctl() failed: %s (errno = %d). "
+                   "Serial line not set! (%d: %d)",
+                   strerror(errno), errno, line, mode);
+    }
+    else {
         switch (line) {
             case SL_DTR:
                 if (mode == OFF)
@@ -1027,27 +1060,52 @@ static void set_SerialLine(bus_t busnumber, int line, int mode)
                 break;
         }
         result = ioctl(buses[busnumber].device.file.fd, TIOCMSET, &arg);
+        if (result == -1) {
+            syslog_bus(busnumber, DBG_FATAL,
+                    "ioctl() failed: %s (errno = %d).",
+                    strerror(result), result);
+            /*What to do now*/
+        }
     }
-    if (result < 0)
-        syslog_bus(busnumber, DBG_ERROR,
-                   "ioctl() failed: %s (errno = %d). "
-                   "Serial line not set! (%d: %d)",
-                   strerror(errno), errno, line, mode);
 }
 
 /* ************************************************ */
 
 static void set_lines_on(bus_t busnumber)
 {
+    int result;
+
     set_SerialLine(busnumber, SL_DTR, ON);
-    tcflow(buses[busnumber].device.file.fd, TCOON);
+    result = tcflow(buses[busnumber].device.file.fd, TCOON);
+    if (result == -1) {
+        syslog_bus(busnumber, DBG_FATAL,
+                   "tcflow() failed: %s (errno = %d).",
+                   strerror(result), result);
+        /*What to do now*/
+    }
 }
 
 static void set_lines_off(bus_t busnumber)
 {
+    int result;
+
     /* set interface lines to the off state */
-    tcflush(buses[busnumber].device.file.fd, TCOFLUSH);
-    tcflow(buses[busnumber].device.file.fd, TCOOFF);
+    result = tcflush(buses[busnumber].device.file.fd, TCOFLUSH);
+    if (result == -1) {
+        syslog_bus(busnumber, DBG_FATAL,
+                   "tcflush() failed: %s (errno = %d).",
+                   strerror(result), result);
+        /*What to do now*/
+    }
+
+    result = tcflow(buses[busnumber].device.file.fd, TCOOFF);
+    if (result == -1) {
+        syslog_bus(busnumber, DBG_FATAL,
+                   "tcflow() failed: %s (errno = %d).",
+                   strerror(result), result);
+        /*What to do now*/
+    }
+
     set_SerialLine(busnumber, SL_DTR, OFF);
 }
 
@@ -1150,7 +1208,8 @@ static void *thr_refresh_cycle(void *v)
             syslog_bus(busnumber, DBG_ERROR,
                     "pthread_getschedparam() failed: %s (errno = %d).",
                     strerror(result), result);
-            /*What to do now?*/
+            /*TODO: Add an expressive error message */
+            pthread_exit((void *) 1);
         }
         sparam.sched_priority = 10;
         result = pthread_setschedparam(pthread_self(), SCHED_FIFO, &sparam);
@@ -1158,28 +1217,56 @@ static void *thr_refresh_cycle(void *v)
             syslog_bus(busnumber, DBG_ERROR,
                     "pthread_setschedparam() failed: %s (errno = %d).",
                     strerror(result), result);
-            /*What to do now?*/
+            /*TODO: Add an expressive error message */
+            pthread_exit((void *) 1);
         }
     }
 
     /* some boosters like the Maerklin 6017 must be initialized */
-    tcflow(buses[busnumber].device.file.fd, TCOON);
+    result = tcflow(buses[busnumber].device.file.fd, TCOON);
+    if (result == -1) {
+        syslog_bus(busnumber, DBG_FATAL,
+                   "tcflow() failed: %s (errno = %d).",
+                   strerror(result), result);
+        /*What to do now*/
+    }
+    
     set_SerialLine(busnumber, SL_DTR, ON);
+    
     wresult = write(buses[busnumber].device.file.fd, "SRCP-DAEMON", 11);
     if (wresult == -1) {
         syslog_bus(busnumber, DBG_ERROR,
                    "write() failed: %s (errno = %d)\n",
                    strerror(errno), errno);
     }
-    tcflush(buses[busnumber].device.file.fd, TCOFLUSH);
+
+    result = tcflush(buses[busnumber].device.file.fd, TCOFLUSH);
+    if (result == -1) {
+        syslog_bus(busnumber, DBG_FATAL,
+                   "tcflush() failed: %s (errno = %d).",
+                   strerror(result), result);
+        /*What to do now*/
+    }
 
     /* now set some serial lines */
-    tcflow(buses[busnumber].device.file.fd, TCOOFF);
+    result = tcflow(buses[busnumber].device.file.fd, TCOOFF);
+    if (result == -1) {
+        syslog_bus(busnumber, DBG_FATAL,
+                   "tcflow() failed: %s (errno = %d).",
+                   strerror(result), result);
+        /*What to do now*/
+    }
     set_SerialLine(busnumber, SL_RTS, ON);      /* +12V for ever on RTS   */
     set_SerialLine(busnumber, SL_CTS, OFF);     /* -12V for ever on CTS   */
     set_SerialLine(busnumber, SL_DTR, OFF);     /* disable booster output */
 
-    tcflow(buses[busnumber].device.file.fd, TCOON);
+    result = tcflow(buses[busnumber].device.file.fd, TCOON);
+    if (result == -1) {
+        syslog_bus(busnumber, DBG_FATAL,
+                   "tcflow() failed: %s (errno = %d).",
+                   strerror(result), result);
+        /*What to do now*/
+    }
     set_SerialLine(busnumber, SL_DTR, ON);
 
     gettimeofday(&tv1, &tz);
@@ -1197,7 +1284,13 @@ static void *thr_refresh_cycle(void *v)
         /* Check if there are new commands and send them. */
         packet_type = queue_get(busnumber, &addr, packet, &packet_size);
         if (packet_type > QNOVALIDPKT) {
-            tcflush(buses[busnumber].device.file.fd, TCOFLUSH);
+            result = tcflush(buses[busnumber].device.file.fd, TCOFLUSH);
+            if (result == -1) {
+                syslog_bus(busnumber, DBG_FATAL,
+                        "tcflush() failed: %s (errno = %d).",
+                        strerror(result), result);
+                /*What to do now*/
+            }
             while (packet_type > QNOVALIDPKT) {
                 if (check_lines(busnumber))
                     continue;
@@ -1272,6 +1365,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
     struct utsname utsBuffer;
     char buf[3];
+    int result;
 
     buses[busnumber].driverdata = malloc(sizeof(struct _DDL_DATA));
 
@@ -1294,7 +1388,13 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     /* we need to check for kernel version below 2.6 or below */
     /* the following code breaks if a kernel version 2.10 will ever occur */
-    uname(&utsBuffer);
+    result = uname(&utsBuffer);
+    if (result == -1) {
+        syslog_bus(busnumber, DBG_FATAL,
+                   "uname() failed: %s (errno = %d).",
+                   strerror(result), result);
+        /*What to do now*/
+    }
     sprintf(buf, "%c%c", utsBuffer.release[0], utsBuffer.release[2]);
 
     if (atoi(buf) > 25) {
@@ -1499,15 +1599,23 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 /* return code wird ignoriert (vorerst) */
 int init_bus_DDL(bus_t busnumber)
 {
+    int i;
+    int result;
+
     syslog_bus(busnumber, DBG_INFO, "DDL init with debug level %d",
                buses[busnumber].debuglevel);
-    int i;
-    /* DDL mode only works with root privileges */
-    if (setuid(0)) {
+
+    /* DDL mode only works with proper privilege setup */
+    result = setuid(0);
+    if (result == -1) {
+        syslog_bus(busnumber, DBG_FATAL,
+                   "setuid() failed: %s (errno = %d).",
+                   strerror(result), result);
         syslog_bus(busnumber, DBG_ERROR,
-                   "DDL mode only works with root privileges! ABORTED!\n");
+                   "DDL mode may only work with root privileges! ABORTED!\n");
         return -1;
     } 
+
     buses[busnumber].device.file.fd = init_lineDDL(busnumber);
 
     __DDL->short_detected = 0;
@@ -1560,11 +1668,21 @@ static void end_bus_thread(bus_thread_t * btd)
     void *pThreadReturn;
 
     /* send cancel to refresh cycle */
-    pthread_cancel(((DDL_DATA *) buses[btd->bus].driverdata)->
+    result = pthread_cancel(((DDL_DATA *) buses[btd->bus].driverdata)->
                    refresh_ptid);
+    if (result != 0) {
+        syslog_bus(btd->bus, DBG_ERROR,
+                   "pthread_cancel() failed: %s (errno = %d).",
+                   strerror(result), result);
+    }
     /* wait until the refresh cycle has terminated */
-    pthread_join(((DDL_DATA *) buses[btd->bus].driverdata)->refresh_ptid,
+    result = pthread_join(((DDL_DATA *) buses[btd->bus].driverdata)->refresh_ptid,
                  &pThreadReturn);
+    if (result != 0) {
+        syslog_bus(btd->bus, DBG_ERROR,
+                   "pthread_join() failed: %s (errno = %d).",
+                   strerror(result), result);
+    }
 
     set_lines_off(btd->bus);
 
@@ -1625,13 +1743,13 @@ static void *thr_sendrec_DDL(void *v)
     error =
         pthread_create(&
                        (((DDL_DATA *) buses[btd->bus].driverdata)->
-                        refresh_ptid), NULL, thr_refresh_cycle, (void *)
-&(((DDL_DATA *) buses[btd->bus].driverdata)->refresh_param));
+                        refresh_ptid), NULL, thr_refresh_cycle,
+                       (void *) &(((DDL_DATA *) buses[btd->bus].driverdata)->refresh_param));
 
-    if (error) {
+    if (error != 0) {
         syslog_bus(btd->bus, DBG_ERROR,
-                   "Cannot create thread: refresh_cycle. Abort! %d",
-                   error);
+                   "pthread_create() failed: %s (errno = %d).",
+                   strerror(error), error);
     }
 
     while (1) {
