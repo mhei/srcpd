@@ -245,7 +245,7 @@ int setSerialMode(bus_t busnumber, int mode)
                     (buses[busnumber].device.file.fd, TCSANOW,
                      &__DDL->maerklin_dev_termios) != 0) {
                     syslog_bus(busnumber, DBG_ERROR,
-                               "error setting serial device mode to Maerklin!");
+                               "Error setting serial device mode to Maerklin!");
                     return -1;
                 }
 #if linux
@@ -254,7 +254,7 @@ int setSerialMode(bus_t busnumber, int mode)
                         (buses[busnumber].device.file.fd,
                          __DDL->serinfo_marklin) != 0) {
                         syslog_bus(busnumber, DBG_ERROR,
-                                   "cannot set custom divisor for maerklin of serial device!");
+                                   "Cannot set custom divisor for maerklin of serial device!");
                         return -1;
                     }
                 }
@@ -268,7 +268,7 @@ int setSerialMode(bus_t busnumber, int mode)
                     (buses[busnumber].device.file.fd, TCSANOW,
                      &__DDL->nmra_dev_termios) != 0) {
                     syslog_bus(busnumber, DBG_ERROR,
-                               "error setting serial device mode to NMRA!");
+                               "Error setting serial device mode to NMRA!");
                     return -1;
                 }
 #if linux
@@ -277,7 +277,7 @@ int setSerialMode(bus_t busnumber, int mode)
                         (buses[busnumber].device.file.fd,
                          __DDL->serinfo_nmradcc) != 0) {
                         syslog_bus(busnumber, DBG_ERROR,
-                                   "cannot set custom divisor for nmra dcc of serial device!");
+                                   "Cannot set custom divisor for nmra dcc of serial device!");
                         return -1;
                     }
                 }
@@ -287,7 +287,7 @@ int setSerialMode(bus_t busnumber, int mode)
             break;
         default:
             syslog_bus(busnumber, DBG_ERROR,
-                       "error setting serial device to unknown mode!");
+                       "Error setting serial device to unknown mode!");
             return -1;
     }
     return 0;
@@ -408,13 +408,13 @@ int init_lineDDL(bus_t busnumber)
     if (__DDL->IMPROVE_NMRADCC_TIMING) {
         if (init_serinfo(dev, 3, &__DDL->serinfo_marklin) != 0) {
             syslog_bus(busnumber, DBG_FATAL,
-                       "error initializing device %s (init_serinfo mm). Abort!",
+                       "Error initializing device %s (init_serinfo mm). Abort!",
                        buses[busnumber].device.file.path);
             exit(1);
         }
         if (init_serinfo(dev, 7, &__DDL->serinfo_nmradcc) != 0) {
             syslog_bus(busnumber, DBG_FATAL,
-                       "error initializing device %s (init_serinfo dcc). Abort!",
+                       "Error initializing device %s (init_serinfo dcc). Abort!",
                        buses[busnumber].device.file.path);
             exit(1);
         }
@@ -424,7 +424,7 @@ int init_lineDDL(bus_t busnumber)
     /* setting serial device to default mode */
     if (!setSerialMode(busnumber, SDM_DEFAULT) == 0) {
         syslog_bus(busnumber, DBG_FATAL,
-                   "error initializing device %s. Abort!",
+                   "Error initializing device %s. Abort!",
                    buses[busnumber].device.file.path);
         exit(1);
     }
@@ -502,7 +502,7 @@ void update_MaerklinPacketPool(bus_t busnumber, int adr,
     int i, found;
     int result;
 
-    syslog_bus(busnumber, DBG_INFO, "update MM Packet Pool: %d", adr);
+    syslog_bus(busnumber, DBG_INFO, "Update MM packet pool: %d", adr);
     found = 0;
     for (i = 0; i < __DDL->MaerklinPacketPool.NrOfKnownAddresses && !found;
          i++)
@@ -1132,11 +1132,11 @@ static int check_lines(bus_t busnumber)
     if (buses[busnumber].power_changed == 1) {
         if (buses[busnumber].power_state == 0) {
             set_lines_off(busnumber);
-            syslog_bus(busnumber, DBG_INFO, "refresh cycle stopped.");
+            syslog_bus(busnumber, DBG_INFO, "Refresh cycle stopped.");
         }
         if (buses[busnumber].power_state == 1) {
             set_lines_on(busnumber);
-            syslog_bus(busnumber, DBG_INFO, "refresh cycle restarted.");
+            syslog_bus(busnumber, DBG_INFO, "Refresh cycle started.");
         }
         buses[busnumber].power_changed = 0;
         infoPower(busnumber, msg);
@@ -1588,7 +1588,10 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     }
     if (__DDL->IMPROVE_NMRADCC_TIMING && __DDL->oslevel == 1) {
         syslog_bus(busnumber, DBG_NONE,
-                   "improve nmra dcc timing causes changes on comports custom divisor. This is deprecated on kernel 2.6 or later. You better disable this feature in srcpd.conf ");
+                   "Improve nmra dcc timing causes changes on serial "
+                   "lines custom divisor."
+                   "This is deprecated on kernel 2.6 or later. You "
+                   "better disable this feature in srcpd.conf");
     }
 
     return (1);
@@ -1767,7 +1770,7 @@ static void *thr_sendrec_DDL(void *v)
             addr = gltmp.id;
             speed = gltmp.speed;
             direction = gltmp.direction;
-            syslog_bus(btd->bus, DBG_DEBUG, "next command: %c (%x) %d %d",
+            syslog_bus(btd->bus, DBG_DEBUG, "Next command: %c (%x) %d %d",
                        p, p, pv, addr);
             if (addr > 127)
                 pv = 2;
@@ -1978,7 +1981,7 @@ static void *thr_sendrec_DDL(void *v)
             dequeueNextGA(btd->bus, &gatmp);
             addr = gatmp.id;
             p = gatmp.protocol;
-            syslog_bus(btd->bus, DBG_DEBUG, "next GA command: %c (%x) %d",
+            syslog_bus(btd->bus, DBG_DEBUG, "Next GA command: %c (%x) %d",
                        p, p, addr);
             switch (p) {
                 case 'M':      /* Motorola Codes */
@@ -1997,7 +2000,7 @@ static void *thr_sendrec_DDL(void *v)
                 usleep(1000L * (unsigned long) gatmp.activetime);
                 gatmp.action = 0;
                 syslog_bus(btd->bus, DBG_DEBUG,
-                           "delayed GA command: %c (%x) %d", p, p, addr);
+                           "Delayed GA command: %c (%x) %d", p, p, addr);
                 switch (p) {
                     case 'M':  /* Motorola Codes */
                         comp_maerklin_ms(btd->bus, addr, gatmp.port,
