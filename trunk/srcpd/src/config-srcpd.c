@@ -390,14 +390,14 @@ int readConfig(char *filename)
     num_buses = 0;
 
     /* some defaults */
-    syslog_bus(0, DBG_DEBUG, "parsing %s", filename);
+    syslog_bus(0, DBG_DEBUG, "Parsing %s", filename);
     doc = xmlParseFile(filename);
 
     /* always show a message */
     if (doc != NULL) {
-        syslog_bus(0, DBG_DEBUG, "walking %s", filename);
+        syslog_bus(0, DBG_DEBUG, "Walking %s", filename);
         rb = walk_config_xml(doc);
-        syslog_bus(0, DBG_DEBUG, " done %s; found %ld buses", filename,
+        syslog_bus(0, DBG_DEBUG, "Done %s; found %ld buses", filename,
                    rb);
         xmlFreeDoc(doc);
         /*
