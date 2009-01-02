@@ -39,15 +39,15 @@ void change_privileges(bus_t bus)
         if ((group = getgrnam(grp)) != NULL ||
             (group = getgrgid((gid_t) atoi(grp))) != NULL) {
             if (setegid(group->gr_gid) != 0) {
-                syslog_bus(0, DBG_WARN, "could not change to group %s: %s",
+                syslog_bus(0, DBG_WARN, "Could not change to group %s: %s",
                     group->gr_name, strerror(errno));
             }
             else {
-                syslog_bus(0, DBG_INFO, "changed to group %s", group->gr_name);
+                syslog_bus(0, DBG_INFO, "Changed to group %s", group->gr_name);
             }
         }
         else {
-            syslog_bus(0, DBG_WARN, "could not change to group %s", grp);
+            syslog_bus(0, DBG_WARN, "Could not change to group %s", grp);
         }
     }
 
@@ -55,15 +55,15 @@ void change_privileges(bus_t bus)
         if ((passwd = getpwnam(uid)) != NULL ||
             (passwd = getpwuid((uid_t) atoi(uid))) != NULL) {
             if (seteuid(passwd->pw_uid) != 0) {
-                syslog_bus(0, DBG_INFO, "could not change to user %s: %s",
+                syslog_bus(0, DBG_INFO, "Could not change to user %s: %s",
                     passwd->pw_name, strerror(errno));
             }
             else {
-                syslog_bus(0, DBG_INFO, "changed to user %s", passwd->pw_name);
+                syslog_bus(0, DBG_INFO, "Changed to user %s", passwd->pw_name);
             }
         }
         else {
-            syslog_bus(0, DBG_INFO, "could not change to user %s", uid);
+            syslog_bus(0, DBG_INFO, "Could not change to user %s", uid);
         }
     }
 }
@@ -169,7 +169,7 @@ void *thr_handlePort(void* v)
     sock_opt = 1;
     if (setsockopt(ntd->socket, SOL_SOCKET, SO_REUSEADDR, &sock_opt,
          sizeof(sock_opt)) == -1) {
-        syslog_bus(0, DBG_ERROR, "Setsockopt failed: %s (errno = %d). "
+        syslog_bus(0, DBG_ERROR, "setsockopt() failed: %s (errno = %d). "
                 "Terminating...\n", strerror(errno), errno);
         close(ntd->socket);
         exit(1);
@@ -177,7 +177,7 @@ void *thr_handlePort(void* v)
 
     /* saddr=(sockaddr_in) if ntd.socket is of type AF_INET else its (sockaddr_in6) */
     if (bind(ntd->socket, (struct sockaddr *) saddr, socklen) == -1) {
-        syslog_bus(0, DBG_ERROR, "Bind failed: %s (errno = %d). "
+        syslog_bus(0, DBG_ERROR, "bind() failed: %s (errno = %d). "
                 "Terminating...\n", strerror(errno), errno);
         close(ntd->socket);
         exit(1);
@@ -198,7 +198,7 @@ void *thr_handlePort(void* v)
 
         if (newsock == -1) {
             /* Possibly the connection got aborted */
-            syslog_bus(0, DBG_WARN, "Accept failed: %s (errno = %d)\n",
+            syslog_bus(0, DBG_WARN, "accept() failed: %s (errno = %d)\n",
                     strerror(errno), errno);
             continue;
         }

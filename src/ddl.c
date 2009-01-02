@@ -1609,6 +1609,7 @@ int init_bus_DDL(bus_t busnumber)
                buses[busnumber].debuglevel);
 
     /* DDL mode only works with proper privilege setup */
+    /*
     result = setuid(0);
     if (result == -1) {
         syslog_bus(busnumber, DBG_FATAL,
@@ -1617,7 +1618,7 @@ int init_bus_DDL(bus_t busnumber)
         syslog_bus(busnumber, DBG_ERROR,
                    "DDL mode may only work with root privileges! ABORTED!\n");
         return -1;
-    } 
+    }*/
 
     buses[busnumber].device.file.fd = init_lineDDL(busnumber);
 
