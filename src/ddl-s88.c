@@ -252,10 +252,12 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 ****************************************************************/
 int init_bus_S88(bus_t busnumber)
 {
+    int result;
     unsigned int i;             /* loop counter */
     int isin = 0;               /* reminder for checking */
     int S88PORT = __ddl_s88->port;
     int S88CLOCK_SCALE = __ddl_s88->clockscale;
+
 #ifdef linux
     syslog_bus(busnumber, DBG_INFO, "init_bus DDL(Linux) S88");
 #else
@@ -273,7 +275,14 @@ int init_bus_S88(bus_t busnumber)
         isin = isin || (S88PORT == LPT_BASE[i]);
     if (isin) {
         /* test if port is accessible*/
-        if (ioperm(S88PORT, 3, 1) == 0) {
+        result = ioperm(S88PORT, 3, 1);
+        if (result == -1) {
+            syslog_bus(busnumber, DBG_FATAL,
+                    "ioperm() failed: %s (errno = %d).",
+                    strerror(result), result);
+            return 1;
+        }
+        else {
             /* test, whether there is a real device on the S88DEV-port
                by writing and reading data to the port. If the written
                data is returned, a real port is there
@@ -291,21 +300,16 @@ int init_bus_S88(bus_t busnumber)
             }
             else {
                 syslog_bus(busnumber, DBG_WARN,
-                    "warning: There is no port for s88 at 0x%X.", S88PORT);
+                    "Warning: There is no port for s88 at 0x%X.", S88PORT);
                 /* stop access to port address */
                 ioperm(S88PORT, 3, 0);
                 return 1;
             }
         }
-        else {
-            syslog_bus(busnumber, DBG_ERROR,
-                "warning: Access to port 0x%X denied.", S88PORT);
-            return 1;
-        }
     }
     else {
         syslog_bus(busnumber, DBG_WARN,
-            "warning: 0x%X is not valid port address for s88 device.",
+            "Warning: 0x%X is not valid port address for s88 device.",
             S88PORT);
         return 1;
     }
