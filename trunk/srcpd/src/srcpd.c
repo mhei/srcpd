@@ -353,6 +353,9 @@ int main(int argc, char **argv)
     cancel_all_threads();
 
     /*FIXME: this operation fails due to missing access rights*/ 
+    if (seteuid(0) != 0) { // fixed  tvo 2009-01-09
+       syslog(LOG_INFO, "seteuid(0) failed!");
+    }
     DeletePIDFile();
 
     closelog();
