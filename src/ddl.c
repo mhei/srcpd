@@ -553,11 +553,19 @@ static void reset_NMRAPacketPool(bus_t busnumber)
                    "pthread_mutex_lock() failed: %s (errno = %d).",
                    strerror(result), result);
     }
-    for (i = 0; i <= __DDL->NMRAPacketPool.NrOfKnownAddresses; i++) {
-      free(__DDL->NMRAPacketPool.packets[__DDL->NMRAPacketPool.knownAddresses[i]]);
+
+    /* tvo -2009-01-09 */
+    /* FIX: why do we need '<='?*/
+    for (i = 0; i < __DDL->NMRAPacketPool.NrOfKnownAddresses; i++) {
+       free(__DDL->NMRAPacketPool.packets[__DDL->NMRAPacketPool.knownAddresses[i]]);
     }
+
     /* free idle package */
-    free(__DDL->NMRAPacketPool.packets[255]);
+    /* tvo 2009-01--09 */
+    /* FIX: why? the idle package should be freed during the for-loop above. */
+    /*      re-freeing it crashes the program                                */
+    /* free(__DDL->NMRAPacketPool.packets[255]); */
+ 
     result = pthread_mutex_unlock(&__DDL->nmra_pktpool_mutex);
     if (result != 0) {
         syslog_bus(busnumber, DBG_ERROR,
@@ -1709,6 +1717,7 @@ static void end_bus_thread(bus_thread_t * btd)
     }
 
     syslog_bus(btd->bus, DBG_INFO, "DDL bus terminated.");
+
     reset_NMRAPacketPool(btd->bus);
     free(buses[btd->bus].driverdata);
     free(btd);
