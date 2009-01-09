@@ -191,31 +191,94 @@ ist \fBnogroup\fP.
 .\"
 .SS ddl
 .PP
-Digital Direct für Linux über die serielle Schnittstelle (RS232).
+Dieser Bus ist für den Betriebsmodus \fBDigital Direct für Linux\fP. In diesem
+Modus übernimmt der PC die Erzeugung der Digitalsignale direkt durch Verwendung der Hardware der seriellen Schnittstelle. Es wird keine Digitalzentrale
+zusätzlich benötigt.
+.PP
+Dieser Modus setzt allerdings besondere Rechte des Users voraus, unter dem
+das Programm srcpd betrieben wird. Es wird empfohlen den User srcpd und die
+Gruppe srcpd wie folgt einzurichten:
+
+   $ addgroup --system srcpd
+   $ adduser --system --no-create-home --ingroup srcpd srcpd\n
+
+In der Datei /etc/security/limits.conf ist nun noch ein Eintrag für diesen
+User vorzunehmen, um die Realtime-Prio zu erhöhen. Folgende Zeile ist dieser
+Datei anzuhängen:
+
+   srcpd  -       rtprio  99
+
+Nun ist noch die Konfiguration des Server-Busses zu ändern:
+
+    ...
+    <server>
+      ...
+      <username>srcpd</username>
+      <groupname>srcpd</groupname>
+      ...
+    </server>
+    ...
 .TP
 number_ga
+Anzahl der Schaltdekoderadressen, die benötigt werden. Beispiel: Bei vier Weichen und drei Signalen muss diese Wert mindestens auf 7 gesetzt werden. Auf 
+herkömmlichen Rechern mit genügend Arbeitsspeicher kann dieser Wert auf 100
+gesetzt werden.
 .TP
 number_gl
+Anzahl der Lok-Dekoderadressen die benötigt werden. Bei drei digitalisierten 
+Lokomotiven muss dieser Wert mindestens auf 3 gesetzt sein. Auf 
+herkömmlichen Rechern mit genügend Arbeitsspeicher kann dieser Wert auf 100
+gesetzt werden.
 .TP
 enable_ringindicator_checking
 .TP
 enable_checkshort_checking
+Falls der verwendete Booster eine Kurzschlusserkennung unterstützt und 
+entsprechend an die serielle Schnittstelle angeschlossen ist, sollte
+dieser Wert auf yes gesetzt werden, sonst auf no.
 .TP
 inverse_dsr_handling
+Bei manchen Boostern muss die serielle Leitung DSR invers behandelt werden,
+damit die Kurzschlusserkennung funktioniert. Wenn ein solcher Booster
+im Einsatz ist, muss dieser Wert auf yes gesetzt werden, sonst auf no.
 .TP
 enable_maerklin
+Dieser Wert ist auf yes zu setzen, falls Dekoder des alten Märklin 
+Digitalsystems gesteuert werden sollen, sonst auf no.
 .TP
 enable_nmradcc
+Dieser Wert ist auf yes zu setzen, falls Dekoder gemäß NMRA-DCC gesteuert
+werden sollen, sonst auf no.
+
+Es können auch beide Werte auf yes gesetzt werden. Dann läuft srcpd im
+Multiprotokollbetrieb, d. h. im gleichen Digitalstromkreis können sowohl
+MM- wie auch NMRA-DCC-Dekoder angesteuert werden.
 .TP
 improve_nmradcc_timing
+Dieser Wert sollte im reinen NMRA-DCC-Betrieb auf yes gesetzt werden. In allen
+Situation - also falls enable_marklin auf yes gesetzt ist - muss(!) dieser Wert
+auf no gesetzt werden!
 .TP
 shortcut_failure_delay
+Anzahl der Millisekunden (usec), die im Falle eines erkannten Kurzschlusses
+gewartet werden soll, bis der Digitalstrom abgeschaltet wird.
 .TP
 nmradcc_translation_routine
+Aus historischen Gründen kennt das Programm drei verschiedene Routinen, die 
+die Pakete für NMRA-DCC berechnen können. Die Dritte ist die aktuellste und
+wird hiermit empfohlen. Der Wert ist also auf 3 zu setzen. Nur wenn es damit
+Probleme gibt, sollte man die Werte 1 und 2 ausprobieren.
 .TP
 enable_usleep_patch
+Im reinen Märklin-Betrieb verursacht das Programm srcpd einiges an Last auf
+dem Rechner. Mit diesem Parameter kann man das Problem lösen. D. h. dieser
+Parameter sollte immer auf yes stehen. Bisher sind keine Probleme bekannt.
+Sollte es Probleme geben, kann man versuchweise den Wert auf no setzen.
 .TP
 usleep_usec
+Anzahl der Millisekunden, die der Usleep-Patch verwendet. Der Wert sollte
+so klein wie  möglich gewählt werden. Als brauchbar haben sich Werte zwischen
+100 und 250 erwiesen.
 .\"
 .\"
 .SS ddl-s88
