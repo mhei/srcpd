@@ -216,6 +216,8 @@ int init_ga_IB( ga_state_t *ga )
 int init_bus_IB( bus_t busnumber )
 {
   int status;
+  static char* protocols = "MP";
+  buses[busnumber].protocols = protocols;
 
   if ( init_GA( busnumber, __ib->number_ga ) )
   {

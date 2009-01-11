@@ -1611,22 +1611,11 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 int init_bus_DDL(bus_t busnumber)
 {
     int i;
-    int result;
+    static char protocols[3] = {'\0','\0','\0'};
+    int protocol = 0;
 
     syslog_bus(busnumber, DBG_INFO, "DDL init with debug level %d",
                buses[busnumber].debuglevel);
-
-    /* DDL mode only works with proper privilege setup */
-    /*
-    result = setuid(0);
-    if (result == -1) {
-        syslog_bus(busnumber, DBG_FATAL,
-                   "setuid() failed: %s (errno = %d).",
-                   strerror(result), result);
-        syslog_bus(busnumber, DBG_ERROR,
-                   "DDL mode may only work with root privileges! ABORTED!\n");
-        return -1;
-    }*/
 
     buses[busnumber].device.file.fd = init_lineDDL(busnumber);
 
@@ -1660,6 +1649,7 @@ int init_bus_DDL(bus_t busnumber)
     if (__DDL->ENABLED_PROTOCOLS & EP_MAERKLIN) {
         init_MaerklinPacketPool(busnumber);
         __DDL->maerklin_refresh = 1;
+        protocols[protocol++] = 'M';
     }
     else {
         __DDL->maerklin_refresh = 0;
@@ -1667,8 +1657,10 @@ int init_bus_DDL(bus_t busnumber)
     }
     if (__DDL->ENABLED_PROTOCOLS & EP_NMRADCC) {
         init_NMRAPacketPool(busnumber);
+        protocols[protocol++] = 'N';
     }
     syslog_bus(busnumber, DBG_INFO, "DDL init done");
+    buses[busnumber].protocols = protocols;
     return 0;
 }
 

@@ -218,7 +218,8 @@ static int init_lineM6051(bus_t bus)
 
 int init_bus_M6051(bus_t bus)
 {
-
+    static char* protocols = "MP";
+    buses[bus].protocols = protocols;
     syslog_bus(bus, DBG_INFO, "M605x  init: debug %d", buses[bus].debuglevel);
     if (buses[bus].debuglevel <= DBG_DEBUG) {
         buses[bus].device.file.fd = init_lineM6051(bus);

@@ -195,6 +195,8 @@ int init_linezimo(bus_t bus, char *name)
 /* return code wird ignoriert (vorerst) */
 int init_bus_ZIMO(bus_t bus)
 {
+    static char* protocols = "MN";
+    buses[bus].protocols = protocols;
     syslog_bus(bus, DBG_INFO, "Zimo init: debug %d, device %s",
         buses[bus].debuglevel, buses[bus].device.file.path);
     buses[bus].device.file.fd = init_linezimo(bus, buses[bus].device.file.path);

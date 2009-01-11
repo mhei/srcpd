@@ -149,6 +149,8 @@ int init_bus_LI100_SERIAL( bus_t busnumber )
   int status;
   int i;
   unsigned char byte2send[ 20 ];
+  static char* protocols = "N";
+  buses[busnumber].protocols = protocols;
 
   if ( init_GA( busnumber, __li100->number_ga ) )
   {

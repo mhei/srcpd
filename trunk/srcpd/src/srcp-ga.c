@@ -224,6 +224,10 @@ int initGA(bus_t busnumber, int addr, const char protocol)
     syslog_bus(busnumber, DBG_INFO, "init GA: %d %c", addr, protocol);
     if ((addr > 0) && (addr <= number_ga)) {
         char msg[100];
+        rc = bus_supports_protocol(busnumber, protocol);
+        if (rc != SRCP_OK) {
+          return rc;
+        }
         ga[busnumber].gastate[addr].protocol = protocol;
         gettimeofday(&ga[busnumber].gastate[addr].inittime, NULL);
         ga[busnumber].gastate[addr].activetime = 0;

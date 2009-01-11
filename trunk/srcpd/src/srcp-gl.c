@@ -260,7 +260,10 @@ int cacheInitGL(bus_t busnumber, int addr, const char protocol,
         char msg[1000];
         gl_state_t tgl;
         memset(&tgl, 0, sizeof(tgl));
-        rc = SRCP_OK;
+        rc = bus_supports_protocol(busnumber, protocol);
+        if (rc != SRCP_OK) {
+          return rc;
+        }
         gettimeofday(&tgl.inittime, NULL);
         gettimeofday(&tgl.tv, NULL);
         tgl.n_fs = n_fs;
