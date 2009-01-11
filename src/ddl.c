@@ -1718,10 +1718,12 @@ static void end_bus_thread(bus_thread_t * btd)
     free(btd);
 }
 
+
 typedef struct _delayedGAResetCmdData {
     int busnumber;
     ga_state_t* gastate;
 } delayedGAResetCmdData;
+
 
 /* sends a GA reset command after a delay */
 void *thr_delayedGAResetCmd(void *v) {
@@ -1747,7 +1749,9 @@ void *thr_delayedGAResetCmd(void *v) {
                 break;
    }
    setGA(busnumber, gatmp->id, *gatmp);
+   return NULL;
 }
+
 
 static void *thr_sendrec_DDL(void *v)
 {
