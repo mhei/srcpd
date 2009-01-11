@@ -157,21 +157,30 @@ verfolgen; nähere Informationen hierzu befinden sich im Handbuch
 use_watchdog
 Einige Busse bieten die Möglichkeit, die Aktivität des Busses zu
 überwachen und einen blockierten Bus wieder zu aktivieren.   Gültige
-Werte sind »yes« oder »no«.  Der voreingestellte Wert ist »no«.
+Werte sind
+.IR yes
+oder
+.IR no .
+Der voreingestellte Wert ist
+.IR no .
 .\"
 .TP
 restore_device_settings
 Einige Busse bieten die Möglichkeit, die Einstellungen der seriellen
 Schnittstelle wieder auf den Ausgangswert zurück zu stellen.  Gültige
 Werte sind
-.IR yes oder
-.IR no .  Der voreingestellte Wert ist »no«.
+.IR yes
+oder
+.IR no .
+Der voreingestellte Wert ist
+.IR no .
 .\"
 .TP
 device
 Hiermit wird der Name der angesteuerten Schnittstelle (z.B. /dev/ttyS0)
 festgelegt.  Die Busse
-.IR server und
+.IR server
+und
 .IR loopback
 benötigen diesen Eintrag nicht.  Der voreingestellte Wert ist
 .IR /dev/null .
@@ -187,10 +196,12 @@ eingestellt ist.  Mögliche Zahlenwerte sind folgende: 2400, 4800, 9600,
 auto_power_on
 Hiermit wird festgelegt, ob beim Start des Daemons automatisch der
 Digitalstrom des Busses eingeschaltet wird.  Gültige Werte sind
-.IR yes oder
+.IR yes
+oder
 .IR no .
 Die Busse
-.IR server und
+.IR server
+und
 .IR loopback
 benötigen diesen Eintrag nicht.  Der voreingestellte Wert ist
 .IR no .
