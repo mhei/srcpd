@@ -84,6 +84,7 @@ typedef struct _BUS
 {
   int debuglevel;  /* verbosity level of syslog */
   int type;        /* which bustype */
+  char *protocols; /* array of supported protocols */
   char description[100]; /* bus description */
 
   int devicetype;  /* file, network, constants start with HW_ */
@@ -139,6 +140,7 @@ void cancel_all_bus_threads();
 void suspend_bus_thread(bus_t bus);
 void resume_bus_thread(bus_t bus);
 int bus_type_is_available(int type);
+int bus_supports_protocol(bus_t bus, const char protocol);
 
 #define DG_SESSION 1
 #define DG_TIME 2

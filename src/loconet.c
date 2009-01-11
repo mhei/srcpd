@@ -294,6 +294,8 @@ static int init_ga_LOCONET(ga_state_t * ga)
 
 int init_bus_LOCONET(bus_t busnumber)
 {
+    static char* protocols = "N";
+    buses[busnumber].protocols = protocols;
     __loconet->sent_packets = __loconet->recv_packets = 0;
     syslog_bus(busnumber, DBG_INFO, "Loconet init: bus #%d, debug %d",
                busnumber, buses[busnumber].debuglevel);

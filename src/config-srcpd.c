@@ -20,6 +20,7 @@
 #include "srcp-fb.h"
 #include "srcp-power.h"
 #include "srcp-server.h"
+#include "srcp-error.h"
 #include "ddl.h"
 #include "m605x.h"
 #include "selectrix.h"
@@ -75,6 +76,24 @@ int bus_has_devicegroup(bus_t bus, int dg)
     return 0;
 }
 
+/** 
+  check if a given bus supports a specified protocol
+  @par Input: bus_t busnumber the bus
+  @par Input: const char protocol the protocol
+  @return SRCP_OK i.e. the protocol is found, else SRCP Error code */
+int bus_supports_protocol(bus_t busnumber, const char protocol) {
+  int i;
+  if (buses[busnumber].protocols) {
+    char const* protocols = buses[busnumber].protocols;
+    for (i=0; i<strlen(protocols); i++ ) {
+      if (protocols[i] == protocol) {
+        return SRCP_OK;
+      }
+    }
+  }
+  return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
+}
+
 static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
 {
     int result;
@@ -97,6 +116,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
     /* some default values */
     buses[current_bus].debuglevel = DBG_INFO;
     buses[current_bus].flags = 0;
+    buses[current_bus].protocols = 0;
 
     /* Function pointers to NULL */
     buses[current_bus].thr_func = NULL;

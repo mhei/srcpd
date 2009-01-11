@@ -168,6 +168,9 @@ int init_ga_LOOPBACK(ga_state_t * ga)
  */
 int init_bus_LOOPBACK(bus_t i)
 {
+    static char* protocols = "LSPMN";
+    buses[i].protocols = protocols;
+
     syslog_bus(i, DBG_INFO,
                "loopback start initialization (verbosity = %d).",
                buses[i].debuglevel);

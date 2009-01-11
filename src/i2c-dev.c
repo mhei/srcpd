@@ -396,6 +396,8 @@ int init_bus_I2C_DEV(bus_t i)
     int j, multiplexer_adr;
     int multiplex_buses;
     char buf;
+    static char* protocols = "P";
+    buses[i].protocols = protocols;
 
     syslog_bus(i, DBG_INFO, "i2c-dev init: bus #%ld, debug %d", i,
         buses[i].debuglevel);

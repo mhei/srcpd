@@ -258,6 +258,8 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 /* On success the port handle is changed to a value <> -1 */
 int init_bus_Selectrix(bus_t busnumber)
 {
+        static char* protocols = "S";
+        buses[busnumber].protocols = protocols;
         syslog_bus(busnumber, DBG_INFO, "Selectrix init: debuglevel %d",
                 buses[busnumber].debuglevel);
         if (buses[busnumber].debuglevel <= DBG_DEBUG) {
