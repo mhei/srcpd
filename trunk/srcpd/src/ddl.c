@@ -554,17 +554,17 @@ static void reset_NMRAPacketPool(bus_t busnumber)
                    strerror(result), result);
     }
 
-    /* tvo -2009-01-09 */
-    /* FIX: why do we need '<='?*/
     for (i = 0; i < __DDL->NMRAPacketPool.NrOfKnownAddresses; i++) {
-       free(__DDL->NMRAPacketPool.packets[__DDL->NMRAPacketPool.knownAddresses[i]]);
+       int nr=__DDL->NMRAPacketPool.knownAddresses[i];
+       free(__DDL->NMRAPacketPool.packets[nr]);
+       __DDL->NMRAPacketPool.packets[nr]=0;
     }
 
-    /* free idle package */
-    /* tvo 2009-01--09 */
-    /* FIX: why? the idle package should be freed during the for-loop above. */
-    /*      re-freeing it crashes the program                                */
-    /* free(__DDL->NMRAPacketPool.packets[255]); */
+    /* free idle package - this is needed because the idle packet is removed
+       from the knownAdresses in the PacketPool after the first Loco is
+       refreshed -> TODO: a better place for this free would be in 
+       update_NMRAPacketPool */
+    free(__DDL->NMRAPacketPool.packets[128]); 
  
     result = pthread_mutex_unlock(&__DDL->nmra_pktpool_mutex);
     if (result != 0) {
@@ -614,7 +614,7 @@ static void init_NMRAPacketPool(bus_t busnumber)
     /* put idle packet in packet pool */
     j = translateBitstream2Packetstream(busnumber, idle_packet,
                                         idle_pktstr, false);
-    update_NMRAPacketPool(busnumber, 255, idle_pktstr, j, idle_pktstr, j);
+    update_NMRAPacketPool(busnumber, 128, idle_pktstr, j, idle_pktstr, j);
     /* generate and override idle_data */
     /* insert the NMRA idle packetstream (the standard idle stream was all
        '1' which is OK for NMRA, so keep the rest of the idle string) */
@@ -659,7 +659,7 @@ void update_NMRAPacketPool(bus_t busnumber, int adr,
 
 
     if (__DDL->NMRAPacketPool.NrOfKnownAddresses == 1
-        && __DDL->NMRAPacketPool.knownAddresses[0] == 255)
+        && __DDL->NMRAPacketPool.knownAddresses[0] == 128)
         __DDL->NMRAPacketPool.NrOfKnownAddresses = 0;
 
     if (!found) {
@@ -1678,6 +1678,7 @@ static void end_bus_thread(bus_thread_t * btd)
     int result;
     /* store thread return value here */
     void *pThreadReturn;
+    int busnumber=btd->bus;
 
     /* send cancel to refresh cycle */
     result = pthread_cancel(((DDL_DATA *) buses[btd->bus].driverdata)->
@@ -1718,7 +1719,9 @@ static void end_bus_thread(bus_thread_t * btd)
 
     syslog_bus(btd->bus, DBG_INFO, "DDL bus terminated.");
 
-    reset_NMRAPacketPool(btd->bus);
+    if (__DDL->ENABLED_PROTOCOLS & EP_NMRADCC) {
+      reset_NMRAPacketPool(btd->bus);
+    }
     free(buses[btd->bus].driverdata);
     free(btd);
 }
