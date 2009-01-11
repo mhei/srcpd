@@ -1718,6 +1718,37 @@ static void end_bus_thread(bus_thread_t * btd)
     free(btd);
 }
 
+typedef struct _delayedGAResetCmdData {
+    int busnumber;
+    ga_state_t* gastate;
+} delayedGAResetCmdData;
+
+/* sends a GA reset command after a delay */
+void *thr_delayedGAResetCmd(void *v) {
+
+   delayedGAResetCmdData *delgatmp = (delayedGAResetCmdData *)v;
+   ga_state_t *gatmp = delgatmp->gastate;
+   int busnumber = delgatmp->busnumber;
+   free(v);
+
+   usleep(1000L * (unsigned long) gatmp->activetime);
+   gatmp->action = 0;
+   syslog_bus(busnumber, DBG_DEBUG,
+                   "Delayed GA command (threaded): %c (%x) %d", gatmp->protocol, 
+                   gatmp->protocol, gatmp->id);
+   switch (gatmp->protocol) {
+      case 'M':  /* Motorola Codes */
+                comp_maerklin_ms(busnumber, gatmp->id, gatmp->port,
+                                           gatmp->action);
+                break;
+      case 'N': /* NMRA DCC */
+                comp_nmra_accessory(busnumber, gatmp->id, gatmp->port,
+                                    gatmp->action, __DDL->NMRA_GA_OFFSET);
+                break;
+   }
+   setGA(busnumber, gatmp->id, *gatmp);
+}
+
 static void *thr_sendrec_DDL(void *v)
 {
     struct _SM smakt;
@@ -1725,6 +1756,9 @@ static void *thr_sendrec_DDL(void *v)
     ga_state_t gatmp;
     int addr, error;
     int last_cancel_state, last_cancel_type;
+
+    delayedGAResetCmdData *tmpv;
+    pthread_t ptid_delacccmd;
 
     bus_thread_t *btd = (bus_thread_t *) malloc(sizeof(bus_thread_t));
     if (btd == NULL)
@@ -2002,21 +2036,48 @@ static void *thr_sendrec_DDL(void *v)
             buses[btd->bus].watchdog = 5;
 
             if (gatmp.activetime >= 0) {
-                usleep(1000L * (unsigned long) gatmp.activetime);
-                gatmp.action = 0;
-                syslog_bus(btd->bus, DBG_DEBUG,
-                           "Delayed GA command: %c (%x) %d", p, p, addr);
-                switch (p) {
-                    case 'M':  /* Motorola Codes */
-                        comp_maerklin_ms(btd->bus, addr, gatmp.port,
-                                         gatmp.action);
-                        break;
-                    case 'N':
-                        comp_nmra_accessory(btd->bus, addr, gatmp.port,
+
+            /* the handling of delayed GA commands in this way, can only 
+               be a short term improvement. If srcpd will have better
+               inter-thread communication, it should be replaced. */
+
+                if (gatmp.activetime < 1000) {
+                   usleep(1000L * (unsigned long) gatmp.activetime);
+                   gatmp.action = 0;
+                   syslog_bus(btd->bus, DBG_DEBUG,
+                              "Delayed GA command: %c (%x) %d", p, p, addr);
+                   switch (p) {
+                       case 'M':  /* Motorola Codes */
+                           comp_maerklin_ms(btd->bus, addr, gatmp.port,
+                                            gatmp.action);
+                           break;
+                       case 'N':
+                           comp_nmra_accessory(btd->bus, addr, gatmp.port,
                                             gatmp.action, __DDL->NMRA_GA_OFFSET);
-                        break;
+                           break;
+                   }
+                   setGA(btd->bus, addr, gatmp);
                 }
-                setGA(btd->bus, addr, gatmp);
+                else {
+                   tmpv = (delayedGAResetCmdData*)malloc(sizeof(delayedGAResetCmdData));
+                   if (!tmpv) {
+                      syslog_bus(btd->bus, DBG_ERROR,
+                                 "malloc() failed!");
+                      continue;
+                   }
+                   tmpv->busnumber = btd->bus;
+                   tmpv->gastate = &gatmp;
+                   error = pthread_create(&ptid_delacccmd,NULL,
+                                          thr_delayedGAResetCmd,tmpv);
+                   if (error==0) { 
+                      pthread_detach(ptid_delacccmd);
+                   }
+                   else { 
+                      syslog_bus(btd->bus, DBG_ERROR,
+                                 "pthread_create() failed: %s (errno = %d).",
+                                  strerror(error), error);
+                   }
+                }
             }
         }
         usleep(3000);
