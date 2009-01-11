@@ -1,4 +1,15 @@
-.TH srcpd.conf 5 "29. Dezember 2007"
+.\"
+.\" Manual page for srcpd.conf
+.\" Process with:
+.\"   groff -man -Tlatin1 srcpd.conf.5 | less
+.\" or
+.\"   groff -man -Tutf8 srcpd.conf.5 | less
+.\"
+.\" Get a printable version with:
+.\"   groff -man -Tps srcpd.conf.5 > srcpd.conf.ps
+.\"
+.\"
+.TH srcpd.conf 5 "11. Januar 2009"
 .\"
 .\"
 .SH "NAME"
@@ -6,20 +17,27 @@ srcpd.conf \- Die Konfigurationsdatei für den srcpd Deamon
 .\"
 .\"
 .SH "BESCHREIBUNG"
-Die Datei \fIsrcpd.conf\fP wird vom SRCP-Daemon \fBsrcpd\fP als
-systemweite Konfigurationsdatei genutzt. Sie bescheibt die
+Die Datei
+.IR srcpd.conf
+wird vom SRCP-Daemon
+.IR srcpd
+als systemweite Konfigurationsdatei genutzt.  Sie bescheibt die
 für die Laufzeit des Systemsdienstes entscheidenden Einstellungen zum
 Verhalten des Daemons selbst, sowie die Anzahl, Art und Betriebsweise
-der angeschlossenen Schnittstellen zur Modellbahn. Weitere Details zum
-Betrieb beschreibt das Handbuch \fBsrcpd (8)\fP des Daemons.
+der angeschlossenen Schnittstellen zur Modellbahn.  Weitere Details zum
+Betrieb beschreibt das Handbuch
+.BR srcpd\ (8)
+des Daemons.
 .\"
 .\"
 .SH "STANDARD KONFIGURATIONSDATEI"
 .\"
 .PP
-Die dem \fBsrcpd\fP mitgelieferte Standardkonfigurationsdatei enthält
+Die dem
+.IR srcpd
+mitgelieferte Standardkonfigurationsdatei enthält
 beispielhafte Einstellungen sowohl für den Server als auch für einen
-vorkonfigurierten Bus. Sie hat den folgenden Aufbau:
+vorkonfigurierten Bus.  Sie hat den folgenden Aufbau:
 .PP
 .RS
 .nf
@@ -50,16 +68,19 @@ vorkonfigurierten Bus. Sie hat den folgenden Aufbau:
 .SH "DATEIFORMAT"
 .\"
 .PP
-Die Konfigurationsdatei wird im XML-Format abgespeichert. Da es sich bei
+Die Konfigurationsdatei wird im XML-Format abgespeichert.  Da es sich bei
 XML-Dateien um ein reines Textformat handelt, kann ein erfahrener
 Benutzer solche Dateien mit einem beliebigen Texteditor bearbeiten.
 Weniger erfahrenen Benutzern sei empfohlen, Veränderungen in der Datei
 mit einem speziellen Programm vorzunehmen, damit der Inhalt der Datei
 stets korrektes XML enthält.
 .PP
-Treten beim Lesen der Konfigurationsdatei Fehler auf, sendet \fBsrcpd\fP
-entsprechende Fehlermeldungen an den syslog-Daemon. Diese können über
-die Datei \fI/var/log/messages\fP verfolgt werden.
+Treten beim Lesen der Konfigurationsdatei Fehler auf, sendet
+.IR srcpd
+entsprechende Fehlermeldungen an den syslog-Daemon.  Diese können über
+die Datei
+.IR /var/log/messages
+verfolgt werden.
 .\"
 .PP
 Aktuell gibt es keine Dokumententypspezifikation (DTD), mit der der
@@ -93,10 +114,10 @@ für die es jeweils wieder eine eigene Grundstruktur gibt:
 .\"
 .SS Allgemeine Hinweise
 .PP
-Der erste konfigurierte Bus muss der für den Server selbst sein. Die
-Reihenfolge und die Anzahl der weiteren Busse sind beliebig. Es sollten
+Der erste konfigurierte Bus muss der für den Server selbst sein.  Die
+Reihenfolge und die Anzahl der weiteren Busse sind beliebig.  Es sollten
 nur Busse konfiguriert werden, die auch tatsächlich beim Betrieb des
-Daemons Verwendung finden. Nicht benötigte Busse können beispielsweise
+Daemons Verwendung finden.  Nicht benötigte Busse können beispielsweise
 über Kommentarzeichen ausgeklammert werden:
 .PP
 .nf
@@ -119,165 +140,230 @@ jeweils individuell festlegen.
 .\"
 .TP
 verbosity
-Abhängig von diesem Zahlenwert (0..7) erzeugt \fBsrcpd\fP während des
+Abhängig von diesem Zahlenwert (0..7) erzeugt
+.IR srcpd
+während des
 Betriebs mehr oder weniger ausführliche Protokollmeldungen zum aktuellen
-Geschehen. Mit dem Wert 0 erfolgt nur eine minimale Ausgabe, mit höheren
-Werten steigt auch die Ausführlichkeit dieser Meldetätigkeit. Für die
+Geschehen.  Mit dem Wert 0 erfolgt nur eine minimale Ausgabe, mit höheren
+Werten steigt auch die Ausführlichkeit dieser Meldetätigkeit.  Für die
 Fehlersuche sollte der Wert möglichst hoch, bei störungsfreiem Betrieb
-möglichst niedrig gewählt werden. Die Meldungen lassen sich über die
-Log-Datei des Syslog-Daemons \fI/var/log/messages\fP verfolgen; nähere
-Informationen hierzu befinden sich im Handbuch \fBsrcpd (8)\fP.
+möglichst niedrig gewählt werden.  Die Meldungen lassen sich über die
+Log-Datei des Syslog-Daemons
+.IR /var/log/messages
+verfolgen; nähere Informationen hierzu befinden sich im Handbuch
+.IR srcpd\ (8) .
 .\"
 .TP
 use_watchdog
 Einige Busse bieten die Möglichkeit, die Aktivität des Busses zu
-überwachen und einen blockierten Bus wieder zu aktivieren.  Gültige
-Werte sind »yes« oder »no«. Der voreingestellte Wert ist »no«..\"
+überwachen und einen blockierten Bus wieder zu aktivieren.   Gültige
+Werte sind »yes« oder »no«.  Der voreingestellte Wert ist »no«.
 .\"
 .TP
 restore_device_settings
 Einige Busse bieten die Möglichkeit, die Einstellungen der seriellen
-Schnittstelle wieder auf den Ausgangswert zurück zu stellen. Gültige
-Werte sind »yes« oder »no«. Der voreingestellte Wert ist »no«.
+Schnittstelle wieder auf den Ausgangswert zurück zu stellen.  Gültige
+Werte sind
+.IR yes oder
+.IR no .  Der voreingestellte Wert ist »no«.
 .\"
 .TP
 device
 Hiermit wird der Name der angesteuerten Schnittstelle (z.B. /dev/ttyS0)
-festgelegt. Die Busse \fBserver\fP und \fBloopback\fP benötigen diesen
-Eintrag nicht. Der voreingestellte Wert ist »/dev/null«.
+festgelegt.  Die Busse
+.IR server und
+.IR loopback
+benötigen diesen Eintrag nicht.  Der voreingestellte Wert ist
+.IR /dev/null .
 .\"
 .TP
 speed
 Bei Bussen, die eine serielle Schnittstelle nutzen, ist es möglich, die
 Schnittstellengeschwindigkeit zu wählen, soweit diese nicht fest
-eingestellt ist. Mögliche Zahlenwerte sind folgende: 2400, 4800, 9600,
-19200, 38400, 57600 and 115200\ Baud. Voreingestellt ist 2400\ Baud.
+eingestellt ist.  Mögliche Zahlenwerte sind folgende: 2400, 4800, 9600,
+19200, 38400, 57600 and 115200\ Baud.  Voreingestellt ist 2400\ Baud.
 .\"
 .TP
 auto_power_on
 Hiermit wird festgelegt, ob beim Start des Daemons automatisch der
-Digitalstrom des Busses eingeschaltet wird. Gültige Werte sind »yes«
-oder »no«. Die Busse \fBserver\fP und \fBloopback\fP benötigen diesen
-Eintrag nicht. Der voreingestellte Wert ist »no«.
+Digitalstrom des Busses eingeschaltet wird.  Gültige Werte sind
+.IR yes oder
+.IR no .
+Die Busse
+.IR server und
+.IR loopback
+benötigen diesen Eintrag nicht.  Der voreingestellte Wert ist
+.IR no .
 .\"
 .\"
 .SS server
 .\"
 .PP
-Dieser Bus darf in keiner Konfigurationsdatei fehlen. Er verfügt über
+Dieser Bus darf in keiner Konfigurationsdatei fehlen.  Er verfügt über
 die folgenden Einstellmöglichkeiten:
 .\"
 .TP
 tcp-port
 Mit diesem Wert wird die Netzwerkportnummer für die TCP/IP-Kommunikation
-zwischen \fBsrcpd\fP und den SRCP-Clients festgelegt. Die Voreinstellung
-hierfür ist der von der IANA festgelegte Wert \fB4303\fP.
+zwischen
+.IR srcpd
+und den SRCP-Clients festgelegt.  Die Voreinstellung hierfür ist der
+von der IANA festgelegte Wert
+.IR 4303 .
 .\"
 .TP
 pid-file
-Name der Datei, in der \fBsrcpd\fP die Prozess-ID abspeichert. Der
-voreingestellte Wert hierfür ist \fI/var/run/srcpd.pid\fP.
+Name der Datei, in der
+.IR srcpd
+die Prozess-ID abspeichert.  Der voreingestellte Wert hierfür ist
+.IR /var/run/srcpd.pid .
 .\"
 .TP
 username
-Benutzerkennung, unter der \fBsrcpd\fP auf dem System läuft.
-Voreingestellt ist \fBnobody\fP.
+Benutzerkennung, unter der
+.IR srcpd
+auf dem System läuft.  Voreingestellt ist
+.IR nobody .
 .\"
 .TP
 groupname
-Gruppenkennung unter der \fBsrcpd\fP auf dem System läuft. Voreingestellt
-ist \fBnogroup\fP.
+Gruppenkennung unter der
+.IR srcpd
+auf dem System läuft.  Voreingestellt ist
+.IR nogroup .
 .\"
 .\"
 .SS ddl
 .PP
-Dieser Bus ist für den Betriebsmodus \fBDigital Direct für Linux\fP. In diesem
-Modus übernimmt der PC die Erzeugung der Digitalsignale direkt durch Verwendung der Hardware der seriellen Schnittstelle. Es wird keine Digitalzentrale
-zusätzlich benötigt. Benutzt werden die Leitungen TxD und GND der seriellen
-Schnittstelle, die geeignet mit den Eingängen eines Digitalboosters verbunden
-werden müssen.
+Dieser Bus ist für den Betriebsmodus
+.IR Digital\ Direct\ für\ Linux .
+In diesem Modus übernimmt der PC die Erzeugung der Digitalsignale
+direkt durch Verwendung der Hardware der seriellen Schnittstelle.
+Es wird keine Digitalzentrale zusätzlich benötigt.  Benutzt werden
+die Leitungen TxD und GND der seriellen Schnittstelle, die geeignet
+mit den Eingängen eines Digitalboosters verbunden werden müssen.
 .PP
-Der DDL-Modus setzt besondere Rechte des Users voraus, unter dem
-das Programm srcpd betrieben wird. Es wird empfohlen den User srcpd und die
-Gruppe srcpd wie folgt einzurichten:
+Der DDL-Modus setzt besondere Rechte des Benutzers voraus, unter dem
+das Programm
+.IR srcpd
+betrieben wird.  Es wird empfohlen den Benutzer
+.IR srcpd
+und die Gruppe
+.IR srcpd
+wie folgt einzurichten:
 
    $ addgroup --system srcpd
-   $ adduser --system --no-create-home --ingroup srcpd srcpd\n
+   $ adduser --system --no-create-home --ingroup srcpd srcpd
 
-Um die Realtime-Prio für diesen User zu erhöhen, ist in der Datei 
-/etc/security/limits.conf folgende Zeile anzuhängen:
+Um die Echtzeitpriorität für diesen Benutzer zu erhöhen, ist in der Datei 
+.IR /etc/security/limits.conf
+folgende Zeile anzuhängen:
 
    srcpd  -       rtprio  99
 
 Die Konfiguration des Server-Busses ist wie folgt zu ändern:
 
-    ...
     <server>
       ...
       <username>srcpd</username>
       <groupname>srcpd</groupname>
       ...
     </server>
-    ...
+
 .TP
 number_ga
-Anzahl der Schaltdekoderadressen, die benötigt werden. Beispiel: Bei vier Weichen und drei Signalen muss diese Wert mindestens auf 7 gesetzt werden. Auf 
-herkömmlichen Rechern mit genügend Arbeitsspeicher kann dieser Wert initial auf 100
-gesetzt werden.
+Anzahl der Schaltdecoderadressen, die benötigt werden.  Beispiel:
+Bei vier Weichen und drei Signalen muss dieser Wert mindestens auf 7
+gesetzt werden.  Auf herkömmlichen Rechern mit genügend Arbeitsspeicher
+kann dieser Wert von vornherein auf 100 gesetzt werden.
 .TP
 number_gl
-Anzahl der Lok-Dekoderadressen die benötigt werden. Bei drei digitalisierten 
-Lokomotiven muss dieser Wert mindestens auf 3 gesetzt sein. Auf 
-herkömmlichen Rechern mit genügend Arbeitsspeicher kann dieser Wert initial auf 100
-gesetzt werden.
+Anzahl der Lok-Decoderadressen die benötigt werden.  Bei drei
+digitalisierten Lokomotiven muss dieser Wert mindestens auf 3 gesetzt
+sein.  Auf herkömmlichen Rechern mit genügend Arbeitsspeicher kann
+dieser Wert von vornherein auf 100 gesetzt werden.
 .TP
 enable_ringindicator_checking
-Der Ringindikator RI ist eine Leitung der seriellen Schnittstelle. Wird dieser Wert
-auf yes gesetzt, so schaltet srcpd den Digitalstrom genau dann ab, wenn die Spannung
-der Leitung RI von -12V (-5V) auf +12V (+5V) wechselt. Die Leitung RI muss natürlich
-von irgendeiner Hardware sinnvoll bedient werden. Denkbar wäre etwa ein Notausschalter.
-Verwendet man die Leitung RI nicht, muss dieser Wert auf no gesetzt werden.
+Der Ringindikator RI ist eine Leitung der seriellen Schnittstelle.
+Wird dieser Wert auf
+.IR yes
+gesetzt, so schaltet der
+.IR srcpd
+den Digitalstrom genau dann ab, wenn die Spannung der Leitung RI von
+-12V (-5V) auf +12V (+5V) wechselt.  Die Leitung RI muss natürlich
+von einer entsprechenden Hardware sinnvoll bedient werden.  Denkbar wäre
+etwa ein Notausschalter.  Verwendet man die Leitung RI nicht, muss dieser
+Wert auf
+.IR no
+gesetzt werden.
 .TP
 enable_checkshort_checking
-Die Leitung DSR der seriellen Schnittstelle kann zur Kurzschlusserkennung
-verwendet werden.
-Falls der verwendete Booster eine Kurzschlusserkennung unterstützt und 
-die Leitung DSR korrekt verkabelt ist, sollte
-dieser Wert auf yes gesetzt werden, sonst auf no. 
+Die Leitung DSR der seriellen Schnittstelle kann zur
+Kurzschlusserkennung verwendet werden.  Falls der verwendete Booster
+eine Kurzschlusserkennung unterstützt und die Leitung DSR korrekt
+verkabelt ist, sollte dieser Wert auf
+.IR yes
+gesetzt werden, sonst auf
+.IR no . 
 
-Der Vollständigkeit wegen sei angemerkt, dass die Leitung DTR der seriellen Schnittstelle
-nach dem Start von srcpd inaktiv (-12V) und erst dann aktiv (+12V) gesetzt wird, wenn
-der Digitalstrom eingeschaltet wird. Wird der Digitalstrom ausgeschaltet, wird DTR 
-wieder auf inaktiv (-12V) gesetzt. Diese Steuerleitung lässt sich also zum 
-Ein-/Ausschalten eines Boosters nutzen, der über dieses Feature verfügt.
+Der Vollständigkeit wegen sei angemerkt, dass die Leitung DTR der
+seriellen Schnittstelle nach dem Start vom
+.IR srcpd
+zunächst inaktiv (-12V) ist und erst dann aktiv (+12V) gesetzt wird,
+wenn der Digitalstrom eingeschaltet wird.  Wird der Digitalstrom
+ausgeschaltet, wird DTR wieder auf inaktiv (-12V) gesetzt.  Diese
+Steuerleitung lässt sich also zum Ein-/Ausschalten eines Boosters
+nutzen, der über dieses Feature verfügt.
 .TP
 inverse_dsr_handling
 Bei manchen Boostern muss die serielle Leitung DSR invers behandelt werden,
-damit die Kurzschlusserkennung funktioniert. Wenn ein solcher Booster
-im Einsatz ist, muss dieser Wert auf yes gesetzt werden, sonst auf no.
+damit die Kurzschlusserkennung funktioniert.  Wenn ein solcher Booster
+im Einsatz ist, muss dieser Wert auf
+.IR yes
+gesetzt werden, sonst auf
+.IR no .
 .TP
 enable_maerklin
-Dieser Wert ist auf yes zu setzen, falls Dekoder des alten Märklin 
-Digitalsystems gesteuert werden sollen, sonst auf no.
+Dieser Wert ist auf
+.IR yes
+zu setzen, falls Decoder des alten Märklin Digitalsystems gesteuert
+werden sollen, sonst auf
+.IR no .
 .TP
 enable_nmradcc
-Dieser Wert ist auf yes zu setzen, falls Dekoder gemäß NMRA-DCC gesteuert
-werden sollen, sonst auf no.
+Dieser Wert ist auf
+.IR yes
+zu setzen, falls Decoder gemäß NMRA-DCC gesteuert werden sollen, sonst
+auf
+.IR no .
 
-Es können auch beide Werte auf yes gesetzt werden. Dann läuft srcpd im
-Multiprotokollbetrieb, d. h. im gleichen Digitalstromkreis können sowohl
-MM- wie auch NMRA-DCC-Dekoder angesteuert werden.
+Es können auch beide Werte auf
+.IR yes
+gesetzt werden.  Dann läuft
+.IR srcpd
+im Multiprotokollbetrieb, d.h. im gleichen Digitalstromkreis können sowohl
+MM- wie auch NMRA-DCC-Decoder angesteuert werden.
 .TP
 improve_nmradcc_timing
-Dieser Wert sollte im reinen NMRA-DCC-Betrieb auf yes gesetzt werden. In allen
-anderen Situation - also falls enable_marklin auf yes gesetzt ist - muss(!) 
-dieser Wert auf no gesetzt werden.
+Dieser Wert sollte im reinen NMRA-DCC-Betrieb auf
+.IR yes
+gesetzt werden.  In allen anderen Situation - also falls
+.IR enable_marklin
+auf
+.IR yes
+gesetzt ist - muss(!) dieser Wert auf
+.IR no
+gesetzt werden.
 .TP
 nmra_ga_offset
-Es gibt verschiedene Interpretationen, wie bei NMRA-DCC die Adressen von
-Schaltdekodern interpretiert werden können. Dieser Parameter trägt dem Rechnung.
-Setzt man diesen Wert auf 1, verhält sich die Adressierung der Schaltdekoder
-wie bei erddcd, dem ursprünglichen SRCP-Server aus dem DDL-Projekt.
+Es gibt zwei verschiedene Möglichkeiten, wie bei NMRA-DCC die Adressen
+von Schaltdecodern interpretiert werden können.  Dieser Parameter trägt
+dem Rechnung.  Setzt man diesen Wert auf
+.IR 1 ,
+verhält sich die Adressierung der Schaltdecoder
+wie beim
+.IR erddcd ,
+dem ursprünglichen SRCP-Server aus dem DDL-Projekt.
 .TP
 shortcut_failure_delay
 Anzahl der Millisekunden (usec), die im Falle eines erkannten Kurzschlusses
@@ -285,33 +371,57 @@ gewartet werden soll, bis der Digitalstrom abgeschaltet wird.
 .TP
 nmradcc_translation_routine
 Aus historischen Gründen kennt das Programm drei verschiedene Routinen, die 
-die Pakete für NMRA-DCC berechnen können. Die Dritte ist die aktuellste und
-wird hiermit empfohlen. Der Wert ist also auf 3 zu setzen. Nur wenn es damit
-Probleme gibt, sollte man die Werte 1 und 2 ausprobieren.
+die Pakete für NMRA-DCC berechnen können.  Die Dritte ist die aktuellste und
+wird standardmäßigen Verwendung empfohlen.  Der Wert ist also auf
+.IR 3
+zu setzen.  Nur wenn es damit Probleme gibt, sollte man die Werte
+.IR 1
+und
+.IR 2 ausprobieren.
 .TP
 enable_usleep_patch
-Im reinen Märklin-Betrieb verursacht das Programm srcpd einiges an Last auf
-dem Rechner. Mit diesem Parameter kann man das Problem lösen. D. h. dieser
-Parameter sollte immer auf yes stehen. Bisher sind keine Probleme bekannt.
-Sollte es Probleme geben, kann man versuchsweise den Wert auf no setzen.
+Im reinen Märklin-Betrieb verursacht das Programm
+.IR srcpd
+durch die Signalberechnung einiges an Last auf dem Rechner.  Mit diesem
+Parameter kann man dieser Erscheinung in begrenztem Maße entgegen wirken.
+Er erlaubt das Pausieren der Signalerzeugung für einen kurzen Zeitraum.
+Da bisher keine Probleme damit bekannt geworden sind, sollte er immer auf
+.IR yes
+stehen.  Sollte es dennoch Probleme geben, kann man versuchsweise den
+Wert auf
+.IR no
+setzen.
 .TP
 usleep_usec
-Anzahl der Millisekunden, die der Usleep-Patch verwendet. Der Wert sollte
-so klein wie  möglich gewählt werden. Als brauchbar haben sich Werte zwischen
-100 und 250 erwiesen.
+Anzahl der Millisekunden, die die im vorausgehenden Parameter
+beschriebene Signalgenerierung pausiert.  Der Wert sollte so klein wie
+möglich gewählt werden, da ein zu großer Wert zu Verzögerungen bei der
+Aktualisierung von Anlagenzuständen führt.  Als brauchbar haben sich
+Werte zwischen 100 und 250 erwiesen.
 .\"
 .\"
 .SS ddl-s88
 .PP
-Digital Direct für Linux S88 über die parallele Schnittstelle (IEEE 1284).
+Digital Direct für Linux S88 über die parallele Schnittstelle (IEEE
+1284). Dieses Modul erlaubt das Auslesen von S88-Bausteinen, die an die
+parallele Schnittstelle eines Computers angeschlossen sind. Dieses Modul
+erzeugt eine signifikante Systemlast, die weitgehend durch den
+Parameter
+.IR refresh
+eingestellt werden kann. 
 .TP
 ioport
-Eingabe/Ausgabe-Adresse des Druckeranschlusses. Der voreingestellte Wert
-ist 0x0378.
+Eingabe/Ausgabe-Adresse des Druckeranschlusses.  Der voreingestellte Wert
+ist
+.IR 0x0378 .
 .TP
 clockscale
 .TP
 refresh
+Anzahl der Millisekunden, die zwischen zwei Abfragezyklen gewartet wird.
+Je höher dieser Wert ist, um so seltener werden die angeschlossenen
+Bausteine abgefragt und umso geringer ist die erzeugte Systemlast.  Als
+brauchbar haben sich Werte zwischen 100 und 250 erwiesen.
 .TP
 fb_delay_time_0
 .TP
@@ -328,48 +438,51 @@ number_fb_4
 .\"
 .PP
 Dieses Modul unterstützt den Betrieb eines Littfinski HSI-88, das an
-eine serielle Schnittstelle angeschlossen ist. Auch der Anschluß über
-einen USB/Seriell-Konvertierer sollte problemlos möglich sein. Die
+eine serielle Schnittstelle angeschlossen ist.  Auch der Anschluß über
+einen USB/Seriell-Konvertierer sollte problemlos möglich sein.  Die
 Geschwindigkeitseinstellung für die serielle Schnittstelle ist fest auf
 9600\ Baud eingestellt und kann nicht verändert werden.
 
 Das HSI-88 verfügt über drei Kanäle zum Anschluß von
-S88-Rückmeldemodulen. Die Summe der pro Kanal angeschlossenen Module
+S88-Rückmeldemodulen.  Die Summe der pro Kanal angeschlossenen Module
 (mit 16 Kontakten) darf maximal 31 betragen, sonst erfolgt die Ausgabe
-einer Fehlermeldung. Bei der Verwendung von Modulen mit 8 Kontakten
+einer Fehlermeldung.  Bei der Verwendung von Modulen mit 8 Kontakten
 zählen 2 Module wie eines mit 16 Kontakten.
 .\"
 .TP
 number_fb_left
 Diese Angabe legt die Anzahl der am Kanal mit der Bezeichnung
-\fBlinks\fP angeschlossenen Rückmeldemodule fest.
+.IR links
+angeschlossenen Rückmeldemodule fest.
 .\"
 .TP
 number_fb_center
 Diese Angabe legt die Anzahl der am Kanal mit der Bezeichnung
-\fBmitte\fP angeschlossenen Rückmeldemodule fest.
+.IR mitte
+angeschlossenen Rückmeldemodule fest.
 .\"
 .TP
 number_fb_right
 Diese Angabe legt die Anzahl der am Kanal mit der Bezeichnung
-\fBrechts\fP angeschlossenen Rückmeldemodule fest.
+.IR rechts
+angeschlossenen Rückmeldemodule fest.
 .\"
 .TP
 fb_delay_time_0
 Dieser Wert in Millisekunden legt fest, wie lange ein Rückmeldekontakt
 auf Null liegen muß, bevor er als gültiger Wert weitergeleitet wird.
 Hiermit lassen sich schlechte Rückmeldungen (Wackler) in begrenztem
-Umfang entprellen. Der voreingestellte Wert beträgt 0\ ms.
+Umfang entprellen.  Der voreingestellte Wert beträgt 0\ ms.
 .\"
 .TP
 refresh
 Wartezeit in Mikrosekungen nach der die Rückmeldungen des Geräts erneut
-eingelesen werden. Der voreingestellte Wert beträgt 10000\ µs.
+eingelesen werden.  Der voreingestellte Wert beträgt 10000\ µs.
 .\"
 .\"
 .SS i2c-dev
 .PP
-Bustreiber für das i2c-dev-Interface des Linux Kernels. Er kann
+Bustreiber für das i2c-dev-Interface des Linux Kernels.  Er kann
 beispielsweise mit der unter http://www.matronix.de/ zu findenden
 Hardware genutzt werden.
 .TP
@@ -384,12 +497,12 @@ ga_reset_device
 .\"
 .PP
 Dieses Modul unterstüzt den Betrieb mit einer Uhlenbrock Intellibox (IB),
-die über eine serielle Schnittstelle angeschlossen ist. Die Ansteuerung
+die über eine serielle Schnittstelle angeschlossen ist.  Die Ansteuerung
 der IB erfolgt über das P50X-Protokoll, zum geringeren Teil mit der
-analogen und zum größeren Teil mit der binären Variante. Beim Betrieb mit
+analogen und zum größeren Teil mit der binären Variante.  Beim Betrieb mit
 protokollkompatiblen Zentralen anderer Hersteller ist das gegebenenfalls
-zu berücksichtigen. Das Programmieren von Decodern ist zur Zeit nur
-für DCC implementiert. Als Schnittstellengeschwindigkeit sind die
+zu berücksichtigen.  Das Programmieren von Decodern ist zur Zeit nur
+für DCC implementiert.  Als Schnittstellengeschwindigkeit sind die
 folgenden Varianten möglich: 2400\ Baud, 4800\ Baud, 9600\ Baud,
 19200\ Baud und 38400\ Baud.
 .\"
@@ -398,36 +511,36 @@ fb_delay_time_0
 Dieser Wert in Millisekunden legt fest, wie lange ein Rückmeldekontakt
 auf Null liegen muß, bevor er als gültiger Wert weitergeleitet wird.
 Hiermit lassen sich schlechte Rückmeldungen (Wackler) in begrenztem
-Umfang entprellen. Der voreingestellte Wert beträgt 0\ ms.
+Umfang entprellen.  Der voreingestellte Wert beträgt 0\ ms.
 .\"
 .TP
 pause_between_commands
 Mit diesem Wert wird die Verzögerungszeit in Millisekungen eingestellt,
 nach der ein weiterer Befehl an die angeschlossene Zentrale gesendet
-wird. Der optimale Wert muß händisch ermittelt werden. Wenn die Zentrale
+wird.  Der optimale Wert muß händisch ermittelt werden.  Wenn die Zentrale
 nicht reagiert, oder Befehlte ignoriert, sollte der Wert erhöht werden.
 Der voreingestellte Wert beträgt 250\ ms.
 .\"
 .TP
 number_ga
 Dieser Wert legt den maximalen Adressbereich für die verwendeten
-Magnetartikel (GA) fest. Gültig sind Werte von 0 bis 1024. Ein Wert von 0
-bedeutet, dass keine Magnetartikel verwendet werden. Der voreingestellte
+Magnetartikel (GA) fest.  Gültig sind Werte von 0 bis 1024.  Ein Wert von 0
+bedeutet, dass keine Magnetartikel verwendet werden.  Der voreingestellte
 Wert beträgt 256.
 .\"
 .TP
 number_gl
 Dieser Wert legt den maximalen Adressbereich für die verwendeten
-Lokdecoder (GL) fest. Gültig sind Werte von 0 bis 10239. Ein Wert von 0 
-bedeutet, dass keine Lokdecoder verwendet werden. Der voreingestellte 
+Lokdecoder (GL) fest.  Gültig sind Werte von 0 bis 10239.  Ein Wert von 0 
+bedeutet, dass keine Lokdecoder verwendet werden.  Der voreingestellte 
 Wert beträgt 80.
 .\"
 .TP
 number_fb
 Dieser Wert legt die Anzahl der an der IB angeschlossenen
-S88-Rückmeldemodule fest. Gültig sind Werte von 0 bis 31 (bei Modulen
-mit 16 Kontakten). Der voreingestellte Wert beträgt 0 (keine Module sind
-angeschlossen). Über Loconet angeschlossene Module werden gegenwärtig
+S88-Rückmeldemodule fest.  Gültig sind Werte von 0 bis 31 (bei Modulen
+mit 16 Kontakten).  Der voreingestellte Wert beträgt 0 (keine Module sind
+angeschlossen).  Über Loconet angeschlossene Module werden gegenwärtig
 nicht unterstützt.
 .\"
 .\"
@@ -436,13 +549,13 @@ nicht unterstützt.
 .PP
 Dieses Modul unterstützt den Betrieb mit den Lenz-Geräten LI100, LI100F,
 LI101F und LI-USB, angeschlossen über die serielle Schnittstelle (RS232)
-bzw. den Universal Serial Bus (USB). Ein USB/Seriell-Konvertierer sollte
-nicht verwendet werden. Die möglichen Geschwindigkeiten der seriellen
-Schnittstelle sind vom verwendeten Gerät abhängig. Für das LI-USB ist
+bzw. den Universal Serial Bus (USB).  Ein USB/Seriell-Konvertierer sollte
+nicht verwendet werden.  Die möglichen Geschwindigkeiten der seriellen
+Schnittstelle sind vom verwendeten Gerät abhängig.  Für das LI-USB ist
 sie fest auf 57600\ Baud eingestellt, ohne Möglichkeit, das zu verändern.
 Ein automatisches Erkennen der richtigen Geschwindikeit ist derzeit in
-Arbeit. Wenn die Verbindungsaufnahme scheitert, versuchen Sie mit einer
-anderen Geschwindigkeitseinstellung zurecht zu kommen. Erlaubte Werte
+Arbeit.  Wenn die Verbindungsaufnahme scheitert, versuchen Sie mit einer
+anderen Geschwindigkeitseinstellung zurecht zu kommen.  Erlaubte Werte
 sind, abhängig vom verwendeten Gerät, 9600\ Baud, 19200\ Baud, 38400\ Baud,
 57600\ Baud und 115200\ Baud.
 .\"
@@ -451,27 +564,27 @@ fb_delay_time_0
 Dieser Wert in Millisekunden legt fest, wie lange ein Rückmeldekontakt
 auf Null liegen muß, bevor er als gültiger Wert weitergeleitet wird.
 Hiermit lassen sich schlechte Rückmeldungen (Wackler) in begrenztem
-Umfang entprellen. Der voreingestellte Wert beträgt 0\ ms.
+Umfang entprellen.  Der voreingestellte Wert beträgt 0\ ms.
 .\"
 .TP
 number_ga
 Dieser Wert legt den maximalen Adressbereich für die verwendeten
-Magnetartikel (GA) fest. Gültig sind Werte von 0 bis 1024. Ein Wert von 0
-bedeutet, dass keine Magnetartikel verwendet werden. Der voreingestellte
+Magnetartikel (GA) fest.  Gültig sind Werte von 0 bis 1024.  Ein Wert von 0
+bedeutet, dass keine Magnetartikel verwendet werden.  Der voreingestellte
 Wert beträgt 99, beim LI-USB 9999.
 .\"
 .TP
 number_gl
 Dieser Wert legt den maximalen Adressbereich für die verwendeten
-Lokdecoder (GL) fest. Gültig sind Werte von 0 bis 9999. Ein Wert von 0 
-bedeutet, dass keine Lokdecoder verwendet werden. Der voreingestellte 
+Lokdecoder (GL) fest.  Gültig sind Werte von 0 bis 9999.  Ein Wert von 0 
+bedeutet, dass keine Lokdecoder verwendet werden.  Der voreingestellte 
 Wert beträgt 99, beim LI-USB 9999.
 .\"
 .TP
 number_fb
-Dieser Wert legt die Anzahl der angeschlossenen RS-Module fest. Gültig
+Dieser Wert legt die Anzahl der angeschlossenen RS-Module fest.  Gültig
 sind Werte von 0 bis 512 (bei Modulen mit 8 Kontakten); 0 bedeutet, keine
-Module sind angeschlossen. Der voreingestellte Wert beträgt 256, beim
+Module sind angeschlossen.  Der voreingestellte Wert beträgt 256, beim
 LI-USB 512.
 .\"
 .\"
@@ -479,23 +592,23 @@ LI-USB 512.
 .\"
 .PP
 Dieser Bus stellt keine Verbindung zu einem tatsächlich existierenden
-Steuergerät her. Er ist primär für Entwicklungzwecke gedacht, kann
-aber auch bei betriebsfähgien Installationen nützlich sein. Jedes
+Steuergerät her.  Er ist primär für Entwicklungzwecke gedacht, kann
+aber auch bei betriebsfähgien Installationen nützlich sein.  Jedes
 Kommando auf diesem Bus bewirkt lediglich ein entsprechendes Echo bei
-den INFO-Sitzungen. Dieser Bus kann also auch für Kommunikationszwecke
+den INFO-Sitzungen.  Dieser Bus kann also auch für Kommunikationszwecke
 genutzt werden.
 .\"
 .TP
 number_ga
-Anzahl der adressierbaren Magnetartikel (GA). Die Voreinstellung ist 256.
+Anzahl der adressierbaren Magnetartikel (GA).  Die Voreinstellung ist 256.
 .\"
 .TP
 number_gl
-Anzahl der adressierbaren Lokdecoder (GL). Die Voreinstellung ist 80.
+Anzahl der adressierbaren Lokdecoder (GL).  Die Voreinstellung ist 80.
 .\"
 .TP
 number_fb
-Anzahl der adressierbaren Rückmeldemodule mit je 16 Kontakten. Die
+Anzahl der adressierbaren Rückmeldemodule mit je 16 Kontakten.  Die
 Voreinstellung ist 0 (keine Rückmeldemodule vorhanden).
 .\"
 .\"
@@ -503,35 +616,37 @@ Voreinstellung ist 0 (keine Rückmeldemodule vorhanden).
 .\"
 .PP
 Dieses Modul unterstützt den Betrieb mit einem Märklin 6051 oder 6050,
-das über die serielle Schnittstelle angeschlossen ist. Auch der Anschluß
-über einen USB/Seriell-Konvertierer sollte problemlos möglich sein. Die
+das über die serielle Schnittstelle angeschlossen ist.  Auch der Anschluß
+über einen USB/Seriell-Konvertierer sollte problemlos möglich sein.  Die
 Einstellungen der Schnittstelle sind festgelegt auf 2400\ Baud, 8N2 und
 können nicht verändert werden.
 .\"
 .TP
 m6020mode
 Bei Aktivierung dieses Modus werden die 4 Funktionen nicht gesendet.
-Dieses Funktionalität wird nur vom 6021 unterstützt. Gültige Werte sind
-»yes« oder »no«. Der voreingestellte Wert ist »no«.
+Dieses Funktionalität wird nur vom 6021 unterstützt.  Gültige Werte sind
+.IR yes oder no .
+Der voreingestellte Wert ist
+.IR no .
 .\"
 .TP
 fb_delay_time_0
 Dieser Wert in Millisekunden legt fest, wie lange ein Rückmeldekontakt
 auf Null liegen muß, bevor er als gültiger Wert weitergeleitet wird.
 Hiermit lassen sich schlechte Rückmeldungen (Wackler) in begrenztem
-Umfang entprellen. Der voreingestellte Wert beträgt 0\ ms.
+Umfang entprellen.  Der voreingestellte Wert beträgt 0\ ms.
 .\"
 .TP
 ga_min_activetime
 Dieser Wert in Millisekunden legt fest, wie lange ein Magnetartikel im
-aktiv Status sein muß. Für einen stabilen Betrieb mit einem 6051 sind
-75\ ms das absolute Minimum. Der voreingestellte Wert beträgt 75\ ms.
+aktiv Status sein muß.  Für einen stabilen Betrieb mit einem 6051 sind
+75\ ms das absolute Minimum.  Der voreingestellte Wert beträgt 75\ ms.
 .\"
 .TP
 pause_between_commands
 Mit diesem Wert wird die Verzögerungszeit in Millisekungen eingestellt,
 nach der ein weiterer Befehl an die angeschlossene Zentrale gesendet
-wird. Der optimale Wert muß händisch ermittelt werden. Wenn die Zentrale
+wird.  Der optimale Wert muß händisch ermittelt werden.  Wenn die Zentrale
 nicht reagiert, oder Befehle ignoriert, sollte der Wert erhöht werden.
 Der voreingestellte Wert beträgt 200\ ms.
 .\"
@@ -539,28 +654,30 @@ Der voreingestellte Wert beträgt 200\ ms.
 pause_between_bytes
 Mit diesem Wert wird die Verzögerungszeit in Millisekungen eingestellt,
 die zwischen dem Versenden von zwei Bytes bei Multi-Byte-Befehlen
-gewartet wird. Hardware-Handshake funktioniert nicht mit allen Geräten,
-so dass dieser Parameter eingeführt wurde, um diesen zu ermöglichen. Der
+gewartet wird.  Hardware-Handshake funktioniert nicht mit allen Geräten,
+so dass dieser Parameter eingeführt wurde, um diesen zu ermöglichen.  Der
 voreingestellte Wert beträgt 2\ ms.
 .\"
 .TP
 number_ga
 Dieser Wert legt den maximalen Adressbereich für die verwendeten
-Magnetartikel (GA) fest. Dieser Parameter hat keinen wirklichen Effekt,
-da das Interface nur die Adressen von 1 bis 256 unterstützt. Der
+Magnetartikel (GA) fest.  Dieser Parameter hat keinen wirklichen Effekt,
+da das Interface nur die Adressen von 1 bis 256 unterstützt.  Der
 voreingestellte Wert beträgt 256; bitte unverändert lassen.
 .\"
 .TP
 number_gl
 Dieser Wert legt den maximalen Adressbereich für die verwendeten
-Lokdecoder (GL) fest. Der voreingestellte Wert entspricht dem maximal
+Lokdecoder (GL) fest.  Der voreingestellte Wert entspricht dem maximal
 gültigen Wert von 80; bitte unverändert lassen.
 .\"
 .TP
 number_fb
 Dieser Wert legt die Anzahl der am 6051/6050 angeschlossenen 6088
-Rückmeldemodule fest. Gültig sind Werte von 0 bis 31. Der
-voreingestellte Wert beträgt 0 (keine Module sind angeschlossen).
+Rückmeldemodule fest.  Gültig sind Werte von 0 bis 31.  Der
+voreingestellte Wert beträgt
+.IR 0
+(keine Module sind angeschlossen).
 Bitte beachten Sie, dass auf 6088 Module, die an anderen Geräten
 angeschlossen sind (Memory) nicht zugegriffen werden kann.
 .\"
@@ -601,6 +718,7 @@ fb_delay_time_0
 .\"
 .SH "AUTOREN"
 Die deutsche Übersetzung wurde von Guido Scholz
-(gscholz@users.sourceforge.net) unter Mitwirkung von Matthias Trute
-(mtrute@users.sourceforge.net) angefertigt.
+(gscholz@users.sourceforge.net) unter Mitwirkung von
+Matthias Trute (mtrute@users.sourceforge.net) und
+Torsten Vogt (tvogt@users.sourceforge.net) angefertigt.
 
