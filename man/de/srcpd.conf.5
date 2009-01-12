@@ -190,7 +190,7 @@ speed
 Bei Bussen, die eine serielle Schnittstelle nutzen, ist es möglich, die
 Schnittstellengeschwindigkeit zu wählen, soweit diese nicht fest
 eingestellt ist.  Mögliche Zahlenwerte sind folgende: 2400, 4800, 9600,
-19200, 38400, 57600 and 115200\ Baud.  Voreingestellt ist 2400\ Baud.
+19200, 38400, 57600 und 115200\ Baud.  Voreingestellt ist 2400\ Baud.
 .\"
 .TP
 auto_power_on
@@ -433,7 +433,7 @@ clockscale
 refresh
 Anzahl der Millisekunden, die zwischen zwei Abfragezyklen gewartet wird.
 Je höher dieser Wert ist, um so seltener werden die angeschlossenen
-Bausteine abgefragt und umso geringer ist die erzeugte Systemlast.  Als
+Bausteine abgefragt und um so geringer ist die erzeugte Systemlast.  Als
 brauchbar haben sich Werte zwischen 100 und 250 erwiesen.
 .TP
 fb_delay_time_0
@@ -566,8 +566,8 @@ bzw. den Universal Serial Bus (USB).  Ein USB/Seriell-Konvertierer sollte
 nicht verwendet werden.  Die möglichen Geschwindigkeiten der seriellen
 Schnittstelle sind vom verwendeten Gerät abhängig.  Für das LI-USB ist
 sie fest auf 57600\ Baud eingestellt, ohne Möglichkeit, das zu verändern.
-Ein automatisches Erkennen der richtigen Geschwindikeit ist derzeit in
-Arbeit.  Wenn die Verbindungsaufnahme scheitert, versuchen Sie mit einer
+Ein automatisches Erkennen der richtigen Geschwindigkeit ist geplant. 
+Wenn die Verbindungsaufnahme scheitert, versuchen Sie mit einer
 anderen Geschwindigkeitseinstellung zurecht zu kommen.  Erlaubte Werte
 sind, abhängig vom verwendeten Gerät, 9600\ Baud, 19200\ Baud, 38400\ Baud,
 57600\ Baud und 115200\ Baud.
@@ -638,7 +638,9 @@ können nicht verändert werden.
 m6020mode
 Bei Aktivierung dieses Modus werden die 4 Funktionen nicht gesendet.
 Dieses Funktionalität wird nur vom 6021 unterstützt.  Gültige Werte sind
-.IR yes oder no .
+.IR yes
+oder
+.IR no .
 Der voreingestellte Wert ist
 .IR no .
 .\"
