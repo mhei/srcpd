@@ -285,13 +285,13 @@ Die Konfiguration des Server-Busses ist wie folgt zu ändern:
 number_ga
 Anzahl der Schaltdecoderadressen, die benötigt werden.  Beispiel:
 Bei vier Weichen und drei Signalen muss dieser Wert mindestens auf 7
-gesetzt werden.  Auf herkömmlichen Rechern mit genügend Arbeitsspeicher
+gesetzt werden.  Auf herkömmlichen Rechnern mit genügend Arbeitsspeicher
 kann dieser Wert von vornherein auf 100 gesetzt werden.
 .TP
 number_gl
 Anzahl der Lok-Decoderadressen die benötigt werden.  Bei drei
 digitalisierten Lokomotiven muss dieser Wert mindestens auf 3 gesetzt
-sein.  Auf herkömmlichen Rechern mit genügend Arbeitsspeicher kann
+sein.  Auf herkömmlichen Rechnern mit genügend Arbeitsspeicher kann
 dieser Wert von vornherein auf 100 gesetzt werden.
 .TP
 enable_ringindicator_checking
@@ -377,7 +377,7 @@ wie beim
 dem ursprünglichen SRCP-Server aus dem DDL-Projekt.
 .TP
 shortcut_failure_delay
-Anzahl der Millisekunden (usec), die im Falle eines erkannten Kurzschlusses
+Anzahl der Mikrosekunden (usec), die im Falle eines erkannten Kurzschlusses
 gewartet werden soll, bis der Digitalstrom abgeschaltet wird.
 .TP
 nmradcc_translation_routine
@@ -387,15 +387,17 @@ wird zur standardmäßigen Verwendung empfohlen.  Der Wert ist also auf
 .IR 3
 zu setzen.  Nur wenn es damit Probleme gibt, sollte man die Werte
 .IR 1
-und
-.IR 2 ausprobieren.
+oder
+.IR 2
+ausprobieren.
 .TP
 enable_usleep_patch
 Im reinen Märklin-Betrieb verursacht das Programm
 .IR srcpd
 durch die Signalberechnung einiges an Last auf dem Rechner.  Mit diesem
-Parameter kann man dieser Erscheinung in begrenztem Maße entgegen wirken.
-Er erlaubt das Pausieren der Signalerzeugung für einen kurzen Zeitraum.
+Parameter kann man dieser Erscheinung sehr gut entgegen wirken.
+Er erlaubt der Signalerzeugung anstelle aktiven Wartens (busy waiting)
+für einen kurzen Zeitraum eine inaktive Pause einzulegen.
 Da bisher keine Probleme damit bekannt geworden sind, sollte er immer auf
 .IR yes
 stehen.  Sollte es dennoch Probleme geben, kann man versuchsweise den
@@ -404,7 +406,7 @@ Wert auf
 setzen.
 .TP
 usleep_usec
-Anzahl der Millisekunden, die die im vorausgehenden Parameter
+Anzahl der Mikrosekunden (usec), die die im vorausgehenden Parameter
 beschriebene Signalgenerierung pausiert.  Der Wert sollte so klein wie
 möglich gewählt werden, da ein zu großer Wert zu Verzögerungen bei der
 Aktualisierung von Anlagenzuständen führt.  Als brauchbar haben sich
