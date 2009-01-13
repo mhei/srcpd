@@ -41,8 +41,6 @@ fd_set rfds;
 int maxfd;
 char conffile[MAXPATHLEN];
 
-extern int server_shutdown_state;
-extern int server_reset_state;
 extern const char *WELCOME_MSG;
 extern char PIDFILENAME;
 
@@ -103,12 +101,11 @@ void init_all_buses()
 /*create all kind of server threads*/
 void create_all_threads()
 {
-    server_shutdown_state = 0;
-    
+    set_server_state(ssInitializing);
     create_time_thread();
     create_all_bus_threads();
     create_netservice_thread();
-
+    set_server_state(ssRunning);
     syslog(LOG_INFO, "All threads started");
 }
 
@@ -150,7 +147,7 @@ void sighup_handler(int s)
 void sigterm_handler(int s)
 {
     syslog(LOG_INFO, "SIGTERM(15) received! Terminating ...");
-    server_shutdown_state = 1;
+    set_server_state(ssTerminating);
 }
 
 /** sigio_handler
@@ -332,9 +329,8 @@ int main(int argc, char **argv)
      * hanging processes
      */
     while (1) {
-        if (server_shutdown_state == 1) {
+        if (get_server_state() == ssTerminating)
             break;
-        }
 
         usleep(100000);
         sleep_ctr--;
