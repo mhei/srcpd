@@ -42,7 +42,7 @@ int isValidGL(bus_t busnumber, int addr)
     /* number of GL is set */
     /* address must be greater 0 */
     /* but not more than the maximum address on that bus */
-    if (busnumber > 0 && busnumber <= num_buses &&
+    if (busnumber <= num_buses &&
         gl[busnumber].numberOfGl > 0 && addr > 0 &&
         addr <= gl[busnumber].numberOfGl) {
         return 1 == 1;
@@ -60,7 +60,7 @@ int isValidGL(bus_t busnumber, int addr)
  */
 int getMaxAddrGL(bus_t busnumber)
 {
-    if (busnumber > 0 && busnumber <= num_buses) {
+    if (busnumber <= num_buses) {
         return gl[busnumber].numberOfGl;
     }
     else {
