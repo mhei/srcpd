@@ -14,12 +14,15 @@
 #include "srcp-info.h"
 #include "syslogmessage.h"
 
+#define __server ((SERVER_DATA*)buses[0].driverdata)
+
 
 char PIDFILENAME[MAXPATHLEN] = "/var/run/srcpd.pid";
-int server_reset_state;
-int server_shutdown_state;
 
-#define __server ((SERVER_DATA*)buses[0].driverdata)
+/* This variable is accessible by several threads at the same time and
+ * should be protected by a lock */
+static server_state_t server_state = ssInitializing;
+
 
 int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
@@ -121,7 +124,7 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         else
             syslog_bus(busnumber, DBG_WARN,
                     "WARNING, unknown tag found: \"%s\"!\n",
-                    child->name);;
+                    child->name);
         
         child = child->next;
     }
@@ -147,18 +150,30 @@ int init_bus_server(bus_t bus)
     return 0;
 }
 
+void set_server_state(server_state_t state)
+{
+    server_state = state;
+}
+
+server_state_t get_server_state()
+{
+    return server_state;
+}
+
 void server_reset()
 {
     char msg[100];
-    server_reset_state = 1;
+    /*TODO: handle reset command, currently nothing happens */
+    set_server_state(ssResetting);
     infoSERVER(msg);
     enqueueInfoMessage(msg);
+    set_server_state(ssRunning);
 }
 
 void server_shutdown()
 {
     char msg[100];
-    server_shutdown_state = 1;
+    set_server_state(ssTerminating);
     infoSERVER(msg);
     enqueueInfoMessage(msg);
 }
@@ -167,19 +182,27 @@ int infoSERVER(char *msg)
 {
     struct timeval akt_time;
     gettimeofday(&akt_time, NULL);
-    if (server_reset_state == 1) {
-        sprintf(msg, "%lu.%.3lu 100 INFO 0 SERVER RESETTING\n",
-                akt_time.tv_sec, akt_time.tv_usec / 1000);
-    }
-    else {
-        if (server_shutdown_state == 1) {
+
+    switch (get_server_state()) {
+        case ssResetting:
+            sprintf(msg, "%lu.%.3lu 100 INFO 0 SERVER RESETTING\n",
+                    akt_time.tv_sec, akt_time.tv_usec / 1000);
+            break;
+
+        case ssTerminating:
             sprintf(msg, "%lu.%.3lu 100 INFO 0 SERVER TERMINATING\n",
                     akt_time.tv_sec, akt_time.tv_usec / 1000);
-        }
-        else {
+            break;
+
+        case ssRunning:
             sprintf(msg, "%lu.%.3lu 100 INFO 0 SERVER RUNNING\n",
                     akt_time.tv_sec, akt_time.tv_usec / 1000);
-        }
+            break;
+
+        default:
+            syslog_bus(0, DBG_ERROR,
+                    "ERROR, unexpected server state detected!");
+            break;
     }
     return SRCP_OK;
 }

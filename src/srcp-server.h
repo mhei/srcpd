@@ -27,6 +27,16 @@ typedef struct _SERVER_DATA {
     char *groupname;
 } SERVER_DATA;
 
+typedef enum {
+    ssInitializing = 0,
+    ssRunning,
+    ssTerminating,
+    ssResetting
+} server_state_t;
+
+void set_server_state(server_state_t);
+server_state_t get_server_state();
+
 int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber);
 int startup_SERVER(void);
 int init_bus_server(bus_t);

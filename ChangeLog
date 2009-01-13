@@ -1,3 +1,7 @@
+2009-01-13 Guido Scholz <guido.scholz@bayernline.de>
+	* srcpd.c, srcp-server.*: Handling of server state variable
+	cleaned up.
+
 2009-01-12 Guido Scholz <guido.scholz@bayernline.de>
 	* ddl-s88.c: Fixed init of s88 buses number 2, 3 and 4.
 

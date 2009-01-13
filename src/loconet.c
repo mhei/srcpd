@@ -604,7 +604,7 @@ void *thr_sendrec_LOCONET(void *v)
     unsigned char ln_packet[128];       /* max length is coded with 7 bit */
     unsigned char ln_packetlen = 2;
     unsigned int addr, timeoutcnt;
-    int code, src, dst, data[8], i;
+    /*int code, src, dst, data[8], i;*/
     int value, port, speed;
     char msg[110];
     ga_state_t gatmp;
