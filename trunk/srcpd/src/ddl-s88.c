@@ -128,7 +128,9 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     __ddl_s88->number_fb[3] = 1;
 
     for (i = 1; i < 4; i++) {
+        strcpy(buses[busnumber + i].description, "FB");
         buses[busnumber + i].type = SERVER_S88;
+        buses[busnumber + i].debuglevel = buses[busnumber].debuglevel;
         buses[busnumber + i].init_func = NULL;
         buses[busnumber + i].thr_func = &thr_sendrec_dummy;
         buses[busnumber + i].driverdata = NULL;
@@ -215,22 +217,19 @@ int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         child = child->next;
     }
 
-    if (init_FB(busnumber, __ddl_s88->number_fb[0] * 16)) {
-        __ddl_s88->number_fb[0] = 0;
-        syslog_bus(busnumber, DBG_ERROR, "Can't create array for feedback");
+    for (i = 0; i < 4; i++) {
+        if (init_FB(busnumber + i, __ddl_s88->number_fb[i] * 16)) {
+            __ddl_s88->number_fb[i] = 0;
+            syslog_bus(busnumber + i, DBG_ERROR,
+                    "Can't create array for s88-feedback "
+                    "channel %d", i + 1);
+        }
+        else
+            syslog_bus(busnumber + i, DBG_INFO,
+                    "%d feeback contacts for channel %d successfully "
+                    "initialized.", __ddl_s88->number_fb[i] * 16, i + 1);
     }
-    if (init_FB(busnumber + 1, __ddl_s88->number_fb[1] * 16)) {
-        __ddl_s88->number_fb[1] = 0;
-        syslog_bus(busnumber, DBG_ERROR, "Can't create array for feedback");
-    }
-    if (init_FB(busnumber + 2, __ddl_s88->number_fb[2] * 16)) {
-        __ddl_s88->number_fb[2] = 0;
-        syslog_bus(busnumber, DBG_ERROR, "Can't create array for feedback");
-    }
-    if (init_FB(busnumber + 3, __ddl_s88->number_fb[3] * 16)) {
-        __ddl_s88->number_fb[3] = 0;
-        syslog_bus(busnumber, DBG_ERROR, "Can't create array for feedback");
-    }
+
     return (4);
 }
 
