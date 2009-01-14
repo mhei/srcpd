@@ -379,6 +379,35 @@ This can also happen, if no central unit is connected to interface.
 .TP
 .BI -4
 device not found
+.\"
+
+.SS loconet
+.PP
+This bus provides a driver for the LocoBuffer device.
+.TP
+loconetID
+Default is 0x50.
+.TP
+ms100
+Valid values are
+.IR yes
+and
+.IR no .
+Default is
+.IR no .
+.TP
+speed
+Default is 57600 Baud.
+.TP
+number_ga
+Default is 2048.
+.TP
+number_gl
+Default is 9999.
+.TP
+number_fb
+Default is 2048.
+.\"
 
 .SS loopback
 .PP
