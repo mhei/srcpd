@@ -84,11 +84,12 @@ void writeByte(bus_t bus, unsigned char b, unsigned long msecs)
 
     if (buses[bus].debuglevel <= DBG_DEBUG) {
         i = write(buses[bus].device.file.fd, &byte, 1);
+        if (i < 0) {
+            syslog_bus(bus, DBG_ERROR, "(FD: %d) write failed: %s "
+                    "(errno = %d)\n",
+                    buses[bus].device.file.fd, strerror(errno), errno);
+        }
         tcdrain(buses[bus].device.file.fd);
-    }
-    if (i < 0) {
-        syslog_bus(bus, DBG_ERROR, "(FD: %d) write failed: %s (errno = %d)\n",
-                buses[bus].device.file.fd, strerror(errno), errno);
     }
     else {
         syslog_bus(bus, DBG_DEBUG, "(FD: %d) %i byte sent: 0x%02x (%d)\n",

@@ -1559,7 +1559,6 @@ static int readAnswer_IB(const bus_t busnumber, const int generatePrintf)
     unsigned char input[80];
     int counter = 0;
     int found = 0;
-    int i;
 
     memset(input, '\0', sizeof(input));
 
