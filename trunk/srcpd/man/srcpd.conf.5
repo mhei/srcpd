@@ -1,11 +1,22 @@
+.\"
+.\" Manual page for srcpd.conf
+.\" Process with:
+.\"   groff -man -Tlatin1 srcpd.conf.5 | less
+.\" or
+.\"   groff -man -Tutf8 srcpd.conf.5 | less
+.\"
+.\" Get a printable version with:
+.\"   groff -mandoc -Tps srcpd.conf.5 > srcpd.conf.ps
+.\"
+.\"
 .TH srcpd.conf 5 "December 29, 2007"
 .\"
-.\"
-.SH "NAME"
+
+.SH NAME
 srcpd.conf \- The configuration file for the srcpd deamon
 .\"
 .\"
-.SH "DESCRIPTION"
+.SH DESCRIPTION
 The file \fI/etc/srcpd.conf\fP is used by the \fB srcpd (8)\fP.
 This file contains the runtime configuration for the deamon
 and it's connection(s) to model railroad system.
@@ -13,7 +24,7 @@ See
 .BR srcpd\ (8)
 for instruction how to use the daemon.
 .\"
-.\"
+
 .SH "DEFAULT CONFIGURATION FILE"
 
 .PP
@@ -461,15 +472,16 @@ number_fb
 .TP
 fb_delay_time_0
 .\"
-.\"
+
 .SH FILES
 .I /etc/srcpd.conf
 .\"
+
 .SH "SEE ALSO"
 .BR srcpd\ (8)
 .\"
-.\"
-.SH "AUTHORS"
+
+.SH AUTHORS
 This man page was written by
 Matthias Trute (mtrute@users.sourceforge.net),
 Frank Schimschke (schmischi@users.sourceforge.net) and

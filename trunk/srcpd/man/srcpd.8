@@ -1,19 +1,30 @@
 '\" t
+.\"
+.\" Manual page for srcpd
+.\" Process with:
+.\"   groff -man -Tlatin1 srcpd.8 | less
+.\" or
+.\"   groff -man -Tutf8 srcpd.8 | less
+.\"
+.\" Get a printable version with:
+.\"   groff -mandoc -Tps srcpd.8 > srcpd.ps
+.\"
+.\"
 .TH srcpd 8 "December 29, 2007"
 .\"
 .\"
 .SH NAME
 srcpd \- SRCP speaking daemon
 .\"
-.\"
+
 .SH SYNOPSIS
 .B srcpd
 [ options ] 
 .\"
-.\"
+
 .SH DESCRIPTION
 This is not a complete manual. You have to consult the project
-home page at http://srcpd.sourceforge.net for full documentation!
+home page at http://srcpd.sourceforge.net/ for full documentation!
 
 .B srcpd
 is a UNIX daemon speaking the Simple Railroad Command Protocol
@@ -24,7 +35,7 @@ Upon start up it reads in the system wide configuration file named
 in detail in the \fBsrcpd.conf (5)\fP man page. The SRCP specification
 is published on http://srcpd.sourceforge.net/srcp.
 .\"
-.\"
+
 .SH OPTIONS
 .TP
 .BI \-h
@@ -38,7 +49,7 @@ Use the specified filename as the configuration file. The default
 value will be defined at compile time and can be displayed using the
 \fB-h\fP parameter.
 .\"
-.\"
+
 .SH NOTES
 .SS Getting started
 The \fBsrcpd\fP system service (daemon) is compliant to the Filesystem
@@ -108,7 +119,7 @@ The verbosity of these messages can be adjusted using the configuration
 file \fIsrcpd.conf\fP. For more information refer to the adequate man
 page.
 .\"
-.\"
+
 .SS Lenz USB Interfaces
 .PP
 It is very important that you have kernel modul ftdi_sio available.
@@ -140,18 +151,18 @@ an the error log.
 .SH "SEE ALSO"
 srcpd.conf (5)
 .\"
-.\"
+
 .SH BUGS
 Possibly there are some bugs. Please report them to the project
 developer mailing list.
 .\"
-.\"
+
 .SH AUTHORS
 This man page was written by
 Matthias Trute (mtrute@users.sourceforge.net),
 Frank Schimschke (schmischi@users.sourceforge.net) and
 Guido Scholz (gscholz@users.sourceforge.net).
 .\"
-.\"
+
 .SH LICENSE
 GNU General Public License, Version 2

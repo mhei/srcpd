@@ -1,16 +1,27 @@
+.\"
+.\" Manual page for srcpd
+.\" Process with:
+.\"   groff -man -Tlatin1 srcpd.8 | less
+.\" or
+.\"   groff -man -Tutf8 srcpd.8 | less
+.\"
+.\" Get a printable version with:
+.\"   groff -mandoc -Tps srcpd.8 > srcpd.ps
+.\"
+.\"
 .TH srcpd 8 "26. Dezember 2007"
 .\"
-.\"
-.SH "NAME"
+
+.SH NAME
 srcpd \- SRCP sprechender Systemdienst
 .\"
-.\"
+
 .SH SYNTAX
 .B srcpd
 [ Optionen ] 
 .\"
-.\"
-.SH "BESCHREIBUNG"
+
+.SH BESCHREIBUNG
 .PP
 Dieses Handbuch ist nicht vollständig. Für weitere Informationen
 besuchen Sie bitte die Internetseite des Projektes unter
@@ -27,8 +38,8 @@ Aufbau und Inhalt im Handbuch \fBsrcpd.conf (5)\fP näher erläutert sind.
 Die Spezifikation von SRCP selbst befindet sich auf der Internetseite
 http://srcpd.sourceforge.net/srcp.
 .\"
-.\"
-.SH "OPTIONEN"
+
+.SH OPTIONEN
 .TP
 .BI \-h
 Ausgabe einiger kurzer Hinweise zur Benutzung.
@@ -41,7 +52,7 @@ Nutze den übergebenen Dateinamen als Konfigurationsdatei. Der
 voreingestellte Wert für diese Datei wird beim Kompilieren des
 Programms festgelegt und kann mit der Option \fB-h\fP angezeigt werden.
 .\"
-.\"
+
 .SH BEMERKUNGEN
 .SS Inbetriebnahme
 Der \fBsrcpd\fP hält sich an die Konventionen des Filesystem Hierarchy
@@ -112,13 +123,15 @@ tail -f /var/log/messages
 .RE
 
 Die Ausführlichkeit der dort erscheinenenden Meldungen läßt sich über
-Einstellungen in der \fIsrcpd.conf\fP anpassen. Nähere Informationen
-hierzu bietet das zugehörige Handbuch. 
+Einstellungen in der
+.IR srcpd.conf
+anpassen. Nähere Informationen hierzu bietet das zugehörige Handbuch. 
 
 .SS Lenz USB-Interface
 .PP
 Um dieses USB-Gerät in Betrieb zu nehmen, muß das Kernelmodul
-\fBftdi_sio\fP verfügbar sein. Bei den gängigen Linux-Distributionen
+.IR ftdi_sio
+verfügbar sein. Bei den gängigen Linux-Distributionen
 ist das in der Regel ohne zusätzliche Konfigurationseinstellungen der
 Fall. Das Modul für die Lenz-Geräte erzeugt beim Starten
 unterschiedliche Rückgabewerte. Diese haben die folgende Bedeutung:
@@ -142,25 +155,25 @@ keine Digitalzentrale am USB-Interface angeschlossen.
 .BI -4
 Gerät nicht gefunden.
 .\"
-.\"
+
 .SH "SIEHE AUCH"
 srcpd.conf (5)
 .\"
-.\"
-.SH "FEHLER"
+
+.SH FEHLER
 .PP
 Sicher gibt es noch ein ganze Reihe an Fehlern. Bitte leiten Sie
 Fehlerberichte und Vorschläge für Verbesserungen an die
 Entwickler-Mailingliste auf http://srcpd.sourceforge.net/.
 .\"
-.\"
-.SH "AUTOREN"
+
+.SH AUTOREN
 Dieses Handbuch wurde geschrieben von
 Matthias Trute (mtrute@users.sourceforge.net),
 Frank Schimschke (schmischi@users.sourceforge.net) und
 Guido Scholz (gscholz@users.sourceforge.net).
 .\"
-.\"
-.SH "LIZENZ"
+
+.SH LIZENZ
 GNU General Public License, Version 2
 
