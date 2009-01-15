@@ -67,8 +67,6 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     __loconet->loconetID = 0x50;        /* Loconet ID */
     __loconet->flags = LN_FLAG_ECHO;
 
-    buses[busnumber].device.file.baudrate = B57600;
-
     strcpy(buses[busnumber].description, "GA FB POWER");
 
     while (child != NULL) {
@@ -217,26 +215,38 @@ static int init_lineLOCONET_lbserver(bus_t busnumber)
     ssize_t sresult;
 
     char msg[256];
-    server = gethostbyname(buses[busnumber].device.net.hostname);
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    sockfd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (sockfd == -1) {
         syslog_bus(busnumber, DBG_ERROR,
                    "Socket creation failed: %s (errno = %d).\n",
                    strerror(errno), errno);
         /*TODO: What to do now? Return some error value? */
     }
-
-    bzero((char *) &serv_addr, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    bcopy((char *) server->h_addr,
-          (char *) &serv_addr.sin_addr.s_addr, server->h_length);
+    server = gethostbyname(buses[busnumber].device.net.hostname);
+    if(NULL == server) {
+        server = gethostbyaddr(buses[busnumber].device.net.hostname,
+	strlen(buses[busnumber].device.net.hostname), AF_INET);
+	if(NULL==server) {
+	   syslog_bus(busnumber, DBG_ERROR,
+                   "cannot resolve address: %s.\n",
+                   buses[busnumber].device.net.hostname);
+        }
+    }
+    memcpy((char *) &serv_addr.sin_addr,
+           (char *) server->h_addr,
+            server->h_length);
     serv_addr.sin_port = htons(buses[busnumber].device.net.port);
+    serv_addr.sin_family = AF_INET;
+
     alarm(30);
 
     if (connect(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr))
-        < 0)
-        syslog_bus(busnumber, DBG_ERROR, "ERROR connecting: %d", errno);
-    /*TODO: What to do now? Return some error value? */
+        < 0) {
+        syslog_bus(busnumber, DBG_ERROR, "ERROR connecting to %s:%d %d", 
+	buses[busnumber].device.net.hostname, buses[busnumber].device.net.port,
+	errno);
+	/*TODO: What to do now? Return some error value? */
+    }
     alarm(0);
 
     sresult = socket_readline(sockfd, msg, sizeof(msg) - 1);
