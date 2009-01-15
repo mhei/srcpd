@@ -383,7 +383,15 @@ device not found
 
 .SS loconet
 .PP
-This bus provides a driver for the LocoBuffer device.
+This bus provides a driver for the Loconet system by Digitrax.
+The device settings may be either serial connections (/dev/ttyS0)
+or network links to a lbserver (look at loconetovertcp.sourceforge.net 
+for details). An example entry is
+
+.nf 
+    <device type="network" port="1234">127.0.0.1</device>
+.fi
+
 .TP
 loconetID
 Default is 0x50.
@@ -395,18 +403,7 @@ and
 .IR no .
 Default is
 .IR no .
-.TP
-speed
-Default is 57600 Baud.
-.TP
-number_ga
-Default is 2048.
-.TP
-number_gl
-Default is 9999.
-.TP
-number_fb
-Default is 2048.
+
 .\"
 
 .SS loopback
