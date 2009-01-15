@@ -238,7 +238,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
             }
             else {
                 syslog_bus(0, DBG_ERROR, "WARNING, \"%s\" (bus %ld) is an "
-                           "unknown device specifier!\n", child->name,
+                           "unknown device property!\n", txt2,
                            current_bus);
             }
             free(txt2);
