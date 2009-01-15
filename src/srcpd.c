@@ -303,20 +303,21 @@ int main(int argc, char **argv)
         }
     }
 
+    openlog("srcpd", LOG_PID, LOG_USER);
+    syslog_bus(0, DBG_INFO, "conffile = \"%s\"\n", conffile);
+
     if (0 == readConfig(conffile)) {
-        fprintf(stderr, "Error, no valid bus setup found in "
+        syslog_bus(0, DBG_ERROR, "Error, no valid bus setup found in "
                         "configuration file '%s'.\n", conffile);
         exit(1);
     }
 
     /*daemonize process*/
-
     if (0 != daemon_init()) {
-        fprintf(stderr, "Daemonization failed!\n");
+        syslog_bus(0, DBG_ERROR, "Daemonization failed!\n");
         exit(1);
     }
 
-    openlog("srcpd", LOG_PID, LOG_USER);
     CreatePIDFile(getpid());
     syslog(LOG_INFO, "%s", WELCOME_MSG);
     install_signal_handlers();
