@@ -660,12 +660,16 @@ void *thr_sendrec_LOCONET(void *v)
                     break;
                     /* */
                 case OPC_SW_REQ:       /* B0 */
-                    addr = (ln_packet[1] | (ln_packet[2] << 7)) + 1;
+                    addr = (ln_packet[1] | ((ln_packet[2] & 0x0f) << 7)) + 1;
                     value = (ln_packet[2] & 0x10) >> 4;
                     port = (ln_packet[2] & 0x20) >> 5;
                     getGA(btd->bus, addr, &gatmp);
                     gatmp.action = value;
                     gatmp.port = port;
+                    syslog_bus(btd->bus, DBG_DEBUG,
+                               "Infomational: switch request (OPC_SW_REQ: /* B0 */)  #%d:%d -> %d",
+                               addr, port, value);
+
                     setGA(btd->bus, addr, gatmp);
                     break;
                     /* some commands on the loconet,  */
@@ -762,36 +766,6 @@ void *thr_sendrec_LOCONET(void *v)
                            gatmp.id, gatmp.action);
             }
 
-            else if (!queue_SM_isempty(btd->bus)) {
-                struct _SM smtmp;
-                session_lock_wait(btd->bus);
-                dequeueNextSM(btd->bus, &smtmp);
-                addr = smtmp.addr;
-                switch (smtmp.command) {
-                    case SET:
-                        syslog_bus(btd->bus, DBG_DEBUG,
-                                   "Loconet: SM SET #%d %02X", smtmp.addr,
-                                   smtmp.value);
-                        break;
-                    case GET:
-                        syslog_bus(btd->bus, DBG_DEBUG,
-                                   "Loconet SM GET #%d[%d]", smtmp.addr,
-                                   smtmp.typeaddr);
-                        ln_packetlen = 16;
-                        ln_packet[0] = 0xe5;    /* OPC_PEER_XFER, old fashioned */
-                        ln_packet[1] = ln_packetlen;
-                        ln_packet[2] = __loconett->loconetID;   /* sender ID */
-                        ln_packet[3] = (unsigned char) smtmp.addr;      /* dest address */
-                        ln_packet[4] = 0x01;
-                        ln_packet[5] = 0x10;
-                        ln_packet[6] = 0x02;
-                        ln_packet[7] = (unsigned char) smtmp.typeaddr;
-                        ln_packet[8] = 0x00;
-                        ln_packet[9] = 0x00;
-                        ln_packet[10] = 0x00;
-                        break;
-                }
-            }
             ln_packet[ln_packetlen - 1] =
                 ln_checksum(ln_packet, ln_packetlen - 1);
             if (ln_packet[0] != OPC_IDLE) {
