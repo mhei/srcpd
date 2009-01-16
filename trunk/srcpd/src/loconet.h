@@ -22,6 +22,7 @@ typedef struct _LOCONET_DATA {
 
     unsigned char ln_msglen;       /* length of last message */
     unsigned char ln_message[128]; /* last message sent */
+    unsigned int  slotmap[128];    /* slot to decoder address mapping */
 } LOCONET_DATA;
 
 int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber);

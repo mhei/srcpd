@@ -65,9 +65,10 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     __loconet->number_ga = 2048;        /* max address for OPC_SW_REQ */
     __loconet->number_gl = 9999;        /* DCC address range */
     __loconet->loconetID = 0x50;        /* Loconet ID */
+    memset(__loconet->slotmap, 0, sizeof(__loconet->slotmap) );
     __loconet->flags = LN_FLAG_ECHO;
 
-    strcpy(buses[busnumber].description, "GA FB POWER");
+    strcpy(buses[busnumber].description, "GA FB POWER DESCRIPTION");
 
     while (child != NULL) {
         if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) {
@@ -615,7 +616,7 @@ void *thr_sendrec_LOCONET(void *v)
     unsigned char ln_packetlen = 2;
     unsigned int addr, timeoutcnt;
     /*int code, src, dst, data[8], i;*/
-    int value, port, speed;
+    int value, port, speed, busnumber;
     char msg[110];
     ga_state_t gatmp;
     int last_cancel_state, last_cancel_type;
@@ -625,15 +626,13 @@ void *thr_sendrec_LOCONET(void *v)
         pthread_exit((void *) 1);
     btd->bus = (bus_t) v;
     btd->fd = -1;
-
+    busnumber = btd->bus; /* to keep the __loconet macro happy */
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &last_cancel_type);
 
     /*register cleanup routine */
     pthread_cleanup_push((void *) end_bus_thread, (void *) btd);
 
-    syslog_bus(btd->bus, DBG_INFO, "Loconet bus started (device = %s).",
-               buses[btd->bus].device.file.path);
     timeoutcnt = 0;
 
     while (1) {
@@ -659,6 +658,11 @@ void *thr_sendrec_LOCONET(void *v)
                     enqueueInfoMessage(msg);
                     break;
                     /* */
+		case OPC_LONG_ACK:
+                    syslog_bus(btd->bus, DBG_DEBUG,
+                               "Infomational: LONG ACK for command 0x%0x: 0x%0x",
+                               ln_packet[1], ln_packet[2]);
+		    break;
                 case OPC_SW_REQ:       /* B0 */
                     addr = (ln_packet[1] | ((ln_packet[2] & 0x0f) << 7)) + 1;
                     value = (ln_packet[2] & 0x10) >> 4;
@@ -692,6 +696,13 @@ void *thr_sendrec_LOCONET(void *v)
                     syslog_bus(btd->bus, DBG_DEBUG,
                                "Set loco speed (OPC_LOCO_SPD:  /* A0 */) %d: %d",
                                addr, speed);
+		    if(__loconet->slotmap[addr]==0) {
+                        syslog_bus(btd->bus, DBG_DEBUG,
+                               "slot %d still unknown", addr);
+		    } else {
+                        syslog_bus(btd->bus, DBG_DEBUG,
+                               "decoder address %d found in slot %d", __loconet->slotmap[addr], addr);
+		    }
                     break;
                 case OPC_LOCO_DIRF:    /* A1 */
                     addr = ln_packet[1];
@@ -715,14 +726,15 @@ void *thr_sendrec_LOCONET(void *v)
                             addr = ln_packet[4] | (ln_packet[9] << 7);
                             speed = ln_packet[5];
                             syslog_bus(btd->bus, DBG_DEBUG,
-                                       "OPC_SL_RD_DATA: /* E7 %0X */ slot #%d: status = %0x addr=%d speed=%d",
+                                       "OPC_SL_RD_DATA: /* E7 %0X */ slot #%d: status=0x%0x addr=%d speed=%d",
                                        ln_packet[1], ln_packet[2],
                                        ln_packet[3], addr, speed);
+			    __loconet -> slotmap[ln_packet[2]] = addr;
                             break;
                         default:
                             syslog_bus(btd->bus, DBG_DEBUG,
-                                       "unknown OPC_SL_RD_DATA: /* E7 %0X */",
-                                       ln_packet[1], ln_packet[2]);
+                                       "unknown OPC_SL_RD_DATA: /* E7 0x%0X */",
+                                       ln_packet[1]);
                     }
                     break;
                 default:
