@@ -54,6 +54,21 @@ int initTIME(int fx, int fy)
     return SRCP_OK;
 }
 
+int termTIME()
+{
+    char msg[100];
+
+    vtime.ratio_x = vtime.ratio_y = 0;
+
+    struct timeval current_time;
+    gettimeofday(&current_time, NULL);
+    sprintf(msg, "%lu.%.3lu 102 INFO 0 TIME\n",
+            current_time.tv_sec, current_time.tv_usec / 1000);
+    enqueueInfoMessage(msg);
+
+    return SRCP_OK;
+}
+
 int getTIME(vtime_t *vt)
 {
     *vt = vtime;
@@ -104,7 +119,7 @@ void *thr_clock(void *v)
         /* delta Modellzeit = delta real time * ratio_x/ratio_y */
         sleeptime = (1000000 * vtime.ratio_y) / vtime.ratio_x;
         usleep(sleeptime);
-        /* fürs Rechnen eine temporäre Kopie. Damit ist vtime immer gültig */
+        /* use temporary copy for calculations, so vtime is always valid */
         vt = vtime;
         vt.sec++;
         if (vt.sec >= 60) {
