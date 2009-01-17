@@ -27,6 +27,7 @@ typedef struct _VTIME
 int startup_TIME(void);
 int setTIME(int d, int h, int m, int s);
 int initTIME(int fx, int fy);
+int termTIME();
 int getTIME(vtime_t *vt);
 int infoTIME(char *msg);
 int waitTIME(int d, int h, int m, int s, char *reply);

@@ -3,6 +3,7 @@ srcpd-2.0.13 (2009-??-??)
     o Fixed function of DDL-S88 buses number 2, 3 and 4.
 
   New Features
+    o Support for TERM 0 TIME added.
 
   General Changes
     o Improved timing for multi protocol mode in DDL module.

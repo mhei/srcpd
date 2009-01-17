@@ -642,6 +642,11 @@ int handleTERM(sessionid_t sessionid, bus_t bus, char *device,
         rc = infoSM(bus, TERM, 0, -1, 0, 0, 0, reply);
     }
 
+    else if (bus_has_devicegroup(bus, DG_TIME)
+             && strncasecmp(device, "TIME", 4) == 0) {
+        rc = termTIME();
+    }
+
     gettimeofday(&akt_time, NULL);
     srcp_fmt_msg(abs(rc), reply, akt_time);
     return rc;
