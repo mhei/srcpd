@@ -1,5 +1,5 @@
 2009-01-17 Matthias Trute <mtrute@users.sourceforge.net>
-	* loconet.* Support for GA and FB devices, communication
+	* loconet.*: Support for GA and FB devices, communication
 	  can be routed via a loconetovertcp server (e.g. JMRI or
 	  lbserver)
 
@@ -14,8 +14,8 @@
 	* ddl-s88.c: Fixed init of s88 buses number 2, 3 and 4.
 
 2008-12-29 Joerg Rottland <rottland@users.sourceforge.net>
-        * DDL: Fixes from Torsten Vogt for simultaneous use of DCC and MM
-        * Configurable GA Adress shift (for backward compability)
+	* ddl.c: Fixes from Torsten Vogt for simultaneous use of DCC and MM
+	Configurable GA Adress shift (for backward compability)
 
 --- Release 2.0.12 ----
 
