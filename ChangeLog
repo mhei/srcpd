@@ -1,3 +1,8 @@
+2009-01-17 Matthias Trute <mtrute@users.sourceforge.net>
+	* loconet.* Support for GA and FB devices, communication
+	  can be routed via a loconetovertcp server (e.g. JMRI or
+	  lbserver)
+
 2009-01-17 Guido Scholz <guido.scholz@bayernline.de>
 	* srcp-time.*, srcp-command.c: Support for TERM 0 TIME added.
 

@@ -4,6 +4,8 @@ srcpd-2.0.13 (2009-??-??)
 
   New Features
     o Support for TERM 0 TIME added.
+    o Loconet support slightly improved: GA and FB devices, 
+      may use a loconetovertcp network server
 
   General Changes
     o Improved timing for multi protocol mode in DDL module.
