@@ -415,37 +415,104 @@ Werte zwischen 100 und 250 erwiesen.
 .\"
 .SS ddl-s88
 .PP
-Digital Direct für Linux S88 über die parallele Schnittstelle (IEEE
-1284). Dieses Modul erlaubt das Auslesen von S88-Bausteinen, die an die
-parallele Schnittstelle eines Computers angeschlossen sind. Dieses Modul
-erzeugt eine signifikante Systemlast, die weitgehend durch den
-Parameter
-.IR refresh
-eingestellt werden kann. 
+Digital Direct for Linux S88 via parport (IEEE 1284).
+Dieser Treiber unterstützt 1 bis 4 S88-Stränge am Parallelport zum Anschluss
+von S88-Rückmeldemodulen. Das Anschlußschema entspricht dem des DDL Dämonen
+(http://www.vogt-it.com/OpenSource/DDL) gemäß der Schaltung von Martin Wolf.
+Die Anschlußstränge werden als jeweils separate Busse geführt.
+
+Die Anzahl der pro Strang angeschlossenen Module (mit 16 Kontakten) darf maximal
+31 betragen. Bei der Verwendung von Modulen mit 8 Kontakten zählen 2 Module wie
+eines mit 16 Kontakten.
+
+Für jeden Strang wird ein separater Bus initialisiert, bei dem die
+feedback-Anschlüsse der Module in der Reihenfolge ihres Anschlusses jam Strang
+eweils separat aufsteigend nummeriert sind. Sind an einem Strang keine Module
+angeschlossen, ist der jeweilige Wert von number_fb_x auf 0 zu setzen. Der
+zugehörige Bus wird trotzdem initalisiert, d.h.auch wenn nur ein Bus
+angeschlossen ist, werden immer 4 Busse belegt.
+
+Auch ohne die Schaltung von Martin Wolf werden 4 Busse belegt, dann ist
+allerdings nur der erste wirksam.
+.\"
 .TP
 ioport
-Eingabe/Ausgabe-Adresse des Druckeranschlusses.  Der voreingestellte Wert
-ist
-.IR 0x0378 .
+Eingabe/Ausgabe-Adresse des Druckeranschlusses. Der voreingestellt ist  Wert
+ist 0x0378 für die Schnittstelle /dev/lp0. Der »ioport« ist im Hexadezimalformat
+anzugeben (mit führendem 0x).
+Gültige Werte sind bei einem typischen Linux-System
+.nf
+    0x0378  /dev/lp0
+    0x0278  /dev/lp1
+    0x03BC  /dev/lp2
+.fi
+Ist nur eine parallele Schnittstelle vorhanden, ist dies üblicherweise /dev/lp0.
+.\"
 .TP
 clockscale
+Parameter zur Einstellung der Taktrate beim Auslesen der Module. Bei dem
+Defaultwert von 35 wird die Originale S88-Taktrate von ca. 8\ KHz erreicht.
+Kleinere Wert erhöhen die Taktrate, werden ggf. jedoch nicht von jedem Modul
+verarbeitet. Maximal sind ca. 125\ kHz möglich. 
+.\"
 .TP
 refresh
-Anzahl der Millisekunden, die zwischen zwei Abfragezyklen gewartet wird.
+Wartezeit in Millisekungen nach der die Rückmeldungen des Geräts erneut
+eingelesen werden. Bei dem Defaultwert 100 werden die Daten alle 100\ ms
+aufgefrischt.
+
 Je höher dieser Wert ist, um so seltener werden die angeschlossenen
 Bausteine abgefragt und um so geringer ist die erzeugte Systemlast.  Als
 brauchbar haben sich Werte zwischen 100 und 250 erwiesen.
+.\"
 .TP
 fb_delay_time_0
+Dieser Wert in Millisekunden legt fest, wie lange ein Rckmeldekontakt
+auf Null liegen muss, bevor er als gültiger Wert weitergeleitet wird.
+Hiermit lassen sich schlechte Rückmeldungen (Wackler) in begrenztem
+Umfang entprellen. Der voreingestellte Wert beträgt 0\ ms.
+.\"
 .TP
 number_fb_1
+Diese Angabe legt die Anzahl der am Strang \fB1\fP angeschlossenen
+Rückmeldemodule fest.
+.\"
 .TP
 number_fb_2
+Diese Angabe legt die Anzahl der am Strang \fB3\fP angeschlossenen
+Rückmeldemodule fest.
+.\"
 .TP
 number_fb_3
+Diese Angabe legt die Anzahl der am Strang \fB4\fP angeschlossenen
+Rückmeldemodule fest.
+.\"
 .TP
 number_fb_4
+Diese Angabe legt die Anzahl der am Strang \fB4\fP angeschlossenen
+Rückmeldemodule fest.
 .\"
+
+In der Konfiguration sollten die allgemeinen Wert vor den busspezifischen Werten
+stehen. Ein Beispiel sieht so aus:
+.RE
+.nf
+ <bus>
+   <auto_power_on>yes</auto_power_on>
+   <verbosity>7</verbosity>
+   <device>/dev/lp0</device>
+   <ddl-s88>
+     <ioport>0x378</ioport>
+     <clockscale>35</clockscale>
+     <refresh>100</refresh>
+     <number_fb_1>3</number_fb_1>
+     <number_fb_2>4</number_fb_2>
+     <number_fb_3>5</number_fb_3>
+     <number_fb_4>6</number_fb_4>
+   </ddl-s88>
+ </bus>
+.fi
+.RE
 .\"
 .SS hsi-88
 .\"
