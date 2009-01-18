@@ -480,10 +480,11 @@ int handleWAIT(sessionid_t sessionid, bus_t bus, char *device,
         int nelem;
         nelem = sscanf(parameter, "%ld %ld %ld %ld", &d, &h, &m, &s);
         if (nelem >= 4) {
-            vtime_t vt;
-            getTIME(&vt);
-            if (vt.ratio_x != 0 && vt.ratio_y != 0) {
+            if (time_is_available()) {
+                /*FIXME: race condition*/
                 bool mustwait;
+                vtime_t vt;
+                getTIME(&vt);
                 do {
                     mustwait = (((d * 24 + h) * 60 + m) * 60 + s) >=
                         (((vt.day * 24 + vt.hour) * 60 +

@@ -12,17 +12,22 @@
 
 #include <sys/time.h>
 
-/* timer */
+/* time value */
 typedef struct _VTIME
 {
   int day;
   int hour;
   int min;
   int sec;
-  int ratio_x; /* ratio_x == 0 und die Uhr steht */
+} vtime_t;
+
+/* time distortion */
+typedef struct TIMEDISTORT
+{
+  int ratio_x; /* ratio_x == 0 stops the clock */
   int ratio_y;
   struct timeval inittime;
-} vtime_t;
+} time_distort_t;
 
 int startup_TIME(void);
 int setTIME(int d, int h, int m, int s);
@@ -32,6 +37,7 @@ int getTIME(vtime_t *vt);
 int infoTIME(char *msg);
 int waitTIME(int d, int h, int m, int s, char *reply);
 int describeTIME(char *reply);
+bool time_is_available();
 
 void create_time_thread();
 void cancel_time_thread();
