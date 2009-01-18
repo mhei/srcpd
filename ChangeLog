@@ -1,3 +1,7 @@
+2009-01-18 Guido Scholz <guido.scholz@bayernline.de>
+	* srcp-time.*, srcp-command.c: Fixed locking of time variable(s),
+	suspend time thread if not used.
+
 2009-01-17 Matthias Trute <mtrute@users.sourceforge.net>
 	* loconet.*: Support for GA and FB devices, communication
 	  can be routed via a loconetovertcp server (e.g. JMRI or
