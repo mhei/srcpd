@@ -1062,6 +1062,7 @@ static void check_status_IB(bus_t busnumber)
 static void check_status_pt_IB(bus_t busnumber)
 {
     int i;
+    int result;
     unsigned char byte2send;
     unsigned char rr[7];
 
@@ -1083,7 +1084,11 @@ static void check_status_pt_IB(bus_t busnumber)
             if (rr[0] == 0xF5) {
                 /* sleep for one second, if answer is not available yet */
                 i = -1;
-                sleep(1);
+                result = sleep(1);
+                if (result != 0) {
+                    syslog_bus(busnumber, DBG_ERROR,
+                            "sleep() interrupted, %d seconds left\n", result);
+                }
             }
         }
     }
@@ -1109,9 +1114,9 @@ static int open_comport(bus_t busnumber, speed_t baud)
     char *name = buses[busnumber].device.file.path;
 
 #ifdef linux
-
     unsigned char rr;
     int status;
+    int result;
 #endif
 
     struct termios interface;
@@ -1140,7 +1145,11 @@ static int open_comport(bus_t busnumber, speed_t baud)
         interface.c_cc[VTIME] = 1;
         tcsetattr(fd, TCSANOW, &interface);
         status = 0;
-        sleep(1);
+        result = sleep(1);
+        if (result != 0) {
+            syslog_bus(busnumber, DBG_ERROR,
+                    "sleep() interrupted, %d seconds left\n", result);
+        }
         while (status != -1)
             status = readByte_IB(busnumber, 1, &rr);
 #else
@@ -1159,6 +1168,7 @@ static int init_lineIB(bus_t busnumber)
 {
     int fd;
     int status;
+    int result;
     speed_t baud;
     unsigned char rr;
     unsigned char byte2send;
@@ -1192,7 +1202,11 @@ static int init_lineIB(bus_t busnumber)
     tcsetattr(fd, TCSANOW, &interface);
 
     status = 0;
-    sleep(1);
+    result = sleep(1);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                   "sleep() interrupted, %d seconds left\n", result);
+    }
     syslog_bus(busnumber, DBG_INFO, "Clearing input-buffer\n");
 
     while (status != -1)
@@ -1235,7 +1249,11 @@ static int init_lineIB(bus_t busnumber)
         resetBaudrate(buses[busnumber].device.file.baudrate, busnumber);
     close_comport(busnumber);
 
-    sleep(1);
+    result = sleep(1);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                   "sleep() interrupted, %d seconds left\n", result);
+    }
 
     /* now open the comport for the communication */
 

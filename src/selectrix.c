@@ -539,12 +539,17 @@ int readSXDecoder(bus_t busnumber)
 {
         int SXdecoder;
         int waitCount;
+        int result;
 
         /* Check if ready */
         if (chkCC2000Ready(busnumber) == 0) {
                 /* Start reading in Selectrix mode */
                 writeSXbus(busnumber, SXcommand, SXcmdstart + SXcmdprog + SXcmdmodus);
-                sleep(250000);
+                result = sleep(250000);
+                if (result != 0) {
+                    syslog_bus(busnumber, DBG_ERROR,
+                            "sleep() interrupted, %d seconds left\n", result);
+                }
                 /* Stop reading */
                 writeSXbus(busnumber, SXcommand, SXcmdstart + SXcmdmodus);
                 /* Get lowerbyte of decoder data */

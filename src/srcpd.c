@@ -112,12 +112,18 @@ void create_all_threads()
 /* cancel all server threads*/
 void cancel_all_threads()
 {
+    int result;
+
     syslog(LOG_INFO, "Terminating SRCP service...");
     server_shutdown();
 
     /* if service is going to terminate, first wait 2 seconds,
      * this is according to protocol specification */
-    sleep(2);
+    result = sleep(2);
+    if (result != 0) {
+        syslog_bus(0, DBG_ERROR,
+                   "sleep() interrupted, %d seconds left\n", result);
+    }
 
     cancel_netservice_thread();
     cancel_time_thread();

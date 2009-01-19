@@ -1723,6 +1723,7 @@ int initLine_LI100_SERIAL( bus_t busnumber )
 #endif
 {
   int status, status2;
+  int result;
   int fd;
   unsigned char byte2send[ 20 ];
 
@@ -1780,7 +1781,13 @@ int initLine_LI100_SERIAL( bus_t busnumber )
   interface.c_cc[ VMIN ] = 0;
   interface.c_cc[ VTIME ] = 1;
   tcsetattr( fd, TCSANOW, &interface );
-  sleep( 1 );
+
+  result = sleep(1);
+  if (result != 0) {
+      syslog_bus(busnumber, DBG_ERROR,
+              "sleep() interrupted, %d seconds left\n", result);
+  }
+
   status++;
 
   /* get version of LI100 */
