@@ -1,3 +1,7 @@
+2009-01-19 Guido Scholz <guido.scholz@bayernline.de>
+	* hsi-88.c, ib.c, ddl-s88.c, li100.c, srcpd.c: All sleep()
+	interruptions made visible as error level syslog messages.
+
 2009-01-18 Guido Scholz <guido.scholz@bayernline.de>
 	* srcp-time.*, srcp-command.c: Fixed locking of time variable(s),
 	suspend time thread if not used.

@@ -173,10 +173,16 @@ static int init_lineHSI88( bus_t busnumber, int modules_left,
   int status;
   int i;
   int ctr;
+  int result;
   unsigned char byte2send;
   unsigned char rr;
 
-  sleep( 1 );
+  result = sleep(1);
+  if (result != 0) {
+      syslog_bus(busnumber, DBG_ERROR,
+              "sleep() interrupted, %d seconds left\n", result);
+  }
+
   byte2send = 0x0d;
   for ( i = 0; i < 10; i++ )
     writeByte( busnumber, byte2send, 500 );
@@ -351,6 +357,7 @@ void *thr_sendrec_HSI_88( void *v )
     unsigned char byte2send;
     unsigned char rr;
     int status;
+    int result;
     int zaehler1, fb_zaehler1, fb_zaehler2;
     int last_cancel_state, last_cancel_type;
 
@@ -421,14 +428,20 @@ void *thr_sendrec_HSI_88( void *v )
             else
             {
                 syslog_bus( btd->bus, DBG_ERROR, "error while initialising" );
-                sleep( 1 );
+
+                result = sleep(1);
+                if (result != 0) {
+                    syslog_bus(btd->bus, DBG_ERROR,
+                            "sleep() interrupted, %d seconds left\n", result);
+                }
+                
                 while ( readByte( btd->bus, 0, &rr ) == 0 )
                 {}
             }
         }
     }
 
-    while ( 1 ) {
+    while (true) {
         pthread_testcancel();
         if ( buses[ btd->bus ].debuglevel <= DBG_DEBUG )
         {
@@ -468,7 +481,11 @@ void *thr_sendrec_HSI_88( void *v )
                 i = 0;
                 temp = 1;
             }
-            sleep( 2 );
+            result = sleep(2);
+            if (result != 0) {
+                syslog_bus(btd->bus, DBG_ERROR,
+                        "sleep() interrupted, %d seconds left\n", result);
+            }
         }
     }
 

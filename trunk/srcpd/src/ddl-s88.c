@@ -479,8 +479,15 @@ void *thr_sendrec_S88(void *v)
 
 void *thr_sendrec_dummy(void *v)
 {
-    while (1)
-        sleep(1);
+    int result;
+
+    while (true) {
+        result = sleep(1);
+        if (result != 0) {
+            syslog_bus(0, DBG_ERROR,
+                    "sleep() interrupted, %d seconds left\n", result);
+        }
+    }
 }
 
 /*---------------------------------------------------------------------------
