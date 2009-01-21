@@ -616,7 +616,7 @@ void *thr_sendrec_LOCONET(void *v)
     unsigned char ln_packetlen = 2;
     unsigned int addr, timeoutcnt;
     /*int code, src, dst, data[8], i;*/
-    int value, port, speed, busnumber;
+    int value, port, speed;
     char msg[110];
     ga_state_t gatmp;
     int last_cancel_state, last_cancel_type;
@@ -626,7 +626,6 @@ void *thr_sendrec_LOCONET(void *v)
         pthread_exit((void *) 1);
     btd->bus = (bus_t) v;
     btd->fd = -1;
-    busnumber = btd->bus; /* to keep the __loconet macro happy */
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &last_cancel_type);
 
@@ -696,12 +695,13 @@ void *thr_sendrec_LOCONET(void *v)
                     syslog_bus(btd->bus, DBG_DEBUG,
                                "Set loco speed (OPC_LOCO_SPD:  /* A0 */) %d: %d",
                                addr, speed);
-		    if(__loconet->slotmap[addr]==0) {
+		    if(__loconett->slotmap[addr]==0) {
                         syslog_bus(btd->bus, DBG_DEBUG,
                                "slot %d still unknown", addr);
 		    } else {
                         syslog_bus(btd->bus, DBG_DEBUG,
-                               "decoder address %d found in slot %d", __loconet->slotmap[addr], addr);
+                               "decoder address %d found in slot %d",
+                               __loconett->slotmap[addr], addr);
 		    }
                     break;
                 case OPC_LOCO_DIRF:    /* A1 */
@@ -729,7 +729,7 @@ void *thr_sendrec_LOCONET(void *v)
                                        "OPC_SL_RD_DATA: /* E7 %0X */ slot #%d: status=0x%0x addr=%d speed=%d",
                                        ln_packet[1], ln_packet[2],
                                        ln_packet[3], addr, speed);
-			    __loconet -> slotmap[ln_packet[2]] = addr;
+			    __loconett->slotmap[ln_packet[2]] = addr;
                             break;
                         default:
                             syslog_bus(btd->bus, DBG_DEBUG,
