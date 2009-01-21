@@ -987,7 +987,11 @@ int comp_maerklin_5(bus_t busnumber, int address, int direction,
     rtc = comp_maerklin_2(busnumber, address, direction, sFS1, func, f1,
             f2, f3, f4);
     if ((sFS2 > 0) && (rtc == 0)) {
-        usleep(50000);
+        if (usleep(50000) == -1) {
+            syslog_bus(busnumber, DBG_ERROR,
+                    "usleep() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+        }
         rtc = comp_maerklin_2(busnumber, address, direction, sFS2, func,
                 f1, f2, f3, f4);
     }

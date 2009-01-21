@@ -339,7 +339,12 @@ int main(int argc, char **argv)
         if (get_server_state() == ssTerminating)
             break;
 
-        usleep(100000);
+        /* wait 100 ms */
+        if (usleep(100000) == -1) {
+            syslog_bus(0, DBG_ERROR,
+                    "usleep() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+        }
         sleep_ctr--;
 
         if (sleep_ctr == 0) {

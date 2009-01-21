@@ -204,12 +204,16 @@ static int init_lineHSI88( bus_t busnumber, int modules_left,
     status = readByte( busnumber, 0, &rr );
     while ( rr != 't' )
     {
-      usleep( 100000 );
-      status = readByte( busnumber, 0, &rr );
-      if ( status == -1 )
-        ctr++;
-      if ( ctr > 20 )
-        return -1;
+        if (usleep(100000) == -1) {
+            syslog_bus(busnumber, DBG_ERROR,
+                    "usleep() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+        }
+        status = readByte( busnumber, 0, &rr );
+        if ( status == -1 )
+            ctr++;
+        if ( ctr > 20 )
+            return -1;
     }
     readByte( busnumber, 0, &rr );
     if ( rr == '0' )
@@ -256,7 +260,11 @@ static int init_lineHSI88( bus_t busnumber, int modules_left,
     readByte( busnumber, 1, &rr );    /*  read answer (three bytes) */
     while ( rr != 's' )
     {
-      usleep( 100000 );
+        if (usleep(100000) == -1) {
+            syslog_bus(busnumber, DBG_ERROR,
+                    "usleep() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+        }
       readByte( busnumber, 0, &rr );
     }
     readByte( busnumber, 0, &rr );    /* number of given modules */
@@ -410,7 +418,11 @@ void *thr_sendrec_HSI_88( void *v )
             readByte( btd->bus, 0, &rr );     /*  read answer (three bytes) */
             while ( rr != 's' )
             {
-                usleep( 100000 );
+                if (usleep(100000) == -1) {
+                    syslog_bus(btd->bus, DBG_ERROR,
+                            "usleep() failed: %s (errno = %d)\n",
+                            strerror(errno), errno);
+                }
                 readByte( btd->bus, 0, &rr );
             }
             readByte( btd->bus, 0, &rr );     /*  number of given modules */
@@ -452,7 +464,11 @@ void *thr_sendrec_HSI_88( void *v )
                    (do this check at the end, we will not run, until
                    get new changes from HSI) */
                 check_reset_fb( btd->bus );
-                usleep( refresh_time );
+                if (usleep(refresh_time) == -1) {
+                    syslog_bus(btd->bus, DBG_ERROR,
+                            "usleep() failed: %s (errno = %d)\n",
+                            strerror(errno), errno);
+                }
                 readByte( btd->bus, 0, &rr );
             }
             readByte( btd->bus, 1, &rr );        /* number of given modules */

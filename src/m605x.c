@@ -371,7 +371,11 @@ void *thr_sendrec_M6051(void *v)
 
         /* do nothing, if power off */
         if (buses[btd->bus].power_state == 0) {
-            usleep(1000);
+            if (usleep(1000) == -1) {
+                syslog_bus(btd->bus, DBG_ERROR,
+                        "usleep() failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
+            }
             continue;
         }
         buses[btd->bus].watchdog = 3;
@@ -441,7 +445,11 @@ void *thr_sendrec_M6051(void *v)
                 SendByte = gatmp.id;
                 writeByte(btd->bus, c, pause_between_bytes);
                 writeByte(btd->bus, SendByte, pause_between_bytes);
-                usleep(1000L * (unsigned long) gatmp.activetime);
+                if (usleep((unsigned long) gatmp.activetime * 1000) == -1) {
+                    syslog_bus(btd->bus, DBG_ERROR,
+                            "usleep() failed: %s (errno = %d)\n",
+                            strerror(errno), errno);
+                }
                 ((M6051_DATA *) buses[btd->bus].driverdata)->cmd32_pending = 1;
             }
             if ((gatmp.action == 0)

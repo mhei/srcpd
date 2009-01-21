@@ -194,7 +194,11 @@ static int handle_i2c_set_ga(bus_t bus, ga_state_t *gatmp)
         return (-1);
     }
 
-    usleep(1000 * (unsigned long) gatmp->activetime);
+    if (usleep((unsigned long) gatmp->activetime * 1000) == -1) {
+        syslog_bus(bus, DBG_ERROR,
+                   "usleep() failed: %s (errno = %d)\n",
+                   strerror(errno), errno);
+    }
 
     if (reset_old_value == 1) {
 
@@ -205,7 +209,11 @@ static int handle_i2c_set_ga(bus_t bus, ga_state_t *gatmp)
             return (-1);
         }
 
-        usleep(1000 * (unsigned long) gatmp->activetime);
+        if (usleep((unsigned long) gatmp->activetime * 1000) == -1) {
+            syslog_bus(bus, DBG_ERROR,
+                    "usleep() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+        }
 
     }
     else {
@@ -526,7 +534,11 @@ void *thr_sendrec_I2C_DEV(void *v)
 
         /* do nothing, if power is off */
         if (buses[btd->bus].power_state == 0) {
-            usleep(1000);
+            if (usleep(1000) == -1) {
+                syslog_bus(btd->bus, DBG_ERROR,
+                        "usleep() failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
+            }
             continue;
         }
 
@@ -540,7 +552,11 @@ void *thr_sendrec_I2C_DEV(void *v)
             select_bus(0, buses[btd->bus].device.file.fd, btd->bus);
             buses[btd->bus].watchdog = 6;
         }
-        usleep(1000);
+        if (usleep(1000) == -1) {
+            syslog_bus(btd->bus, DBG_ERROR,
+                    "usleep() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+        }
     }
 
     /*run the cleanup routine*/

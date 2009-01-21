@@ -1367,7 +1367,11 @@ static int waitUARTempty_scanACK(bus_t busnumber)
 */
 static int handleACK(bus_t busnumber, int ack)
 {
-    usleep(5000);
+    if (usleep(5000) == -1) {
+        syslog_bus(busnumber, DBG_ERROR,
+                   "usleep() failed: %s (errno = %d)\n",
+                   strerror(errno), errno);
+    }
     /* ack not supported */
     if ((ack == 1) && (scanACK(busnumber) == 1)) {
         return 0;

@@ -715,7 +715,11 @@ static void waitUARTempty_COMMON_USLEEPPATCH(bus_t busnumber)
                        "ioctl() failed: %s (errno = %d)\n",
                        strerror(errno), errno);
         }
-        usleep(__DDL->WAITUART_USLEEP_USEC);
+        if (usleep(__DDL->WAITUART_USLEEP_USEC) == -1) {
+            syslog_bus(busnumber, DBG_ERROR,
+                    "usleep() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+        }
     } while (!value);
 }
 
@@ -1152,7 +1156,11 @@ static int check_lines(bus_t busnumber)
     }
 
     if (buses[busnumber].power_state == 0) {
-        usleep(1000);
+        if (usleep(1000) == -1) {
+            syslog_bus(busnumber, DBG_ERROR,
+                    "usleep() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+        }
         return (1);
     }
     return (0);
@@ -1733,7 +1741,11 @@ void *thr_delayedGAResetCmd(void *v) {
    int busnumber = delgatmp->busnumber;
    free(v);
 
-   usleep(1000L * (unsigned long) gatmp->activetime);
+   if (usleep((unsigned long) gatmp->activetime * 1000) == -1) {
+       syslog_bus(busnumber, DBG_ERROR,
+               "usleep() failed: %s (errno = %d)\n",
+               strerror(errno), errno);
+   }
    gatmp->action = 0;
    syslog_bus(busnumber, DBG_DEBUG,
                    "Delayed GA command (threaded): %c (%x) %d", gatmp->protocol, 
@@ -2046,7 +2058,11 @@ static void *thr_sendrec_DDL(void *v)
                inter-thread communication, it should be replaced. */
 
                 if (gatmp.activetime < 1000) {
-                   usleep(1000L * (unsigned long) gatmp.activetime);
+                   if (usleep((unsigned long) gatmp.activetime * 1000) == -1) {
+                       syslog_bus(busnumber, DBG_ERROR,
+                               "usleep() failed: %s (errno = %d)\n",
+                               strerror(errno), errno);
+                   }
                    gatmp.action = 0;
                    syslog_bus(btd->bus, DBG_DEBUG,
                               "Delayed GA command: %c (%x) %d", p, p, addr);
@@ -2084,7 +2100,11 @@ static void *thr_sendrec_DDL(void *v)
                 }
             }
         }
-        usleep(3000);
+        if (usleep(3000) == -1) {
+            syslog_bus(btd->bus, DBG_ERROR,
+                    "usleep() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+        }
     }
 
     /*run the cleanup routine */

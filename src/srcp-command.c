@@ -454,7 +454,11 @@ int handleWAIT(sessionid_t sessionid, bus_t bus, char *device,
                 /* we exactly wait for 1/20 seconds */
                 timeout *= 20;
                 do {
-                    usleep(50000);
+                    if (usleep(50000) == -1) {
+                        syslog_bus(bus, DBG_ERROR,
+                                "usleep() failed: %s (errno = %d)\n",
+                                strerror(errno), errno);
+                    }
                     getFB(bus, port, &time, &value);
                     timeout--;
                 }
@@ -492,7 +496,11 @@ int handleWAIT(sessionid_t sessionid, bus_t bus, char *device,
 
                     /* wait 10ms real time.. */
                     if (mustwait) {
-                        usleep(10000);
+                        if (usleep(10000) == -1) {
+                            syslog_bus(bus, DBG_ERROR,
+                                    "usleep() failed: %s (errno = %d)\n",
+                                    strerror(errno), errno);
+                        }
                         getTIME(&vt);
                     }
                 }
