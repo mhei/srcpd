@@ -1,3 +1,7 @@
+2009-01-21 Guido Scholz <guido.scholz@bayernline.de>
+	* config-srcpd.c: Fixed counting of interface bus number,
+	reported by Heiko Gau.
+
 2009-01-19 Guido Scholz <guido.scholz@bayernline.de>
 	* hsi-88.c, ib.c, ddl-s88.c, li100.c, srcpd.c: All sleep()
 	interruptions made visible as error level syslog messages.

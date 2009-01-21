@@ -111,8 +111,6 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
         return busnumber;
     }
 
-    num_buses = busnumber;
-
     /* some default values */
     buses[current_bus].debuglevel = DBG_INFO;
     buses[current_bus].flags = 0;
@@ -394,6 +392,7 @@ static bus_t walk_config_xml(xmlDocPtr doc)
 
     while (child != NULL) {
         bus = register_bus(bus, doc, child);
+        num_buses = bus - 1;
         child = child->next;
     }
     return bus;

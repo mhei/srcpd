@@ -1,6 +1,7 @@
 srcpd-2.0.13 (2009-??-??)
   Fixed Bugs
-    o Fixed function of DDL-S88 buses number 2, 3 and 4.
+    o Fixed counting of interface bus number as well as function and
+      initialization of channel 2, 3 and 4 in ddl-s88 module. 
 
   New Features
     o Support for TERM 0 TIME added.
