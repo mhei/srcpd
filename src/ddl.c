@@ -71,6 +71,7 @@
 #include "syslogmessage.h"
 
 #define __DDL ((DDL_DATA*)buses[busnumber].driverdata)
+#define __DDLt ((DDL_DATA*)buses[btd->bus].driverdata)
 
 #ifdef __CYGWIN__
 #define TIOCOUTQ 0x5411
@@ -2032,7 +2033,6 @@ static void *thr_sendrec_DDL(void *v)
 
         if (!queue_GA_isempty(btd->bus)) {
             char p;
-            int busnumber = btd->bus;
             dequeueNextGA(btd->bus, &gatmp);
             addr = gatmp.id;
             p = gatmp.protocol;
@@ -2045,7 +2045,7 @@ static void *thr_sendrec_DDL(void *v)
                     break;
                 case 'N':
                     comp_nmra_accessory(btd->bus, addr, gatmp.port,
-                                        gatmp.action, __DDL->NMRA_GA_OFFSET);
+                                        gatmp.action, __DDLt->NMRA_GA_OFFSET);
                     break;
             }
             setGA(btd->bus, addr, gatmp);
@@ -2059,7 +2059,7 @@ static void *thr_sendrec_DDL(void *v)
 
                 if (gatmp.activetime < 1000) {
                    if (usleep((unsigned long) gatmp.activetime * 1000) == -1) {
-                       syslog_bus(busnumber, DBG_ERROR,
+                       syslog_bus(btd->bus, DBG_ERROR,
                                "usleep() failed: %s (errno = %d)\n",
                                strerror(errno), errno);
                    }
@@ -2073,7 +2073,7 @@ static void *thr_sendrec_DDL(void *v)
                            break;
                        case 'N':
                            comp_nmra_accessory(btd->bus, addr, gatmp.port,
-                                            gatmp.action, __DDL->NMRA_GA_OFFSET);
+                                            gatmp.action, __DDLt->NMRA_GA_OFFSET);
                            break;
                    }
                    setGA(btd->bus, addr, gatmp);
