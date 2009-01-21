@@ -328,7 +328,11 @@ void *thr_sendrec_IB(void *v)
                 writeByte(btd->bus, byte2send, __ibt->pause_between_cmd);
                 status = readByte(btd->bus, 1, &rr);
                 while (status == -1) {
-                    usleep(100000);
+                    if (usleep(100000) == -1) {
+                        syslog_bus(btd->bus, DBG_ERROR,
+                                "usleep() failed: %s (errno = %d)\n",
+                                strerror(errno), errno);
+                    }
                     status = readByte(btd->bus, 1, &rr);
                 }
                 /* sleep(2); */
@@ -337,7 +341,11 @@ void *thr_sendrec_IB(void *v)
                 if ((__ibt->emergency_on_ib == 2)
                     && (buses[btd->bus].power_state == 0)) {
                     check_status_IB(btd->bus);
-                    usleep(50000);
+                    if (usleep(50000) == -1) {
+                        syslog_bus(btd->bus, DBG_ERROR,
+                                "usleep() failed: %s (errno = %d)\n",
+                                strerror(errno), errno);
+                    }
                     continue;
                 }
                 char msg[110];
@@ -346,7 +354,11 @@ void *thr_sendrec_IB(void *v)
                 writeByte(btd->bus, byte2send, __ibt->pause_between_cmd);
                 status = readByte_IB(btd->bus, 1, &rr);
                 while (status == -1) {
-                    usleep(100000);
+                    if (usleep(100000) == -1) {
+                        syslog_bus(btd->bus, DBG_ERROR,
+                                "usleep() failed: %s (errno = %d)\n",
+                                strerror(errno), errno);
+                    }
                     status = readByte_IB(btd->bus, 1, &rr);
                 }
                 /* war alles OK? */
@@ -367,7 +379,11 @@ void *thr_sendrec_IB(void *v)
 
         if (buses[btd->bus].power_state == 0) {
             check_status_IB(btd->bus);
-            usleep(50000);
+            if (usleep(50000) == -1) {
+                syslog_bus(btd->bus, DBG_ERROR,
+                        "usleep() failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
+            }
             continue;
         }
 
@@ -377,7 +393,11 @@ void *thr_sendrec_IB(void *v)
         send_command_sm_IB(btd->bus);
         check_reset_fb(btd->bus);
         buses[btd->bus].watchdog = 1;
-        usleep(50000);
+        if (usleep(50000) == -1) {
+            syslog_bus(btd->bus, DBG_ERROR,
+                    "usleep() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+        }
     }                           /* End WHILE(1) */
 
     /*run the cleanup routine */

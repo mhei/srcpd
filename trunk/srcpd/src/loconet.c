@@ -789,7 +789,11 @@ void *thr_sendrec_LOCONET(void *v)
             syslog_bus(btd->bus, DBG_DEBUG,
                        "Waiting for echo of last command (%d ms timeoutcount)",
                        timeoutcnt);
-            usleep(100000);
+            if (usleep(100000) == -1) {
+                syslog_bus(btd->bus, DBG_ERROR,
+                        "usleep() failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
+            }
             timeoutcnt++;
             if (timeoutcnt > 10) {
                 syslog_bus(btd->bus, DBG_DEBUG,
@@ -797,7 +801,13 @@ void *thr_sendrec_LOCONET(void *v)
                 __loconett->ln_msglen = 0;
             }
         }
-        usleep(1000);
+
+        /* wait 1 ms */
+        if (usleep(1000) == -1) {
+            syslog_bus(btd->bus, DBG_ERROR,
+                    "usleep() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+        }
     }
     /*run the cleanup routine */
     pthread_cleanup_pop(1);

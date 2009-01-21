@@ -27,6 +27,7 @@
  *   (Control centre of MUT and Uwe Magnus are CC-2000 compatible).
  */
 
+#include <errno.h>
 #include <unistd.h>
 #include <stdbool.h>
 
@@ -471,7 +472,11 @@ int syncSXbus(bus_t busnumber)
                 while ((__checkSXflag(Connection)) && (syncWait > 0))
                 {
                         write_port(busnumber, SXempty);
-                        usleep(500);
+                        if (usleep(500) == -1) {
+                            syslog_bus(busnumber, DBG_ERROR,
+                                    "usleep() failed: %s (errno = %d)\n",
+                                    strerror(errno), errno);
+                        }
                         syncWait--;
                 }
                 if (syncWait == 0) {
@@ -501,7 +506,11 @@ int chkCC2000Status(bus_t busnumber, int step, int statFlag)
         __selectrix->stateInterface = step;
         wait = 10;
         while ((__selectrix->stateInterface < (step + 1)) || (wait == 0)) {
-                usleep(500);
+            if (usleep(500) == -1) {
+                syslog_bus(busnumber, DBG_ERROR,
+                        "usleep() failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
+            }
                 wait--;
         }
         /* Check flag in status byte */
@@ -557,7 +566,11 @@ int readSXDecoder(bus_t busnumber)
                 __selectrix->stateInterface = 12;
                 waitCount = 10;
                 while ((__selectrix->stateInterface < (13)) || (waitCount == 0)) {
-                        usleep(500);
+                        if (usleep(500) == -1) {
+                            syslog_bus(busnumber, DBG_ERROR,
+                                    "usleep() failed: %s (errno = %d)\n",
+                                    strerror(errno), errno);
+                        }
                         waitCount--;
                 }
                 if (waitCount > 0) {
@@ -567,7 +580,11 @@ int readSXDecoder(bus_t busnumber)
                         __selectrix->stateInterface = 12;
                         waitCount = 10;
                         while ((__selectrix->stateInterface < (13)) || (waitCount == 0)) {
-                                usleep(500);
+                            if (usleep(500) == -1) {
+                                syslog_bus(busnumber, DBG_ERROR,
+                                        "usleep() failed: %s (errno = %d)\n",
+                                        strerror(errno), errno);
+                            }
                                 waitCount--;
                         }
                         if (waitCount > 0) {
@@ -592,14 +609,23 @@ void writeSXDecoder(bus_t busnumber, int SXdecoder)
                 writeSXbus(busnumber, SXprog2, (SXdecoder / 256) & 0xff);
                 /* Start Programming in Selectrix mode */
                 writeSXbus(busnumber, SXcommand, SXcmdstart + SXcmdprog + SXcmddcod + SXcmdmodus);
-                usleep(3000000);  /*  Wait 3 seconds */
+                /*  Wait 3 seconds */
+                if (usleep(3000000) == -1) {
+                    syslog_bus(busnumber, DBG_ERROR,
+                            "usleep() failed: %s (errno = %d)\n",
+                            strerror(errno), errno);
+                }
                 timeout = 1000;
                 while (timeout > 0) {
                        if (chkCC2000Status(busnumber, 14, SXstready) == 0) {
                                timeout = 0;
                        } else {
                                timeout--;
-                               usleep(500);
+                               if (usleep(500) == -1) {
+                                   syslog_bus(busnumber, DBG_ERROR,
+                                           "usleep() failed: %s (errno = %d)\n",
+                                           strerror(errno), errno);
+                               }
                        }
                 }
                 /* Stop programming */
@@ -953,9 +979,17 @@ void *thr_feedbackSelectrix(void *v)
                                 break;
                         }
                         /* Process every feedback 4 times per second */
-                        usleep(250000 / __selectrix->number_fb);
+                        if (usleep(250000 / __selectrix->number_fb) == -1) {
+                            syslog_bus(busnumber, DBG_ERROR,
+                                    "usleep() failed: %s (errno = %d)\n",
+                                    strerror(errno), errno);
+                        }
                 } else {
-                        usleep(1000000);
+                        if (usleep(1000000) == -1) {
+                            syslog_bus(busnumber, DBG_ERROR,
+                                    "usleep() failed: %s (errno = %d)\n",
+                                    strerror(errno), errno);
+                        }
                 }
         }
 }

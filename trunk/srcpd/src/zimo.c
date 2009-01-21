@@ -73,7 +73,12 @@ int readanswer(bus_t bus, char cmd, char *buf, int maxbuflen,
             lc = c;
         }
         else
-            usleep(1);
+            /*What is the background of this micro second*/
+            if (usleep(1) == -1) {
+                syslog_bus(bus, DBG_ERROR,
+                        "usleep() failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
+            }
     }
 }
 
@@ -376,7 +381,11 @@ void *thr_sendrec_ZIMO(void *v)
             }
 
             buses[btd->bus].watchdog = 4;
-            usleep(10);
+            if (usleep(1000) == -1) {
+                syslog_bus(btd->bus, DBG_ERROR,
+                        "usleep() failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
+            }
         }
     }
 

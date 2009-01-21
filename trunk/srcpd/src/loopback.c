@@ -4,6 +4,8 @@
  * loopback: simple bus driver without any hardware.
  **/
 
+#include <errno.h>
+
 #include "config-srcpd.h"
 #include "io.h"
 #include "loopback.h"
@@ -261,7 +263,13 @@ void *thr_sendrec_LOOPBACK(void *v)
         /* loop shortcut to prevent processing of GA, GL, SM (and FB)
          * without power on */
         if (buses[btd->bus].power_state == 0) {
-            usleep(1000);
+
+            /* wait 1 ms */
+            if (usleep(1000) == -1) {
+                syslog_bus(btd->bus, DBG_ERROR,
+                        "usleep() failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
+            }
             continue;
         }
 
@@ -485,7 +493,12 @@ void *thr_sendrec_LOOPBACK(void *v)
         buses[btd->bus].watchdog++;
 
         /* busy wait and continue loop */
-        usleep(1000);
+        /* wait 1 ms */
+        if (usleep(1000) == -1) {
+            syslog_bus(btd->bus, DBG_ERROR,
+                    "usleep() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+        }
     }
 
     /*run the cleanup routine */

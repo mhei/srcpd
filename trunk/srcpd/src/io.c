@@ -95,7 +95,11 @@ void writeByte(bus_t bus, unsigned char b, unsigned long msecs)
         syslog_bus(bus, DBG_DEBUG, "(FD: %d) %i byte sent: 0x%02x (%d)\n",
         buses[bus].device.file.fd, i, b, b);
     }
-    usleep(msecs * 1000);
+    if (usleep(msecs * 1000) == -1) {
+        syslog_bus(bus, DBG_ERROR,
+                   "usleep() failed: %s (errno = %d)\n",
+                   strerror(errno), errno);
+    }
 }
 
 void writeString(bus_t bus, unsigned char *s, unsigned long msecs)

@@ -18,6 +18,7 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <errno.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -463,12 +464,20 @@ void *thr_sendrec_S88(void *v)
 
         /*do nothing if power is off*/
         if (buses[btd->bus].power_state == 0) {
-            usleep(1000);
+            if (usleep(1000) == -1) {
+                syslog_bus(btd->bus, DBG_ERROR,
+                        "usleep() failed: %s (errno = %d)\n",
+                        strerror(errno), errno);
+            }
             continue;
         }
 
         check_reset_fb(btd->bus);
-        usleep(sleepusec);
+        if (usleep(sleepusec) == -1) {
+            syslog_bus(btd->bus, DBG_ERROR,
+                    "usleep() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+        }
         s88load(btd->bus);
     }
 

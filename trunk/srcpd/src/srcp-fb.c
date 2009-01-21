@@ -5,6 +5,7 @@
  *
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -115,7 +116,12 @@ static void queue_reset_fb(bus_t busnumber, int port,
     int result;
 
     while (queueIsFullFB(busnumber)) {
-        usleep(1000);
+        /* wait 1 ms */
+        if (usleep(1000) == -1) {
+            syslog_bus(busnumber, DBG_ERROR,
+                    "usleep() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+        }
     }
 
     result = pthread_mutex_lock(&queue_mutex_reset[busnumber]);

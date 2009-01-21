@@ -406,7 +406,11 @@ void *thr_sendrec_LI100_SERIAL( void *v )
 #endif
     check_reset_fb( btd->bus );
     buses[ btd->bus ].watchdog = 1;
-    usleep( 50000 );
+    if (usleep(50000) == -1) {
+        syslog_bus(btd->bus, DBG_ERROR,
+                   "usleep() failed: %s (errno = %d)\n",
+                   strerror(errno), errno);
+    }
   }                           /* End WHILE(1) */
 
     /*run the cleanup routine*/
@@ -1398,7 +1402,11 @@ int readAnswer_LI100_SERIAL( bus_t busnumber, unsigned char *str )
     if ( ctr < 0 )
       return status;
 
-    usleep( 2000 );
+    if (usleep(2000) == -1) {
+        syslog_bus(busnumber, DBG_ERROR,
+                   "usleep() failed: %s (errno = %d)\n",
+                   strerror(errno), errno);
+    }
     status = readByte( busnumber, 1, &str[ 0 ] );
   }
 
