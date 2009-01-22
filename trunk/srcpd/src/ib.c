@@ -1299,6 +1299,12 @@ static int init_lineIB(bus_t busnumber)
     return 0;
 }
 
+/* Send RS232 break signal
+ * This is an inversion of the data lead for a specific period of
+ * time, exceeding the period of at least one full character, including
+ * the start/stop bits, and any parity. As such, the duration of the
+ * BREAK signal is a function of the port speed of the UART sending the
+ * data. */
 static int sendBreak(const int fd, bus_t busnumber)
 {
     int result;
@@ -1323,6 +1329,8 @@ static int sendBreak(const int fd, bus_t busnumber)
                    strerror(errno), errno);
     }
 
+    /* Why is this simple call not sufficient and what does the "100"
+     * mean? More than undefined behavior? (gs) */
     if (tcsendbreak(fd, 100) == -1) {
         syslog_bus(busnumber, DBG_ERROR,
                    "tcsendbreak() failed: %s (errno = %d)\n",
