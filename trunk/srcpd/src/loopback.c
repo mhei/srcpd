@@ -264,76 +264,6 @@ void *thr_sendrec_LOOPBACK(void *v)
             buses[btd->bus].watchdog++;
         }
 
-        /* loop shortcut to prevent processing of GA, GL, SM (and FB)
-         * without power on */
-        if (buses[btd->bus].power_state == 0) {
-
-            /* wait 1 ms */
-            if (usleep(1000) == -1) {
-                syslog_bus(btd->bus, DBG_ERROR,
-                           "usleep() failed: %s (errno = %d)\n",
-                           strerror(errno), errno);
-            }
-            continue;
-        }
-
-        /*GL action arrived */
-        if (!queue_GL_isempty(btd->bus)) {
-            dequeueNextGL(btd->bus, &gltmp);
-            addr = gltmp.id;
-            cacheGetGL(btd->bus, addr, &glakt);
-
-            if (gltmp.direction == 2) {
-                gltmp.speed = 0;
-                gltmp.direction = !glakt.direction;
-            }
-            cacheSetGL(btd->bus, addr, gltmp);
-            buses[btd->bus].watchdog++;
-        }
-
-        gettimeofday(&akt_time, NULL);
-        /* first switch of decoders */
-        for (ctr = 0; ctr < 50; ctr++) {
-            if (__loopbackt->tga[ctr].id) {
-                cmp_time = __loopbackt->tga[ctr].t;
-
-                /* switch off time reached? */
-                if (cmpTime(&cmp_time, &akt_time)) {
-                    gatmp = __loopbackt->tga[ctr];
-                    addr = gatmp.id;
-                    gatmp.action = 0;
-                    setGA(btd->bus, addr, gatmp);
-                    __loopbackt->tga[ctr].id = 0;
-                }
-            }
-        }
-
-        /*GA action arrived */
-        if (!queue_GA_isempty(btd->bus)) {
-            dequeueNextGA(btd->bus, &gatmp);
-            addr = gatmp.id;
-
-            gettimeofday(&gatmp.tv[gatmp.port], NULL);
-            setGA(btd->bus, addr, gatmp);
-            if (gatmp.action && (gatmp.activetime > 0)) {
-                for (ctr = 0; ctr < 50; ctr++) {
-                    if (__loopbackt->tga[ctr].id == 0) {
-                        gatmp.t = akt_time;
-                        gatmp.t.tv_sec += gatmp.activetime / 1000;
-                        gatmp.t.tv_usec +=
-                            (gatmp.activetime % 1000) * 1000;
-                        if (gatmp.t.tv_usec > 1000000) {
-                            gatmp.t.tv_sec++;
-                            gatmp.t.tv_usec -= 1000000;
-                        }
-                        __loopbackt->tga[ctr] = gatmp;
-                        break;
-                    }
-                }
-            }
-            buses[btd->bus].watchdog++;
-        }
-
         /*SM action arrived (process only with power on) */
         if (!queue_SM_isempty(btd->bus)) {
             dequeueNextSM(btd->bus, &smtmp);
@@ -483,6 +413,76 @@ void *thr_sendrec_LOOPBACK(void *v)
             }
             session_endwait(btd->bus, smtmp.value);
 
+            buses[btd->bus].watchdog++;
+        }
+
+        /* loop shortcut to prevent processing of GA, GL (and FB)
+         * without power on */
+        if (buses[btd->bus].power_state == 0) {
+
+            /* wait 1 ms */
+            if (usleep(1000) == -1) {
+                syslog_bus(btd->bus, DBG_ERROR,
+                           "usleep() failed: %s (errno = %d)\n",
+                           strerror(errno), errno);
+            }
+            continue;
+        }
+
+        /*GL action arrived */
+        if (!queue_GL_isempty(btd->bus)) {
+            dequeueNextGL(btd->bus, &gltmp);
+            addr = gltmp.id;
+            cacheGetGL(btd->bus, addr, &glakt);
+
+            if (gltmp.direction == 2) {
+                gltmp.speed = 0;
+                gltmp.direction = !glakt.direction;
+            }
+            cacheSetGL(btd->bus, addr, gltmp);
+            buses[btd->bus].watchdog++;
+        }
+
+        gettimeofday(&akt_time, NULL);
+        /* first switch of decoders */
+        for (ctr = 0; ctr < 50; ctr++) {
+            if (__loopbackt->tga[ctr].id) {
+                cmp_time = __loopbackt->tga[ctr].t;
+
+                /* switch off time reached? */
+                if (cmpTime(&cmp_time, &akt_time)) {
+                    gatmp = __loopbackt->tga[ctr];
+                    addr = gatmp.id;
+                    gatmp.action = 0;
+                    setGA(btd->bus, addr, gatmp);
+                    __loopbackt->tga[ctr].id = 0;
+                }
+            }
+        }
+
+        /*GA action arrived */
+        if (!queue_GA_isempty(btd->bus)) {
+            dequeueNextGA(btd->bus, &gatmp);
+            addr = gatmp.id;
+
+            gettimeofday(&gatmp.tv[gatmp.port], NULL);
+            setGA(btd->bus, addr, gatmp);
+            if (gatmp.action && (gatmp.activetime > 0)) {
+                for (ctr = 0; ctr < 50; ctr++) {
+                    if (__loopbackt->tga[ctr].id == 0) {
+                        gatmp.t = akt_time;
+                        gatmp.t.tv_sec += gatmp.activetime / 1000;
+                        gatmp.t.tv_usec +=
+                            (gatmp.activetime % 1000) * 1000;
+                        if (gatmp.t.tv_usec > 1000000) {
+                            gatmp.t.tv_sec++;
+                            gatmp.t.tv_usec -= 1000000;
+                        }
+                        __loopbackt->tga[ctr] = gatmp;
+                        break;
+                    }
+                }
+            }
             buses[btd->bus].watchdog++;
         }
 
