@@ -611,8 +611,19 @@ void run_bus_watchdog()
             syslog_bus(bus, DBG_ERROR, "Oops: Interface thread "
                        "hangs, restarting (old tid = %ld, %d).",
                        (long) buses[bus].tid, buses[bus].watchdog);
-            pthread_cancel(buses[bus].tid);
-            pthread_join(buses[bus].tid, NULL);
+
+            result = pthread_cancel(buses[bus].tid);
+            if (result != 0)
+                syslog_bus(bus, DBG_ERROR,
+                           "Interface thread cancel failed: %s (errno = %d).",
+                           strerror(result), result);
+            
+            result = pthread_join(buses[bus].tid, NULL);
+            if (result != 0)
+                syslog_bus(bus, DBG_ERROR,
+                           "Interface thread join failed: %s (errno = %d).",
+                           strerror(result), result);
+            
             result = pthread_create(&ttid_tid, NULL,
                                     buses[bus].thr_func, (void *) bus);
             if (result != 0) {
