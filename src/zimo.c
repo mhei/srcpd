@@ -45,7 +45,7 @@ int readanswer(bus_t bus, char cmd, char *buf, int maxbuflen,
     struct timeval ts, tn;
 
     gettimeofday(&ts, NULL);
-    while (1) {
+    while (true) {
         result = ioctl(buses[bus].device.file.fd, FIONREAD, &i);
         if (result == -1) {
             syslog_bus(bus, DBG_ERROR,
@@ -73,8 +73,7 @@ int readanswer(bus_t bus, char cmd, char *buf, int maxbuflen,
             lc = c;
         }
         else
-            /*What is the background of this micro second*/
-            if (usleep(1) == -1) {
+            if (usleep(1000) == -1) {
                 syslog_bus(bus, DBG_ERROR,
                         "usleep() failed: %s (errno = %d)\n",
                         strerror(errno), errno);
