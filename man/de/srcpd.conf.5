@@ -8,6 +8,11 @@
 .\" Get a printable version with:
 .\"   groff -mandoc -Tps srcpd.conf.5 > srcpd.conf.ps
 .\"
+.\" Find typos with:
+.\"   ispell -C -n -d ngerman srcpd.conf.5
+.\" or
+.\"   aspell -C -d de-neu --encoding=iso-8859-1 -c srcpd.conf.5
+.\"
 .\"
 .TH srcpd.conf 5 "11. Januar 2009"
 .\"
@@ -21,8 +26,8 @@ Die Datei
 .IR srcpd.conf
 wird vom SRCP-Daemon
 .IR srcpd
-als systemweite Konfigurationsdatei genutzt.  Sie bescheibt die
-für die Laufzeit des Systemsdienstes entscheidenden Einstellungen zum
+als systemweite Konfigurationsdatei genutzt.  Sie beschreibt die
+für die Laufzeit des Systemdienstes entscheidenden Einstellungen zum
 Verhalten des Daemons selbst, sowie die Anzahl, Art und Betriebsweise
 der angeschlossenen Schnittstellen zur Modellbahn.  Weitere Details zum
 Betrieb beschreibt das Handbuch
