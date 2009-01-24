@@ -216,13 +216,13 @@ enable_usleep_patch
 usleep_usec
 .TP
 nmra_ga_offset
-For backward compabilty and alternate usage of different CUs.
+For backward compatibility and alternate usage of different CUs.
 If your ga decoders are shifted by 4 (i.e. you want to change switch 1, and
 you have to change switch 5 to do this), then you shoul use a value of 1 for
 this value. Valid values are 0 and 1. Default value is 0.
 .TP
 program_track
-This parameter allows you to supress commands which are issued for a
+This parameter allows you to suppress commands which are issued for a
 program track. This parameter should only be used on your main.  Valid
 input values are \fByes\fR or \fBno\fR. The default value is \fByes\fR,
 i.e. all program track commands will be executed by default.
@@ -231,23 +231,87 @@ i.e. all program track commands will be executed by default.
 .SS ddl-s88
 .PP
 Digital Direct for Linux S88 via parport (IEEE 1284).
+This bus provide 1 up to 4 S88-data links on the parport to connect
+S88-feedback modules. The wiring scheme is equivalent to this from the DDL
+daemon (http://www.vogt-it.com/OpenSource/DDL) as the circuit of Martin Wolf.
+The data links are managed as separate busses. 
+
+The maximum count of modules (with 16 contacts) which can connected to a
+data link is 31. When using modules with 8 contacts two modules count as one. 
+
+For each data link a separate bus would be initialized where the order of
+the feedback contacts of the modules is increasing so as the order of the
+modules connected to the data link. If there are no modules connected to a data
+link the respectively value of number_fb_x should be 0. Nevertheless this bus
+would be initialized that means also if only one bus is in use all four busses
+would be initialized.
+.\"
 .TP
 ioport
-Line printer port input/output address. Default value is 0x0378.
+Input/Output address of the printer port. The default value is 0x0378 for the
+device /dev/lp0. The \fBioport\fR has to give in hexadezimal format (starting
+whith 0x). Valid values for a typical linux system are:
+.nf
+
+    0x0378  /dev/lp0
+    0x0278  /dev/lp1
+    0x03BC  /dev/lp2
+    
+.fi
+Is there only one parport avalaible it is typically /dev/lp0. 
 .TP
 clockscale
+Parameter to adjust the clock rate for reading the modules. In the case of the 
+default value 35 the original S88 clock rate of approximaly 8\ KHz would be
+achieved. Smaller values increasing the clock rate but not each module can work
+whith this. In maximum there is approximaly 125\ KHz possible.
 .TP
 refresh
+Delay time in milliseconds after witch the feedback moduls will be read again.
+In case of the default value 100 the datas will be refreshed each 100\ ms. 
+Useful values are between 1000 and 250.
 .TP
 fb_delay_time_0
+This value in milliseconds determines how long the signal on a feedback contact 
+must be on zero level before it accepted as valid and will be forwarded. Whith
+this it is in a limited range possible to debounce bad feedback contacts
+(bouncing contacts). The default value is 0\ ms.
 .TP
 number_fb_1
+This statement defines the count of to the data link \fB1\fP connected feedback
+modules. 
 .TP
 number_fb_2
+This statement defines the count of to the data link \fB2\fP connected feedback
+modules. 
 .TP
 number_fb_3
+This statement defines the count of to the data link \fB3\fP connected feedback
+modules. 
 .TP
 number_fb_4
+This statement defines the count of to the data link \fB4\fP connected feedback
+modules.
+.PP
+Inside of the configuration the common values should be arranged before
+the bus spezific values. A example looks like:
+
+.nf
+        <bus>
+          <auto_power_on>yes</auto_power_on>
+          <verbosity>7</verbosity>
+          <device>/dev/lp0</device>
+          <ddl-s88>
+            <ioport>0x378</ioport>
+            <clockscale>35</clockscale>
+            <refresh>100</refresh>
+            <number_fb_1>3</number_fb_1>
+            <number_fb_2>4</number_fb_2>
+            <number_fb_3>5</number_fb_3>
+            <number_fb_4>6</number_fb_4>
+          </ddl-s88>
+        </bus>
+.fi
 .\"
 .\"
 .SS hsi-88
