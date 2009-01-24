@@ -615,6 +615,7 @@ void *thr_sendrec_LOCONET(void *v)
     unsigned char ln_packet[128];       /* max length is coded with 7 bit */
     unsigned char ln_packetlen = 2;
     unsigned int addr, timeoutcnt;
+    unsigned int startup_slot_index = 0; /* read the slot numbers upon start up */
     /*int code, src, dst, data[8], i;*/
     int value, port, speed;
     char msg[110];
@@ -739,7 +740,7 @@ void *thr_sendrec_LOCONET(void *v)
                     break;
                 default:
                     syslog_bus(btd->bus, DBG_DEBUG,
-                               "Unkown Loconet Message (%x)",
+                               "Unknown or not decoded Loconet Message (%x)",
                                ln_packet[0]);
                     /* unknown Loconet packet received, ignored */
                     break;
@@ -755,8 +756,7 @@ void *thr_sendrec_LOCONET(void *v)
                 buses[btd->bus].power_changed = 0;
                 infoPower(btd->bus, msg);
                 enqueueInfoMessage(msg);
-            }
-            else if (!queue_GA_isempty(btd->bus)) {
+            } else if (!queue_GA_isempty(btd->bus)) {
                 ga_state_t gatmp;
                 dequeueNextGA(btd->bus, &gatmp);
                 addr = gatmp.id - 1;
@@ -776,16 +776,25 @@ void *thr_sendrec_LOCONET(void *v)
                 setGA(btd->bus, gatmp.id, gatmp);
                 syslog_bus(btd->bus, DBG_DEBUG, "Loconet: GA SET #%d %02X",
                            gatmp.id, gatmp.action);
-            }
-
+            } else {
+		/* send out a slot read message to collect the current state. Do this
+		   only once at startup time */
+		if(startup_slot_index<128) {
+                    syslog_bus(btd->bus, DBG_DEBUG, "Loconet: requesting startup slot info %d",
+                           startup_slot_index);
+		    ln_packetlen = 4;
+		    ln_packet[0] = OPC_RQ_SL_DATA;
+	    	    ln_packet[1] = startup_slot_index++;
+	    	    ln_packet[2] = 0;
+		}
+	    }
             ln_packet[ln_packetlen - 1] =
                 ln_checksum(ln_packet, ln_packetlen - 1);
             if (ln_packet[0] != OPC_IDLE) {
                 ln_write(btd->bus, ln_packet, ln_packetlen);
                 timeoutcnt = 0;
             }
-        }
-        else {
+        } else {
             syslog_bus(btd->bus, DBG_DEBUG,
                        "Waiting for echo of last command (%d ms timeoutcount)",
                        timeoutcnt);
