@@ -384,7 +384,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
 
         child = child->next;
     }
-
+    num_buses = busnumber - 1;
     return busnumber;
 }
 
