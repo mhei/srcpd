@@ -3,6 +3,8 @@
 	of Intellibox BIBA function added to to speed up connection
 	initialization if user configures the proper baudrate in
 	srcpd.conf.
+	* ib.c: Very basic support added to print firmware version to
+	syslog.
 
 2009-01-21 Guido Scholz <guido.scholz@bayernline.de>
 	* config-srcpd.c: Fixed counting of interface bus number,
