@@ -60,6 +60,7 @@ typedef unsigned long int sessionid_t;
 #define USE_WATCHDOG          0x0001 /* use watchdog */
 #define AUTO_POWER_ON         0x0002 /* start Power on startup */
 #define RESTORE_COM_SETTINGS  0x0004 /* restore com-port settings after close */
+#define USE_AUTODETECTION     0x0008 /* use com-port baudrate auto detection */
 
 /* driver specific flags */
 #define FB_ORDER_0            0x0200 /* feedback port 0 is bit 0 */

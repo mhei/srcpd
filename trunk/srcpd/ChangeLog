@@ -1,3 +1,9 @@
+2009-01-24 Guido Scholz <guido.scholz@bayernline.de>
+	* config-srcpd.*, ib.*, io.*, zimo.c: Support for circumvention
+	of Intellibox BIBA function added to to speed up connection
+	initialization if user configures the proper baudrate in
+	srcpd.conf.
+
 2009-01-21 Guido Scholz <guido.scholz@bayernline.de>
 	* config-srcpd.c: Fixed counting of interface bus number,
 	reported by Heiko Gau.

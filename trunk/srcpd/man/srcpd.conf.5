@@ -327,6 +327,22 @@ number_fb
 This is the number of S88 modules attached to the Intellibox device.
 The maximum valid number is 31. The default is 0 (no modules are attached).
 Please note that Loconet is currently not supported.
+.TP
+auto_speed_detection
+This option activates an automatical baudrate detection of the connected
+Intellibox (BABI = Break and Automatic Baud-rate Identification).  This
+procedure takes several seconds but if enabled it is not necessary to
+specify a value for the 
+.IR speed
+parameter.  If disabled the connection initialization is much faster but
+the given
+.IR speed
+value must comply to the actual Intellibox setting.  Valid values are
+.IR yes
+and
+.IR no .
+The default value is
+.IR yes .
 .\"
 .\"
 .SS li100, li100usb

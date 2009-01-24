@@ -40,7 +40,8 @@ int init_gl_IB(gl_state_t *gl);
 int init_ga_IB(ga_state_t *ga);
 void* thr_sendrec_IB(void *);
 
-#define P50X_ONLY "xZzA1"
+static const char P50_DISABLE[] = "xZzA1";
+static const char P50_ENABLE[] = "ZzA0";
 
 /* general purpose P50Xb commands */
 

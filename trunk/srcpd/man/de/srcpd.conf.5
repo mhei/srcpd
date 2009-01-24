@@ -622,6 +622,24 @@ S88-Rückmeldemodule fest.  Gültig sind Werte von 0 bis 31 (bei Modulen
 mit 16 Kontakten).  Der voreingestellte Wert beträgt 0 (keine Module sind
 angeschlossen).  Über Loconet angeschlossene Module werden gegenwärtig
 nicht unterstützt.
+.TP
+auto_speed_detection
+Diese Option aktiviert eine automatische Baudratenerkennung der
+angeschlossenen Intellibox (BABI = Break and Automatic Baud-rate
+Identification).  Sie benötigt einige Sekunden, macht es aber unnötig,
+den richtigen Wert für den
+.IR speed
+Parameter zu konfigurieren.  Wenn die automatische Erkennung abgeschaltet
+ist, erfolgt die Verbindungsaufnahme erheblich schneller, aber der
+konfigurierte
+.IR speed
+Wert muß dem tatsächlichen Einstellung an der Intellibox entsprechen.
+Gültige Werte sind
+.IR yes
+und
+.IR no .
+Die Voreinstellung ist
+.IR yes .
 .\"
 .\"
 .SS li100, li100usb
