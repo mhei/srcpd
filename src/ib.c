@@ -1424,6 +1424,79 @@ static int run_autodetection(bus_t busnumber)
     return 0;
 }
 
+
+static void show_firmware_version(bus_t bus)
+{
+    unsigned char buffer[20];
+    ssize_t nbytes;
+    unsigned char listlen;
+
+    memset(buffer, '\0', sizeof(buffer));
+    writeByte(bus, XVer, 0);
+
+again1:
+    nbytes = read(buses[bus].device.file.fd, &listlen, 1);
+    if (nbytes == -1) {
+
+        /* handle interrupt */
+        if (errno == EINTR)
+            goto again1;
+
+        /* normal read error*/
+        else {
+            syslog_bus(bus, DBG_ERROR,
+                    "readbyte(): read() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+            return;
+        }
+    }
+
+    if (listlen == 0) {
+        syslog_bus(bus, DBG_INFO, "No version information available.\n");
+        return;
+    }
+
+    /*FIXME: line buffer not read*/
+    else if ((listlen + 1) > sizeof(buffer)) {
+        syslog_bus(bus, DBG_INFO, "Buffer size not sufficient: %d\n",
+                listlen + 1);
+        return;
+    }
+
+    /*read also terminating '\0'  -> listlen + 1*/
+again2:
+    nbytes = read(buses[bus].device.file.fd, buffer, listlen + 1);
+    if (nbytes == -1) {
+
+        /* handle interrupt */
+        if (errno == EINTR)
+            goto again2;
+
+        /* normal read error*/
+        else {
+            syslog_bus(bus, DBG_ERROR,
+                    "read() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
+            return;
+        }
+    }
+
+    if (nbytes != (listlen + 1)) {
+        syslog_bus(bus, DBG_ERROR, "Bytes available: %d, bytes read: %d\n",
+                listlen + 1, nbytes);
+        return;
+    }
+
+    /* FIXME: This solution definitively is not smart and needs some
+     * fine tuning; the original IB delivers 6 list elements, other P50X
+     * central units may do less. */
+    syslog_bus(bus, DBG_INFO, "Firmware version: "
+            "%hhi %hhi %hhi %hhi %hhi %hhi\n",
+            buffer[0], buffer[1], buffer[2],
+            buffer[3], buffer[4], buffer[5]);
+}
+
+
 static int init_lineIB(bus_t busnumber)
 {
     int fd;
@@ -1454,7 +1527,9 @@ static int init_lineIB(bus_t busnumber)
             break;
     }
 
-    /*TODO: read firmware version*/
+    /* read firmware version*/
+    show_firmware_version(busnumber);
+
     return 0;
 }
 
