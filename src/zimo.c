@@ -270,7 +270,7 @@ void *thr_sendrec_ZIMO(void *v)
         if (buses[btd->bus].power_changed == 1) {
             sprintf(msg, "S%c%c", (buses[btd->bus].power_state) ? 'E' : 'A',
                     13);
-            writeString(btd->bus, (unsigned char *) msg, 0);
+            writeString(btd->bus, msg, 0);
             buses[btd->bus].power_changed = 0;
             infoPower(btd->bus, msg);
             enqueueInfoMessage(msg);
@@ -292,7 +292,7 @@ void *thr_sendrec_ZIMO(void *v)
             if (addr > 128) {
                 sprintf(msg, "E%04X%c", addr, 13);
                 syslog_bus(btd->bus, DBG_INFO, "%s", msg);
-                writeString(btd->bus, (unsigned char *) msg, 0);
+                writeString(btd->bus, msg, 0);
                 addr = 0;
                 i = readanswer(btd->bus, 'E', msg, 20, 40);
                 syslog_bus(btd->bus, DBG_INFO, "readed %d", i);
@@ -310,7 +310,7 @@ void *thr_sendrec_ZIMO(void *v)
                         addr, gltmp.speed, databyte1, databyte2, databyte3,
                         13);
                 syslog_bus(btd->bus, DBG_INFO, "%s", msg);
-                writeString(btd->bus, (unsigned char *) msg, 0);
+                writeString(btd->bus, msg, 0);
 
                 result = ioctl(buses[btd->bus].device.file.fd,
                         FIONREAD, &temp);
@@ -348,7 +348,7 @@ void *thr_sendrec_ZIMO(void *v)
                                 smtmp.typeaddr, smtmp.value);
                         sprintf(msg, "RN%02X%02X%c", smtmp.typeaddr,
                                 smtmp.value, 13);
-                        writeString(btd->bus, (unsigned char *) msg, 0);
+                        writeString(btd->bus, msg, 0);
                         session_lock_wait(btd->bus);
                         if (readanswer(btd->bus, 'Q', msg, 20, 1000) > 3) {
                             sscanf(&msg[1], "%2X%2X%2X", &error, &cv, &val);
@@ -364,7 +364,7 @@ void *thr_sendrec_ZIMO(void *v)
                     case GET:
                         syslog_bus(btd->bus, DBG_INFO, "SM GET #%d", smtmp.typeaddr);
                         sprintf(msg, "Q%02X%c", smtmp.typeaddr, 13);
-                        writeString(btd->bus, (unsigned char *) msg, 0);
+                        writeString(btd->bus, msg, 0);
                         session_lock_wait(btd->bus);
                         if (readanswer(btd->bus, 'Q', msg, 20, 10000) > 3) {
                             /* sscanf(&msg[1],"%2X%2X%2X",&error,&cv,&val); */

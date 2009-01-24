@@ -20,8 +20,8 @@
 #include "config-srcpd.h"
 
 int  readByte(bus_t bus, int wait, unsigned char *the_byte);
-void writeByte(bus_t bus, unsigned char the_byte, unsigned long msec);
-void writeString(bus_t bus, unsigned char *the_string, unsigned long msecs);
+void writeByte(bus_t bus, const char the_byte, unsigned long msec);
+void writeString(bus_t bus, const char *the_string, unsigned long msecs);
 
 void restore_comport(bus_t bus);
 void save_comport(bus_t bus);

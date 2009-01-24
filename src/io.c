@@ -77,7 +77,7 @@ int readByte(bus_t bus, int wait, unsigned char *the_byte)
     return (i > 0 ? 0 : -1);
 }
 
-void writeByte(bus_t bus, unsigned char b, unsigned long msecs)
+void writeByte(bus_t bus, const char b, unsigned long msecs)
 {
     ssize_t i = 0;
     char byte = b;
@@ -102,10 +102,11 @@ void writeByte(bus_t bus, unsigned char b, unsigned long msecs)
     }
 }
 
-void writeString(bus_t bus, unsigned char *s, unsigned long msecs)
+void writeString(bus_t bus, const char *s, unsigned long msecs)
 {
-    size_t l = strlen((char *) s);
+    size_t l = strlen(s);
     size_t i;
+
     for (i = 0; i < l; i++) {
         writeByte(bus, s[i], msecs);
     }

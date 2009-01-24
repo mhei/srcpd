@@ -366,6 +366,17 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
             }
         }
 
+        else if (xmlStrcmp(child->name, BAD_CAST "auto_speed_detection") == 0) {
+            txt = xmlNodeListGetString(doc, child->children, 1);
+            if (txt != NULL) {
+                if (xmlStrcmp(txt, BAD_CAST "yes") == 0)
+                    buses[current_bus].flags |= USE_AUTODETECTION;
+                else if (xmlStrcmp(txt, BAD_CAST "no") == 0)
+                    buses[current_bus].flags &= ~USE_AUTODETECTION;
+                xmlFree(txt);
+            }
+        }
+
         else
             syslog_bus(0, DBG_ERROR,
                        "WARNING, \"%s\" (bus %ld) is an unknown tag!\n",
