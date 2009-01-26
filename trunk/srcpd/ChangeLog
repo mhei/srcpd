@@ -1,3 +1,6 @@
+2009-01-26 Guido Scholz <guido.scholz@bayernline.de>
+	* loopback.c: Cleaner design for bus thread event loop applied.
+
 2009-01-24 Guido Scholz <guido.scholz@bayernline.de>
 	* config-srcpd.*, ib.*, io.*, zimo.c: Support for circumvention
 	of Intellibox BIBA function added to to speed up connection
