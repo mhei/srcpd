@@ -189,6 +189,230 @@ int init_bus_LOOPBACK(bus_t i)
     return 0;
 }
 
+
+static void handle_power_command(bus_t bus)
+{
+    buses[bus].power_changed = 0;
+    char msg[110];
+
+    infoPower(bus, msg);
+    enqueueInfoMessage(msg);
+    buses[bus].watchdog++;
+}
+
+
+static void handle_sm_command(bus_t bus)
+{
+    struct _SM smtmp;
+    /* registers 1-4 == CV#1-4; reg5 == CV#29; reg 7-8 == CV#7-8 */
+    int reg6 = 1;
+    int cv[MAX_CV_NUMBER + 1];
+
+
+    dequeueNextSM(bus, &smtmp);
+    session_lock_wait(bus);
+    smtmp.value &= 255;
+    memset(cv, 0, MAX_CV_NUMBER + 1);
+
+    switch (smtmp.command) {
+        case GET:
+            smtmp.value = -1;
+            switch (smtmp.type) {
+                case REGISTER:
+                    if ((smtmp.typeaddr > 0) &&
+                            (smtmp.typeaddr < 9)) {
+                        if (smtmp.typeaddr < 5
+                                || smtmp.typeaddr > 6) {
+                            smtmp.value = cv[smtmp.typeaddr];
+                            if (smtmp.typeaddr < 5)
+                                reg6 = 1;
+                        }
+                        else if (smtmp.typeaddr == 5) {
+                            cv[29] = smtmp.value = cv[29];
+                        }
+                        else {
+                            smtmp.value = reg6;
+                        }
+                    }
+                    break;
+                case PAGE:
+                case CV:
+                    if ((smtmp.typeaddr >= 0) &&
+                            (smtmp.typeaddr <= MAX_CV_NUMBER)) {
+                        smtmp.value = cv[smtmp.typeaddr];
+                    }
+                    break;
+                case CV_BIT:
+                    if ((smtmp.typeaddr >= 0) && (smtmp.bit >= 0)
+                            && (smtmp.bit < 8) &&
+                            (smtmp.typeaddr <= MAX_CV_NUMBER)) {
+                        smtmp.value = (1 &
+                                (cv[smtmp.typeaddr] >>
+                                 smtmp.bit));
+                    }
+                    break;
+            }
+            break;
+        case SET:
+            switch (smtmp.type) {
+                case REGISTER:
+                    if ((smtmp.typeaddr > 0) &&
+                            (smtmp.typeaddr < 9)) {
+                        if (smtmp.typeaddr < 5
+                                || smtmp.typeaddr > 6) {
+                            if (smtmp.typeaddr < 5)
+                                reg6 = 1;
+                            cv[smtmp.typeaddr] = smtmp.value;
+                        }
+                        else if (smtmp.typeaddr == 5) {
+                            cv[29] = smtmp.value;
+                        }
+                        else {
+                            reg6 = smtmp.value;
+                        }
+                    }
+                    else {
+                        smtmp.value = -1;
+                    }
+                    break;
+                case PAGE:
+                case CV:
+                    if ((smtmp.typeaddr >= 0) &&
+                            (smtmp.typeaddr <= MAX_CV_NUMBER)) {
+                        cv[smtmp.typeaddr] = smtmp.value;
+                    }
+                    else {
+                        smtmp.value = -1;
+                    }
+                    break;
+                case CV_BIT:
+                    if ((smtmp.typeaddr >= 0) && (smtmp.bit >= 0)
+                            && (smtmp.bit < 8) && (smtmp.value >= 0) &&
+                            (smtmp.value <= 1) &&
+                            (smtmp.typeaddr <= MAX_CV_NUMBER)) {
+                        if (smtmp.value) {
+                            cv[smtmp.typeaddr] |= (1 << smtmp.bit);
+                        }
+                        else {
+                            cv[smtmp.typeaddr] &=
+                                ~(1 << smtmp.bit);
+                        }
+                    }
+                    else {
+                        smtmp.value = -1;
+                    }
+                    break;
+            }
+            break;
+        case VERIFY:
+            switch (smtmp.type) {
+                case REGISTER:
+                    if ((smtmp.typeaddr > 0) &&
+                            (smtmp.typeaddr < 9)) {
+                        if (smtmp.typeaddr < 5
+                                || smtmp.typeaddr > 6) {
+                            if (smtmp.typeaddr < 5)
+                                reg6 = 1;
+                            if (smtmp.value != cv[smtmp.typeaddr])
+                                smtmp.value = -1;
+                        }
+                        else if (smtmp.typeaddr == 5) {
+                            if (cv[29] != smtmp.value)
+                                smtmp.value = -1;
+                        }
+                        else {
+                            if (reg6 != smtmp.value)
+                                smtmp.value = -1;
+                        }
+                    }
+                    else {
+                        smtmp.value = -1;
+                    }
+                    break;
+                case PAGE:
+                case CV:
+                    if ((smtmp.typeaddr >= 0) &&
+                            (smtmp.typeaddr <= MAX_CV_NUMBER)) {
+                        if (smtmp.value != cv[smtmp.typeaddr])
+                            smtmp.value = -1;
+                    }
+                    else {
+                        smtmp.value = -1;
+                    }
+                    break;
+                case CV_BIT:
+                    if ((smtmp.typeaddr >= 0) && (smtmp.bit >= 0)
+                            && (smtmp.bit < 8) &&
+                            (smtmp.typeaddr <= MAX_CV_NUMBER)) {
+                        if (smtmp.value != (1 &
+                                    (cv[smtmp.typeaddr] >>
+                                     smtmp.bit)))
+                            smtmp.value = -1;
+                    }
+                    else {
+                        smtmp.value = -1;
+                    }
+                    break;
+            }
+            break;
+    }
+    session_endwait(bus, smtmp.value);
+
+    buses[bus].watchdog++;
+}
+
+
+static void handle_gl_command(bus_t bus)
+{
+    gl_state_t gltmp, glakt;
+    int addr;
+
+    dequeueNextGL(bus, &gltmp);
+    addr = gltmp.id;
+    cacheGetGL(bus, addr, &glakt);
+
+    if (gltmp.direction == 2) {
+        gltmp.speed = 0;
+        gltmp.direction = !glakt.direction;
+    }
+    cacheSetGL(bus, addr, gltmp);
+    buses[bus].watchdog++;
+}
+
+
+static void handle_ga_command(bus_t busnumber)
+{
+    ga_state_t gatmp;
+    int addr, i;
+    struct timeval akt_time;
+
+    dequeueNextGA(busnumber, &gatmp);
+    addr = gatmp.id;
+
+    gettimeofday(&akt_time, NULL);
+    gatmp.tv[gatmp.port] = akt_time;
+    setGA(busnumber, addr, gatmp);
+
+    if (gatmp.action && (gatmp.activetime > 0)) {
+        for (i = 0; i < 50; i++) {
+            if (__loopback->tga[i].id == 0) {
+                gatmp.t = akt_time;
+                gatmp.t.tv_sec += gatmp.activetime / 1000;
+                gatmp.t.tv_usec +=
+                    (gatmp.activetime % 1000) * 1000;
+                if (gatmp.t.tv_usec > 1000000) {
+                    gatmp.t.tv_sec++;
+                    gatmp.t.tv_usec -= 1000000;
+                }
+                __loopback->tga[i] = gatmp;
+                break;
+            }
+        }
+    }
+    buses[busnumber].watchdog++;
+}
+
+
 /*thread cleanup routine for this bus*/
 static void end_bus_thread(bus_thread_t * btd)
 {
@@ -217,18 +441,11 @@ static void end_bus_thread(bus_thread_t * btd)
 /*main thread routine for this bus*/
 void *thr_sendrec_LOOPBACK(void *v)
 {
-    gl_state_t gltmp, glakt;
-    ga_state_t gatmp;
-    struct _SM smtmp;
-    struct timeval akt_time, cmp_time;
     int addr, ctr;
+    struct timeval akt_time, cmp_time;
+    ga_state_t gatmp;
     int last_cancel_state, last_cancel_type;
-    int cv[MAX_CV_NUMBER + 1];
 
-    /* registers 1-4 == CV#1-4; reg5 == CV#29; reg 7-8 == CV#7-8 */
-    int reg6 = 1;
-
-    memset(cv, 0, MAX_CV_NUMBER + 1);
     bus_thread_t *btd = (bus_thread_t *) malloc(sizeof(bus_thread_t));
 
     if (btd == NULL)
@@ -250,174 +467,21 @@ void *thr_sendrec_LOOPBACK(void *v)
                buses[btd->bus].device.file.path);
 
     /*enter endless loop to process work tasks */
-    while (1) {
+    while (true) {
 
         buses[btd->bus].watchdog = 1;
 
         /*POWER action arrived */
-        if (buses[btd->bus].power_changed == 1) {
-            buses[btd->bus].power_changed = 0;
-            char msg[110];
+        if (buses[btd->bus].power_changed == 1)
+            handle_power_command(btd->bus);
 
-            infoPower(btd->bus, msg);
-            enqueueInfoMessage(msg);
-            buses[btd->bus].watchdog++;
-        }
-
-        /*SM action arrived (process only with power on) */
-        if (!queue_SM_isempty(btd->bus)) {
-            dequeueNextSM(btd->bus, &smtmp);
-            session_lock_wait(btd->bus);
-            smtmp.value &= 255;
-            switch (smtmp.command) {
-                case GET:
-                    smtmp.value = -1;
-                    switch (smtmp.type) {
-                        case REGISTER:
-                            if ((smtmp.typeaddr > 0) &&
-                                (smtmp.typeaddr < 9)) {
-                                if (smtmp.typeaddr < 5
-                                    || smtmp.typeaddr > 6) {
-                                    smtmp.value = cv[smtmp.typeaddr];
-                                    if (smtmp.typeaddr < 5)
-                                        reg6 = 1;
-                                }
-                                else if (smtmp.typeaddr == 5) {
-                                    cv[29] = smtmp.value = cv[29];
-                                }
-                                else {
-                                    smtmp.value = reg6;
-                                }
-                            }
-                            break;
-                        case PAGE:
-                        case CV:
-                            if ((smtmp.typeaddr >= 0) &&
-                                (smtmp.typeaddr <= MAX_CV_NUMBER)) {
-                                smtmp.value = cv[smtmp.typeaddr];
-                            }
-                            break;
-                        case CV_BIT:
-                            if ((smtmp.typeaddr >= 0) && (smtmp.bit >= 0)
-                                && (smtmp.bit < 8) &&
-                                (smtmp.typeaddr <= MAX_CV_NUMBER)) {
-                                smtmp.value = (1 &
-                                               (cv[smtmp.typeaddr] >>
-                                                smtmp.bit));
-                            }
-                            break;
-                    }
-                    break;
-                case SET:
-                    switch (smtmp.type) {
-                        case REGISTER:
-                            if ((smtmp.typeaddr > 0) &&
-                                (smtmp.typeaddr < 9)) {
-                                if (smtmp.typeaddr < 5
-                                    || smtmp.typeaddr > 6) {
-                                    if (smtmp.typeaddr < 5)
-                                        reg6 = 1;
-                                    cv[smtmp.typeaddr] = smtmp.value;
-                                }
-                                else if (smtmp.typeaddr == 5) {
-                                    cv[29] = smtmp.value;
-                                }
-                                else {
-                                    reg6 = smtmp.value;
-                                }
-                            }
-                            else {
-                                smtmp.value = -1;
-                            }
-                            break;
-                        case PAGE:
-                        case CV:
-                            if ((smtmp.typeaddr >= 0) &&
-                                (smtmp.typeaddr <= MAX_CV_NUMBER)) {
-                                cv[smtmp.typeaddr] = smtmp.value;
-                            }
-                            else {
-                                smtmp.value = -1;
-                            }
-                            break;
-                        case CV_BIT:
-                            if ((smtmp.typeaddr >= 0) && (smtmp.bit >= 0)
-                                && (smtmp.bit < 8) && (smtmp.value >= 0) &&
-                                (smtmp.value <= 1) &&
-                                (smtmp.typeaddr <= MAX_CV_NUMBER)) {
-                                if (smtmp.value) {
-                                    cv[smtmp.typeaddr] |= (1 << smtmp.bit);
-                                }
-                                else {
-                                    cv[smtmp.typeaddr] &=
-                                        ~(1 << smtmp.bit);
-                                }
-                            }
-                            else {
-                                smtmp.value = -1;
-                            }
-                            break;
-                    }
-                    break;
-                case VERIFY:
-                    switch (smtmp.type) {
-                        case REGISTER:
-                            if ((smtmp.typeaddr > 0) &&
-                                (smtmp.typeaddr < 9)) {
-                                if (smtmp.typeaddr < 5
-                                    || smtmp.typeaddr > 6) {
-                                    if (smtmp.typeaddr < 5)
-                                        reg6 = 1;
-                                    if (smtmp.value != cv[smtmp.typeaddr])
-                                        smtmp.value = -1;
-                                }
-                                else if (smtmp.typeaddr == 5) {
-                                    if (cv[29] != smtmp.value)
-                                        smtmp.value = -1;
-                                }
-                                else {
-                                    if (reg6 != smtmp.value)
-                                        smtmp.value = -1;
-                                }
-                            }
-                            else {
-                                smtmp.value = -1;
-                            }
-                            break;
-                        case PAGE:
-                        case CV:
-                            if ((smtmp.typeaddr >= 0) &&
-                                (smtmp.typeaddr <= MAX_CV_NUMBER)) {
-                                if (smtmp.value != cv[smtmp.typeaddr])
-                                    smtmp.value = -1;
-                            }
-                            else {
-                                smtmp.value = -1;
-                            }
-                            break;
-                        case CV_BIT:
-                            if ((smtmp.typeaddr >= 0) && (smtmp.bit >= 0)
-                                && (smtmp.bit < 8) &&
-                                (smtmp.typeaddr <= MAX_CV_NUMBER)) {
-                                if (smtmp.value != (1 &
-                                                    (cv[smtmp.typeaddr] >>
-                                                     smtmp.bit)))
-                                    smtmp.value = -1;
-                            }
-                            else {
-                                smtmp.value = -1;
-                            }
-                            break;
-                    }
-                    break;
-            }
-            session_endwait(btd->bus, smtmp.value);
-
-            buses[btd->bus].watchdog++;
-        }
+        /*SM action arrived */
+        if (!queue_SM_isempty(btd->bus))
+            handle_sm_command(btd->bus);
 
         /* loop shortcut to prevent processing of GA, GL (and FB)
-         * without power on */
+         * without power on; arriving commands will flood the command
+         * queue */
         if (buses[btd->bus].power_state == 0) {
 
             /* wait 1 ms */
@@ -430,21 +494,12 @@ void *thr_sendrec_LOOPBACK(void *v)
         }
 
         /*GL action arrived */
-        if (!queue_GL_isempty(btd->bus)) {
-            dequeueNextGL(btd->bus, &gltmp);
-            addr = gltmp.id;
-            cacheGetGL(btd->bus, addr, &glakt);
+        if (!queue_GL_isempty(btd->bus))
+            handle_gl_command(btd->bus);
 
-            if (gltmp.direction == 2) {
-                gltmp.speed = 0;
-                gltmp.direction = !glakt.direction;
-            }
-            cacheSetGL(btd->bus, addr, gltmp);
-            buses[btd->bus].watchdog++;
-        }
 
+        /* handle delayed switching of GAs (there is a better place) */
         gettimeofday(&akt_time, NULL);
-        /* first switch of decoders */
         for (ctr = 0; ctr < 50; ctr++) {
             if (__loopbackt->tga[ctr].id) {
                 cmp_time = __loopbackt->tga[ctr].t;
@@ -461,30 +516,8 @@ void *thr_sendrec_LOOPBACK(void *v)
         }
 
         /*GA action arrived */
-        if (!queue_GA_isempty(btd->bus)) {
-            dequeueNextGA(btd->bus, &gatmp);
-            addr = gatmp.id;
-
-            gettimeofday(&gatmp.tv[gatmp.port], NULL);
-            setGA(btd->bus, addr, gatmp);
-            if (gatmp.action && (gatmp.activetime > 0)) {
-                for (ctr = 0; ctr < 50; ctr++) {
-                    if (__loopbackt->tga[ctr].id == 0) {
-                        gatmp.t = akt_time;
-                        gatmp.t.tv_sec += gatmp.activetime / 1000;
-                        gatmp.t.tv_usec +=
-                            (gatmp.activetime % 1000) * 1000;
-                        if (gatmp.t.tv_usec > 1000000) {
-                            gatmp.t.tv_sec++;
-                            gatmp.t.tv_usec -= 1000000;
-                        }
-                        __loopbackt->tga[ctr] = gatmp;
-                        break;
-                    }
-                }
-            }
-            buses[btd->bus].watchdog++;
-        }
+        if (!queue_GA_isempty(btd->bus))
+            handle_ga_command(btd->bus);
 
         /*FB action arrived */
         /* currently nothing to do here */
