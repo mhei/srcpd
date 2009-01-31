@@ -7,6 +7,7 @@ sbin_PROGRAMS = srcpd
 srcpd_SOURCES = \
 	clientservice.c \
 	config-srcpd.c \
+	dcc-address.c \
 	ddl.c \
 	ddl_maerklin.c \
 	ddl_nmra.c \
@@ -44,6 +45,7 @@ srcpd_SOURCES = \
 noinst_HEADERS = \
 	clientservice.h \
 	config-srcpd.h \
+	dcc-address.h \
 	ddl.h \
 	ddl_maerklin.h \
 	ddl_nmra.h \

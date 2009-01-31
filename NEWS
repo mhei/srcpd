@@ -4,9 +4,11 @@ srcpd-2.0.13 (2009-??-??)
       initialization of channel 2, 3 and 4 in ddl-s88 module. 
 
   New Features
-    o Support for TERM 0 TIME added.
+    o Support for TERM 0 TIME added. Timer thread now is suspended
+      if not used.
     o Loconet support slightly improved: GA and FB devices, 
-      may use a loconetovertcp network server
+      may use a loconetovertcp network server.
+    o Support for GA switching in Zimo module added.
 
   General Changes
     o Improved timing for multi protocol mode in DDL module.
