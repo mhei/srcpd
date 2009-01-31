@@ -249,8 +249,9 @@ int readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     while (child != NULL) {
 
-        if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) {
-            /* just do nothing, it is only a comment */
+        if ((xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) ||
+            (xmlStrncmp(child->name, BAD_CAST "comment", 7) == 0)) {
+            /* just do nothing, it is only formatting text or a comment */
         }
 
         /*

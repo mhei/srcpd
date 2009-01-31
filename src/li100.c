@@ -85,14 +85,15 @@ int readConfig_LI100_SERIAL( xmlDocPtr doc, xmlNodePtr node,  bus_t busnumber )
 
   xmlNodePtr child = node->children;
   xmlChar *txt = NULL;
-  while ( child != NULL )
-  {
-    if ( xmlStrncmp( child->name, BAD_CAST "text", 4 ) == 0 )
-    {
-      /* just do nothing, it is only a comment */
-    }
-    else
-      if ( xmlStrcmp( child->name, BAD_CAST "number_fb" ) == 0 )
+
+  while ( child != NULL ) {
+
+        if ((xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) ||
+            (xmlStrncmp(child->name, BAD_CAST "comment", 7) == 0)) {
+            /* just do nothing, it is only formatting text or a comment */
+        }
+
+    else if ( xmlStrcmp( child->name, BAD_CAST "number_fb" ) == 0 )
       {
         txt = xmlNodeListGetString( doc, child->xmlChildrenNode, 1 );
         if ( txt != NULL )

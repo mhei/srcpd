@@ -53,8 +53,10 @@ int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     xmlChar *txt = NULL;
 
     while (child != NULL) {
-        if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) {
-            /* just do nothing, it is only a comment */
+
+        if ((xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) ||
+            (xmlStrncmp(child->name, BAD_CAST "comment", 7) == 0)) {
+            /* just do nothing, it is only formatting text or a comment */
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "number_fb") == 0) {
