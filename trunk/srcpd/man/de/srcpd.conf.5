@@ -795,15 +795,27 @@ controller
 .\"
 .SS zimo
 .PP
-Zimo MX1
+Dieser Bus unterstützt das alte ASCII basierte Zimo MX1
+Schnittstellenprotokoll.  Die Baudrate ist fest auf 9600 Baud
+eingestellt.
 .TP
 number_ga
+Dieser Wert legt den maximal nutzbaren Adressbereich für GA-Elemente
+fest.  Für das Märklin/Motorola-Protokoll (M) darf dieser maximal 63
+betragen, für das NMRA/DCC-Protokoll (N) liegt der maximal erlaubte Wert
+bei 2044 (entsprechend dem Lenz-DCC-Adressschema). Das Zimo-Protokoll
+(Z) wird noch nicht unterstützt.  Der voreingestellte Wert beträgt 256.
 .TP
 number_gl
+Dieser Wert legt den maximal nutzbaren Adressbereich für GL-Elemente
+fest.  Der voreingestellte Wert beträgt 80.
 .TP
 number_fb
+Rückmeldemodule werden nicht unterstützt.  Der voreingestellte Wert
+beträgt 0.
 .TP
 fb_delay_time_0
+Wird nicht unterstützt.
 .\"
 .\"
 .SH "DATEIEN"

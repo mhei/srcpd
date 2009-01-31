@@ -1,3 +1,10 @@
+2009-01-31 Guido Scholz <guido.scholz@bayernline.de>
+	* zimo.c: Support for GA switching added. Thread event loop
+	design cleaned up. New Copyright/License header according to GPL
+	rules (http://www.fsf.org/licensing/licenses/gpl-howto.html).
+	* dcc-address.*: Basic functions to map address/port values
+	between NMRA and Lenz-DCC address scheme added.
+
 2009-01-26 Guido Scholz <guido.scholz@bayernline.de>
 	* loopback.c: Cleaner design for bus thread event loop applied.
 
@@ -1240,7 +1247,7 @@
 	netserver.h, srcp-fb-s88.h, srcp-fb.c, srcp-fb.h, srcp-ga.c,
 	srcp-ga.h, srcp-gl.c, srcp-gl.h, srcp-lock.c, srcp-session.c,
 	srcp-session.h, srcp-srv.c, srcp-srv.h, srcp-time.c, srcp-time.h,
-	srcpd.kdevprj: mehr Ger�e, cleanups
+	srcpd.kdevprj: mehr Geraete, cleanups
 
 2002-05-09 17:37  mtrute
 	* ChangeLog, Makefile, Makefile.am, Makefile.in, NEWS, ddl-s88.c,
@@ -1253,7 +1260,7 @@
 2002-05-08 16:56  mtrute
 	* config-srcpd.c, ddl-s88.c, ddl-s88.h, hsi-88.c, hsi-88.h, ib.c,
 	ib.h, loopback.c, loopback.h, srcp-srv.c, srcp-srv.h, srcpd.c,
-	threads.c: XML Umbauten, unvollst�dig
+	threads.c: XML Umbauten, unvollstaendig
 
 2002-05-08 15:43  mtrute
 	* config-srcpd.c, m605x.c, m605x.h, srcpd.conf: XML Umbauten,
@@ -1595,7 +1602,7 @@
 	kleinere doc-fixes
 
 2001-08-07 19:34  mtrute
-	* config-srcpd.c: aufr�men
+	* config-srcpd.c: aufraeumen
 
 2001-08-05 20:18  mtrute
 	* srcpd.8: added really simple man page

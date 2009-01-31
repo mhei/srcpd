@@ -568,15 +568,26 @@ controller
 .\"
 .SS zimo
 .PP
-Zimo MX1
+This bus provides support for the old ASCII based Zimo MX1 interface
+protocol. The baud rate can not be changed and has an internal preset
+of 9600 Baud.
 .TP
 number_ga
+This value sets the maximum number for the GA address range.  For
+protocol M (Maerklin/Motorola) the upper limit is 63, for protocol
+N (NMRA/DCC) the upper limit is 2044 (according to Lenz-DCC address
+scheme).  The Z (Zimo) protocol is not supported yet.  The default
+value is 256.
 .TP
 number_gl
+This value sets the maximum number for the GL address range.  The
+default value is 80.
 .TP
 number_fb
+Not supported. The default value is 0.
 .TP
 fb_delay_time_0
+Not supported.
 .\"
 
 .SH FILES
