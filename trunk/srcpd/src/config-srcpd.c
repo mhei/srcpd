@@ -151,8 +151,8 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
 
     while (child != NULL) {
 
-        if ((xmlStrcmp(child->name, BAD_CAST "text") == 0) ||
-            (xmlStrcmp(child->name, BAD_CAST "comment") == 0)) {
+        if ((xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) ||
+            (xmlStrncmp(child->name, BAD_CAST "comment", 7) == 0)) {
             /* just do nothing, it is only formatting text or a comment */
         }
 

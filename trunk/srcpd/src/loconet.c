@@ -71,9 +71,12 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     strcpy(buses[busnumber].description, "GA FB POWER DESCRIPTION");
 
     while (child != NULL) {
-        if (xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) {
-            /* just do nothing, it is only a comment */
+
+        if ((xmlStrncmp(child->name, BAD_CAST "text", 4) == 0) ||
+            (xmlStrncmp(child->name, BAD_CAST "comment", 7) == 0)) {
+            /* just do nothing, it is only formatting text or a comment */
         }
+
         else if (xmlStrcmp(child->name, BAD_CAST "loconetID") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
