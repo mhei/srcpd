@@ -89,6 +89,7 @@ static const unsigned char BIT_VALUES[] =
     { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
 
 #define __ddl_s88 ((DDL_S88_DATA *) buses[busnumber].driverdata)
+#define __ddl_s88t ((DDL_S88_DATA *) buses[btd->bus].driverdata)
 
 int readconfig_DDL_S88(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
@@ -453,8 +454,8 @@ void *thr_sendrec_S88(void *v)
     if (sleepusec < S88REFRESH * 1000)
         sleepusec = S88REFRESH * 1000;
 
-    syslog_bus(btd->bus, DBG_INFO, "DDL_S88 bus startet (device = %s).",
-        buses[btd->bus].device.file.path);
+    syslog_bus(btd->bus, DBG_INFO, "DDL_S88 bus startet (device = %04x).",
+            __ddl_s88t->port);
 
     while (1) {
         if (buses[btd->bus].power_changed == 1) {
