@@ -122,6 +122,8 @@ int init_gl_LOOPBACK(gl_state_t * gl)
     switch (gl->protocol) {
         case 'L':
         case 'S':              /*TODO: implement range checks */
+            return (gl->n_fs == 31) ? SRCP_OK : SRCP_WRONGVALUE;
+            break;
         case 'P':
             return SRCP_OK;
             break;
