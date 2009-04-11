@@ -488,6 +488,10 @@ int syncSXbus(bus_t busnumber)
                                 "Selectrix on bus %ld, no synchronisation responce.",
                                 busnumber);
                         syncError = 1;
+                } else {
+                        syslog_bus(busnumber, DBG_WARN,
+                                "Selectrix on bus %ld, synchronisation in %d times.",
+                                busnumber, 500 - syncWait);
                 }
         } else {
                 syslog_bus(busnumber, DBG_DEBUG,
