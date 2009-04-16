@@ -18,7 +18,7 @@ A GL on SCRP is on a Maerklin/Intellibox system the same as on a
 Selectrix system. It is on all systems a multiple bit command. A
 Selectrix decoder accepts the following command:
 
-- Bit 4 – bit 0:	Speed of the engine (0 = stop, 31 = max speed)
+- Bit 4 ï¿½ bit 0:	Speed of the engine (0 = stop, 31 = max speed)
 - Bit 5:		Direction of the engine (0 = forward, 1 = backward)
 - Bit 6:		Light on/off (0 = off, 1 = on)
 - Bit 7:		Function on/off (0 = off, 1 = on) 
@@ -70,7 +70,10 @@ have to be given to the SCRP server. This is done by the command
 
 addressfeedback:  Physical address on SX-bus
 numberfeedback:    Number from 1 to 112. There may be gaps between the
-                   numbers. 
+                   numbers.
+if addressfeedback is -1 then the configuration from the xml file is taken 
+and the process of obtaining feedback status is started. No further 
+initialisation is requered.
 
 The feedbacks are checked by:
 
@@ -107,7 +110,7 @@ Used hardware:
 66820: Feedback controller (address 100)
 66820: Feedback controller (address 101)
 66828: Function decoder    (address 50, switches)
-66828: Function decoder    (address 51, 4 times a 3 expect signals
+66828: Function decoder    (address 51, 4 times a 3 aspect signals
                            (green-yellow-red))
 
 Two trains on the layout with decoders at addresses 5 and 10.
@@ -126,10 +129,14 @@ Configuration file for srcpd:
   </bus>
   <bus number="1">
     <selectrix>
-      <number_gl>2</number_gl>
-      <number_ga>2</number_ga>
+      <number_gl>10</number_gl>
+      <number_ga>112</number_ga>
       <number_fb>2</number_fb>
-      <mode_cc2000>yes</mode_cc2000>
+      <controller>CC2000</controller>
+      <ports>
+        <port>100</port>
+        <port>101</port>
+      </ports>
     </selectrix>
     <device>/dev/ttyS0</device>
     <use_watchdog>yes</use_watchdog>
@@ -151,8 +158,7 @@ SRCPD command: INIT 1 GA 50
 SRCPD command: INIT 1 GA 51
 
 FB:
-SRCPD command: INIT 1 FB 100 S 1
-SRCPD command: INIT 1 FB 101 S 2
+SRCPD command: INIT 1 FB -1 S 0
 
 Driving (srcpd):
 
