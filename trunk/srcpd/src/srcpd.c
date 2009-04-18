@@ -217,11 +217,11 @@ void install_signal_handlers()
  * daemonize process
  * this is from "UNIX Network Programming, W. R. Stevens et al."
  */
-int daemon_init()
+int daemon_init(int flag)
 {
     int i;
     pid_t pid;
-
+    if(!flag) { return(0); }
     if ((pid = fork()) < 0)
         return (-1);
     else if (pid)
@@ -265,7 +265,7 @@ int main(int argc, char **argv)
 {
     int sleep_ctr;
     char c;
-
+    int daemonflag = 1;
     /* First: Init the device data used internally */
     startup_GL();
     startup_GA();
@@ -281,7 +281,7 @@ int main(int argc, char **argv)
 
     /* read command line parameters */
     opterr = 0;
-    while ((c = getopt(argc, argv, "f:hv")) != EOF) {
+    while ((c = getopt(argc, argv, "f:hvn")) != EOF) {
         switch (c) {
             case 'f':
                 if (strlen(optarg) < MAXPATHLEN - 1)
@@ -291,6 +291,9 @@ int main(int argc, char **argv)
                 printf(WELCOME_MSG);
                 exit(1);
                 break;
+	    case 'n':
+		daemonflag = 0;
+		break;
             case 'h':
                 printf(WELCOME_MSG);
                 printf("Usage: srcpd -f <conffile> -v -h\n\n");
@@ -298,6 +301,7 @@ int main(int argc, char **argv)
                 printf("  -v  Show program version and quit.\n");
                 printf("  -f  Use another config file (default %s).\n",
                      conffile);
+		printf("  -n  Do not daemonize at startup.\n");
                 printf("  -h  Show this help text and quit.\n");
                 exit(1);
                 break;
@@ -319,7 +323,7 @@ int main(int argc, char **argv)
     }
 
     /*daemonize process*/
-    if (0 != daemon_init()) {
+    if (0 != daemon_init(daemonflag)) {
         syslog_bus(0, DBG_ERROR, "Daemonization failed!\n");
         exit(1);
     }
