@@ -973,7 +973,6 @@ void *thr_feedbackSelectrix(void *v)
                                 if (__selectrix->max_address > addr) {
                                         /* Let thread process a feedback */
                                         __selectrix->stateInterface = 1;
-                                        resume_bus_thread(busnumber);
                                 } else {
                                         syslog_bus(busnumber, DBG_INFO,
                                                 "Selectrix "
