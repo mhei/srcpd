@@ -108,7 +108,7 @@ void write_port(bus_t bus, unsigned char b)
         if (i < 0) {
                 /* Error reported from write */
                 syslog_bus(bus, DBG_ERROR, 
-                        "write_port() failed: %s (errno = %d)\n",
+                        "write_port(): Failed for %s (errno = %d)\n",
                         strerror(errno), errno);
         }
         if (i == 0) {
@@ -136,8 +136,8 @@ unsigned int read_port(bus_t bus)
                 /* Error reading port */
                 if (i < 0) {
                         syslog_bus(bus, DBG_ERROR,
-                            "read_port() failed: %s (errno = %d)\n",
-                            strerror(errno), errno);
+                                "read_port(): Failed for %s (errno = %d)\n",
+                                strerror(errno), errno);
                         in = 0x200 + errno;	/* Result all blocked */
                 }
 
@@ -163,7 +163,7 @@ int check_port(bus_t bus)
         result = ioctl(buses[bus].device.file.fd, FIONREAD, &temp);
         if (result == -1) {
             syslog_bus(bus, DBG_ERROR,
-                    "ioctl() failed: %s (errno = %d)\n",
+                    "ioctl() failed for %s (errno = %d)\n",
                     strerror(errno), errno);
         }
         return (temp > 0 ? -1 : 0);
