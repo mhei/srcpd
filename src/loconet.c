@@ -836,6 +836,7 @@ void *thr_sendrec_LOCONET(void *v)
             } else if (!queue_GA_isempty(btd->bus)) {
                 ga_state_t gatmp;
                 dequeueNextGA(btd->bus, &gatmp);
+		addr = gatmp.id - 1;
                 ln_packetlen = 4;
                 ln_packet[0] = OPC_SW_REQ;
 
