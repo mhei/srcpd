@@ -321,7 +321,7 @@ static int init_ga_LOCONET(ga_state_t * ga)
 
 int init_bus_LOCONET(bus_t busnumber)
 {
-    static char* protocols = "N";
+    static char* protocols = "L";
     buses[busnumber].protocols = protocols;
     __loconet->sent_packets = __loconet->recv_packets = 0;
     syslog_bus(busnumber, DBG_INFO, "Loconet init: bus #%d, debug %d",
@@ -729,8 +729,12 @@ void *thr_sendrec_LOCONET(void *v)
                         syslog_bus(btd->bus, DBG_DEBUG,
                                "slot %d still unknown", addr);
 		    } else {
+		        gl_state_t gltmp;
                         syslog_bus(btd->bus, DBG_DEBUG,
-                               "decoder address %d found in slot %d", __loconett->slotmap[addr], addr);
+                               "GL decoder address %d found in slot %d", __loconett->slotmap[addr], addr);
+		        cacheGetGL(btd->bus, __loconett->slotmap[addr], &gltmp);
+		        gltmp.speed = speed;
+		        cacheSetGL(btd->bus, __loconett->slotmap[addr], gltmp);
 		    }
                     break;
                 case OPC_LOCO_DIRF:    /* A1 */
