@@ -1,7 +1,3 @@
-/*
- * Vorliegende Software unterliegt der General Public License,
- * Version 2, 1991. (c) Matthias Trute & the srcpd team, 2000-2003.
- */
 
 #include <string.h>
 #include <stdio.h>
@@ -34,9 +30,6 @@ static int queue_isfull(bus_t busnumber);
  */
 int isValidGL(bus_t busnumber, int addr)
 {
-    syslog_bus(busnumber, DBG_DEBUG, "GL VALID: %d %d (from %d to %d)",
-            busnumber, addr, 1, gl[busnumber].numberOfGl /*- 1*/);
-
     /* in bus 0 GL are not allowed */
     /* only num_buses are configured */
     /* number of GL is set */
