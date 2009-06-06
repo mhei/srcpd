@@ -646,9 +646,10 @@ void *thr_sendrec_LOCONET(void *v)
     unsigned int addr, timeoutcnt;
     unsigned int startup_slot_index = 0; /* read the slot numbers upon start up */
     /*int code, src, dst, data[8], i;*/
-    int value, port, speed;
+    int value, port, speed, tmp;
     char msg[110];
     ga_state_t gatmp;
+    gl_state_t gltmp;
     int last_cancel_state, last_cancel_type;
 
     bus_thread_t *btd = (bus_thread_t *) malloc(sizeof(bus_thread_t));
@@ -729,7 +730,6 @@ void *thr_sendrec_LOCONET(void *v)
                         syslog_bus(btd->bus, DBG_DEBUG,
                                "slot %d still unknown", addr);
 		    } else {
-		        gl_state_t gltmp;
                         syslog_bus(btd->bus, DBG_DEBUG,
                                "GL decoder address %d found in slot %d", __loconett->slotmap[addr], addr);
 		        cacheGetGL(btd->bus, __loconett->slotmap[addr], &gltmp);
@@ -739,12 +739,20 @@ void *thr_sendrec_LOCONET(void *v)
                     break;
                 case OPC_LOCO_DIRF:    /* A1 */
                     addr = ln_packet[1];
-                    speed = ln_packet[2];
-                    syslog_bus(btd->bus, DBG_DEBUG,
-                               "New flags for loco in slot (OPC_LOCO_DIRF:  /* A1 */) #%d: %d",
-                               addr, speed);
+		    if(__loconett->slotmap[addr]==0) {
+                        syslog_bus(btd->bus, DBG_DEBUG,
+                               "slot %d still unknown", addr);
+		    } else {
+                        syslog_bus(btd->bus, DBG_DEBUG,
+                               "GL decoder address %d found in slot %d", __loconett->slotmap[addr], addr);
+		        cacheGetGL(btd->bus, __loconett->slotmap[addr], &gltmp);
+			tmp = ln_packet[2];
+			/* bit shuffling */
+			tmp = (tmp & 0x0010)>>4 | (tmp & 0x000f) <<1;
+			gltmp.funcs = tmp;
+		        cacheSetGL(btd->bus, __loconett->slotmap[addr], gltmp);
+		    }
                     break;
-
                 case OPC_SW_REP:       /* B1 */
                     break;
                 case OPC_INPUT_REP:    /* B2 */
@@ -761,11 +769,20 @@ void *thr_sendrec_LOCONET(void *v)
 			    speed = speed_list[speed & 0x0007];
 				
                             syslog_bus(btd->bus, DBG_DEBUG,
-                                       "OPC_SL_RD_DATA: /* E7 %0X */ slot #%d: status=0x%0x addr=%d speed=%d",
+                                       "OPC_SL_RD_DATA: /* E7 %0X */ slot #%d: status=0x%0x addr=%d maxspeed=%d",
                                        ln_packet[1], ln_packet[2],
                                        ln_packet[3], addr, speed);
 			    __loconett -> slotmap[ln_packet[2]] = addr;
-			    cacheInitGL(btd->bus, addr, 'L', 1, speed, 9);
+			    if(!isInitializedGL(btd->bus, addr)) {
+	        		    cacheInitGL(btd->bus, addr, 'L', 1, speed, 9);
+			    }
+			    cacheGetGL(btd->bus, addr, &gltmp);
+			    gltmp.n_fs  = speed;
+			    gltmp.speed = ln_packet[5];
+			    tmp = ln_packet[6] | ln_packet[7]<<5;
+			    tmp = (tmp & 0x0010)>>4 | (tmp & 0x000f) <<1;
+			    gltmp.funcs = tmp;
+			    cacheSetGL(btd->bus, addr, gltmp);
                             break;
                         default:
                             syslog_bus(btd->bus, DBG_DEBUG,
@@ -775,7 +792,7 @@ void *thr_sendrec_LOCONET(void *v)
                     break;
                 default:
                     syslog_bus(btd->bus, DBG_DEBUG,
-                               "Unknown or not decoded Loconet Message (%x)",
+                               "Unknown or not decoded Loconet Message (0x%x)",
                                ln_packet[0]);
                     /* unknown Loconet packet received, ignored */
                     break;
@@ -860,7 +877,7 @@ void *thr_sendrec_LOCONET(void *v)
             } else {
 		/* send out a slot read message to collect the current state. Do this
 		   only once at startup time */
-		if(startup_slot_index<128) {
+		if(startup_slot_index<127) {
                     syslog_bus(btd->bus, DBG_DEBUG, "Loconet: requesting startup slot info %d",
                            startup_slot_index);
 		    ln_packetlen = 4;
