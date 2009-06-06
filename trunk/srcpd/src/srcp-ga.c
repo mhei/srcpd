@@ -1,23 +1,7 @@
-
 /*
- * Vorliegende Software unterliegt der General Public License,
- * Version 2, 1991. (c) Matthias Trute, 2000-2001.
- *
  * This software is published under the restrictions of the
  * GNU License Version2
  *
- * 2002-12-29 Manuel Borchers
- *            - added ga[busnumber].gastate[addr].locked_by = 0 to the init-
- *              function, because lockid = 0 should mean no lock; without
- *              this init it returned -1
- *
- * Ostern 2002, Matthias Trute
- *            - echte Kommandoqueue anstelle der Vormerkungen.
- *
- * 04.07.2001 Frank Schmischke
- *            - Feld fr Vormerkungen wurde auf 50 reduziert
- *            - Position im Feld fr Vormerkung ist jetzt unabh�gig von der
- *              Decoderadresse
  */
 
 #include <stdlib.h>
