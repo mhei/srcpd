@@ -691,7 +691,7 @@ void *thr_sendrec_LOCONET(void *v)
 		case OPC_LONG_ACK:
                     syslog_bus(btd->bus, DBG_DEBUG,
                                "Infomational: LONG ACK for command 0x%0x: 0x%0x",
-                               ln_packet[1], ln_packet[2]);
+                               ln_packet[1]==0?ln_packet[1]:ln_packet[1]|0x0080, ln_packet[2]);
 		    break;
                 case OPC_SW_REQ:       /* B0 */
                     addr = (ln_packet[1] | ((ln_packet[2] & 0x0f) << 7)) + 1;
@@ -790,6 +790,30 @@ void *thr_sendrec_LOCONET(void *v)
                                        ln_packet[1]);
                     }
                     break;
+		case OPC_WR_SL_DATA:
+                    switch (ln_packet[1]) {
+                        case 0x0e:
+			    if(ln_packet[2]==0x7b) {
+				int day, hour, minute, clkrate, clkstate;
+				clkrate = ln_packet[3];
+				clkstate = ln_packet[10] & 0x20;
+				if(!clkstate) {
+				    day = ln_packet[9];
+				    minute = ( (256 - ln_packet[6]) & 0x7f) % 60;
+				    hour = ((256- ln_packet[8]) & 0x7f) % 24;
+				    hour = (24-hour)%24;
+				    minute=(60-minute)%60;
+                            	    syslog_bus(btd->bus, DBG_DEBUG,
+                                       "fast clock update: day %d %02d:%02d",day, hour, minute);
+				} else {
+				    syslog_bus(btd->bus, DBG_DEBUG, "clock frozen");
+				}
+			    }
+			    break;
+			default:
+			    ;
+		    }
+		    break;
                 default:
                     syslog_bus(btd->bus, DBG_DEBUG,
                                "Unknown or not decoded Loconet Message (0x%x)",
