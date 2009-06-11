@@ -84,6 +84,17 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                 xmlFree(txt);
             }
         }
+        else if (xmlStrcmp(child->name, BAD_CAST "getTIME") == 0) {
+            txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+            if (txt != NULL) {
+                if (xmlStrcmp(txt, BAD_CAST "yes") == 0) {
+                    __loconet->flags |= LN_FLAG_GETTIME;
+                    __loconet->flags &= ~LN_FLAG_GETTIME;
+                }
+                xmlFree(txt);
+            }
+        }
+
         else if (xmlStrcmp(child->name, BAD_CAST "ms100") == 0) {
 #ifdef HAVE_LINUX_SERIAL_H
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
@@ -124,7 +135,6 @@ static int cacheGetSlotNumberforAddr(bus_t busnumber, unsigned int addr) {
     int i;
     syslog_bus(busnumber, DBG_DEBUG, "looking up slot number for address %d", addr);
     for (i=1;i<128;i++) {
-        syslog_bus(busnumber, DBG_DEBUG, "slot %d has address %d", i, __loconet->slotmap[i]);
 	if(__loconet->slotmap[i]==addr) {
 	    syslog_bus(busnumber, DBG_DEBUG, "found slot %d for address %d", i, addr);
 	    return i;
@@ -321,7 +331,7 @@ static int init_ga_LOCONET(ga_state_t * ga)
 
 int init_bus_LOCONET(bus_t busnumber)
 {
-    static char* protocols = "L";
+    static char* protocols = "LPMN";
     buses[busnumber].protocols = protocols;
     __loconet->sent_packets = __loconet->recv_packets = 0;
     syslog_bus(busnumber, DBG_INFO, "Loconet init: bus #%d, debug %d",
@@ -496,7 +506,7 @@ static int ln_read_lbserver(bus_t busnumber, unsigned char *cmd, int len)
             int pktlen = len / 3;
             int i;
             char *d;
-            syslog_bus(busnumber, DBG_DEBUG, " * message '%s' %d bytes",
+            syslog_bus(busnumber, DBG_DEBUG, " * got message '%s' %d bytes",
                        line + 7, pktlen);
             for (i = 0; i < pktlen; i++) {
                 cmd[i] = strtol(line + 7 + 3 * i, &d, 16);
@@ -671,7 +681,7 @@ void *thr_sendrec_LOCONET(void *v)
         memset(ln_packet, 0, sizeof(ln_packet));
         /* first action is always a read _from_ Loconet */
         if ((ln_packetlen = ln_read(btd->bus, ln_packet,
-                                    sizeof(ln_packet))) > 0) {
+                                    sizeof(ln_packet))) > 1) {
 
             switch (ln_packet[0]) {
                     /* basic operations, 2byte Commands on Loconet */
@@ -782,7 +792,7 @@ void *thr_sendrec_LOCONET(void *v)
                             break;
                         default:
                             syslog_bus(btd->bus, DBG_DEBUG,
-                                       "unknown OPC_SL_RD_DATA: /* E7 0x%0X */",
+                                       "Unknown or not decoded Loconet Message OPC_SL_RD_DATA: /* 0x%0X */",
                                        ln_packet[1]);
                     }
                     break;
@@ -801,19 +811,27 @@ void *thr_sendrec_LOCONET(void *v)
 				    minute=(60-minute)%60;
                             	    syslog_bus(btd->bus, DBG_DEBUG,
                                        "fast clock update: day %d %02d:%02d",day, hour, minute);
+				    if(__loconett->flags & LN_FLAG_GETTIME == LN_FLAG_GETTIME) {
+					    initTIME(clkrate, 1);
+					    setTIME(day, hour, minute,0);
+				    }
 				} else {
 				    syslog_bus(btd->bus, DBG_DEBUG, "clock frozen");
 				}
 			    }
 			    break;
 			default:
+                            syslog_bus(btd->bus, DBG_DEBUG,
+                                       "Unknown or not decoded Loconet Message OPC_WR_SL_DATA: /* 0x%0X */",
+                                       ln_packet[1]);
+
 			    ;
 		    }
 		    break;
                 default:
                     syslog_bus(btd->bus, DBG_DEBUG,
-                               "Unknown or not decoded Loconet Message (0x%0X)",
-                               ln_packet[0]);
+                               "Unknown or not decoded Loconet Message (0x%0X), packet length is %d bytes",
+                               ln_packet[0], ln_packetlen);
                     /* unknown Loconet packet received, ignored */
                     break;
             }
