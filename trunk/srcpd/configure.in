@@ -90,7 +90,7 @@ if test "x$enable_debug" = "xyes"; then
    AC_MSG_RESULT(debug)
 else
    if test "x$CFLAGS" = "x"; then
-      CFLAGS="-O2 -Wall"
+      CFLAGS="-O2 -Wall -Wextra"
    fi
    AC_MSG_RESULT(release)
 fi

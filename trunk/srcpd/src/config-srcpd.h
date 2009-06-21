@@ -28,7 +28,6 @@
 #define _CONFIG_SRCPD_H
 
 #include <termios.h>
-#include <sys/param.h>
 
 /*due to cross references, this types are defined here*/
 typedef unsigned long int bus_t;

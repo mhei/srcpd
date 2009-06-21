@@ -1,3 +1,7 @@
+2009-06-21 Guido Scholz <guido.scholz@bayernline.de>
+	* config-srcpd.*, io.*: Removed sys/param.h dependency. Fixed
+	compiler warning.
+
 2009-01-31 Guido Scholz <guido.scholz@bayernline.de>
 	* zimo.c: Support for GA switching added. Thread event loop
 	design cleaned up. New Copyright/License header according to GPL
