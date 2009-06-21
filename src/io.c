@@ -28,7 +28,6 @@
 #include <stdbool.h>
 #include <string.h>
 #include <sys/ioctl.h>
-#include <unistd.h>
 
 #ifdef __CYGWIN__
 #include <sys/socket.h> /*for FIONREAD*/

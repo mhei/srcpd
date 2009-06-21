@@ -82,16 +82,17 @@ int bus_has_devicegroup(bus_t bus, int dg)
   @par Input: const char protocol the protocol
   @return SRCP_OK i.e. the protocol is found, else SRCP Error code */
 int bus_supports_protocol(bus_t busnumber, const char protocol) {
-  int i;
-  if (buses[busnumber].protocols) {
-    char const* protocols = buses[busnumber].protocols;
-    for (i=0; i<strlen(protocols); i++ ) {
-      if (protocols[i] == protocol) {
-        return SRCP_OK;
-      }
+    size_t i;
+
+    if (buses[busnumber].protocols) {
+        char const* protocols = buses[busnumber].protocols;
+        for (i = 0; i < strlen(protocols); i++ ) {
+            if (protocols[i] == protocol) {
+                return SRCP_OK;
+            }
+        }
     }
-  }
-  return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
+    return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
 }
 
 static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
