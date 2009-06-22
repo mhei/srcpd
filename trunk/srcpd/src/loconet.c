@@ -14,7 +14,7 @@
 
 #include "config.h"
 #ifdef HAVE_LINUX_SERIAL_H
-#include "linux/serial.h"
+#include <linux/serial.h>
 #else
 #warning "MS100 support for Linux only!"
 #endif

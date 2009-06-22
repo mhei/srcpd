@@ -15,12 +15,14 @@
 *         2002-2005 by Manuel Borchers <manuel@matronix.de>
 *
 */
+
+#include "config.h"
+
 #ifdef linux
 
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
-#include <linux/types.h>
 
 #ifdef HAVE_LINUX_I2C_H
 #include <linux/i2c.h>
@@ -49,7 +51,7 @@
 #define __i2cdev ((I2CDEV_DATA*)buses[busnumber].driverdata)
 
 
-static int write_PCF8574(bus_t bus, int addr, __u8 byte)
+static int write_PCF8574(bus_t bus, int addr, uint8_t byte)
 {
 
     int busfd = buses[bus].device.file.fd;
