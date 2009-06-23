@@ -57,7 +57,7 @@ fi
 dnl Checks for host dependend header files.
 case $host in
   *-*-linux*)
-    AC_CHECK_HEADERS(sys/io.h linux/serial.h linux/lp.h linux/types.h \
+    AC_CHECK_HEADERS(sys/io.h linux/serial.h linux/lp.h \
                      linux/i2c.h linux/i2c-dev.h, ,
                  AC_MSG_ERROR(essential header file is missing))
     ;;
