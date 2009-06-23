@@ -28,6 +28,7 @@
 #include "srcp-sm.h"
 #include "srcp-power.h"
 #include "srcp-server.h"
+#include "srcp-time.h"
 #include "srcp-info.h"
 #include "srcp-session.h"
 #include "srcp-error.h"
@@ -811,7 +812,7 @@ void *thr_sendrec_LOCONET(void *v)
 				    minute=(60-minute)%60;
                             	    syslog_bus(btd->bus, DBG_DEBUG,
                                        "fast clock update: day %d %02d:%02d",day, hour, minute);
-				    if(__loconett->flags & LN_FLAG_GETTIME == LN_FLAG_GETTIME) {
+				    if ((__loconett->flags & LN_FLAG_GETTIME) == LN_FLAG_GETTIME) {
 					    initTIME(clkrate, 1);
 					    setTIME(day, hour, minute,0);
 				    }
