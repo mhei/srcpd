@@ -23,7 +23,6 @@
 #include <unistd.h>
 
 #ifdef linux
-  #include <linux/lp.h>
   #include <sys/io.h>
 #else
   #ifdef __CYGWIN__
