@@ -30,7 +30,6 @@ email                : frank.schmischke@t-online.de
 #include <unistd.h>
 
 #ifdef linux
-#include <linux/serial.h>
 #include <sys/io.h>
 #endif
 

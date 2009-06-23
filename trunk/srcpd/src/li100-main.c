@@ -16,7 +16,6 @@ email                : frank.schmischke@t-online.de
  ***************************************************************************/
 
 #ifdef linux
-#include <linux/serial.h>
 #include <sys/io.h>
 #endif
 
