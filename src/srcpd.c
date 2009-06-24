@@ -41,7 +41,6 @@ fd_set rfds;
 int maxfd;
 char conffile[MAXPATHLEN];
 
-extern const char *WELCOME_MSG;
 extern char PIDFILENAME;
 
 
