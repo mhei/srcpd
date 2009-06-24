@@ -18,7 +18,12 @@
 #include <sys/param.h>
 
 #include "config-srcpd.h" /*for bus_t*/
+#include "config.h" /*for VERSION*/
 
+
+/* SRCP server welcome message */
+static const char WELCOME_MSG[] = 
+    "srcpd V" VERSION "; SRCP 0.8.3; SRCPOTHER 0.8.4-wip\n";
 
 typedef struct _SERVER_DATA {
     unsigned short int TCPPORT;

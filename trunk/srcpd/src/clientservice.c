@@ -23,11 +23,7 @@
 #include "srcp-info.h"
 #include "srcp-server.h"
 #include "syslogmessage.h"
-#include "config.h" /*for VERSION*/
 
-/* SRCP server welcome message */
-const char *WELCOME_MSG =
-    "srcpd V" VERSION "; SRCP 0.8.3; SRCPOTHER 0.8.4-wip\n";
 
 
 /* Cleanup routine for network client thread. */
