@@ -282,7 +282,7 @@ int main(int argc, char **argv)
     startup_SERVER();
     startup_SESSION();
 
-    sprintf(conffile, "%s/srcpd.conf", SYSCONFDIR);
+    snprintf(conffile, sizeof(conffile), "%s/srcpd.conf", SYSCONFDIR);
 
     /* read command line parameters */
     opterr = 0;

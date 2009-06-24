@@ -242,7 +242,7 @@ static void handle_power_command(bus_t bus)
     char msg[5];
 
     buses[bus].power_changed = 0;
-    sprintf(msg, "S%c\r", (buses[bus].power_state) ? 'E' : 'A');
+    snprintf(msg, sizeof(msg), "S%c\r", (buses[bus].power_state) ? 'E' : 'A');
     writeString(bus, msg, 0);
     infoPower(bus, msg);
     enqueueInfoMessage(msg);
@@ -266,7 +266,8 @@ static void handle_sm_command(bus_t bus)
             case SET:
                 syslog_bus(bus, DBG_INFO, "SM SET #%d %02X",
                         smtmp.typeaddr, smtmp.value);
-                sprintf(msg, "RN%02X%02X\r", smtmp.typeaddr, smtmp.value);
+                snprintf(msg, sizeof(msg), "RN%02X%02X\r",
+                        smtmp.typeaddr, smtmp.value);
                 writeString(bus, msg, 0);
 
                 session_lock_wait(bus);
@@ -284,7 +285,7 @@ static void handle_sm_command(bus_t bus)
                 break;
             case GET:
                 syslog_bus(bus, DBG_INFO, "SM GET #%d", smtmp.typeaddr);
-                sprintf(msg, "Q%02X\r", smtmp.typeaddr);
+                snprintf(msg, sizeof(msg), "Q%02X\r", smtmp.typeaddr);
                 writeString(bus, msg, 0);
                 
                 session_lock_wait(bus);
@@ -332,7 +333,7 @@ static void handle_gl_command(bus_t bus)
     databyte3 = '\0';
 
     if (addr > 128) {
-        sprintf(msg, "E%04X\r", addr);
+        snprintf(msg, sizeof(msg), "E%04X\r", addr);
         syslog_bus(bus, DBG_INFO, "%s", msg);
         writeString(bus, msg, 0);
         addr = 0;
@@ -349,7 +350,7 @@ static void handle_gl_command(bus_t bus)
         }
     }
     if (addr > 0) {
-        sprintf(msg, "F%c%02X%02X%02X%02X%02X\r", glakt.protocol,
+        snprintf(msg, sizeof(msg), "F%c%02X%02X%02X%02X%02X\r", glakt.protocol,
                 addr, gltmp.speed, databyte1, databyte2, databyte3);
         syslog_bus(bus, DBG_INFO, "%s", msg);
         writeString(bus, msg, 0);
@@ -406,7 +407,8 @@ static void handle_ga_command(bus_t bus)
     if (gatmp.action != 0)
         databyte |= 0x08;
 
-    sprintf(msg, "M%c%02X%02X\r", gatmp.protocol, address, databyte);
+    snprintf(msg, sizeof(msg), "M%c%02X%02X\r", gatmp.protocol,
+            address, databyte);
     syslog_bus(bus, DBG_DEBUG, "MX1 message: %s", msg);
     writeString(bus, msg, 0);
 }

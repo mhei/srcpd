@@ -164,8 +164,8 @@ void* thr_doClient(void* v)
                 register_session(sn);
 
                 gettimeofday(&time, NULL);
-                sprintf(reply, "%lu.%.3lu 200 OK GO %ld\n", time.tv_sec,
-                        time.tv_usec / 1000, sn->session);
+                snprintf(reply, sizeof(reply), "%lu.%.3lu 200 OK GO %ld\n",
+                        time.tv_sec, time.tv_usec / 1000, sn->session);
 
                 sresult = writen(sn->socket, reply, strlen(reply));
                 if (-1 == sresult) {

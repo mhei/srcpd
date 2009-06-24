@@ -480,10 +480,11 @@ int start_session(session_node_t* sn)
 {
     char msg[1000];
     struct timeval akt_time;
+
     gettimeofday(&akt_time, NULL);
 
-    sprintf(msg, "%lu.%.3lu 101 INFO 0 SESSION %lu %s\n", akt_time.tv_sec,
-            akt_time.tv_usec / 1000, sn->session,
+    snprintf(msg, sizeof(msg), "%lu.%.3lu 101 INFO 0 SESSION %lu %s\n",
+            akt_time.tv_sec, akt_time.tv_usec / 1000, sn->session,
             (sn->mode == 1 ? "COMMAND" : "INFO"));
     enqueueInfoMessage(msg);
 
@@ -506,8 +507,8 @@ int stop_session(sessionid_t sid)
     unlock_ga_bysessionid(sid);
     unlock_gl_bysessionid(sid);
 
-    sprintf(msg, "%lu.%.3lu 102 INFO 0 SESSION %lu\n", akt_time.tv_sec,
-            akt_time.tv_usec / 1000, sid);
+    snprintf(msg, sizeof(msg), "%lu.%.3lu 102 INFO 0 SESSION %lu\n",
+            akt_time.tv_sec, akt_time.tv_usec / 1000, sid);
     enqueueInfoMessage(msg);
 
     return SRCP_OK;

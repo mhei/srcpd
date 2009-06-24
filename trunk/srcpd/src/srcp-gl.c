@@ -228,7 +228,7 @@ int cacheSetGL(bus_t busnumber, int addr, gl_state_t l)
         gl[busnumber].glstate[addr].n_func = l.n_func;
         gettimeofday(&gl[busnumber].glstate[addr].tv, NULL);
         if (gl[busnumber].glstate[addr].state == 2) {
-            sprintf(msg, "%lu.%.3lu 102 INFO %ld GL %d\n",
+            snprintf(msg, sizeof(msg), "%lu.%.3lu 102 INFO %ld GL %d\n",
                     gl[busnumber].glstate[addr].tv.tv_sec,
                     gl[busnumber].glstate[addr].tv.tv_usec / 1000,
                     busnumber, addr);

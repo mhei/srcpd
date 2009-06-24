@@ -546,9 +546,10 @@ ln_write_lbserver(long int busnumber, const unsigned char *cmd,
     unsigned char i;
     ssize_t result;
     char msg[256], tmp[10];
-    sprintf(msg, "SEND");
+    
+    snprintf(msg, sizeof(msg), "SEND");
     for (i = 0; i < len; i++) {
-        sprintf(tmp, " %02X", cmd[i]);
+        snprintf(tmp, sizeof(tmp), " %02X", cmd[i]);
         strcat(msg, tmp);
     }
     strcat(msg, "\r\n");
