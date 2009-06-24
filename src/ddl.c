@@ -1412,7 +1412,8 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                    strerror(result), result);
         /*What to do now*/
     }
-    sprintf(buf, "%c%c", utsBuffer.release[0], utsBuffer.release[2]);
+    snprintf(buf, sizeof(buf), "%c%c", utsBuffer.release[0],
+            utsBuffer.release[2]);
 
     if (atoi(buf) > 25) {
         __DDL->oslevel = 1;     /* kernel 2.6 or later */

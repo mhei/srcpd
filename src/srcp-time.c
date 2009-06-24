@@ -134,7 +134,7 @@ int termTIME()
     }
     
     gettimeofday(&current_time, NULL);
-    sprintf(msg, "%lu.%.3lu 102 INFO 0 TIME\n",
+    snprintf(msg, sizeof(msg), "%lu.%.3lu 102 INFO 0 TIME\n",
             current_time.tv_sec, current_time.tv_usec / 1000);
     enqueueInfoMessage(msg);
 

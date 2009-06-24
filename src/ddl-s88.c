@@ -558,7 +558,7 @@ int FBSD_ioperm(int Port, int KeineAhnung, int DesiredAccess,
     if (found == 0)
         return -1;
 
-    sprintf(DevName, "/dev/ppi%d", i);
+    snprintf(DevName, sizeof(DevName), "/dev/ppi%d", i);
 
     Fd = open(DevName, O_RDWR);
 
