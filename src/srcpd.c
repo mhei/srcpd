@@ -218,9 +218,11 @@ void install_signal_handlers()
  */
 int daemon_init(int flag)
 {
-    int i;
+    int i, result;
     pid_t pid;
-    if(!flag) { return(0); }
+    
+    if (!flag) { return(0); }
+
     if ((pid = fork()) < 0)
         return (-1);
     else if (pid)
@@ -243,7 +245,11 @@ int daemon_init(int flag)
     /* child 2 continues... */
 
     /* change working directory */
-    chdir("/");
+    result = chdir("/");
+    if (-1 == result) {
+        printf("chdir() failed: %s (errno = %d)\n",
+                strerror(errno), errno);
+    }
 
     /* close off file descriptors */
     for (i = 0; i < MAXFD; i++)
