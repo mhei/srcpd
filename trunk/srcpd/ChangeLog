@@ -1,6 +1,7 @@
 2009-06-24 Guido Scholz <guido.scholz@bayernline.de>
 	* clientservice.c, srcp-server.h, srcpd.c: Improved server
 	message string handling.
+	* srcpd.c: Report error, if chdir() fails.
 
 2009-06-21 Guido Scholz <guido.scholz@bayernline.de>
 	* config-srcpd.*, io.*: Removed sys/param.h dependency. Fixed
