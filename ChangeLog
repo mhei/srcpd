@@ -1,4 +1,8 @@
 2009-06-28 Matthias Trute <mtrute@users.sourceforge.net>
+	* README.loconet: New document that describes some
+	loconet specific stuff.
+
+2009-06-28 Matthias Trute <mtrute@users.sourceforge.net>
 	* loconet.c: improved loconet communication, internal code 
 	cleanups
 
