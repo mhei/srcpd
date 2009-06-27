@@ -67,9 +67,8 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     __loconet->number_gl = 9999;        /* DCC address range */
     __loconet->loconetID = 0x50;        /* Loconet ID */
     memset(__loconet->slotmap, 0, sizeof(__loconet->slotmap) );
-    __loconet->flags = LN_FLAG_ECHO;
 
-    strcpy(buses[busnumber].description, "GA GL FB POWER DESCRIPTION");
+    strcpy(buses[busnumber].description, "GA GL FB POWER");
 
     while (child != NULL) {
 
@@ -102,7 +101,6 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
             if (txt != NULL) {
                 if (xmlStrcmp(txt, BAD_CAST "yes") == 0) {
                     __loconet->flags |= LN_FLAG_MS100;
-                    __loconet->flags &= ~LN_FLAG_ECHO;
                 }
                 xmlFree(txt);
             }
@@ -359,26 +357,6 @@ static unsigned char ln_checksum(const unsigned char *cmd, int len)
     return chksum;
 }
 
-static int
-ln_isecho(bus_t busnumber, const unsigned char *ln_packet,
-          unsigned char ln_packetlen)
-{
-    int i;
-    /* do we check for echos? */
-    if ((__loconet->flags & LN_FLAG_ECHO) == 0) {
-        return false;
-    }
-
-    if (__loconet->ln_msglen == 0)
-        return false;
-    for (i = 0; i < ln_packetlen; i++) {
-        if (ln_packet[i] != __loconet->ln_message[i])
-            return false;
-    }
-
-    return true;
-}
-
 static int ln_read_serial(bus_t busnumber, unsigned char *cmd, int len)
 {
     int fd = buses[busnumber].device.file.fd;
@@ -445,16 +423,7 @@ static int ln_read_serial(bus_t busnumber, unsigned char *cmd, int len)
         }
 
         retval = pktlen;
-        if (ln_isecho(busnumber, cmd, pktlen)) {
-            __loconet->ln_msglen = 0;
-            syslog_bus(busnumber, DBG_DEBUG,
-                       "this is the echo of the last "
-                       "packet sent, clear to sent next command!");
-            retval = 0;         /* we ignore echos */
-        }
-        else {
-            __loconet->recv_packets++;
-        }
+        __loconet->recv_packets++;
     }
     else if (retval == -1) {
         syslog_bus(busnumber, DBG_ERROR,
@@ -507,8 +476,6 @@ static int ln_read_lbserver(bus_t busnumber, unsigned char *cmd, int len)
             int pktlen = len / 3;
             int i;
             char *d;
-            syslog_bus(busnumber, DBG_DEBUG, " * got message '%s' %d bytes",
-                       line + 7, pktlen);
             for (i = 0; i < pktlen; i++) {
                 cmd[i] = strtol(line + 7 + 3 * i, &d, 16);
                 /* syslog_bus(busnumber, DBG_DEBUG, " * %d %d ", i, cmd[i]); */
@@ -527,15 +494,20 @@ static int ln_read_lbserver(bus_t busnumber, unsigned char *cmd, int len)
 
 static int ln_read(bus_t busnumber, unsigned char *cmd, int len)
 {
+    int rc = 0;
     switch (buses[busnumber].devicetype) {
         case HW_FILENAME:
-            return ln_read_serial(busnumber, cmd, len);
+            rc=ln_read_serial(busnumber, cmd, len);
             break;
         case HW_NETWORK:
-            return ln_read_lbserver(busnumber, cmd, len);
+            rc=ln_read_lbserver(busnumber, cmd, len);
             break;
     }
-    return 0;
+    if ( rc>0 ) {
+	syslog_bus(busnumber, DBG_DEBUG, "received Loconet packet with OPC 0x%02X", cmd[0]);
+	syslog_bus(busnumber, DBG_DEBUG, " %s to send commands to loconet", cmd[0]&0x08?"block":"ok");
+    }
+    return rc;
 }
 
 
@@ -558,10 +530,6 @@ ln_write_lbserver(long int busnumber, const unsigned char *cmd,
         syslog_bus(busnumber, DBG_ERROR,
                    "Socket write failed: %s (errno = %d)\n",
                    strerror(errno), errno);
-
-    syslog_bus(busnumber, DBG_DEBUG,
-               "sent Loconet packet with OPC 0x%02x, %d bytes (%s)",
-               cmd[0], len, msg);
     __loconet->sent_packets++;
     __loconet->ln_msglen = 0;
     return 0;
@@ -576,9 +544,6 @@ ln_write_serial(bus_t busnumber, const unsigned char *cmd,
     for (i = 0; i < len; i++) {
         writeByte(busnumber, cmd[i], 0);
     }
-    syslog_bus(busnumber, DBG_DEBUG,
-               "sent Loconet packet with OPC 0x%02x, %d bytes", cmd[0],
-               len);
     __loconet->sent_packets++;
     __loconet->ln_msglen = len;
     memcpy(__loconet->ln_message, cmd, len);
@@ -588,6 +553,9 @@ ln_write_serial(bus_t busnumber, const unsigned char *cmd,
 static int
 ln_write(bus_t busnumber, const unsigned char *cmd, unsigned char len)
 {
+    syslog_bus(busnumber, DBG_DEBUG,
+               "sent Loconet packet with OPC 0x%02X, %d bytes", cmd[0],
+               len);
     switch (buses[busnumber].devicetype) {
         case HW_FILENAME:
             return ln_write_serial(busnumber, cmd, len);
@@ -638,6 +606,9 @@ static void end_bus_thread(bus_thread_t * btd)
     free(btd);
 }
 
+/* check if the loconet is available, there are two message transfers,
+ * that shall not be disturbed
+ */
 static int ln_sendmessage(bus_t  bus, int ln_packetlen, unsigned char *ln_packet) {
     ln_packet[ln_packetlen - 1] = ln_checksum(ln_packet, ln_packetlen - 1);
     if (ln_packet[0] != OPC_IDLE) {
@@ -647,15 +618,13 @@ static int ln_sendmessage(bus_t  bus, int ln_packetlen, unsigned char *ln_packet
     return 1;
 }
 
-static int speed_list[] = {28,28,14,128,28,0,0,128};
-
-
+/* static int speed_list[] = {28,28,14,128,28,0,0,128}; */
 
 void *thr_sendrec_LOCONET(void *v)
 {
     unsigned char ln_packet[128];       /* max length is coded with 7 bit */
     unsigned char ln_packetlen = 2;
-    unsigned int addr, timeoutcnt;
+    unsigned int addr, timeoutcnt, twomessageflag;
     unsigned int startup_slot_index = 1; /* read the slot numbers upon start up */
     /*int code, src, dst, data[8], i;*/
     int value, port, speed, tmp;
@@ -681,10 +650,11 @@ void *thr_sendrec_LOCONET(void *v)
         pthread_testcancel();
         buses[btd->bus].watchdog = 1;
         memset(ln_packet, 0, sizeof(ln_packet));
+	twomessageflag = 0;
         /* first action is always a read _from_ Loconet */
         if ((ln_packetlen = ln_read(btd->bus, ln_packet,
                                     sizeof(ln_packet))) > 1) {
-
+	    twomessageflag = (ln_packet[0] & 0x08)?0:1; /* block:ok */
             switch (ln_packet[0]) {
                     /* basic operations, 2byte Commands on Loconet */
                 case OPC_GPOFF:
@@ -702,7 +672,7 @@ void *thr_sendrec_LOCONET(void *v)
                     /* */
 		case OPC_LONG_ACK:
                     syslog_bus(btd->bus, DBG_DEBUG,
-                               "Infomational: LONG ACK for command 0x%0x: 0x%0x",
+                               "Infomational: LONG ACK for command 0x%0X: 0x%0X",
                                ln_packet[1]==0?ln_packet[1]:ln_packet[1]|0x0080, ln_packet[2]);
 		    break;
                 case OPC_SW_REQ:       /* B0 */
@@ -838,7 +808,7 @@ void *thr_sendrec_LOCONET(void *v)
                     break;
             }
         }
-        if (__loconett->ln_msglen == 0) {
+        if ( !twomessageflag && (ln_packetlen == 0)) {
             /* now we process the way back _to_ Loconet */
             ln_packet[0] = OPC_IDLE;
             ln_packetlen = 2;
@@ -866,8 +836,7 @@ void *thr_sendrec_LOCONET(void *v)
                     ln_packet[0] = OPC_LOCO_SPD;
                     ln_packet[1] = slot;
             	    ln_packet[2] = gltmp.speed + (gltmp.speed>0?1:0); /* speed step in loconet 1 is a emergency stop */
-	            ln_packet[ln_packetlen - 1] = ln_checksum(ln_packet, ln_packetlen - 1);
-            	    ln_write(btd->bus, ln_packet, ln_packetlen);
+            	    ln_sendmessage(btd->bus, ln_packetlen, ln_packet);
 		    syslog_bus(btd->bus, DBG_DEBUG, "Loconet: GL SET slot %d with addr %d to speed %d.", slot, addr, speed);
 		}
 
@@ -878,8 +847,7 @@ void *thr_sendrec_LOCONET(void *v)
             	    ln_packet[2] =  (gltmp.direction       ? 0: DIRF_DIR) +
             			   ((gltmp.funcs & 0x0001) ? DIRF_F0:0 ) +
             			   ((gltmp.funcs>>1) & 0x000f) ;
-	            ln_packet[ln_packetlen - 1] = ln_checksum(ln_packet, ln_packetlen - 1);
-            	    ln_write(btd->bus, ln_packet, ln_packetlen);
+            	    ln_sendmessage(btd->bus, ln_packetlen, ln_packet);
 		    syslog_bus(btd->bus, DBG_DEBUG, "Loconet: GL SET slot %d with addr %d to direction/funcs 0x%x.", slot, addr, ln_packet[2]);
 		}
                 if((gltmp.funcs&0x01e0) != (glcur.funcs & 0x01e0)) {
@@ -887,8 +855,7 @@ void *thr_sendrec_LOCONET(void *v)
                     ln_packet[0] = OPC_LOCO_SND;
                     ln_packet[1] = slot;
             	    ln_packet[2] = (gltmp.funcs >> 5)&0x000f;
-	            ln_packet[ln_packetlen - 1] = ln_checksum(ln_packet, ln_packetlen - 1);
-            	    ln_write(btd->bus, ln_packet, ln_packetlen);
+            	    ln_sendmessage(btd->bus, ln_packetlen, ln_packet);
 		    syslog_bus(btd->bus, DBG_DEBUG, "Loconet: GL SET slot %d with addr %d to sound funcs 0x%x.", slot, addr, ln_packet[2]);
 		}
 
@@ -924,29 +891,8 @@ void *thr_sendrec_LOCONET(void *v)
 	    	    ln_packet[2] = 0;
 		}
 	    }
-            ln_packet[ln_packetlen - 1] =
-                ln_checksum(ln_packet, ln_packetlen - 1);
-            if (ln_packet[0] != OPC_IDLE) {
-                ln_write(btd->bus, ln_packet, ln_packetlen);
-                timeoutcnt = 0;
-            }
-        } else {
-            syslog_bus(btd->bus, DBG_DEBUG,
-                       "Waiting for echo of last command (%d ms timeoutcount)",
-                       timeoutcnt);
-            if (usleep(100000) == -1) {
-                syslog_bus(btd->bus, DBG_ERROR,
-                        "usleep() failed: %s (errno = %d)\n",
-                        strerror(errno), errno);
-            }
-            timeoutcnt++;
-            if (timeoutcnt > 10) {
-                syslog_bus(btd->bus, DBG_DEBUG,
-                           "time out for reading echo, giving up");
-                __loconett->ln_msglen = 0;
-            }
-        }
-
+    	    ln_sendmessage(btd->bus, ln_packetlen, ln_packet);
+        } 
         /* wait 1 ms */
         if (usleep(1000) == -1) {
             syslog_bus(btd->bus, DBG_ERROR,
