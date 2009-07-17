@@ -465,6 +465,7 @@ static int ln_read_lbserver(bus_t busnumber, unsigned char *cmd, int len)
         /* client terminated connection */
         if (0 == result) {
            shutdown(fd, SHUT_RDWR);
+	   close(fd);
 	   buses[busnumber].devicestate = devFAIL;
            return 0;
            }
@@ -473,6 +474,7 @@ static int ln_read_lbserver(bus_t busnumber, unsigned char *cmd, int len)
         else if (-1 == result) {
 	    buses[busnumber].devicestate = devFAIL;
 	    shutdown(fd, SHUT_RDWR);
+	    close(fd);
             syslog_bus(busnumber, DBG_ERROR,
                        "Socket read failed: %s (errno = %d)\n",
                        strerror(errno), errno);
@@ -510,6 +512,7 @@ static int ln_read(bus_t busnumber, unsigned char *cmd, int len)
 {
     int rc = 0;
     while(buses[busnumber].devicestate != devOK) {
+	sleep(1);
 	init_lineLOCONET(busnumber);
     }
     switch (buses[busnumber].devicetype) {
@@ -545,6 +548,7 @@ ln_write_lbserver(long int busnumber, const unsigned char *cmd,
     if (result == -1) {
         buses[busnumber].devicestate = devFAIL;
 	shutdown(buses[busnumber].device.net.sockfd, SHUT_RDWR);
+	close(buses[busnumber].device.net.sockfd);
         syslog_bus(busnumber, DBG_ERROR,
                    "Socket write failed: %s (errno = %d)\n",
                    strerror(errno), errno);
