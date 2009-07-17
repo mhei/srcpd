@@ -299,29 +299,37 @@ static int init_lineLOCONET_lbserver(bus_t busnumber)
 
 static int init_lineLOCONET(bus_t busnumber)
 {
+    enum devicestates rc;
+    rc = devNONE;
     switch (buses[busnumber].devicetype) {
         case HW_FILENAME:
-            return init_lineLOCONET_serial(busnumber);
+            rc = init_lineLOCONET_serial(busnumber);
             break;
         case HW_NETWORK:
-            return init_lineLOCONET_lbserver(busnumber);
+            rc = init_lineLOCONET_lbserver(busnumber);
             break;
     }
-    return 0;
+    buses[busnumber].devicestate = rc;
+    return rc;
 }
 
 /**
- * cacheInitGL: modifies the gl data used to initialize the device
-
+ *
  */
 static int init_gl_LOCONET(gl_state_t * gl)
 {
+    /* this is a complex transaction 
+       1. send out a BF<hi><lo> Message. 
+       2. wait for the E7 response, if a B4 comes, the slot table is full, exit
+       3. check the slot status. If it is IN_USE or CONSISTED, mark the address
+          as (SRCP-)locked and exit
+       4. mark the slot as IN_USE with a BA<slot><slot> message
+    */
     return SRCP_OK;
 }
 
 /**
- * initGA: modifies the ga data used to initialize the device
-
+ * GA dont need an initialization
  */
 static int init_ga_LOCONET(ga_state_t * ga)
 {
@@ -381,10 +389,11 @@ static int ln_read_serial(bus_t busnumber, unsigned char *cmd, int len)
         do {
             result = read(fd, &c, 1);
             if (result == -1) {
+		buses[busnumber].devicestate = devFAIL;
                 syslog_bus(busnumber, DBG_ERROR,
                            "read() failed: %s (errno = %d)\n",
                            strerror(errno), errno);
-                /*TODO: appropriate action */
+		return 0;
             }
         }
         while (c < 0x80);
@@ -402,12 +411,13 @@ static int ln_read_serial(bus_t busnumber, unsigned char *cmd, int len)
             case 0xe0:
                 result = read(fd, &pktlen, 1);
                 if (result == -1) {
+		    buses[busnumber].devicestate = devFAIL;
                     syslog_bus(busnumber, DBG_ERROR,
                                "could not read the number of bytes in loconet packet: %s (errno = %d)\n",
                                strerror(errno), errno);
-                    /*TODO: appropriate action */
+		    return 0;
                 }
-                cmd[1] = pktlen;
+                cmd[1] = pktlen & 0x7f;
                 index = 2;
                 break;
         }
@@ -416,10 +426,11 @@ static int ln_read_serial(bus_t busnumber, unsigned char *cmd, int len)
 
         result = read(fd, &cmd[index], pktlen - 1);
         if (result == -1) {
+	    buses[busnumber].devicestate = devFAIL;
             syslog_bus(busnumber, DBG_ERROR,
                        "could not read the complete loconet packet. read() failed: %s (errno = %d)\n",
                        strerror(errno), errno);
-            /*TODO: appropriate action */
+	    return 0;
         }
 
         retval = pktlen;
@@ -452,17 +463,20 @@ static int ln_read_lbserver(bus_t busnumber, unsigned char *cmd, int len)
         result = socket_readline(fd, line, sizeof(line) - 1);
 
         /* client terminated connection */
-        /*if (0 == result) {
+        if (0 == result) {
            shutdown(fd, SHUT_RDWR);
+	   buses[busnumber].devicestate = devFAIL;
            return 0;
-           } */
+           }
 
         /* read errror */
-        /*else */ if (-1 == result) {
+        else if (-1 == result) {
+	    buses[busnumber].devicestate = devFAIL;
+	    shutdown(fd, SHUT_RDWR);
             syslog_bus(busnumber, DBG_ERROR,
                        "Socket read failed: %s (errno = %d)\n",
                        strerror(errno), errno);
-            return (-1);
+            return 0;
         }
 
         /* line may begin with
@@ -495,6 +509,9 @@ static int ln_read_lbserver(bus_t busnumber, unsigned char *cmd, int len)
 static int ln_read(bus_t busnumber, unsigned char *cmd, int len)
 {
     int rc = 0;
+    while(buses[busnumber].devicestate != devOK) {
+	init_lineLOCONET(busnumber);
+    }
     switch (buses[busnumber].devicetype) {
         case HW_FILENAME:
             rc=ln_read_serial(busnumber, cmd, len);
@@ -504,8 +521,7 @@ static int ln_read(bus_t busnumber, unsigned char *cmd, int len)
             break;
     }
     if ( rc>0 ) {
-	syslog_bus(busnumber, DBG_DEBUG, "received Loconet packet with OPC 0x%02X", cmd[0]);
-	syslog_bus(busnumber, DBG_DEBUG, " %s to send commands to loconet", cmd[0]&0x08?"block":"ok");
+	syslog_bus(busnumber, DBG_DEBUG, "received Loconet packet with OPC 0x%02X. %s to send commands to loconet", cmd[0], cmd[0]&0x08?"block":"ok");
     }
     return rc;
 }
@@ -526,10 +542,13 @@ ln_write_lbserver(long int busnumber, const unsigned char *cmd,
     }
     strcat(msg, "\r\n");
     result = writen(buses[busnumber].device.net.sockfd, msg, strlen(msg));
-    if (result == -1)
+    if (result == -1) {
+        buses[busnumber].devicestate = devFAIL;
+	shutdown(buses[busnumber].device.net.sockfd, SHUT_RDWR);
         syslog_bus(busnumber, DBG_ERROR,
                    "Socket write failed: %s (errno = %d)\n",
                    strerror(errno), errno);
+	}
     __loconet->sent_packets++;
     __loconet->ln_msglen = 0;
     return 0;
@@ -728,13 +747,29 @@ void *thr_sendrec_LOCONET(void *v)
                         syslog_bus(btd->bus, DBG_DEBUG,
                                "GL decoder address %d found in slot %d", __loconett->slotmap[addr], addr);
 		        cacheGetGL(btd->bus, __loconett->slotmap[addr], &gltmp);
-			tmp = ln_packet[2];
+			tmp = gltmp.funcs & 0xffe0;
 			/* bit shuffling */
-			tmp = (tmp & 0x0010)>>4 | (tmp & 0x000f) <<1;
+			tmp |= (ln_packet[2] & 0x0010)>>4 | (ln_packet[2] & 0x000f) <<1;
 			gltmp.funcs = tmp;
 		        cacheSetGL(btd->bus, __loconett->slotmap[addr], gltmp);
 		    }
                     break;
+		case OPC_LOCO_SND: 
+                    addr = ln_packet[1];
+		    if(__loconett->slotmap[addr]==0) {
+                        syslog_bus(btd->bus, DBG_DEBUG,
+                               "slot %d still unknown", addr);
+		    } else {
+                        syslog_bus(btd->bus, DBG_DEBUG,
+                               "GL decoder address %d found in slot %d", __loconett->slotmap[addr], addr);
+		        cacheGetGL(btd->bus, __loconett->slotmap[addr], &gltmp);
+			tmp = gltmp.funcs & 0xfe1f;
+			/* bit shuffling */
+			tmp |= (ln_packet[2]& 0x000f) << 5;
+			gltmp.funcs = tmp;
+		        cacheSetGL(btd->bus, __loconett->slotmap[addr], gltmp);
+		    }
+		    break;
                 case OPC_SW_REP:       /* B1 */
                     break;
                 case OPC_INPUT_REP:    /* B2 */
@@ -882,7 +917,7 @@ void *thr_sendrec_LOCONET(void *v)
             } else {
 		/* send out a slot read message to collect the current state. Do this
 		   only once at startup time */
-		if(startup_slot_index<127) {
+		if(startup_slot_index<120) {
                     syslog_bus(btd->bus, DBG_DEBUG, "Loconet: requesting startup slot info %d",
                            startup_slot_index);
 		    ln_packetlen = 4;
