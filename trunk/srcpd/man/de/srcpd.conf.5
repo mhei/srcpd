@@ -85,7 +85,12 @@ Treten beim Lesen der Konfigurationsdatei Fehler auf, sendet
 entsprechende Fehlermeldungen an den syslog-Daemon.  Diese können über
 die Datei
 .IR /var/log/messages
-verfolgt werden.
+verfolgt werden. Der srcpd benutzt die syslog facility user.info, die
+auf einigen System möglicherweise erst konfiguriert werden muß. 
+.fr
+user.info      /var/adm/user-info.log
+.fi
+
 .\"
 .PP
 Aktuell gibt es keine Dokumententypspezifikation (DTD), mit der der
