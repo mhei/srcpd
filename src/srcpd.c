@@ -91,7 +91,9 @@ void init_all_buses()
                         ? maxfd 
                         : buses[i].device.file.fd);
                 fcntl(buses[i].device.file.fd, F_SETOWN, getpid());
+#ifdef linux
                 fcntl(buses[i].device.file.fd, F_SETFL, FASYNC);
+#endif
             }
         }
     }
