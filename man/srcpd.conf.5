@@ -66,7 +66,16 @@ external configuration tool to ensure a syntactically correct format.
 .PP
 If there are errors during configuration file reading the daemon will
 send appropriate notifications to the syslog daemon. These messages can
-be watched using the \fI/var/log/messages\fP file.
+be watched using with the syslog facility user.info. This facility
+is usually sent to the file \fI/var/log/messages\fP. On some systems
+the \fI/etc/syslog.conf\fP may need to be edited to access the user.info
+facility:
+.nf
+...
+user.info     /var/adm/user-info.log
+...
+.fi
+
 .PP
 Currently there is no document type definition (DTD) available, to
 validate the format of a user created configuration file.
