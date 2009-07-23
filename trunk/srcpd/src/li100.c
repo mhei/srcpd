@@ -24,7 +24,9 @@ email                : frank.schmischke@t-online.de
 #ifdef __CYGWIN__
 #include <sys/socket.h> /*for FIONREAD*/
 #endif
-
+#ifdef __sun__
+#include <sys/filio.h>
+#endif
 #include "syslogmessage.h"
 
 

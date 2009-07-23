@@ -1,23 +1,5 @@
 /* cvs: $Id$             */
 
-/*
- * Vorliegende Software unterliegt der General Public License,
- * Version 2, 1991. (c) Matthias Trute, 2000-2001.
- *
- * 30.01.2002 Matthias Trute
- *            - Rueckmelder optimiert, Bugfixes (Anregungen von Michael Hodel)
- *
- * 05.07.2001 Frank Schmischke
- *            - Anpassungen wegen srcpd
- *            - es werden nur noch Befehle gesendet, wenn Auftraege vorliegen,
- *              es werden nicht mehr alle Adressen auf Verdacht durchsucht
- *
- */
-
-
-/* Die Konfiguration des seriellen Ports von M6050emu (D. Schaefer) */
-/* wenngleich etwas veraendert, mea culpa..                         */
-
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -25,6 +7,10 @@
 
 #ifdef __CYGWIN__
 #include <sys/socket.h> /*for FIONREAD*/
+#endif
+
+#ifdef __sun__
+#include <sys/filio.h>
 #endif
 
 #include "config-srcpd.h"
@@ -205,14 +191,14 @@ static int init_lineM6051(bus_t bus)
     interface.c_iflag &= ~(ISTRIP | IXON | IXOFF | IXANY);
     interface.c_lflag = NOFLSH | IEXTEN;
     interface.c_lflag &= ~(ISIG | ICANON | ECHO | ECHOE | TOSTOP | PENDIN);
-
-    cfsetospeed(&interface, B2400);
-    cfsetispeed(&interface, B2400);
 #else
     cfmakeraw(&interface);
-    interface.c_ispeed = interface.c_ospeed = B2400;
+
     interface.c_cflag = CREAD | HUPCL | CS8 | CSTOPB | CRTSCTS;
 #endif
+    cfsetospeed(&interface, B2400);
+    cfsetispeed(&interface, B2400);
+
     tcsetattr(fd, TCSANOW, &interface);
     syslog_bus(bus, DBG_INFO, "Opening 605x succeeded (fd = %d).", fd);
     return fd;

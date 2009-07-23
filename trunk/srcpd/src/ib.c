@@ -1206,8 +1206,8 @@ static int open_comport(bus_t busnumber, speed_t baud)
         while (status != -1)
             status = readByte_IB(busnumber, 1, &rr);
 #else
-
-        interface.c_ispeed = interface.c_ospeed = baud;
+        cfsetispeed(&interface, baud);
+        cfsetospeed(&interface, baud);
         interface.c_cflag = CREAD | HUPCL | CS8 | CSTOPB | CRTSCTS;
         cfmakeraw(&interface);
         tcsetattr(fd, TCSAFLUSH | TCSANOW, &interface);
