@@ -6,7 +6,7 @@ srcpd-2.0.13 (2009-??-??)
   New Features
     o Support for TERM 0 TIME added. Timer thread now is suspended
       if not used.
-    o Loconet support slightly improved: GA and FB devices, 
+    o improved Loconet support: GL, GA and FB devices, 
       may use a loconetovertcp network server.
     o Support for GA switching in Zimo module added.
 
