@@ -738,7 +738,12 @@ void *thr_sendrec_LOCONET(void *v)
                         syslog_bus(btd->bus, DBG_DEBUG,
                                "GL decoder address %d found in slot %d", __loconett->slotmap[addr], addr);
 		        cacheGetGL(btd->bus, __loconett->slotmap[addr], &gltmp);
-		        gltmp.speed = speed;
+			if(speed==1) {
+			    /* gltmp.direction = 2; */
+			    gltmp.speed = 0;
+			} else {
+			    gltmp.speed = speed;
+			}
 		        cacheSetGL(btd->bus, __loconett->slotmap[addr], gltmp);
 		    }
                     break;
@@ -755,6 +760,7 @@ void *thr_sendrec_LOCONET(void *v)
 			/* bit shuffling */
 			tmp |= (ln_packet[2] & 0x0010)>>4 | (ln_packet[2] & 0x000f) <<1;
 			gltmp.funcs = tmp;
+			gltmp.direction = (ln_packet[2] & DIRF_DIR)?0:1;
 		        cacheSetGL(btd->bus, __loconett->slotmap[addr], gltmp);
 		    }
                     break;
