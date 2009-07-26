@@ -9,7 +9,7 @@ and the srcpd / SRCP.
 The srcpd acts basically as a two-way gateway between the loconet
 bus and the SRCP world. It translates the loconet messages
 into SRCP events and emits loconet commands and queries to
-fullfil SRCP commands.
+execute SRCP commands.
 
 The srcpd is not a loconet master, it acts as a loconet device
 via a locobuffer or similiar hardware gateways.
@@ -32,18 +32,26 @@ fixed size list called slots. Every slot contains exactly
 The slot number is used by loconet messages to communicate
 with the decoder. The srcpd hides the existence of slots
 completly. In SRCP only the decoder addresses are used.
-Which slot is used, is maintained by the loconet master
-and the srcpd maintains a local copy. There is no way to
-get the slot number.
+Which slot is used, is maintained by the loconet master.
+The srcpd builds and maintaines a local copy. There is no 
+way to get the slot number.
 
 Since SRCP does not have a consists model, consisting slots
-is neither used nor decoded.
+are neither used nor decoded.
 
 Upon startup the srcpd reads all slots. That may trigger some
 traffic however.
 
 Dispatching and LOCKs are currently not available.
 
+The following loconet message types are used (both direction)
+
+OPC_LOCO_SPD (0xA0)
+OPC_LOCO_DIRF (0xA1)
+OPC_LOCO_SND  (0xA2)
+
+OPC_SLOT_STAT1 (0xB5)
+  with status 2 a SRCP TERM message is generated
 
 Generic Accessoires  GA
 
