@@ -788,6 +788,20 @@ void *thr_sendrec_LOCONET(void *v)
                     value = (ln_packet[2] & 0x10) >> 4;
                     updateFB(btd->bus, addr, value);
                     break;
+		case OPC_SLOT_STAT1: /* B5 */
+                    addr = ln_packet[1];
+		    if(__loconett->slotmap[addr]==0) {
+                        syslog_bus(btd->bus, DBG_DEBUG,
+                               "slot %d still unknown", addr);
+		    } else {
+                        syslog_bus(btd->bus, DBG_DEBUG,
+                               "GL decoder address %d found in slot %d", __loconett->slotmap[addr], addr);
+			if(ln_packet[2]==2) {
+			    cacheTermGL(btd->bus, __loconett->slotmap[addr]);
+			}
+		    }
+
+		    break;
                 case OPC_SL_RD_DATA:   /* E7 */
                     switch (ln_packet[1]) {
                         case 0x0e:
