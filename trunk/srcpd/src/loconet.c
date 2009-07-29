@@ -248,11 +248,22 @@ static int init_lineLOCONET_lbserver(bus_t busnumber)
                    strerror(errno), errno);
         /*TODO: What to do now? Return some error value? */
     }
+
+    /*TODO: To gain IPV4 _and_ IPV6 compliance some obsoleted interface
+     * functions should be replaced by more modern ones. This is
+     * according to 
+     *
+     *   http://people.redhat.com/drepper/userapi-ipv6.html
+     * 
+     * gethostbyname() should be replaced by getaddrinfo()
+     * gethostbyaddr() should be replaced by getnameinfo()
+     * */
+
     server = gethostbyname(buses[busnumber].device.net.hostname);
-    if(NULL == server) {
+    if (NULL == server) {
         server = gethostbyaddr(buses[busnumber].device.net.hostname,
 	strlen(buses[busnumber].device.net.hostname), AF_INET);
-	if(NULL==server) {
+	if (NULL == server) {
 	   syslog_bus(busnumber, DBG_ERROR,
                    "cannot resolve address: %s.\n",
                    buses[busnumber].device.net.hostname);
