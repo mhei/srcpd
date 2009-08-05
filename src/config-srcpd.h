@@ -99,7 +99,7 @@ typedef struct _BUS
       struct {
         char *hostname;  /* DNS resolvable hostname */
         int protocol;    /* Values are taken from /etc/protocols: 6==tcp */
-        int port;        /* if using tcp or udp: portnumber to connect to. */
+        char *port;      /* if using tcp or udp: portnumber or servicename to connect to. */
         int sockfd;      /* socket descriptor */
       } net;
   } device;
