@@ -235,73 +235,53 @@ static int init_lineLOCONET_serial(bus_t busnumber)
 
 static int init_lineLOCONET_lbserver(bus_t busnumber)
 {
-    int sockfd;
-    struct sockaddr_in serv_addr;
-    struct hostent *server;
-    ssize_t sresult;
-
+    int sockfd, server;
+    struct addrinfo *ai;
+    struct addrinfo hi;
+    int result;
     char msg[256];
-    sockfd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (sockfd == -1) {
-        syslog_bus(busnumber, DBG_ERROR,
+
+    memset(&hi,'\0',sizeof(hi));
+    hi.ai_flags = AI_ADDRCONFIG;
+    hi.ai_socktype = SOCK_STREAM;
+    result = getaddrinfo(buses[busnumber].device.net.hostname, buses[busnumber].device.net.port, &hi, &ai);
+    if(result != 0) {
+	syslog_bus(busnumber, DBG_ERROR, "getaddrinfo %s", gai_strerror(result));
+    }
+    struct addrinfo *runp = ai;
+    if(runp != NULL) {
+        sockfd = socket(runp->ai_family, runp->ai_socktype, runp->ai_protocol);
+        if (sockfd == -1) {
+	    syslog_bus(busnumber, DBG_FATAL,
                    "Socket creation failed: %s (errno = %d).\n",
                    strerror(errno), errno);
-        /*TODO: What to do now? Return some error value? */
-    }
-
-    /*TODO: To gain IPV4 _and_ IPV6 compliance some obsoleted interface
-     * functions should be replaced by more modern ones. This is
-     * according to 
-     *
-     *   http://people.redhat.com/drepper/userapi-ipv6.html
-     * 
-     * gethostbyname() should be replaced by getaddrinfo()
-     * gethostbyaddr() should be replaced by getnameinfo()
-     * */
-
-    server = gethostbyname(buses[busnumber].device.net.hostname);
-    if (NULL == server) {
-        server = gethostbyaddr(buses[busnumber].device.net.hostname,
-	strlen(buses[busnumber].device.net.hostname), AF_INET);
-	if (NULL == server) {
-	   syslog_bus(busnumber, DBG_ERROR,
-                   "cannot resolve address: %s.\n",
-                   buses[busnumber].device.net.hostname);
         }
-    }
-    memcpy((char *) &serv_addr.sin_addr,
-           (char *) server->h_addr,
-            server->h_length);
-    serv_addr.sin_port = htons(buses[busnumber].device.net.port);
-    serv_addr.sin_family = AF_INET;
-
-    alarm(30);
-
-    if (connect(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr))
-        < 0) {
+      alarm(30);
+      if (connect(sockfd, runp->ai_addr, runp->ai_addrlen) != 0) {
         syslog_bus(busnumber, DBG_ERROR, "ERROR connecting to %s:%d %d",
 	buses[busnumber].device.net.hostname, buses[busnumber].device.net.port,
 	errno);
 	/*TODO: What to do now? Return some error value? */
-    }
-    alarm(0);
+      }
+      alarm(0);
 
-    sresult = socket_readline(sockfd, msg, sizeof(msg) - 1);
+      result = socket_readline(sockfd, msg, sizeof(msg) - 1);
 
-    /* client terminated connection */
-    if (0 == sresult) {
+      /* client terminated connection */
+      if (0 == result) {
+        freeaddrinfo(ai);
         shutdown(sockfd, SHUT_RDWR);
         return 0;
+      }
     }
-
     /* read errror */
-    if (-1 == sresult) {
+    if (-1 == result) {
         syslog_bus(busnumber, DBG_ERROR,
                    "Socket read failed: %s (errno = %d)\n",
                    strerror(errno), errno);
         return (-1);
     }
-
+    freeaddrinfo(ai);
     syslog_bus(busnumber, DBG_INFO, "connected to %s", msg);
     buses[busnumber].device.net.sockfd = sockfd;
     return 1;
@@ -486,7 +466,7 @@ static int ln_read_lbserver(bus_t busnumber, unsigned char *cmd, int len)
 	    buses[busnumber].devicestate = devFAIL;
 	    shutdown(fd, SHUT_RDWR);
 	    close(fd);
-            syslog_bus(busnumber, DBG_ERROR,
+            syslog_bus(busnumber, DBG_WARN,
                        "Socket read failed: %s (errno = %d)\n",
                        strerror(errno), errno);
             return 0;
@@ -560,7 +540,7 @@ ln_write_lbserver(long int busnumber, const unsigned char *cmd,
         buses[busnumber].devicestate = devFAIL;
 	shutdown(buses[busnumber].device.net.sockfd, SHUT_RDWR);
 	close(buses[busnumber].device.net.sockfd);
-        syslog_bus(busnumber, DBG_ERROR,
+        syslog_bus(busnumber, DBG_WARN,
                    "Socket write failed: %s (errno = %d)\n",
                    strerror(errno), errno);
 	}
