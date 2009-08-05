@@ -259,12 +259,13 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
                                (char *) txt);
                         txt2 = xmlGetProp(child, BAD_CAST "port");
                         if (txt2 != NULL) {
-                            buses[current_bus].device.net.port =
-                                atoi((char *) txt2);
+                            free(buses[current_bus].device.net.port);
+	                    buses[current_bus].device.net.port =  malloc(strlen((char *) txt2) + 1);
+                            strcpy(buses[current_bus].device.net.port, (char *) txt2);
                             free(txt2);
                         }
                         else {
-                            buses[current_bus].device.net.port = 0;
+                            buses[current_bus].device.net.port = NULL;
                         }
                         txt2 = xmlGetProp(child, BAD_CAST "protocol");
                         if (txt2 != NULL) {
