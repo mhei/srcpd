@@ -258,7 +258,7 @@ int cacheInitGL(bus_t busnumber, int addr, const char protocol,
           return rc;
         }
         gettimeofday(&tgl.inittime, NULL);
-        gettimeofday(&tgl.tv, NULL);
+        tgl.tv = tgl.inittime;
         tgl.n_fs = n_fs;
         tgl.n_func = n_func;
         tgl.protocolversion = protoversion;
