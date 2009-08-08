@@ -296,4 +296,16 @@ Sonst noch was?
 Weitere Informationen
     http://srcpd.sourceforge.net/
     http://www.der-moba.de/index.php/Digitalprojekt
-    
+
+
+
+SVN checkout
+------------
+
+If you start with a fresh svn checkout, please first apply
+
+  autoreconf -i
+
+to get a proper configure script. For more instructions about compiling
+and installing this application please refer to the INSTALL file.
+
