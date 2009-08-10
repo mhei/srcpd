@@ -242,26 +242,39 @@ static int init_lineLOCONET_lbserver(bus_t busnumber)
     char msg[256];
 
     memset(&hi,'\0',sizeof(hi));
+
+    /* Set preferred network connection options, for Cygwin use IPv4-only
+     * as IPv6 is not supported yet */
+#ifdef __CYGWIN__
+    hi.ai_family = AF_INET;
+    hi.ai_protocol = IPPROTO_TCP;
+#else
     hi.ai_flags = AI_ADDRCONFIG;
+#endif
     hi.ai_socktype = SOCK_STREAM;
-    result = getaddrinfo(buses[busnumber].device.net.hostname, buses[busnumber].device.net.port, &hi, &ai);
-    if(result != 0) {
-	syslog_bus(busnumber, DBG_ERROR, "getaddrinfo %s", gai_strerror(result));
+    result = getaddrinfo(buses[busnumber].device.net.hostname,
+            buses[busnumber].device.net.port, &hi, &ai);
+    if (result != 0) {
+	syslog_bus(busnumber, DBG_ERROR, "getaddrinfo %s",
+                gai_strerror(result));
+        return 0;
     }
     struct addrinfo *runp = ai;
-    if(runp != NULL) {
+    if (runp != NULL) {
         sockfd = socket(runp->ai_family, runp->ai_socktype, runp->ai_protocol);
         if (sockfd == -1) {
 	    syslog_bus(busnumber, DBG_FATAL,
                    "Socket creation failed: %s (errno = %d).\n",
                    strerror(errno), errno);
+            return 0;
         }
       alarm(30);
       if (connect(sockfd, runp->ai_addr, runp->ai_addrlen) != 0) {
-        syslog_bus(busnumber, DBG_ERROR, "ERROR connecting to %s:%d %d",
-	buses[busnumber].device.net.hostname, buses[busnumber].device.net.port,
-	errno);
-	/*TODO: What to do now? Return some error value? */
+          syslog_bus(busnumber, DBG_ERROR, "ERROR connecting to %s:%d %d",
+                  buses[busnumber].device.net.hostname,
+                  buses[busnumber].device.net.port,
+                  errno);
+          return 0;
       }
       alarm(0);
 
