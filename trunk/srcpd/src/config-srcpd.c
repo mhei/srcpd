@@ -289,7 +289,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
                     break;
                 case HW_NETWORK:
                     syslog_bus(current_bus, DBG_DEBUG,
-                               "** Network Host='%s', Protocol=%d Port=%d",
+                               "** Network Host='%s', Protocol=%d Port=%s",
                                buses[current_bus].device.net.hostname,
                                buses[current_bus].device.net.protocol,
                                buses[current_bus].device.net.port);
