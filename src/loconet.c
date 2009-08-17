@@ -235,7 +235,7 @@ static int init_lineLOCONET_serial(bus_t busnumber)
 
 static int init_lineLOCONET_lbserver(bus_t busnumber)
 {
-    int sockfd, server;
+    int sockfd;
     struct addrinfo *ai;
     struct addrinfo hi;
     int result;
