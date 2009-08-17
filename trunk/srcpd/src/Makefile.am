@@ -17,7 +17,6 @@ srcpd_SOURCES = \
 	ib.c \
 	io.c \
 	li100-main.c \
-	loconet.c \
 	loopback.c \
 	m605x.c \
 	netservice.c \
@@ -56,7 +55,6 @@ noinst_HEADERS = \
 	io.h \
 	li100.c \
 	li100.h \
-       	loconet.h \
 	loopback.h \
 	m605x.h \
 	netservice.h \
@@ -80,6 +78,9 @@ noinst_HEADERS = \
 	ttycygwin.h \
 	zimo.h
 
+if USE_LOCONET
+srcpd_SOURCES += loconet.c loconet.h
+endif
 
 DEFS = -D_REENTRANT -DSYSCONFDIR=\"$(sysconfdir)\" @DEFS@
 
