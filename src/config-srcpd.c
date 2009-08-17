@@ -16,6 +16,7 @@
 #include <libxml/xmlmemory.h>
 #include <netdb.h>
 
+#include "config.h"
 #include "config-srcpd.h"
 #include "srcp-fb.h"
 #include "srcp-power.h"
@@ -31,8 +32,14 @@
 #include "i2c-dev.h"
 #include "zimo.h"
 #include "li100.h"
+#ifdef USE_LOCONET
 #include "loconet.h"
+#endif
 #include "syslogmessage.h"
+
+
+static const char DISABLE_MSG[] =
+      "\"%s\" has been disabled at compile time.\n";
 
 /* check if a bus type is actually available on the server */
 int bus_type_is_available(int type)
@@ -184,7 +191,11 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "loconet") == 0) {
+#ifdef USE_LOCONET
             busnumber += readConfig_LOCONET(doc, child, busnumber);
+#else
+            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
+#endif
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "loopback") == 0) {
