@@ -1,3 +1,7 @@
+2009-08-17 Guido Scholz <guido.scholz@bayernline.de>
+	* config-srcpd.c: Create error message if unvalid verbosity
+	value is detected. Reset wrong value to maximum limit.
+
 2009-06-28 Matthias Trute <mtrute@users.sourceforge.net>
 	* README.loconet: New document that describes some
 	loconet specific stuff.
