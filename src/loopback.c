@@ -24,7 +24,23 @@
 
 #define MAX_CV_NUMBER 255
 
-int cmpTime(struct timeval *t1, struct timeval *t2);
+static int cmpTime(struct timeval *t1, struct timeval *t2)
+{
+    int result;
+
+    result = 0;
+    if (t2->tv_sec > t1->tv_sec) {
+        result = 1;
+    }
+    else {
+        if (t2->tv_sec == t1->tv_sec) {
+            if (t2->tv_usec > t1->tv_usec) {
+                result = 1;
+            }
+        }
+    }
+    return result;
+}
 
 
 int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
