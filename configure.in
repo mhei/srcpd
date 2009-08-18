@@ -30,18 +30,9 @@ AC_PROG_CPP
 AC_PROG_INSTALL
 
 
-dnl Option to disable Loconet support
-AC_ARG_ENABLE(loconet,
-    [  --disable-loconet       do not compile loconet module],
-    [with_LOCONET="$enableval"], [with_LOCONET=yes])
-if test "$with_LOCONET" = "yes"; then
-    AC_DEFINE(USE_LOCONET,1, [define to 1 if you want loconet support])
-fi
-AM_CONDITIONAL(USE_LOCONET, test "$with_LOCONET" = yes)
-
 dnl Option to disable DDL support
 AC_ARG_ENABLE(ddl,
-    [  --disable-ddl       do not compile ddl module],
+    AC_HELP_STRING([--disable-ddl], [do not compile ddl module])
     [with_DLL="$enableval"], [with_DDL=yes])
 if test "$with_DDL" = "yes"; then
    AC_DEFINE(USE_DDL,1, [define to 1 if you want ddl support])
@@ -50,7 +41,7 @@ AM_CONDITIONAL(USE_DDL, test "$with_DDL" = yes)
 
 dnl Option to disable DDL S88 support
 AC_ARG_ENABLE(ddls88,
-    [  --disable-ddls88       do not compile ddls88 module],
+    AC_HELP_STRING([--disable-ddls88], [do not compile ddls88 module])
     [with_DLL88="$enableval"], [with_DDL88=yes])
 if test "$with_DDL88" = "yes"; then
    AC_DEFINE(USE_DDL88,1, [define to 1 if you want ddls88 support])
@@ -59,7 +50,7 @@ AM_CONDITIONAL(USE_DDL88, test "$with_DDL88" = yes)
 
 dnl Option to disable HSI S88 support
 AC_ARG_ENABLE(hsi88,
-    [  --disable-hsi88       do not compile hsi88 module],
+    AC_HELP_STRING([--disable-hsi88], [do not compile hsi88 module])
     [with_HSI88="$leval"], [with_HSI88=yes])
 if test "$with_HSI88" = "yes"; then
    AC_DEFINE(USE_HSI88,1,[define to 1 if you want hsi88 support])
@@ -68,7 +59,7 @@ AM_CONDITIONAL(USE_HSI88, test "$with_HSI88" = yes)
 
 dnl Option to disable I2C support
 AC_ARG_ENABLE(i2cdev,
-    [  --disable-i2cdev       do not compile i2cdev module],
+    AC_HELP_STRING([--disable-i2cdev], [do not compile i2cdev module])
     [with_I2C="$enableval"], [with_I2C=yes])
 if test "$with_I2C" = "yes"; then
    AC_DEFINE(USE_I2C,1, [define to 1 if you want i2cdev support])
@@ -77,7 +68,7 @@ AM_CONDITIONAL(USE_I2C, test "$with_I2C" = yes)
 
 dnl Option to disable Intellibox support
 AC_ARG_ENABLE(intellibox,
-    [  --disable-intellibox        do not compile intellibox module],
+    AC_HELP_STRING([--disable-intellibox], [do not compile intellibox module])
     [with_IB="$enableval"], [with_IB=yes])
 if test "$with_IB" = "yes"; then
    AC_DEFINE(USE_IB,1,[define to 1 if you want intellibox support])
@@ -86,16 +77,25 @@ AM_CONDITIONAL(USE_IB, test "$with_IB" = yes)
 
 dnl Option to disable Lenz support
 AC_ARG_ENABLE(li100,
-    [  --disable-li100       do not compile li100 (RS232 + USB) module],
+    AC_HELP_STRING([--disable-li100], [do not compile li100 module])
     [with_LENZ="$enableval"], [with_LENZ=yes])
 if test "$with_LENZ" = "yes"; then
    AC_DEFINE(USE_LENZ,1,[define to 1 if you want li100 (RS232 + USB) support])
 fi
 AM_CONDITIONAL(USE_LENZ, test "$with_LENZ" = yes)
 
+dnl Option to disable Loconet support
+AC_ARG_ENABLE(loconet,
+    AC_HELP_STRING([--disable-loconet], [do not compile loconet module])
+    [with_LOCONET="$enableval"], [with_LOCONET=yes])
+if test "$with_LOCONET" = "yes"; then
+    AC_DEFINE(USE_LOCONET,1, [define to 1 if you want loconet support])
+fi
+AM_CONDITIONAL(USE_LOCONET, test "$with_LOCONET" = yes)
+
 dnl Option to disable M605X support
 AC_ARG_ENABLE(m605x,
-    [  --disable-m605x       do not compile m605x module],
+    AC_HELP_STRING([--disable-m605x], [do not compile m605x module])
     [with_M605X="$enableval"], [with_M605X=yes])
 if test "$with_M605X" = "yes"; then
    AC_DEFINE(USE_M605X,1, [define to 1 if you want m605x support])
@@ -104,7 +104,7 @@ AM_CONDITIONAL(USE_M605X, test "$with_M605X" = yes)
 
 dnl Option to disable Selectrix support
 AC_ARG_ENABLE(selectrix,
-    [  --disable-selectrix       do not compile selectrix module],
+    AC_HELP_STRING([--disable-selectrix], [do not compile selectrix module])
     [with_SELECTRIX="$enableval"], [with_SELECTRIX=yes])
 if test "$with_SELECTRIX" = "yes"; then
    AC_DEFINE(USE_SELECTRIX,1,[define to 1 if you want selectrix support])
@@ -113,7 +113,7 @@ AM_CONDITIONAL(USE_SELECTRIX, test "$with_SELECTRIX" = yes)
 
 dnl Option to disable Zimo support
 AC_ARG_ENABLE(zimo,
-    [  --disable-zimo       do not compile zimo module],
+    AC_HELP_STRING([--disable-zimo], [do not compile zimo module])
     [with_ZIMO="$enableval"], [with_ZIMO=yes])
 if test "$with_ZIMO" = "yes"; then
    AC_DEFINE(USE_ZIMO,1, [define to 1 if you want zimo support])
