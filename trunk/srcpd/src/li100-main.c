@@ -35,8 +35,23 @@ email                : frank.schmischke@t-online.de
 #define __li100 ((LI100_DATA*)buses[busnumber].driverdata)
 #define __li100t ((LI100_DATA*)buses[btd->bus].driverdata)
 
-/* implementation see ib.c*/
-int cmpTime( struct timeval *t1, struct timeval *t2 );
+static int cmpTime(struct timeval *t1, struct timeval *t2)
+{
+    int result;
+
+    result = 0;
+    if (t2->tv_sec > t1->tv_sec) {
+        result = 1;
+    }
+    else {
+        if (t2->tv_sec == t1->tv_sec) {
+            if (t2->tv_usec > t1->tv_usec) {
+                result = 1;
+            }
+        }
+    }
+    return result;
+}
 
 #define LI100_USB
 #include "li100.c"
