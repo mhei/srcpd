@@ -253,3 +253,32 @@ main()
 
 AC_CONFIG_FILES(Makefile src/Makefile man/Makefile man/de/Makefile)
 AC_OUTPUT
+
+echo
+echo "Supported devices:"
+if test "$with_DDL88"     = "yes"; then echo "    ddl-s88"; fi
+if test "$with_DDL"       = "yes"; then echo "    ddl"; fi
+if test "$with_HSI88"     = "yes"; then echo "    hsi-88"; fi
+if test "$with_I2C"       = "yes"; then echo "    i2c"; fi
+if test "$with_IB"        = "yes"; then echo "    ib"; fi
+if test "$with_LENZ"      = "yes"; then echo "    li100"; fi
+if test "$with_LOCONET"   = "yes"; then echo "    loconet"; fi
+if test "$with_M605X"     = "yes"; then echo "    m605x"; fi
+if test "$with_SELECTRIX" = "yes"; then echo "    selectrix"; fi
+if test "$with_ZIMO"      = "yes"; then echo "    zimo"; fi
+echo
+echo "Unsupported devices:"
+if test "$with_DDL88"     != "yes"; then echo "    ddl-s88"; fi
+if test "$with_DDL"       != "yes"; then echo "    ddl"; fi
+if test "$with_HSI88"     != "yes"; then echo "    hsi-88"; fi
+if test "$with_I2C"       != "yes"; then echo "    i2c"; fi
+if test "$with_IB"        != "yes"; then echo "    ib"; fi
+if test "$with_LENZ"      != "yes"; then echo "    li100"; fi
+if test "$with_LOCONET"   != "yes"; then echo "    loconet"; fi
+if test "$with_M605X"     != "yes"; then echo "    m605x"; fi
+if test "$with_SELECTRIX" != "yes"; then echo "    selectrix"; fi
+if test "$with_ZIMO"      != "yes"; then echo "    zimo"; fi
+
+echo
+echo "Run 'make' to continue."
+echo
