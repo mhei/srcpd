@@ -12,7 +12,7 @@ srcpd-2.0.13 (2009-??-??)
 
   General Changes
     o Improved timing for multi protocol mode in DDL module.
-
+    o configure may be used to disable modules at compile time
 
 srcpd-2.0.12 (2008-11-19)
   Fixed Bugs

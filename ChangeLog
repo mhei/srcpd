@@ -1,3 +1,12 @@
+2009-08-18 Matthias Trute <mtrute@users.sourceforge.net>
+	* src/loopback.c src/li100.c: copy the cmdTime() from
+	ib.c, only a temporary solution to avoid compilation errors
+	when disabling the ib module.
+
+2009-08-18 Matthias Trute <mtrute@users.sourceforge.net>
+	* configure.in src/Makefile.am config-srcpd.c config-srcpd.h:
+	option to disable all modules except loopback
+
 2009-08-17 Guido Scholz <guido.scholz@bayernline.de>
 	* config-srcpd.c: Create error message if unvalid verbosity
 	value is detected. Reset wrong value to maximum limit.
