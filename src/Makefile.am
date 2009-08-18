@@ -8,20 +8,10 @@ srcpd_SOURCES = \
 	clientservice.c \
 	config-srcpd.c \
 	dcc-address.c \
-	ddl.c \
-	ddl_maerklin.c \
-	ddl_nmra.c \
-	ddl-s88.c \
-	hsi-88.c \
-	i2c-dev.c \
-	ib.c \
 	io.c \
-	li100-main.c \
 	loopback.c \
-	m605x.c \
 	netservice.c \
 	portio.c \
-	selectrix.c \
 	srcp-command.c \
 	srcpd.c \
 	srcp-descr.c \
@@ -38,28 +28,16 @@ srcpd_SOURCES = \
 	srcp-sm.c \
 	srcp-time.c \
 	syslogmessage.c \
-	ttycygwin.c \
-	zimo.c
+	ttycygwin.c 
 
 noinst_HEADERS = \
 	clientservice.h \
 	config-srcpd.h \
 	dcc-address.h \
-	ddl.h \
-	ddl_maerklin.h \
-	ddl_nmra.h \
-	ddl-s88.h \
-	hsi-88.h \
-	i2c-dev.h \
-	ib.h \
 	io.h \
-	li100.c \
-	li100.h \
 	loopback.h \
-	m605x.h \
 	netservice.h \
 	portio.h \
-	selectrix.h \
 	srcp-command.h \
 	srcp-descr.h \
 	srcp-error.h \
@@ -75,12 +53,49 @@ noinst_HEADERS = \
 	srcp-sm.h \
 	srcp-time.h \
 	syslogmessage.h \
-	ttycygwin.h \
-	zimo.h
+	ttycygwin.h
 
 if USE_LOCONET
 srcpd_SOURCES += loconet.c loconet.h
 endif
+
+if USE_DDL
+srcpd_SOURCES +=ddl.c ddl_maerklin.c ddl_nmra.c   ddl.h ddl_maerklin.h ddl_nmra.h
+endif
+
+if USE_HSI88
+srcpd_SOURCES += hsi-88.c hsi-88.h
+endif
+
+if USE_DDL88
+srcpd_SOURCES += ddl-s88.c ddl-s88.h
+endif
+
+# tricky: li100-main includes li100.c twice for both USB and RS232 support
+if USE_LENZ
+srcpd_SOURCES += li100-main.c li100.h
+endif
+
+if USE_SELECTRIX
+srcpd_SOURCES +=selectrix.c selectrix.h
+endif
+
+if USE_M605X
+srcpd_SOURCES +=m605x.c m605x.h
+endif
+
+if USE_ZIMO
+srcpd_SOURCES +=zimo.c zimo.h
+endif
+
+if USE_IB
+srcpd_SOURCES +=ib.c ib.h
+endif
+
+if USE_I2C
+srcpd_SOURCES +=i2c-dev.c i2c-dev.h
+endif
+
 
 DEFS = -D_REENTRANT -DSYSCONFDIR=\"$(sysconfdir)\" @DEFS@
 

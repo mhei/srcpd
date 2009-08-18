@@ -38,6 +38,78 @@ test "$with_LOCONET" = "yes" && AC_DEFINE(USE_LOCONET,1,
                                     [define to 1 if you want Loconet support])
 AM_CONDITIONAL(USE_LOCONET, test "$with_LOCONET" = yes)
 
+dnl Option to disable DDL support
+AC_ARG_ENABLE(ddl,
+    [  --disable-ddl       do not compile ddl module],
+    [with_DLL="$enableval"], [with_DDL=yes])
+test "$with_DDL" = "yes" && AC_DEFINE(USE_DDL,1,
+                                    [define to 1 if you want DDL support])
+AM_CONDITIONAL(USE_DDL, test "$with_DDL" = yes)
+
+dnl Option to disable DDL S88 support
+AC_ARG_ENABLE(ddl88,
+    [  --disable-ddl88       do not compile ddl S88 module],
+    [with_DLL88="$enableval"], [with_DDL88=yes])
+test "$with_DDL88" = "yes" && AC_DEFINE(USE_DDL88,1,
+                                    [define to 1 if you want DDL S88 support])
+AM_CONDITIONAL(USE_DDL88, test "$with_DDL88" = yes)
+
+dnl Option to disable HSI S88 support
+AC_ARG_ENABLE(hsi88,
+    [  --disable-hsi88       do not compile HSI S88 module],
+    [with_HSI88="$enableval"], [with_HSI88=yes])
+test "$with_HSI88" = "yes" && AC_DEFINE(USE_HSI88,1,
+                                    [define to 1 if you want HSI S88 support])
+AM_CONDITIONAL(USE_HSI88, test "$with_HSI88" = yes)
+
+dnl Option to disable LENZ support
+AC_ARG_ENABLE(lenz,
+    [  --disable-lenz       do not compile LENZ module],
+    [with_LENZ="$enableval"], [with_LENZ=yes])
+test "$with_LENZ" = "yes" && AC_DEFINE(USE_LENZ,1,
+                                    [define to 1 if you want LENZ support])
+AM_CONDITIONAL(USE_LENZ, test "$with_LENZ" = yes)
+
+dnl Option to disable Intellibox support
+AC_ARG_ENABLE(ib,
+    [  --disable-ib        do not compile Intellibox module],
+    [with_IB="$enableval"], [with_IB=yes])
+test "$with_IB" = "yes" && AC_DEFINE(USE_IB,1,
+                                    [define to 1 if you want Intellibox support])
+AM_CONDITIONAL(USE_IB, test "$with_IB" = yes)
+
+dnl Option to disable SELECTRIX support
+AC_ARG_ENABLE(selectrix,
+    [  --disable-selectrix       do not compile SELECTRIX module],
+    [with_SELECTRIX="$enableval"], [with_SELECTRIX=yes])
+test "$with_SELECTRIX" = "yes" && AC_DEFINE(USE_SELECTRIX,1,
+                                    [define to 1 if you want SELECTRIX support])
+AM_CONDITIONAL(USE_SELECTRIX, test "$with_SELECTRIX" = yes)
+
+dnl Option to disable M605X support
+AC_ARG_ENABLE(m605x,
+    [  --disable-m605x       do not compile M605x module],
+    [with_M605X="$enableval"], [with_M605X=yes])
+test "$with_M605X" = "yes" && AC_DEFINE(USE_M605X,1,
+                                    [define to 1 if you want M605X support])
+AM_CONDITIONAL(USE_M605X, test "$with_M605X" = yes)
+
+dnl Option to disable Zimo support
+AC_ARG_ENABLE(zimo,
+    [  --disable-zimo       do not compile ZIMO module],
+    [with_ZIMO="$enableval"], [with_ZIMO=yes])
+test "$with_ZIMO" = "yes" && AC_DEFINE(USE_ZIMO,1,
+                                    [define to 1 if you want ZIMO support])
+AM_CONDITIONAL(USE_ZIMO, test "$with_ZIMO" = yes)
+
+dnl Option to disable I2C support
+AC_ARG_ENABLE(i2c,
+    [  --disable-i2c       do not compile I2c module],
+    [with_I2C="$enableval"], [with_I2C=yes])
+test "$with_I2C" = "yes" && AC_DEFINE(USE_I2C,1,
+                                    [define to 1 if you want I2C support])
+AM_CONDITIONAL(USE_I2C, test "$with_I2C" = yes)
+
 
 dnl test for getaddrinfo, not available under Cygwin but necessary for Loconet
 if test "$with_LOCONET" = "yes"; then

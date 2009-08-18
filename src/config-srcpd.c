@@ -22,19 +22,50 @@
 #include "srcp-power.h"
 #include "srcp-server.h"
 #include "srcp-error.h"
-#include "ddl.h"
-#include "m605x.h"
-#include "selectrix.h"
-#include "ib.h"
+
+/* always support this bus type */
 #include "loopback.h"
+
+#ifdef USE_M605X
+#include "m605x.h"
+#endif
+
+#ifdef USE_SELECTRIX
+#include "selectrix.h"
+#endif
+
+#ifdef USE_IB
+#include "ib.h"
+#endif
+
+#ifdef USE_DDL
+#include "ddl.h"
+#endif
+
+#ifdef USE_DDL88
 #include "ddl-s88.h"
+#endif
+
+#ifdef USE_HSI88
 #include "hsi-88.h"
+#endif
+
+#ifdef USE_I2C
 #include "i2c-dev.h"
+#endif
+
+#ifdef USE_ZIMO
 #include "zimo.h"
+#endif
+
+#ifdef USE_LENZ
 #include "li100.h"
+#endif
+
 #ifdef USE_LOCONET
 #include "loconet.h"
 #endif
+
 #include "syslogmessage.h"
 
 
@@ -173,23 +204,34 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
                            "at bus %ld!\n", busnumber);
         }
 
-        /* but the most important are not ;=)  */
         else if (xmlStrcmp(child->name, BAD_CAST "zimo") == 0) {
+#ifdef USE_ZIMO
             busnumber += readconfig_ZIMO(doc, child, busnumber);
+#else
+            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
+#endif
         }
-
         else if (xmlStrcmp(child->name, BAD_CAST "ddl") == 0) {
+#ifdef USE_DDL
             busnumber += readconfig_DDL(doc, child, busnumber);
+#else
+            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
+#endif
         }
-
         else if (xmlStrcmp(child->name, BAD_CAST "m605x") == 0) {
+#ifdef USE_M605X
             busnumber += readconfig_m605x(doc, child, busnumber);
+#else
+            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
+#endif
         }
-
         else if (xmlStrcmp(child->name, BAD_CAST "intellibox") == 0) {
+#ifdef USE_IB
             busnumber += readConfig_IB(doc, child, busnumber);
+#else
+            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
+#endif
         }
-
         else if (xmlStrcmp(child->name, BAD_CAST "loconet") == 0) {
 #ifdef USE_LOCONET
             busnumber += readConfig_LOCONET(doc, child, busnumber);
@@ -201,39 +243,51 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
         else if (xmlStrcmp(child->name, BAD_CAST "loopback") == 0) {
             busnumber += readconfig_LOOPBACK(doc, child, busnumber);
         }
-
         else if (xmlStrcmp(child->name, BAD_CAST "ddl-s88") == 0) {
-#if defined(linux) || defined(__CYGWIN__) || defined(__FreeBSD__)
+#ifdef USE_DDL88
             busnumber += readconfig_DDL_S88(doc, child, busnumber);
 #else
-            syslog_bus(0, DBG_ERROR,
-                       "Sorry, DDL-S88 not (yet) available on "
-                       "this system.\n");
+            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
 #endif
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "hsi-88") == 0) {
+#ifdef USE_HSI88
             busnumber += readConfig_HSI_88(doc, child, busnumber);
-        }
+#else
 
+#endif
+        }
         else if (xmlStrcmp(child->name, BAD_CAST "li100usb") == 0) {
+#ifdef USE_LENZ
             busnumber += readConfig_LI100_USB(doc, child, busnumber);
+#else
+            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
+#endif
         }
-
         else if (xmlStrcmp(child->name, BAD_CAST "li100") == 0) {
+#ifdef USE_LENZ
             busnumber += readConfig_LI100_SERIAL(doc, child, busnumber);
+#else
+            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
+#endif
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "selectrix") == 0) {
+#ifdef USE_SELECTRIX
             busnumber += readconfig_Selectrix(doc, child, busnumber);
+#else
+            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
+#endif
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "i2c-dev") == 0) {
-#ifdef linux
+#ifdef USE_I2C 
             busnumber += readconfig_I2C_DEV(doc, child, busnumber);
 #else
-            syslog_bus(0, DBG_ERROR, "Sorry, I2C-DEV is only available on "
-                       "Linux (yet).\n");
+            syslog_bus(0, DBG_ERROR,
+                       "Sorry, DDL-S88 not (yet) available on "
+                       "this system.\n");
 #endif
         }
 
