@@ -135,7 +135,9 @@ case $host in
   *-*-linux*)
     ;;
   *-*-cygwin*)
-    AC_CHECK_LIB(ioperm, ioperm, , AC_MSG_ERROR(lib ioperm is missing))
+    if test "$with_DDL88" = "yes"; then
+      AC_CHECK_LIB(ioperm, ioperm, , AC_MSG_ERROR(lib ioperm is missing))
+    fi
     ;;
   *-*-freebsd*)
     ;;
@@ -216,10 +218,14 @@ ACX_PTHREAD([LIBS="$PTHREAD_LIBS $LIBS"
 dnl Checks for host dependend library functions.
 case $host in
   *-*-linux*)
-    AC_CHECK_FUNC(ioperm, , AC_MSG_ERROR(support missing))
+    if test "$with_DDL88" = "yes"; then
+      AC_CHECK_FUNC(ioperm, , AC_MSG_ERROR(support missing))
+    fi
     ;;
   *-*-cygwin*)
-    AC_CHECK_FUNC(ioperm, , AC_MSG_ERROR(support missing))
+    if test "$with_DDL88" = "yes"; then
+      AC_CHECK_FUNC(ioperm, , AC_MSG_ERROR(support missing))
+    fi
     ;;
   *-*-freebsd*)
     ;;
