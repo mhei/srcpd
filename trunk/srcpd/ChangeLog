@@ -1,6 +1,7 @@
 2009-08-17 Guido Scholz <guido.scholz@bayernline.de>
 	* configure.in: Let the configure script show a short summary
-	about which modules are in and out
+	about which modules are in and out, only check for ioperm() if
+	ddl-s88 module is used
 
 2009-08-18 Matthias Trute <mtrute@users.sourceforge.net>
 	* src/loopback.c src/li100.c: copy the cmdTime() from
