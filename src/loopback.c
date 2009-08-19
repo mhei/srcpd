@@ -7,7 +7,6 @@
 #include <errno.h>
 
 #include "config-srcpd.h"
-#include "io.h"
 #include "loopback.h"
 #include "srcp-fb.h"
 #include "srcp-ga.h"
