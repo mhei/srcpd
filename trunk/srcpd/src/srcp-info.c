@@ -36,7 +36,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "io.h"
 #include "config-srcpd.h"
 #include "srcp-gl.h"
 #include "srcp-ga.h"
