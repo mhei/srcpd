@@ -8,6 +8,7 @@
 
 #include "config-srcpd.h"
 #include "loopback.h"
+#include "toolbox.h"
 #include "srcp-fb.h"
 #include "srcp-ga.h"
 #include "srcp-gl.h"
@@ -22,24 +23,6 @@
 #define __loopbackt ((LOOPBACK_DATA*)buses[btd->bus].driverdata)
 
 #define MAX_CV_NUMBER 255
-
-static int cmpTime(struct timeval *t1, struct timeval *t2)
-{
-    int result;
-
-    result = 0;
-    if (t2->tv_sec > t1->tv_sec) {
-        result = 1;
-    }
-    else {
-        if (t2->tv_sec == t1->tv_sec) {
-            if (t2->tv_usec > t1->tv_usec) {
-                result = 1;
-            }
-        }
-    }
-    return result;
-}
 
 
 int readconfig_LOOPBACK(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)

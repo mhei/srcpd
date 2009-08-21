@@ -1,3 +1,8 @@
+2009-08-21 Matthias Trute <mtrute@users.sourceforge.net>
+	* src/Makefile.am src/toolbox.c src/toolbox.h src/ib.c
+	src/li100-main.c src/loopback.c: new module toolbox, contains 
+	the cmpTime function found in multiple driver files.
+
 2009-08-17 Guido Scholz <guido.scholz@bayernline.de>
 	* configure.in: Let the configure script show a short summary
 	about which modules are in and out, only check for ioperm() if

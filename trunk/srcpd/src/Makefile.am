@@ -9,6 +9,7 @@ srcpd_SOURCES = \
 	config-srcpd.c config-srcpd.h \
 	dcc-address.c dcc-address.h \
 	io.c io.h \
+	toolbox.c toolbox.h \
 	loopback.c loopback.h \
 	netservice.c netservice.h \
 	portio.c portio.h \
@@ -75,7 +76,6 @@ endif
 if USE_ZIMO
 srcpd_SOURCES += zimo.c zimo.h
 endif
-
 
 DEFS = -D_REENTRANT -DSYSCONFDIR=\"$(sysconfdir)\" @DEFS@
 
