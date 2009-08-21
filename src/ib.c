@@ -36,6 +36,7 @@ email                : frank.schmischke@t-online.de
 #include "config-srcpd.h"
 #include "ib.h"
 #include "io.h"
+#include "toolbox.h"
 #include "srcp-ga.h"
 #include "srcp-gl.h"
 #include "srcp-sm.h"
@@ -155,25 +156,6 @@ int readConfig_IB(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     }
 
     return (1);
-}
-
-/*also used in li100-main.c*/
-int cmpTime(struct timeval *t1, struct timeval *t2)
-{
-    int result;
-
-    result = 0;
-    if (t2->tv_sec > t1->tv_sec) {
-        result = 1;
-    }
-    else {
-        if (t2->tv_sec == t1->tv_sec) {
-            if (t2->tv_usec > t1->tv_usec) {
-                result = 1;
-            }
-        }
-    }
-    return result;
 }
 
 /**
