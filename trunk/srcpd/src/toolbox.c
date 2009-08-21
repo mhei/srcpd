@@ -1,7 +1,7 @@
 /*
  * Various functions used by or useful for more than 1 module.
  * 
- * 
+ */
 
 #include "toolbox.h"
 
