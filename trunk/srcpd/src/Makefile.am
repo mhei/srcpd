@@ -57,7 +57,7 @@ endif
 
 # tricky: li100-main includes li100.c twice for both USB and RS232 support
 if USE_LENZ
-srcpd_SOURCES += li100.c li100.h \
+srcpd_SOURCES += li100.h \
 		 li100-main.c
 endif
 
@@ -76,6 +76,8 @@ endif
 if USE_ZIMO
 srcpd_SOURCES += zimo.c zimo.h
 endif
+
+EXTRA_DIST = li100.c
 
 DEFS = -D_REENTRANT -DSYSCONFDIR=\"$(sysconfdir)\" @DEFS@
 
