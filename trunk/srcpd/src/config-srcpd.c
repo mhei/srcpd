@@ -368,7 +368,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
                 int verbosity = atoi((char *) txt);
                 if ((verbosity < 0) || (verbosity > DBG_DEBUG)) {
                     syslog_bus(current_bus, DBG_ERROR,
-		        "Unvalid verbosity value found: %d; using %d instead",
+		        "Invalid verbosity value found: %d; using %d instead",
 			verbosity, DBG_DEBUG);
 		    verbosity = DBG_DEBUG;
 		}
