@@ -78,13 +78,15 @@ int readByte(bus_t bus, int wait, unsigned char *the_byte)
     return (i > 0 ? 0 : -1);
 }
 
-void writeByte(bus_t bus, const char b, unsigned long msecs)
+void writeByte(bus_t bus, const unsigned char b, unsigned long msecs)
 {
     ssize_t i = 0;
     char byte = b;
 
     if (buses[bus].debuglevel <= DBG_DEBUG) {
         i = write(buses[bus].device.file.fd, &byte, 1);
+        syslog_bus(bus, DBG_DEBUG, "(FD: %d) %i byte sent: 0x%02x (%d)\n",
+                   buses[bus].device.file.fd, i, b, b);
         if (i < 0) {
             syslog_bus(bus, DBG_ERROR, "(FD: %d) write failed: %s "
                     "(errno = %d)\n",
