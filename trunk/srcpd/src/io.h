@@ -23,7 +23,7 @@
 
 
 int  readByte(bus_t bus, int wait, unsigned char *the_byte);
-void writeByte(bus_t bus, const char the_byte, unsigned long msec);
+void writeByte(bus_t bus, const unsigned char the_byte, unsigned long msec);
 void writeString(bus_t bus, const char *the_string, unsigned long msecs);
 
 void restore_comport(bus_t bus);
