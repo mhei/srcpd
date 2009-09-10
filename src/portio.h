@@ -20,6 +20,5 @@ void write_port(bus_t bus, unsigned char b);
 int check_port(bus_t bus);
 unsigned int read_port(bus_t bus);
 
-
 #endif
 

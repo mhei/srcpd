@@ -1,5 +1,3 @@
-/* cvs: $Id$ */
-
 /**
  * This software is published under the terms of the GNU General Public
  * License, Version 2.0
@@ -92,6 +90,7 @@ int readconfig_Selectrix(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         __selectrix->number_fb = 0;
         __selectrix->SXflags = 0;
         __selectrix->stateInterface = 0;
+        __selectrix->currentFB = 1;
         __selectrix->max_address = 0x100; /* SXmax; */
         /* Initialise the two array's */
         for (i = 0; i < SXmax; i++) {
@@ -265,19 +264,15 @@ int init_bus_Selectrix(bus_t busnumber)
                 buses[busnumber].debuglevel);
         if (buses[busnumber].debuglevel <= DBG_DEBUG) {
                 open_port(busnumber);
-                if (syncSXbus(busnumber) == 0) {
-                        syslog_bus(busnumber, DBG_INFO, 
-                                "Selectrix init done, fd=%d",
-                                buses[busnumber].device.file.fd);
-                        syslog_bus(busnumber, DBG_INFO,
-                                "Selectrix description: %s",
-                                buses[busnumber].description);
-                        syslog_bus(busnumber, DBG_INFO,
-                                "Selectrix flags: %04X (hex)",
-                                __selectrix->SXflags);
-                } else {
-                        close_port(busnumber);
-                }
+                syslog_bus(busnumber, DBG_INFO, 
+                        "Selectrix init done, fd=%d",
+                        buses[busnumber].device.file.fd);
+                syslog_bus(busnumber, DBG_INFO,
+                        "Selectrix description: %s",
+                        buses[busnumber].description);
+                syslog_bus(busnumber, DBG_INFO,
+                        "Selectrix flags: %04X (hex)",
+                        __selectrix->SXflags);
         } else {
                 buses[busnumber].device.file.fd = -1;
         }
@@ -414,7 +409,7 @@ int readSXbus(bus_t busnumber)
         if (buses[busnumber].device.file.fd != -1 ) {
                 /* Wait until a character arrives */
                 rr = read_port(busnumber);
-                syslog_bus(busnumber, DBG_WARN,
+                syslog_bus(busnumber, DBG_DEBUG,
                        "Selectrix on bus %ld, read byte %02X (hex).",
                        busnumber, rr);
                 if (rr < 0x100) {
@@ -455,47 +450,9 @@ void writeSXbus(bus_t busnumber, int SXadres, int SXdata)
                 write_port(busnumber, SXdata);
         } else {
                 syslog_bus(busnumber, DBG_ERROR,
-                        "Selectrix on bus %ld, byte %d not to address %d.",
+                        "Selectrix on bus %ld, byte %02X (hex) not to address %d.",
                         busnumber, SXdata, SXadres);
         }
-}
-
-int syncSXbus(bus_t busnumber)
-{
-        int syncError;
-        int syncWait;
-
-        syncError = 0;
-        if (buses[busnumber].device.file.fd != -1 ) {
-                syncWait = 500;
-                __selectrix->SXflags &= ~Connection;
-                while ((__checkSXflag(Connection)) && (syncWait > 0))
-                {
-                        write_port(busnumber, SXempty);
-                        if (usleep(500) == -1) {
-                            syslog_bus(busnumber, DBG_DEBUG,
-                                    "usleep() failed: %s (errno = %d)\n",
-                                    strerror(errno), errno);
-                        }
-                        syncWait--;
-                }
-                if (syncWait == 0) {
-                        syslog_bus(busnumber, DBG_ERROR,
-                                "Selectrix on bus %ld, no synchronisation responce.",
-                                busnumber);
-                        syncError = 1;
-                } else {
-                        syslog_bus(busnumber, DBG_WARN,
-                                "Selectrix on bus %ld, synchronisation in %d times.",
-                                busnumber, 500 - syncWait);
-                }
-        } else {
-                syslog_bus(busnumber, DBG_DEBUG,
-                        "Selectrix on bus %ld, port not open.",
-                        busnumber);
-                syncError = 2;
-        }
-        return syncError;
 }
 
 /*******************************************************
@@ -737,26 +694,6 @@ void *thr_commandSelectrix(void *v)
                                 }
                                 session_endwait(btd->bus, smtmp.value);
                         }
-                        if (!queue_SM_isempty(btd->bus))
-                        {
-                                state = 2;
-                                buses[btd->bus].watchdog = 3;
-                                dequeueNextSM(btd->bus, &smtmp);
-                                session_lock_wait(btd->bus);
-                                switch (smtmp.command )
-                                {
-                                case SET:
-                                        /* Write data to decoder */
-                                        writeSXDecoder(btd->bus, smtmp.value);
-                                        break;
-                                case GET:
-                                case VERIFY:
-                                        /* Read data from decoder */
-                                        smtmp.value = readSXDecoder(btd->bus);
-                                        break;
-                                }
-                                session_endwait(btd->bus, smtmp.value);
-                        }
                 }
                 /* Loco decoders */
                 if (!queue_GL_isempty(btd->bus)) {
@@ -932,25 +869,18 @@ void *thr_commandSelectrix(void *v)
 void *thr_feedbackSelectrix(void *v)
 {
         int addr;
+        int respondtime;
 
         bus_t busnumber = (bus_t) v;
         syslog_bus(busnumber, DBG_INFO, "Selectrix "
                 "feedback thread started.");
-        __selectrix->currentFB = __selectrix->number_fb;
+        respondtime = 0;
         while (1) {
                 /* Feed back contacts */
                 if ((__selectrix->number_fb > 0) &&
                     !(__checkSXflag(Rautenhaus_MODE + Rautenhaus_FDBCK))) {
                         switch (__selectrix->stateInterface) {
                         case 0:
-                                /* Select the next module */
-                                if (__selectrix->currentFB >= __selectrix->number_fb) {
-                                        /* Reset to start */
-                                        __selectrix->currentFB = 1;
-                                } else {
-                                        /* Next */
-                                        __selectrix->currentFB++;
-                                }
                                 /* Fetch the module address */
                                 addr = __selectrix->fb_adresses[__selectrix->currentFB];
                                 if (__selectrix->max_address > addr) {
@@ -966,14 +896,24 @@ void *thr_feedbackSelectrix(void *v)
                                                 "invalid address %d "
                                                 "with feedback index %d.",
                                                 addr, __selectrix->currentFB);
+                                        __selectrix->stateInterface = 0;
+                                        __selectrix->currentFB = 1;
                                 }
+                                respondtime = 0;
                                 break;
                         case 1:
-                                break;
                         case 2:
+                                respondtime++;
+                                if (respondtime > 50) {
+                                        __selectrix->stateInterface = 0;
+                                        __selectrix->currentFB = 1;
+                                        respondtime = 0;
+                                }
                                 break;
                         default:
                                 __selectrix->stateInterface = 0;
+                                __selectrix->currentFB = 1;
+                                respondtime = 0;
                                 break;
                         }
                         /* Process every feedback 4 times per second */
@@ -1002,7 +942,7 @@ void sig_processSelectrix(bus_t busnumber)
         int dataUP, i;
 
         __selectrix->SXflags |= Connection;
-        syslog_bus(busnumber, DBG_INFO, "Selectrix SIGIO processed.");
+        syslog_bus(busnumber, DBG_DEBUG, "Selectrix SIGIO processed.");
         /* Read the SX-bus */
         data = readSXbus(busnumber);
         switch (__selectrix->stateInterface) {
@@ -1024,7 +964,15 @@ void sig_processSelectrix(bus_t busnumber)
                  /* Use 1, 2, ... as address for feedback */
                  setFBmodul(busnumber, __selectrix->currentFB, dataUP);
                  /* Use real address for feedback */
-                 /* setFBmodul(busnumber, addr, dataUP); */
+                 // setFBmodul(busnumber, addr, dataUP);
+                 /* Select the next module */
+                 if (__selectrix->currentFB >= __selectrix->number_fb) {
+                         /* Reset to start */
+                         __selectrix->currentFB = 1;
+                 } else {
+                         /* Next */
+                         __selectrix->currentFB++;
+                 }
                  __selectrix->stateInterface = 0;
                  break;
         /* Reading and programming a decoder */
@@ -1075,6 +1023,8 @@ void sig_processSelectrix(bus_t busnumber)
                            syslog_bus(busnumber, DBG_INFO,
                                    "Selectrix discarded data %02X (hex).",
                                    data);
+                           __selectrix->stateInterface = 0;
+                           __selectrix->currentFB = 1;
                    }
                    break;
         }

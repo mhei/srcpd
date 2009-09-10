@@ -24,9 +24,7 @@
 #ifdef __CYGWIN__
 #include <sys/socket.h> /*for FIONREAD*/
 #endif
-#ifdef __sun__
-#include <sys/filio.h>
-#endif
+
 
 #include "config-srcpd.h"
 #include "ttycygwin.h"
