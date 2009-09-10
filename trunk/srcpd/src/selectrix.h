@@ -79,12 +79,12 @@ typedef struct _SELECTRIX_DATA {
     int number_fb;
     int number_ga;
     int number_gl;
-    int max_address;
     int SXflags;
-    SX_BUS fb_adresses;
-    SX_BUS bus_data;
     int stateInterface;             /* Reply state of the interface */
     int currentFB;                  /* holds current number of the feedback */
+    int max_address;
+    SX_BUS fb_adresses;
+    SX_BUS bus_data;
 } SELECTRIX_DATA;
 
 /* Initialisation of the structure */
