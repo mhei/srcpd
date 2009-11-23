@@ -40,6 +40,11 @@ int init_gl_IB(gl_state_t *gl);
 int init_ga_IB(ga_state_t *ga);
 void* thr_sendrec_IB(void *);
 
+/* values for power_state */
+
+#define POWER_OFF 0
+#define POWER_ON  1
+
 static const char P50_DISABLE[] = "xZzA1";
 static const char P50_ENABLE[] = "ZzA0";
 
