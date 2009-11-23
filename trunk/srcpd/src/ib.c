@@ -63,6 +63,7 @@ static void check_status_pt_IB(bus_t busnumber);
 static void send_command_ga_IB(bus_t busnumber);
 static void send_command_gl_IB(bus_t busnumber);
 static void send_command_sm_IB(bus_t busnumber);
+static unsigned char send_power_IB(bus_t bus);
 
 
 int readConfig_IB(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
@@ -298,6 +299,16 @@ static void end_bus_thread(bus_thread_t * btd)
     free(btd);
 }
 
+static void handle_power_command(bus_t bus)
+{
+    buses[bus].power_changed = 0;
+    char msg[110];
+
+    infoPower(bus, msg);
+    enqueueInfoMessage(msg);
+    buses[bus].watchdog++;
+}
+
 void *thr_sendrec_IB(void *v)
 {
     unsigned char byte2send;
@@ -330,27 +341,18 @@ void *thr_sendrec_IB(void *v)
     fb_zaehler2 = 1;
     byte2send = XSensOff;
     writeByte(btd->bus, byte2send, 0);
-    status = readByte(btd->bus, 1, &rr);
+    status = readByte_IB(btd->bus, 1, &rr);
 
-    while (1) {
+    while (true) {
+        buses[btd->bus].watchdog = 1;
         pthread_testcancel();
         if (buses[btd->bus].power_changed == 1) {
+
             if (__ibt->emergency_on_ib == 1) {
                 syslog_bus(btd->bus, DBG_INFO,
-                           "send power off to IB off while emergency-stop");
+                           "got power off from IB");
                 __ibt->emergency_on_ib = 2;
-                byte2send = XPwrOff;
-                writeByte(btd->bus, byte2send, __ibt->pause_between_cmd);
-                status = readByte(btd->bus, 1, &rr);
-                while (status == -1) {
-                    if (usleep(100000) == -1) {
-                        syslog_bus(btd->bus, DBG_ERROR,
-                                "usleep() failed: %s (errno = %d)\n",
-                                strerror(errno), errno);
-                    }
-                    status = readByte(btd->bus, 1, &rr);
-                }
-                /* sleep(2); */
+                setPower(btd->bus, POWER_OFF, "Emergency Stop");
             }
             else {
                 if ((__ibt->emergency_on_ib == 2)
@@ -363,33 +365,17 @@ void *thr_sendrec_IB(void *v)
                     }
                     continue;
                 }
-                char msg[110];
 
-                byte2send = (buses[btd->bus].power_state == POWER_ON) ? XPwrOn : XPwrOff;
-                writeByte(btd->bus, byte2send, __ibt->pause_between_cmd);
-                status = readByte_IB(btd->bus, 1, &rr);
-                while (status == -1) {
-                    if (usleep(100000) == -1) {
-                        syslog_bus(btd->bus, DBG_ERROR,
-                                "usleep() failed: %s (errno = %d)\n",
-                                strerror(errno), errno);
-                    }
-                    status = readByte_IB(btd->bus, 1, &rr);
+                if (send_power_IB(btd->bus) == 0x06) {
+                    syslog_bus(btd->bus, DBG_INFO,
+                               "power on not possible - overheating");
+                    setPower(btd->bus, POWER_OFF, "power on not possible - overheating");
                 }
-                /* war alles OK? */
-                if (rr == 0x00) {
-                    buses[btd->bus].power_changed = 0;
-                }
-                /* power on not possible - overheating */
-                if (rr == 0x06) {
-                    buses[btd->bus].power_changed = 0;
-                    buses[btd->bus].power_state = POWER_OFF;
-                }
-                if (buses[btd->bus].power_state == POWER_ON)
+                else if (buses[btd->bus].power_state == POWER_ON)
                     __ibt->emergency_on_ib = 0;
-                infoPower(btd->bus, msg);
-                enqueueInfoMessage(msg);
             }
+
+            handle_power_command(btd->bus);
         }
 
         if (buses[btd->bus].power_state == POWER_OFF) {
@@ -407,7 +393,6 @@ void *thr_sendrec_IB(void *v)
         check_status_IB(btd->bus);
         send_command_sm_IB(btd->bus);
         check_reset_fb(btd->bus);
-        buses[btd->bus].watchdog = 1;
         if (usleep(50000) == -1) {
             syslog_bus(btd->bus, DBG_ERROR,
                     "usleep() failed: %s (errno = %d)\n",
@@ -622,7 +607,7 @@ static int read_register_IB(bus_t busnumber, int reg)
     byte2send = 0;
     writeByte(busnumber, byte2send, 2);
 
-    readByte(busnumber, 1, &status);
+    readByte_IB(busnumber, 1, &status);
 
     return status;
 }
@@ -731,7 +716,7 @@ static int write_cv_IB(bus_t busnumber, int cv, int value)
     byte2send = value;
     writeByte(busnumber, byte2send, 2);
 
-    readByte(busnumber, 1, &status);
+    readByte_IB(busnumber, 1, &status);
 
     return status;
 }
@@ -832,7 +817,7 @@ static int term_pgm_IB(bus_t busnumber)
     byte2send = XPT_Off;
     writeByte(busnumber, byte2send, 0);
 
-    readByte(busnumber, 1, &status);
+    readByte_IB(busnumber, 1, &status);
 
     ret_val = 0;
     if (status != 0)
@@ -1033,28 +1018,28 @@ static void check_status_IB(bus_t busnumber)
         syslog_bus(busnumber, DBG_DEBUG,
                    "On bus %i short detected; old-state is %i", busnumber,
                    getPower(busnumber));
-        if ((__ib->emergency_on_ib == 0) && (getPower(busnumber))) {
+        if ((__ib->emergency_on_ib == 0) && (getPower(busnumber) == POWER_ON)) {
             if (xevnt2 & 0x20)
-                setPower(busnumber, 0, "Overheating condition detected");
+                setPower(busnumber, POWER_OFF, "Overheating condition detected");
 
             if (xevnt2 & 0x10)
-                setPower(busnumber, 0,
+                setPower(busnumber, POWER_OFF,
                          "Non-allowed electrical connection between "
                          "programming track and rest of layout");
             
             if (xevnt2 & 0x08)
-                setPower(busnumber, 0,
+                setPower(busnumber, POWER_OFF,
                          "Overload on DCC-Booster or Loconet");
             
             if (xevnt2 & 0x04)
-                setPower(busnumber, 0,
+                setPower(busnumber, POWER_OFF,
                          "Short-circuit on internal booster");
             
             if (xevnt2 & 0x02)
-                setPower(busnumber, 0, "Overload on Lokmaus-bus");
+                setPower(busnumber, POWER_OFF, "Overload on Lokmaus-bus");
             
             if (xevnt2 & 0x01)
-                setPower(busnumber, 0,
+                setPower(busnumber, POWER_OFF,
                          "Short-circuit on external booster");
 
             __ib->emergency_on_ib = 1;
@@ -1063,7 +1048,7 @@ static void check_status_IB(bus_t busnumber)
 
     /* power off? */
     /* we should send an XStatus-command */
-    if ((xevnt1 & 0x08) || (xevnt2 & 0x40)) {
+    if ((xevnt1 & 0x08) || (xevnt2 & 0x40) || (__ib->emergency_on_ib == 2)) {
         byte2send = XStatus;
         writeByte(busnumber, byte2send, 0);
         readByte_IB(busnumber, 1, &rr);
@@ -1071,8 +1056,8 @@ static void check_status_IB(bus_t busnumber)
             syslog_bus(busnumber, DBG_DEBUG,
                        "On bus %i no power detected; old-state is %i",
                        busnumber, getPower(busnumber));
-            if ((__ib->emergency_on_ib == 0) && (getPower(busnumber))) {
-                setPower(busnumber, 0, "Emergency Stop");
+            if ((__ib->emergency_on_ib == 0) && (getPower(busnumber) == POWER_ON)) {
+                setPower(busnumber, POWER_OFF, "Emergency Stop");
                 __ib->emergency_on_ib = 1;
             }
         }
@@ -1080,8 +1065,8 @@ static void check_status_IB(bus_t busnumber)
             syslog_bus(busnumber, DBG_DEBUG,
                        "On bus %i power detected; old-state is %i",
                        busnumber, getPower(busnumber));
-            if ((__ib->emergency_on_ib == 1) || (!getPower(busnumber))) {
-                setPower(busnumber, 1, "No Emergency Stop");
+            if ((__ib->emergency_on_ib == 1) || (getPower(busnumber) == POWER_OFF)) {
+                setPower(busnumber, POWER_ON, "No Emergency Stop");
                 __ib->emergency_on_ib = 0;
             }
         }
@@ -1105,7 +1090,7 @@ static void check_status_pt_IB(bus_t busnumber)
     /* first clear input-buffer */
     i = 0;
     while (i == 0) {
-        i = readByte(busnumber, 0, &rr[0]);
+        i = readByte_IB(busnumber, 0, &rr[0]);
     }
 
     i = -1;
@@ -1758,7 +1743,7 @@ static int readAnswer_IB(const bus_t busnumber, const int generatePrintf)
  *
  * Tries to read one byte 10 times. If no byte is received -1 is returned.
  * Because the IB guarantees an answer during 50 ms all write bytes can
- * be generated with a waiting time of 0, and readByte_ib can be called
+ * be generated with a waiting time of 0, and readByte_IB can be called
  * directly after write
  *
  * @param: busnumber
@@ -1783,4 +1768,24 @@ static int readByte_IB(bus_t bus, int wait, unsigned char *the_byte)
         }
     }
     return -1;
+}
+
+static unsigned char send_power_IB(bus_t busnumber)
+{
+    unsigned char result;
+    unsigned char byte2send;
+    int status;
+
+    byte2send = (buses[busnumber].power_state == POWER_ON) ? XPwrOn : XPwrOff;
+    writeByte(busnumber, byte2send, __ib->pause_between_cmd);
+    status = readByte_IB(busnumber, 1, &result);
+    while (status == -1) {
+        if (usleep(100000) == -1) {
+            syslog_bus(busnumber, DBG_ERROR,
+                       "usleep() failed: %s (errno = %d)\n",
+                       strerror(errno), errno);
+        }
+        status = readByte_IB(busnumber, 1, &result);
+    }
+    return result;
 }
