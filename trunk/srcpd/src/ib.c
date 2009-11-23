@@ -354,7 +354,7 @@ void *thr_sendrec_IB(void *v)
             }
             else {
                 if ((__ibt->emergency_on_ib == 2)
-                    && (buses[btd->bus].power_state == 0)) {
+                    && (buses[btd->bus].power_state == POWER_OFF)) {
                     check_status_IB(btd->bus);
                     if (usleep(50000) == -1) {
                         syslog_bus(btd->bus, DBG_ERROR,
@@ -365,7 +365,7 @@ void *thr_sendrec_IB(void *v)
                 }
                 char msg[110];
 
-                byte2send = buses[btd->bus].power_state ? XPwrOn : XPwrOff;
+                byte2send = (buses[btd->bus].power_state == POWER_ON) ? XPwrOn : XPwrOff;
                 writeByte(btd->bus, byte2send, __ibt->pause_between_cmd);
                 status = readByte_IB(btd->bus, 1, &rr);
                 while (status == -1) {
@@ -383,16 +383,16 @@ void *thr_sendrec_IB(void *v)
                 /* power on not possible - overheating */
                 if (rr == 0x06) {
                     buses[btd->bus].power_changed = 0;
-                    buses[btd->bus].power_state = 0;
+                    buses[btd->bus].power_state = POWER_OFF;
                 }
-                if (buses[btd->bus].power_state == 1)
+                if (buses[btd->bus].power_state == POWER_ON)
                     __ibt->emergency_on_ib = 0;
                 infoPower(btd->bus, msg);
                 enqueueInfoMessage(msg);
             }
         }
 
-        if (buses[btd->bus].power_state == 0) {
+        if (buses[btd->bus].power_state == POWER_OFF) {
             check_status_IB(btd->bus);
             if (usleep(50000) == -1) {
                 syslog_bus(btd->bus, DBG_ERROR,
