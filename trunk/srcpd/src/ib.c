@@ -59,6 +59,9 @@ static int readAnswer_IB(const bus_t busnumber, const int generatePrintf);
 static int readByte_IB(bus_t bus, int wait, unsigned char *the_byte);
 static speed_t checkBaudrate(const int fd, const bus_t busnumber);
 static void check_status_IB(bus_t busnumber);
+static void check_status_fb_IB(bus_t busnumber);
+static void check_status_ga_IB(bus_t busnumber);
+static void check_status_gl_IB(bus_t busnumber);
 static void check_status_pt_IB(bus_t busnumber);
 static void send_command_ga_IB(bus_t busnumber);
 static void send_command_gl_IB(bus_t busnumber);
@@ -347,7 +350,6 @@ void *thr_sendrec_IB(void *v)
         buses[btd->bus].watchdog = 1;
         pthread_testcancel();
         if (buses[btd->bus].power_changed == 1) {
-
             if (__ibt->emergency_on_ib == 1) {
                 syslog_bus(btd->bus, DBG_INFO,
                            "got power off from IB");
@@ -374,7 +376,6 @@ void *thr_sendrec_IB(void *v)
                 else if (buses[btd->bus].power_state == POWER_ON)
                     __ibt->emergency_on_ib = 0;
             }
-
             handle_power_command(btd->bus);
         }
 
@@ -895,13 +896,9 @@ static void send_command_sm_IB(bus_t busnumber)
 
 static void check_status_IB(bus_t busnumber)
 {
-    int i;
-    int temp;
     unsigned char byte2send;
     unsigned char rr;
     unsigned char xevnt1, xevnt2, xevnt3;
-    gl_state_t gltmp, glakt;
-    ga_state_t gatmp;
 
     /* Request for state�changes:
        1. �derungen an S88-Modulen
@@ -924,93 +921,17 @@ static void check_status_IB(bus_t busnumber)
 
     /* at least one loco was controlled by throttle */
     if (xevnt1 & 0x01) {
-        byte2send = XEvtLok;
-        writeByte(busnumber, byte2send, 0);
-        readByte_IB(busnumber, 1, &rr);
-        while (rr != 0x80) {
-            if (rr == 1) {
-                /* Loco in emergency stop */
-                gltmp.speed = 0;
-                gltmp.direction = 2;
-            }
-            else {
-                /* current loco speed */
-                gltmp.speed = rr;
-                gltmp.direction = 0;
-                if (gltmp.speed > 0)
-                    gltmp.speed--;
-            }
-            /* 2. byte functions */
-            readByte_IB(busnumber, 1, &rr);
-            /* gltmp.funcs = rr & 0xf0; */
-            gltmp.funcs = (rr << 1);
-            /* 3. byte address (low-part A7..A0) */
-            readByte_IB(busnumber, 1, &rr);
-            gltmp.id = rr;
-            /* 4. byte address (high-part A13..A8), direction, light */
-            readByte_IB(busnumber, 1, &rr);
-            if ((rr & 0x80) && (gltmp.direction == 0))
-                gltmp.direction = 1;    /* direction is forward */
-            if (rr & 0x40)
-                gltmp.funcs |= 0x01;    /* light is on */
-            rr &= 0x3F;
-            gltmp.id |= rr << 8;
-
-            /* 5. byte real speed (is ignored) */
-            readByte_IB(busnumber, 1, &rr);
-            /* gltmp.id, gltmp.speed, gltmp.direction); */
-
-            /* initialize the GL if not done by user, */
-            /* because IB can report uninitialized GLs... */
-            if (!isInitializedGL(busnumber, gltmp.id)) {
-                syslog_bus(busnumber, DBG_INFO,
-                           "IB reported uninitialized GL. "
-                           "Performing default init for %d", gltmp.id);
-                cacheInitGL(busnumber, gltmp.id, 'P', 1, 126, 5);
-            }
-            /* get old data, to know which FS the user wants to have... */
-            cacheGetGL(busnumber, gltmp.id, &glakt);
-            /* recalculate speed */
-            gltmp.speed = (gltmp.speed * glakt.n_fs) / 126;
-            cacheSetGL(busnumber, gltmp.id, gltmp);
-
-            /* next 1. byte */
-            readByte_IB(busnumber, 1, &rr);
-        }
+        check_status_gl_IB(busnumber);
     }
 
     /* some feedback state has changed */
     if (xevnt1 & 0x04) {
-        byte2send = XEvtSen;
-        writeByte(busnumber, byte2send, 0);
-        readByte_IB(busnumber, 1, &rr);
-        while (rr != 0x00) {
-            int aktS88 = rr;
-
-            readByte_IB(busnumber, 1, &rr);
-            temp = rr;
-            temp <<= 8;
-            readByte_IB(busnumber, 1, &rr);
-            setFBmodul(busnumber, aktS88, temp | rr);
-            readByte_IB(busnumber, 1, &rr);
-        }
+        check_status_fb_IB(busnumber);
     }
 
     /* some turnout was switched by hand */
     if (xevnt1 & 0x20) {
-        byte2send = XEvtTrn;
-        writeByte(busnumber, byte2send, 0);
-        readByte_IB(busnumber, 1, &rr);
-        temp = rr;
-        for (i = 0; i < temp; i++) {
-            readByte_IB(busnumber, 1, &rr);
-            gatmp.id = rr;
-            readByte_IB(busnumber, 1, &rr);
-            gatmp.id |= (rr & 0x07) << 8;
-            gatmp.port = (rr & 0x80) ? 1 : 0;
-            gatmp.action = (rr & 0x40) ? 1 : 0;
-            setGA(busnumber, gatmp.id, gatmp);
-        }
+        check_status_ga_IB(busnumber);
     }
 
     /* overheat, short-circuit on track etc. */
@@ -1788,4 +1709,110 @@ static unsigned char send_power_IB(bus_t busnumber)
         status = readByte_IB(busnumber, 1, &result);
     }
     return result;
+}
+
+static void check_status_fb_IB(bus_t busnumber)
+{
+    unsigned char byte2send;
+    unsigned char rr;
+    int temp;
+    int aktS88;
+
+    byte2send = XEvtSen;
+    writeByte(busnumber, byte2send, 0);
+    readByte_IB(busnumber, 1, &rr);
+    while (rr != 0x00) {
+        aktS88 = rr;
+        readByte_IB(busnumber, 1, &rr);
+        temp = rr;
+        temp <<= 8;
+        readByte_IB(busnumber, 1, &rr);
+        setFBmodul(busnumber, aktS88, temp | rr);
+        readByte_IB(busnumber, 1, &rr);
+    }
+}
+
+static void check_status_ga_IB(bus_t busnumber)
+{
+    unsigned char byte2send;
+    unsigned char rr;
+    int temp;
+    int i;
+    ga_state_t gatmp;
+
+    byte2send = XEvtTrn;
+    writeByte(busnumber, byte2send, 0);
+    readByte_IB(busnumber, 1, &rr);
+    temp = rr;
+    for (i = 0; i < temp; i++) {
+        readByte_IB(busnumber, 1, &rr);
+        gatmp.id = rr;
+        readByte_IB(busnumber, 1, &rr);
+        gatmp.id |= (rr & 0x07) << 8;
+        gatmp.port = (rr & 0x80) ? 1 : 0;
+        gatmp.action = (rr & 0x40) ? 1 : 0;
+        setGA(busnumber, gatmp.id, gatmp);
+    }
+}
+
+static void check_status_gl_IB(bus_t busnumber)
+{
+    unsigned char byte2send;
+    unsigned char rr;
+    gl_state_t gltmp, glakt;
+
+    byte2send = XEvtLok;
+    writeByte(busnumber, byte2send, 0);
+    readByte_IB(busnumber, 1, &rr);
+
+    while (rr != 0x80) {
+        if (rr == 1) {
+            /* Loco in emergency stop */
+            gltmp.speed = 0;
+            gltmp.direction = 2;
+        }
+        else {
+            /* current loco speed */
+            gltmp.speed = rr;
+            gltmp.direction = 0;
+            if (gltmp.speed > 0)
+                gltmp.speed--;
+        }
+
+        /* 2. byte functions */
+        readByte_IB(busnumber, 1, &rr);
+        /* gltmp.funcs = rr & 0xf0; */
+        gltmp.funcs = (rr << 1);
+
+        /* 3. byte address (low-part A7..A0) */
+        readByte_IB(busnumber, 1, &rr);
+        gltmp.id = rr;
+
+        /* 4. byte address (high-part A13..A8), direction, light */
+        readByte_IB(busnumber, 1, &rr);
+        if ((rr & 0x80) && (gltmp.direction == 0))
+            gltmp.direction = 1;    /* direction is forward */
+        if (rr & 0x40)
+            gltmp.funcs |= 0x01;    /* light is on */
+        rr &= 0x3F;
+        gltmp.id |= rr << 8;
+
+        /* 5. byte real speed (is ignored) */
+        readByte_IB(busnumber, 1, &rr);
+        /* gltmp.id, gltmp.speed, gltmp.direction); */
+
+        /* initialize the GL if not done by user, */
+        /* because IB can report uninitialized GLs... */
+        if (!isInitializedGL(busnumber, gltmp.id)) {
+            syslog_bus(busnumber, DBG_INFO,
+                       "IB reported uninitialized GL. "
+                       "Performing default init for %d", gltmp.id);
+            cacheInitGL(busnumber, gltmp.id, 'P', 1, 126, 5);
+        }
+        /* get old data, to know which FS the user wants to have... */
+        cacheGetGL(busnumber, gltmp.id, &glakt);
+        /* recalculate speed */
+        gltmp.speed = (gltmp.speed * glakt.n_fs) / 126;
+        cacheSetGL(busnumber, gltmp.id, gltmp);
+    }
 }
