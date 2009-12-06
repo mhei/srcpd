@@ -139,7 +139,7 @@ Daemons Verwendung finden.  Nicht benötigte Busse können beispielsweise
 .fi
 
 .PP
-Hierbei ist zu beachten, das die Nummern der nachfolgenden Busse
+Hierbei ist zu beachten, dass die Nummern der nachfolgenden Busse
 sich entsprechend verschieben.
 .\"
 .\"
@@ -166,7 +166,7 @@ verfolgen; nähere Informationen hierzu befinden sich im Handbuch
 .TP
 use_watchdog
 Einige Busse bieten die Möglichkeit, die Aktivität des Busses zu
-überwachen und einen blockierten Bus wieder zu aktivieren.   Gültige
+überwachen und einen blockierten Bus wieder zu aktivieren.  Gültige
 Werte sind
 .IR yes
 oder
@@ -259,7 +259,7 @@ auf dem System läuft.  Voreingestellt ist
 Dieser Bus ist für den Betriebsmodus
 .IR Digital\ Direct\ für\ Linux .
 In diesem Modus übernimmt der PC die Erzeugung der Digitalsignale
-direkt durch Verwendung der Hardware der seriellen Schnittstelle.
+direkt durch Verwendung der Hardware der seriellen Schnittstelle (RS232).
 Es wird keine Digitalzentrale zusätzlich benötigt.  Benutzt werden
 die Leitungen TxD und GND der seriellen Schnittstelle, die geeignet
 mit den Eingängen eines Digitalboosters verbunden werden müssen.
@@ -278,7 +278,7 @@ wie folgt einzurichten:
 
 Um die Echtzeitpriorität für diesen Benutzer zu erhöhen, ist in der Datei 
 .IR /etc/security/limits.conf
-folgende Zeile anzuhängen:
+folgende Zeile einzutragen:
 
    srcpd  -       rtprio  99
 
@@ -296,16 +296,22 @@ number_ga
 Anzahl der Schaltdecoderadressen, die benötigt werden.  Beispiel:
 Bei vier Weichen und drei Signalen muss dieser Wert mindestens auf 7
 gesetzt werden.  Auf herkömmlichen Rechnern mit genügend Arbeitsspeicher
-kann dieser Wert von vornherein auf 100 gesetzt werden.
+kann dieser Wert von vornherein auf 100 gesetzt werden. Der
+voreingestellte Wert ist
+.IR 324 .
+.\"
 .TP
 number_gl
 Anzahl der Lok-Decoderadressen die benötigt werden.  Bei drei
 digitalisierten Lokomotiven muss dieser Wert mindestens auf 3 gesetzt
 sein.  Auf herkömmlichen Rechnern mit genügend Arbeitsspeicher kann
-dieser Wert von vornherein auf 100 gesetzt werden.
+dieser Wert von vornherein auf 100 gesetzt werden. Der voreingestellte
+Wert ist
+.IR 81 .
+.\"
 .TP
 enable_ringindicator_checking
-Der Ringindikator RI ist eine Leitung der seriellen Schnittstelle.
+Der Ringindikator (RI) ist eine Leitung der seriellen Schnittstelle.
 Wird dieser Wert auf
 .IR yes
 gesetzt, so schaltet der
@@ -316,7 +322,9 @@ von einer entsprechenden Hardware sinnvoll bedient werden.  Denkbar wäre
 etwa ein Notausschalter.  Verwendet man die Leitung RI nicht, muss dieser
 Wert auf
 .IR no
-gesetzt werden.
+gesetzt werden.  Der voreingestellte Wert ist
+.IR no .
+.\"
 .TP
 enable_checkshort_checking
 Die Leitung DSR der seriellen Schnittstelle kann zur
@@ -326,6 +334,8 @@ verkabelt ist, sollte dieser Wert auf
 .IR yes
 gesetzt werden, sonst auf
 .IR no . 
+Der voreingestellte Wert ist
+.IR no .
 
 Der Vollständigkeit wegen sei angemerkt, dass die Leitung DTR der
 seriellen Schnittstelle nach dem Start vom
@@ -335,6 +345,7 @@ wenn der Digitalstrom eingeschaltet wird.  Wird der Digitalstrom
 ausgeschaltet, wird DTR wieder auf inaktiv (-12V) gesetzt.  Diese
 Steuerleitung lässt sich also zum Ein-/Ausschalten eines Boosters
 nutzen, der über dieses Feature verfügt.
+.\"
 .TP
 inverse_dsr_handling
 Bei manchen Boostern muss die serielle Leitung DSR invers behandelt werden,
@@ -343,6 +354,9 @@ im Einsatz ist, muss dieser Wert auf
 .IR yes
 gesetzt werden, sonst auf
 .IR no .
+Der voreingestellte Wert ist
+.IR no .
+.\"
 .TP
 enable_maerklin
 Dieser Wert ist auf
@@ -350,6 +364,9 @@ Dieser Wert ist auf
 zu setzen, falls Decoder des alten Märklin Digitalsystems gesteuert
 werden sollen, sonst auf
 .IR no .
+Der voreingestellte Wert ist
+.IR yes .
+.\"
 .TP
 enable_nmradcc
 Dieser Wert ist auf
@@ -357,6 +374,8 @@ Dieser Wert ist auf
 zu setzen, falls Decoder gemäß NMRA-DCC gesteuert werden sollen, sonst
 auf
 .IR no .
+Der voreingestellte Wert ist
+.IR yes .
 
 Es können auch beide Werte auf
 .IR yes
@@ -364,6 +383,7 @@ gesetzt werden.  Dann läuft
 .IR srcpd
 im Multiprotokollbetrieb, d.h. im gleichen Digitalstromkreis können sowohl
 MM- wie auch NMRA-DCC-Decoder angesteuert werden.
+.\"
 .TP
 improve_nmradcc_timing
 Dieser Wert sollte im reinen NMRA-DCC-Betrieb auf
@@ -374,37 +394,48 @@ auf
 .IR yes
 gesetzt ist - muss(!) dieser Wert auf
 .IR no
-gesetzt werden.
+gesetzt werden.  Der voreingestellte Wert ist
+.IR no .
+.\"
 .TP
 nmra_ga_offset
 Es gibt zwei verschiedene Möglichkeiten, wie bei NMRA-DCC die Adressen
 von Schaltdecodern interpretiert werden können.  Dieser Parameter trägt
-dem Rechnung.  Setzt man diesen Wert auf
+dem Rechnung und erlaubt die Erhöhung des verarbeiteten Adresswertes um
+den übergebenen Betrag.  Setzt man diesen Wert auf
 .IR 1 ,
 verhält sich die Adressierung der Schaltdecoder
 wie beim
 .IR erddcd ,
-dem ursprünglichen SRCP-Server aus dem DDL-Projekt.
+dem ursprünglichen SRCP-Server aus dem DDL-Projekt.  Der
+voreingestellte Wert ist
+.IR 0 .
+.\"
 .TP
 shortcut_failure_delay
 Anzahl der Mikrosekunden (usec), die im Falle eines erkannten Kurzschlusses
-gewartet werden soll, bis der Digitalstrom abgeschaltet wird.
+gewartet werden soll, bis der Digitalstrom abgeschaltet wird.  Der
+voreingestellte Wert ist
+.IR 0 .
+.\"
 .TP
 nmradcc_translation_routine
 Aus historischen Gründen kennt das Programm drei verschiedene Routinen, die 
-die Pakete für NMRA-DCC berechnen können.  Die Dritte ist die aktuellste und
-wird zur standardmäßigen Verwendung empfohlen.  Der Wert ist also auf
-.IR 3
-zu setzen.  Nur wenn es damit Probleme gibt, sollte man die Werte
+die Pakete für NMRA-DCC berechnen können.  Die Dritte ist die aktuellste
+und wird zur standardmäßigen Verwendung empfohlen.  Dem entsprechend ist
+der voreingestellte Wert
+.IR 3 .
+Nur wenn es damit Probleme gibt, sollte man die Werte
 .IR 1
 oder
 .IR 2
 ausprobieren.
+.\"
 .TP
 enable_usleep_patch
 Im reinen Märklin-Betrieb verursacht das Programm
 .IR srcpd
-durch die Signalberechnung einiges an Last auf dem Rechner.  Mit diesem
+durch die Signalberechnung einiges an CPU-Last.  Mit diesem
 Parameter kann man dieser Erscheinung sehr gut entgegen wirken.
 Er erlaubt der Signalerzeugung anstelle aktiven Wartens (busy waiting)
 für einen kurzen Zeitraum eine inaktive Pause einzulegen.
@@ -413,14 +444,18 @@ Da bisher keine Probleme damit bekannt geworden sind, sollte er immer auf
 stehen.  Sollte es dennoch Probleme geben, kann man versuchsweise den
 Wert auf
 .IR no
-setzen.
+setzen oder den usleep_usec Wert optimieren.  Der voreingestellte Wert ist
+.IR no .
+.\"
 .TP
 usleep_usec
 Anzahl der Mikrosekunden (usec), die die im vorausgehenden Parameter
 beschriebene Signalgenerierung pausiert.  Der Wert sollte so klein wie
 möglich gewählt werden, da ein zu großer Wert dazu führen kann, dass die
-Digitalsignale nicht korrekt erzeugt werden. Als brauchbar haben sich
-Werte zwischen 100 und 250 erwiesen.
+Digitalsignale nicht korrekt erzeugt werden. Bei größeren Werten wird
+andererseits die CPU stärker entlastet. Als brauchbar haben sich
+Werte zwischen 100 und 250 erwiesen.  Der voreingestellte Wert ist
+.IR 100 .
 .\"
 .\"
 .SS ddl-s88
