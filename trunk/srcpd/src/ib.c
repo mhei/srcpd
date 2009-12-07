@@ -243,7 +243,7 @@ int init_bus_IB(bus_t busnumber)
 }
 
 /**
- * Sends the command to switch of P50 commands off, see interface
+ * Sends the command to switch P50 commands on or off, see interface
  * description of Intellibox
  *
  * The answer of the Intellibox is written to syslog
