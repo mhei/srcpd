@@ -87,10 +87,10 @@ die Datei
 .IR /var/log/messages
 verfolgt werden. Der srcpd benutzt die syslog facility user.info, die
 auf einigen System möglicherweise erst konfiguriert werden muß. 
-.fr
-user.info      /var/adm/user-info.log
+.PP
+.nf
+    user.info      /var/adm/user-info.log
 .fi
-
 .\"
 .PP
 Aktuell gibt es keine Dokumententypspezifikation (DTD), mit der der
@@ -107,7 +107,7 @@ Jede Konfigurationsdatei muss die folgende Grundstruktur enthalten:
     ...
     </srcpd>
 .fi
-
+.\"
 .PP
 Innerhalb dieser Struktur (...) werden die verwendeten Busse angelegt,
 für die es jeweils wieder eine eigene Grundstruktur gibt:
@@ -120,7 +120,6 @@ für die es jeweils wieder eine eigene Grundstruktur gibt:
     ...
     </bus>
 .fi
-.\"
 .\"
 .SS Allgemeine Hinweise
 .PP
@@ -137,7 +136,7 @@ Daemons Verwendung finden.  Nicht benötigte Busse können beispielsweise
     </bus>
     -->
 .fi
-
+.\"
 .PP
 Hierbei ist zu beachten, dass die Nummern der nachfolgenden Busse
 sich entsprechend verschieben.
@@ -162,6 +161,8 @@ Log-Datei des Syslog-Daemons
 .IR /var/log/messages
 verfolgen; nähere Informationen hierzu befinden sich im Handbuch
 .IR srcpd\ (8) .
+Der voreingestellte Wert ist
+.IR 4 .
 .\"
 .TP
 use_watchdog
@@ -282,7 +283,7 @@ folgende Zeile einzutragen:
 
    srcpd  -       rtprio  99
 
-Die Konfiguration des Server-Busses ist wie folgt zu ändern:
+Die Konfiguration des Server-Busses ist wie folgt anzupassen:
 
     <server>
       ...
@@ -294,7 +295,8 @@ Die Konfiguration des Server-Busses ist wie folgt zu ändern:
 .TP
 number_ga
 Anzahl der Schaltdecoderadressen, die benötigt werden.  Beispiel:
-Bei vier Weichen und drei Signalen muss dieser Wert mindestens auf 7
+Bei vier Weichen und drei Signalen deren Decoder die Digitaladressen 1
+bis 7 nutzen, muss dieser Wert mindestens auf 7
 gesetzt werden.  Auf herkömmlichen Rechnern mit genügend Arbeitsspeicher
 kann dieser Wert von vornherein auf 100 gesetzt werden. Der
 voreingestellte Wert ist
@@ -336,7 +338,7 @@ gesetzt werden, sonst auf
 .IR no . 
 Der voreingestellte Wert ist
 .IR no .
-
+.PP
 Der Vollständigkeit wegen sei angemerkt, dass die Leitung DTR der
 seriellen Schnittstelle nach dem Start vom
 .IR srcpd
@@ -361,7 +363,7 @@ Der voreingestellte Wert ist
 enable_maerklin
 Dieser Wert ist auf
 .IR yes
-zu setzen, falls Decoder des alten Märklin Digitalsystems gesteuert
+zu setzen, falls Decoder des alten Märklin Digitalsystems (MM) gesteuert
 werden sollen, sonst auf
 .IR no .
 Der voreingestellte Wert ist
@@ -376,7 +378,7 @@ auf
 .IR no .
 Der voreingestellte Wert ist
 .IR yes .
-
+.PP
 Es können auch beide Werte auf
 .IR yes
 gesetzt werden.  Dann läuft
@@ -444,7 +446,9 @@ Da bisher keine Probleme damit bekannt geworden sind, sollte er immer auf
 stehen.  Sollte es dennoch Probleme geben, kann man versuchsweise den
 Wert auf
 .IR no
-setzen oder den usleep_usec Wert optimieren.  Der voreingestellte Wert ist
+setzen oder den
+.IR usleep_usec
+Wert optimieren.  Der voreingestellte Wert ist
 .IR no .
 .\"
 .TP
@@ -464,11 +468,11 @@ Dieser Treiber unterstützt das direkte Auslesen von S88-Rückmeldemodulen
 über die parallele Schnittstelle (IEEE 1284).  Der Betrieb eines
 Stranges ist ohne größeren Aufwand möglich, für umfangreichere
 Installationen können bis zu vier S88-Stränge gleichzeitig angeschlossen
-werden.  Das Anschlussschema entspricht dem des DDL Dämonen
+werden.  Das Anschlussschema entspricht dem des DDL Daemons
 (http://www.vogt-it.com/OpenSource/DDL) gemäß der Schaltung von Martin
 Wolf.  Die Anschlussstränge werden als jeweils separate Busse geführt.
 
-Die Anzahl der pro Strang angeschlossenen Module (mit 16 Kontakten)
+Die Anzahl der pro Strang angeschlossenen Module (mit jeweils 16 Kontakten)
 darf maximal 31 betragen. Bei der Verwendung von Modulen mit 8 Kontakten
 zählen 2 Module wie eines mit 16 Kontakten.
 
@@ -483,33 +487,26 @@ Dieses Modul erzeugt eine signifikante Systemlast, die weitgehend durch
 den Parameter
 .IR refresh
 eingestellt werden kann.
-
 .\"
 .TP
 ioport    
 Eingabe/Ausgabe-Adresse des Druckeranschlusses.  Der voreingestellte Wert
 ist
-.IR 0x0378
-für die Schnittstelle /dev/lp0.  Der »ioport« ist im
-Hexadezimalformat anzugeben (mit führendem 0x).  Gültige Werte sind bei
-einem typischen Linux-System
-
-    0x0378  /dev/lp0
-    0x0278  /dev/lp1
-    0x03BC  /dev/lp2
-
+.IR 0x0378 .
+Der »ioport« ist im Hexadezimalformat anzugeben (mit führendem 0x).
+Gültige Werte sind bei einem typischen Linux-System folgende: 0x0378,
+0x0278 und 0x03BC.
+.PP
 Der richtige Wert läßt sich leicht durch Suche in den Meldungen
-ermitteln, die der Betriebsystemkern beim Hochfahren erzeugt:
+ermitteln, die der Betriebssystemkern beim Hochfahren erzeugt:
 
     dmesg | grep parport
-
-
 .\"
 .TP
 clockscale
 Parameter zur Einstellung der Taktrate beim Auslesen der Module.  Bei dem
-voreingestellten Wert von 35 wird die Originale S88-Taktrate von ca.
-8\ kHz erreicht.  Kleinere Wert erhöhen die Taktrate, werden ggf. jedoch
+voreingestellten Wert von 35 wird die originale S88-Taktrate von
+ca. 8\ kHz erreicht.  Kleinere Wert erhöhen die Taktrate, werden ggf. jedoch
 nicht von jedem Modul verarbeitet. Maximal sind ca. 125\ kHz möglich.
 .TP
 refresh
@@ -543,8 +540,8 @@ number_fb_4
 Diese Angabe legt die Anzahl der am Strang \fB4\fP angeschlossenen
 Rückmeldemodule fest.
 .PP
-In der Konfiguration sollten die allgemeinen Wert vor den
-busspezifischen Werten stehen. Ein Beispiel sieht so aus:
+In der Konfiguration sollten die allgemeinen Werte vor den
+busspezifischen Werten stehen. Ein typisches Beispiel sieht so aus:
 
 .nf
     <bus>
@@ -554,10 +551,10 @@ busspezifischen Werten stehen. Ein Beispiel sieht so aus:
         <ioport>0x378</ioport>
         <clockscale>35</clockscale>
         <refresh>100</refresh>
-        <number_fb_1>3</number_fb_1>
-        <number_fb_2>4</number_fb_2>
-        <number_fb_3>5</number_fb_3>
-        <number_fb_4>6</number_fb_4>
+        <number_fb_1>9</number_fb_1>
+        <number_fb_2>0</number_fb_2>
+        <number_fb_3>0</number_fb_3>
+        <number_fb_4>0</number_fb_4>
       </ddl-s88>
     </bus>
 .fi
@@ -570,7 +567,7 @@ Dieses Modul unterstützt den Betrieb eines Littfinski HSI-88, das an
 eine serielle Schnittstelle angeschlossen ist.  Auch der Anschluss über
 einen USB/Seriell-Konverter sollte problemlos möglich sein.  Die
 Geschwindigkeitseinstellung für die serielle Schnittstelle ist fest auf
-9600\ Baud eingestellt und kann nicht verändert werden.
+9600\ Baud vorkonfiguriert und kann nicht verändert werden.
 
 Das HSI-88 verfügt über drei Kanäle zum Anschluss von
 S88-Rückmeldemodulen.  Die Summe der pro Kanal angeschlossenen Module
@@ -606,7 +603,7 @@ Umfang entprellen.  Der voreingestellte Wert beträgt 0\ ms.
 .TP
 refresh
 Wartezeit in Mikrosekunden nach der die Rückmeldungen des Geräts erneut
-eingelesen werden.  Der voreingestellte Wert beträgt 10000\ µs.
+eingelesen werden.  Der voreingestellte Wert beträgt 10.000\ µs.
 .\"
 .\"
 .SS i2c-dev
@@ -616,10 +613,13 @@ beispielsweise mit der unter http://www.matronix.de/ zu findenden
 Hardware genutzt werden.
 .TP
 multiplex_buses
+TODO
 .TP
 ga_hardware_inverters
+TODO
 .TP
 ga_reset_device
+TODO
 .\"
 .\"
 .SS intellibox
@@ -629,7 +629,8 @@ Dieses Modul unterstützt den Betrieb mit einer Uhlenbrock Intellibox (IB),
 die über eine serielle Schnittstelle angeschlossen ist.  Die Ansteuerung
 der IB erfolgt über das P50X-Protokoll, zum geringeren Teil mit der
 analogen und zum größeren Teil mit der binären Variante.  Beim Betrieb mit
-protokollkompatiblen Zentralen anderer Hersteller ist das gegebenenfalls
+protokollkompatiblen Zentralen anderer Hersteller (z.B. OpenDCC,
+DiCoStation, EasyControl) ist das gegebenenfalls
 zu berücksichtigen.  Das Programmieren von Decodern ist zur Zeit nur
 für DCC implementiert.  Als Schnittstellengeschwindigkeit sind die
 folgenden Varianten möglich: 2400\ Baud, 4800\ Baud, 9600\ Baud,
@@ -675,8 +676,8 @@ nicht unterstützt.
 auto_speed_detection
 Diese Option aktiviert eine automatische Baudratenerkennung der
 angeschlossenen Intellibox (BABI = Break and Automatic Baud-rate
-Identification).  Sie benötigt einige Sekunden, macht es aber unnötig,
-den richtigen Wert für den
+Identification).  Sie benötigt bei der Initialisierung einige Sekunden,
+macht es aber unnötig, den richtigen Wert für den
 .IR speed
 Parameter zu konfigurieren.  Wenn die automatische Erkennung abgeschaltet
 ist, erfolgt die Verbindungsaufnahme erheblich schneller, aber der
@@ -755,8 +756,11 @@ Anzahl der adressierbaren Lokdecoder (GL).  Die Voreinstellung ist 80.
 .\"
 .TP
 number_fb
-Anzahl der adressierbaren Rückmeldemodule mit je 16 Kontakten.  Die
-Voreinstellung ist 0 (keine Rückmeldemodule vorhanden).
+Im Unterschied zu den anderen Bussen, legt dieser Zahlenwerd die Anzahl
+der adressierbaren Rückmeldekontakte, nicht der Rückmeldemodule, fest.
+Die Simulation von zwei Rückmeldemodulen mit je 16 Kontakten erfordert
+also hier den Wert 32. Die Voreinstellung ist 0 (keine Rückmeldekontakte
+vorhanden).
 .\"
 .\"
 .SS m605x
@@ -788,7 +792,7 @@ Umfang entprellen.  Der voreingestellte Wert beträgt 0\ ms.
 .TP
 ga_min_activetime
 Dieser Wert in Millisekunden legt fest, wie lange ein Magnetartikel im
-aktiv Status sein muss.  Für einen stabilen Betrieb mit einem 6051 sind
+Aktiv-Status sein muss.  Für einen stabilen Betrieb mit einem 6051 sind
 75\ ms das absolute Minimum.  Der voreingestellte Wert beträgt 75\ ms.
 .\"
 .TP
@@ -836,12 +840,16 @@ angeschlossen sind (Memory) nicht zugegriffen werden kann.
 Selectrix CC-2000 und Rautenhaus SLX852.
 .TP
 number_ga
+TODO
 .TP
 number_gl
+TODO
 .TP
 number_fb
+TODO
 .TP
 controller
+TODO
 .\"
 .\"
 .SS zimo
