@@ -201,7 +201,8 @@ speed
 Bei Bussen, die eine serielle Schnittstelle nutzen, ist es möglich, die
 Schnittstellengeschwindigkeit zu wählen, soweit diese nicht fest
 eingestellt ist.  Mögliche Zahlenwerte sind folgende: 2400, 4800, 9600,
-19200, 38400, 57600 und 115200\ Baud.  Voreingestellt ist 2400\ Baud.
+19200, 38400, 57600 und 115200\ Baud.  Bei Bussen mit variabler
+Schnittstellengeschwindigkeit ist 2400\ Baud voreingestellt.
 .\"
 .TP
 auto_power_on
@@ -237,8 +238,8 @@ von der IANA festgelegte Wert
 pid-file
 Name der Datei, in der
 .IR srcpd
-die Prozess-ID abspeichert.  Der voreingestellte Wert hierfür ist
-.IR /var/run/srcpd.pid .
+die Prozess-ID abspeichert.  Der gemäß FHS voreingestellte Wert hierfür
+ist .IR /var/run/srcpd.pid .
 .\"
 .TP
 username
@@ -268,7 +269,7 @@ mit den Eingängen eines Digitalboosters verbunden werden müssen.
 Der DDL-Modus setzt besondere Rechte des Benutzers voraus, unter dem
 das Programm
 .IR srcpd
-betrieben wird.  Es wird empfohlen den Benutzer
+betrieben wird.  Es wird empfohlen, den Benutzer
 .IR srcpd
 und die Gruppe
 .IR srcpd
@@ -338,7 +339,7 @@ gesetzt werden, sonst auf
 .IR no . 
 Der voreingestellte Wert ist
 .IR no .
-.PP
+
 Der Vollständigkeit wegen sei angemerkt, dass die Leitung DTR der
 seriellen Schnittstelle nach dem Start vom
 .IR srcpd
@@ -384,7 +385,8 @@ Es können auch beide Werte auf
 gesetzt werden.  Dann läuft
 .IR srcpd
 im Multiprotokollbetrieb, d.h. im gleichen Digitalstromkreis können sowohl
-MM- wie auch NMRA-DCC-Decoder angesteuert werden.
+MM- wie auch NMRA-DCC-Decoder angesteuert werden. Zur Minimierung der
+CPU-Last ist das nicht benötigte Protokoll abzuschalten.
 .\"
 .TP
 improve_nmradcc_timing
@@ -468,12 +470,13 @@ Dieser Treiber unterstützt das direkte Auslesen von S88-Rückmeldemodulen
 über die parallele Schnittstelle (IEEE 1284).  Der Betrieb eines
 Stranges ist ohne größeren Aufwand möglich, für umfangreichere
 Installationen können bis zu vier S88-Stränge gleichzeitig angeschlossen
-werden.  Das Anschlussschema entspricht dem des DDL Daemons
+werden.  Das dafür notwendige Anschlussschema entspricht dem des DDL Daemons
 (http://www.vogt-it.com/OpenSource/DDL) gemäß der Schaltung von Martin
 Wolf.  Die Anschlussstränge werden als jeweils separate Busse geführt.
 
 Die Anzahl der pro Strang angeschlossenen Module (mit jeweils 16 Kontakten)
-darf maximal 31 betragen. Bei der Verwendung von Modulen mit 8 Kontakten
+darf maximal 31 betragen, was einem Maximum von 496 Kontakten pro Strang
+entspricht. Bei der Verwendung von Modulen mit 8 Kontakten
 zählen 2 Module wie eines mit 16 Kontakten.
 
 Für jeden Strang wird ein separater Bus initialisiert, bei dem die
@@ -496,12 +499,12 @@ ist
 Der »ioport« ist im Hexadezimalformat anzugeben (mit führendem 0x).
 Gültige Werte sind bei einem typischen Linux-System folgende: 0x0378,
 0x0278 und 0x03BC.
-.PP
+
 Der richtige Wert läßt sich leicht durch Suche in den Meldungen
 ermitteln, die der Betriebssystemkern beim Hochfahren erzeugt:
-
+.nf
     dmesg | grep parport
-.\"
+.fi
 .TP
 clockscale
 Parameter zur Einstellung der Taktrate beim Auslesen der Module.  Bei dem
@@ -736,6 +739,47 @@ Module sind angeschlossen.  Der voreingestellte Wert beträgt 256, beim
 LI-USB 512.
 .\"
 .\"
+.SS loconet
+.\"
+.PP
+Dieser Bus unterstützt Loconet-Geräte, die entweder über die serielle
+Schnittstelle (z.B. LocoBuffer) oder ein TCP/IP-Netzwerk (z.B. LbServer,
+siehe http://loconetovertcp.sourceforge.net/) angebunden sind.
+.TP
+loconetID
+Wert für die Loconet ID. Die Voreinstellung beträgt 0x50.
+.TP
+ms100
+Unterstützung für das MS100/RS232-Gerät von Digitrax.  Gültige Werte sind 
+.IR yes
+oder
+.IR no .
+Voreingestellt ist
+.IR no .
+.TP
+getTIME
+Unterstützung für Zeitabfragen. Gültige Eingaben sind 
+.IR yes
+oder
+.IR no .
+Voreingestellt ist
+.IR no .
+.\"
+.TP
+number_ga
+Anzahl der adressierbaren Magnetartikel (GA).  Die Voreinstellung ist
+2048.
+.\"
+.TP
+number_gl
+Anzahl der adressierbaren Lok-Decoder (GL).  Die Voreinstellung ist
+9999.
+.\"
+.TP
+number_fb
+Anzahl der angeschlossenen Rückmeldekontakte.  Die Voreinstellung ist
+2048.
+.\"
 .SS loopback
 .\"
 .PP
@@ -756,7 +800,7 @@ Anzahl der adressierbaren Lokdecoder (GL).  Die Voreinstellung ist 80.
 .\"
 .TP
 number_fb
-Im Unterschied zu den anderen Bussen, legt dieser Zahlenwerd die Anzahl
+Im Unterschied zu den anderen Bussen, legt dieser Zahlenwert die Anzahl
 der adressierbaren Rückmeldekontakte, nicht der Rückmeldemodule, fest.
 Die Simulation von zwei Rückmeldemodulen mit je 16 Kontakten erfordert
 also hier den Wert 32. Die Voreinstellung ist 0 (keine Rückmeldekontakte
