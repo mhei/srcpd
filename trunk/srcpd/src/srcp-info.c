@@ -37,6 +37,7 @@
 #include <unistd.h>
 
 #include "config-srcpd.h"
+#include "io.h"
 #include "srcp-gl.h"
 #include "srcp-ga.h"
 #include "srcp-fb.h"
