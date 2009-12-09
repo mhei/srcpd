@@ -250,7 +250,13 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
         }
         else if (xmlStrcmp(child->name, BAD_CAST "ddl-s88") == 0) {
 #ifdef USE_DDL88
+#if defined(linux) || defined(__CYGWIN__) || defined(__FreeBSD__)
             busnumber += readconfig_DDL_S88(doc, child, busnumber);
+#else
+            syslog_bus(0, DBG_ERROR,
+                       "Sorry, DDL-S88 not (yet) available on "
+                       "this system.\n");
+#endif
 #else
             syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
 #endif
@@ -288,11 +294,14 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
 
         else if (xmlStrcmp(child->name, BAD_CAST "i2c-dev") == 0) {
 #ifdef USE_I2C 
+#ifdef linux
             busnumber += readconfig_I2C_DEV(doc, child, busnumber);
 #else
-            syslog_bus(0, DBG_ERROR,
-                       "Sorry, DDL-S88 not (yet) available on "
-                       "this system.\n");
+            syslog_bus(0, DBG_ERROR, "Sorry, I2C-DEV is only available on "
+                       "Linux (yet).\n");
+#endif
+#else
+            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
 #endif
         }
 
