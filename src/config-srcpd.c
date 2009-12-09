@@ -73,16 +73,6 @@
 static const char DISABLE_MSG[] =
       "\"%s\" has been disabled at compile time.\n";
 
-/* check if a bus type is actually available on the server */
-int bus_type_is_available(int type)
-{
-    int i = 0;
-    while (i < MAX_BUSES && buses[i].type != type)
-        i++;
-    if (i < MAX_BUSES)
-        return 1;               // true
-    return 0;                   // false
-}
 
 /* check if a bus has a device group or not */
 int bus_has_devicegroup(bus_t bus, int dg)
