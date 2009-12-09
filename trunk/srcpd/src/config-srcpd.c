@@ -205,13 +205,6 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
                            "at bus %ld!\n", busnumber);
         }
 
-        else if (xmlStrcmp(child->name, BAD_CAST "zimo") == 0) {
-#ifdef USE_ZIMO
-            busnumber += readconfig_ZIMO(doc, child, busnumber);
-#else
-            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
-#endif
-        }
         else if (xmlStrcmp(child->name, BAD_CAST "ddl") == 0) {
 #ifdef USE_DDL
             busnumber += readconfig_DDL(doc, child, busnumber);
@@ -219,35 +212,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
             syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
 #endif
         }
-        else if (xmlStrcmp(child->name, BAD_CAST "m605x") == 0) {
-#ifdef USE_M605X
-            busnumber += readconfig_m605x(doc, child, busnumber);
-#else
-            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
-#endif
-        }
-        else if (xmlStrcmp(child->name, BAD_CAST "intellibox") == 0) {
-#ifdef USE_IB
-            busnumber += readConfig_IB(doc, child, busnumber);
-#else
-            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
-#endif
-        }
-        else if (xmlStrcmp(child->name, BAD_CAST "loconet") == 0) {
-#ifdef USE_LOCONET
-            busnumber += readConfig_LOCONET(doc, child, busnumber);
-#else
-            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
-#endif
-        }
 
-        else if (xmlStrcmp(child->name, BAD_CAST "loopback") == 0) {
-#ifdef USE_LOOPBACK
-            busnumber += readconfig_LOOPBACK(doc, child, busnumber);
-#else
-            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
-#endif
-        }
         else if (xmlStrcmp(child->name, BAD_CAST "ddl-s88") == 0) {
 #ifdef USE_DDL88
 #if defined(linux) || defined(__CYGWIN__) || defined(__FreeBSD__)
@@ -269,28 +234,6 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
             syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
 #endif
         }
-        else if (xmlStrcmp(child->name, BAD_CAST "li100usb") == 0) {
-#ifdef USE_LENZ
-            busnumber += readConfig_LI100_USB(doc, child, busnumber);
-#else
-            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
-#endif
-        }
-        else if (xmlStrcmp(child->name, BAD_CAST "li100") == 0) {
-#ifdef USE_LENZ
-            busnumber += readConfig_LI100_SERIAL(doc, child, busnumber);
-#else
-            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
-#endif
-        }
-
-        else if (xmlStrcmp(child->name, BAD_CAST "selectrix") == 0) {
-#ifdef USE_SELECTRIX
-            busnumber += readconfig_Selectrix(doc, child, busnumber);
-#else
-            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
-#endif
-        }
 
         else if (xmlStrcmp(child->name, BAD_CAST "i2c-dev") == 0) {
 #ifdef USE_I2C 
@@ -304,6 +247,70 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
             syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
 #endif
         }
+
+        else if (xmlStrcmp(child->name, BAD_CAST "intellibox") == 0) {
+#ifdef USE_IB
+            busnumber += readConfig_IB(doc, child, busnumber);
+#else
+            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
+#endif
+        }
+
+        else if (xmlStrcmp(child->name, BAD_CAST "li100usb") == 0) {
+#ifdef USE_LENZ
+            busnumber += readConfig_LI100_USB(doc, child, busnumber);
+#else
+            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
+#endif
+        }
+
+        else if (xmlStrcmp(child->name, BAD_CAST "li100") == 0) {
+#ifdef USE_LENZ
+            busnumber += readConfig_LI100_SERIAL(doc, child, busnumber);
+#else
+            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
+#endif
+        }
+
+        else if (xmlStrcmp(child->name, BAD_CAST "loconet") == 0) {
+#ifdef USE_LOCONET
+            busnumber += readConfig_LOCONET(doc, child, busnumber);
+#else
+            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
+#endif
+        }
+
+        else if (xmlStrcmp(child->name, BAD_CAST "loopback") == 0) {
+#ifdef USE_LOOPBACK
+            busnumber += readconfig_LOOPBACK(doc, child, busnumber);
+#else
+            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
+#endif
+        }
+
+        else if (xmlStrcmp(child->name, BAD_CAST "m605x") == 0) {
+#ifdef USE_M605X
+            busnumber += readconfig_m605x(doc, child, busnumber);
+#else
+            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
+#endif
+        }
+
+        else if (xmlStrcmp(child->name, BAD_CAST "selectrix") == 0) {
+#ifdef USE_SELECTRIX
+            busnumber += readconfig_Selectrix(doc, child, busnumber);
+#else
+            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
+#endif
+        }
+        else if (xmlStrcmp(child->name, BAD_CAST "zimo") == 0) {
+#ifdef USE_ZIMO
+            busnumber += readconfig_ZIMO(doc, child, busnumber);
+#else
+            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
+#endif
+        }
+
 
         /* some attributes are common for all (real) buses */
         else if (xmlStrcmp(child->name, BAD_CAST "device") == 0) {
@@ -339,8 +346,10 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
                         txt2 = xmlGetProp(child, BAD_CAST "port");
                         if (txt2 != NULL) {
                             free(buses[current_bus].device.net.port);
-	                    buses[current_bus].device.net.port =  malloc(strlen((char *) txt2) + 1);
-                            strcpy(buses[current_bus].device.net.port, (char *) txt2);
+	                    buses[current_bus].device.net.port =
+                                malloc(strlen((char *) txt2) + 1);
+                            strcpy(buses[current_bus].device.net.port,
+                                    (char *) txt2);
                             free(txt2);
                         }
                         else {
