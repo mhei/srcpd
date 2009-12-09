@@ -38,7 +38,7 @@ srcpd_SOURCES += \
 	ddl_nmra.c ddl_nmra.h
 endif
 
-if USE_DDL88
+if USE_DDLS88
 srcpd_SOURCES += ddl-s88.c ddl-s88.h
 endif
 
@@ -55,7 +55,7 @@ srcpd_SOURCES += hsi-88.c hsi-88.h
 endif
 
 # tricky: li100-main includes li100.c twice for both USB and RS232 support
-if USE_LENZ
+if USE_LI100
 srcpd_SOURCES += li100.h \
 		 li100-main.c
 endif

@@ -27,7 +27,7 @@
 #include "ddl.h"
 #endif
 
-#ifdef USE_DDL88
+#ifdef USE_DDLS88
 #include "ddl-s88.h"
 #endif
 
@@ -43,7 +43,7 @@
 #include "ib.h"
 #endif
 
-#ifdef USE_LENZ
+#ifdef USE_LI100
 #include "li100.h"
 #endif
 
@@ -204,7 +204,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "ddl-s88") == 0) {
-#ifdef USE_DDL88
+#ifdef USE_DDLS88
 #if defined(linux) || defined(__CYGWIN__) || defined(__FreeBSD__)
             busnumber += readconfig_DDL_S88(doc, child, busnumber);
 #else
@@ -247,7 +247,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "li100usb") == 0) {
-#ifdef USE_LENZ
+#ifdef USE_LI100
             busnumber += readConfig_LI100_USB(doc, child, busnumber);
 #else
             syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
@@ -255,7 +255,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "li100") == 0) {
-#ifdef USE_LENZ
+#ifdef USE_LI100
             busnumber += readConfig_LI100_SERIAL(doc, child, busnumber);
 #else
             syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
