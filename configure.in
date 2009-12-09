@@ -102,6 +102,16 @@ if test "$with_LOCONET" = "yes"; then
 fi
 AM_CONDITIONAL(USE_LOCONET, test "$with_LOCONET" = yes)
 
+dnl Option to disable loopback support
+AC_ARG_ENABLE(loopback,
+    AC_HELP_STRING([--disable-loopback], [do not compile loopback module]),
+    [with_LOOPBACK="$enableval"], [with_LOOPBACK=yes])
+if test "$with_LOOPBACK" = "yes"; then
+   AC_DEFINE(USE_LOOPBACK,1, [define to 1 if you want loopback support])
+   ((NUM_MODULES++))
+fi
+AM_CONDITIONAL(USE_LOOPBACK, test "$with_LOOPBACK" = yes)
+
 dnl Option to disable M605X support
 AC_ARG_ENABLE(m605x,
     AC_HELP_STRING([--disable-m605x], [do not compile m605x module]),
@@ -284,25 +294,27 @@ AC_OUTPUT
 
 echo
 echo "Supported devices:"
-if test "$with_DDL88"     = "yes"; then echo "    ddls88"; fi
 if test "$with_DDL"       = "yes"; then echo "    ddl"; fi
+if test "$with_DDL88"     = "yes"; then echo "    ddls88"; fi
 if test "$with_HSI88"     = "yes"; then echo "    hsi88"; fi
 if test "$with_I2C"       = "yes"; then echo "    i2cdev"; fi
 if test "$with_IB"        = "yes"; then echo "    intellibox"; fi
 if test "$with_LENZ"      = "yes"; then echo "    li100"; fi
 if test "$with_LOCONET"   = "yes"; then echo "    loconet"; fi
+if test "$with_LOOPBACK"  = "yes"; then echo "    loopback"; fi
 if test "$with_M605X"     = "yes"; then echo "    m605x"; fi
 if test "$with_SELECTRIX" = "yes"; then echo "    selectrix"; fi
 if test "$with_ZIMO"      = "yes"; then echo "    zimo"; fi
 echo
 echo "Unsupported devices:"
-if test "$with_DDL88"     != "yes"; then echo "    ddls88"; fi
 if test "$with_DDL"       != "yes"; then echo "    ddl"; fi
+if test "$with_DDL88"     != "yes"; then echo "    ddls88"; fi
 if test "$with_HSI88"     != "yes"; then echo "    hsi88"; fi
 if test "$with_I2C"       != "yes"; then echo "    i2cdev"; fi
 if test "$with_IB"        != "yes"; then echo "    intellibox"; fi
 if test "$with_LENZ"      != "yes"; then echo "    li100"; fi
 if test "$with_LOCONET"   != "yes"; then echo "    loconet"; fi
+if test "$with_LOOPBACK"  != "yes"; then echo "    loopback"; fi
 if test "$with_M605X"     != "yes"; then echo "    m605x"; fi
 if test "$with_SELECTRIX" != "yes"; then echo "    selectrix"; fi
 if test "$with_ZIMO"      != "yes"; then echo "    zimo"; fi

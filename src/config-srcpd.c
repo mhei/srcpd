@@ -23,21 +23,6 @@
 #include "srcp-server.h"
 #include "srcp-error.h"
 
-/* always support this bus type */
-#include "loopback.h"
-
-#ifdef USE_M605X
-#include "m605x.h"
-#endif
-
-#ifdef USE_SELECTRIX
-#include "selectrix.h"
-#endif
-
-#ifdef USE_IB
-#include "ib.h"
-#endif
-
 #ifdef USE_DDL
 #include "ddl.h"
 #endif
@@ -54,8 +39,8 @@
 #include "i2c-dev.h"
 #endif
 
-#ifdef USE_ZIMO
-#include "zimo.h"
+#ifdef USE_IB
+#include "ib.h"
 #endif
 
 #ifdef USE_LENZ
@@ -64,6 +49,22 @@
 
 #ifdef USE_LOCONET
 #include "loconet.h"
+#endif
+
+#ifdef USE_LOOPBACK
+#include "loopback.h"
+#endif
+
+#ifdef USE_M605X
+#include "m605x.h"
+#endif
+
+#ifdef USE_SELECTRIX
+#include "selectrix.h"
+#endif
+
+#ifdef USE_ZIMO
+#include "zimo.h"
 #endif
 
 #include "syslogmessage.h"
@@ -241,7 +242,11 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "loopback") == 0) {
+#ifdef USE_LOOPBACK
             busnumber += readconfig_LOOPBACK(doc, child, busnumber);
+#else
+            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
+#endif
         }
         else if (xmlStrcmp(child->name, BAD_CAST "ddl-s88") == 0) {
 #ifdef USE_DDL88

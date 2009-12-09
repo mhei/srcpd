@@ -10,7 +10,6 @@ srcpd_SOURCES = \
 	dcc-address.c dcc-address.h \
 	io.c io.h \
 	toolbox.c toolbox.h \
-	loopback.c loopback.h \
 	netservice.c netservice.h \
 	portio.c portio.h \
 	srcp-command.c srcp-command.h \
@@ -63,6 +62,10 @@ endif
 
 if USE_LOCONET
 srcpd_SOURCES += loconet.c loconet.h
+endif
+
+if USE_LOCONET
+srcpd_SOURCES += loopback.c loopback.h
 endif
 
 if USE_M605X
