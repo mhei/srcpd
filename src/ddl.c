@@ -1214,7 +1214,10 @@ static void *thr_refresh_cycle(void *v)
 
     /* set the best waitUARTempty-Routine */
     waitUARTempty = waitUARTempty_COMMON_USLEEPPATCH;
-    waitUARTempty_MM = waitUARTempty_COMMON_USLEEPPATCH;
+    if (__DDL->WAITUART_USLEEP_PATCH)
+        waitUARTempty_MM = waitUARTempty_COMMON_USLEEPPATCH;
+    else
+        waitUARTempty_MM = waitUARTempty_COMMON;
 
     nanosleep_DDL = nanosleep;
     if (__DDL->oslevel == 1) {
@@ -1435,7 +1438,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     __DDL->ENABLED_PROTOCOLS = (EP_MAERKLIN | EP_NMRADCC);      /* enabled p's */
     __DDL->IMPROVE_NMRADCC_TIMING = 0;  /* NMRA DCC: improve timing    */
 
-    __DDL->WAITUART_USLEEP_PATCH = 0;   /* enable/disable usleep patch */
+    __DDL->WAITUART_USLEEP_PATCH = false; /* enable/disable usleep patch */
     __DDL->WAITUART_USLEEP_USEC = 100;    /* usecs for usleep patch      */
     __DDL->NMRA_GA_OFFSET = 0;    /* offset for ga base address 0 or 1  */
     __DDL->PROGRAM_TRACK = 1;   /* 0: suppress SM commands to PT address */

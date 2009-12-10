@@ -341,10 +341,10 @@ static char *preamble = "111111111111111";
 static const int NMRA_STACKSIZE = 200;
 
 /* 230 is needed for all functions F0-F28 */
-static const int BUFFERSIZE = 230;
+static const unsigned int BUFFERSIZE = 230;
 
 /* internal offset of the long addresses */
-static const int ADDR14BIT_OFFSET = 128;
+static const unsigned int ADDR14BIT_OFFSET = 128;
 
 /* the result is only an index, no warranty */
 static int translateabel(char *bs)
