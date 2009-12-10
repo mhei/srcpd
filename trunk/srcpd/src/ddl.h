@@ -91,7 +91,7 @@ typedef struct _DDL_DATA {
     int ENABLED_PROTOCOLS;      /* enabled p's                  */
     int IMPROVE_NMRADCC_TIMING; /* NMRA DCC: improve timing     */
 
-    int WAITUART_USLEEP_PATCH;  /* enable/disbable usleep patch */
+    bool WAITUART_USLEEP_PATCH;  /* enable/disbable usleep patch */
     int WAITUART_USLEEP_USEC;   /* usecs for usleep patch       */
     int NMRA_GA_OFFSET;         /* offset for ga base address 0/1*/
 
