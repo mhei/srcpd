@@ -9,13 +9,12 @@
 .\"   groff -mandoc -Tps srcpd.8 > srcpd.ps
 .\"
 .\"
-.TH srcpd 8 "26. Dezember 2007"
+.TH srcpd 8 "19. Dezember 2009"
 .\"
 
 .SH NAME
 srcpd \- SRCP sprechender Systemdienst
 .\"
-
 .SH SYNTAX
 .B srcpd
 [ Optionen ] 
@@ -69,10 +68,10 @@ Informationen geben allgemein gültige Hinweise zur Konfiguration.
 Erstellen Sie zunächst eine zu ihrer Modellbahnsteuerung passende
 Konfigurationsdatei (\fIsrcpd.conf\fP). Speichern Sie diese dann mit
 Administrationsrechten im Verzeichnis für die systemweite Konfiguration
-(\fI/etc\fP) ab. Die mitgelieferte Beispieldatei muß dabei ersetzt bzw.
+(\fI/etc\fP) ab. Die mitgelieferte Beispieldatei muss dabei ersetzt bzw.
 überschrieben werden.
 
-Sobald die angepaßte Konfigurationsdatei vorliegt, kann der Daemon mit
+Sobald die angepasste Konfigurationsdatei vorliegt, kann der Daemon mit
 folgendem Befehl gestartet werden:
 
 .RS
@@ -81,7 +80,7 @@ folgendem Befehl gestartet werden:
 .fi
 .RE
 
-Läuft der srcpd-Daemon bereits, muß er zum Einlesen der neuen
+Läuft der srcpd-Daemon bereits, muss er zum Einlesen der neuen
 Konfiguration zunächst angehalten werden. Das Anhalten des Daemons
 erfolgt analog zum Startvorgang mit folgendem Befehl:
 
@@ -104,7 +103,7 @@ angeschlossen ist, reicht es, den srcpd-Daemon mit der entsprechenden
 Gruppenberechtigung (in der Regel »dialout«) zu betreiben. Beim
 »ddl-s88« Modul, das S88-Rückmeldungen über die parallele Schnittstelle
 einliest, wird eine Systemfunktion genutzt (ioperm), die immer
-root-Berechtigung benötigt. Daher muß in diesem Fall der srcpd-Daemon
+root-Berechtigung benötigt. Daher muss in diesem Fall der srcpd-Daemon
 mit root-Berechtigung laufen. 
 
 Zum Neueinlesen der Konfigurationsdatei dient, unter der Voraussetzung,
@@ -127,38 +126,10 @@ tail -f /var/log/messages
 .fi
 .RE
 
-Die Ausführlichkeit der dort erscheinenenden Meldungen läßt sich über
+Die Ausführlichkeit der dort erscheinenenden Meldungen lässt sich über
 Einstellungen in der
 .IR srcpd.conf
 anpassen. Nähere Informationen hierzu bietet das zugehörige Handbuch. 
-
-.SS Lenz USB-Interface
-.PP
-Um dieses USB-Gerät in Betrieb zu nehmen, muß das Kernelmodul
-.IR ftdi_sio
-verfügbar sein. Bei den gängigen Linux-Distributionen
-ist das in der Regel ohne zusätzliche Konfigurationseinstellungen der
-Fall. Das Modul für die Lenz-Geräte erzeugt beim Starten
-unterschiedliche Rückgabewerte. Diese haben die folgende Bedeutung:
-.TP
-.BI 0
-Das Gerät ist betriebsbereit.
-.TP
-.BI -1
-Digitalzentrale wurde nicht gefunden. Die Softwareversion der Zentrale
-konnte nicht ermittelt werden.
-.TP
-.BI -2
-Digitalzentrale wurde nicht gefunden. Die Softwareversion der Zentrale
-konnte nicht ermittelt werden.
-.TP
-.BI -3
-USB-Interface nicht gefunden. Die Softwareversion des
-Schnittstellengerätes konnte nicht ermittelt werden. Möglicherweise ist
-keine Digitalzentrale am USB-Interface angeschlossen.
-.TP
-.BI -4
-Gerät nicht gefunden.
 .\"
 
 .SH "SIEHE AUCH"

@@ -1,3 +1,8 @@
+--- Release 2.1.0 ----
+
+2009-12-19 Guido Scholz <guido.scholz@bayernline.de>
+	* man/*: Content of English and German manual pages aligned.
+
 2009-08-21 Matthias Trute <mtrute@users.sourceforge.net>
 	* src/Makefile.am src/toolbox.c src/toolbox.h src/ib.c
 	src/li100-main.c src/loopback.c: new module toolbox, contains 
