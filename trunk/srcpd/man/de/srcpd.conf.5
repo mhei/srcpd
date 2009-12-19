@@ -14,7 +14,7 @@
 .\"   aspell -C -d de-neu --encoding=iso-8859-1 -c srcpd.conf.5
 .\"
 .\"
-.TH srcpd.conf 5 "2. Februar 2009"
+.TH srcpd.conf 5 "19. Februar 2009"
 .\"
 
 .SH NAME
@@ -86,7 +86,7 @@ entsprechende Fehlermeldungen an den syslog-Daemon.  Diese können über
 die Datei
 .IR /var/log/messages
 verfolgt werden. Der srcpd benutzt die syslog facility user.info, die
-auf einigen System möglicherweise erst konfiguriert werden muß. 
+auf einigen System möglicherweise erst konfiguriert werden muss. 
 .PP
 .nf
     user.info      /var/adm/user-info.log
@@ -99,7 +99,6 @@ kann.
 .\"
 .PP
 Jede Konfigurationsdatei muss die folgende Grundstruktur enthalten:
-.\"
 .PP
 .nf
     <?xml version="1.0"?>
@@ -124,7 +123,13 @@ für die es jeweils wieder eine eigene Grundstruktur gibt:
 .SS Allgemeine Hinweise
 .PP
 Der erste konfigurierte Bus muss der für den Server selbst sein.  Die
-Reihenfolge und die Anzahl der weiteren Busse sind beliebig.  Es sollten
+Reihenfolge und die Anzahl der weiteren Busse sind beliebig.  Die
+Nummerierung der einzelnen Busse erfolgt abhängig von ihrer in dieser
+Konfigurationsdatei benutzten Reihenfolge. Der Server selbst bekommt die
+Nummer 0, die weiteren werden kontinuerlich mit 1 beginnend hoch
+gezählt, bis zum Maximalwert von 20.
+.PP
+Es sollten
 nur Busse konfiguriert werden, die auch tatsächlich beim Betrieb des
 Daemons Verwendung finden.  Nicht benötigte Busse können beispielsweise
 über Kommentarzeichen ausgeklammert werden:
@@ -149,7 +154,7 @@ jeweils individuell festlegen.
 .\"
 .TP
 verbosity
-Abhängig von diesem Zahlenwert (0..7) erzeugt
+Abhängig von diesem Zahlenwert (0..5) erzeugt
 .IR srcpd
 während des
 Betriebs mehr oder weniger ausführliche Protokollmeldungen zum aktuellen
@@ -220,7 +225,6 @@ benötigen diesen Eintrag nicht.  Der voreingestellte Wert ist
 .\"
 .\"
 .SS server
-.\"
 .PP
 Dieser Bus darf in keiner Konfigurationsdatei fehlen.  Er verfügt über
 die folgenden Einstellmöglichkeiten:
@@ -464,6 +468,20 @@ andererseits die CPU stärker entlastet. Als brauchbar haben sich
 Werte zwischen 100 und 250 erwiesen.  Der voreingestellte Wert ist
 .IR 100 .
 .\"
+.TP
+program_track
+Dieser Parameter erlaubt das Unterdrücken von Befehlen, die nur auf
+einem Programmiergleis sinnvoll anwendbar sind. Der Parameterwert
+.IR yes
+ist also nur für den Betrieb des Hauptgleises nutzbar. Gültige Werte sind
+.IR yes
+oder
+.IR no.
+Der voreingestellte Wert ist
+.IR no ,
+was bedeutet, dass Prpgrammierbefehle standardmäßig ans Gleis
+weitergeleitet werden.
+.\"
 .\"
 .SS ddl-s88
 .PP
@@ -501,7 +519,7 @@ Der »ioport« ist im Hexadezimalformat anzugeben (mit führendem 0x).
 Gültige Werte sind bei einem typischen Linux-System folgende: 0x0378,
 0x0278 und 0x03BC.
 
-Der richtige Wert läßt sich leicht durch Suche in den Meldungen
+Der richtige Wert lässt sich leicht durch Suche in den Meldungen
 ermitteln, die der Betriebssystemkern beim Hochfahren erzeugt:
 .nf
     dmesg | grep parport
@@ -739,6 +757,33 @@ sind Werte von 0 bis 512 (bei Modulen mit 8 Kontakten); 0 bedeutet, keine
 Module sind angeschlossen.  Der voreingestellte Wert beträgt 256, beim
 LI-USB 512.
 .\"
+.PP
+Um Lenz USB-Geräte in Betrieb zu nehmen, muss das Kernelmodul
+.IR ftdi_sio
+verfügbar sein. Bei den gängigen Linux-Distributionen
+ist das in der Regel ohne zusätzliche Konfigurationseinstellungen der
+Fall. Das Modul für die Lenz-Geräte erzeugt beim Starten
+unterschiedliche Rückgabewerte. Diese haben die folgende Bedeutung:
+.TP
+.BI 0
+Das Gerät ist betriebsbereit.
+.TP
+.BI -1
+Digitalzentrale wurde nicht gefunden. Die Softwareversion der Zentrale
+konnte nicht ermittelt werden.
+.TP
+.BI -2
+Digitalzentrale wurde nicht gefunden. Die Softwareversion der Zentrale
+konnte nicht ermittelt werden.
+.TP
+.BI -3
+USB-Interface nicht gefunden. Die Softwareversion des
+Schnittstellengerätes konnte nicht ermittelt werden. Möglicherweise ist
+keine Digitalzentrale am USB-Interface angeschlossen.
+.TP
+.BI -4
+Gerät nicht gefunden.
+.\"
 .\"
 .SS loconet
 .\"
@@ -781,8 +826,8 @@ number_fb
 Anzahl der angeschlossenen Rückmeldekontakte.  Die Voreinstellung ist
 2048.
 .\"
-.SS loopback
 .\"
+.SS loopback
 .PP
 Dieser Bus stellt keine Verbindung zu einem tatsächlich existierenden
 Steuergerät her.  Er ist primär für Entwicklungzwecke gedacht, kann

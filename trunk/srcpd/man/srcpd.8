@@ -10,9 +10,10 @@
 .\"   groff -mandoc -Tps srcpd.8 > srcpd.ps
 .\"
 .\"
-.TH srcpd 8 "December 29, 2007"
+.TH srcpd 8 "December 19, 2009"
 .\"
 .\"
+
 .SH NAME
 srcpd \- SRCP speaking daemon
 .\"
@@ -31,7 +32,7 @@ is a UNIX daemon speaking the Simple Railroad Command Protocol
 (SRCP).
 
 Upon start up it reads in the system wide configuration file named
-\fBsrcpd.conf\fP. Contents and stucture of this XML-file is explained
+\fBsrcpd.conf\fP. Contents and structure of this XML-file is explained
 in detail in the \fBsrcpd.conf (5)\fP man page. The SRCP specification
 is published on http://srcpd.sourceforge.net/srcp.
 .\"
@@ -42,7 +43,7 @@ is published on http://srcpd.sourceforge.net/srcp.
 Prints some useful help about command line options and exit
 .TP
 .BI \-n
-Do not daemonize upon startup. The srcpd does not switch into
+Do not daemonize upon start-up. The srcpd does not switch into
 background mode. This option can be used with the Ubuntu upstart
 system.
 .TP
@@ -62,6 +63,7 @@ Hierarchy Standard (FHS, http://www.pathname.com/fhs/). For more
 information and special options about daemon usage please refer to to
 your system documentation. The following instructions are on a general
 level of information.
+.\"
 
 .SH "NOTES"
 Please first start assembling a configuration file (\fIsrcpd.conf\fP)
@@ -79,8 +81,8 @@ daemon can be started using this command:
 .fi
 .RE
 
-If the \fBsrcpd\fP is already running, the daemon first must be stoped
-to get it aware of the new setup. Stoping the daemon is executed in
+If the \fBsrcpd\fP is already running, the daemon first must be stopped
+to get it aware of the new setup. Stopping the daemon is executed in
 analogy to the start command:
 
 .RS
@@ -91,16 +93,16 @@ analogy to the start command:
 
 Under certain conditions it is also possible to get the daemon re-read
 its configuration file without stopping it. With respect to hardware
-access rules unter UNIXlike systems, the group and/or user rights must
+access rules under UNIXlike systems, the group and/or user rights must
 be properly set in \fIsrcpd.conf\fP to let the daemon access the
-appropriate hardware resouces at any time.
+appropriate hardware resources at any time.
 
 Common model railway interfaces will require access rights for serial
 lines (RS232, USB), which can be achieved using the proper group rights
 (e.g. \fBdialout\fR). The \fBddl-s88\fR module uses a special system function
-(ioperm) which allways needs root rights to perform successfully.
+(ioperm) which always needs root rights to perform successfully.
 
-To let srcpd re-read its confuguration file, assumed the setup
+To let srcpd re-read its configuration file, assumed the setup
 mentioned before is correct, the following command can be used:
 
 .RS
@@ -110,8 +112,8 @@ mentioned before is correct, the following command can be used:
 .RE
 
 The log file \fI/var/log/messages\fP of the syslog daemon can be used
-to monitor occuring errors on daemon start or during current operation.
-With root rights the upcomming messages can be continously watched in a
+to monitor occurring errors on daemon start or during current operation.
+With root rights the upcoming messages can be continuously watched in a
 separate terminal:
 
 .RS
@@ -124,34 +126,6 @@ The verbosity of these messages can be adjusted using the configuration
 file \fIsrcpd.conf\fP. For more information refer to the adequate man
 page.
 .\"
-
-.SS Lenz USB Interfaces
-.PP
-It is very important that you have kernel modul ftdi_sio available.
-Due to concept of Lenz, there you get different return values after start.
-.TP
-.BI 0
-everything is OK
-.TP
-.BI -1
-Central Unit not found. Unable to read version of central unit.
-.TP
-.BI -2
-Central Unit not found. Unable to read version of central unit.
-.TP
-.BI -3
-Interface not found. Unable to read version of interface.
-This can also happen, if no central unit is connected to interface.
-.TP
-.BI -4
-device not found
-.\"
-.\"
-The srcpd uses the syslog facility.
-
-Some modules may set a return code when they encounter a fatal
-error upon startup. If this happens check both the return code
-an the error log.
 
 .SH "SEE ALSO"
 srcpd.conf (5)
