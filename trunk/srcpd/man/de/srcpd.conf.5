@@ -482,6 +482,41 @@ Der voreingestellte Wert ist
 was bedeutet, dass Prpgrammierbefehle standardmäßig ans Gleis
 weitergeleitet werden.
 .\"
+.TP
+Beispiel Märklin/Motorola
+.nf
+<bus>
+    <ddl>
+       <number_ga>200</number_ga>
+       <number_gl>81</number_gl>
+       <enable_maerklin>yes</enable_maerklin>
+       <enable_nmradcc>no</enable_nmradcc>
+       <enable_usleep_patch>yes</enable_usleep_patch>
+       <usleep_usec>200</usleep_usec>
+    </ddl>
+    <auto_power_on>no</auto_power_on>
+    <verbosity>4</verbosity>
+    <device>/dev/ttyS0</device>
+</bus>
+.fi
+.\"
+.TP
+Beispiel NMRA/DCC
+.nf
+<bus>
+    <ddl>
+       <number_ga>160</number_ga>
+       <number_gl>60</number_gl>
+       <enable_maerklin>no</enable_maerklin>
+       <enable_nmradcc>yes</enable_nmradcc>
+       <nmradcc_translation_routine>3</nmradcc_translation_routine>
+    </ddl>
+    <auto_power_on>no</auto_power_on>
+    <verbosity>4</verbosity>
+    <device>/dev/ttyS0</device>
+</bus>
+.fi
+.\"
 .\"
 .SS ddl-s88
 .PP
@@ -563,22 +598,22 @@ Diese Angabe legt die Anzahl der am Strang \fB4\fP angeschlossenen
 Rückmeldemodule fest.
 .PP
 In der Konfiguration sollten die allgemeinen Werte vor den
-busspezifischen Werten stehen. Ein typisches Beispiel sieht so aus:
-
+busspezifischen Werten stehen.
+.\"
+.TP
+Beispiel
 .nf
-    <bus>
-      <auto_power_on>yes</auto_power_on>
-      <verbosity>4</verbosity>
-      <ddl-s88>
+<bus>
+    <auto_power_on>yes</auto_power_on>
+    <verbosity>4</verbosity>
+    <ddl-s88>
         <ioport>0x378</ioport>
-        <clockscale>35</clockscale>
-        <refresh>100</refresh>
         <number_fb_1>9</number_fb_1>
         <number_fb_2>0</number_fb_2>
         <number_fb_3>0</number_fb_3>
         <number_fb_4>0</number_fb_4>
-      </ddl-s88>
-    </bus>
+    </ddl-s88>
+</bus>
 .fi
 .\"
 .\"
@@ -626,6 +661,22 @@ Umfang entprellen.  Der voreingestellte Wert beträgt 0\ ms.
 refresh
 Wartezeit in Mikrosekunden nach der die Rückmeldungen des Geräts erneut
 eingelesen werden.  Der voreingestellte Wert beträgt 10.000\ µs.
+.\"
+.TP
+Beispiel
+.nf
+<bus>
+    <hsi-88>
+        <number_fb_left>8</number_fb_left>
+        <number_fb_center>5</number_fb_center>
+        <number_fb_right>0</number_fb_right>
+        <refresh>10000</refresh>
+    </hsi-88>
+    <auto_power_on>yes</auto_power_on>
+    <verbosity>4</verbosity>
+    <device>/dev/ttyS0</device>
+</bus>
+.fi
 .\"
 .\"
 .SS i2c-dev
@@ -712,6 +763,25 @@ und
 .IR no .
 Die Voreinstellung ist
 .IR yes .
+.\"
+.TP
+Beispiel
+.nf
+<bus>
+    <intellibox>
+        <number_ga>250</number_ga>
+        <number_gl>100</number_gl>
+        <number_fb>4</number_fb>
+        <fb_delay_time_0>0</fb_delay_time_0>
+        <pause_between_commands>0</pause_between_commands>
+    </intellibox>
+    <speed>19200</speed>
+    <auto_speed_detection>no</auto_speed_detection>
+    <auto_power_on>no</auto_power_on>
+    <verbosity>4</verbosity>
+    <device>/dev/ttyUSB0</device>
+</bus>
+.fi
 .\"
 .\"
 .SS li100, li100usb
@@ -826,6 +896,16 @@ number_fb
 Anzahl der angeschlossenen Rückmeldekontakte.  Die Voreinstellung ist
 2048.
 .\"
+.TP
+Beispiel
+.nf
+<bus>
+    <loconet>
+        <device type="network" port="1234">127.0.0.1</device>
+    </loconet>
+</bus>
+.fi
+.\"
 .\"
 .SS loopback
 .PP
@@ -851,6 +931,20 @@ der adressierbaren Rückmeldekontakte, nicht der Rückmeldemodule, fest.
 Die Simulation von zwei Rückmeldemodulen mit je 16 Kontakten erfordert
 also hier den Wert 32. Die Voreinstellung ist 0 (keine Rückmeldekontakte
 vorhanden).
+.\"
+.TP
+Beispiel
+.nf
+<bus>
+    <loopback>
+        <number_ga>120</number_fb>
+        <number_gl>100</number_fb>
+        <number_fb>64</number_fb>
+    </loopback>
+    <verbosity>2</verbosity>
+    <auto_power_on>no</auto_power_on>
+</bus>
+.fi
 .\"
 .\"
 .SS m605x
@@ -923,6 +1017,24 @@ voreingestellte Wert beträgt
 (keine Module sind angeschlossen).
 Bitte beachten Sie, dass auf 6088 Module, die an anderen Geräten
 angeschlossen sind (Memory) nicht zugegriffen werden kann.
+.\"
+.TP
+Beispiel
+.nf
+<bus>
+    <m605x>
+        <number_ga>120</number_fb>
+        <number_gl>60</number_fb>
+        <number_fb>8</number_fb>
+        <ga_min_activetime>75</ga_min_activetime>
+        <pause_between_bytes>2</pause_between_bytes>
+        <pause_between_commands>50</pause_between_commands>
+    </m605x>
+    <auto_power_on>no</auto_power_on>
+    <verbosity>4</verbosity>
+    <device>/dev/ttyS0</device>
+</bus>
+.fi
 .\"
 .\"
 .SS selectrix
