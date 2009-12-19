@@ -2,6 +2,9 @@
 
 2009-12-19 Guido Scholz <guido.scholz@bayernline.de>
 	* man/*: Content of English and German manual pages aligned.
+	* srcpd.conf.5, de/srcpd.conf.5: Example bus sections for ddl,
+	ddl-s88, hsi-88, intellibox, loconet (very bare), loopback and
+	m605x added.
 
 2009-08-21 Matthias Trute <mtrute@users.sourceforge.net>
 	* src/Makefile.am src/toolbox.c src/toolbox.h src/ib.c

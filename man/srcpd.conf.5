@@ -297,7 +297,7 @@ The default value is
 enable_maerklin
 This parameter must be set to
 .IR yes ,
-if decoders for the old (not mfx) Marklin/Motorola (MM) format are used.
+if decoders for the old (not mfx) Maerklin/Motorola (MM) format are used.
 If not used, it should be set to
 .IR no . 
 The default value is
@@ -388,6 +388,41 @@ program track.  This parameter should only be used on your main.  Valid
 input values are \fByes\fR or \fBno\fR.  The default value is \fByes\fR,
 i.e.  all program track commands will be executed by default.
 .\"
+.TP
+Example Maerklin/Motorola
+.nf
+<bus>
+    <ddl>
+       <number_ga>200</number_ga>
+       <number_gl>81</number_gl>
+       <enable_maerklin>yes</enable_maerklin>
+       <enable_nmradcc>no</enable_nmradcc>
+       <enable_usleep_patch>yes</enable_usleep_patch>
+       <usleep_usec>200</usleep_usec>
+    </ddl>
+    <auto_power_on>no</auto_power_on>
+    <verbosity>4</verbosity>
+    <device>/dev/ttyS0</device>
+</bus>
+.fi
+.\"
+.TP
+Example NMRA/DCC
+.nf
+<bus>
+    <ddl>
+       <number_ga>160</number_ga>
+       <number_gl>60</number_gl>
+       <enable_maerklin>no</enable_maerklin>
+       <enable_nmradcc>yes</enable_nmradcc>
+       <nmradcc_translation_routine>3</nmradcc_translation_routine>
+    </ddl>
+    <auto_power_on>no</auto_power_on>
+    <verbosity>4</verbosity>
+    <device>/dev/ttyS0</device>
+</bus>
+.fi
+.\"
 .\"
 .SS ddl-s88
 .PP
@@ -476,23 +511,22 @@ This statement defines the count of to the data link number
 connected feedback modules.
 .PP
 Inside of the configuration the common values should be arranged before
-the bus specific values.  An example looks like this:
-
+the bus specific values. 
+.\"
+.TP
+Example
 .nf
-        <bus>
-          <auto_power_on>yes</auto_power_on>
-          <verbosity>7</verbosity>
-          <device>/dev/lp0</device>
-          <ddl-s88>
-            <ioport>0x378</ioport>
-            <clockscale>35</clockscale>
-            <refresh>100</refresh>
-            <number_fb_1>3</number_fb_1>
-            <number_fb_2>4</number_fb_2>
-            <number_fb_3>5</number_fb_3>
-            <number_fb_4>6</number_fb_4>
-          </ddl-s88>
-        </bus>
+<bus>
+    <auto_power_on>yes</auto_power_on>
+    <verbosity>5</verbosity>
+    <ddl-s88>
+        <ioport>0x378</ioport>
+        <number_fb_1>9</number_fb_1>
+        <number_fb_2>0</number_fb_2>
+        <number_fb_3>0</number_fb_3>
+        <number_fb_4>0</number_fb_4>
+    </ddl-s88>
+</bus>
 .fi
 .\"
 .\"
@@ -537,6 +571,22 @@ refresh
 The time in microseconds (us) after srcpd will read feedback again from
 HSI-88.  The default value is 10000\ us.  The lower this value the higher
 the resulting CPU load.
+.\"
+.TP
+Example
+.nf
+<bus>
+    <hsi-88>
+        <number_fb_left>8</number_fb_left>
+        <number_fb_center>5</number_fb_center>
+        <number_fb_right>0</number_fb_right>
+        <refresh>10000</refresh>
+    </hsi-88>
+    <auto_power_on>yes</auto_power_on>
+    <verbosity>4</verbosity>
+    <device>/dev/ttyS0</device>
+</bus>
+.fi
 .\"
 .\"
 .SS i2c-dev
@@ -611,6 +661,25 @@ and
 The default value is
 .IR yes .
 .\"
+.TP
+Example
+.nf
+<bus>
+    <intellibox>
+        <number_ga>250</number_ga>
+        <number_gl>100</number_gl>
+        <number_fb>4</number_fb>
+        <fb_delay_time_0>0</fb_delay_time_0>
+        <pause_between_commands>0</pause_between_commands>
+    </intellibox>
+    <speed>19200</speed>
+    <auto_speed_detection>no</auto_speed_detection>
+    <auto_power_on>no</auto_power_on>
+    <verbosity>4</verbosity>
+    <device>/dev/ttyUSB0</device>
+</bus>
+.fi
+.\"
 .\"
 .SS li100, li100usb
 .PP
@@ -669,12 +738,8 @@ device not found
 This bus provides a driver for the Loconet system by Digitrax.
 The device settings may be either serial connections (e.g. MS100,
 LocoBuffer) or TCP/IP network links (e.g. LbServer,
-http://loconetovertcp.sourceforge.net/).  An example entry is
-
-.nf 
-    <device type="network" port="1234">127.0.0.1</device>
-.fi
-
+http://loconetovertcp.sourceforge.net/).
+.\"
 .TP
 loconetID
 Default is 0x50.
@@ -694,6 +759,16 @@ or
 .IR no .
 Default is
 .IR no .
+.\"
+.TP
+Example
+.nf
+<bus>
+    <loconet>
+        <device type="network" port="1234">127.0.0.1</device>
+    </loconet>
+</bus>
+.fi
 .\"
 .\"
 .SS loopback
@@ -718,6 +793,20 @@ contacts, not modules.  Simulation of two feedback modules, each
 providing 16 contacts, accordingly needs a parameter value of 32.  Default
 is 0 (no contact).
 .\"
+.TP
+Example
+.nf
+<bus>
+    <loopback>
+        <number_ga>120</number_fb>
+        <number_gl>100</number_fb>
+        <number_fb>64</number_fb>
+    </loopback>
+    <verbosity>2</verbosity>
+    <auto_power_on>no</auto_power_on>
+</bus>
+.fi
+.\"
 .\"
 .SS m605x
 .PP
@@ -725,45 +814,76 @@ This supports communication with the 6051 or 6050 devices from Maerklin
 connected via the serial port.  An USB2Serial converter should work
 fine.  The serial line settings are fixed to 2400\ baud 8N2 and cannot
 be changed.
+.\"
 .TP
 m6020mode
 In this mode the srcpd does not sent the 4 functions.  This
-is a feature of the 6021 only.
+is a feature of the 6021 only. Valid values are 
+.IR yes
+and
+.IR no .
+Default value is
+.IR no.
+.\"
 .TP
 fb_delay_time_0
 This is the time the driver code waits until it recognized the input
 change in milliseconds.  This feature may support a debounce found in
 the hardware.  The default value is 0\ ms.
+.\"
 .TP
 ga_min_activetime
 The time in milliseconds a GA device needs to be in active state.  The
 absolute minimum is 75\ ms and is needed for stable communication with
 the 6051.  The default value is 75\ ms.
+.\"
 .TP
 pause_between_commands
 This is the time between two commands the drivers must wait.  The exact
 values should be hand tuned.  If the system does not respond or drops
 commands try to increase this value.  Default is 200\ ms.
+.\"
 .TP
 pause_between_bytes
 This is the time the driver waits between 2 bytes in multi-byte commands.
 The hardware handshake does not work with all devices so this parameter
 was introduced to support it.  The default is 2\ ms.
+.\"
 .TP
 number_ga
 This is the number of GA.  This parameter does not have a real effect
 since the interface supports the addresses 1..256 only.  Keep the
 default value 256 untouched.
+.\"
 .TP
 number_gl
 Like the number of GA this number gives the maximum GL address.  Since
 this number is limited to 80, keep the default value 80 untouched.
+.\"
 .TP
 number_fb
 This is the number of 6088 modules attached to the 6051/6050 device.
 The valid range is from 0..31.  The default value is 0 (no modules are
 attached).  Please note that 6088 modules attached to other devices
 (memory) cannot be accessed.
+.\"
+.TP
+Example
+.nf
+<bus>
+    <m605x>
+        <number_ga>120</number_fb>
+        <number_gl>60</number_fb>
+        <number_fb>8</number_fb>
+        <ga_min_activetime>150</ga_min_activetime>
+        <pause_between_bytes>2</pause_between_bytes>
+        <pause_between_commands>50</pause_between_commands>
+    </m605x>
+    <auto_power_on>no</auto_power_on>
+    <verbosity>4</verbosity>
+    <device>/dev/ttyS0</device>
+</bus>
+.fi
 .\"
 .\"
 .SS selectrix
