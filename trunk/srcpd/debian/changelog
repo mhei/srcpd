@@ -1,3 +1,9 @@
+srcpd (2.1.0-1) unstable; urgency=low
+
+  * Update to version 2.1.0
+
+ -- Guido Scholz (privat) <guido.scholz@bayernline.de>  Sat, 19 Dec 2009 14:14:02 +0100
+
 srcpd (2.0.11-1) unstable; urgency=low
 
   * Update to version 2.0.11
