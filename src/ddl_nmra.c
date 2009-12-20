@@ -1321,7 +1321,7 @@ static int waitUARTempty_scanACK(bus_t busnumber)
         if (scanACK(busnumber))
             ack = 1;            /* scan ACK */
         /* prevent endless loop in case somone turned the power on */
-        if (buses[busnumber].power_state) {
+        if (buses[busnumber].power_state == 1) {
             clock_t now = clock();
             float diff = (now - start);
             diff /= CLOCKS_PER_SEC;
