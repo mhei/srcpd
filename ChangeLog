@@ -1,4 +1,7 @@
 --- Release 2.1.0 ----
+2009-12-20 Matthias Trute <mtrute@users.sourceforge.net>
+	* src/loconet.c: renamed setting names: loconetID -> loconet-id
+	  and getTIME to sync-time-from-loconet, activated DESCRIOPTION
 
 2009-12-19 Guido Scholz <guido.scholz@bayernline.de>
 	* man/*: Content of English and German manual pages aligned.
