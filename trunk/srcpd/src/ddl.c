@@ -1122,9 +1122,14 @@ static void set_lines_off(bus_t busnumber)
     set_SerialLine(busnumber, SL_DTR, OFF);
 }
 
-static int check_lines(bus_t busnumber)
+/* check if shortcut or emergengy break happened
+   return "true" if power is off
+   return "false" if power is on
+ */
+static bool power_is_off(bus_t busnumber)
 {
     char msg[110];
+
     if (__DDL->CHECKSHORT)
         if (checkShortcut(busnumber) == 1) {
             buses[busnumber].power_state = 0;
@@ -1133,6 +1138,7 @@ static int check_lines(bus_t busnumber)
             infoPower(busnumber, msg);
             enqueueInfoMessage(msg);
         }
+
     if (__DDL->RI_CHECK)
         if (checkRingIndicator(busnumber) == 1) {
             buses[busnumber].power_state = 0;
@@ -1162,9 +1168,9 @@ static int check_lines(bus_t busnumber)
                     "usleep() failed: %s (errno = %d)\n",
                     strerror(errno), errno);
         }
-        return (1);
+        return true;
     }
-    return (0);
+    return false;
 }
 
 /* tvo 2005-12-03 */
@@ -1210,7 +1216,7 @@ static void *thr_refresh_cycle(void *v)
     struct timeval tv1, tv2;
     struct timezone tz;
     /* argument for nanosleep to do non-busy waiting */
-    static struct timespec rqtp_sleep = { 0, 2500000 }; /* ==> non-busy waiting */
+    static struct timespec rqtp_sleep = { 0, 2500000 };
 
     /* set the best waitUARTempty-Routine */
     waitUARTempty = waitUARTempty_COMMON_USLEEPPATCH;
@@ -1285,13 +1291,13 @@ static void *thr_refresh_cycle(void *v)
         syslog_bus(busnumber, DBG_FATAL,
                    "tcflow() failed: %s (errno = %d).",
                    strerror(result), result);
-        /*What to do now*/
+        /*What to do now?*/
     }
     set_SerialLine(busnumber, SL_DTR, ON);
 
     gettimeofday(&tv1, &tz);
     for (;;) {
-        if (check_lines(busnumber))
+        if (power_is_off(busnumber))
             continue;
         wresult = write(buses[busnumber].device.file.fd,
                        __DDL->idle_data, MAXDATA);
@@ -1309,11 +1315,16 @@ static void *thr_refresh_cycle(void *v)
                 syslog_bus(busnumber, DBG_FATAL,
                         "tcflush() failed: %s (errno = %d).",
                         strerror(result), result);
-                /*What to do now*/
+                /*What to do now?*/
             }
+
             while (packet_type > QNOVALIDPKT) {
-                if (check_lines(busnumber))
+
+                /* if power is off, wait here until power is turned on
+                 * again */
+                if (power_is_off(busnumber))
                     continue;
+
                 send_packet(busnumber, packet, packet_size,
                             packet_type, false);
                 if (__DDL->ENABLED_PROTOCOLS == (EP_MAERKLIN | EP_NMRADCC)) {
@@ -1334,8 +1345,9 @@ static void *thr_refresh_cycle(void *v)
         /* If there are no new commands, send a loco state refresch; but
          * only if the last refresh was applied more than 100 ms ago. */
         else {
-            if (check_lines(busnumber))
+            if (power_is_off(busnumber))
                 continue;
+
             gettimeofday(&tv2, &tz);
 
             if (compute_delta(tv1, tv2) > 100000) {
