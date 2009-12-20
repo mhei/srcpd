@@ -742,26 +742,23 @@ http://loconetovertcp.sourceforge.net/).
 .\"
 .TP
 sync-time-from-loconet
-default is no
-.TP
-decode time messages from the loconet and set the SRCP TIME device.
-
+Decode time messages from the loconet and set the SRCP TIME device.
+Valid values are
+.IR yes
+or
+.IR no .
+Default is
+.IR no .
+.\"
 .TP
 loconet-id
 Default is 0x50.
+.\"
 .TP
 ms100
 Support for the MS100/RS232 device of Digitrax.  Valid values are
 .IR yes
 and
-.IR no .
-Default is
-.IR no .
-.TP
-getTIME
-Support for time requests.  Valid values are
-.IR yes
-or
 .IR no .
 Default is
 .IR no .
