@@ -68,7 +68,7 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     __loconet->loconetID = 0x50;        /* Loconet ID */
     memset(__loconet->slotmap, 0, sizeof(__loconet->slotmap) );
 
-    strcpy(buses[busnumber].description, "GA GL FB POWER");
+    strcpy(buses[busnumber].description, "GA GL FB POWER DESCRIPTION");
 
     while (child != NULL) {
 
@@ -77,14 +77,14 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
             /* just do nothing, it is only formatting text or a comment */
         }
 
-        else if (xmlStrcmp(child->name, BAD_CAST "loconetID") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "loconet-id") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 __loconet->loconetID = (unsigned char) atoi((char *) txt);
                 xmlFree(txt);
             }
         }
-        else if (xmlStrcmp(child->name, BAD_CAST "getTIME") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "sync-time-from-loconet") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 if (xmlStrcmp(txt, BAD_CAST "yes") == 0) {
