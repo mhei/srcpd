@@ -1,4 +1,8 @@
 --- Release 2.1.0 ----
+2009-12-27 Matthias Trute <mtrute@users.sourceforge.net>
+	* src/loconet.[ch]: use an input buffer to accumulate serial
+	 characters until a complete loconet packet is received.
+
 2009-12-20 Matthias Trute <mtrute@users.sourceforge.net>
 	* src/loconet.c: renamed setting names: loconetID -> loconet-id
 	  and getTIME to sync-time-from-loconet, activated DESCRIOPTION
