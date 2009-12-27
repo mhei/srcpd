@@ -89,6 +89,7 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
             if (txt != NULL) {
                 if (xmlStrcmp(txt, BAD_CAST "yes") == 0) {
                     __loconet->flags |= LN_FLAG_GETTIME;
+                } else {
                     __loconet->flags &= ~LN_FLAG_GETTIME;
                 }
                 xmlFree(txt);
@@ -101,6 +102,8 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
             if (txt != NULL) {
                 if (xmlStrcmp(txt, BAD_CAST "yes") == 0) {
                     __loconet->flags |= LN_FLAG_MS100;
+                } else {
+                    __loconet->flags &= ~LN_FLAG_MS100;
                 }
                 xmlFree(txt);
             }
@@ -158,7 +161,7 @@ static int init_lineLOCONET_serial(bus_t busnumber)
     }
     buses[busnumber].device.file.fd = fd;
 #ifdef HAVE_LINUX_SERIAL_H
-    if ((__loconet->flags & LN_FLAG_MS100) == 1) {
+    if ((__loconet->flags & LN_FLAG_MS100) == LN_FLAG_MS100) {
         struct serial_struct serial;
         struct termios tios;
         unsigned int cm;
@@ -215,8 +218,7 @@ static int init_lineLOCONET_serial(bus_t busnumber)
 #endif
         tcgetattr(fd, &interface);
         interface.c_oflag = ONOCR;
-        interface.c_cflag =
-            CS8 | CRTSCTS | CSTOPB | CLOCAL | CREAD | HUPCL;
+        interface.c_cflag = CS8 | CRTSCTS | CLOCAL | CREAD | HUPCL;
         interface.c_iflag = IGNBRK;
         interface.c_lflag = IEXTEN;
         interface.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
@@ -558,7 +560,6 @@ ln_write_lbserver(long int busnumber, const unsigned char *cmd,
                    strerror(errno), errno);
 	}
     __loconet->sent_packets++;
-    __loconet->ln_msglen = 0;
     return 0;
 }
 
@@ -572,8 +573,6 @@ ln_write_serial(bus_t busnumber, const unsigned char *cmd,
         writeByte(busnumber, cmd[i], 0);
     }
     __loconet->sent_packets++;
-    __loconet->ln_msglen = len;
-    memcpy(__loconet->ln_message, cmd, len);
     return 0;
 }
 
