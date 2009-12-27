@@ -5,7 +5,6 @@
 
 #include <libxml/tree.h> /*xmlDocPtr, xmlNodePtr*/
 
-
 #define LN_FLAG_ECHO 1     /* loconet interface sends commands back to rs232 */
 #define LN_FLAG_MS100 2    /* MS100 compatible settings (implicit no echo)   */
 #define LN_FLAG_GETTIME 4  /* update the internal TIME device from loconet   */
@@ -21,8 +20,9 @@ typedef struct _LOCONET_DATA {
     unsigned int sent_packets;  /* statistics */
     unsigned int recv_packets;
 
-    unsigned char ln_msglen;       /* length of last message */
-    unsigned char ln_message[128]; /* last message sent */
+    int ibufferin;       /* pointer for incoming characters */
+    int ibufferout;      /* pointer to read from the buffer */
+    unsigned char ibuffer[256]; /* input buffer for loconet packets */
     unsigned int  slotmap[128];    /* slot to decoder address mapping */
 } LOCONET_DATA;
 

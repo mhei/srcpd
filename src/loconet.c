@@ -347,6 +347,7 @@ int init_bus_LOCONET(bus_t busnumber)
     static char* protocols = "LPMN";
     buses[busnumber].protocols = protocols;
     __loconet->sent_packets = __loconet->recv_packets = 0;
+    __loconet->ibufferin  = 0;
     syslog_bus(busnumber, DBG_INFO, "Loconet init: bus #%d, debug %d",
                busnumber, buses[busnumber].debuglevel);
     if (buses[busnumber].debuglevel <= 5) {
@@ -373,38 +374,32 @@ static unsigned char ln_checksum(const unsigned char *cmd, int len)
 
 static int ln_read_serial(bus_t busnumber, unsigned char *cmd, int len)
 {
+    /* two tasks: first check the serial line for a character, append it to
+       the buffer. Second: check the buffer for a complete loconet
+       packet, remove it from the buffer and transfer it to the caller
+       if complete. */
     int fd = buses[busnumber].device.file.fd;
     int index = 1;
     fd_set fds;
     struct timeval t = { 0, 0 };
-    int retval;
+    int retval, pktlen;
+    unsigned char c;
     ssize_t result;
 
     FD_ZERO(&fds);
     FD_SET(fd, &fds);
     retval = select(fd + 1, &fds, NULL, NULL, &t);
     if (retval > 0 && FD_ISSET(fd, &fds)) {
-        /* read data from locobuffer */
-        int pktlen;
-        unsigned char c;
-        /* read exactly one Loconet packet; there must be at least one
-           character due to select call result */
-        /* a valid Loconet packet starts with a byte >= 0x080
-           and contains one or more bytes <0x80.
-         */
-        do {
-            result = read(fd, &c, 1);
-            if (result == -1) {
-		buses[busnumber].devicestate = devFAIL;
-                syslog_bus(busnumber, DBG_ERROR,
-                           "read() failed: %s (errno = %d)\n",
-                           strerror(errno), errno);
-		return 0;
-            }
-        }
-        while (c < 0x80);
-
-        switch (c & 0xe0) {
+        /* read data from locobuffer, we skip everthing before the first ln-packet later */
+        pktlen = read(fd, &c, 1);
+        __loconet->ibuffer[__loconet->ibufferin++] = c;
+    }
+    /* now examine the buffer */
+    __loconet->ibufferout = 0;
+    if(__loconet->ibufferin <2) return(0);
+    /* first skip everything up to the next loconet packet start */
+    while( (__loconet->ibuffer[__loconet->ibufferout] & 0x80) != 0x80) __loconet->ibufferout++;
+    switch(__loconet->ibuffer[__loconet->ibufferout] & 0xe0) {
             case 0x80:
                 pktlen = 2;
                 break;
@@ -415,40 +410,20 @@ static int ln_read_serial(bus_t busnumber, unsigned char *cmd, int len)
                 pktlen = 6;
                 break;
             case 0xe0:
-                result = read(fd, &pktlen, 1);
-                if (result == -1) {
-		    buses[busnumber].devicestate = devFAIL;
-                    syslog_bus(busnumber, DBG_ERROR,
-                               "could not read the number of bytes in loconet packet: %s (errno = %d)\n",
-                               strerror(errno), errno);
-		    return 0;
-                }
-                cmd[1] = pktlen & 0x7f;
-                index = 2;
+                pktlen = __loconet->ibuffer[__loconet->ibufferout+1];
                 break;
-        }
-
-        cmd[0] = c;
-
-        result = read(fd, &cmd[index], pktlen - 1);
-        if (result == -1) {
-	    buses[busnumber].devicestate = devFAIL;
-            syslog_bus(busnumber, DBG_ERROR,
-                       "could not read the complete loconet packet. read() failed: %s (errno = %d)\n",
-                       strerror(errno), errno);
-	    return 0;
-        }
-
-        retval = pktlen;
-        __loconet->recv_packets++;
     }
-    else if (retval == -1) {
-        syslog_bus(busnumber, DBG_ERROR,
-                   "Select failed: %s (errno = %d)\n", strerror(errno),
-                   errno);
+    /* complete packet ? */
+    if(__loconet->ibufferout+pktlen > __loconet->ibufferin) {
+	return(0);
     }
-
-    return retval;
+    syslog_bus(busnumber, DBG_DEBUG, "got a packet size %d, first 2 byte: 0x%02x%02x ", 
+	pktlen, __loconet->ibuffer[__loconet->ibufferout], __loconet->ibuffer[__loconet->ibufferout+1] );
+    /* copy the packet to the transfer buffer and mark the input buffer empty */
+    memcpy(cmd, &__loconet->ibuffer[__loconet->ibufferout], pktlen);
+    __loconet->ibufferin = 0;
+    __loconet->recv_packets++;
+    return pktlen;
 }
 
 
