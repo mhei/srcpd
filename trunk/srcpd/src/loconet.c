@@ -66,6 +66,7 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     __loconet->number_ga = 2048;        /* max address for OPC_SW_REQ */
     __loconet->number_gl = 9999;        /* DCC address range */
     __loconet->loconetID = 0x50;        /* Loconet ID */
+    buses[busnumber].device.file.baudrate = B57600;
     memset(__loconet->slotmap, 0, sizeof(__loconet->slotmap) );
 
     strcpy(buses[busnumber].description, "GA GL FB POWER DESCRIPTION");
@@ -276,6 +277,7 @@ static int init_lineLOCONET_lbserver(bus_t busnumber)
                   buses[busnumber].device.net.hostname,
                   buses[busnumber].device.net.port,
                   errno);
+          close(sockfd);
           return 0;
       }
       alarm(0);
