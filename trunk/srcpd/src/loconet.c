@@ -353,8 +353,6 @@ int init_bus_LOCONET(bus_t busnumber)
     syslog_bus(busnumber, DBG_INFO, "Loconet init: bus #%d, debug %d",
                busnumber, buses[busnumber].debuglevel);
     if (buses[busnumber].debuglevel <= 5) {
-        syslog_bus(busnumber, DBG_INFO, "Loconet bus %ld open device %s",
-                   busnumber, buses[busnumber].device.file.path);
         init_lineLOCONET(busnumber);
         /*TODO: Check return value of line initialization and trigger
          * proper error action. */
