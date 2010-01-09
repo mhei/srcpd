@@ -366,8 +366,12 @@ this situation by introducing a process wait state for a certain amount
 of time.  Normally this does not result in any trouble controlling the
 attached decoders, so the parameter should be set to
 .IR yes .
-The default value is
+Valid values are
+.IR yes
+and
 .IR no .
+The default value is
+.IR yes .
 .\"
 .TP
 usleep_usec
@@ -386,7 +390,7 @@ program_track
 This parameter allows you to suppress commands which are issued for a
 program track.  This parameter should only be used on your main.  Valid
 input values are \fByes\fR or \fBno\fR.  The default value is \fByes\fR,
-i.e.  all program track commands will be executed by default.
+i.e. all program track commands will be executed by default.
 .\"
 .TP
 Example Maerklin/Motorola
