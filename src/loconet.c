@@ -670,38 +670,7 @@ void *thr_sendrec_LOCONET(void *v)
                     infoPower(btd->bus, msg);
                     enqueueInfoMessage(msg);
                     break;
-                    /* */
-		case OPC_LONG_ACK:
-                    syslog_bus(btd->bus, DBG_DEBUG,
-                               "Infomational: LONG ACK for command 0x%0X: 0x%0X",
-                               ln_packet[1]==0?ln_packet[1]:ln_packet[1]|0x0080, ln_packet[2]);
-		    break;
-                case OPC_SW_REQ:       /* B0 */
-                    addr = (ln_packet[1] | ((ln_packet[2] & 0x0f) << 7)) + 1;
-                    value = (ln_packet[2] & 0x10) >> 4;
-                    port = (ln_packet[2] & 0x20) >> 5;
-                    getGA(btd->bus, addr, &gatmp);
-                    gatmp.action = value;
-                    gatmp.port = port;
-                    syslog_bus(btd->bus, DBG_DEBUG,
-                               "Infomational: switch request (OPC_SW_REQ: /* B0 */)  #%d:%d -> %d",
-                               addr, port, value);
-
-                    setGA(btd->bus, addr, gatmp);
-                    break;
-                    /* some commands on the loconet,  */
-                case OPC_RQ_SL_DATA:   /* BB, E7 Message follows */
-                    addr = ln_packet[1];
-                    syslog_bus(btd->bus, DBG_DEBUG,
-                               "Infomational: Request SLOT DATA (OPC_RQ_SL_DATA: /* BB */)  #%d",
-                               addr);
-                    break;
-                case OPC_LOCO_ADR:     /* BF, E7 Message follows */
-                    addr = (ln_packet[1] << 7) | ln_packet[2];
-                    syslog_bus(btd->bus, DBG_DEBUG,
-                               "Informational: request loco address (OPC_LOCO_ADR:  /* BF */)  #%d",
-                               addr);
-                    break;
+                    /* 4byte Commands and Reports on Loconet */
                     /* loco data, unfortunatly with slot addresses and not decoder addresses */
                 case OPC_LOCO_SPD:     /* A0 */
                     addr = ln_packet[1];
@@ -742,7 +711,7 @@ void *thr_sendrec_LOCONET(void *v)
 		        cacheSetGL(btd->bus, __loconett->slotmap[addr], gltmp);
 		    }
                     break;
-		case OPC_LOCO_SND: 
+		case OPC_LOCO_SND:   /* A2 */
                     addr = ln_packet[1];
 		    if(__loconett->slotmap[addr]==0) {
                         syslog_bus(btd->bus, DBG_DEBUG,
@@ -758,7 +727,20 @@ void *thr_sendrec_LOCONET(void *v)
 		        cacheSetGL(btd->bus, __loconett->slotmap[addr], gltmp);
 		    }
 		    break;
+
+                case OPC_SW_REQ:       /* B0 */
                 case OPC_SW_REP:       /* B1 */
+                    addr = (ln_packet[1] | ((ln_packet[2] & 0x0f) << 7)) + 1;
+                    value = (ln_packet[2] & 0x10) >> 4;
+                    port = (ln_packet[2] & 0x20) >> 5;
+                    getGA(btd->bus, addr, &gatmp);
+                    gatmp.action = value;
+                    gatmp.port = port;
+                    syslog_bus(btd->bus, DBG_DEBUG,
+                               "Infomational: switch request (OPC_SW_REQ: /* B0 */)  #%d:%d -> %d",
+                               addr, port, value);
+
+                    setGA(btd->bus, addr, gatmp);
                     break;
                 case OPC_INPUT_REP:    /* B2 */
                     addr = ln_packet[1] | ((ln_packet[2] & 0x000f) << 7);
@@ -766,6 +748,12 @@ void *thr_sendrec_LOCONET(void *v)
                     value = (ln_packet[2] & 0x10) >> 4;
                     updateFB(btd->bus, addr, value);
                     break;
+		case OPC_LONG_ACK:     /* B4 */
+                    syslog_bus(btd->bus, DBG_DEBUG,
+                               "Infomational: LONG ACK for command 0x%0X: 0x%0X",
+                               ln_packet[1]==0?ln_packet[1]:ln_packet[1]|0x0080, ln_packet[2]);
+		    break;
+
 		case OPC_SLOT_STAT1: /* B5 */
                     addr = ln_packet[1];
 		    if(__loconett->slotmap[addr]==0) {
@@ -780,6 +768,19 @@ void *thr_sendrec_LOCONET(void *v)
 		    }
 
 		    break;
+
+                case OPC_RQ_SL_DATA:   /* BB, E7 Message follows */
+                    addr = ln_packet[1];
+                    syslog_bus(btd->bus, DBG_DEBUG,
+                               "Infomational: Request SLOT DATA (OPC_RQ_SL_DATA: /* BB */)  #%d",
+                               addr);
+                    break;
+                case OPC_LOCO_ADR:     /* BF, E7 Message follows */
+                    addr = (ln_packet[1] << 7) | ln_packet[2];
+                    syslog_bus(btd->bus, DBG_DEBUG,
+                               "Informational: request loco address (OPC_LOCO_ADR:  /* BF */)  #%d",
+                               addr);
+                    break;
                 case OPC_SL_RD_DATA:   /* E7 */
                     switch (ln_packet[1]) {
                         case 0x0e:
