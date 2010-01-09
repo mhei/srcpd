@@ -1,4 +1,9 @@
 --- Release 2.1.0 ----
+
+2010-01-09 Guido Scholz <guido.scholz@bayernline.de>
+	* ddl.c, srcpd.conf.5: Default value for usleep_patch in DDL
+	module set to "yes".
+
 2009-12-27 Matthias Trute <mtrute@users.sourceforge.net>
 	* src/loconet.[ch]: use an input buffer to accumulate serial
 	 characters until a complete loconet packet is received.
