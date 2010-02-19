@@ -67,7 +67,7 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     __loconet->number_gl = 9999;        /* DCC address range */
     __loconet->loconetID = 0x50;        /* Loconet ID */
     buses[busnumber].device.file.baudrate = B57600;
-    memset(__loconet->slotmap, 0, sizeof(__loconet->slotmap) );
+    memset(__loconet->slotmap, 0, sizeof(__loconet->slotmap));
 
     strcpy(buses[busnumber].description, "GA GL FB POWER DESCRIPTION");
 
@@ -85,12 +85,14 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                 xmlFree(txt);
             }
         }
-        else if (xmlStrcmp(child->name, BAD_CAST "sync-time-from-loconet") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "sync-time-from-loconet")
+                 == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
                 if (xmlStrcmp(txt, BAD_CAST "yes") == 0) {
                     __loconet->flags |= LN_FLAG_GETTIME;
-                } else {
+                }
+                else {
                     __loconet->flags &= ~LN_FLAG_GETTIME;
                 }
                 xmlFree(txt);
@@ -103,7 +105,8 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
             if (txt != NULL) {
                 if (xmlStrcmp(txt, BAD_CAST "yes") == 0) {
                     __loconet->flags |= LN_FLAG_MS100;
-                } else {
+                }
+                else {
                     __loconet->flags &= ~LN_FLAG_MS100;
                 }
                 xmlFree(txt);
@@ -134,14 +137,17 @@ int readConfig_LOCONET(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     return (1);
 }
 
-static int cacheGetSlotNumberforAddr(bus_t busnumber, unsigned int addr) {
+static int cacheGetSlotNumberforAddr(bus_t busnumber, unsigned int addr)
+{
     int i;
-    syslog_bus(busnumber, DBG_DEBUG, "looking up slot number for address %d", addr);
-    for (i=1;i<128;i++) {
-	if(__loconet->slotmap[i]==addr) {
-	    syslog_bus(busnumber, DBG_DEBUG, "found slot %d for address %d", i, addr);
-	    return i;
-	}
+    syslog_bus(busnumber, DBG_DEBUG,
+               "looking up slot number for address %d", addr);
+    for (i = 1; i < 128; i++) {
+        if (__loconet->slotmap[i] == addr) {
+            syslog_bus(busnumber, DBG_DEBUG,
+                       "found slot %d for address %d", i, addr);
+            return i;
+        }
     }
     return -1;
 }
@@ -244,7 +250,7 @@ static int init_lineLOCONET_lbserver(bus_t busnumber)
     int result;
     char msg[256];
 
-    memset(&hi,'\0',sizeof(hi));
+    memset(&hi, '\0', sizeof(hi));
 
     /* Set preferred network connection options, for Cygwin use IPv4-only
      * as IPv6 is not supported yet */
@@ -256,40 +262,41 @@ static int init_lineLOCONET_lbserver(bus_t busnumber)
 #endif
     hi.ai_socktype = SOCK_STREAM;
     result = getaddrinfo(buses[busnumber].device.net.hostname,
-            buses[busnumber].device.net.port, &hi, &ai);
+                         buses[busnumber].device.net.port, &hi, &ai);
     if (result != 0) {
-	syslog_bus(busnumber, DBG_ERROR, "getaddrinfo %s",
-                gai_strerror(result));
+        syslog_bus(busnumber, DBG_ERROR, "getaddrinfo %s",
+                   gai_strerror(result));
         return 0;
     }
     struct addrinfo *runp = ai;
     if (runp != NULL) {
-        sockfd = socket(runp->ai_family, runp->ai_socktype, runp->ai_protocol);
+        sockfd =
+            socket(runp->ai_family, runp->ai_socktype, runp->ai_protocol);
         if (sockfd == -1) {
-	    syslog_bus(busnumber, DBG_FATAL,
-                   "Socket creation failed: %s (errno = %d).\n",
-                   strerror(errno), errno);
+            syslog_bus(busnumber, DBG_FATAL,
+                       "Socket creation failed: %s (errno = %d).\n",
+                       strerror(errno), errno);
             return 0;
         }
-      alarm(30);
-      if (connect(sockfd, runp->ai_addr, runp->ai_addrlen) != 0) {
-          syslog_bus(busnumber, DBG_ERROR, "ERROR connecting to %s:%d %d",
-                  buses[busnumber].device.net.hostname,
-                  buses[busnumber].device.net.port,
-                  errno);
-          close(sockfd);
-          return 0;
-      }
-      alarm(0);
+        alarm(30);
+        if (connect(sockfd, runp->ai_addr, runp->ai_addrlen) != 0) {
+            syslog_bus(busnumber, DBG_ERROR,
+                       "ERROR connecting to %s:%d %d",
+                       buses[busnumber].device.net.hostname,
+                       buses[busnumber].device.net.port, errno);
+            close(sockfd);
+            return 0;
+        }
+        alarm(0);
 
-      result = socket_readline(sockfd, msg, sizeof(msg) - 1);
+        result = socket_readline(sockfd, msg, sizeof(msg) - 1);
 
-      /* client terminated connection */
-      if (0 == result) {
-        freeaddrinfo(ai);
-        shutdown(sockfd, SHUT_RDWR);
-        return 0;
-      }
+        /* client terminated connection */
+        if (0 == result) {
+            freeaddrinfo(ai);
+            shutdown(sockfd, SHUT_RDWR);
+            return 0;
+        }
     }
     /* read errror */
     if (-1 == result) {
@@ -330,9 +337,9 @@ static int init_gl_LOCONET(gl_state_t * gl)
        1. send out a BF<hi><lo> Message. 
        2. wait for the E7 response, if a B4 comes, the slot table is full, exit
        3. check the slot status. If it is IN_USE or CONSISTED, mark the address
-          as (SRCP-)locked and exit
+       as (SRCP-)locked and exit
        4. mark the slot as IN_USE with a BA<slot><slot> message
-    */
+     */
     return SRCP_OK;
 }
 
@@ -346,10 +353,10 @@ static int init_ga_LOCONET(ga_state_t * ga)
 
 int init_bus_LOCONET(bus_t busnumber)
 {
-    static char* protocols = "LPMN";
+    static char *protocols = "LPMN";
     buses[busnumber].protocols = protocols;
     __loconet->sent_packets = __loconet->recv_packets = 0;
-    __loconet->ibufferin  = 0;
+    __loconet->ibufferin = 0;
     syslog_bus(busnumber, DBG_INFO, "Loconet init: bus #%d, debug %d",
                busnumber, buses[busnumber].debuglevel);
     if (buses[busnumber].debuglevel <= 5) {
@@ -389,36 +396,46 @@ static int ln_read_serial(bus_t busnumber, unsigned char *cmd, int len)
     FD_ZERO(&fds);
     FD_SET(fd, &fds);
     retval = select(fd + 1, &fds, NULL, NULL, &t);
+
+    /* read data from locobuffer,
+       we skip everthing before the first ln-packet later */
     if (retval > 0 && FD_ISSET(fd, &fds)) {
-        /* read data from locobuffer, we skip everthing before the first ln-packet later */
         pktlen = read(fd, &c, 1);
         __loconet->ibuffer[__loconet->ibufferin++] = c;
     }
+    
     /* now examine the buffer */
     __loconet->ibufferout = 0;
-    if(__loconet->ibufferin <2) return(0);
+    if (__loconet->ibufferin < 2)
+        return (0);
+
     /* first skip everything up to the next loconet packet start */
-    while( (__loconet->ibuffer[__loconet->ibufferout] & 0x80) != 0x80) __loconet->ibufferout++;
-    switch(__loconet->ibuffer[__loconet->ibufferout] & 0xe0) {
-            case 0x80:
-                pktlen = 2;
-                break;
-            case 0xa0:
-                pktlen = 4;
-                break;
-            case 0xc0:
-                pktlen = 6;
-                break;
-            case 0xe0:
-                pktlen = __loconet->ibuffer[__loconet->ibufferout+1];
-                break;
+    while ((__loconet->ibuffer[__loconet->ibufferout] & 0x80) != 0x80)
+        __loconet->ibufferout++;
+    switch (__loconet->ibuffer[__loconet->ibufferout] & 0xe0) {
+        case 0x80:
+            pktlen = 2;
+            break;
+        case 0xa0:
+            pktlen = 4;
+            break;
+        case 0xc0:
+            pktlen = 6;
+            break;
+        case 0xe0:
+            pktlen = __loconet->ibuffer[__loconet->ibufferout + 1];
+            break;
     }
+    
     /* complete packet ? */
-    if(__loconet->ibufferout+pktlen > __loconet->ibufferin) {
-	return(0);
+    if (__loconet->ibufferout + pktlen > __loconet->ibufferin) {
+        return (0);
     }
-    syslog_bus(busnumber, DBG_DEBUG, "got a packet size %d, first 2 byte: 0x%02x%02x ", 
-	pktlen, __loconet->ibuffer[__loconet->ibufferout], __loconet->ibuffer[__loconet->ibufferout+1] );
+    
+    syslog_bus(busnumber, DBG_DEBUG,
+               "got a packet size %d, first 2 byte: 0x%02x%02x ", pktlen,
+               __loconet->ibuffer[__loconet->ibufferout],
+               __loconet->ibuffer[__loconet->ibufferout + 1]);
     /* copy the packet to the transfer buffer and mark the input buffer empty */
     memcpy(cmd, &__loconet->ibuffer[__loconet->ibufferout], pktlen);
     __loconet->ibufferin = 0;
@@ -445,17 +462,17 @@ static int ln_read_lbserver(bus_t busnumber, unsigned char *cmd, int len)
 
         /* client terminated connection */
         if (0 == result) {
-           shutdown(fd, SHUT_RDWR);
-	   close(fd);
-	   buses[busnumber].devicestate = devFAIL;
-           return 0;
-           }
+            shutdown(fd, SHUT_RDWR);
+            close(fd);
+            buses[busnumber].devicestate = devFAIL;
+            return 0;
+        }
 
         /* read errror */
         else if (-1 == result) {
-	    buses[busnumber].devicestate = devFAIL;
-	    shutdown(fd, SHUT_RDWR);
-	    close(fd);
+            buses[busnumber].devicestate = devFAIL;
+            shutdown(fd, SHUT_RDWR);
+            close(fd);
             syslog_bus(busnumber, DBG_WARN,
                        "Socket read failed: %s (errno = %d)\n",
                        strerror(errno), errno);
@@ -492,20 +509,22 @@ static int ln_read_lbserver(bus_t busnumber, unsigned char *cmd, int len)
 static int ln_read(bus_t busnumber, unsigned char *cmd, int len)
 {
     int rc = 0;
-    while(buses[busnumber].devicestate != devOK) {
-	sleep(1);
-	init_lineLOCONET(busnumber);
+    while (buses[busnumber].devicestate != devOK) {
+        sleep(1);
+        init_lineLOCONET(busnumber);
     }
     switch (buses[busnumber].devicetype) {
         case HW_FILENAME:
-            rc=ln_read_serial(busnumber, cmd, len);
+            rc = ln_read_serial(busnumber, cmd, len);
             break;
         case HW_NETWORK:
-            rc=ln_read_lbserver(busnumber, cmd, len);
+            rc = ln_read_lbserver(busnumber, cmd, len);
             break;
     }
-    if ( rc>0 ) {
-	syslog_bus(busnumber, DBG_DEBUG, "received Loconet packet with OPC 0x%02X. %s to send commands to loconet", cmd[0], cmd[0]&0x08?"block":"ok");
+    if (rc > 0) {
+        syslog_bus(busnumber, DBG_DEBUG,
+                   "received Loconet packet with OPC 0x%02X. %s to send commands to loconet",
+                   cmd[0], cmd[0] & 0x08 ? "block" : "ok");
     }
     return rc;
 }
@@ -518,7 +537,7 @@ ln_write_lbserver(long int busnumber, const unsigned char *cmd,
     unsigned char i;
     ssize_t result;
     char msg[256], tmp[10];
-    
+
     snprintf(msg, sizeof(msg), "SEND");
     for (i = 0; i < len; i++) {
         snprintf(tmp, sizeof(tmp), " %02X", cmd[i]);
@@ -528,12 +547,12 @@ ln_write_lbserver(long int busnumber, const unsigned char *cmd,
     result = writen(buses[busnumber].device.net.sockfd, msg, strlen(msg));
     if (result == -1) {
         buses[busnumber].devicestate = devFAIL;
-	shutdown(buses[busnumber].device.net.sockfd, SHUT_RDWR);
-	close(buses[busnumber].device.net.sockfd);
+        shutdown(buses[busnumber].device.net.sockfd, SHUT_RDWR);
+        close(buses[busnumber].device.net.sockfd);
         syslog_bus(busnumber, DBG_WARN,
                    "Socket write failed: %s (errno = %d)\n",
                    strerror(errno), errno);
-	}
+    }
     __loconet->sent_packets++;
     return 0;
 }
@@ -610,7 +629,9 @@ static void end_bus_thread(bus_thread_t * btd)
 /* check if the loconet is available, there are two message transfers,
  * that shall not be disturbed
  */
-static int ln_sendmessage(bus_t  bus, int ln_packetlen, unsigned char *ln_packet) {
+static int ln_sendmessage(bus_t bus, int ln_packetlen,
+                          unsigned char *ln_packet)
+{
     ln_packet[ln_packetlen - 1] = ln_checksum(ln_packet, ln_packetlen - 1);
     if (ln_packet[0] != OPC_IDLE) {
         ln_write(bus, ln_packet, ln_packetlen);
@@ -626,8 +647,8 @@ void *thr_sendrec_LOCONET(void *v)
     unsigned char ln_packet[128];       /* max length is coded with 7 bit */
     unsigned char ln_packetlen = 2;
     unsigned int addr, timeoutcnt, twomessageflag;
-    unsigned int startup_slot_index = 1; /* read the slot numbers upon start up */
-    /*int code, src, dst, data[8], i;*/
+    unsigned int startup_slot_index = 1;        /* read the slot numbers upon start up */
+    /*int code, src, dst, data[8], i; */
     int value, port, speed, tmp;
     char msg[110];
     ga_state_t gatmp;
@@ -651,11 +672,11 @@ void *thr_sendrec_LOCONET(void *v)
         pthread_testcancel();
         buses[btd->bus].watchdog = 1;
         memset(ln_packet, 0, sizeof(ln_packet));
-	twomessageflag = 0;
+        twomessageflag = 0;
         /* first action is always a read _from_ Loconet */
         if ((ln_packetlen = ln_read(btd->bus, ln_packet,
                                     sizeof(ln_packet))) > 1) {
-	    twomessageflag = (ln_packet[0] & 0x08)?0:1; /* block:ok */
+            twomessageflag = (ln_packet[0] & 0x08) ? 0 : 1;     /* block:ok */
             switch (ln_packet[0]) {
                     /* basic operations, 2byte Commands on Loconet */
                 case OPC_GPOFF:
@@ -678,59 +699,76 @@ void *thr_sendrec_LOCONET(void *v)
                     syslog_bus(btd->bus, DBG_DEBUG,
                                "Set loco speed (OPC_LOCO_SPD:  /* A0 */) %d: %d",
                                addr, speed);
-		    if(__loconett->slotmap[addr]==0) {
+                    if (__loconett->slotmap[addr] == 0) {
                         syslog_bus(btd->bus, DBG_DEBUG,
-                               "slot %d still unknown", addr);
-		    } else {
+                                   "slot %d still unknown", addr);
+                    }
+                    else {
                         syslog_bus(btd->bus, DBG_DEBUG,
-                               "GL decoder address %d found in slot %d", __loconett->slotmap[addr], addr);
-		        cacheGetGL(btd->bus, __loconett->slotmap[addr], &gltmp);
-			if(speed==1) {
-			    /* gltmp.direction = 2; */
-			    gltmp.speed = 0;
-			} else {
-			    gltmp.speed = speed;
-			}
-		        cacheSetGL(btd->bus, __loconett->slotmap[addr], gltmp);
-		    }
+                                   "GL decoder address %d found in slot %d",
+                                   __loconett->slotmap[addr], addr);
+                        cacheGetGL(btd->bus, __loconett->slotmap[addr],
+                                   &gltmp);
+                        if (speed == 1) {
+                            /* gltmp.direction = 2; */
+                            gltmp.speed = 0;
+                        }
+                        else {
+                            gltmp.speed = speed;
+                        }
+                        cacheSetGL(btd->bus, __loconett->slotmap[addr],
+                                   gltmp);
+                    }
                     break;
                 case OPC_LOCO_DIRF:    /* A1 */
                     addr = ln_packet[1];
-		    if(__loconett->slotmap[addr]==0) {
+                    if (__loconett->slotmap[addr] == 0) {
                         syslog_bus(btd->bus, DBG_DEBUG,
-                               "slot %d still unknown", addr);
-		    } else {
+                                   "slot %d still unknown", addr);
+                    }
+                    else {
                         syslog_bus(btd->bus, DBG_DEBUG,
-                               "GL decoder address %d found in slot %d", __loconett->slotmap[addr], addr);
-		        cacheGetGL(btd->bus, __loconett->slotmap[addr], &gltmp);
-			tmp = gltmp.funcs & 0xffe0;
-			/* bit shuffling */
-			tmp |= (ln_packet[2] & 0x0010)>>4 | (ln_packet[2] & 0x000f) <<1;
-			gltmp.funcs = tmp;
-			gltmp.direction = (ln_packet[2] & DIRF_DIR)?0:1;
-		        cacheSetGL(btd->bus, __loconett->slotmap[addr], gltmp);
-		    }
+                                   "GL decoder address %d found in slot %d",
+                                   __loconett->slotmap[addr], addr);
+                        cacheGetGL(btd->bus, __loconett->slotmap[addr],
+                                   &gltmp);
+                        tmp = gltmp.funcs & 0xffe0;
+                        /* bit shuffling */
+                        tmp |=
+                            (ln_packet[2] & 0x0010) >> 4 | (ln_packet[2] &
+                                                            0x000f) << 1;
+                        gltmp.funcs = tmp;
+                        gltmp.direction =
+                            (ln_packet[2] & DIRF_DIR) ? 0 : 1;
+                        cacheSetGL(btd->bus, __loconett->slotmap[addr],
+                                   gltmp);
+                    }
                     break;
-		case OPC_LOCO_SND:   /* A2 */
+                case OPC_LOCO_SND:     /* A2 */
                     addr = ln_packet[1];
-		    if(__loconett->slotmap[addr]==0) {
+                    if (__loconett->slotmap[addr] == 0) {
                         syslog_bus(btd->bus, DBG_DEBUG,
-                               "slot %d still unknown", addr);
-		    } else {
+                                   "slot %d still unknown", addr);
+                    }
+                    else {
                         syslog_bus(btd->bus, DBG_DEBUG,
-                               "GL decoder address %d found in slot %d", __loconett->slotmap[addr], addr);
-		        cacheGetGL(btd->bus, __loconett->slotmap[addr], &gltmp);
-			tmp = gltmp.funcs & 0xfe1f;
-			/* bit shuffling */
-			tmp |= (ln_packet[2]& 0x000f) << 5;
-			gltmp.funcs = tmp;
-		        cacheSetGL(btd->bus, __loconett->slotmap[addr], gltmp);
-		    }
-		    break;
+                                   "GL decoder address %d found in slot %d",
+                                   __loconett->slotmap[addr], addr);
+                        cacheGetGL(btd->bus, __loconett->slotmap[addr],
+                                   &gltmp);
+                        tmp = gltmp.funcs & 0xfe1f;
+                        /* bit shuffling */
+                        tmp |= (ln_packet[2] & 0x000f) << 5;
+                        gltmp.funcs = tmp;
+                        cacheSetGL(btd->bus, __loconett->slotmap[addr],
+                                   gltmp);
+                    }
+                    break;
 
                 case OPC_SW_REQ:       /* B0 */
                 case OPC_SW_REP:       /* B1 */
-                    addr = (ln_packet[1] | ((ln_packet[2] & 0x0f) << 7)) + 1;
+                    addr =
+                        (ln_packet[1] | ((ln_packet[2] & 0x0f) << 7)) + 1;
                     value = (ln_packet[2] & 0x10) >> 4;
                     port = (ln_packet[2] & 0x20) >> 5;
                     getGA(btd->bus, addr, &gatmp);
@@ -748,26 +786,31 @@ void *thr_sendrec_LOCONET(void *v)
                     value = (ln_packet[2] & 0x10) >> 4;
                     updateFB(btd->bus, addr, value);
                     break;
-		case OPC_LONG_ACK:     /* B4 */
+                case OPC_LONG_ACK:     /* B4 */
                     syslog_bus(btd->bus, DBG_DEBUG,
                                "Infomational: LONG ACK for command 0x%0X: 0x%0X",
-                               ln_packet[1]==0?ln_packet[1]:ln_packet[1]|0x0080, ln_packet[2]);
-		    break;
+                               ln_packet[1] ==
+                               0 ? ln_packet[1] : ln_packet[1] | 0x0080,
+                               ln_packet[2]);
+                    break;
 
-		case OPC_SLOT_STAT1: /* B5 */
+                case OPC_SLOT_STAT1:   /* B5 */
                     addr = ln_packet[1];
-		    if(__loconett->slotmap[addr]==0) {
+                    if (__loconett->slotmap[addr] == 0) {
                         syslog_bus(btd->bus, DBG_DEBUG,
-                               "slot %d still unknown", addr);
-		    } else {
+                                   "slot %d still unknown", addr);
+                    }
+                    else {
                         syslog_bus(btd->bus, DBG_DEBUG,
-                               "GL decoder address %d found in slot %d", __loconett->slotmap[addr], addr);
-			if(ln_packet[2]==2) {
-			    cacheTermGL(btd->bus, __loconett->slotmap[addr]);
-			}
-		    }
+                                   "GL decoder address %d found in slot %d",
+                                   __loconett->slotmap[addr], addr);
+                        if (ln_packet[2] == 2) {
+                            cacheTermGL(btd->bus,
+                                        __loconett->slotmap[addr]);
+                        }
+                    }
 
-		    break;
+                    break;
 
                 case OPC_RQ_SL_DATA:   /* BB, E7 Message follows */
                     addr = ln_packet[1];
@@ -787,18 +830,21 @@ void *thr_sendrec_LOCONET(void *v)
                             addr = ln_packet[4] | (ln_packet[9] << 7);
                             syslog_bus(btd->bus, DBG_DEBUG,
                                        "OPC_SL_RD_DATA: /* E7 %0X */ slot #%d: status=0x%0x addr=%d",
-                                       ln_packet[1], ln_packet[2], ln_packet[3], addr);
-			    __loconett -> slotmap[ln_packet[2]] = addr;
-			    if(!isInitializedGL(btd->bus, addr)) {
-	        		    cacheInitGL(btd->bus, addr, 'L', 1, 128, 9);
-			    }
-			    cacheGetGL(btd->bus, addr, &gltmp);
-			    gltmp.speed = ln_packet[5];
-			    tmp = ln_packet[6];
-			    tmp = (tmp & 0x0010)>>4 | (tmp & 0x000f) <<1;
-                            tmp = tmp | ln_packet[7]<<5;
-			    gltmp.funcs = tmp;
-			    cacheSetGL(btd->bus, addr, gltmp);
+                                       ln_packet[1], ln_packet[2],
+                                       ln_packet[3], addr);
+                            __loconett->slotmap[ln_packet[2]] = addr;
+                            if (!isInitializedGL(btd->bus, addr)) {
+                                cacheInitGL(btd->bus, addr, 'L', 1, 128,
+                                            9);
+                            }
+                            cacheGetGL(btd->bus, addr, &gltmp);
+                            gltmp.speed = ln_packet[5];
+                            tmp = ln_packet[6];
+                            tmp =
+                                (tmp & 0x0010) >> 4 | (tmp & 0x000f) << 1;
+                            tmp = tmp | ln_packet[7] << 5;
+                            gltmp.funcs = tmp;
+                            cacheSetGL(btd->bus, addr, gltmp);
                             break;
                         default:
                             syslog_bus(btd->bus, DBG_DEBUG,
@@ -806,38 +852,45 @@ void *thr_sendrec_LOCONET(void *v)
                                        ln_packet[1]);
                     }
                     break;
-		case OPC_WR_SL_DATA:
+                case OPC_WR_SL_DATA:
                     switch (ln_packet[1]) {
                         case 0x0e:
-			    if(ln_packet[2]==0x7b) {
-				int day, hour, minute, clkrate, clkstate;
-				clkrate = ln_packet[3];
-				clkstate = ln_packet[10] & 0x20;
-				if(!clkstate) {
-				    day = ln_packet[9];
-				    minute = ( (256 - ln_packet[6]) & 0x7f) % 60;
-				    hour = ((256- ln_packet[8]) & 0x7f) % 24;
-				    hour = (24-hour)%24;
-				    minute=(60-minute)%60;
-                            	    syslog_bus(btd->bus, DBG_DEBUG,
-                                       "fast clock update: day %d %02d:%02d",day, hour, minute);
-				    if ((__loconett->flags & LN_FLAG_GETTIME) == LN_FLAG_GETTIME) {
-					    initTIME(clkrate, 1);
-					    setTIME(day, hour, minute,0);
-				    }
-				} else {
-				    syslog_bus(btd->bus, DBG_DEBUG, "clock frozen");
-				}
-			    }
-			    break;
-			default:
+                            if (ln_packet[2] == 0x7b) {
+                                int day, hour, minute, clkrate, clkstate;
+                                clkrate = ln_packet[3];
+                                clkstate = ln_packet[10] & 0x20;
+                                if (!clkstate) {
+                                    day = ln_packet[9];
+                                    minute =
+                                        ((256 - ln_packet[6]) & 0x7f) % 60;
+                                    hour =
+                                        ((256 - ln_packet[8]) & 0x7f) % 24;
+                                    hour = (24 - hour) % 24;
+                                    minute = (60 - minute) % 60;
+                                    syslog_bus(btd->bus, DBG_DEBUG,
+                                               "fast clock update: day %d %02d:%02d",
+                                               day, hour, minute);
+                                    if ((__loconett->
+                                         flags & LN_FLAG_GETTIME) ==
+                                        LN_FLAG_GETTIME) {
+                                        initTIME(clkrate, 1);
+                                        setTIME(day, hour, minute, 0);
+                                    }
+                                }
+                                else {
+                                    syslog_bus(btd->bus, DBG_DEBUG,
+                                               "clock frozen");
+                                }
+                            }
+                            break;
+                        default:
                             syslog_bus(btd->bus, DBG_DEBUG,
                                        "Unknown or not decoded Loconet Message OPC_WR_SL_DATA: /* 0x%0X */",
                                        ln_packet[1]);
 
-			    ;
-		    }
-		    break;
+                            ;
+                    }
+                    break;
                 default:
                     syslog_bus(btd->bus, DBG_DEBUG,
                                "Unknown or not decoded Loconet Message (0x%0X), packet length is %d bytes",
@@ -846,7 +899,7 @@ void *thr_sendrec_LOCONET(void *v)
                     break;
             }
         }
-        if ( !twomessageflag && (ln_packetlen == 0)) {
+        if (!twomessageflag && (ln_packetlen == 0)) {
             /* now we process the way back _to_ Loconet */
             ln_packet[0] = OPC_IDLE;
             ln_packetlen = 2;
@@ -861,55 +914,66 @@ void *thr_sendrec_LOCONET(void *v)
                 gl_state_t gltmp, glcur;
                 int slot;
                 dequeueNextGL(btd->bus, &gltmp);
-		addr = gltmp.id;
+                addr = gltmp.id;
                 slot = cacheGetSlotNumberforAddr(btd->bus, addr);
                 cacheGetGL(btd->bus, addr, &glcur);
                 /* we may have to send out 3 different messages
                    OPC_LOCO_SPD for speed changes
                    OPC_LOCO_DIRF for direction and function 0-4
                    OPC_LOCO_SND for function 5-8
-                */
-                if(gltmp.speed != glcur.speed) {
-		    ln_packetlen = 4;
+                 */
+                if (gltmp.speed != glcur.speed) {
+                    ln_packetlen = 4;
                     ln_packet[0] = OPC_LOCO_SPD;
                     ln_packet[1] = slot;
-            	    ln_packet[2] = gltmp.speed + (gltmp.speed>0?1:0); /* speed step in loconet 1 is a emergency stop */
-            	    ln_sendmessage(btd->bus, ln_packetlen, ln_packet);
-		    syslog_bus(btd->bus, DBG_DEBUG, "Loconet: GL SET slot %d with addr %d to speed %d.", slot, addr, speed);
-		}
+                    ln_packet[2] = gltmp.speed + (gltmp.speed > 0 ? 1 : 0);     /* speed step in loconet 1 is a emergency stop */
+                    ln_sendmessage(btd->bus, ln_packetlen, ln_packet);
+                    syslog_bus(btd->bus, DBG_DEBUG,
+                               "Loconet: GL SET slot %d with addr %d to speed %d.",
+                               slot, addr, speed);
+                }
 
-                if(gltmp.direction != glcur.direction || ((gltmp.funcs & 0x001f) != (glcur.funcs & 0x001f)) ) {
-		    ln_packetlen = 4;
+                if (gltmp.direction != glcur.direction
+                    || ((gltmp.funcs & 0x001f) !=
+                        (glcur.funcs & 0x001f))) {
+                    ln_packetlen = 4;
                     ln_packet[0] = OPC_LOCO_DIRF;
                     ln_packet[1] = slot;
-            	    ln_packet[2] =  (gltmp.direction       ? 0: DIRF_DIR) +
-            			   ((gltmp.funcs & 0x0001) ? DIRF_F0:0 ) +
-            			   ((gltmp.funcs>>1) & 0x000f) ;
-            	    ln_sendmessage(btd->bus, ln_packetlen, ln_packet);
-		    syslog_bus(btd->bus, DBG_DEBUG, "Loconet: GL SET slot %d with addr %d to direction/funcs 0x%x.", slot, addr, ln_packet[2]);
-		}
-                if((gltmp.funcs&0x01e0) != (glcur.funcs & 0x01e0)) {
-		    ln_packetlen = 4;
+                    ln_packet[2] = (gltmp.direction ? 0 : DIRF_DIR) +
+                        ((gltmp.funcs & 0x0001) ? DIRF_F0 : 0) +
+                        ((gltmp.funcs >> 1) & 0x000f);
+                    ln_sendmessage(btd->bus, ln_packetlen, ln_packet);
+                    syslog_bus(btd->bus, DBG_DEBUG,
+                               "Loconet: GL SET slot %d with addr %d to direction/funcs 0x%x.",
+                               slot, addr, ln_packet[2]);
+                }
+                if ((gltmp.funcs & 0x01e0) != (glcur.funcs & 0x01e0)) {
+                    ln_packetlen = 4;
                     ln_packet[0] = OPC_LOCO_SND;
                     ln_packet[1] = slot;
-            	    ln_packet[2] = (gltmp.funcs >> 5)&0x000f;
-            	    ln_sendmessage(btd->bus, ln_packetlen, ln_packet);
-		    syslog_bus(btd->bus, DBG_DEBUG, "Loconet: GL SET slot %d with addr %d to sound funcs 0x%x.", slot, addr, ln_packet[2]);
-		}
+                    ln_packet[2] = (gltmp.funcs >> 5) & 0x000f;
+                    ln_sendmessage(btd->bus, ln_packetlen, ln_packet);
+                    syslog_bus(btd->bus, DBG_DEBUG,
+                               "Loconet: GL SET slot %d with addr %d to sound funcs 0x%x.",
+                               slot, addr, ln_packet[2]);
+                }
 
                 cacheSetGL(btd->bus, gltmp.id, gltmp);
 
-            } else if (!queue_GA_isempty(btd->bus)) {
+            }
+            else if (!queue_GA_isempty(btd->bus)) {
                 ga_state_t gatmp;
                 dequeueNextGA(btd->bus, &gatmp);
-		addr = gatmp.id - 1;
+                addr = gatmp.id - 1;
                 ln_packetlen = 4;
                 ln_packet[0] = OPC_SW_REQ;
 
                 ln_packet[1] = (unsigned short int) (addr & 0x0007f);
                 ln_packet[2] = (unsigned short int) ((addr >> 7) & 0x000f);
-                ln_packet[2] |=(unsigned short int) ((gatmp.port & 0x0001) << 5);
-                ln_packet[2] |=(unsigned short int) ((gatmp.action & 0x0001) << 4);
+                ln_packet[2] |=
+                    (unsigned short int) ((gatmp.port & 0x0001) << 5);
+                ln_packet[2] |=
+                    (unsigned short int) ((gatmp.action & 0x0001) << 4);
 
                 if (gatmp.action == 1) {
                     gettimeofday(&gatmp.tv[gatmp.port], NULL);
@@ -917,25 +981,27 @@ void *thr_sendrec_LOCONET(void *v)
                 setGA(btd->bus, gatmp.id, gatmp);
                 syslog_bus(btd->bus, DBG_DEBUG, "Loconet: GA SET #%d %02X",
                            gatmp.id, gatmp.action);
-            } else {
-		/* send out a slot read message to collect the current state. Do this
-		   only once at startup time */
-		if(startup_slot_index<120) {
-                    syslog_bus(btd->bus, DBG_DEBUG, "Loconet: requesting startup slot info %d",
-                           startup_slot_index);
-		    ln_packetlen = 4;
-		    ln_packet[0] = OPC_RQ_SL_DATA;
-	    	    ln_packet[1] = startup_slot_index++;
-	    	    ln_packet[2] = 0;
-		}
-	    }
-    	    ln_sendmessage(btd->bus, ln_packetlen, ln_packet);
-        } 
+            }
+            else {
+                /* send out a slot read message to collect the current state. Do this
+                   only once at startup time */
+                if (startup_slot_index < 120) {
+                    syslog_bus(btd->bus, DBG_DEBUG,
+                               "Loconet: requesting startup slot info %d",
+                               startup_slot_index);
+                    ln_packetlen = 4;
+                    ln_packet[0] = OPC_RQ_SL_DATA;
+                    ln_packet[1] = startup_slot_index++;
+                    ln_packet[2] = 0;
+                }
+            }
+            ln_sendmessage(btd->bus, ln_packetlen, ln_packet);
+        }
         /* wait 1 ms */
         if (usleep(1000) == -1) {
             syslog_bus(btd->bus, DBG_ERROR,
-                    "usleep() failed: %s (errno = %d)\n",
-                    strerror(errno), errno);
+                       "usleep() failed: %s (errno = %d)\n",
+                       strerror(errno), errno);
         }
     }
     /*run the cleanup routine */
