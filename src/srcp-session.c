@@ -230,7 +230,7 @@ void destroy_anonymous_session(session_node_t* n)
     }
 }
 
-/*destroy a fully funtionalized session*/
+/*destroy a fully functionalized session*/
 void destroy_session(sessionid_t sid)
 {
     int result;
