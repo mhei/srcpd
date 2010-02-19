@@ -1,7 +1,8 @@
-srcpd-2.1.0 (2009-12-??)
+srcpd-2.1.0 (2010-20-??)
   Fixed Bugs
     o Fixed counting of interface bus number as well as function and
       initialization of channel 2, 3 and 4 in ddl-s88 module. 
+    o Fixed compile error if glibc and linux headers are installed
 
   New Features
     o Support for TERM 0 TIME added. Timer thread now is suspended
