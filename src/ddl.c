@@ -1219,11 +1219,14 @@ static void *thr_refresh_cycle(void *v)
     static struct timespec rqtp_sleep = { 0, 2500000 };
 
     /* set the best waitUARTempty-Routine */
-    waitUARTempty = waitUARTempty_COMMON_USLEEPPATCH;
-    if (__DDL->WAITUART_USLEEP_PATCH)
+    if (__DDL->WAITUART_USLEEP_PATCH) {
+        waitUARTempty = waitUARTempty_COMMON_USLEEPPATCH;
         waitUARTempty_MM = waitUARTempty_COMMON_USLEEPPATCH;
-    else
+    }
+    else {
+        waitUARTempty = waitUARTempty_COMMON;
         waitUARTempty_MM = waitUARTempty_COMMON;
+    }
 
     nanosleep_DDL = nanosleep;
     if (__DDL->oslevel == 1) {
