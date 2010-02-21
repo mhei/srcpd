@@ -29,6 +29,8 @@
     #include <sys/io.h>
   #else
     #if __FreeBSD__
+      #include <sys/stat.h>
+      #include <fcntl.h>
       #include <dev/ppbus/ppi.h>
       #include <dev/ppbus/ppbconf.h>
 /* #else */
