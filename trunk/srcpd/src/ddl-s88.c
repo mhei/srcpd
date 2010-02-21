@@ -408,8 +408,8 @@ static void end_bus_thread(bus_thread_t *btd)
     syslog_bus(btd->bus, DBG_INFO, "DDL-S88 bus terminated.");
 
 #ifdef __FreeBSD__
-    if (((DDL_S88_DATA *) buses[busnumber].driverdata)->Fd != -1)
-        close(((DDL_S88_DATA *) buses[busnumber].driverdata)->Fd);
+    if (((DDL_S88_DATA *) buses[btd->bus].driverdata)->Fd != -1)
+        close(((DDL_S88_DATA *) buses[btd->bus].driverdata)->Fd);
 #endif
 
     result = pthread_mutex_destroy(&buses[btd->bus].transmit_mutex);
