@@ -387,7 +387,6 @@ void *thr_sendrec_IB(void *v)
             }
             continue;
         }
-
         send_command_gl_IB(btd->bus);
         send_command_ga_IB(btd->bus);
         check_status_IB(btd->bus);
@@ -779,6 +778,7 @@ static void send_command_sm_IB(bus_t busnumber)
                 else {
                     send_pom_IB(busnumber, smakt.addr, smakt.typeaddr,
                                 smakt.value);
+		    session_endwait(busnumber, 0);
                 }
                 break;
             case GET:
@@ -798,9 +798,13 @@ static void send_command_sm_IB(bus_t busnumber)
                 }
                 break;
             case VERIFY:
+	        session_endwait(busnumber, 0);
                 break;
             case TERM:
-                term_pgm_IB(busnumber);
+                session_endwait(busnumber, term_pgm_IB(busnumber));
+		break;
+	    case INIT:
+                session_endwait(busnumber, 0);
                 break;
         }
     }
