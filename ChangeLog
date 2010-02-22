@@ -1,5 +1,8 @@
 --- Release 2.1.0 ----
 
+2010-02-21 Guido Scholz <guido.scholz@bayernline.de>
+	* ddl-s88.*: FreeBSD compile errors fixed.
+
 2010-01-09 Guido Scholz <guido.scholz@bayernline.de>
 	* ddl.c, srcpd.conf.5: Default value for usleep_patch in DDL
 	module set to "yes".
