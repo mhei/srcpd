@@ -314,8 +314,8 @@ static int init_lineLOCONET_lbserver(bus_t busnumber)
 
 static int init_lineLOCONET(bus_t busnumber)
 {
-    enum devicestates rc;
-    rc = devNONE;
+    DeviceState rc = devNONE;
+
     switch (buses[busnumber].devicetype) {
         case HW_FILENAME:
             rc = init_lineLOCONET_serial(busnumber);
@@ -353,20 +353,21 @@ static int init_ga_LOCONET(ga_state_t * ga)
 
 int init_bus_LOCONET(bus_t busnumber)
 {
+    int result = 0;
     static char *protocols = "LPMN";
+
     buses[busnumber].protocols = protocols;
     __loconet->sent_packets = __loconet->recv_packets = 0;
     __loconet->ibufferin = 0;
     syslog_bus(busnumber, DBG_INFO, "Loconet init: bus #%d, debug %d",
                busnumber, buses[busnumber].debuglevel);
-    if (buses[busnumber].debuglevel <= 5) {
-        init_lineLOCONET(busnumber);
-        /*TODO: Check return value of line initialization and trigger
-         * proper error action. */
-    }
+
+    if (buses[busnumber].debuglevel <= 5)
+        result = init_lineLOCONET(busnumber);
+    
     syslog_bus(busnumber, DBG_INFO, "Loconet bus %ld init done",
                busnumber);
-    return 0;
+    return result;
 }
 
 static unsigned char ln_checksum(const unsigned char *cmd, int len)
@@ -509,10 +510,12 @@ static int ln_read_lbserver(bus_t busnumber, unsigned char *cmd, int len)
 static int ln_read(bus_t busnumber, unsigned char *cmd, int len)
 {
     int rc = 0;
+
     while (buses[busnumber].devicestate != devOK) {
         sleep(1);
         init_lineLOCONET(busnumber);
     }
+
     switch (buses[busnumber].devicetype) {
         case HW_FILENAME:
             rc = ln_read_serial(busnumber, cmd, len);
@@ -521,17 +524,18 @@ static int ln_read(bus_t busnumber, unsigned char *cmd, int len)
             rc = ln_read_lbserver(busnumber, cmd, len);
             break;
     }
+
     if (rc > 0) {
         syslog_bus(busnumber, DBG_DEBUG,
-                   "received Loconet packet with OPC 0x%02X. %s to send commands to loconet",
+                   "received Loconet packet with OPC 0x%02X. %s to "
+                   "send commands to loconet",
                    cmd[0], cmd[0] & 0x08 ? "block" : "ok");
     }
     return rc;
 }
 
 
-static int
-ln_write_lbserver(long int busnumber, const unsigned char *cmd,
+static int ln_write_lbserver(long int busnumber, const unsigned char *cmd,
                   unsigned char len)
 {
     unsigned char i;
@@ -558,8 +562,7 @@ ln_write_lbserver(long int busnumber, const unsigned char *cmd,
 }
 
 
-static int
-ln_write_serial(bus_t busnumber, const unsigned char *cmd,
+static int ln_write_serial(bus_t busnumber, const unsigned char *cmd,
                 unsigned char len)
 {
     unsigned char i;
@@ -570,8 +573,8 @@ ln_write_serial(bus_t busnumber, const unsigned char *cmd,
     return 0;
 }
 
-static int
-ln_write(bus_t busnumber, const unsigned char *cmd, unsigned char len)
+static int ln_write(bus_t busnumber, const unsigned char *cmd,
+        unsigned char len)
 {
     syslog_bus(busnumber, DBG_DEBUG,
                "sent Loconet packet with OPC 0x%02X, %d bytes", cmd[0],
