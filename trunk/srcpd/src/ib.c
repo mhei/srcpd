@@ -188,7 +188,7 @@ int init_ga_IB(ga_state_t * ga)
 int init_bus_IB(bus_t busnumber)
 {
     int status;
-    static char *protocols = "MP";
+    static char *protocols = "MNP";
 
     buses[busnumber].protocols = protocols;
 
