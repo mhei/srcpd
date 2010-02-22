@@ -56,7 +56,7 @@ email                : frank.schmischke@t-online.de
 static int init_lineIB(bus_t busnumber);
 static int sendBreak(const int fd, bus_t busnumber);
 static int readAnswer_IB(const bus_t busnumber, const int generatePrintf);
-static int readByte_IB(bus_t bus, int wait, unsigned char *the_byte);
+static int readByte_IB(bus_t busnumber, int wait, unsigned char *the_byte);
 static speed_t checkBaudrate(const int fd, const bus_t busnumber);
 static void check_status_IB(bus_t busnumber);
 static void check_status_fb_IB(bus_t busnumber);
@@ -1583,18 +1583,18 @@ static int readAnswer_IB(const bus_t busnumber, const int generatePrintf)
  * @param: wait time during read
  * @param: address of the byte to be received.
  **/
-static int readByte_IB(bus_t bus, int wait, unsigned char *the_byte)
+static int readByte_IB(bus_t busnumber, int wait, unsigned char *the_byte)
 {
     int i, status;
 
     for (i = 0; i < 10; i++) {
-        status = readByte(bus, wait, the_byte);
+        status = readByte(busnumber, wait, the_byte);
         if (status == 0)
             return 0;
 
         /* wait 10 ms */
         if (usleep(10000) == -1) {
-            syslog_bus(bus, DBG_ERROR,
+            syslog_bus(busnumber, DBG_ERROR,
                        "usleep() failed: %s (errno = %d)\n",
                        strerror(errno), errno);
         }
