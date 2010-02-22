@@ -66,7 +66,7 @@ static void check_status_pt_IB(bus_t busnumber);
 static void send_command_ga_IB(bus_t busnumber);
 static void send_command_gl_IB(bus_t busnumber);
 static void send_command_sm_IB(bus_t busnumber);
-static unsigned char send_power_IB(bus_t busnumber);
+static unsigned char send_command_power_IB(bus_t busnumber);
 
 
 int readConfig_IB(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
@@ -366,7 +366,7 @@ void *thr_sendrec_IB(void *v)
                     continue;
                 }
 
-                if (send_power_IB(btd->bus) == 0x06) {
+                if (send_command_power_IB(btd->bus) == 0x06) {
                     syslog_bus(btd->bus, DBG_INFO,
                                "power on not possible - overheating");
                     setPower(btd->bus, POWER_OFF,
@@ -1602,7 +1602,7 @@ static int readByte_IB(bus_t busnumber, int wait, unsigned char *the_byte)
     return -1;
 }
 
-static unsigned char send_power_IB(bus_t busnumber)
+static unsigned char send_command_power_IB(bus_t busnumber)
 {
     unsigned char result;
     int status;
