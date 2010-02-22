@@ -79,7 +79,7 @@ typedef struct bt {
   bus_t bus;
 } bus_thread_t;
 
-enum devicestates  { devNONE, devOK, devFAIL } ;
+typedef enum {devNONE = 0, devOK, devFAIL} DeviceState;
 
 /* bus data struct */
 typedef struct _BUS
@@ -104,7 +104,7 @@ typedef struct _BUS
         int sockfd;      /* socket descriptor */
       } net;
   } device;
-  enum devicestates devicestate;
+  DeviceState devicestate;
   /* thread synchronisation variables */
   pthread_mutex_t transmit_mutex;
   pthread_cond_t transmit_cond;
