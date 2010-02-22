@@ -4,6 +4,8 @@ srcpd-2.1.0 (2010-02-??)
       initialization of channel 2, 3 and 4 in ddl-s88 module. 
     o Fixed compile error if glibc and linux headers are installed
     o Fixed FreeBSD compile errors
+    o Improved detection of power state in IB module.
+    o Fixed some lockings in SM functions in IB module.
 
   New Features
     o Support for TERM 0 TIME added. Timer thread now is suspended
