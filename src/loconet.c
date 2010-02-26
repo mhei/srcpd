@@ -511,8 +511,8 @@ static int ln_read(bus_t busnumber, unsigned char *cmd, int len)
 {
     int rc = 0;
 
-    /*FIXME: endless loop condition*/
     while (buses[busnumber].devicestate != devOK) {
+        pthread_testcancel();
         sleep(1);
         init_lineLOCONET(busnumber);
     }
