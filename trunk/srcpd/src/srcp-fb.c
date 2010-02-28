@@ -60,7 +60,7 @@ int queueIsEmptyFB(bus_t busnumber)
 }
 
 /** returns next entry and >=0, or -1 */
-static int getNextFB(bus_t busnumber, fb_reset_t *info)
+static int getNextFB(bus_t busnumber, fb_reset_t * info)
 {
     int result;
 
@@ -70,8 +70,8 @@ static int getNextFB(bus_t busnumber, fb_reset_t *info)
     result = pthread_mutex_lock(&queue_mutex_reset[busnumber]);
     if (result != 0) {
         syslog_bus(busnumber, DBG_ERROR,
-                "pthread_mutex_lock() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_lock() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
 
     info->port = reset_queue[busnumber][out[busnumber]].port;
@@ -80,8 +80,8 @@ static int getNextFB(bus_t busnumber, fb_reset_t *info)
     result = pthread_mutex_unlock(&queue_mutex_reset[busnumber]);
     if (result != 0) {
         syslog_bus(busnumber, DBG_ERROR,
-                "pthread_mutex_unlock() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_unlock() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
 
     return out[busnumber];
@@ -95,8 +95,8 @@ static void unqueueNextFB(bus_t busnumber)
     result = pthread_mutex_lock(&queue_mutex_reset[busnumber]);
     if (result != 0) {
         syslog_bus(busnumber, DBG_ERROR,
-                "pthread_mutex_lock() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_lock() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
 
     out[busnumber]++;
@@ -105,8 +105,8 @@ static void unqueueNextFB(bus_t busnumber)
     result = pthread_mutex_unlock(&queue_mutex_reset[busnumber]);
     if (result != 0) {
         syslog_bus(busnumber, DBG_ERROR,
-                "pthread_mutex_unlock() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_unlock() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
 }
 
@@ -119,16 +119,16 @@ static void queue_reset_fb(bus_t busnumber, int port,
         /* wait 1 ms */
         if (usleep(1000) == -1) {
             syslog_bus(busnumber, DBG_ERROR,
-                    "usleep() failed: %s (errno = %d)\n",
-                    strerror(errno), errno);
+                       "usleep() failed: %s (errno = %d)\n",
+                       strerror(errno), errno);
         }
     }
 
     result = pthread_mutex_lock(&queue_mutex_reset[busnumber]);
     if (result != 0) {
         syslog_bus(busnumber, DBG_ERROR,
-                "pthread_mutex_lock() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_lock() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
 
     reset_queue[busnumber][in[busnumber]].port = port;
@@ -140,8 +140,8 @@ static void queue_reset_fb(bus_t busnumber, int port,
     result = pthread_mutex_unlock(&queue_mutex_reset[busnumber]);
     if (result != 0) {
         syslog_bus(busnumber, DBG_ERROR,
-                "pthread_mutex_unlock() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_unlock() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
 }
 
@@ -181,8 +181,8 @@ int updateFB(bus_t bus, int port, int value)
     /* if changed contact is reset, we will wait 'min_time[bus]' seconds to */
     /* minimize problems from contacts between track and train */
     if (fb[bus].fbstate[port_t].state != value) {
-        syslog_bus(bus, DBG_DEBUG, "FB %02i/%04i is set to \"%i\"", bus, port,
-            value);
+        syslog_bus(bus, DBG_DEBUG, "FB %02i/%04i is set to \"%i\"", bus,
+                   port, value);
 
         gettimeofday(&akt_time, &dummy);
         if (value == 0) {
@@ -196,8 +196,8 @@ int updateFB(bus_t bus, int port, int value)
                 result = pthread_mutex_lock(&queue_mutex_fb);
                 if (result != 0) {
                     syslog_bus(bus, DBG_ERROR,
-                            "pthread_mutex_lock() failed: %s (errno = %d).",
-                            strerror(result), result);
+                               "pthread_mutex_lock() failed: %s (errno = %d).",
+                               strerror(result), result);
                 }
 
                 fb[bus].fbstate[port_t].change = -1;
@@ -205,8 +205,8 @@ int updateFB(bus_t bus, int port, int value)
                 result = pthread_mutex_unlock(&queue_mutex_fb);
                 if (result != 0) {
                     syslog_bus(bus, DBG_ERROR,
-                            "pthread_mutex_unlock() failed: %s (errno = %d).",
-                            strerror(result), result);
+                               "pthread_mutex_unlock() failed: %s (errno = %d).",
+                               strerror(result), result);
                 }
 
                 queue_reset_fb(bus, port_t, &akt_time);
@@ -220,8 +220,8 @@ int updateFB(bus_t bus, int port, int value)
                 result = pthread_mutex_lock(&queue_mutex_fb);
                 if (result != 0) {
                     syslog_bus(bus, DBG_ERROR,
-                            "pthread_mutex_lock() failed: %s (errno = %d).",
-                            strerror(result), result);
+                               "pthread_mutex_lock() failed: %s (errno = %d).",
+                               strerror(result), result);
                 }
 
                 fb[bus].fbstate[port_t].state = value;
@@ -231,8 +231,8 @@ int updateFB(bus_t bus, int port, int value)
                 result = pthread_mutex_unlock(&queue_mutex_fb);
                 if (result != 0) {
                     syslog_bus(bus, DBG_ERROR,
-                            "pthread_mutex_unlock() failed: %s (errno = %d).",
-                            strerror(result), result);
+                               "pthread_mutex_unlock() failed: %s (errno = %d).",
+                               strerror(result), result);
                 }
 
                 /* queue changes for writing info-message */
@@ -291,7 +291,7 @@ int infoFB(bus_t bus, int port, char *msg)
 
     if (rc >= SRCP_OK) {
         snprintf(msg, sizeof(msg), "%lu.%.3lu 100 INFO %ld FB %d %d\n",
-                time.tv_sec, time.tv_usec / 1000, bus, port, state);
+                 time.tv_sec, time.tv_usec / 1000, bus, port, state);
         return SRCP_INFO;
     }
     else {
@@ -351,11 +351,12 @@ int initFB(bus_t busnumber, int adres, const char protocol, int index)
 {
     int rc = SRCP_OK;
     int number_fb = get_number_fb(busnumber);
-    syslog_bus(busnumber, DBG_DEBUG, "init FB: %d %c %d", adres, protocol, index);
+    syslog_bus(busnumber, DBG_DEBUG, "init FB: %d %c %d", adres, protocol,
+               index);
     if ((adres > 0) && (adres <= number_fb)) {
         if (buses[busnumber].init_fb_func != NULL)
             rc = (*buses[busnumber].init_fb_func) (busnumber, adres,
-                                                    protocol, index);
+                                                   protocol, index);
     }
     return rc;
 }
@@ -379,31 +380,33 @@ void check_reset_fb(bus_t busnumber)
         else {
             gettimeofday(&cmp_time, NULL);
             syslog_bus(busnumber, DBG_DEBUG,
-                "FB %02i/%03i  time: %ld.%ld  compare: %ld.%ld", busnumber,
-                reset_fb.port, cmp_time.tv_sec, cmp_time.tv_usec,
-                reset_fb.timestamp.tv_sec, reset_fb.timestamp.tv_usec);
+                       "FB %02i/%03i  time: %ld.%ld  compare: %ld.%ld",
+                       busnumber, reset_fb.port, cmp_time.tv_sec,
+                       cmp_time.tv_usec, reset_fb.timestamp.tv_sec,
+                       reset_fb.timestamp.tv_usec);
             diff_time.tv_sec = cmp_time.tv_sec - reset_fb.timestamp.tv_sec;
             diff_time.tv_usec =
                 cmp_time.tv_usec - reset_fb.timestamp.tv_usec;
             diff_time.tv_usec += (diff_time.tv_sec * 1000000);
             syslog_bus(busnumber, DBG_DEBUG,
-                "FB %02i/%03i  time-diff = %ld us (need %d us)", busnumber,
-                reset_fb.port, diff_time.tv_usec, min_time[busnumber]);
+                       "FB %02i/%03i  time-diff = %ld us (need %d us)",
+                       busnumber, reset_fb.port, diff_time.tv_usec,
+                       min_time[busnumber]);
             if (diff_time.tv_usec < min_time[busnumber]) {
                 break;
             }
             else {
                 syslog_bus(busnumber, DBG_DEBUG, "set %d feedback to 0",
-                    reset_fb.port);
+                           reset_fb.port);
                 unqueueNextFB(busnumber);
-                
+
                 result = pthread_mutex_lock(&queue_mutex_fb);
                 if (result != 0) {
                     syslog_bus(busnumber, DBG_ERROR,
-                            "pthread_mutex_lock() failed: %s (errno = %d).",
-                            strerror(result), result);
+                               "pthread_mutex_lock() failed: %s (errno = %d).",
+                               strerror(result), result);
                 }
-                
+
                 fb[busnumber].fbstate[reset_fb.port].state = 0;
                 fb[busnumber].fbstate[reset_fb.port].timestamp =
                     reset_fb.timestamp;
@@ -412,12 +415,11 @@ void check_reset_fb(bus_t busnumber)
                 result = pthread_mutex_unlock(&queue_mutex_fb);
                 if (result != 0) {
                     syslog_bus(busnumber, DBG_ERROR,
-                            "pthread_mutex_unlock() failed: %s (errno = %d).",
-                            strerror(result), result);
+                               "pthread_mutex_unlock() failed: %s (errno = %d).",
+                               strerror(result), result);
                 }
                 enqueueInfoFB(busnumber, reset_fb.port + 1);
             }
         }
     }
 }
-

@@ -331,7 +331,7 @@ int init_lineDDL(bus_t busnumber)
         exit(1);
     }
 
-    result = tcflow(dev, TCOOFF);        /* suspend output */
+    result = tcflow(dev, TCOOFF);       /* suspend output */
     if (result == -1) {
         syslog_bus(busnumber, DBG_FATAL,
                    "tcflow() failed: %s (errno = %d).",
@@ -343,7 +343,8 @@ int init_lineDDL(bus_t busnumber)
     if (result == -1) {
         syslog_bus(busnumber, DBG_FATAL,
                    "tcgetattr() failed: %s (errno = %d, device = %s).",
-                   strerror(result), result, buses[busnumber].device.file.path);
+                   strerror(result), result,
+                   buses[busnumber].device.file.path);
         exit(1);
     }
 
@@ -351,7 +352,8 @@ int init_lineDDL(bus_t busnumber)
     if (result == -1) {
         syslog_bus(busnumber, DBG_FATAL,
                    "tcgetattr() failed: %s (errno = %d, device = %s).",
-                   strerror(result), result, buses[busnumber].device.file.path);
+                   strerror(result), result,
+                   buses[busnumber].device.file.path);
         exit(1);
     }
 
@@ -556,17 +558,17 @@ static void reset_NMRAPacketPool(bus_t busnumber)
     }
 
     for (i = 0; i < __DDL->NMRAPacketPool.NrOfKnownAddresses; i++) {
-       int nr=__DDL->NMRAPacketPool.knownAddresses[i];
-       free(__DDL->NMRAPacketPool.packets[nr]);
-       __DDL->NMRAPacketPool.packets[nr]=0;
+        int nr = __DDL->NMRAPacketPool.knownAddresses[i];
+        free(__DDL->NMRAPacketPool.packets[nr]);
+        __DDL->NMRAPacketPool.packets[nr] = 0;
     }
 
     /* free idle package - this is needed because the idle packet is removed
        from the knownAdresses in the PacketPool after the first Loco is
        refreshed -> TODO: a better place for this free would be in 
        update_NMRAPacketPool */
-    free(__DDL->NMRAPacketPool.packets[128]); 
- 
+    free(__DDL->NMRAPacketPool.packets[128]);
+
     result = pthread_mutex_unlock(&__DDL->nmra_pktpool_mutex);
     if (result != 0) {
         syslog_bus(busnumber, DBG_ERROR,
@@ -645,14 +647,15 @@ void update_NMRAPacketPool(bus_t busnumber, int adr,
                    strerror(result), result);
     }
     if (!__DDL->NMRAPacketPool.packets[adr]) {
-      __DDL->NMRAPacketPool.packets[adr]=malloc(sizeof(tNMRAPacket));
-      if (__DDL->NMRAPacketPool.packets[adr] == NULL) {
-        syslog_bus(busnumber, DBG_ERROR,
-                   "Memory allocation error in update_NMRAPacketPool");
-        return;
-      }
+        __DDL->NMRAPacketPool.packets[adr] = malloc(sizeof(tNMRAPacket));
+        if (__DDL->NMRAPacketPool.packets[adr] == NULL) {
+            syslog_bus(busnumber, DBG_ERROR,
+                       "Memory allocation error in update_NMRAPacketPool");
+            return;
+        }
     }
-    memcpy(__DDL->NMRAPacketPool.packets[adr]->packet, packet, packet_size);
+    memcpy(__DDL->NMRAPacketPool.packets[adr]->packet, packet,
+           packet_size);
     __DDL->NMRAPacketPool.packets[adr]->packet_size = packet_size;
     memcpy(__DDL->NMRAPacketPool.packets[adr]->fx_packet, fx_packet,
            fx_packet_size);
@@ -680,7 +683,7 @@ void update_NMRAPacketPool(bus_t busnumber, int adr,
 /* busy wait until UART is empty, without delay */
 static void waitUARTempty_COMMON(bus_t busnumber)
 {
-    int value=0;
+    int value = 0;
     int result;
 
     do {
@@ -701,7 +704,7 @@ static void waitUARTempty_COMMON(bus_t busnumber)
 /* busy wait until UART is empty, with delay */
 static void waitUARTempty_COMMON_USLEEPPATCH(bus_t busnumber)
 {
-    int value=0;
+    int value = 0;
     int result;
 
     do {
@@ -718,8 +721,8 @@ static void waitUARTempty_COMMON_USLEEPPATCH(bus_t busnumber)
         }
         if (usleep(__DDL->WAITUART_USLEEP_USEC) == -1) {
             syslog_bus(busnumber, DBG_ERROR,
-                    "usleep() failed: %s (errno = %d)\n",
-                    strerror(errno), errno);
+                       "usleep() failed: %s (errno = %d)\n",
+                       strerror(errno), errno);
         }
     } while (!value);
 }
@@ -822,7 +825,7 @@ static void send_packet(bus_t busnumber, char *packet,
     /* all using busy waiting */
     static struct timespec rqtp_btw19K = { 0, 1250000 };
     static struct timespec rqtp_end19K = { 0, 1700000 };
-    /* arguments for nanosleep and Maerklin solenoids/function decoders (38KHz)*/
+    /* arguments for nanosleep and Maerklin solenoids/function decoders (38KHz) */
     static struct timespec rqtp_btw38K = { 0, 625000 };
     static struct timespec rqtp_end38K = { 0, 850000 };
 
@@ -952,9 +955,9 @@ static void refresh_loco(bus_t busnumber)
         result = tcflush(buses[busnumber].device.file.fd, TCOFLUSH);
         if (result == -1) {
             syslog_bus(busnumber, DBG_FATAL,
-                    "tcflush() failed: %s (errno = %d).",
-                    strerror(result), result);
-            /*What to do now?*/
+                       "tcflush() failed: %s (errno = %d).",
+                       strerror(result), result);
+            /*What to do now? */
         }
 
         if (__DDL->last_refreshed_maerklin_fx < 0)
@@ -983,8 +986,8 @@ static void refresh_loco(bus_t busnumber)
             if (__DDL->last_refreshed_nmra_fx < 0) {
                 send_packet(busnumber,
                             __DDL->NMRAPacketPool.packets[adr]->packet,
-                            __DDL->NMRAPacketPool.packets[adr]->packet_size,
-                            QNBLOCOPKT, true);
+                            __DDL->NMRAPacketPool.packets[adr]->
+                            packet_size, QNBLOCOPKT, true);
                 __DDL->last_refreshed_nmra_fx = 0;
             }
             else {
@@ -1008,7 +1011,7 @@ static void refresh_loco(bus_t busnumber)
 }
 
 /* calculate difference between two time values and return the
- * difference in microseconds */ 
+ * difference in microseconds */
 static long int compute_delta(struct timeval tv1, struct timeval tv2)
 {
     long int delta_sec;
@@ -1075,9 +1078,9 @@ static void set_SerialLine(bus_t busnumber, int line, int mode)
         result = ioctl(buses[busnumber].device.file.fd, TIOCMSET, &arg);
         if (result == -1) {
             syslog_bus(busnumber, DBG_FATAL,
-                    "ioctl() failed: %s (errno = %d).",
-                    strerror(result), result);
-            /*What to do now*/
+                       "ioctl() failed: %s (errno = %d).",
+                       strerror(result), result);
+            /*What to do now */
         }
     }
 }
@@ -1094,7 +1097,7 @@ static void set_lines_on(bus_t busnumber)
         syslog_bus(busnumber, DBG_FATAL,
                    "tcflow() failed: %s (errno = %d).",
                    strerror(result), result);
-        /*What to do now*/
+        /*What to do now */
     }
 }
 
@@ -1108,7 +1111,7 @@ static void set_lines_off(bus_t busnumber)
         syslog_bus(busnumber, DBG_FATAL,
                    "tcflush() failed: %s (errno = %d).",
                    strerror(result), result);
-        /*What to do now*/
+        /*What to do now */
     }
 
     result = tcflow(buses[busnumber].device.file.fd, TCOOFF);
@@ -1116,7 +1119,7 @@ static void set_lines_off(bus_t busnumber)
         syslog_bus(busnumber, DBG_FATAL,
                    "tcflow() failed: %s (errno = %d).",
                    strerror(result), result);
-        /*What to do now*/
+        /*What to do now */
     }
 
     set_SerialLine(busnumber, SL_DTR, OFF);
@@ -1165,8 +1168,8 @@ static bool power_is_off(bus_t busnumber)
     if (buses[busnumber].power_state == 0) {
         if (usleep(1000) == -1) {
             syslog_bus(busnumber, DBG_ERROR,
-                    "usleep() failed: %s (errno = %d)\n",
-                    strerror(errno), errno);
+                       "usleep() failed: %s (errno = %d)\n",
+                       strerror(errno), errno);
         }
         return true;
     }
@@ -1235,17 +1238,18 @@ static void *thr_refresh_cycle(void *v)
         result = pthread_getschedparam(pthread_self(), &policy, &sparam);
         if (result != 0) {
             syslog_bus(busnumber, DBG_ERROR,
-                    "pthread_getschedparam() failed: %s (errno = %d).",
-                    strerror(result), result);
+                       "pthread_getschedparam() failed: %s (errno = %d).",
+                       strerror(result), result);
             /*TODO: Add an expressive error message */
             pthread_exit((void *) 1);
         }
         sparam.sched_priority = 10;
-        result = pthread_setschedparam(pthread_self(), SCHED_FIFO, &sparam);
+        result =
+            pthread_setschedparam(pthread_self(), SCHED_FIFO, &sparam);
         if (result != 0) {
             syslog_bus(busnumber, DBG_ERROR,
-                    "pthread_setschedparam() failed: %s (errno = %d).",
-                    strerror(result), result);
+                       "pthread_setschedparam() failed: %s (errno = %d).",
+                       strerror(result), result);
             /*TODO: Add an expressive error message */
             pthread_exit((void *) 1);
         }
@@ -1257,11 +1261,11 @@ static void *thr_refresh_cycle(void *v)
         syslog_bus(busnumber, DBG_FATAL,
                    "tcflow() failed: %s (errno = %d).",
                    strerror(result), result);
-        /*What to do now*/
+        /*What to do now */
     }
-    
+
     set_SerialLine(busnumber, SL_DTR, ON);
-    
+
     wresult = write(buses[busnumber].device.file.fd, "SRCP-DAEMON", 11);
     if (wresult == -1) {
         syslog_bus(busnumber, DBG_ERROR,
@@ -1274,7 +1278,7 @@ static void *thr_refresh_cycle(void *v)
         syslog_bus(busnumber, DBG_FATAL,
                    "tcflush() failed: %s (errno = %d).",
                    strerror(result), result);
-        /*What to do now*/
+        /*What to do now */
     }
 
     /* now set some serial lines */
@@ -1283,7 +1287,7 @@ static void *thr_refresh_cycle(void *v)
         syslog_bus(busnumber, DBG_FATAL,
                    "tcflow() failed: %s (errno = %d).",
                    strerror(result), result);
-        /*What to do now*/
+        /*What to do now */
     }
     set_SerialLine(busnumber, SL_RTS, ON);      /* +12V for ever on RTS   */
     set_SerialLine(busnumber, SL_CTS, OFF);     /* -12V for ever on CTS   */
@@ -1294,7 +1298,7 @@ static void *thr_refresh_cycle(void *v)
         syslog_bus(busnumber, DBG_FATAL,
                    "tcflow() failed: %s (errno = %d).",
                    strerror(result), result);
-        /*What to do now?*/
+        /*What to do now? */
     }
     set_SerialLine(busnumber, SL_DTR, ON);
 
@@ -1303,7 +1307,7 @@ static void *thr_refresh_cycle(void *v)
         if (power_is_off(busnumber))
             continue;
         wresult = write(buses[busnumber].device.file.fd,
-                       __DDL->idle_data, MAXDATA);
+                        __DDL->idle_data, MAXDATA);
         if (wresult == -1) {
             syslog_bus(busnumber, DBG_ERROR,
                        "write() failed: %s (errno = %d)\n",
@@ -1316,9 +1320,9 @@ static void *thr_refresh_cycle(void *v)
             result = tcflush(buses[busnumber].device.file.fd, TCOFLUSH);
             if (result == -1) {
                 syslog_bus(busnumber, DBG_FATAL,
-                        "tcflush() failed: %s (errno = %d).",
-                        strerror(result), result);
-                /*What to do now?*/
+                           "tcflush() failed: %s (errno = %d).",
+                           strerror(result), result);
+                /*What to do now? */
             }
 
             while (packet_type > QNOVALIDPKT) {
@@ -1332,8 +1336,8 @@ static void *thr_refresh_cycle(void *v)
                             packet_type, false);
                 if (__DDL->ENABLED_PROTOCOLS == (EP_MAERKLIN | EP_NMRADCC)) {
                     wresult = write(buses[busnumber].device.file.fd,
-                                   __DDL->NMRA_idle_data,
-                                   __DDL->NMRA_idle_data_size);
+                                    __DDL->NMRA_idle_data,
+                                    __DDL->NMRA_idle_data_size);
                     if (wresult == -1) {
                         syslog_bus(busnumber, DBG_ERROR,
                                    "write() failed: %s (errno = %d)\n",
@@ -1428,10 +1432,10 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         syslog_bus(busnumber, DBG_FATAL,
                    "uname() failed: %s (errno = %d).",
                    strerror(result), result);
-        /*What to do now*/
+        /*What to do now */
     }
     snprintf(buf, sizeof(buf), "%c%c", utsBuffer.release[0],
-            utsBuffer.release[2]);
+             utsBuffer.release[2]);
 
     if (atoi(buf) > 25) {
         __DDL->oslevel = 1;     /* kernel 2.6 or later */
@@ -1453,9 +1457,9 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     __DDL->ENABLED_PROTOCOLS = (EP_MAERKLIN | EP_NMRADCC);      /* enabled p's */
     __DDL->IMPROVE_NMRADCC_TIMING = 0;  /* NMRA DCC: improve timing    */
 
-    __DDL->WAITUART_USLEEP_PATCH = true; /* enable/disable usleep patch */
-    __DDL->WAITUART_USLEEP_USEC = 100;    /* usecs for usleep patch      */
-    __DDL->NMRA_GA_OFFSET = 0;    /* offset for ga base address 0 or 1  */
+    __DDL->WAITUART_USLEEP_PATCH = true;        /* enable/disable usleep patch */
+    __DDL->WAITUART_USLEEP_USEC = 100;  /* usecs for usleep patch      */
+    __DDL->NMRA_GA_OFFSET = 0;  /* offset for ga base address 0 or 1  */
     __DDL->PROGRAM_TRACK = 1;   /* 0: suppress SM commands to PT address */
 
     __DDL->SERIAL_DEVICE_MODE = SDM_NOTINITIALIZED;
@@ -1641,7 +1645,7 @@ int readconfig_DDL(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 int init_bus_DDL(bus_t busnumber)
 {
     int i;
-    static char protocols[3] = {'\0','\0','\0'};
+    static char protocols[3] = { '\0', '\0', '\0' };
     int protocol = 0;
 
     syslog_bus(busnumber, DBG_INFO, "DDL init with debug level %d",
@@ -1700,19 +1704,20 @@ static void end_bus_thread(bus_thread_t * btd)
     int result;
     /* store thread return value here */
     void *pThreadReturn;
-    int busnumber=btd->bus;
+    int busnumber = btd->bus;
 
     /* send cancel to refresh cycle */
     result = pthread_cancel(((DDL_DATA *) buses[btd->bus].driverdata)->
-                   refresh_ptid);
+                            refresh_ptid);
     if (result != 0) {
         syslog_bus(btd->bus, DBG_ERROR,
                    "pthread_cancel() failed: %s (errno = %d).",
                    strerror(result), result);
     }
     /* wait until the refresh cycle has terminated */
-    result = pthread_join(((DDL_DATA *) buses[btd->bus].driverdata)->refresh_ptid,
-                 &pThreadReturn);
+    result =
+        pthread_join(((DDL_DATA *) buses[btd->bus].driverdata)->
+                     refresh_ptid, &pThreadReturn);
     if (result != 0) {
         syslog_bus(btd->bus, DBG_ERROR,
                    "pthread_join() failed: %s (errno = %d).",
@@ -1742,7 +1747,7 @@ static void end_bus_thread(bus_thread_t * btd)
     syslog_bus(btd->bus, DBG_INFO, "DDL bus terminated.");
 
     if (__DDL->ENABLED_PROTOCOLS & EP_NMRADCC) {
-      reset_NMRAPacketPool(btd->bus);
+        reset_NMRAPacketPool(btd->bus);
     }
     free(buses[btd->bus].driverdata);
     free(btd);
@@ -1751,39 +1756,40 @@ static void end_bus_thread(bus_thread_t * btd)
 
 typedef struct _delayedGAResetCmdData {
     int busnumber;
-    ga_state_t* gastate;
+    ga_state_t *gastate;
 } delayedGAResetCmdData;
 
 
 /* sends a GA reset command after a delay */
-void *thr_delayedGAResetCmd(void *v) {
+void *thr_delayedGAResetCmd(void *v)
+{
 
-   delayedGAResetCmdData *delgatmp = (delayedGAResetCmdData *)v;
-   ga_state_t *gatmp = delgatmp->gastate;
-   int busnumber = delgatmp->busnumber;
-   free(v);
+    delayedGAResetCmdData *delgatmp = (delayedGAResetCmdData *) v;
+    ga_state_t *gatmp = delgatmp->gastate;
+    int busnumber = delgatmp->busnumber;
+    free(v);
 
-   if (usleep((unsigned long) gatmp->activetime * 1000) == -1) {
-       syslog_bus(busnumber, DBG_ERROR,
-               "usleep() failed: %s (errno = %d)\n",
-               strerror(errno), errno);
-   }
-   gatmp->action = 0;
-   syslog_bus(busnumber, DBG_DEBUG,
-                   "Delayed GA command (threaded): %c (%x) %d", gatmp->protocol, 
-                   gatmp->protocol, gatmp->id);
-   switch (gatmp->protocol) {
-      case 'M':  /* Motorola Codes */
-                comp_maerklin_ms(busnumber, gatmp->id, gatmp->port,
-                                           gatmp->action);
-                break;
-      case 'N': /* NMRA DCC */
-                comp_nmra_accessory(busnumber, gatmp->id, gatmp->port,
-                                    gatmp->action, __DDL->NMRA_GA_OFFSET);
-                break;
-   }
-   setGA(busnumber, gatmp->id, *gatmp);
-   return NULL;
+    if (usleep((unsigned long) gatmp->activetime * 1000) == -1) {
+        syslog_bus(busnumber, DBG_ERROR,
+                   "usleep() failed: %s (errno = %d)\n",
+                   strerror(errno), errno);
+    }
+    gatmp->action = 0;
+    syslog_bus(busnumber, DBG_DEBUG,
+               "Delayed GA command (threaded): %c (%x) %d",
+               gatmp->protocol, gatmp->protocol, gatmp->id);
+    switch (gatmp->protocol) {
+        case 'M':              /* Motorola Codes */
+            comp_maerklin_ms(busnumber, gatmp->id, gatmp->port,
+                             gatmp->action);
+            break;
+        case 'N':              /* NMRA DCC */
+            comp_nmra_accessory(busnumber, gatmp->id, gatmp->port,
+                                gatmp->action, __DDL->NMRA_GA_OFFSET);
+            break;
+    }
+    setGA(busnumber, gatmp->id, *gatmp);
+    return NULL;
 }
 
 
@@ -1824,7 +1830,9 @@ static void *thr_sendrec_DDL(void *v)
         pthread_create(&
                        (((DDL_DATA *) buses[btd->bus].driverdata)->
                         refresh_ptid), NULL, thr_refresh_cycle,
-                       (void *) &(((DDL_DATA *) buses[btd->bus].driverdata)->refresh_param));
+                       (void *)
+                       &(((DDL_DATA *) buses[btd->bus].driverdata)->
+                         refresh_param));
 
     if (error != 0) {
         syslog_bus(btd->bus, DBG_ERROR,
@@ -2066,7 +2074,8 @@ static void *thr_sendrec_DDL(void *v)
                     break;
                 case 'N':
                     comp_nmra_accessory(btd->bus, addr, gatmp.port,
-                                        gatmp.action, __DDLt->NMRA_GA_OFFSET);
+                                        gatmp.action,
+                                        __DDLt->NMRA_GA_OFFSET);
                     break;
             }
             setGA(btd->bus, addr, gatmp);
@@ -2074,57 +2083,62 @@ static void *thr_sendrec_DDL(void *v)
 
             if (gatmp.activetime >= 0) {
 
-            /* the handling of delayed GA commands in this way, can only 
-               be a short term improvement. If srcpd will have better
-               inter-thread communication, it should be replaced. */
+                /* the handling of delayed GA commands in this way, can only 
+                   be a short term improvement. If srcpd will have better
+                   inter-thread communication, it should be replaced. */
 
                 if (gatmp.activetime < 1000) {
-                   if (usleep((unsigned long) gatmp.activetime * 1000) == -1) {
-                       syslog_bus(btd->bus, DBG_ERROR,
-                               "usleep() failed: %s (errno = %d)\n",
-                               strerror(errno), errno);
-                   }
-                   gatmp.action = 0;
-                   syslog_bus(btd->bus, DBG_DEBUG,
-                              "Delayed GA command: %c (%x) %d", p, p, addr);
-                   switch (p) {
-                       case 'M':  /* Motorola Codes */
-                           comp_maerklin_ms(btd->bus, addr, gatmp.port,
-                                            gatmp.action);
-                           break;
-                       case 'N':
-                           comp_nmra_accessory(btd->bus, addr, gatmp.port,
-                                            gatmp.action, __DDLt->NMRA_GA_OFFSET);
-                           break;
-                   }
-                   setGA(btd->bus, addr, gatmp);
+                    if (usleep((unsigned long) gatmp.activetime * 1000) ==
+                        -1) {
+                        syslog_bus(btd->bus, DBG_ERROR,
+                                   "usleep() failed: %s (errno = %d)\n",
+                                   strerror(errno), errno);
+                    }
+                    gatmp.action = 0;
+                    syslog_bus(btd->bus, DBG_DEBUG,
+                               "Delayed GA command: %c (%x) %d", p, p,
+                               addr);
+                    switch (p) {
+                        case 'M':      /* Motorola Codes */
+                            comp_maerklin_ms(btd->bus, addr, gatmp.port,
+                                             gatmp.action);
+                            break;
+                        case 'N':
+                            comp_nmra_accessory(btd->bus, addr, gatmp.port,
+                                                gatmp.action,
+                                                __DDLt->NMRA_GA_OFFSET);
+                            break;
+                    }
+                    setGA(btd->bus, addr, gatmp);
                 }
                 else {
-                   tmpv = (delayedGAResetCmdData*)malloc(sizeof(delayedGAResetCmdData));
-                   if (!tmpv) {
-                      syslog_bus(btd->bus, DBG_ERROR,
-                                 "malloc() failed!");
-                      continue;
-                   }
-                   tmpv->busnumber = btd->bus;
-                   tmpv->gastate = &gatmp;
-                   error = pthread_create(&ptid_delacccmd,NULL,
-                                          thr_delayedGAResetCmd,tmpv);
-                   if (error==0) { 
-                      pthread_detach(ptid_delacccmd);
-                   }
-                   else { 
-                      syslog_bus(btd->bus, DBG_ERROR,
-                                 "pthread_create() failed: %s (errno = %d).",
-                                  strerror(error), error);
-                   }
+                    tmpv =
+                        (delayedGAResetCmdData *)
+                        malloc(sizeof(delayedGAResetCmdData));
+                    if (!tmpv) {
+                        syslog_bus(btd->bus, DBG_ERROR,
+                                   "malloc() failed!");
+                        continue;
+                    }
+                    tmpv->busnumber = btd->bus;
+                    tmpv->gastate = &gatmp;
+                    error = pthread_create(&ptid_delacccmd, NULL,
+                                           thr_delayedGAResetCmd, tmpv);
+                    if (error == 0) {
+                        pthread_detach(ptid_delacccmd);
+                    }
+                    else {
+                        syslog_bus(btd->bus, DBG_ERROR,
+                                   "pthread_create() failed: %s (errno = %d).",
+                                   strerror(error), error);
+                    }
                 }
             }
         }
         if (usleep(3000) == -1) {
             syslog_bus(btd->bus, DBG_ERROR,
-                    "usleep() failed: %s (errno = %d)\n",
-                    strerror(errno), errno);
+                       "usleep() failed: %s (errno = %d)\n",
+                       strerror(errno), errno);
         }
     }
 

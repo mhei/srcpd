@@ -37,7 +37,7 @@ int get_number_ga(bus_t busnumber)
 
 /* Uebernehme die neuen Angaben fuer die Weiche, einige wenige Pruefungen */
 int enqueueGA(bus_t busnumber, int addr, int port, int action,
-            long int activetime)
+              long int activetime)
 {
     int result;
     struct timeval akt_time;
@@ -52,8 +52,8 @@ int enqueueGA(bus_t busnumber, int addr, int port, int action,
         result = pthread_mutex_lock(&queue_mutex[busnumber]);
         if (result != 0) {
             syslog_bus(busnumber, DBG_ERROR,
-                    "pthread_mutex_lock() failed: %s (errno = %d).",
-                    strerror(result), result);
+                       "pthread_mutex_lock() failed: %s (errno = %d).",
+                       strerror(result), result);
         }
 
         queue[busnumber][in[busnumber]].protocol =
@@ -71,8 +71,8 @@ int enqueueGA(bus_t busnumber, int addr, int port, int action,
         result = pthread_mutex_unlock(&queue_mutex[busnumber]);
         if (result != 0) {
             syslog_bus(busnumber, DBG_ERROR,
-                    "pthread_mutex_unlock() failed: %s (errno = %d).",
-                    strerror(result), result);
+                       "pthread_mutex_unlock() failed: %s (errno = %d).",
+                       strerror(result), result);
         }
         /* Restart thread to send GL command */
         resume_bus_thread(busnumber);
@@ -103,7 +103,7 @@ static int queue_isfull(bus_t busnumber)
 }
 
 /** liefert naechsten Eintrag oder -1, setzt fifo pointer neu! */
-int dequeueNextGA(bus_t busnumber, ga_state_t *a)
+int dequeueNextGA(bus_t busnumber, ga_state_t * a)
 {
     if (in[busnumber] == out[busnumber])
         return -1;
@@ -115,7 +115,7 @@ int dequeueNextGA(bus_t busnumber, ga_state_t *a)
     return out[busnumber];
 }
 
-int getGA(bus_t busnumber, int addr, ga_state_t *a)
+int getGA(bus_t busnumber, int addr, ga_state_t * a)
 {
     int number_ga = get_number_ga(busnumber);
 
@@ -183,9 +183,9 @@ int infoGA(bus_t busnumber, int addr, int port, char *msg)
 {
     int number_ga = get_number_ga(busnumber);
 
-    if ((addr > 0) && (addr <= number_ga) && (port >= 0) && (port < MAXGAPORT)
-            && (ga[busnumber].gastate[addr].tv[port].tv_sec > 0))
-    {
+    if ((addr > 0) && (addr <= number_ga) && (port >= 0)
+        && (port < MAXGAPORT)
+        && (ga[busnumber].gastate[addr].tv[port].tv_sec > 0)) {
         sprintf(msg, "%lu.%.3lu 100 INFO %ld GA %d %d %d\n",
                 ga[busnumber].gastate[addr].tv[port].tv_sec,
                 ga[busnumber].gastate[addr].tv[port].tv_usec / 1000,
@@ -210,19 +210,19 @@ int initGA(bus_t busnumber, int addr, const char protocol)
         char msg[100];
         rc = bus_supports_protocol(busnumber, protocol);
         if (rc != SRCP_OK) {
-          return rc;
+            return rc;
         }
         ga[busnumber].gastate[addr].protocol = protocol;
         gettimeofday(&ga[busnumber].gastate[addr].inittime, NULL);
         ga[busnumber].gastate[addr].activetime = 0;
         ga[busnumber].gastate[addr].action = 0;
-	for(i=0; i<MAXGAPORT; i++) {
-    	    ga[busnumber].gastate[addr].tv[i].tv_sec = 0;
-    	    ga[busnumber].gastate[addr].tv[i].tv_usec = 0;
-	}
+        for (i = 0; i < MAXGAPORT; i++) {
+            ga[busnumber].gastate[addr].tv[i].tv_sec = 0;
+            ga[busnumber].gastate[addr].tv[i].tv_usec = 0;
+        }
         if (buses[busnumber].init_ga_func != NULL)
             rc = (*buses[busnumber].init_ga_func) (&ga[busnumber].
-                                                    gastate[addr]);
+                                                   gastate[addr]);
         if (rc == SRCP_OK) {
             ga[busnumber].gastate[addr].state = 1;
             describeGA(busnumber, addr, msg);
@@ -256,7 +256,7 @@ int lockGA(bus_t busnumber, int addr, long int duration,
     return SRCP_UNSUPPORTEDOPERATION;
 }
 
-int getlockGA(bus_t busnumber, int addr, sessionid_t *sessionid)
+int getlockGA(bus_t busnumber, int addr, sessionid_t * sessionid)
 {
     *sessionid = ga[busnumber].gastate[addr].locked_by;
     return SRCP_OK;
@@ -338,8 +338,8 @@ int startup_GA(void)
         result = pthread_mutex_init(&queue_mutex[i], NULL);
         if (result != 0) {
             syslog_bus(0, DBG_ERROR,
-                    "pthread_mutex_init() failed: %s (errno = %d).",
-                    strerror(result), result);
+                       "pthread_mutex_init() failed: %s (errno = %d).",
+                       strerror(result), result);
         }
     }
     return 0;
@@ -354,8 +354,7 @@ int init_GA(bus_t busnumber, int number)
 
     if (number > 0) {
         /* one more, 'cause we do not use index 0, but start with 1 */
-        ga[busnumber].gastate =
-            malloc((number + 1) * sizeof(ga_state_t));
+        ga[busnumber].gastate = malloc((number + 1) * sizeof(ga_state_t));
         if (ga[busnumber].gastate == NULL)
             return 1;
         ga[busnumber].numberOfGa = number;

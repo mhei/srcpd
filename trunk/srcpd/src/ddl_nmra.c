@@ -664,7 +664,8 @@ static void calc_28spst_speed_byte(char *byte, int direction, int speed)
         if (speed & 1) {
             byte[3] = '1';
         }
-    } else {
+    }
+    else {
         calc_single_byte(byte, 0x40 | (direction << 5) | speed);
     }
 }
@@ -689,7 +690,8 @@ static void calc_function_group_two_byte(char *byte, int func, int lower)
         func = (func >> 5) & 0xf;
         /* set command for F5 to F8 */
         func |= 0xb0;
-    } else {
+    }
+    else {
         func = (func >> 9) & 0xf;
         func |= 0xa0;
     }
@@ -721,8 +723,8 @@ static void xor_two_bytes(char *byte, char *byte1, char *byte2)
 
 /*** functions to generate NMRA-DCC data packets ***/
 
-int comp_nmra_accessory(bus_t busnumber, int nr, int output, int activate, 
-			int offset)
+int comp_nmra_accessory(bus_t busnumber, int nr, int output, int activate,
+                        int offset)
 {
     /* command: NA <nr [0001-2044]> <outp [0,1]> <activate [0,1]>
        example: NA 0012 0 1  */
@@ -763,7 +765,7 @@ int comp_nmra_accessory(bus_t busnumber, int nr, int output, int activate,
     /* address and data 1AAACDDO upper 3 address bits are inverted */
     /* C =  activate, DD = pairnr */
     calc_single_byte(byte2,
-                     0x80 | ((~address) & 0x1c0) >> 2 | activate << 3 | 
+                     0x80 | ((~address) & 0x1c0) >> 2 | activate << 3 |
                      pairnr << 1 | output);
     xor_two_bytes(byte3, byte2, byte1);
 
@@ -1080,15 +1082,17 @@ int comp_nmra_multi_func(bus_t busnumber, int address, int direction,
            14 and 28 speed steps. All decoders supporting 128
            speed steps also have to support 14/28 speed step commands
            ==> results in shorter refresh cycle if there are many 128
-               speed steps decoders with speed=0, and a slightly faster 
-               emergency stop for these decoders.
-        */
+           speed steps decoders with speed=0, and a slightly faster 
+           emergency stop for these decoders.
+         */
         calc_baseline_speed_byte(spdrbyte, direction, speed, func);
-    } else {
+    }
+    else {
         if (nspeed > 29) {
             calc_128spst_adv_op_bytes(spdrbyte, spdrbyte2, direction,
                                       speed);
-        } else {
+        }
+        else {
             calc_28spst_speed_byte(spdrbyte, direction, speed);
         }
     }
@@ -1114,7 +1118,8 @@ int comp_nmra_multi_func(bus_t busnumber, int address, int direction,
                                             packetstream, false);
         jj = translateBitstream2Packetstream(busnumber, bitstream2,
                                              packetstream2, false);
-    } else {
+    }
+    else {
         j = translateBitstream2Packetstream(busnumber, bitstream,
                                             packetstream, false);
         packetstream2 = packetstream;

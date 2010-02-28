@@ -47,65 +47,58 @@ email                : frank.schmischke@t-online.de
  * cacheInitGL: modifies the gl data used to initialize the device
  * this is called whenever a new loco comes in town...
  */
-int init_gl_LI100( gl_state_t *gl )
+int init_gl_LI100(gl_state_t * gl)
 {
-  gl->protocol = 'N';
-  return SRCP_OK;
+    gl->protocol = 'N';
+    return SRCP_OK;
 }
 
 /**
  * initGA: modifies the ga data used to initialize the device
  */
-int init_ga_LI100( ga_state_t *ga )
+int init_ga_LI100(ga_state_t * ga)
 {
-  ga->protocol = 'N';
-  return SRCP_OK;
+    ga->protocol = 'N';
+    return SRCP_OK;
 }
 
-void add_extern_engine( bus_t busnumber, int address )
+void add_extern_engine(bus_t busnumber, int address)
 {
-  int i;
-  int ctr;
+    int i;
+    int ctr;
 
-  i = -1;
-  if ( __li100->extern_engine_ctr == 0 )
-    i = 0;
-  else
-  {
-    for ( ctr = 0; ctr < 100; ctr++ )
-    {
-      if ( __li100->extern_engine[ ctr ] == address )
-        break;
+    i = -1;
+    if (__li100->extern_engine_ctr == 0)
+        i = 0;
+    else {
+        for (ctr = 0; ctr < 100; ctr++) {
+            if (__li100->extern_engine[ctr] == address)
+                break;
 
-    }
-    if ( ctr < 100 )
-      for ( ctr = 0; ctr < 100; ctr++ )
-      {
-        if ( __li100->extern_engine[ ctr ] == -1 )
-        {
-          i = ctr;
-          break;
         }
-      }
-  }
-  if ( i != -1 )
-  {
-    __li100->extern_engine[ i ] = address;
-    __li100->extern_engine_ctr++;
-  }
+        if (ctr < 100)
+            for (ctr = 0; ctr < 100; ctr++) {
+                if (__li100->extern_engine[ctr] == -1) {
+                    i = ctr;
+                    break;
+                }
+            }
+    }
+    if (i != -1) {
+        __li100->extern_engine[i] = address;
+        __li100->extern_engine_ctr++;
+    }
 }
 
-void remove_extern_engine( bus_t busnumber, int address )
+void remove_extern_engine(bus_t busnumber, int address)
 {
-  int ctr;
+    int ctr;
 
-  for ( ctr = 0; ctr < 100; ctr++ )
-  {
-    if ( __li100->extern_engine[ ctr ] == address )
-    {
-      __li100->extern_engine[ ctr ] = -1;
-      __li100->extern_engine_ctr--;
-      break;
+    for (ctr = 0; ctr < 100; ctr++) {
+        if (__li100->extern_engine[ctr] == address) {
+            __li100->extern_engine[ctr] = -1;
+            __li100->extern_engine_ctr--;
+            break;
+        }
     }
-  }
 }

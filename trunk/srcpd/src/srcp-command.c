@@ -57,7 +57,7 @@ static int handle_setcheck(sessionid_t sessionid, bus_t bus, char *device,
             func += (f[i] ? 1 : 0) << i;
         }
         if (anzparms >= 4) {
-            sessionid_t lockid=0;
+            sessionid_t lockid = 0;
             /* Only if not locked or emergency stop !! */
             cacheGetLockGL(bus, laddr, &lockid);
             if (lockid == 0 || lockid == sessionid || direction == 2) {
@@ -456,8 +456,8 @@ int handleWAIT(sessionid_t sessionid, bus_t bus, char *device,
                 do {
                     if (usleep(50000) == -1) {
                         syslog_bus(bus, DBG_ERROR,
-                                "usleep() failed: %s (errno = %d)\n",
-                                strerror(errno), errno);
+                                   "usleep() failed: %s (errno = %d)\n",
+                                   strerror(errno), errno);
                     }
                     getFB(bus, port, &time, &value);
                     timeout--;
@@ -479,13 +479,13 @@ int handleWAIT(sessionid_t sessionid, bus_t bus, char *device,
     }
 
     else if (bus_has_devicegroup(bus, DG_TIME)
-            && strncasecmp(device, "TIME", 4) == 0) {
+             && strncasecmp(device, "TIME", 4) == 0) {
         long d, h, m, s;
         int nelem;
         nelem = sscanf(parameter, "%ld %ld %ld %ld", &d, &h, &m, &s);
         if (nelem >= 4) {
             if (time_is_available()) {
-                /*FIXME: race condition*/
+                /*FIXME: race condition */
                 bool mustwait;
                 vtime_t vt;
                 getTIME(&vt);
@@ -498,8 +498,8 @@ int handleWAIT(sessionid_t sessionid, bus_t bus, char *device,
                     if (mustwait) {
                         if (usleep(10000) == -1) {
                             syslog_bus(bus, DBG_ERROR,
-                                    "usleep() failed: %s (errno = %d)\n",
-                                    strerror(errno), errno);
+                                       "usleep() failed: %s (errno = %d)\n",
+                                       strerror(errno), errno);
                         }
                         getTIME(&vt);
                     }
@@ -805,7 +805,7 @@ int doCmdClient(session_node_t * sn)
             break;
         }
 
-        /*remove terminating line break*/
+        /*remove terminating line break */
         size_t linelen = strlen(line);
         if (linelen > 1 && (line[linelen - 1] == '\n'))
             line[linelen - 1] = '\0';

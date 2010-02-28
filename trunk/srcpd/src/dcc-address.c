@@ -26,8 +26,8 @@
  *   nmra = 0..511
  *   sub = 0..3
  */
-void lenz_to_nmra(unsigned int lenz, unsigned int* nmra,
-        unsigned char* sub)
+void lenz_to_nmra(unsigned int lenz, unsigned int *nmra,
+                  unsigned char *sub)
 {
     if (lenz > 0) {
         *sub = (lenz - 1) % 4;
@@ -45,8 +45,7 @@ void lenz_to_nmra(unsigned int lenz, unsigned int* nmra,
  *   nmra = 0..511
  *   sub = 0..3
  */
-void nmra_to_lenz(unsigned int nmra, unsigned char sub,
-        unsigned int *lenz)
+void nmra_to_lenz(unsigned int nmra, unsigned char sub, unsigned int *lenz)
 {
     if (nmra == 0)
         *lenz = 0;
@@ -64,7 +63,7 @@ void nmra_to_lenz(unsigned int nmra, unsigned char sub,
  *   nmra_p = 0..7
  */
 void lenz2_to_nmra2(unsigned int lenz, unsigned char port,
-        unsigned int* nmra_a, unsigned char* nmra_p)
+                    unsigned int *nmra_a, unsigned char *nmra_p)
 {
     if (lenz > 0) {
         *nmra_p = ((lenz - 1) % 4) << 1;
@@ -85,7 +84,7 @@ void lenz2_to_nmra2(unsigned int lenz, unsigned char port,
  *   port = 0..1
  */
 void nmra2_to_lenz2(unsigned int nmra_a, unsigned char nmra_p,
-        unsigned int *lenz, unsigned char* port)
+                    unsigned int *lenz, unsigned char *port)
 {
     if (nmra_a == 0) {
         *lenz = 0;
@@ -93,8 +92,7 @@ void nmra2_to_lenz2(unsigned int nmra_a, unsigned char nmra_p,
     }
     else {
         *lenz = (nmra_a - 1) << 2;
-        *lenz += (nmra_p >> 1)  + 1;
+        *lenz += (nmra_p >> 1) + 1;
         *port = nmra_p & 0x01;
     }
 }
-

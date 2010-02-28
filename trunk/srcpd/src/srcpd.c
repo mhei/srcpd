@@ -33,7 +33,7 @@
 #include "syslogmessage.h"
 
 
-#define	MAXFD	64 /* for daemon_init */
+#define	MAXFD	64              /* for daemon_init */
 
 
 /* structures to determine which port needs to be served */
@@ -63,7 +63,8 @@ void DeletePIDFile()
     int result;
     result = unlink(&PIDFILENAME);
     if (result != 0)
-        syslog(LOG_INFO, "Unlinking pid file '%s' failed: %s (errno = %d)\n",
+        syslog(LOG_INFO,
+               "Unlinking pid file '%s' failed: %s (errno = %d)\n",
                &PIDFILENAME, strerror(errno), errno);
 }
 
@@ -84,12 +85,11 @@ void init_all_buses()
             }
 
             /* Configure descriptors for Selectrix module to throw SIGIO */
-            if ((buses[i].device.file.fd != -1) && 
-                    (buses[i].type == SERVER_SELECTRIX)) {
+            if ((buses[i].device.file.fd != -1) &&
+                (buses[i].type == SERVER_SELECTRIX)) {
                 FD_SET(buses[i].device.file.fd, &rfds);
-                maxfd = (maxfd > buses[i].device.file.fd 
-                        ? maxfd 
-                        : buses[i].device.file.fd);
+                maxfd = (maxfd > buses[i].device.file.fd
+                         ? maxfd : buses[i].device.file.fd);
                 fcntl(buses[i].device.file.fd, F_SETOWN, getpid());
 #ifdef linux
                 fcntl(buses[i].device.file.fd, F_SETFL, FASYNC);
@@ -139,11 +139,11 @@ void sighup_handler(int s)
 {
     signal(s, sighup_handler);
     syslog(LOG_INFO, "SIGHUP(1) received, "
-            "going to re-read configuration file.");
+           "going to re-read configuration file.");
     cancel_all_threads();
     if (0 == readConfig(conffile)) {
         syslog_bus(0, DBG_ERROR, "Error, no valid bus setup found in "
-                        "configuration file. Terminating.\n");
+                   "configuration file. Terminating.\n");
         exit(1);
     }
     init_all_buses();
@@ -176,7 +176,7 @@ void sigio_handler(int status)
     /* something strange happened, report error */
     if (retval == -1) {
         syslog_bus(0, DBG_ERROR, "Select failed: %s (errno = %d)\n",
-               strerror(errno), errno);
+                   strerror(errno), errno);
     }
 
     /* nothing changed */
@@ -188,9 +188,9 @@ void sigio_handler(int status)
     else {
         for (i = 1; i <= num_buses; i++) {
             if ((buses[i].device.file.fd != -1) &&
-                    (FD_ISSET(buses[i].device.file.fd, &rfds))) {
+                (FD_ISSET(buses[i].device.file.fd, &rfds))) {
                 if (buses[i].sigio_reader != NULL) {
-                   (*buses[i].sigio_reader) (i);
+                    (*buses[i].sigio_reader) (i);
                 }
             }
         }
@@ -222,8 +222,10 @@ int daemon_init(int flag)
 {
     int i, result;
     pid_t pid;
-    
-    if (!flag) { return(0); }
+
+    if (!flag) {
+        return (0);
+    }
 
     if ((pid = fork()) < 0)
         return (-1);
@@ -250,7 +252,7 @@ int daemon_init(int flag)
     result = chdir("/");
     if (-1 == result) {
         printf("chdir() failed: %s (errno = %d)\n",
-                strerror(errno), errno);
+               strerror(errno), errno);
     }
 
     /* close off file descriptors */
@@ -298,17 +300,17 @@ int main(int argc, char **argv)
                 printf(WELCOME_MSG);
                 exit(1);
                 break;
-	    case 'n':
-		daemonflag = 0;
-		break;
+            case 'n':
+                daemonflag = 0;
+                break;
             case 'h':
                 printf(WELCOME_MSG);
                 printf("Usage: srcpd -f <conffile> -v -h\n\n");
                 printf("Options:\n");
                 printf("  -v  Show program version and quit.\n");
                 printf("  -f  Use another config file (default %s).\n",
-                     conffile);
-		printf("  -n  Do not daemonize at startup.\n");
+                       conffile);
+                printf("  -n  Do not daemonize at startup.\n");
                 printf("  -h  Show this help text and quit.\n");
                 exit(1);
                 break;
@@ -325,11 +327,11 @@ int main(int argc, char **argv)
 
     if (0 == readConfig(conffile)) {
         syslog_bus(0, DBG_ERROR, "Error, no valid bus setup found in "
-                        "configuration file '%s'.\n", conffile);
+                   "configuration file '%s'.\n", conffile);
         exit(1);
     }
 
-    /*daemonize process*/
+    /*daemonize process */
     if (0 != daemon_init(daemonflag)) {
         syslog_bus(0, DBG_ERROR, "Daemonization failed!\n");
         exit(1);
@@ -353,8 +355,8 @@ int main(int argc, char **argv)
         /* wait 100 ms */
         if (usleep(100000) == -1) {
             syslog_bus(0, DBG_ERROR,
-                    "usleep() failed: %s (errno = %d)\n",
-                    strerror(errno), errno);
+                       "usleep() failed: %s (errno = %d)\n",
+                       strerror(errno), errno);
         }
         sleep_ctr--;
 
@@ -363,7 +365,7 @@ int main(int argc, char **argv)
             /* clear LOCKs */
             unlock_gl_bytime();
             unlock_ga_bytime();
-            
+
             run_bus_watchdog();
             sleep_ctr = 10;
         }
@@ -373,11 +375,10 @@ int main(int argc, char **argv)
 
     if (seteuid(0) != 0) {
         syslog(LOG_INFO, "seteuid() failed: %s (errno = %d)\n",
-                strerror(errno), errno);
+               strerror(errno), errno);
     }
 
     DeletePIDFile();
     closelog();
     exit(0);
 }
-

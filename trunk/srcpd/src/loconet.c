@@ -364,7 +364,7 @@ int init_bus_LOCONET(bus_t busnumber)
 
     if (buses[busnumber].debuglevel <= 5)
         result = init_lineLOCONET(busnumber);
-    
+
     syslog_bus(busnumber, DBG_INFO, "Loconet bus %ld init done",
                busnumber);
     return result;
@@ -404,7 +404,7 @@ static int ln_read_serial(bus_t busnumber, unsigned char *cmd, int len)
         pktlen = read(fd, &c, 1);
         __loconet->ibuffer[__loconet->ibufferin++] = c;
     }
-    
+
     /* now examine the buffer */
     __loconet->ibufferout = 0;
     if (__loconet->ibufferin < 2)
@@ -427,12 +427,12 @@ static int ln_read_serial(bus_t busnumber, unsigned char *cmd, int len)
             pktlen = __loconet->ibuffer[__loconet->ibufferout + 1];
             break;
     }
-    
+
     /* complete packet ? */
     if (__loconet->ibufferout + pktlen > __loconet->ibufferin) {
         return (0);
     }
-    
+
     syslog_bus(busnumber, DBG_DEBUG,
                "got a packet size %d, first 2 byte: 0x%02x%02x ", pktlen,
                __loconet->ibuffer[__loconet->ibufferout],
@@ -536,7 +536,7 @@ static int ln_read(bus_t busnumber, unsigned char *cmd, int len)
 
 
 static int ln_write_lbserver(long int busnumber, const unsigned char *cmd,
-                  unsigned char len)
+                             unsigned char len)
 {
     unsigned char i;
     ssize_t result;
@@ -563,7 +563,7 @@ static int ln_write_lbserver(long int busnumber, const unsigned char *cmd,
 
 
 static int ln_write_serial(bus_t busnumber, const unsigned char *cmd,
-                unsigned char len)
+                           unsigned char len)
 {
     unsigned char i;
     for (i = 0; i < len; i++) {
@@ -574,7 +574,7 @@ static int ln_write_serial(bus_t busnumber, const unsigned char *cmd,
 }
 
 static int ln_write(bus_t busnumber, const unsigned char *cmd,
-        unsigned char len)
+                    unsigned char len)
 {
     syslog_bus(busnumber, DBG_DEBUG,
                "sent Loconet packet with OPC 0x%02X, %d bytes", cmd[0],
