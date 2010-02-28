@@ -510,9 +510,8 @@ static int ln_read_lbserver(bus_t busnumber, unsigned char *cmd, int len)
 static int ln_read(bus_t busnumber, unsigned char *cmd, int len)
 {
     int rc = 0;
-
+    /* re-establish a lost connection, nothing else can be done at this point */
     while (buses[busnumber].devicestate != devOK) {
-        pthread_testcancel();
         sleep(1);
         init_lineLOCONET(busnumber);
     }
