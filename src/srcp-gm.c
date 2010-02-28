@@ -25,12 +25,12 @@ int setGM(sessionid_t sid, sessionid_t rid, char *msg)
         return SRCP_WRONGVALUE;
 
     /*
-    <time> 100 INFO 0 GM <send_to_id> <reply_to_id> <message_type> <message>
-    */
+       <time> 100 INFO 0 GM <send_to_id> <reply_to_id> <message_type> <message>
+     */
     gettimeofday(&akt_time, NULL);
     snprintf(msgtmp, sizeof(msgtmp),
-            "%lu.%.3lu 100 INFO 0 GM %lu %lu %s\n",
-            akt_time.tv_sec, akt_time.tv_usec / 1000, sid, rid, msg);
+             "%lu.%.3lu 100 INFO 0 GM %lu %lu %s\n",
+             akt_time.tv_sec, akt_time.tv_usec / 1000, sid, rid, msg);
 
     session_enqueue_info_message(sid, msgtmp);
 

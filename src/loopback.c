@@ -221,10 +221,8 @@ static void handle_sm_command(bus_t bus)
             smtmp.value = -1;
             switch (smtmp.type) {
                 case REGISTER:
-                    if ((smtmp.typeaddr > 0) &&
-                            (smtmp.typeaddr < 9)) {
-                        if (smtmp.typeaddr < 5
-                                || smtmp.typeaddr > 6) {
+                    if ((smtmp.typeaddr > 0) && (smtmp.typeaddr < 9)) {
+                        if (smtmp.typeaddr < 5 || smtmp.typeaddr > 6) {
                             smtmp.value = cv[smtmp.typeaddr];
                             if (smtmp.typeaddr < 5)
                                 reg6 = 1;
@@ -240,17 +238,16 @@ static void handle_sm_command(bus_t bus)
                 case PAGE:
                 case CV:
                     if ((smtmp.typeaddr >= 0) &&
-                            (smtmp.typeaddr <= MAX_CV_NUMBER)) {
+                        (smtmp.typeaddr <= MAX_CV_NUMBER)) {
                         smtmp.value = cv[smtmp.typeaddr];
                     }
                     break;
                 case CV_BIT:
                     if ((smtmp.typeaddr >= 0) && (smtmp.bit >= 0)
-                            && (smtmp.bit < 8) &&
-                            (smtmp.typeaddr <= MAX_CV_NUMBER)) {
+                        && (smtmp.bit < 8) &&
+                        (smtmp.typeaddr <= MAX_CV_NUMBER)) {
                         smtmp.value = (1 &
-                                (cv[smtmp.typeaddr] >>
-                                 smtmp.bit));
+                                       (cv[smtmp.typeaddr] >> smtmp.bit));
                     }
                     break;
             }
@@ -258,10 +255,8 @@ static void handle_sm_command(bus_t bus)
         case SET:
             switch (smtmp.type) {
                 case REGISTER:
-                    if ((smtmp.typeaddr > 0) &&
-                            (smtmp.typeaddr < 9)) {
-                        if (smtmp.typeaddr < 5
-                                || smtmp.typeaddr > 6) {
+                    if ((smtmp.typeaddr > 0) && (smtmp.typeaddr < 9)) {
+                        if (smtmp.typeaddr < 5 || smtmp.typeaddr > 6) {
                             if (smtmp.typeaddr < 5)
                                 reg6 = 1;
                             cv[smtmp.typeaddr] = smtmp.value;
@@ -280,7 +275,7 @@ static void handle_sm_command(bus_t bus)
                 case PAGE:
                 case CV:
                     if ((smtmp.typeaddr >= 0) &&
-                            (smtmp.typeaddr <= MAX_CV_NUMBER)) {
+                        (smtmp.typeaddr <= MAX_CV_NUMBER)) {
                         cv[smtmp.typeaddr] = smtmp.value;
                     }
                     else {
@@ -289,15 +284,14 @@ static void handle_sm_command(bus_t bus)
                     break;
                 case CV_BIT:
                     if ((smtmp.typeaddr >= 0) && (smtmp.bit >= 0)
-                            && (smtmp.bit < 8) && (smtmp.value >= 0) &&
-                            (smtmp.value <= 1) &&
-                            (smtmp.typeaddr <= MAX_CV_NUMBER)) {
+                        && (smtmp.bit < 8) && (smtmp.value >= 0) &&
+                        (smtmp.value <= 1) &&
+                        (smtmp.typeaddr <= MAX_CV_NUMBER)) {
                         if (smtmp.value) {
                             cv[smtmp.typeaddr] |= (1 << smtmp.bit);
                         }
                         else {
-                            cv[smtmp.typeaddr] &=
-                                ~(1 << smtmp.bit);
+                            cv[smtmp.typeaddr] &= ~(1 << smtmp.bit);
                         }
                     }
                     else {
@@ -309,10 +303,8 @@ static void handle_sm_command(bus_t bus)
         case VERIFY:
             switch (smtmp.type) {
                 case REGISTER:
-                    if ((smtmp.typeaddr > 0) &&
-                            (smtmp.typeaddr < 9)) {
-                        if (smtmp.typeaddr < 5
-                                || smtmp.typeaddr > 6) {
+                    if ((smtmp.typeaddr > 0) && (smtmp.typeaddr < 9)) {
+                        if (smtmp.typeaddr < 5 || smtmp.typeaddr > 6) {
                             if (smtmp.typeaddr < 5)
                                 reg6 = 1;
                             if (smtmp.value != cv[smtmp.typeaddr])
@@ -334,7 +326,7 @@ static void handle_sm_command(bus_t bus)
                 case PAGE:
                 case CV:
                     if ((smtmp.typeaddr >= 0) &&
-                            (smtmp.typeaddr <= MAX_CV_NUMBER)) {
+                        (smtmp.typeaddr <= MAX_CV_NUMBER)) {
                         if (smtmp.value != cv[smtmp.typeaddr])
                             smtmp.value = -1;
                     }
@@ -344,11 +336,11 @@ static void handle_sm_command(bus_t bus)
                     break;
                 case CV_BIT:
                     if ((smtmp.typeaddr >= 0) && (smtmp.bit >= 0)
-                            && (smtmp.bit < 8) &&
-                            (smtmp.typeaddr <= MAX_CV_NUMBER)) {
+                        && (smtmp.bit < 8) &&
+                        (smtmp.typeaddr <= MAX_CV_NUMBER)) {
                         if (smtmp.value != (1 &
-                                    (cv[smtmp.typeaddr] >>
-                                     smtmp.bit)))
+                                            (cv[smtmp.typeaddr] >>
+                                             smtmp.bit)))
                             smtmp.value = -1;
                     }
                     else {
@@ -400,8 +392,7 @@ static void handle_ga_command(bus_t busnumber)
             if (__loopback->tga[i].id == 0) {
                 gatmp.t = akt_time;
                 gatmp.t.tv_sec += gatmp.activetime / 1000;
-                gatmp.t.tv_usec +=
-                    (gatmp.activetime % 1000) * 1000;
+                gatmp.t.tv_usec += (gatmp.activetime % 1000) * 1000;
                 if (gatmp.t.tv_usec > 1000000) {
                     gatmp.t.tv_sec++;
                     gatmp.t.tv_usec -= 1000000;

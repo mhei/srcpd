@@ -47,7 +47,8 @@ int srcp_fmt_msg(int errorcode, char *msg, struct timeval time)
                     time.tv_sec, time.tv_usec / 1000, errorcode);
             break;
         case 401:
-            sprintf(msg, "%lu.%.3lu %d ERROR unsupported connection mode\n",
+            sprintf(msg,
+                    "%lu.%.3lu %d ERROR unsupported connection mode\n",
                     time.tv_sec, time.tv_usec / 1000, errorcode);
             break;
         case 402:

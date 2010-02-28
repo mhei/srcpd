@@ -58,8 +58,8 @@ static int queue_isfull(bus_t busnumber);
 
 
 int enqueueInfoSM(bus_t busnumber, int addr, int type, int typeaddr,
-                int bit, int value, int return_code,
-                struct timeval *akt_time)
+                  int bit, int value, int return_code,
+                  struct timeval *akt_time)
 {
     char buffer[1000], msg[1000];
     char tmp[100];
@@ -140,18 +140,18 @@ int enqueueInfoSM(bus_t busnumber, int addr, int type, int typeaddr,
 
 /* enqueue SM after some checks */
 int enqueueSM(bus_t busnumber, int command, int type, int addr,
-            int typeaddr, int bit, int value)
+              int typeaddr, int bit, int value)
 {
     int result;
     struct timeval akt_time;
 
     syslog_bus(busnumber, DBG_INFO, "enqueueSM for %i (in = %d, out = %d)",
-            addr, in[busnumber], out[busnumber]);
+               addr, in[busnumber], out[busnumber]);
     /* 
      * addr values:
      *    -1: using separate program-track
      *  > -1: programming on the main (only available with CV)
-    */
+     */
 
     /* if ((addr == -1) || ((addr > 0)
      *  && (addr <= number_sm) && (type == CV))) */
@@ -195,7 +195,7 @@ int enqueueSM(bus_t busnumber, int command, int type, int addr,
     }
 
     syslog_bus(busnumber, DBG_INFO, "SM enqueued (in = %d, out = %d)",
-            in[busnumber], out[busnumber]);
+               in[busnumber], out[busnumber]);
     return SRCP_OK;
 }
 
@@ -219,7 +219,7 @@ static int queue_isfull(bus_t busnumber)
 }
 
 /** return next entry with rc >=0, or return -1, if no more entries */
-int getNextSM(bus_t busnumber, sm_t *l)
+int getNextSM(bus_t busnumber, sm_t * l)
 {
     if (in[busnumber] == out[busnumber])
         return -1;
@@ -228,7 +228,7 @@ int getNextSM(bus_t busnumber, sm_t *l)
 }
 
 /** return next entry or -1, set fifo pointer to new position! */
-int dequeueNextSM(bus_t busnumber, sm_t *l)
+int dequeueNextSM(bus_t busnumber, sm_t * l)
 {
     if (in[busnumber] == out[busnumber])
         return -1;
@@ -253,7 +253,7 @@ int setSM(bus_t busnumber, int type, int addr, int typeaddr, int bit,
         if (type == CV_BIT)
             value = (value & (1 << bit)) ? 1 : 0;
         enqueueInfoSM(busnumber, addr, type, typeaddr, bit, value,
-                    return_code, &tv);
+                      return_code, &tv);
         return SRCP_OK;
     }
     else {
@@ -271,7 +271,8 @@ int infoSM(bus_t busnumber, int command, int type, int addr,
                "TYPE: %d, CV: %d, BIT: %d, VALUE: 0x%02x", type, typeaddr,
                bit, value);
     session_lock_wait(busnumber);
-    status = enqueueSM(busnumber, command, type, addr, typeaddr, bit, value);
+    status =
+        enqueueSM(busnumber, command, type, addr, typeaddr, bit, value);
 
     if (session_condt_wait(busnumber, 90, &result) == ETIMEDOUT) {
         gettimeofday(&now, NULL);

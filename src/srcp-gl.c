@@ -105,7 +105,7 @@ bool isInitializedGL(bus_t busnumber, int addr)
 */
 
 int enqueueGL(bus_t busnumber, int addr, int dir, int speed, int maxspeed,
-            const int f)
+              const int f)
 {
     int result;
     struct timeval akt_time;
@@ -114,7 +114,7 @@ int enqueueGL(bus_t busnumber, int addr, int dir, int speed, int maxspeed,
         if (!isInitializedGL(busnumber, addr)) {
             cacheInitGL(busnumber, addr, 'P', 1, 14, 1);
             syslog_bus(busnumber, DBG_WARN, "GL default init for %d-%d",
-                busnumber, addr);
+                       busnumber, addr);
         }
         if (queue_isfull(busnumber)) {
             syslog_bus(busnumber, DBG_WARN, "GL Command Queue full");
@@ -124,8 +124,8 @@ int enqueueGL(bus_t busnumber, int addr, int dir, int speed, int maxspeed,
         result = pthread_mutex_lock(&queue_mutex[busnumber]);
         if (result != 0) {
             syslog_bus(busnumber, DBG_ERROR,
-                    "pthread_mutex_lock() failed: %s (errno = %d).",
-                    strerror(result), result);
+                       "pthread_mutex_lock() failed: %s (errno = %d).",
+                       strerror(result), result);
         }
 
         /* Protokollbezeichner und sonstige INIT Werte in die Queue kopieren! */
@@ -137,7 +137,7 @@ int enqueueGL(bus_t busnumber, int addr, int dir, int speed, int maxspeed,
         queue[busnumber][in[busnumber]].speed =
             calcspeed(speed, maxspeed, gl[busnumber].glstate[addr].n_fs);
 
-        queue[busnumber][in[busnumber]].n_fs = 
+        queue[busnumber][in[busnumber]].n_fs =
             gl[busnumber].glstate[addr].n_fs;
 
         queue[busnumber][in[busnumber]].n_func =
@@ -155,8 +155,8 @@ int enqueueGL(bus_t busnumber, int addr, int dir, int speed, int maxspeed,
         result = pthread_mutex_unlock(&queue_mutex[busnumber]);
         if (result != 0) {
             syslog_bus(busnumber, DBG_ERROR,
-                    "pthread_mutex_unlock() failed: %s (errno = %d).",
-                    strerror(result), result);
+                       "pthread_mutex_unlock() failed: %s (errno = %d).",
+                       strerror(result), result);
         }
 
         /* Restart thread to send GL command */
@@ -188,7 +188,7 @@ static int queue_isfull(bus_t busnumber)
 }
 
 /** liefert n�hsten Eintrag oder -1, setzt fifo pointer neu! */
-int dequeueNextGL(bus_t busnumber, gl_state_t *l)
+int dequeueNextGL(bus_t busnumber, gl_state_t * l)
 {
     if (in[busnumber] == out[busnumber])
         return -1;
@@ -200,7 +200,7 @@ int dequeueNextGL(bus_t busnumber, gl_state_t *l)
     return out[busnumber];
 }
 
-int cacheGetGL(bus_t busnumber, int addr, gl_state_t *l)
+int cacheGetGL(bus_t busnumber, int addr, gl_state_t * l)
 {
     if (isInitializedGL(busnumber, addr)) {
         *l = gl[busnumber].glstate[addr];
@@ -229,9 +229,9 @@ int cacheSetGL(bus_t busnumber, int addr, gl_state_t l)
         gettimeofday(&gl[busnumber].glstate[addr].tv, NULL);
         if (gl[busnumber].glstate[addr].state == 2) {
             snprintf(msg, sizeof(msg), "%lu.%.3lu 102 INFO %ld GL %d\n",
-                    gl[busnumber].glstate[addr].tv.tv_sec,
-                    gl[busnumber].glstate[addr].tv.tv_usec / 1000,
-                    busnumber, addr);
+                     gl[busnumber].glstate[addr].tv.tv_sec,
+                     gl[busnumber].glstate[addr].tv.tv_usec / 1000,
+                     busnumber, addr);
             bzero(&gl[busnumber].glstate[addr], sizeof(gl_state_t));
         }
         else {
@@ -246,7 +246,7 @@ int cacheSetGL(bus_t busnumber, int addr, gl_state_t l)
 }
 
 int cacheInitGL(bus_t busnumber, int addr, const char protocol,
-           int protoversion, int n_fs, int n_func)
+                int protoversion, int n_fs, int n_func)
 {
     int rc = SRCP_WRONGVALUE;
     if (isValidGL(busnumber, addr)) {
@@ -255,7 +255,7 @@ int cacheInitGL(bus_t busnumber, int addr, const char protocol,
         memset(&tgl, 0, sizeof(tgl));
         rc = bus_supports_protocol(busnumber, protocol);
         if (rc != SRCP_OK) {
-          return rc;
+            return rc;
         }
         gettimeofday(&tgl.inittime, NULL);
         tgl.tv = tgl.inittime;
@@ -362,7 +362,7 @@ int cacheInfoGL(bus_t busnumber, int addr, char *msg)
 
 /* has to use a semaphore, must be atomized! */
 int cacheLockGL(bus_t busnumber, int addr, long int duration,
-           sessionid_t sessionid)
+                sessionid_t sessionid)
 {
     char msg[256];
 
@@ -495,8 +495,8 @@ int startup_GL(void)
         result = pthread_mutex_init(&queue_mutex[i], NULL);
         if (result != 0) {
             syslog_bus(0, DBG_ERROR,
-                    "pthread_mutex_init() failed: %s (errno = %d).",
-                    strerror(result), result);
+                       "pthread_mutex_init() failed: %s (errno = %d).",
+                       strerror(result), result);
         }
 
     }
@@ -515,8 +515,7 @@ int init_GL(bus_t busnumber, int number)
         return 1;
 
     if (number > 0) {
-        gl[busnumber].glstate =
-            malloc((number + 1) * sizeof(gl_state_t));
+        gl[busnumber].glstate = malloc((number + 1) * sizeof(gl_state_t));
         if (gl[busnumber].glstate == NULL)
             return 1;
         gl[busnumber].numberOfGl = number;
@@ -532,21 +531,23 @@ void debugGL(bus_t busnumber, int start, int end)
     gl_state_t *gls;
     int i;
 
-    syslog_bus(busnumber, DBG_WARN, "debug GLSTATE from %d to %d", start, end);
+    syslog_bus(busnumber, DBG_WARN, "debug GLSTATE from %d to %d", start,
+               end);
     for (i = start; i <= end; i++) {
         gls = &gl[busnumber].glstate[i];
         syslog_bus(busnumber, DBG_WARN, "GLSTATE for %d/%d", busnumber, i);
         syslog_bus(busnumber, DBG_WARN, "state %d", gls->state);
         syslog_bus(busnumber, DBG_WARN, "protocol %c", gls->protocol);
         syslog_bus(busnumber, DBG_WARN, "protocolversion %d",
-            gls->protocolversion);
+                   gls->protocolversion);
         syslog_bus(busnumber, DBG_WARN, "n_func %d", gls->n_func);
         syslog_bus(busnumber, DBG_WARN, "n_fs %d", gls->n_fs);
         syslog_bus(busnumber, DBG_WARN, "id %d", gls->id);
         syslog_bus(busnumber, DBG_WARN, "speed %d", gls->speed);
         syslog_bus(busnumber, DBG_WARN, "direction %d", gls->direction);
         syslog_bus(busnumber, DBG_WARN, "funcs %d", gls->funcs);
-        syslog_bus(busnumber, DBG_WARN, "lockduration %ld", gls->lockduration);
+        syslog_bus(busnumber, DBG_WARN, "lockduration %ld",
+                   gls->lockduration);
         syslog_bus(busnumber, DBG_WARN, "locked_by %ld", gls->locked_by);
         /*  struct timeval tv;
            struct timeval inittime;

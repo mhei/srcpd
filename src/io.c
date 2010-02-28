@@ -30,7 +30,7 @@
 #include <sys/ioctl.h>
 
 #ifdef __CYGWIN__
-#include <sys/socket.h> /*for FIONREAD*/
+#include <sys/socket.h>         /*for FIONREAD */
 #endif
 #ifdef __sun__
 #include <sys/filio.h>
@@ -55,24 +55,24 @@ int readByte(bus_t bus, int wait, unsigned char *the_byte)
         status = ioctl(buses[bus].device.file.fd, FIONREAD, &i);
         if (status == -1) {
             syslog_bus(bus, DBG_ERROR,
-                "readbyte(): ioctl() failed: %s (errno = %d)\n",
-                strerror(errno), errno);
+                       "readbyte(): ioctl() failed: %s (errno = %d)\n",
+                       strerror(errno), errno);
             return -1;
         }
         syslog_bus(bus, DBG_DEBUG,
-            "readbyte(): (fd = %d), there are %d bytes to read.",
-            buses[bus].device.file.fd, i);
+                   "readbyte(): (fd = %d), there are %d bytes to read.",
+                   buses[bus].device.file.fd, i);
         /* read only, if there is really an input */
         if ((i > 0) || (wait == 1)) {
             i = read(buses[bus].device.file.fd, the_byte, 1);
             if (i == -1) {
                 syslog_bus(bus, DBG_ERROR,
-                    "readbyte(): read() failed: %s (errno = %d)\n",
-                    strerror(errno), errno);
+                           "readbyte(): read() failed: %s (errno = %d)\n",
+                           strerror(errno), errno);
             }
             if (i > 0)
                 syslog_bus(bus, DBG_DEBUG, "readbyte(): byte read: 0x%02x",
-                    *the_byte);
+                           *the_byte);
         }
     }
     return (i > 0 ? 0 : -1);
@@ -89,14 +89,14 @@ void writeByte(bus_t bus, const unsigned char b, unsigned long msecs)
                    buses[bus].device.file.fd, i, b, b);
         if (i < 0) {
             syslog_bus(bus, DBG_ERROR, "(FD: %d) write failed: %s "
-                    "(errno = %d)\n",
-                    buses[bus].device.file.fd, strerror(errno), errno);
+                       "(errno = %d)\n",
+                       buses[bus].device.file.fd, strerror(errno), errno);
         }
         tcdrain(buses[bus].device.file.fd);
     }
     else {
         syslog_bus(bus, DBG_DEBUG, "(FD: %d) %i byte sent: 0x%02x (%d)\n",
-        buses[bus].device.file.fd, i, b, b);
+                   buses[bus].device.file.fd, i, b, b);
     }
     if (usleep(msecs * 1000) == -1) {
         syslog_bus(bus, DBG_ERROR,
@@ -121,8 +121,9 @@ void save_comport(bus_t bus)
 
     fd = open(buses[bus].device.file.path, O_RDWR);
     if (fd == -1) {
-        syslog_bus(bus, DBG_ERROR, "Open serial line failed: %s (errno = %d).\n",
-                strerror(errno), errno);
+        syslog_bus(bus, DBG_ERROR,
+                   "Open serial line failed: %s (errno = %d).\n",
+                   strerror(errno), errno);
     }
     else {
         tcgetattr(fd, &buses[bus].device.file.devicesettings);
@@ -135,12 +136,12 @@ void restore_comport(bus_t bus)
     int fd;
 
     syslog_bus(bus, DBG_INFO, "Restoring attributes for serial line %s",
-        buses[bus].device.file.path);
+               buses[bus].device.file.path);
     fd = open(buses[bus].device.file.path, O_RDWR);
     if (fd == -1) {
         syslog_bus(bus, DBG_ERROR,
-                "Open serial line failed: %s (errno = %d).\n",
-                strerror(errno), errno);
+                   "Open serial line failed: %s (errno = %d).\n",
+                   strerror(errno), errno);
     }
     else {
         syslog_bus(bus, DBG_INFO, "Restoring old values...");
@@ -183,7 +184,7 @@ ssize_t socket_readline(int Socket, char *line, int len)
     int i = 0;
     ssize_t bytes_read;
 
-again:
+  again:
     bytes_read = read(Socket, &c, 1);
     if (bytes_read == -1) {
 
@@ -191,22 +192,22 @@ again:
         if (errno == EINTR)
             goto again;
 
-        /* normal read error*/
+        /* normal read error */
         else
             return -1;
     }
 
-    /*EOF detected, client closed connection*/
+    /*EOF detected, client closed connection */
     else if (bytes_read == 0) {
         return 0;
     }
 
-    /*normal operation*/
+    /*normal operation */
     else {
         if (isvalidchar(c))
             line[i++] = c;
         /* die Reihenfolge beachten! */
-        /*TODO: handle (errno == EINTR), message part will get lost*/
+        /*TODO: handle (errno == EINTR), message part will get lost */
         while (read(Socket, &c, 1) > 0) {
             if (isvalidchar(c) && (i < len - 1))
                 line[i++] = c;
@@ -243,8 +244,7 @@ ssize_t writen(int fd, const void *vptr, size_t n)
         }
 
         nleft -= nwritten;
-        ptr   += nwritten;
+        ptr += nwritten;
     }
     return n;
 }
-

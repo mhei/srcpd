@@ -6,7 +6,7 @@
 #include <unistd.h>
 
 #ifdef __CYGWIN__
-#include <sys/socket.h> /*for FIONREAD*/
+#include <sys/socket.h>         /*for FIONREAD */
 #endif
 
 #ifdef __sun__
@@ -40,7 +40,7 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     if (buses[busnumber].driverdata == NULL) {
         syslog_bus(busnumber, DBG_ERROR,
-                "Memory allocation error in module '%s'.", node->name);
+                   "Memory allocation error in module '%s'.", node->name);
         return 0;
     }
 
@@ -138,24 +138,28 @@ int readconfig_m605x(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
         else
             syslog_bus(busnumber, DBG_WARN,
-                "WARNING, unknown tag found: \"%s\"!\n", child->name);;
+                       "WARNING, unknown tag found: \"%s\"!\n",
+                       child->name);;
 
         child = child->next;
     }
 
     if (init_GA(busnumber, __m6051->number_ga)) {
         __m6051->number_ga = 0;
-        syslog_bus(busnumber, DBG_ERROR, "Can't create array for accessories");
+        syslog_bus(busnumber, DBG_ERROR,
+                   "Can't create array for accessories");
     }
 
     if (init_GL(busnumber, __m6051->number_gl)) {
         __m6051->number_gl = 0;
-        syslog_bus(busnumber, DBG_ERROR, "Can't create array for locomotives");
+        syslog_bus(busnumber, DBG_ERROR,
+                   "Can't create array for locomotives");
     }
 
     if (init_FB(busnumber, __m6051->number_fb * 16)) {
         __m6051->number_fb = 0;
-        syslog_bus(busnumber, DBG_ERROR, "Can't create array for feedback");
+        syslog_bus(busnumber, DBG_ERROR,
+                   "Can't create array for feedback");
     }
 
     return 1;
@@ -172,14 +176,14 @@ static int init_lineM6051(bus_t bus)
 
     if (buses[bus].debuglevel > 0) {
         syslog_bus(bus, DBG_INFO, "Opening 605x: %s",
-                buses[bus].device.file.path);
+                   buses[bus].device.file.path);
     }
 
     fd = open(buses[bus].device.file.path, O_RDWR | O_NONBLOCK);
     if (fd == -1) {
         syslog_bus(bus, DBG_ERROR, "Open serial device '%s' failed: %s "
-                "(errno = %d).\n", buses[bus].device.file.path,
-                strerror(errno), errno);
+                   "(errno = %d).\n", buses[bus].device.file.path,
+                   strerror(errno), errno);
         return -1;
     }
     tcgetattr(fd, &interface);
@@ -206,9 +210,10 @@ static int init_lineM6051(bus_t bus)
 
 int init_bus_M6051(bus_t bus)
 {
-    static char* protocols = "MP";
+    static char *protocols = "MP";
     buses[bus].protocols = protocols;
-    syslog_bus(bus, DBG_INFO, "M605x  init: debug %d", buses[bus].debuglevel);
+    syslog_bus(bus, DBG_INFO, "M605x  init: debug %d",
+               buses[bus].debuglevel);
     if (buses[bus].debuglevel <= DBG_DEBUG) {
         buses[bus].device.file.fd = init_lineM6051(bus);
     }
@@ -216,17 +221,17 @@ int init_bus_M6051(bus_t bus)
         buses[bus].device.file.fd = -1;
     }
     syslog_bus(bus, DBG_INFO, "M605x init done, fd=%d",
-            buses[bus].device.file.fd);
+               buses[bus].device.file.fd);
     syslog_bus(bus, DBG_INFO, "M605x: %s", buses[bus].description);
     syslog_bus(bus, DBG_INFO, "M605x flags: %d",
-        buses[bus].flags & AUTO_POWER_ON);
+               buses[bus].flags & AUTO_POWER_ON);
     return 0;
 }
 
 /**
  * cacheInitGL: modifies the gl data used to initialize the device
  **/
-int init_gl_M6051(gl_state_t *gl)
+int init_gl_M6051(gl_state_t * gl)
 {
     if (gl->protocol != 'M')
         return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
@@ -246,7 +251,7 @@ int init_gl_M6051(gl_state_t *gl)
 /**
  * initGA: modifies the ga data used to initialize the device
  **/
-int init_ga_M6051(ga_state_t *ga)
+int init_ga_M6051(ga_state_t * ga)
 {
     if ((ga->protocol != 'M') || (ga->protocol != 'P'))
         return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
@@ -254,26 +259,26 @@ int init_ga_M6051(ga_state_t *ga)
 }
 
 /*thread cleanup routine for this bus*/
-static void end_bus_thread(bus_thread_t *btd)
+static void end_bus_thread(bus_thread_t * btd)
 {
     int result;
 
     syslog_bus(btd->bus, DBG_INFO, "M605x bus terminated.");
     if (buses[btd->bus].device.file.fd != -1)
         close(buses[btd->bus].device.file.fd);
-    
+
     result = pthread_mutex_destroy(&buses[btd->bus].transmit_mutex);
     if (result != 0) {
         syslog_bus(btd->bus, DBG_WARN,
-                "pthread_mutex_destroy() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_destroy() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
 
     result = pthread_cond_destroy(&buses[btd->bus].transmit_cond);
     if (result != 0) {
         syslog_bus(btd->bus, DBG_WARN,
-                "pthread_mutex_init() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_init() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
 
     free(buses[btd->bus].driverdata);
@@ -291,20 +296,20 @@ void *thr_sendrec_M6051(void *v)
     ga_state_t gatmp;
     int last_cancel_state, last_cancel_type;
 
-    bus_thread_t* btd = (bus_thread_t*) malloc(sizeof(bus_thread_t));
+    bus_thread_t *btd = (bus_thread_t *) malloc(sizeof(bus_thread_t));
     if (btd == NULL)
-        pthread_exit((void*) 1);
-    btd->bus =  (bus_t) v;
+        pthread_exit((void *) 1);
+    btd->bus = (bus_t) v;
     btd->fd = -1;
 
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &last_cancel_type);
 
-    /*register cleanup routine*/
+    /*register cleanup routine */
     pthread_cleanup_push((void *) end_bus_thread, (void *) btd);
 
     syslog_bus(btd->bus, DBG_INFO, "M605x bus started (device = %s).",
-        buses[btd->bus].device.file.path);
+               buses[btd->bus].device.file.path);
 
     int ga_min_active_time =
         ((M6051_DATA *) buses[btd->bus].driverdata)->ga_min_active_time;
@@ -320,8 +325,8 @@ void *thr_sendrec_M6051(void *v)
     result = ioctl(buses[btd->bus].device.file.fd, FIONREAD, &temp);
     if (result == -1) {
         syslog_bus(btd->bus, DBG_ERROR,
-                "ioctl() failed: %s (errno = %d)\n",
-                strerror(errno), errno);
+                   "ioctl() failed: %s (errno = %d)\n",
+                   strerror(errno), errno);
     }
 
     if (((M6051_DATA *) buses[btd->bus].driverdata)->cmd32_pending) {
@@ -334,8 +339,8 @@ void *thr_sendrec_M6051(void *v)
         result = ioctl(buses[btd->bus].device.file.fd, FIONREAD, &temp);
         if (result == -1) {
             syslog_bus(btd->bus, DBG_ERROR,
-                    "ioctl() failed: %s (errno = %d)\n",
-                    strerror(errno), errno);
+                       "ioctl() failed: %s (errno = %d)\n",
+                       strerror(errno), errno);
         }
 
         syslog_bus(btd->bus, DBG_INFO, "Ignoring unread byte: %d ", rr);
@@ -361,8 +366,8 @@ void *thr_sendrec_M6051(void *v)
         if (buses[btd->bus].power_state == 0) {
             if (usleep(1000) == -1) {
                 syslog_bus(btd->bus, DBG_ERROR,
-                        "usleep() failed: %s (errno = %d)\n",
-                        strerror(errno), errno);
+                           "usleep() failed: %s (errno = %d)\n",
+                           strerror(errno), errno);
             }
             continue;
         }
@@ -435,16 +440,19 @@ void *thr_sendrec_M6051(void *v)
                 writeByte(btd->bus, SendByte, pause_between_bytes);
                 if (usleep((unsigned long) gatmp.activetime * 1000) == -1) {
                     syslog_bus(btd->bus, DBG_ERROR,
-                            "usleep() failed: %s (errno = %d)\n",
-                            strerror(errno), errno);
+                               "usleep() failed: %s (errno = %d)\n",
+                               strerror(errno), errno);
                 }
-                ((M6051_DATA *) buses[btd->bus].driverdata)->cmd32_pending = 1;
+                ((M6051_DATA *) buses[btd->bus].driverdata)->
+                    cmd32_pending = 1;
             }
             if ((gatmp.action == 0)
-                && ((M6051_DATA *) buses[btd->bus].driverdata)->cmd32_pending) {
+                && ((M6051_DATA *) buses[btd->bus].driverdata)->
+                cmd32_pending) {
                 SendByte = 32;
                 writeByte(btd->bus, SendByte, pause_between_cmd);
-                ((M6051_DATA *) buses[btd->bus].driverdata)->cmd32_pending = 0;
+                ((M6051_DATA *) buses[btd->bus].driverdata)->
+                    cmd32_pending = 0;
                 setGA(btd->bus, addr, gatmp);
             }
 
@@ -456,25 +464,28 @@ void *thr_sendrec_M6051(void *v)
         if ((number_fb > 0)
             && !((M6051_DATA *) buses[btd->bus].driverdata)->cmd32_pending) {
 
-            result = ioctl(buses[btd->bus].device.file.fd, FIONREAD, &temp);
+            result =
+                ioctl(buses[btd->bus].device.file.fd, FIONREAD, &temp);
             if (result == -1) {
                 syslog_bus(btd->bus, DBG_ERROR,
-                        "ioctl() failed: %s (errno = %d)\n",
-                        strerror(errno), errno);
+                           "ioctl() failed: %s (errno = %d)\n",
+                           strerror(errno), errno);
             }
 
             while (temp > 0) {
                 readByte(btd->bus, 0, &rr);
-                
-                result = ioctl(buses[btd->bus].device.file.fd, FIONREAD, &temp);
+
+                result =
+                    ioctl(buses[btd->bus].device.file.fd, FIONREAD, &temp);
                 if (result == -1) {
                     syslog_bus(btd->bus, DBG_ERROR,
-                            "ioctl() failed: %s (errno = %d)\n",
-                            strerror(errno), errno);
+                               "ioctl() failed: %s (errno = %d)\n",
+                               strerror(errno), errno);
                 }
 
                 syslog_bus(btd->bus, DBG_INFO,
-                    "FB M6051: oops; ignoring unread byte: %d ", rr);
+                           "FB M6051: oops; ignoring unread byte: %d ",
+                           rr);
             }
             SendByte = 192 + akt_S88;
             writeByte(btd->bus, SendByte, pause_between_cmd);
@@ -494,7 +505,7 @@ void *thr_sendrec_M6051(void *v)
         /* fprintf(stderr, " ende\n"); */
     }
 
-    /*run the cleanup routine*/
+    /*run the cleanup routine */
     pthread_cleanup_pop(1);
     return NULL;
 }

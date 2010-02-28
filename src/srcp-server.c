@@ -27,16 +27,16 @@ static server_state_t server_state = ssInitializing;
 int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
     struct servent *serviceentry;
-    
+
     syslog_bus(busnumber, DBG_INFO, "Reading configuration for bus '%s'",
-        node->name);
+               node->name);
 
     buses[0].driverdata = malloc(sizeof(struct _SERVER_DATA));
 
     /* if there is too less memory for server data -> exit process */
     if (buses[0].driverdata == NULL) {
         syslog_bus(busnumber, DBG_ERROR,
-                "Memory allocation error in module '%s'.", node->name);
+                   "Memory allocation error in module '%s'.", node->name);
         exit(1);
     }
 
@@ -45,11 +45,12 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     strcpy(buses[0].description, "SESSION SERVER TIME GM");
 
     /* initialize _SERVER_DATA with defaults */
-    serviceentry = getservbyname("srcp","tcp");
+    serviceentry = getservbyname("srcp", "tcp");
     if (serviceentry == NULL) {
-	__server->TCPPORT = 4303;
-    } else {
-	__server->TCPPORT = ntohs(serviceentry->s_port);
+        __server->TCPPORT = 4303;
+    }
+    else {
+        __server->TCPPORT = ntohs(serviceentry->s_port);
     }
     __server->groupname = NULL;
     __server->username = NULL;
@@ -85,7 +86,8 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
         else if (xmlStrcmp(child->name, BAD_CAST "pid-file") == 0) {
             txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
             if (txt != NULL) {
-                strncpy((char *) &PIDFILENAME, (char *) txt, MAXPATHLEN - 2);
+                strncpy((char *) &PIDFILENAME, (char *) txt,
+                        MAXPATHLEN - 2);
                 PIDFILENAME[MAXPATHLEN - 1] = 0x00;
                 xmlFree(txt);
             }
@@ -98,7 +100,7 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                 __server->username = malloc(strlen((char *) txt) + 1);
                 if (__server->username == NULL) {
                     syslog_bus(busnumber, DBG_ERROR,
-                            "Cannot allocate memory\n");
+                               "Cannot allocate memory\n");
                     exit(1);
                 }
                 strcpy(__server->username, (char *) txt);
@@ -113,7 +115,7 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                 __server->groupname = malloc(strlen((char *) txt) + 1);
                 if (__server->groupname == NULL) {
                     syslog_bus(busnumber, DBG_ERROR,
-                            "Cannot allocate memory\n");
+                               "Cannot allocate memory\n");
                     exit(1);
                 }
                 strcpy(__server->groupname, (char *) txt);
@@ -123,9 +125,9 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
         else
             syslog_bus(busnumber, DBG_WARN,
-                    "WARNING, unknown tag found: \"%s\"!\n",
-                    child->name);
-        
+                       "WARNING, unknown tag found: \"%s\"!\n",
+                       child->name);
+
         child = child->next;
     }
 
@@ -201,7 +203,7 @@ int infoSERVER(char *msg)
 
         default:
             syslog_bus(0, DBG_ERROR,
-                    "ERROR, unexpected server state detected!");
+                       "ERROR, unexpected server state detected!");
             break;
     }
     return SRCP_OK;

@@ -33,8 +33,8 @@
 #endif
 
 #ifndef I2C_SLAVE
-    #define I2C_SLAVE 0x0703
-    #warning "Value for I2C_SLAVE defined due to a problem with system headers."
+#define I2C_SLAVE 0x0703
+#warning "Value for I2C_SLAVE defined due to a problem with system headers."
 #endif
 
 #include "config-srcpd.h"
@@ -61,15 +61,16 @@ static int write_PCF8574(bus_t bus, int addr, uint8_t byte)
 
     if (result < 0) {
         syslog_bus(bus, DBG_INFO, "Couldn't access address %d (%s)",
-            addr, strerror(errno));
+                   addr, strerror(errno));
         return (result);
     }
 
     /* ret = i2c_smbus_write_byte(busfd, byte); */
 
     if (result < 0) {
-        syslog_bus(bus, DBG_INFO, "Couldn't send byte %d to address %d (%s)",
-            byte, addr, strerror(errno));
+        syslog_bus(bus, DBG_INFO,
+                   "Couldn't send byte %d to address %d (%s)", byte, addr,
+                   strerror(errno));
         return (result);
     }
 
@@ -115,13 +116,14 @@ static int write_i2c_dev(bus_t bus, int addr, I2C_VALUE value)
         return (write_PCF8574(bus, addr, 0xFF & value));
     }
 
-    syslog_bus(bus, DBG_ERROR, "Unsupported i2c device at address %d", addr);
+    syslog_bus(bus, DBG_ERROR, "Unsupported i2c device at address %d",
+               addr);
     return (-1);
 }
 
 /*  Handle set command of GA */
 
-static int handle_i2c_set_ga(bus_t bus, ga_state_t *gatmp)
+static int handle_i2c_set_ga(bus_t bus, ga_state_t * gatmp)
 {
     I2C_ADDR i2c_addr;
     I2C_VALUE i2c_val;
@@ -155,7 +157,7 @@ static int handle_i2c_set_ga(bus_t bus, ga_state_t *gatmp)
     }
 
     syslog_bus(bus, DBG_DEBUG, "i2c_addr = %d on multiplexed bus #%d",
-        i2c_addr, mult_busnum);
+               i2c_addr, mult_busnum);
     /* port: 0     - direct write of value to device */
     /* other - select port pins directly, value = {0,1} */
 
@@ -207,14 +209,15 @@ static int handle_i2c_set_ga(bus_t bus, ga_state_t *gatmp)
         if (write_i2c_dev
             (bus, i2c_addr,
              data->i2c_values[i2c_addr][mult_busnum - 1]) < 0) {
-            syslog_bus(bus, DBG_ERROR, "Device not found at address %d", addr);
+            syslog_bus(bus, DBG_ERROR, "Device not found at address %d",
+                       addr);
             return (-1);
         }
 
         if (usleep((unsigned long) gatmp->activetime * 1000) == -1) {
             syslog_bus(bus, DBG_ERROR,
-                    "usleep() failed: %s (errno = %d)\n",
-                    strerror(errno), errno);
+                       "usleep() failed: %s (errno = %d)\n",
+                       strerror(errno), errno);
         }
 
     }
@@ -231,7 +234,7 @@ int readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     if (buses[busnumber].driverdata == NULL) {
         syslog_bus(busnumber, DBG_ERROR,
-                "Memory allocation error in module '%s'.", node->name);
+                   "Memory allocation error in module '%s'.", node->name);
         return 0;
     }
 
@@ -293,7 +296,8 @@ int readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
         else
             syslog_bus(busnumber, DBG_WARN,
-                "WARNING, unknown tag found: \"%s\"!\n", child->name);;
+                       "WARNING, unknown tag found: \"%s\"!\n",
+                       child->name);;
 
         child = child->next;
     }
@@ -304,7 +308,8 @@ int readconfig_I2C_DEV(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 
     if (init_GA(busnumber, __i2cdev->number_ga)) {
         __i2cdev->number_ga = 0;
-        syslog_bus(busnumber, DBG_ERROR, "Can't create array for accessoires");
+        syslog_bus(busnumber, DBG_ERROR,
+                   "Can't create array for accessoires");
     }
 
     /*
@@ -329,15 +334,15 @@ int init_lineI2C_DEV(bus_t bus)
 
     if (buses[bus].debuglevel > 0) {
         syslog_bus(bus, DBG_INFO, "Opening i2c-dev: %s",
-                buses[bus].device.file.path);
+                   buses[bus].device.file.path);
     }
 
     fd = open(buses[bus].device.file.path, O_RDWR);
 
     if (fd == -1) {
         syslog_bus(bus, DBG_ERROR, "Open device '%s' failed: %s "
-                "(errno = %d).\n", buses[bus].device.file.path,
-                strerror(errno), errno);
+                   "(errno = %d).\n", buses[bus].device.file.path,
+                   strerror(errno), errno);
     }
 
     return fd;
@@ -407,11 +412,11 @@ int init_bus_I2C_DEV(bus_t i)
     int j, multiplexer_adr;
     int multiplex_buses;
     char buf;
-    static char* protocols = "P";
+    static char *protocols = "P";
     buses[i].protocols = protocols;
 
     syslog_bus(i, DBG_INFO, "i2c-dev init: bus #%ld, debug %d", i,
-        buses[i].debuglevel);
+               buses[i].debuglevel);
 
     /* init the hardware interface */
     if (buses[i].debuglevel < 6) {
@@ -457,7 +462,7 @@ int init_bus_I2C_DEV(bus_t i)
 }
 
 /*thread cleanup routine for this bus*/
-static void end_bus_thread(bus_thread_t *btd)
+static void end_bus_thread(bus_thread_t * btd)
 {
     int result;
 
@@ -467,15 +472,15 @@ static void end_bus_thread(bus_thread_t *btd)
     result = pthread_mutex_destroy(&buses[btd->bus].transmit_mutex);
     if (result != 0) {
         syslog_bus(btd->bus, DBG_WARN,
-                "pthread_mutex_destroy() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_destroy() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
 
     result = pthread_cond_destroy(&buses[btd->bus].transmit_cond);
     if (result != 0) {
         syslog_bus(btd->bus, DBG_WARN,
-                "pthread_mutex_init() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_init() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
 
     free(buses[btd->bus].driverdata);
@@ -497,20 +502,20 @@ void *thr_sendrec_I2C_DEV(void *v)
     ga_state_t gatmp;
     int last_cancel_state, last_cancel_type;
 
-    bus_thread_t* btd = (bus_thread_t*) malloc(sizeof(bus_thread_t));
+    bus_thread_t *btd = (bus_thread_t *) malloc(sizeof(bus_thread_t));
     if (btd == NULL)
-        pthread_exit((void*) 1);
-    btd->bus =  (bus_t) v;
+        pthread_exit((void *) 1);
+    btd->bus = (bus_t) v;
     btd->fd = -1;
 
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &last_cancel_type);
 
-    /*register cleanup routine*/
+    /*register cleanup routine */
     pthread_cleanup_push((void *) end_bus_thread, (void *) btd);
 
     syslog_bus(btd->bus, DBG_INFO, "i2c-dev bus started (device =  %s).",
-        buses[btd->bus].device.file.path);
+               buses[btd->bus].device.file.path);
 
     I2CDEV_DATA *data = buses[btd->bus].driverdata;
     int ga_reset_devices = data->ga_reset_devices;
@@ -529,7 +534,7 @@ void *thr_sendrec_I2C_DEV(void *v)
             enqueueInfoMessage(msg);
 
             if ((ga_reset_devices == 1)
-                    && (buses[btd->bus].power_state == 1)) {
+                && (buses[btd->bus].power_state == 1)) {
                 reset_ga(btd->bus, buses[btd->bus].device.file.fd);
             }
 
@@ -539,8 +544,8 @@ void *thr_sendrec_I2C_DEV(void *v)
         if (buses[btd->bus].power_state == 0) {
             if (usleep(1000) == -1) {
                 syslog_bus(btd->bus, DBG_ERROR,
-                        "usleep() failed: %s (errno = %d)\n",
-                        strerror(errno), errno);
+                           "usleep() failed: %s (errno = %d)\n",
+                           strerror(errno), errno);
             }
             continue;
         }
@@ -557,12 +562,12 @@ void *thr_sendrec_I2C_DEV(void *v)
         }
         if (usleep(1000) == -1) {
             syslog_bus(btd->bus, DBG_ERROR,
-                    "usleep() failed: %s (errno = %d)\n",
-                    strerror(errno), errno);
+                       "usleep() failed: %s (errno = %d)\n",
+                       strerror(errno), errno);
         }
     }
 
-    /*run the cleanup routine*/
+    /*run the cleanup routine */
     pthread_cleanup_pop(1);
     return NULL;
 }

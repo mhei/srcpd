@@ -331,7 +331,8 @@ int comp_maerklin_1(bus_t busnumber, int address, int direction,
     int i, j;
     gl_state_t loco;
     syslog_bus(busnumber, DBG_DEBUG,
-        "Command for Maerklin protocol type 1: %d received", address);
+               "Command for Maerklin protocol type 1: %d received",
+               address);
 
     /* no special error handling, it's job of the clients */
     if (address < 0 || address > 80 || func < 0 || func > 1 || speed < 0
@@ -405,7 +406,7 @@ int comp_maerklin_2(bus_t busnumber, int address, int direction,
     int mspeed;
 
     syslog_bus(busnumber, DBG_DEBUG,
-        "Command for Maerklin protocol type 2 (M2) received");
+               "Command for Maerklin protocol type 2 (M2) received");
 
     adr = address;
     if (direction == 0)
@@ -575,7 +576,7 @@ int comp_maerklin_3(bus_t busnumber, int address, int direction,
     int mspeed;
 
     syslog_bus(busnumber, DBG_DEBUG,
-        "Command for Maerklin protocol type 3 (28 speed steps) (M3) received");
+               "Command for Maerklin protocol type 3 (28 speed steps) (M3) received");
 
     adr = address;
     if (direction == 0)
@@ -753,8 +754,9 @@ int comp_maerklin_4(bus_t busnumber, int address, int direction,
     int adr = 0;
     int mspeed;
 
-    syslog_bus(busnumber, DBG_DEBUG, "Command for Maerklin protocol type 4 "
-            "(M4, Uhlenbrock Intellibox) received");
+    syslog_bus(busnumber, DBG_DEBUG,
+               "Command for Maerklin protocol type 4 "
+               "(M4, Uhlenbrock Intellibox) received");
 
     adr = address;
     if (direction == 0)
@@ -985,15 +987,15 @@ int comp_maerklin_5(bus_t busnumber, int address, int direction,
     }
 
     rtc = comp_maerklin_2(busnumber, address, direction, sFS1, func, f1,
-            f2, f3, f4);
+                          f2, f3, f4);
     if ((sFS2 > 0) && (rtc == 0)) {
         if (usleep(50000) == -1) {
             syslog_bus(busnumber, DBG_ERROR,
-                    "usleep() failed: %s (errno = %d)\n",
-                    strerror(errno), errno);
+                       "usleep() failed: %s (errno = %d)\n",
+                       strerror(errno), errno);
         }
         rtc = comp_maerklin_2(busnumber, address, direction, sFS2, func,
-                f1, f2, f3, f4);
+                              f1, f2, f3, f4);
     }
     return rtc;
 }
@@ -1008,7 +1010,7 @@ int comp_maerklin_ms(bus_t busnumber, int address, int port, int action)
     int id, subid;
 
     syslog_bus(busnumber, DBG_DEBUG,
-        "command for solenoid (Maerklin) (MS) received");
+               "command for solenoid (Maerklin) (MS) received");
 
     /* no special error handling, it's job of the clients */
     if (address < 1 || address > 324 || action < 0 || action > 1 ||
@@ -1090,7 +1092,7 @@ int comp_maerklin_mf(bus_t busnumber, int address, int f1, int f2,
     int i;
 
     syslog_bus(busnumber, DBG_DEBUG,
-        "Command for func decoder (Maerklin) (MF) received");
+               "Command for func decoder (Maerklin) (MF) received");
 
     /* no special error handling, it's job of the clients */
     if (address < 0 || address > 80 || f1 < 0 || f1 > 1 ||

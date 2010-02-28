@@ -71,7 +71,7 @@
 
 
 static const char DISABLE_MSG[] =
-      "\"%s\" has been disabled at compile time.\n";
+    "\"%s\" has been disabled at compile time.\n";
 
 
 /* check if a bus has a device group or not */
@@ -110,12 +110,13 @@ int bus_has_devicegroup(bus_t bus, int dg)
   @par Input: bus_t busnumber the bus
   @par Input: const char protocol the protocol
   @return SRCP_OK i.e. the protocol is found, else SRCP Error code */
-int bus_supports_protocol(bus_t busnumber, const char protocol) {
+int bus_supports_protocol(bus_t busnumber, const char protocol)
+{
     size_t i;
 
     if (buses[busnumber].protocols) {
-        char const* protocols = buses[busnumber].protocols;
-        for (i = 0; i < strlen(protocols); i++ ) {
+        char const *protocols = buses[busnumber].protocols;
+        for (i = 0; i < strlen(protocols); i++) {
             if (protocols[i] == protocol) {
                 return SRCP_OK;
             }
@@ -226,7 +227,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
         }
 
         else if (xmlStrcmp(child->name, BAD_CAST "i2c-dev") == 0) {
-#ifdef USE_I2C 
+#ifdef USE_I2C
 #ifdef linux
             busnumber += readconfig_I2C_DEV(doc, child, busnumber);
 #else
@@ -336,10 +337,10 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
                         txt2 = xmlGetProp(child, BAD_CAST "port");
                         if (txt2 != NULL) {
                             free(buses[current_bus].device.net.port);
-	                    buses[current_bus].device.net.port =
+                            buses[current_bus].device.net.port =
                                 malloc(strlen((char *) txt2) + 1);
                             strcpy(buses[current_bus].device.net.port,
-                                    (char *) txt2);
+                                   (char *) txt2);
                             free(txt2);
                         }
                         else {
@@ -381,11 +382,11 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
                 int verbosity = atoi((char *) txt);
                 if ((verbosity < 0) || (verbosity > DBG_DEBUG)) {
                     syslog_bus(current_bus, DBG_ERROR,
-		        "Invalid verbosity value found: %d; using %d instead",
-			verbosity, DBG_DEBUG);
-		    verbosity = DBG_DEBUG;
-		}
-		buses[current_bus].debuglevel = verbosity;
+                               "Invalid verbosity value found: %d; using %d instead",
+                               verbosity, DBG_DEBUG);
+                    verbosity = DBG_DEBUG;
+                }
+                buses[current_bus].debuglevel = verbosity;
                 xmlFree(txt);
             }
         }
@@ -453,7 +454,8 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
             }
         }
 
-        else if (xmlStrcmp(child->name, BAD_CAST "auto_speed_detection") == 0) {
+        else if (xmlStrcmp(child->name, BAD_CAST "auto_speed_detection") ==
+                 0) {
             txt = xmlNodeListGetString(doc, child->children, 1);
             if (txt != NULL) {
                 if (xmlStrcmp(txt, BAD_CAST "yes") == 0)
@@ -513,8 +515,7 @@ int readConfig(char *filename)
     if (doc != NULL) {
         syslog_bus(0, DBG_DEBUG, "Walking %s", filename);
         rb = walk_config_xml(doc);
-        syslog_bus(0, DBG_DEBUG, "Done %s; found %ld buses", filename,
-                   rb);
+        syslog_bus(0, DBG_DEBUG, "Done %s; found %ld buses", filename, rb);
         xmlFreeDoc(doc);
         /*
          *Free the global variables that may
@@ -714,13 +715,13 @@ void run_bus_watchdog()
                 syslog_bus(bus, DBG_ERROR,
                            "Interface thread cancel failed: %s (errno = %d).",
                            strerror(result), result);
-            
+
             result = pthread_join(buses[bus].tid, NULL);
             if (result != 0)
                 syslog_bus(bus, DBG_ERROR,
                            "Interface thread join failed: %s (errno = %d).",
                            strerror(result), result);
-            
+
             result = pthread_create(&ttid_tid, NULL,
                                     buses[bus].thr_func, (void *) bus);
             if (result != 0) {

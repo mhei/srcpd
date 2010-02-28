@@ -50,7 +50,8 @@ void syslog_bus(bus_t busnumber, int dbglevel, const char *fmt, ...)
     }
 }
 
-void syslog_session(sessionid_t session, int dbglevel, const char *fmt, ...)
+void syslog_session(sessionid_t session, int dbglevel, const char *fmt,
+                    ...)
 {
     if (dbglevel <= buses[0].debuglevel) {
         va_list parm;

@@ -18,10 +18,9 @@
 #include "syslogmessage.h"
 
 
-typedef struct _THREADS
-{
-  unsigned short int port;
-  int socket;
+typedef struct _THREADS {
+    unsigned short int port;
+    int socket;
 } net_thread_t;
 
 static pthread_t netservice_tid;
@@ -40,10 +39,11 @@ void change_privileges(bus_t bus)
             (group = getgrgid((gid_t) atoi(grp))) != NULL) {
             if (setegid(group->gr_gid) != 0) {
                 syslog_bus(0, DBG_WARN, "Could not change to group %s: %s",
-                    group->gr_name, strerror(errno));
+                           group->gr_name, strerror(errno));
             }
             else {
-                syslog_bus(0, DBG_INFO, "Changed to group %s", group->gr_name);
+                syslog_bus(0, DBG_INFO, "Changed to group %s",
+                           group->gr_name);
             }
         }
         else {
@@ -56,10 +56,11 @@ void change_privileges(bus_t bus)
             (passwd = getpwuid((uid_t) atoi(uid))) != NULL) {
             if (seteuid(passwd->pw_uid) != 0) {
                 syslog_bus(0, DBG_INFO, "Could not change to user %s: %s",
-                    passwd->pw_name, strerror(errno));
+                           passwd->pw_name, strerror(errno));
             }
             else {
-                syslog_bus(0, DBG_INFO, "Changed to user %s", passwd->pw_name);
+                syslog_bus(0, DBG_INFO, "Changed to user %s",
+                           passwd->pw_name);
             }
         }
         else {
@@ -84,7 +85,7 @@ int ipv6_supported()
 }
 
 /*cleanup routine for network syn request thread*/
-void end_netrequest_thread(net_thread_t *ntd)
+void end_netrequest_thread(net_thread_t * ntd)
 {
     if (ntd->socket != -1) {
         close(ntd->socket);
@@ -94,23 +95,23 @@ void end_netrequest_thread(net_thread_t *ntd)
 }
 
 /*handle incoming network syn requests*/
-void *thr_handlePort(void* v)
+void *thr_handlePort(void *v)
 {
     int last_cancel_state, last_cancel_type;
     pthread_t ttid;
     int newsock;
     int result;
 
-    net_thread_t* ntd = (net_thread_t*) malloc(sizeof(net_thread_t));
+    net_thread_t *ntd = (net_thread_t *) malloc(sizeof(net_thread_t));
     if (ntd == NULL)
-        pthread_exit((void*) 1);
+        pthread_exit((void *) 1);
 
     ntd->port = (unsigned long int) v;
 
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &last_cancel_type);
 
-    /*register cleanup routine*/
+    /*register cleanup routine */
     pthread_cleanup_push((void *) end_netrequest_thread, (void *) ntd);
 
 #if defined (ENABLE_IPV6)
@@ -134,8 +135,9 @@ void *thr_handlePort(void* v)
         /* create a socket for listening */
         ntd->socket = socket(AF_INET6, SOCK_STREAM, 0);
         if (ntd->socket == -1) {
-            syslog_bus(0, DBG_ERROR, "Socket creation failed: %s (errno = %d). "
-                    "Terminating...\n", strerror(errno), errno);
+            syslog_bus(0, DBG_ERROR,
+                       "Socket creation failed: %s (errno = %d). "
+                       "Terminating...\n", strerror(errno), errno);
             exit(1);
         }
         saddr = (struct sockaddr *) &sin6;
@@ -154,8 +156,9 @@ void *thr_handlePort(void* v)
         /* Create the socket */
         ntd->socket = socket(AF_INET, SOCK_STREAM, 0);
         if (ntd->socket == -1) {
-            syslog_bus(0, DBG_ERROR, "Socket creation failed: %s (errno = %d). "
-                    "Terminating...\n", strerror(errno), errno);
+            syslog_bus(0, DBG_ERROR,
+                       "Socket creation failed: %s (errno = %d). "
+                       "Terminating...\n", strerror(errno), errno);
             exit(1);
         }
         saddr = (struct sockaddr *) &sin;
@@ -168,9 +171,9 @@ void *thr_handlePort(void* v)
 
     sock_opt = 1;
     if (setsockopt(ntd->socket, SOL_SOCKET, SO_REUSEADDR, &sock_opt,
-         sizeof(sock_opt)) == -1) {
+                   sizeof(sock_opt)) == -1) {
         syslog_bus(0, DBG_ERROR, "setsockopt() failed: %s (errno = %d). "
-                "Terminating...\n", strerror(errno), errno);
+                   "Terminating...\n", strerror(errno), errno);
         close(ntd->socket);
         exit(1);
     }
@@ -178,14 +181,14 @@ void *thr_handlePort(void* v)
     /* saddr=(sockaddr_in) if ntd.socket is of type AF_INET else its (sockaddr_in6) */
     if (bind(ntd->socket, (struct sockaddr *) saddr, socklen) == -1) {
         syslog_bus(0, DBG_ERROR, "bind() failed: %s (errno = %d). "
-                "Terminating...\n", strerror(errno), errno);
+                   "Terminating...\n", strerror(errno), errno);
         close(ntd->socket);
         exit(1);
     }
 
     if (listen(ntd->socket, 1) == -1) {
         syslog_bus(0, DBG_ERROR, "Listen failed: %s (errno = %d). "
-                "Terminating...\n", strerror(errno), errno);
+                   "Terminating...\n", strerror(errno), errno);
         close(ntd->socket);
         exit(1);
     }
@@ -194,12 +197,13 @@ void *thr_handlePort(void* v)
     for (;;) {
         pthread_testcancel();
         fsocklen = socklen;
-        newsock = accept(ntd->socket, (struct sockaddr *) fsaddr, &fsocklen);
+        newsock =
+            accept(ntd->socket, (struct sockaddr *) fsaddr, &fsocklen);
 
         if (newsock == -1) {
             /* Possibly the connection got aborted */
             syslog_bus(0, DBG_WARN, "accept() failed: %s (errno = %d)\n",
-                    strerror(errno), errno);
+                       strerror(errno), errno);
             continue;
         }
 
@@ -214,32 +218,35 @@ void *thr_handlePort(void* v)
             char addrbuf[INET6_ADDRSTRLEN];
 
             if (IN6_IS_ADDR_V4MAPPED(&(sin6_ptr->sin6_addr))) {
-                syslog_bus(0, DBG_INFO, "Connection from an IPv4 client\n");
+                syslog_bus(0, DBG_INFO,
+                           "Connection from an IPv4 client\n");
             }
 
             syslog_bus(0, DBG_INFO, "Connection from %s/%d\n",
-                inet_ntop(AF_INET6, (void *) &(sin6_ptr->sin6_addr),
-                          addrbuf, sizeof(addrbuf)),
-                ntohs(sin6_ptr->sin6_port));
+                       inet_ntop(AF_INET6, (void *) &(sin6_ptr->sin6_addr),
+                                 addrbuf, sizeof(addrbuf)),
+                       ntohs(sin6_ptr->sin6_port));
         }
         else
 #endif
         {
             struct sockaddr_in *sin_ptr = (struct sockaddr_in *) fsaddr;
             syslog_bus(0, DBG_INFO, "Connection from %s/%d\n",
-                inet_ntoa(sin_ptr->sin_addr), ntohs(sin_ptr->sin_port));
+                       inet_ntoa(sin_ptr->sin_addr),
+                       ntohs(sin_ptr->sin_port));
         }
         sock_opt = 1;
         if (setsockopt(newsock, SOL_SOCKET, SO_KEEPALIVE, &sock_opt,
-                    sizeof(sock_opt)) == -1) {
-            syslog_bus(0, DBG_ERROR, "Setsockopt failed: %s (errno = %d)\n",
-                    strerror(errno), errno);
+                       sizeof(sock_opt)) == -1) {
+            syslog_bus(0, DBG_ERROR,
+                       "Setsockopt failed: %s (errno = %d)\n",
+                       strerror(errno), errno);
             close(newsock);
             continue;
         }
 
         /* create an anonymous session with a valid socket */
-        session_node_t* asn = create_anonymous_session(newsock);
+        session_node_t *asn = create_anonymous_session(newsock);
         if (asn == NULL) {
             close(newsock);
             syslog_bus(0, DBG_ERROR, "Session create failed!");
@@ -250,15 +257,15 @@ void *thr_handlePort(void* v)
         result = pthread_create(&ttid, NULL, thr_doClient, asn);
         if (result != 0) {
             syslog_bus(0, DBG_ERROR, "Create thread for network client "
-                    "failed: %s (errno = %d). Terminating...\n",
-                    strerror(result), result);
+                       "failed: %s (errno = %d). Terminating...\n",
+                       strerror(result), result);
             close(newsock);
             destroy_anonymous_session(asn);
             continue;
         }
     }
 
-    /*run the cleanup routine*/
+    /*run the cleanup routine */
     pthread_cleanup_pop(1);
     return NULL;
 }
@@ -271,39 +278,39 @@ void create_netservice_thread()
 
     port = ((SERVER_DATA *) buses[0].driverdata)->TCPPORT;
 
-    /*TODO: search for other solution than doubled type cast*/
+    /*TODO: search for other solution than doubled type cast */
     result = pthread_create(&netservice_tid, NULL, thr_handlePort,
-            (void*) (unsigned long int) port);
+                            (void *) (unsigned long int) port);
 
     if (result != 0) {
         syslog_bus(0, DBG_ERROR, "Create netservice thread failed: %s "
-                "(errno = %d). Terminating...\n", strerror(result), result);
+                   "(errno = %d). Terminating...\n", strerror(result),
+                   result);
         exit(1);
     }
-    
+
     syslog_bus(0, DBG_INFO, "Netservice thread for port %d created.",
-            port);
+               port);
 }
 
 /* cancel network connection thread */
 void cancel_netservice_thread()
 {
     int result;
-    void* thr_result;
+    void *thr_result;
 
     result = pthread_cancel(netservice_tid);
     if (result != 0)
         syslog_bus(0, DBG_ERROR,
-                "Netservice thread cancel failed: %s (errno = %d).",
-                strerror(result), result);
-    
-    /*wait for termination*/
+                   "Netservice thread cancel failed: %s (errno = %d).",
+                   strerror(result), result);
+
+    /*wait for termination */
     result = pthread_join(netservice_tid, &thr_result);
     if (result != 0)
         syslog_bus(0, DBG_ERROR,
-                "Netservice thread join failed: %s (errno = %d).",
-                strerror(result), result);
+                   "Netservice thread join failed: %s (errno = %d).",
+                   strerror(result), result);
 
     syslog_bus(0, DBG_INFO, "Netservice thread terminated.");
 }
-

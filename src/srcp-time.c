@@ -31,24 +31,24 @@ int startup_TIME(void)
     return 0;
 }
 
-static void set_time(vtime_t *vt)
+static void set_time(vtime_t * vt)
 {
     int result;
 
     result = pthread_mutex_lock(&time_value_mutex);
     if (result != 0) {
         syslog_bus(0, DBG_ERROR,
-                "pthread_mutex_lock() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_lock() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
 
     vtime = *vt;
-    
+
     result = pthread_mutex_unlock(&time_value_mutex);
     if (result != 0) {
         syslog_bus(0, DBG_ERROR,
-                "pthread_mutex_unlock() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_unlock() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
 }
 
@@ -84,10 +84,10 @@ int initTIME(int fx, int fy)
     result = pthread_mutex_lock(&time_distort_mutex);
     if (result != 0) {
         syslog_bus(0, DBG_ERROR,
-                "pthread_mutex_lock() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_lock() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
-    
+
     distort.ratio_x = fx;
     distort.ratio_y = fy;
     gettimeofday(&distort.inittime, NULL);
@@ -95,17 +95,17 @@ int initTIME(int fx, int fy)
     result = pthread_cond_signal(&time_distort_cond);
     if (result != 0) {
         syslog_bus(0, DBG_ERROR,
-                "pthread_cond_signal() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_cond_signal() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
-    
+
     result = pthread_mutex_unlock(&time_distort_mutex);
     if (result != 0) {
         syslog_bus(0, DBG_ERROR,
-                "pthread_mutex_unlock() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_unlock() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
-    
+
     describeTIME(msg);
     enqueueInfoMessage(msg);
     return SRCP_OK;
@@ -120,70 +120,70 @@ int termTIME()
     result = pthread_mutex_lock(&time_distort_mutex);
     if (result != 0) {
         syslog_bus(0, DBG_ERROR,
-                "pthread_mutex_lock() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_lock() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
-    
+
     distort.ratio_x = distort.ratio_y = 0;
 
     result = pthread_mutex_unlock(&time_distort_mutex);
     if (result != 0) {
         syslog_bus(0, DBG_ERROR,
-                "pthread_mutex_unlock() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_unlock() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
-    
+
     gettimeofday(&current_time, NULL);
     snprintf(msg, sizeof(msg), "%lu.%.3lu 102 INFO 0 TIME\n",
-            current_time.tv_sec, current_time.tv_usec / 1000);
+             current_time.tv_sec, current_time.tv_usec / 1000);
     enqueueInfoMessage(msg);
 
     return SRCP_OK;
 }
 
-int getTIME(vtime_t *vt)
+int getTIME(vtime_t * vt)
 {
     int result;
 
     result = pthread_mutex_lock(&time_value_mutex);
     if (result != 0) {
         syslog_bus(0, DBG_ERROR,
-                "pthread_mutex_lock() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_lock() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
 
     *vt = vtime;
-    
+
     result = pthread_mutex_unlock(&time_value_mutex);
     if (result != 0) {
         syslog_bus(0, DBG_ERROR,
-                "pthread_mutex_unlock() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_unlock() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
-    
+
     return SRCP_OK;
 }
 
-static int get_distortion(time_distort_t *td)
+static int get_distortion(time_distort_t * td)
 {
     int result;
 
     result = pthread_mutex_lock(&time_distort_mutex);
     if (result != 0) {
         syslog_bus(0, DBG_ERROR,
-                "pthread_mutex_lock() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_lock() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
 
     *td = distort;
-    
+
     result = pthread_mutex_unlock(&time_distort_mutex);
     if (result != 0) {
         syslog_bus(0, DBG_ERROR,
-                "pthread_mutex_unlock() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_unlock() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
-    
+
     return SRCP_OK;
 }
 
@@ -195,17 +195,17 @@ bool time_is_available()
     result = pthread_mutex_lock(&time_distort_mutex);
     if (result != 0) {
         syslog_bus(0, DBG_ERROR,
-                "pthread_mutex_lock() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_lock() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
-    
+
     available = ((distort.ratio_x > 0) && (distort.ratio_y > 0));
-    
+
     result = pthread_mutex_unlock(&time_distort_mutex);
     if (result != 0) {
         syslog_bus(0, DBG_ERROR,
-                "pthread_mutex_unlock() failed: %s (errno = %d).",
-                strerror(result), result);
+                   "pthread_mutex_unlock() failed: %s (errno = %d).",
+                   strerror(result), result);
     }
 
     return available;
@@ -226,11 +226,11 @@ int infoTIME(char *msg)
         return result;
 
     gettimeofday(&akt_time, NULL);
-    
+
     sprintf(msg, "%lu.%.3lu 100 INFO 0 TIME %d %d %d %d\n",
             akt_time.tv_sec, akt_time.tv_usec / 1000,
             vt.day, vt.hour, vt.min, vt.sec);
-    
+
     return SRCP_INFO;
 }
 
@@ -266,17 +266,18 @@ void *thr_clock(void *v)
         result = pthread_mutex_lock(&time_distort_mutex);
         if (result != 0) {
             syslog_bus(0, DBG_ERROR,
-                    "pthread_mutex_lock() failed: %s (errno = %d).",
-                    strerror(result), result);
+                       "pthread_mutex_lock() failed: %s (errno = %d).",
+                       strerror(result), result);
         }
 
-        /*wait here suspended if no timer is needed*/
+        /*wait here suspended if no timer is needed */
         while (distort.ratio_x == 0 || distort.ratio_y == 0) {
-            result = pthread_cond_wait(&time_distort_cond, &time_distort_mutex);
+            result =
+                pthread_cond_wait(&time_distort_cond, &time_distort_mutex);
             if (result != 0) {
                 syslog_bus(0, DBG_ERROR,
-                        "pthread_cond_wait() failed: %s (errno = %d).",
-                        strerror(result), result);
+                           "pthread_cond_wait() failed: %s (errno = %d).",
+                           strerror(result), result);
             }
         }
 
@@ -286,14 +287,14 @@ void *thr_clock(void *v)
         result = pthread_mutex_unlock(&time_distort_mutex);
         if (result != 0) {
             syslog_bus(0, DBG_ERROR,
-                    "pthread_mutex_unlock() failed: %s (errno = %d).",
-                    strerror(result), result);
+                       "pthread_mutex_unlock() failed: %s (errno = %d).",
+                       strerror(result), result);
         }
 
         if (usleep(sleeptime) == -1) {
             syslog_bus(0, DBG_ERROR,
-                    "usleep() failed: %s (errno = %d)\n",
-                    strerror(errno), errno);
+                       "usleep() failed: %s (errno = %d)\n",
+                       strerror(errno), errno);
         }
 
         /* use temporary copy for calculations, so vtime is always valid */
@@ -332,7 +333,7 @@ void create_time_thread()
     result = pthread_create(&time_tid, NULL, thr_clock, NULL);
     if (result != 0) {
         syslog_bus(0, DBG_ERROR, "Create time thread failed: %s "
-                "(errno = %d)\n", strerror(result), result);
+                   "(errno = %d)\n", strerror(result), result);
         return;
     }
 
@@ -347,18 +348,17 @@ void cancel_time_thread()
     result = pthread_cancel(time_tid);
     if (result != 0)
         syslog_bus(0, DBG_ERROR,
-                "Time thread cancel failed: %s (errno = %d).",
-                strerror(result), result);
+                   "Time thread cancel failed: %s (errno = %d).",
+                   strerror(result), result);
 
-    /*wait until time thread terminates*/
+    /*wait until time thread terminates */
     result = pthread_join(time_tid, NULL);
     if (result != 0) {
         syslog_bus(0, DBG_ERROR,
-                "Time thread join failed: %s (errno = %d).",
-                strerror(result), result);
+                   "Time thread join failed: %s (errno = %d).",
+                   strerror(result), result);
         return;
     }
 
     syslog_bus(0, DBG_DEBUG, "Time thread cancelled.");
 }
-

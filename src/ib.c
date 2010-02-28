@@ -778,7 +778,7 @@ static void send_command_sm_IB(bus_t busnumber)
                 else {
                     send_pom_IB(busnumber, smakt.addr, smakt.typeaddr,
                                 smakt.value);
-		    session_endwait(busnumber, 0);
+                    session_endwait(busnumber, 0);
                 }
                 break;
             case GET:
@@ -798,12 +798,12 @@ static void send_command_sm_IB(bus_t busnumber)
                 }
                 break;
             case VERIFY:
-	        session_endwait(busnumber, 0);
+                session_endwait(busnumber, 0);
                 break;
             case TERM:
                 session_endwait(busnumber, term_pgm_IB(busnumber));
-		break;
-	    case INIT:
+                break;
+            case INIT:
                 session_endwait(busnumber, 0);
                 break;
         }
