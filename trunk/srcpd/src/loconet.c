@@ -391,7 +391,6 @@ static int ln_read_serial(bus_t busnumber, unsigned char *cmd, int len)
        packet, remove it from the buffer and transfer it to the caller
        if complete. */
     int fd = buses[busnumber].device.file.fd;
-    int index = 1;
     fd_set fds;
     struct timeval t = { 0, 0 };
     int retval;
