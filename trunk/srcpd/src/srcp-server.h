@@ -23,7 +23,7 @@
 
 /* SRCP server welcome message */
 static const char WELCOME_MSG[] = 
-    "srcpd V" VERSION "; SRCP 0.8.3; SRCPOTHER 0.8.4-wip\n";
+    "srcpd V" VERSION "; SRCP 0.8.4; SRCPOTHER 0.8.3\n";
 
 typedef struct _SERVER_DATA {
     unsigned short int TCPPORT;
