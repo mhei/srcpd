@@ -351,6 +351,10 @@ static int init_ga_LOCONET(ga_state_t * ga)
     return SRCP_OK;
 }
 
+/*
+ * @param srcp busnumber
+ * @return 0 if OK, -1 on error
+ */
 int init_bus_LOCONET(bus_t busnumber)
 {
     int result = 0;
@@ -363,7 +367,7 @@ int init_bus_LOCONET(bus_t busnumber)
                busnumber, buses[busnumber].debuglevel);
 
     if (buses[busnumber].debuglevel <= 5)
-        result = init_lineLOCONET(busnumber);
+        result = (init_lineLOCONET(busnumber) == 0) ? -1 : 0;
 
     syslog_bus(busnumber, DBG_INFO, "Loconet bus %ld init done",
                busnumber);
