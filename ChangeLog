@@ -1,3 +1,15 @@
+--- Release 2.1.1 ----
+
+2010-03-03 Guido Scholz <guido.scholz@bayernline.de>
+	* srcp-fb.c: Fixed undelivered INFO messages caused by
+	sizeof(msg).
+	* i2c-dev.*: Fixed opensuse compile error, unused function
+	parameters removed
+
+2010-03-01 Guido Scholz <guido.scholz@bayernline.de>
+	* loconet.c: Fixed Loconet module init routine.
+
+
 --- Release 2.1.0 ----
 
 2010-02-21 Guido Scholz <guido.scholz@bayernline.de>
