@@ -26,7 +26,7 @@ typedef struct _THREADS {
 static pthread_t netservice_tid;
 
 
-void change_privileges(bus_t bus)
+void change_privileges()
 {
     struct group *group;
     struct passwd *passwd;
@@ -166,7 +166,7 @@ void *thr_handlePort(void *v)
         socklen = sizeof(sin);
     }
     if (getuid() == 0) {
-        change_privileges(0);
+        change_privileges();
     }
 
     sock_opt = 1;
