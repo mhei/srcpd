@@ -2,6 +2,7 @@ srcpd-2.1.1 (2010-03-??)
   Fixed Bugs
     o Fixed Loconet module start up.
     o Fixed not delivered INFO messages.
+    o Fixed opensuse i2c module compile error.
 
 
 srcpd-2.1.0 (2010-02-28)
