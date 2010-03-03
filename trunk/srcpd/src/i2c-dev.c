@@ -121,7 +121,7 @@ static int write_i2c_dev(bus_t bus, int addr, I2C_VALUE value)
     return (-1);
 }
 
-void select_bus(int mult_busnum, bus_t busnumber)
+static void select_bus(int mult_busnum, bus_t busnumber)
 {
     int addr, value = 0;
 
@@ -139,7 +139,6 @@ void select_bus(int mult_busnum, bus_t busnumber)
 }
 
 /*  Handle set command of GA */
-
 static int handle_i2c_set_ga(bus_t bus, ga_state_t * gatmp)
 {
     I2C_ADDR i2c_addr;
@@ -365,7 +364,7 @@ int init_lineI2C_DEV(bus_t bus)
     return fd;
 }
 
-void reset_ga(bus_t busnumber)
+static void reset_ga(bus_t busnumber)
 {
     /* reset ga devices to values stored in data->i2c_values */
     I2CDEV_DATA *data = (I2CDEV_DATA *) buses[busnumber].driverdata;
