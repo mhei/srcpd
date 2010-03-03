@@ -24,9 +24,9 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 
-#ifdef HAVE_LINUX_I2C_H
+/*#ifdef HAVE_LINUX_I2C_H
 #include <linux/i2c.h>
-#endif
+#endif*/
 
 #ifdef HAVE_LINUX_I2C_DEV_H
 #include <linux/i2c-dev.h>
@@ -121,6 +121,23 @@ static int write_i2c_dev(bus_t bus, int addr, I2C_VALUE value)
     return (-1);
 }
 
+void select_bus(int mult_busnum, bus_t busnumber)
+{
+    int addr, value = 0;
+
+    /* addr = 224 + (2 * (int) (mult_busnum / 9)); */
+    addr = 224;
+    if (mult_busnum > 8)
+        mult_busnum = 0;
+
+    if (buses[busnumber].power_state == 1)
+        value = 64;
+    value = value | (mult_busnum % 9);
+    write_PCF8574(busnumber, (addr >> 1), value);
+    /*  result = ioctl(busfd, I2C_SLAVE, (addr >> 1));
+       writeByte(busnumber, value, 1); */
+}
+
 /*  Handle set command of GA */
 
 static int handle_i2c_set_ga(bus_t bus, ga_state_t * gatmp)
@@ -141,7 +158,7 @@ static int handle_i2c_set_ga(bus_t bus, ga_state_t * gatmp)
     value = gatmp->action;
 
     mult_busnum = (addr / 256) + 1;
-    select_bus(mult_busnum, buses[bus].device.file.fd, bus);
+    select_bus(mult_busnum, bus);
 
     i2c_addr = (addr % 256);
     /* gettimeofday(gatmp->tv[0], NULL); */
@@ -348,7 +365,7 @@ int init_lineI2C_DEV(bus_t bus)
     return fd;
 }
 
-void reset_ga(bus_t busnumber, int busfd)
+void reset_ga(bus_t busnumber)
 {
     /* reset ga devices to values stored in data->i2c_values */
     I2CDEV_DATA *data = (I2CDEV_DATA *) buses[busnumber].driverdata;
@@ -362,7 +379,7 @@ void reset_ga(bus_t busnumber, int busfd)
         for (multiplexer_adr = 1; multiplexer_adr <= multiplex_buses;
              multiplexer_adr++) {
 
-            select_bus(multiplexer_adr, busfd, busnumber);
+            select_bus(multiplexer_adr, busnumber);
 
             /* first PCF 8574 P */
             for (i = 32; i <= 39; i++) {
@@ -377,25 +394,8 @@ void reset_ga(bus_t busnumber, int busfd)
             }
         }
 
-        select_bus(0, busfd, busnumber);
+        select_bus(0, busnumber);
     }
-}
-
-void select_bus(int mult_busnum, int busfd, bus_t busnumber)
-{
-    int addr, value = 0;
-
-    /* addr = 224 + (2 * (int) (mult_busnum / 9)); */
-    addr = 224;
-    if (mult_busnum > 8)
-        mult_busnum = 0;
-
-    if (buses[busnumber].power_state == 1)
-        value = 64;
-    value = value | (mult_busnum % 9);
-    write_PCF8574(busnumber, (addr >> 1), value);
-    /*  result = ioctl(busfd, I2C_SLAVE, (addr >> 1));
-       writeByte(busnumber, value, 1); */
 }
 
 /*
@@ -528,14 +528,14 @@ void *thr_sendrec_I2C_DEV(void *v)
         if (buses[btd->bus].power_changed == 1) {
 
             /* dummy select, power state is directly read by select_bus() */
-            select_bus(0, buses[btd->bus].device.file.fd, btd->bus);
+            select_bus(0, btd->bus);
             buses[btd->bus].power_changed = 0;
             infoPower(btd->bus, msg);
             enqueueInfoMessage(msg);
 
             if ((ga_reset_devices == 1)
                 && (buses[btd->bus].power_state == 1)) {
-                reset_ga(btd->bus, buses[btd->bus].device.file.fd);
+                reset_ga(btd->bus);
             }
 
         }
@@ -557,7 +557,7 @@ void *thr_sendrec_I2C_DEV(void *v)
             dequeueNextGA(btd->bus, &gatmp);
             handle_i2c_set_ga(btd->bus, &gatmp);
             setGA(btd->bus, gatmp.id, gatmp);
-            select_bus(0, buses[btd->bus].device.file.fd, btd->bus);
+            select_bus(0, btd->bus);
             buses[btd->bus].watchdog = 6;
         }
         if (usleep(1000) == -1) {

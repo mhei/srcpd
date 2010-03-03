@@ -39,8 +39,4 @@ int init_bus_I2C_DEV( bus_t);
 int getDescription_I2C_DEV(char *reply);
 void* thr_sendrec_I2C_DEV(void *);
 
-/* helper functions */
-void reset_ga( bus_t busnumber, int busfd);
-void select_bus(int mult_busnum, int busfd, bus_t busnumber);
-
 #endif
