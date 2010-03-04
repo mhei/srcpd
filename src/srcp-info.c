@@ -234,7 +234,7 @@ int doInfoClient(session_node_t * sn)
             for (i = 1; i <= number; i++) {
                 int rc = getFB(bus, i, &cmp_time, &value);
                 if (rc == SRCP_OK && value != 0) {
-                    infoFB(bus, i, reply);
+                    infoFB(bus, i, reply, sizeof(reply));
                     if (writen(sn->socket, reply, strlen(reply)) == -1) {
                         syslog_session(sn->session, DBG_ERROR,
                                        "Socket write failed: %s (errno = %d)\n",

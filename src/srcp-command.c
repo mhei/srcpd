@@ -260,7 +260,7 @@ int handleCHECK(sessionid_t sessionid, bus_t bus, char *device,
  * GET
  */
 int handleGET(sessionid_t sessionid, bus_t bus, char *device,
-              char *parameter, char *reply)
+              char *parameter, char *reply, size_t length)
 {
     struct timeval akt_time;
     int rc = SRCP_UNSUPPORTEDDEVICEGROUP;
@@ -272,7 +272,7 @@ int handleGET(sessionid_t sessionid, bus_t bus, char *device,
         long int nelem, port;
         nelem = sscanf(parameter, "%ld", &port);
         if (nelem >= 1)
-            rc = infoFB(bus, port, reply);
+            rc = infoFB(bus, port, reply, length);
         else
             rc = srcp_fmt_msg(SRCP_LISTTOOSHORT, reply, akt_time);
     }
@@ -429,7 +429,7 @@ int handleGET(sessionid_t sessionid, bus_t bus, char *device,
  * WAIT
  */
 int handleWAIT(sessionid_t sessionid, bus_t bus, char *device,
-               char *parameter, char *reply)
+               char *parameter, char *reply, size_t length)
 {
     struct timeval time;
     int rc = SRCP_UNSUPPORTEDDEVICEGROUP;
@@ -448,7 +448,7 @@ int handleWAIT(sessionid_t sessionid, bus_t bus, char *device,
         if (nelem >= 3) {
             if (getFB(bus, port, &time, &value) == SRCP_OK
                 && value == waitvalue) {
-                rc = infoFB(bus, port, reply);
+                rc = infoFB(bus, port, reply, length);
             }
             else {
                 /* we exactly wait for 1/20 seconds */
@@ -469,7 +469,7 @@ int handleWAIT(sessionid_t sessionid, bus_t bus, char *device,
                     rc = srcp_fmt_msg(SRCP_TIMEOUT, reply, time);
                 }
                 else {
-                    rc = infoFB(bus, port, reply);
+                    rc = infoFB(bus, port, reply, length);
                 }
             }
         }
@@ -828,11 +828,11 @@ int doCmdClient(session_node_t * sn)
                 }
                 else if (strncasecmp(command, "GET", 3) == 0) {
                     rc = handleGET(sn->session, bus, devicegroup,
-                                   parameter, reply);
+                                   parameter, reply, sizeof(reply));
                 }
                 else if (strncasecmp(command, "WAIT", 4) == 0) {
                     rc = handleWAIT(sn->session, bus, devicegroup,
-                                    parameter, reply);
+                                    parameter, reply, sizeof(reply));
                 }
                 else if (strncasecmp(command, "INIT", 4) == 0) {
                     rc = handleINIT(sn->session, bus, devicegroup,

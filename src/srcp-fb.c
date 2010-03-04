@@ -36,7 +36,7 @@ static int out[MAX_BUSES], in[MAX_BUSES];
 static int enqueueInfoFB(bus_t busnumber, int port)
 {
     char msg[1000];
-    infoFB(busnumber, port, msg);
+    infoFB(busnumber, port, msg, sizeof(msg));
     enqueueInfoMessage(msg);
     return SRCP_OK;
 }
@@ -282,7 +282,7 @@ int setFBmodul(bus_t bus, int modul, int values)
     return rc;
 }
 
-int infoFB(bus_t bus, int port, char *msg)
+int infoFB(bus_t bus, int port, char *msg, size_t length)
 {
     struct timeval time;
     int state;
@@ -290,7 +290,7 @@ int infoFB(bus_t bus, int port, char *msg)
     msg[0] = 0x00;
 
     if (rc >= SRCP_OK) {
-        snprintf(msg, sizeof(*msg), "%lu.%.3lu 100 INFO %ld FB %d %d\n",
+        snprintf(msg, sizeof(length), "%lu.%.3lu 100 INFO %ld FB %d %d\n",
                  time.tv_sec, time.tv_usec / 1000, bus, port, state);
         return SRCP_INFO;
     }

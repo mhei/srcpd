@@ -41,7 +41,7 @@ int getFB(bus_t bus, int port, struct timeval *time, int *value);
 int setFB( bus_t bus, int port,  int value );
 int updateFB(bus_t bus, int port, int value);
 int setFBmodul(bus_t bus, int mod, int values);
-int infoFB(bus_t bus, int port, char *msg);
+int infoFB(bus_t bus, int port, char *msg, size_t lenght);
 int describeFB(bus_t bus, int addr, char *reply);
 void check_reset_fb(bus_t busnumber);
 void set_min_time(bus_t busnumber, int mt);
