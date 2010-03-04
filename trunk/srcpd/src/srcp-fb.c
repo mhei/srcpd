@@ -290,7 +290,7 @@ int infoFB(bus_t bus, int port, char *msg, size_t length)
     msg[0] = 0x00;
 
     if (rc >= SRCP_OK) {
-        snprintf(msg, sizeof(length), "%lu.%.3lu 100 INFO %ld FB %d %d\n",
+        snprintf(msg, length, "%lu.%.3lu 100 INFO %ld FB %d %d\n",
                  time.tv_sec, time.tv_usec / 1000, bus, port, state);
         return SRCP_INFO;
     }
