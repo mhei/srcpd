@@ -35,7 +35,7 @@ static int out[MAX_BUSES], in[MAX_BUSES];
 
 static int enqueueInfoFB(bus_t busnumber, int port)
 {
-    char msg[1000];
+    char msg[MAXSRCPLINELEN];
     infoFB(busnumber, port, msg, sizeof(msg));
     enqueueInfoMessage(msg);
     return SRCP_OK;
