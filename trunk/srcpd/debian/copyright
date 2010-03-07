@@ -3,7 +3,7 @@ Sun, 26 Jun 2005 10:18:04 +1200.
 
 It was downloaded from http://sourceforge.net/projects/srcpd/
 
-Copyright (c) 2001-2009 by the srcpd team
+Copyright (c) 2001-2010 by the srcpd team
 
 Upstream developers: 
 Dipl.-Ing. Matthias Trute  <mtrute@web.de>
@@ -33,5 +33,5 @@ License:
    02110-1301 USA.
 
 On Debian systems, the complete text of the GNU General
-Public License can be found in `/usr/share/common-licenses/GPL'.
+Public License can be found in `/usr/share/common-licenses/GPL-2'.
 
