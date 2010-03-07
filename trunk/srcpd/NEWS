@@ -1,4 +1,4 @@
-srcpd-2.1.1 (2010-03-??)
+srcpd-2.1.1 (2010-03-07)
   Fixed Bugs
     o Fixed Loconet module start up.
     o Fixed not delivered INFO messages.
