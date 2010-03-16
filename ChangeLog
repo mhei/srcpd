@@ -1,8 +1,12 @@
+2010-03-16 Guido Scholz <guido.scholz@bayernline.de>
+	* srcp-gl.c: Cleaned up GL address validity check. Patch
+	provided by Harald Barth.
+
 --- Release 2.1.1 ----
 
 2010-03-04 Guido Scholz <guido.scholz@bayernline.de>
 	* srcp-fb.*, srcp-info.c, srcp-command.c: Fixed undelivered
-        INFO messages caused by sizeof(msg).
+	INFO messages caused by sizeof(msg).
 
 2010-03-03 Guido Scholz <guido.scholz@bayernline.de>
 	* i2c-dev.*: Fixed opensuse compile error, unused function
