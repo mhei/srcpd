@@ -772,8 +772,15 @@ Example
 .nf
 <bus>
     <loconet>
-        <device type="network" port="1234">127.0.0.1</device>
+       <loconet-id>80</loconet-id>
+        <sync-time-from-loconet>no</sync-time-from-loconet>
+        <ms100>no</ms100>
     </loconet>
+    <device type="network" port="1234">127.0.0.1</device>
+    <!--
+    <device type="file">/dev/ttyS0</device>
+    -->
+    
 </bus>
 .fi
 .\"
