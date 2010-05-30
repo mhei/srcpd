@@ -315,7 +315,7 @@ int main(int argc, char **argv)
                 exit(1);
                 break;
             default:
-                printf("Unknown option.\n");
+                printf("Unknown option: %c\n", c);
                 printf("Use: \"srcpd -h\" for help, terminating.\n");
                 exit(1);
                 break;
