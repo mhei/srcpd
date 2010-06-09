@@ -254,6 +254,13 @@ Maximum usable decoder address number for generic accessory devices (GA).
 The default value is
 .IR 324 .
 .\"
+
+please note that there is an offset of 4 between the DDL addresses and
+the addresses according to the documentation from maerklin. The equation
+ddl-address = maerklin docu address + 4 is used. This is due to some
+interpretation differences what the trits mean. Details can be found at
+http://vogt-it.com/OpenSource/DDL/Addrestable.html
+
 .TP
 number_gl
 Maximum usable decoder address number for generic locomotive devices (GL).
