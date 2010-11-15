@@ -36,7 +36,7 @@ typedef struct _IB_DATA {
 
 int readConfig_IB(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber);
 int init_bus_IB(bus_t busnumber);
-int init_gl_IB(gl_state_t *gl);
+int init_gl_IB(bus_t busnumber, gl_state_t *gl);
 int init_ga_IB(ga_state_t *ga);
 void* thr_sendrec_IB(void *);
 
@@ -136,8 +136,9 @@ static const char P50_ENABLE[] = "ZzA0";
 #define XNODATA     0x0A
 #define XNOSLOT     0x0B
 #define XBADLNP     0x0C
-#define XBADTNP     0x0E
 #define XLKBUSY     0x0D
+#define XBADTNP     0x0E
+#define XBADSOV     0x0F
 #define XNOISPC     0x10
 #define XLOWTSP     0x40
 #define XLKHALT     0x41
