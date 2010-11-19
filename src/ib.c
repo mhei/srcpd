@@ -57,6 +57,7 @@ static int init_lineIB(bus_t busnumber);
 static int sendBreak(const int fd, bus_t busnumber);
 static int readAnswer_IB(const bus_t busnumber, const int generatePrintf);
 static int readByte_IB(bus_t busnumber, int wait, unsigned char *the_byte);
+static bool readList_IB(bus_t busnumber, unsigned char *bytes, size_t n);
 static speed_t checkBaudrate(const int fd, const bus_t busnumber);
 static void check_status_IB(bus_t busnumber);
 static void check_status_fb_IB(bus_t busnumber);
@@ -67,7 +68,6 @@ static void send_command_ga_IB(bus_t busnumber);
 static void send_command_gl_IB(bus_t busnumber);
 static void send_command_sm_IB(bus_t busnumber);
 static unsigned char send_command_power_IB(bus_t busnumber);
-
 
 int readConfig_IB(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
@@ -170,7 +170,7 @@ int init_gl_IB(gl_state_t * gl)
 {
     gl->n_fs = 126;
     if (gl->n_func > 17) {
-        return SRCP_WRONGVALUE;
+      return SRCP_WRONGVALUE;
     }
     gl->protocol = 'P';
     return SRCP_OK;
@@ -1233,62 +1233,12 @@ static int run_autodetection(bus_t busnumber)
 static void show_firmware_version(bus_t bus)
 {
     unsigned char buffer[20];
-    ssize_t nbytes;
-    unsigned char listlen;
 
     memset(buffer, '\0', sizeof(buffer));
     writeByte(bus, XVer, 0);
 
-  again1:
-    nbytes = read(buses[bus].device.file.fd, &listlen, 1);
-    if (nbytes == -1) {
-
-        /* handle interrupt */
-        if (errno == EINTR)
-            goto again1;
-
-        /* normal read error */
-        else {
-            syslog_bus(bus, DBG_ERROR,
-                       "readbyte(): read() failed: %s (errno = %d)\n",
-                       strerror(errno), errno);
-            return;
-        }
-    }
-
-    if (listlen == 0) {
-        syslog_bus(bus, DBG_INFO, "No version information available.\n");
-        return;
-    }
-
-    /*FIXME: line buffer not read */
-    else if ((listlen + 1) > sizeof(buffer)) {
-        syslog_bus(bus, DBG_INFO, "Buffer size not sufficient: %d\n",
-                   listlen + 1);
-        return;
-    }
-
-    /*read also terminating '\0'  -> listlen + 1 */
-  again2:
-    nbytes = read(buses[bus].device.file.fd, buffer, listlen + 1);
-    if (nbytes == -1) {
-
-        /* handle interrupt */
-        if (errno == EINTR)
-            goto again2;
-
-        /* normal read error */
-        else {
-            syslog_bus(bus, DBG_ERROR,
-                       "read() failed: %s (errno = %d)\n",
-                       strerror(errno), errno);
-            return;
-        }
-    }
-
-    if (nbytes != (listlen + 1)) {
-        syslog_bus(bus, DBG_ERROR, "Bytes available: %d, bytes read: %d\n",
-                   listlen + 1, nbytes);
+    if (!readList_IB(bus, buffer, sizeof(buffer))) {
+        syslog_bus(bus, DBG_INFO, "Could not read version information.\n");
         return;
     }
 
@@ -1604,6 +1554,49 @@ static int readByte_IB(bus_t busnumber, int wait, unsigned char *the_byte)
         }
     }
     return -1;
+}
+
+/**
+ * Read a configuration list from the intellibox. Every list entry starts
+ * with one byte (length) followed by n bytes. After that another list entry
+ * may follow. If a length byte is 0 then the end of the list is reached.
+ *
+ * All list entries are copied into the given array without any gaps.
+ *
+ * @param: busnumber
+ * @param: bytes array to store the list content
+ * @param: n array size
+ *
+ * @result true if read was successful
+ **/
+static bool readList_IB(bus_t busnumber, unsigned char *bytes, size_t n)
+{
+    bool result = false;
+    int i, j = 0, status;
+    unsigned char length;
+
+    if (bytes != NULL) {
+	while (true) {
+	    if (j >= n) {
+	        break;
+	    }
+	    status = readByte_IB(busnumber, 1, &length);
+	    if (status != 0) {
+	        break;
+	    }
+	    if (length == 0) {
+	        result = true;
+		break;
+	    }
+	    for (i = 0; i < length && j < n; i++) {
+	        status = readByte_IB(busnumber, 1, &bytes[j++]);
+		if (status != 0) {
+		  break;
+		}
+	    }
+	}
+    }
+    return result;
 }
 
 static unsigned char send_command_power_IB(bus_t busnumber)
