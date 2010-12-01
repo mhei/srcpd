@@ -1,3 +1,6 @@
+2010-12-01 Guido Scholz <guido.scholz@bayernline.de>
+	* src/li100.c: Fix GA feedback address nibble mask
+
 2010-03-16 Guido Scholz <guido.scholz@bayernline.de>
 	* srcp-gl.c: Cleaned up GL address validity check. Patch
 	provided by Harald Barth.

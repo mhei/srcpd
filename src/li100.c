@@ -1573,41 +1573,57 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
         message_processed = 1;
     }
 
-    /* information about feedback */
+    /* information about feedback: AAAA AAAA ITTN ZZZZ*/
     if ((str[0] & 0xf0) == 0x40) {
         ctr = str[0] & 0xf;
         for (i = 1; i < ctr; i += 2) {
+
+            /*check for address type TT, mask: 0110 0000 */
             switch (str[i + 1] & 0x60) {
                 case 0x00:     /* switch-decoder without feedback */
                 case 0x20:     /* switch-decoder with feedback */
                     gatmp.id = str[i];
                     gatmp.id <<= 2;
-                    if (str[i + 1] & 0x20)
+
+                    /*check for upper nibble, mask: 0001 0000 */
+                    if (str[i + 1] & 0x10)
                         gatmp.id += 2;
+
+                    /*first address, mask 0011 */
                     tmp_addr = str[i + 1] & 0x03;
+
+                    /*position left, mask: 0001 */
                     if (tmp_addr == 0x01) {
                         gatmp.port = 0;
                         gatmp.action = 1;
                         setGA(busnumber, gatmp.id, gatmp);
                     }
+                    /*position right, mask: 0010 */
                     if (tmp_addr == 0x02) {
                         gatmp.port = 1;
                         gatmp.action = 1;
                         setGA(busnumber, gatmp.id, gatmp);
                     }
-                    gatmp.id++;
+
+                    /*second address, mask 1100 */
                     tmp_addr = str[i + 1] & 0x0C;
+                    gatmp.id++;
+
+                    /*position left, mask: 0100 */
                     if (tmp_addr == 0x04) {
                         gatmp.port = 0;
                         gatmp.action = 1;
                         setGA(busnumber, gatmp.id, gatmp);
                     }
+
+                    /*position right, mask: 1000 */
                     if (tmp_addr == 0x08) {
                         gatmp.port = 1;
                         gatmp.action = 1;
                         setGA(busnumber, gatmp.id, gatmp);
                     }
                     break;
+
                 case 0x40:     /* feedback-decoder */
                     setFBmodul(busnumber,
                                (str[i] * 2) +
