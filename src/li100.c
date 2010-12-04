@@ -1398,14 +1398,57 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
     if (cXor != 0x00)           /* must be 0x00 */
         status = -1;            /* error */
 
-    if (str[0] == 0x02) {       /* version-number of interface */
+
+    /* li100 reply message */
+    if (str[0] == 0x01) {
+
+        switch (str[1]) {
+            case 0x01:
+                syslog_bus(busnumber, DBG_ERROR,
+                        "Interface/PC communication error\n");
+                break;
+
+            case 0x02:
+                syslog_bus(busnumber, DBG_ERROR,
+                        "Interface/central unit communication error\n");
+                break;
+
+            case 0x03:
+                syslog_bus(busnumber, DBG_ERROR,
+                        "Unknown error\n");
+                break;
+
+            case 0x04:
+            /* command send to central unit (normal operation)*/
+                break;
+
+            case 0x05:
+                syslog_bus(busnumber, DBG_ERROR,
+                        "Central unit can not address LI101F\n");
+                break;
+
+            case 0x06:
+                syslog_bus(busnumber, DBG_ERROR,
+                        "LI101F buffer overflow\n");
+                break;
+
+            default:
+                syslog_bus(busnumber, DBG_ERROR,
+                        "Unknown command key received: 0x%02x\n", str[1]);
+                break;
+        }
+        message_processed = 1;
+    }
+
+    /* version-number of interface */
+    else if (str[0] == 0x02) {
         __li100->version_interface =
             ((str[1] & 0xf0) << 4) + (str[1] & 0x0f);
         __li100->code_interface = (int) str[2];
         message_processed = 1;
     }
 
-    if ((str[0] == 0x62) || (str[0] == 0x63)) {
+    else if ((str[0] == 0x62) || (str[0] == 0x63)) {
 
         /* version-number of central unit */
         if (str[1] == 0x21) {
