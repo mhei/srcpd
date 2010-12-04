@@ -204,14 +204,14 @@ int init_bus_LI100_SERIAL(bus_t busnumber)
 
     if (status == 0) {
         __li100->working_LI100 = 1;
-        syslog_bus(busnumber, DBG_INFO, "Version LENZ-Interface : %d.%d\n",
+        syslog_bus(busnumber, DBG_INFO, "Version Lenz interface: %d.%d\n",
                    __li100->version_interface / 256,
                    __li100->version_interface % 256);
-        syslog_bus(busnumber, DBG_INFO, "Code LENZ-Interface    : %d%d\n",
+        syslog_bus(busnumber, DBG_INFO, "Code Lenz interface: %d%d\n",
                    __li100->code_interface / 16,
                    __li100->code_interface % 16);
         syslog_bus(busnumber, DBG_INFO,
-                   "Version LENZ-Central unit  : %d.%d\n",
+                   "Version Lenz central unit: %d.%d\n",
                    __li100->version_zentrale / 256,
                    __li100->version_zentrale % 256);
         /* printf("Code LENZ-Central unit     : %d",__li100->code_zentrale); */
@@ -280,8 +280,7 @@ int init_bus_LI100_SERIAL(bus_t busnumber)
                "code: %d\n", status);
 #else
     syslog_bus(busnumber, DBG_DEBUG,
-               "INIT_BUS_LI100 (serial) finished with " "code: %d\n",
-               status);
+               "INIT_BUS_LI100 (serial) finished with code: %d\n", status);
 #endif
     __li100->last_type = -1;
     __li100->last_value = -1;
