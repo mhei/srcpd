@@ -1406,8 +1406,9 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
         message_processed = 1;
     }
 
-    /* version-number of central unit */
     if ((str[0] == 0x62) || (str[0] == 0x63)) {
+
+        /* version-number of central unit */
         if (str[1] == 0x21) {
             __li100->version_zentrale =
                 ((str[2] & 0xf0) << 4) + (str[2] & 0x0f);
@@ -1427,6 +1428,29 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
                     __li100->number_ga = 256;
             }
 #endif
+            message_processed = 1;
+        }
+
+        /*central unit status*/
+        else if (str[1] == 0x22) {
+            int emergencystop = str[2] & 0x01;
+            int emergencyoff = str[2] & 0x02;
+            int startmode = str[2] & 0x04;
+            int programmingmode = str[2] & 0x08;
+            int coldstart = str[2] & 0x20;
+            int ramcheckerror = str[2] & 0x40;
+
+            syslog_bus(busnumber, DBG_INFO,
+                    "Central unit status: "
+                    "emergency stop: %d, "
+                    "emergency off: %d, "
+                    "start mode: %d, "
+                    "programming mode: %d, "
+                    "cold start: %d, "
+                    "RAM check error: %d\n",
+                    emergencystop, emergencyoff, startmode,
+                    programmingmode, coldstart, ramcheckerror);
+
             message_processed = 1;
         }
     }
