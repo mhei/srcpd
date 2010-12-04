@@ -420,28 +420,26 @@ void send_command_ga_LI100_SERIAL(bus_t busnumber)
 {
     int i, i1;
     int temp;
-    int addr;
     unsigned char byte2send[20];
     unsigned char status;
 
-    ga_state_t gatmp;
     struct timeval akt_time, cmp_time;
 
     gettimeofday(&akt_time, NULL);
 
     /* first eventually Decoder switch off */
     for (i = 0; i < 50; i++) {
-        if (__li100->tga[i].id) {
+        if (__li100->tga[i].id > 0) {
             syslog_bus(busnumber, DBG_DEBUG, "time %i,%i",
                        (int) akt_time.tv_sec, (int) akt_time.tv_usec);
             cmp_time = __li100->tga[i].t;
-            /* switch of time reached? */
 
+            /* switch off time reached? */
             if (cmpTime(&cmp_time, &akt_time)) {
-                gatmp = __li100->tga[i];
-                addr = gatmp.id;
-                temp = addr;
-                temp--;
+                ga_state_t delayedga = __li100->tga[i];
+
+                /*align SRCP address (1..2048) to li100 address (0..2047)*/
+                temp = delayedga.id - 1;
                 byte2send[0] = 0x52;
                 byte2send[1] = temp >> 2;
                 byte2send[2] = 0x80;
@@ -449,7 +447,7 @@ void send_command_ga_LI100_SERIAL(bus_t busnumber)
                 temp <<= 1;
                 byte2send[2] |= temp;
 
-                if (gatmp.port) {
+                if (delayedga.port > 0) {
                     byte2send[2] |= 0x01;
                 }
 
@@ -458,8 +456,8 @@ void send_command_ga_LI100_SERIAL(bus_t busnumber)
 #else
                 send_command_LI100_SERIAL(busnumber, byte2send);
 #endif
-                gatmp.action = 0;
-                setGA(busnumber, addr, gatmp);
+                delayedga.action = 0;
+                setGA(busnumber, delayedga.id, delayedga);
                 __li100->tga[i].id = 0;
             }
         }
@@ -467,10 +465,12 @@ void send_command_ga_LI100_SERIAL(bus_t busnumber)
 
     /* Decoder switch on */
     if (!queue_GA_isempty(busnumber)) {
+
+        ga_state_t gatmp;
         dequeueNextGA(busnumber, &gatmp);
-        addr = gatmp.id;
-        temp = addr;
-        temp--;
+
+        /*align SRCP address (1..2048) to li100 address (0..2047)*/
+        temp = gatmp.id - 1;
         byte2send[0] = 0x52;
         byte2send[1] = temp >> 2;
         byte2send[2] = 0x80;
@@ -478,10 +478,10 @@ void send_command_ga_LI100_SERIAL(bus_t busnumber)
         temp <<= 1;
         byte2send[2] |= temp;
 
-        if (gatmp.action) {
+        if (gatmp.action > 0) {
             byte2send[2] |= 0x08;
         }
-        if (gatmp.port) {
+        if (gatmp.port > 0) {
             byte2send[2] |= 0x01;
         }
 
@@ -493,7 +493,8 @@ void send_command_ga_LI100_SERIAL(bus_t busnumber)
 
         status = 1;
 
-        if (gatmp.action && (gatmp.activetime > 0)) {
+        /*add GA to empty place of delayed switch back queue*/
+        if ((gatmp.action > 0) && (gatmp.activetime > 0)) {
             for (i1 = 0; i1 < 50; i1++) {
                 if (__li100->tga[i1].id == 0) {
                     gatmp.t = akt_time;
@@ -519,7 +520,7 @@ void send_command_ga_LI100_SERIAL(bus_t busnumber)
         }
 
         if (status) {
-            setGA(busnumber, addr, gatmp);
+            setGA(busnumber, gatmp.id, gatmp);
         }
     }
 }
@@ -1573,7 +1574,7 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
         message_processed = 1;
     }
 
-    /* information about feedback: AAAA AAAA ITTN ZZZZ*/
+    /* information about feedback, bit pattern: AAAA AAAA ITTN ZZZZ*/
     if ((str[0] & 0xf0) == 0x40) {
         ctr = str[0] & 0xf;
         for (i = 1; i < ctr; i += 2) {
@@ -1584,6 +1585,9 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
                 case 0x20:     /* switch-decoder with feedback */
                     gatmp.id = str[i];
                     gatmp.id <<= 2;
+
+                    /*align li100 address (0..2047) to SRCP address (1..2048)*/
+                    gatmp.id++;
 
                     /*check for upper nibble, mask: 0001 0000 */
                     if (str[i + 1] & 0x10)
@@ -1598,6 +1602,7 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
                         gatmp.action = 1;
                         setGA(busnumber, gatmp.id, gatmp);
                     }
+
                     /*position right, mask: 0010 */
                     if (tmp_addr == 0x02) {
                         gatmp.port = 1;
