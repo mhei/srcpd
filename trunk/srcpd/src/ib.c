@@ -364,7 +364,7 @@ void *thr_sendrec_IB(void *v)
                     continue;
                 }
 
-                if (send_command_power_IB(btd->bus) == 0x06) {
+                if (send_command_power_IB(btd->bus) == XPWOFF) {
                     syslog_bus(btd->bus, DBG_INFO,
                                "power on not possible - overheating");
                     setPower(btd->bus, POWER_OFF,
