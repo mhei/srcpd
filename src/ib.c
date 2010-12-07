@@ -237,7 +237,7 @@ int init_bus_IB(bus_t busnumber)
                status);
 
     __ib->last_type = -1;
-    __ib->emergency_on_ib = 0;
+    __ib->emergency_on_ib = 2;
 
     return status;
 }
@@ -340,6 +340,7 @@ void *thr_sendrec_IB(void *v)
     for (zaehler1 = 0; zaehler1 < 50; zaehler1++)
         __ibt->tga[zaehler1].id = 0;
 
+    /* request current sensor status */
     writeByte(btd->bus, XSensOff, 0);
     status = readByte_IB(btd->bus, 1, &rr);
 
