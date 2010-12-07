@@ -170,7 +170,7 @@ int init_gl_IB(gl_state_t * gl)
 {
     gl->n_fs = 126;
     if (gl->n_func > 17) {
-      return SRCP_WRONGVALUE;
+        return SRCP_WRONGVALUE;
     }
     gl->protocol = 'P';
     return SRCP_OK;
@@ -187,7 +187,7 @@ int init_ga_IB(ga_state_t * ga)
 
 int init_bus_IB(bus_t busnumber)
 {
-    int status;
+  int status;
     static char *protocols = "MNP";
 
     buses[busnumber].protocols = protocols;
@@ -317,7 +317,7 @@ void *thr_sendrec_IB(void *v)
 {
     int status;
     unsigned char rr;
-    int zaehler1, fb_zaehler1, fb_zaehler2;
+    int zaehler1;
     int last_cancel_state, last_cancel_type;
 
     bus_thread_t *btd = (bus_thread_t *) malloc(sizeof(bus_thread_t));
@@ -340,8 +340,6 @@ void *thr_sendrec_IB(void *v)
     for (zaehler1 = 0; zaehler1 < 50; zaehler1++)
         __ibt->tga[zaehler1].id = 0;
 
-    fb_zaehler1 = 0;
-    fb_zaehler2 = 1;
     writeByte(btd->bus, XSensOff, 0);
     status = readByte_IB(btd->bus, 1, &rr);
 
@@ -506,7 +504,7 @@ static void send_command_gl_IB(bus_t busnumber)
     if (!queue_GL_isempty(busnumber)) {
         dequeueNextGL(busnumber, &gltmp);
         addr = gltmp.id;
-        cacheGetGL(busnumber, addr, &glakt);
+	cacheGetGL(busnumber, addr, &glakt);
 
         /* speed, direction or function changed? */
         if ((gltmp.direction != glakt.direction) ||
