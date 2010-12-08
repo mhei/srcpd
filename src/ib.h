@@ -40,6 +40,9 @@ int init_gl_IB(gl_state_t *gl);
 int init_ga_IB(ga_state_t *ga);
 void* thr_sendrec_IB(void *);
 
+/* IB uses 126 speed steps internally. */
+#define SPEED_STEPS 126
+
 /* values for power_state */
 
 #define POWER_OFF 0

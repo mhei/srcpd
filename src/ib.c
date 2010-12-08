@@ -168,7 +168,7 @@ int readConfig_IB(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
  */
 int init_gl_IB(gl_state_t * gl)
 {
-    gl->n_fs = 126;
+    gl->n_fs = SPEED_STEPS;
     if (gl->n_func > 17) {
         return SRCP_WRONGVALUE;
     }
@@ -282,7 +282,7 @@ static void end_bus_thread(bus_thread_t * btd)
 
     enableP50Commands(btd->bus, true);
     syslog_bus(btd->bus, DBG_INFO, "Intellibox bus terminated.");
-    ((IB_DATA *) buses[btd->bus].driverdata)->working_IB = 0;
+    __ibt->working_IB = 0;
     close_comport(btd->bus);
 
     result = pthread_mutex_destroy(&buses[btd->bus].transmit_mutex);
@@ -528,7 +528,7 @@ static void send_command_gl_IB(bus_t busnumber)
                 /* but gltmp.speed can already contain down-scaled speed */
                 /* IB has general range of 0..127, independent of decoder type */
                 byte2send =
-                    (unsigned char) ((gltmp.speed * 126) / glakt.n_fs);
+                    (unsigned char) ((gltmp.speed * SPEED_STEPS) / glakt.n_fs);
 
                 if (byte2send > 0) {
                     byte2send++;
@@ -1706,12 +1706,12 @@ static void check_status_gl_IB(bus_t busnumber)
             syslog_bus(busnumber, DBG_INFO,
                        "IB reported uninitialized GL. "
                        "Performing default init for %d", gltmp.id);
-            cacheInitGL(busnumber, gltmp.id, 'P', 1, 126, 5);
+            cacheInitGL(busnumber, gltmp.id, 'P', 1, SPEED_STEPS, 5);
         }
         /* get old data, to know which FS the user wants to have... */
         cacheGetGL(busnumber, gltmp.id, &glakt);
         /* recalculate speed */
-        gltmp.speed = (gltmp.speed * glakt.n_fs) / 126;
+        gltmp.speed = (gltmp.speed * glakt.n_fs) / SPEED_STEPS;
         cacheSetGL(busnumber, gltmp.id, gltmp);
     }
 }
