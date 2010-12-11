@@ -287,7 +287,6 @@ int cacheTermGL(bus_t busnumber, int addr)
     else {
         return SRCP_NODATA;
     }
-
 }
 
 /*
@@ -314,12 +313,12 @@ int cacheDescribeGL(bus_t busnumber, int addr, char *msg)
                 gl[busnumber].glstate[addr].protocolversion,
                 gl[busnumber].glstate[addr].n_fs,
                 gl[busnumber].glstate[addr].n_func);
+        return SRCP_INFO;
     }
     else {
         strcpy(msg, "");
         return SRCP_NODATA;
     }
-    return SRCP_INFO;
 }
 
 int cacheInfoGL(bus_t busnumber, int addr, char *msg)
@@ -349,11 +348,10 @@ int cacheInfoGL(bus_t busnumber, int addr, char *msg)
         strcpy(msg, tmp);
         free(tmp);
 
+        return SRCP_INFO;
     }
-    else {
+    else
         return SRCP_NODATA;
-    }
-    return SRCP_INFO;
 }
 
 /* has to use a semaphore, must be atomized! */
