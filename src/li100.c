@@ -31,10 +31,10 @@ email                : frank.schmischke@t-online.de
 
 
 #ifdef LI100_USB
-static int readAnswer_LI100_USB(bus_t busnumber, unsigned char *str);
+static int readAnswer_LI100_USB(bus_t busnumber);
 static int initLine_LI100_USB(bus_t busnumber);
 #else
-static int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str);
+static int readAnswer_LI100_SERIAL(bus_t busnumber);
 static int initLine_LI100_SERIAL(bus_t busnumber);
 #endif
 
@@ -733,10 +733,10 @@ void send_command_gl_LI100_SERIAL(bus_t busnumber)
                         send_command_LI100_SERIAL(busnumber, byte2send);
 #endif
 
-                    /* send functions f0..f4 */
+                    /* send functions */
                     byte2send[0] = 0xe4;
 
-                    /* mode */
+                    /* function group 1: f0..f4 */
                     byte2send[1] = 0x20;
 
                     /* high byte of address */
@@ -751,7 +751,7 @@ void send_command_gl_LI100_SERIAL(bus_t busnumber)
                     temp &= 0x00FF;
                     byte2send[3] = temp;
 
-                    /* setting F0-F4 */
+                    /* setting F0-F4, map: 0 0 0 F0 F4 F3 F2 F1 */
                     byte2send[4] = (gltmp.funcs >> 1) & 0x00FF;
                     if (gltmp.funcs & 1) {
                         byte2send[4] |= 0x10;
@@ -762,6 +762,14 @@ void send_command_gl_LI100_SERIAL(bus_t busnumber)
 #else
                     status =
                         send_command_LI100_SERIAL(busnumber, byte2send);
+
+                    /*TODO: add more functions
+                     * 2: 0 0 0 0 F8 F7 F6 F5
+                     * 3: 0 0 0 0 F12 F11 F10 F9
+                     * version >= 3.6
+                     * 4: F20 F19 F18 F17 F16 F15 F14 F13
+                     * 5: F28 F27 F26 F25 F24 F23 F22 F21
+                     */
                 }
 #endif
             }
@@ -1276,7 +1284,6 @@ void check_status_LI100_SERIAL(bus_t busnumber)
 {
     int i;
     int status;
-    unsigned char str[20];
 
     /* with debug level beyond DBG_DEBUG, we will not really work on hardware */
     if (buses[busnumber].debuglevel <= DBG_DEBUG) {
@@ -1299,22 +1306,23 @@ void check_status_LI100_SERIAL(bus_t busnumber)
             /* read only, if there is really an input */
             if (i > 0)
 #ifdef LI100_USB
-                status = readAnswer_LI100_USB(busnumber, str);
+                status = readAnswer_LI100_USB(busnumber);
 #else
-                status = readAnswer_LI100_SERIAL(busnumber, str);
+                status = readAnswer_LI100_SERIAL(busnumber);
 #endif
         }
     }
 }
 
 #ifdef LI100_USB
-int send_command_LI100_USB(bus_t busnumber, unsigned char *str)
+int send_command_LI100_USB(bus_t busnumber, const unsigned char *str)
 #else
-int send_command_LI100_SERIAL(bus_t busnumber, unsigned char *str)
+int send_command_LI100_SERIAL(bus_t busnumber, const unsigned char *str)
 #endif
 {
-    int ctr, i;
+    int i, ctr;
     int status;
+    unsigned char xor = 0x00; /* control-byte for xor */
 
 #ifdef LI100_USB
     /* header for LI100_USB */
@@ -1322,30 +1330,29 @@ int send_command_LI100_SERIAL(bus_t busnumber, unsigned char *str)
     writeByte(busnumber, 0xfe, 0);
 #endif
 
-    str[19] = 0x00;             /* control-byte for xor */
     ctr = str[0] & 0x0f;        /* generate length of command */
     ctr++;
 
     for (i = 0; i < ctr; i++) { /* send command */
-        str[19] ^= str[i];
+        xor ^= str[i];
         writeByte(busnumber, str[i], 0);
     }
 
-    writeByte(busnumber, str[19], 0);   /* send X-Or-Byte */
+    writeByte(busnumber, xor, 0);   /* send X-Or-Byte */
 
 #ifdef LI100_USB
-    status = readAnswer_LI100_USB(busnumber, str);
+    status = readAnswer_LI100_USB(busnumber);
 #else
-    status = readAnswer_LI100_SERIAL(busnumber, str);
+    status = readAnswer_LI100_SERIAL(busnumber);
 #endif
 
     return status;
 }
 
 #ifdef LI100_USB
-int readAnswer_LI100_USB(bus_t busnumber, unsigned char *str)
+int readAnswer_LI100_USB(bus_t busnumber)
 #else
-int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
+int readAnswer_LI100_SERIAL(bus_t busnumber)
 #endif
 {
     int status;
@@ -1353,6 +1360,7 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
     int tmp_addr;
     int message_processed;
     unsigned char cXor;
+    unsigned char buffer[20];
 
     gl_state_t gltmp, glakt;
 
@@ -1375,26 +1383,26 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
                        "usleep() failed: %s (errno = %d)\n",
                        strerror(errno), errno);
         }
-        status = readByte(busnumber, 1, &str[0]);
+        status = readByte(busnumber, 1, &buffer[0]);
     }
 
 #ifdef LI100_USB
     /* skip LI100_USB-header */
-    readByte(busnumber, 1, &str[0]);
-    readByte(busnumber, 1, &str[0]);
+    readByte(busnumber, 1, &buffer[0]);
+    readByte(busnumber, 1, &buffer[0]);
 #endif
 
-    ctr = str[0] & 0x0f;        /* generate length of answer */
+    ctr = buffer[0] & 0x0f;        /* generate length of answer */
     ctr += 2;
 
     /* read answer */
     for (i = 1; i < ctr; i++) {
-        readByte(busnumber, 1, &str[i]);
+        readByte(busnumber, 1, &buffer[i]);
     }
 
     cXor = 0;
     for (i = 0; i < ctr; i++) {
-        cXor ^= str[i];
+        cXor ^= buffer[i];
     }
 
     if (cXor != 0x00)           /* must be 0x00 */
@@ -1402,9 +1410,9 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
 
 
     /* li100 reply message */
-    if (str[0] == 0x01) {
+    if (buffer[0] == 0x01) {
 
-        switch (str[1]) {
+        switch (buffer[1]) {
             case 0x01:
                 syslog_bus(busnumber, DBG_ERROR,
                         "Interface/PC communication error\n");
@@ -1436,25 +1444,25 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
 
             default:
                 syslog_bus(busnumber, DBG_ERROR,
-                        "Unknown command key received: 0x%02x\n", str[1]);
+                        "Unknown command key received: 0x%02x\n", buffer[1]);
                 break;
         }
         message_processed = 1;
     }
 
     /* version-number of interface */
-    else if (str[0] == 0x02) {
+    else if (buffer[0] == 0x02) {
         __li100->version_interface =
-            ((str[1] & 0xf0) << 4) + (str[1] & 0x0f);
-        __li100->code_interface = (int) str[2];
+            ((buffer[1] & 0xf0) << 4) + (buffer[1] & 0x0f);
+        __li100->code_interface = (int) buffer[2];
         message_processed = 1;
     }
 
     /* power on/off, service mode changes */
-    else if (str[0] == 0x61) {
+    else if (buffer[0] == 0x61) {
 
         /* power off */
-        if (str[1] == 0x00) {
+        if (buffer[1] == 0x00) {
             syslog_bus(busnumber, DBG_DEBUG,
                        "on bus %i no power detected; old-state is %i",
                        busnumber, getPower(busnumber));
@@ -1467,7 +1475,7 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
         }
 
         /* power on */
-        else if (str[1] == 0x01) {
+        else if (buffer[1] == 0x01) {
             syslog_bus(busnumber, DBG_DEBUG,
                        "on bus %i power detected; old-state is %i",
                        busnumber, getPower(busnumber));
@@ -1485,7 +1493,7 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
         }
 
         /* service mode on */
-        else if (str[1] == 0x02) {
+        else if (buffer[1] == 0x02) {
             if (__li100->pgm_mode == 0) {
                 __li100->pgm_mode = 1;
                 syslog_bus(busnumber, DBG_DEBUG,
@@ -1497,14 +1505,14 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
         }
 
         /*short circuit*/
-        else if (str[1] == 0x12) {
+        else if (buffer[1] == 0x12) {
             syslog_bus(busnumber, DBG_WARN,
                     "Short circuit detected on bus %i", busnumber);
             message_processed = 1;
         }
 
         /*data byte not found*/
-        else if (str[1] == 0x13) {
+        else if (buffer[1] == 0x13) {
             if (__li100->last_type != -1) {
                 session_endwait(busnumber, -1);
                 setSM(busnumber, __li100->last_type, -1,
@@ -1516,35 +1524,35 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
         }
 
         /*Command station ready*/
-        else if (str[1] == 0x11) {
+        else if (buffer[1] == 0x11) {
             syslog_bus(busnumber, DBG_WARN,
                     "Command station ready on bus %i", busnumber);
             message_processed = 1;
         }
 
         /*Command station busy*/
-        else if (str[1] == 0x1f) {
+        else if (buffer[1] == 0x1f) {
             syslog_bus(busnumber, DBG_WARN,
                     "Command station busy on bus %i", busnumber);
             message_processed = 1;
         }
 
         /*Transfer error*/
-        else if (str[1] == 0x80) {
+        else if (buffer[1] == 0x80) {
             syslog_bus(busnumber, DBG_WARN,
                     "Transfer error on bus %i", busnumber);
             message_processed = 1;
         }
 
         /*Command station busy*/
-        else if (str[1] == 0x81) {
+        else if (buffer[1] == 0x81) {
             syslog_bus(busnumber, DBG_WARN,
                     "Command station busy on bus %i", busnumber);
             message_processed = 1;
         }
 
         /*Instruction not supported*/
-        else if (str[1] == 0x82) {
+        else if (buffer[1] == 0x82) {
             syslog_bus(busnumber, DBG_WARN,
                     "Instruction not supported on bus %i", busnumber);
             message_processed = 1;
@@ -1554,15 +1562,15 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
 
     /*FIXME: 0x62 and 0x63 are mixed, messing up the "if/else" sequence*/
     /* 0x62: X-Bus 1 + 2, 0x63: XpressNet */
-    else if ((str[0] == 0x62) || (str[0] == 0x63)) {
+    else if ((buffer[0] == 0x62) || (buffer[0] == 0x63)) {
 
         /* version-number of central unit */
-        if (str[1] == 0x21) {
+        if (buffer[1] == 0x21) {
             __li100->version_zentrale =
-                ((str[2] & 0xf0) << 4) + (str[2] & 0x0f);
+                ((buffer[2] & 0xf0) << 4) + (buffer[2] & 0x0f);
 
-            if (str[0] == 0x63)
-                __li100->code_interface = (int) str[3];
+            if (buffer[0] == 0x63)
+                __li100->code_interface = (int) buffer[3];
             else
                 __li100->code_interface = -1;
 
@@ -1580,13 +1588,13 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
         }
 
         /*central unit status*/
-        else if (str[1] == 0x22) {
-            int emergencystop = str[2] & 0x01;
-            int emergencyoff = str[2] & 0x02;
-            int startmode = str[2] & 0x04;
-            int programmingmode = str[2] & 0x08;
-            int coldstart = str[2] & 0x20;
-            int ramcheckerror = str[2] & 0x40;
+        else if (buffer[1] == 0x22) {
+            int emergencystop = buffer[2] & 0x01;
+            int emergencyoff = buffer[2] & 0x02;
+            int startmode = buffer[2] & 0x04;
+            int programmingmode = buffer[2] & 0x08;
+            int coldstart = buffer[2] & 0x20;
+            int ramcheckerror = buffer[2] & 0x40;
 
             syslog_bus(busnumber, DBG_INFO,
                     "Central unit status: "
@@ -1604,11 +1612,11 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
     }
 
     /* answer of programming */
-    if ((str[0] == 0x63) && ((str[1] & 0xf0) == 0x10)) {
+    if ((buffer[0] == 0x63) && ((buffer[1] & 0xf0) == 0x10)) {
         if (__li100->last_type != -1) {
-            session_endwait(busnumber, (int) str[3]);
+            session_endwait(busnumber, (int) buffer[3]);
             setSM(busnumber, __li100->last_type, -1,
-                  __li100->last_typeaddr, __li100->last_bit, (int) str[3],
+                  __li100->last_typeaddr, __li100->last_bit, (int) buffer[3],
                   0);
             __li100->last_type = -1;
         }
@@ -1621,15 +1629,15 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
     /*0xa3: Locomotive is being operated by another device*/
     /*0xa4: Locomotive is being operated by another device
             not handled yet*/
-    else if ((str[0] == 0x83) || (str[0] == 0xa3)) {
-        if (str[0] & 0x20)
-            add_extern_engine(busnumber, str[1]);
+    else if ((buffer[0] == 0x83) || (buffer[0] == 0xa3)) {
+        if (buffer[0] & 0x20)
+            add_extern_engine(busnumber, buffer[1]);
         else
-            remove_extern_engine(busnumber, str[1]);
+            remove_extern_engine(busnumber, buffer[1]);
 
-        gltmp.id = str[1];
-        gltmp.direction = (str[2] & 0x40) ? 1 : 0;
-        gltmp.speed = str[2] & 0x0f;
+        gltmp.id = buffer[1];
+        gltmp.direction = (buffer[2] & 0x40) ? 1 : 0;
+        gltmp.speed = buffer[2] & 0x0f;
         if (gltmp.speed == 1) {
             gltmp.speed = 0;
             gltmp.direction = 2;
@@ -1638,8 +1646,8 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
             if (gltmp.speed > 0)
                 gltmp.speed--;
         }
-        gltmp.funcs = ((str[3] & 0x0f) << 1);
-        if (str[2] & 0x20)
+        gltmp.funcs = ((buffer[3] & 0x0f) << 1);
+        if (buffer[2] & 0x20)
             gltmp.funcs |= 0x01;        /* light is on */
 
         /* get old data, to send only if something changed */
@@ -1653,7 +1661,7 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
     }
 
     /* Double Header information response (X-Bus V1) */
-    else if (str[0] == 0xc5) {
+    else if (buffer[0] == 0xc5) {
         syslog_bus(busnumber, DBG_WARN,
                 "Double Header information response on bus %i "
                 " (not supported)", busnumber);
@@ -1661,12 +1669,12 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
     }
 
     /* XpressNet MU+DH error message response */
-    else if (str[0] == 0xe1) {
+    else if (buffer[0] == 0xe1) {
         syslog_bus(busnumber, DBG_WARN,
                 "XpressNet MU+DH error message response on bus %i "
                 " (not supported)", busnumber);
 
-        switch (str[1]) {
+        switch (buffer[1]) {
 
             case 0x81:
                 syslog_bus(busnumber, DBG_WARN,
@@ -1718,7 +1726,7 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
 
             default:
                 syslog_bus(busnumber, DBG_WARN,
-                "Unknown error code 0x%02x on bus %i", str[1], busnumber);
+                "Unknown error code 0x%02x on bus %i", buffer[1], busnumber);
                 break;
         }
 
@@ -1726,7 +1734,7 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
     }
 
     /* Locomotive information for the Multi-unit address */
-    else if (str[0] == 0xe2) {
+    else if (buffer[0] == 0xe2) {
         syslog_bus(busnumber, DBG_WARN,
                 "Multi-unit locomotive address response on bus %i "
                 " (not supported)", busnumber);
@@ -1734,40 +1742,40 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
     }
 
     /*Locomotive status response*/
-    else if (str[0] == 0xe3) {
+    else if (buffer[0] == 0xe3) {
 
         /* Locomotive information response for address retrieval requests
          * (XpressNet only)*/
-        if ((str[1] & 0x30) == 0x30) {
-            __li100->get_addr = 256 * (int) str[2];
-            __li100->get_addr += (int) str[3];
+        if ((buffer[1] & 0x30) == 0x30) {
+            __li100->get_addr = 256 * (int) buffer[2];
+            __li100->get_addr += (int) buffer[3];
             message_processed = 1;
         }
 
         /* Locomotive is being operated by another device response
          * (XpressNet only)*/
-        else if (str[1] == 0x40) {
-            tmp_addr = str[3];
-            tmp_addr |= str[2] << 8;
+        else if (buffer[1] == 0x40) {
+            tmp_addr = buffer[3];
+            tmp_addr |= buffer[2] << 8;
             add_extern_engine(busnumber, tmp_addr);
             message_processed = 1;
         }
         /*TODO: function status report
-          else if (str[1] == 0x50)*/
+          else if (buffer[1] == 0x50)*/
     }
 
     /* Locomotive information normal locomotive (single traction) */
-    else if (str[0] == 0xe4) {
+    else if (buffer[0] == 0xe4) {
         gltmp.id = __li100->last_value & 0x3fff;
         /* is engine always allocated by an external device? */
-        if (!(str[1] & 0x08)) {
+        if (!(buffer[1] & 0x08)) {
             remove_extern_engine(busnumber, __li100->last_value);
         }
-        gltmp.direction = (str[2] & 0x80) ? 1 : 0;
-        switch (str[1] & 7) {
+        gltmp.direction = (buffer[2] & 0x80) ? 1 : 0;
+        switch (buffer[1] & 7) {
             case 0:
             case 4:
-                gltmp.speed = str[2] & 0x7f;
+                gltmp.speed = buffer[2] & 0x7f;
                 if (gltmp.speed == 1) {
                     gltmp.speed = 0;
                     /* gltmp.direction = 2; */
@@ -1779,7 +1787,7 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
                 break;
             case 1:
             case 2:
-                gltmp.speed = str[2] & 0x7f;
+                gltmp.speed = buffer[2] & 0x7f;
                 gltmp.speed <<= 1;
                 if (gltmp.speed & 0x20)
                     gltmp.speed |= 0x01;
@@ -1794,7 +1802,7 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
                 }
                 break;
         }
-        if (str[3] & 0x10)
+        if (buffer[3] & 0x10)
             gltmp.funcs |= 0x01;        /* light is on */
 
         /* get old data, to send only if something changed */
@@ -1807,7 +1815,7 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
     }
 
     /* Locomotive information for a locomotive in a multi-unit */
-    else if (str[0] == 0xe5) {
+    else if (buffer[0] == 0xe5) {
         syslog_bus(busnumber, DBG_WARN,
                 "Multi-unit locomotive response on bus %i "
                 " (not supported)", busnumber);
@@ -1815,7 +1823,7 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
     }
 
     /*Locomotive information for a locomotive in a Double Header*/
-    else if (str[0] == 0xe6) {
+    else if (buffer[0] == 0xe6) {
         syslog_bus(busnumber, DBG_WARN,
                 "Double header locomotive response on bus %i "
                 " (not supported)", busnumber);
@@ -1824,29 +1832,29 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
 
     /* information about feedback, bit pattern: AAAA AAAA ITTN ZZZZ*/
     /*0x42: Accessory Decoder information response*/
-    if ((str[0] & 0xf0) == 0x40) {
+    if ((buffer[0] & 0xf0) == 0x40) {
 
         ga_state_t gatmp;
-        ctr = str[0] & 0xf;
+        ctr = buffer[0] & 0xf;
         
         for (i = 1; i < ctr; i += 2) {
 
             /*check for address type TT, mask: 0110 0000 */
-            switch (str[i + 1] & 0x60) {
+            switch (buffer[i + 1] & 0x60) {
                 case 0x00:     /* switch-decoder without feedback */
                 case 0x20:     /* switch-decoder with feedback */
-                    gatmp.id = str[i];
+                    gatmp.id = buffer[i];
                     gatmp.id <<= 2;
 
                     /*align li100 address (0..2047) to SRCP address (1..2048)*/
                     gatmp.id++;
 
                     /*check for upper nibble, mask: 0001 0000 */
-                    if (str[i + 1] & 0x10)
+                    if (buffer[i + 1] & 0x10)
                         gatmp.id += 2;
 
                     /*first address, mask 0011 */
-                    tmp_addr = str[i + 1] & 0x03;
+                    tmp_addr = buffer[i + 1] & 0x03;
 
                     /*position left, mask: 0001 */
                     if (tmp_addr == 0x01) {
@@ -1863,7 +1871,7 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
                     }
 
                     /*second address, mask 1100 */
-                    tmp_addr = str[i + 1] & 0x0C;
+                    tmp_addr = buffer[i + 1] & 0x0C;
                     gatmp.id++;
 
                     /*position left, mask: 0100 */
@@ -1883,30 +1891,30 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
 
                 case 0x40:     /* feedback-decoder */
                     setFBmodul(busnumber,
-                               (str[i] * 2) +
-                               ((str[i + 1] & 0x10) ? 2 : 1),
-                               str[i + 1] & 0x0f);
+                               (buffer[i] * 2) +
+                               ((buffer[i + 1] & 0x10) ? 2 : 1),
+                               buffer[i + 1] & 0x0f);
                     break;
             }
         }
         message_processed = 1;
     }
 
-    else if (str[0] == 0xf2) {
+    else if (buffer[0] == 0xf2) {
 
         /* XpresssNet address answer*/
-        if (str[1] == 0x01) {
+        if (buffer[1] == 0x01) {
             syslog_bus(busnumber, DBG_WARN,
                     "XpressNet address changes not handled yet: "
-                    "currrent = 0x%02x", str[2]);
+                    "currrent = 0x%02x", buffer[2]);
             message_processed = 1;
         }
 
         /* baud rate settings answer*/
-        else if (str[1] == 0x02) {
+        else if (buffer[1] == 0x02) {
             syslog_bus(busnumber, DBG_WARN,
                     "Baud rate setting changes not handled yet: "
-                    "currrent = 0x%02x", str[2]);
+                    "currrent = 0x%02x", buffer[2]);
             message_processed = 1;
         }
     }
@@ -1914,8 +1922,8 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
     /* at last catch all unknown command keys and show a warning message */
     if (message_processed == 0) {
         syslog_bus(busnumber, DBG_WARN,
-                   "Unknown command key received: 0x%02x 0x%02x", str[0],
-                   str[1]);
+                   "Unknown command key received: 0x%02x 0x%02x", buffer[0],
+                   buffer[1]);
     }
 
     return status;

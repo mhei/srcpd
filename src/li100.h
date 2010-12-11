@@ -48,7 +48,7 @@ void send_command_ga_LI100_USB( bus_t busnumber );
 void send_command_gl_LI100_USB( bus_t busnumber );
 void send_command_sm_LI100_USB( bus_t busnumber );
 void check_status_LI100_USB( bus_t busnumber );
-int send_command_LI100_USB( bus_t busnumber, unsigned char *str );
+int send_command_LI100_USB(bus_t busnumber, const unsigned char*);
 void get_status_sm_LI100_USB( bus_t busnumber );
 
 int readConfig_LI100_SERIAL(xmlDocPtr doc, xmlNodePtr node,  bus_t busnumber);
@@ -57,7 +57,7 @@ void send_command_ga_LI100_SERIAL( bus_t busnumber );
 void send_command_gl_LI100_SERIAL( bus_t busnumber );
 void send_command_sm_LI100_SERIAL( bus_t busnumber );
 void check_status_LI100_SERIAL( bus_t busnumber );
-int send_command_LI100_SERIAL( bus_t busnumber, unsigned char *str );
+int send_command_LI100_SERIAL(bus_t busnumber, const unsigned char*);
 void get_status_sm_LI100_SERIAL( bus_t busnumber );
 
 int init_gl_LI100( gl_state_t *gl );

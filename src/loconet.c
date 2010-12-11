@@ -344,7 +344,7 @@ static int init_gl_LOCONET(gl_state_t * gl)
 }
 
 /**
- * GA dont need an initialization
+ * GA don't need initialization
  */
 static int init_ga_LOCONET(ga_state_t * ga)
 {
