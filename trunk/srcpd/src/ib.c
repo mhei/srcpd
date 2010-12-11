@@ -1571,7 +1571,8 @@ static int readByte_IB(bus_t busnumber, int wait, unsigned char *the_byte)
 static bool readList_IB(bus_t busnumber, unsigned char *bytes, size_t n)
 {
     bool result = false;
-    int i, j = 0, status;
+    size_t j = 0;
+    int i = 0, status;
     unsigned char length;
 
     if (bytes != NULL) {
