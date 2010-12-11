@@ -144,6 +144,7 @@ int setGA(bus_t busnumber, int addr, ga_state_t a)
         char msg[1000];
         if (!isInitializedGA(busnumber, addr))
             initGA(busnumber, addr, 'P');
+        ga[busnumber].gastate[addr].id = a.id;
         ga[busnumber].gastate[addr].action = a.action;
         ga[busnumber].gastate[addr].port = a.port;
         gettimeofday(&ga[busnumber].gastate[addr].
