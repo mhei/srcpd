@@ -762,17 +762,69 @@ void send_command_gl_LI100_SERIAL(bus_t busnumber)
 #else
                     status =
                         send_command_LI100_SERIAL(busnumber, byte2send);
-
-                    /*TODO: add more functions
-                     * 2: 0 0 0 0 F8 F7 F6 F5
-                     * 3: 0 0 0 0 F12 F11 F10 F9
-                     * version >= 3.6
-                     * 4: F20 F19 F18 F17 F16 F15 F14 F13
-                     * 5: F28 F27 F26 F25 F24 F23 F22 F21
-                     */
-                }
 #endif
-            }
+
+                    /*function group 2: f5..f8 */
+                    if (gltmp.n_func > 5) {
+                        byte2send[1] = 0x21;
+                        /* setting F5-F8, map: 0 0 0 0 F8 F7 F6 F5 */
+                        byte2send[4] = (gltmp.funcs >> 5) & 0x00FF;
+#ifdef LI100_USB
+                        status = send_command_LI100_USB(busnumber, byte2send);
+#else
+                        status =
+                            send_command_LI100_SERIAL(busnumber, byte2send);
+#endif
+                    }
+
+                    /* function group 3: f9..f12 */
+                    if (gltmp.n_func > 9) {
+                        byte2send[1] = 0x22;
+                        /* setting F9-F12, map: 0 0 0 0 F12 F11 F10 F9 */
+                        byte2send[4] = (gltmp.funcs >> 9) & 0x00FF;
+#ifdef LI100_USB
+                        status = send_command_LI100_USB(busnumber, byte2send);
+#else
+                        status =
+                            send_command_LI100_SERIAL(busnumber, byte2send);
+#endif
+                    }
+
+                    /*support for functions > F12 since version 3.6*/
+                    if (__li100->version_zentrale >= 0x0360) {
+
+                        /* function group 4: f13..f20 */
+                        /* map: F20 F19 F18 F17 F16 F15 F14 F13*/
+                        if (gltmp.n_func > 13) {
+                            byte2send[1] = 0x23;
+                            byte2send[4] = (gltmp.funcs >> 13) & 0xffff;
+#ifdef LI100_USB
+                            status =
+                                send_command_LI100_USB(busnumber, byte2send);
+#else
+                            status =
+                                send_command_LI100_SERIAL(busnumber, byte2send);
+#endif
+                        }
+
+                        /* function group 5: f21..f28 */
+                        /* map: F28 F27 F26 F25 F24 F23 F22 F21*/
+                        if (gltmp.n_func > 21) {
+                            byte2send[1] = 0x28;
+                            byte2send[4] = (gltmp.funcs >> 21) & 0xffff;
+#ifdef LI100_USB
+                            status =
+                                send_command_LI100_USB(busnumber, byte2send);
+#else
+                            status =
+                                send_command_LI100_SERIAL(busnumber, byte2send);
+#endif
+                        }
+                    }
+#ifndef LI100_USB
+                } /* version > 3.00 */
+#endif
+            } /* gltmp.direction != 2*/
 
             if (status == 0) {
                 cacheSetGL(busnumber, addr, gltmp);
