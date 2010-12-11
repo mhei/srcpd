@@ -418,7 +418,7 @@ void send_command_ga_LI100_SERIAL(bus_t busnumber)
 #endif
 {
     int i, i1;
-    int temp;
+    unsigned int temp;
     unsigned char byte2send[20];
     unsigned char status;
 
@@ -576,6 +576,7 @@ void send_command_gl_LI100_SERIAL(bus_t busnumber)
             }
             else {
 #ifndef LI100_USB
+                /* version <= 1.50 */
                 if (__li100->version_zentrale <= 0x0150) {
                     byte2send[0] = 0xb3;
                     /* address */
@@ -598,8 +599,8 @@ void send_command_gl_LI100_SERIAL(bus_t busnumber)
                         send_command_LI100_SERIAL(busnumber, byte2send);
                 }
 
-                if ((__li100->version_zentrale > 0x0150) &&
-                    (__li100->version_zentrale < 0x0300)) {
+                /* version > 1.50 + < 3.00 */
+                else if (__li100->version_zentrale < 0x0300) {
                     byte2send[0] = 0xb4;
                     /* address */
                     byte2send[1] = gltmp.id;
@@ -671,7 +672,9 @@ void send_command_gl_LI100_SERIAL(bus_t busnumber)
                         send_command_LI100_SERIAL(busnumber, byte2send);
                 }
 
-                if (__li100->version_zentrale >= 0x0300) {
+                /* version > 3.00 */
+                /*else if (__li100->version_zentrale >= 0x0300) {*/
+                else {
 #endif
                     byte2send[0] = 0xe4;
                     /* mode */
@@ -1353,7 +1356,6 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
 
     gl_state_t gltmp, glakt;
 
-    ga_state_t gatmp /*, gaakt */ ;
     gltmp.speed = 0;
     gltmp.funcs = 0;
 
@@ -1448,6 +1450,110 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
         message_processed = 1;
     }
 
+    /* power on/off, service mode changes */
+    else if (str[0] == 0x61) {
+
+        /* power off */
+        if (str[1] == 0x00) {
+            syslog_bus(busnumber, DBG_DEBUG,
+                       "on bus %i no power detected; old-state is %i",
+                       busnumber, getPower(busnumber));
+            if ((__li100->emergency_on_LI100 == 0)
+                && (getPower(busnumber))) {
+                setPower(busnumber, 0, "Emergency Stop");
+                __li100->emergency_on_LI100 = 1;
+            }
+            message_processed = 1;
+        }
+
+        /* power on */
+        else if (str[1] == 0x01) {
+            syslog_bus(busnumber, DBG_DEBUG,
+                       "on bus %i power detected; old-state is %i",
+                       busnumber, getPower(busnumber));
+            if ((__li100->emergency_on_LI100 == 1)
+                || (!getPower(busnumber))) {
+                setPower(busnumber, 1, "No Emergency Stop");
+                __li100->emergency_on_LI100 = 0;
+            }
+            else if (__li100->pgm_mode == 1) {
+                session_endwait(busnumber, -1);
+                setPower(busnumber, 1, "Service mode end");
+                __li100->pgm_mode = 0;
+            }
+            message_processed = 1;
+        }
+
+        /* service mode on */
+        else if (str[1] == 0x02) {
+            if (__li100->pgm_mode == 0) {
+                __li100->pgm_mode = 1;
+                syslog_bus(busnumber, DBG_DEBUG,
+                           "Service mode activated on bus %i",
+                           busnumber);
+                setPower(busnumber, -1, "Service mode start");
+            }
+            message_processed = 1;
+        }
+
+        /*short circuit*/
+        else if (str[1] == 0x12) {
+            syslog_bus(busnumber, DBG_WARN,
+                    "Short circuit detected on bus %i", busnumber);
+            message_processed = 1;
+        }
+
+        /*data byte not found*/
+        else if (str[1] == 0x13) {
+            if (__li100->last_type != -1) {
+                session_endwait(busnumber, -1);
+                setSM(busnumber, __li100->last_type, -1,
+                        __li100->last_typeaddr, __li100->last_bit,
+                        __li100->last_value, -1);
+                __li100->last_type = -1;
+            }
+            message_processed = 1;
+        }
+
+        /*Command station ready*/
+        else if (str[1] == 0x11) {
+            syslog_bus(busnumber, DBG_WARN,
+                    "Command station ready on bus %i", busnumber);
+            message_processed = 1;
+        }
+
+        /*Command station busy*/
+        else if (str[1] == 0x1f) {
+            syslog_bus(busnumber, DBG_WARN,
+                    "Command station busy on bus %i", busnumber);
+            message_processed = 1;
+        }
+
+        /*Transfer error*/
+        else if (str[1] == 0x80) {
+            syslog_bus(busnumber, DBG_WARN,
+                    "Transfer error on bus %i", busnumber);
+            message_processed = 1;
+        }
+
+        /*Command station busy*/
+        else if (str[1] == 0x81) {
+            syslog_bus(busnumber, DBG_WARN,
+                    "Command station busy on bus %i", busnumber);
+            message_processed = 1;
+        }
+
+        /*Instruction not supported*/
+        else if (str[1] == 0x82) {
+            syslog_bus(busnumber, DBG_WARN,
+                    "Instruction not supported on bus %i", busnumber);
+            message_processed = 1;
+        }
+
+    }
+
+    /*FIXME: 0x62 and 0x63 are mixed, messing up the "if/else" sequence*/
+    /* 0x62: X-Bus 1 + 2, 0x63: XpressNet */
     else if ((str[0] == 0x62) || (str[0] == 0x63)) {
 
         /* version-number of central unit */
@@ -1497,54 +1603,25 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
         }
     }
 
-    /* power on/off */
-    if (str[0] == 0x61) {
-        /* power on */
-        if (str[1] == 0x01) {
-            syslog_bus(busnumber, DBG_DEBUG,
-                       "on bus %i power detected; old-state is %i",
-                       busnumber, getPower(busnumber));
-            if ((__li100->emergency_on_LI100 == 1)
-                || (!getPower(busnumber))) {
-                setPower(busnumber, 1, "No Emergency Stop");
-                __li100->emergency_on_LI100 = 0;
-            }
-            else if (__li100->pgm_mode == 1) {
-                session_endwait(busnumber, -1);
-                setPower(busnumber, 1, "Program mode end");
-                __li100->pgm_mode = 0;
-            }
-            message_processed = 1;
+    /* answer of programming */
+    if ((str[0] == 0x63) && ((str[1] & 0xf0) == 0x10)) {
+        if (__li100->last_type != -1) {
+            session_endwait(busnumber, (int) str[3]);
+            setSM(busnumber, __li100->last_type, -1,
+                  __li100->last_typeaddr, __li100->last_bit, (int) str[3],
+                  0);
+            __li100->last_type = -1;
         }
-
-        /* power off */
-        if (str[1] == 0x00) {
-            syslog_bus(busnumber, DBG_DEBUG,
-                       "on bus %i no power detected; old-state is %i",
-                       busnumber, getPower(busnumber));
-            if ((__li100->emergency_on_LI100 == 0)
-                && (getPower(busnumber))) {
-                setPower(busnumber, 0, "Emergency Stop");
-                __li100->emergency_on_LI100 = 1;
-            }
-            message_processed = 1;
-        }
-
-        /* program mode on */
-        if (str[1] == 0x02) {
-            if (__li100->pgm_mode == 0) {
-                __li100->pgm_mode = 1;
-                syslog_bus(busnumber, DBG_DEBUG,
-                           "on bus %i program mode was activated",
-                           busnumber);
-                setPower(busnumber, -1, "Program mode start");
-            }
-            message_processed = 1;
-        }
+        message_processed = 1;
     }
 
-
-    if ((str[0] == 0x83) || (str[0] == 0xa3)) {
+    /*0x83: Locomotive information response */
+    /*0x84: Locomotive information response (available for operation)
+            not handled yet*/
+    /*0xa3: Locomotive is being operated by another device*/
+    /*0xa4: Locomotive is being operated by another device
+            not handled yet*/
+    else if ((str[0] == 0x83) || (str[0] == 0xa3)) {
         if (str[0] & 0x20)
             add_extern_engine(busnumber, str[1]);
         else
@@ -1575,23 +1652,112 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
         message_processed = 1;
     }
 
-    if (str[0] == 0xe3) {
+    /* Double Header information response (X-Bus V1) */
+    else if (str[0] == 0xc5) {
+        syslog_bus(busnumber, DBG_WARN,
+                "Double Header information response on bus %i "
+                " (not supported)", busnumber);
+        message_processed = 1;
+    }
+
+    /* XpressNet MU+DH error message response */
+    else if (str[0] == 0xe1) {
+        syslog_bus(busnumber, DBG_WARN,
+                "XpressNet MU+DH error message response on bus %i "
+                " (not supported)", busnumber);
+
+        switch (str[1]) {
+
+            case 0x81:
+                syslog_bus(busnumber, DBG_WARN,
+                "Locomotive has not been operated on bus %i", busnumber);
+                break;
+
+            case 0x82:
+                syslog_bus(busnumber, DBG_WARN,
+                        "Locomotive operated by another XpressNet "
+                        "device on bus %i", busnumber);
+                break;
+
+            case 0x83:
+                syslog_bus(busnumber, DBG_WARN,
+                        "One of the locomotives already is in another "
+                        "Multi-Unit or Double Header on bus %i", busnumber);
+                break;
+
+            case 0x84:
+                syslog_bus(busnumber, DBG_WARN,
+                        "The speed of one of the locomotives of the "
+                        "Double Header/Multi-Unit is not zero on bus %i",
+                        busnumber);
+                break;
+
+            case 0x85:
+                syslog_bus(busnumber, DBG_WARN,
+                        "The locomotive is not in a multi-unit on bus %i",
+                        busnumber);
+                break;
+
+            case 0x86:
+                syslog_bus(busnumber, DBG_WARN,
+                        "The locomotive address is not a multi-unit "
+                        "base address on bus %i", busnumber);
+                break;
+
+            case 0x87:
+                syslog_bus(busnumber, DBG_WARN,
+                        "It is not possible to delete the locomotive "
+                        "on bus %i", busnumber);
+                break;
+
+            case 0x88:
+                syslog_bus(busnumber, DBG_WARN,
+                        "The command station stack is full on bus %i",
+                        busnumber);
+                break;
+
+            default:
+                syslog_bus(busnumber, DBG_WARN,
+                "Unknown error code 0x%02x on bus %i", str[1], busnumber);
+                break;
+        }
+
+        message_processed = 1;
+    }
+
+    /* Locomotive information for the Multi-unit address */
+    else if (str[0] == 0xe2) {
+        syslog_bus(busnumber, DBG_WARN,
+                "Multi-unit locomotive address response on bus %i "
+                " (not supported)", busnumber);
+        message_processed = 1;
+    }
+
+    /*Locomotive status response*/
+    else if (str[0] == 0xe3) {
+
+        /* Locomotive information response for address retrieval requests
+         * (XpressNet only)*/
         if ((str[1] & 0x30) == 0x30) {
             __li100->get_addr = 256 * (int) str[2];
             __li100->get_addr += (int) str[3];
             message_processed = 1;
         }
 
-        if (str[1] == 0x40) {
+        /* Locomotive is being operated by another device response
+         * (XpressNet only)*/
+        else if (str[1] == 0x40) {
             tmp_addr = str[3];
             tmp_addr |= str[2] << 8;
             add_extern_engine(busnumber, tmp_addr);
             message_processed = 1;
         }
+        /*TODO: function status report
+          else if (str[1] == 0x50)*/
     }
 
-    /* information about an engine (single traction) */
-    if (str[0] == 0xe4) {
+    /* Locomotive information normal locomotive (single traction) */
+    else if (str[0] == 0xe4) {
         gltmp.id = __li100->last_value & 0x3fff;
         /* is engine always allocated by an external device? */
         if (!(str[1] & 0x08)) {
@@ -1640,9 +1806,29 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
         message_processed = 1;
     }
 
+    /* Locomotive information for a locomotive in a multi-unit */
+    else if (str[0] == 0xe5) {
+        syslog_bus(busnumber, DBG_WARN,
+                "Multi-unit locomotive response on bus %i "
+                " (not supported)", busnumber);
+        message_processed = 1;
+    }
+
+    /*Locomotive information for a locomotive in a Double Header*/
+    else if (str[0] == 0xe6) {
+        syslog_bus(busnumber, DBG_WARN,
+                "Double header locomotive response on bus %i "
+                " (not supported)", busnumber);
+        message_processed = 1;
+    }
+
     /* information about feedback, bit pattern: AAAA AAAA ITTN ZZZZ*/
+    /*0x42: Accessory Decoder information response*/
     if ((str[0] & 0xf0) == 0x40) {
+
+        ga_state_t gatmp;
         ctr = str[0] & 0xf;
+        
         for (i = 1; i < ctr; i += 2) {
 
             /*check for address type TT, mask: 0110 0000 */
@@ -1706,27 +1892,23 @@ int readAnswer_LI100_SERIAL(bus_t busnumber, unsigned char *str)
         message_processed = 1;
     }
 
-    /* answer of programming */
-    if ((str[0] == 0x63) && ((str[1] & 0xf0) == 0x10)) {
-        if (__li100->last_type != -1) {
-            session_endwait(busnumber, (int) str[3]);
-            setSM(busnumber, __li100->last_type, -1,
-                  __li100->last_typeaddr, __li100->last_bit, (int) str[3],
-                  0);
-            __li100->last_type = -1;
-        }
-        message_processed = 1;
-    }
+    else if (str[0] == 0xf2) {
 
-    if ((str[0] == 0x61) && (str[1] == 0x13)) {
-        if (__li100->last_type != -1) {
-            session_endwait(busnumber, -1);
-            setSM(busnumber, __li100->last_type, -1,
-                  __li100->last_typeaddr, __li100->last_bit,
-                  __li100->last_value, -1);
-            __li100->last_type = -1;
+        /* XpresssNet address answer*/
+        if (str[1] == 0x01) {
+            syslog_bus(busnumber, DBG_WARN,
+                    "XpressNet address changes not handled yet: "
+                    "currrent = 0x%02x", str[2]);
+            message_processed = 1;
         }
-        message_processed = 1;
+
+        /* baud rate settings answer*/
+        else if (str[1] == 0x02) {
+            syslog_bus(busnumber, DBG_WARN,
+                    "Baud rate setting changes not handled yet: "
+                    "currrent = 0x%02x", str[2]);
+            message_processed = 1;
+        }
     }
 
     /* at last catch all unknown command keys and show a warning message */
