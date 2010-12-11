@@ -1874,8 +1874,19 @@ int readAnswer_LI100_SERIAL(bus_t busnumber)
                 }
                 break;
         }
+
+        /*function map: F12 F11 F10 F9 F8 F7 F6 F5*/
+        gltmp.funcs = buffer[4];
+        gltmp.funcs <<= 5;
+
+        /*function map: 0 0 0 F0 F4 F3 F2 F1*/
+        unsigned int tmpfuncs = buffer[3] & 0x0F;
+        tmpfuncs <<= 1;
+
         if (buffer[3] & 0x10)
-            gltmp.funcs |= 0x01;        /* light is on */
+            tmpfuncs |= 0x01;        /* light is on */
+
+        gltmp.funcs |= tmpfuncs;
 
         /* get old data, to send only if something changed */
         cacheGetGL(busnumber, gltmp.id, &glakt);
