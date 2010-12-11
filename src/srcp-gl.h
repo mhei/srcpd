@@ -20,7 +20,7 @@ typedef struct _GLSTATE {
     int id;                     /* address  */
     int speed;                  /* Sollgeschwindigkeit skal. auf 0..14 */
     int direction;              /* 0/1/2                               */
-    int funcs;                  /* Fx..F1, F                           */
+    unsigned int funcs;         /* Fx..F1, F                           */
     struct timeval tv;          /* Last time of change                 */
     struct timeval inittime;
     struct timeval locktime;
