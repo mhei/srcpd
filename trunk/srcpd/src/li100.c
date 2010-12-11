@@ -1812,8 +1812,28 @@ int readAnswer_LI100_SERIAL(bus_t busnumber)
             add_extern_engine(busnumber, tmp_addr);
             message_processed = 1;
         }
-        /*TODO: function status report
-          else if (buffer[1] == 0x50)*/
+
+        /*not part of SRCP: function type report (switch/button) f0..f12*/
+        else if (buffer[1] == 0x50) {
+        }
+
+        /*not part of SRCP: function type report (switch/button) f13..f28*/
+        else if (buffer[1] == 0x51) {
+        }
+
+        /*function status report f13..f28*/
+        else if (buffer[1] == 0x52) {
+            cacheGetGL(busnumber, __li100->get_addr, &gltmp);
+            unsigned int fncblock = buffer[3];
+            fncblock <<= 8;
+            fncblock |= buffer[2];
+            fncblock <<= 13;
+            unsigned int tmpfuncs = gltmp.funcs;
+            tmpfuncs &= ~0x1fffe000;
+            tmpfuncs |= fncblock;
+            if (gltmp.funcs != tmpfuncs)
+                cacheSetGL(busnumber, __li100->get_addr, gltmp);
+        }
     }
 
     /* Locomotive information normal locomotive (single traction) */
