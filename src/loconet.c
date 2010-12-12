@@ -244,7 +244,7 @@ static int init_lineLOCONET_serial(bus_t busnumber)
 
 static int init_lineLOCONET_lbserver(bus_t busnumber)
 {
-    int sockfd;
+    int sockfd = -1;
     struct addrinfo *ai;
     struct addrinfo hi;
     int result;
@@ -655,7 +655,8 @@ void *thr_sendrec_LOCONET(void *v)
     unsigned int addr, timeoutcnt, twomessageflag;
     unsigned int startup_slot_index = 1;        /* read the slot numbers upon start up */
     /*int code, src, dst, data[8], i; */
-    int value, port, speed, tmp;
+    int value, port, tmp;
+    int speed = 0;
     char msg[110];
     ga_state_t gatmp;
     gl_state_t gltmp;
