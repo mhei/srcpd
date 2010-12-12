@@ -285,7 +285,9 @@ int setFBmodul(bus_t bus, int modul, int values)
 int infoFB(bus_t bus, int port, char *msg, size_t length)
 {
     struct timeval time;
-    int state;
+    time.tv_sec = 0;
+    time.tv_usec = 0;
+    int state = 0;
     int rc = getFB(bus, port, &time, &state);
     msg[0] = 0x00;
 
