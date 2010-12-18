@@ -1702,6 +1702,11 @@ int readAnswer_LI100_SERIAL(bus_t busnumber)
         if (buffer[2] & 0x20)
             gltmp.funcs |= 0x01;        /* light is on */
 
+        /*functions f5..f12, map: F12 F11 F10 F9 F8 F7 F6 F5 */
+        unsigned int f5tof12 = buffer[4];
+        f5tof12 <<= 5;
+        gltmp.funcs |= f5tof12;
+
         /* get old data, to send only if something changed */
         cacheGetGL(busnumber, gltmp.id, &glakt);
         if ((glakt.speed != gltmp.speed) ||
