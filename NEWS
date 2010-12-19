@@ -1,3 +1,11 @@
+srcpd-2.1.2 (2010-12-??)
+  Fixed Bugs
+    o Fix Lenz GA address handling (bug introduced in version 2.0.11).
+
+  New Features
+    o Support for up to 28 GL functions in Lenz module.
+
+
 srcpd-2.1.1 (2010-03-07)
   Fixed Bugs
     o Fixed Loconet module start up.
