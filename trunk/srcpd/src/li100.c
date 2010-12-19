@@ -1709,6 +1709,8 @@ int readAnswer_LI100_SERIAL(bus_t busnumber)
 
         /* get old data, to send only if something changed */
         cacheGetGL(busnumber, gltmp.id, &glakt);
+        gltmp.n_func = glakt.n_func;
+
         if ((glakt.speed != gltmp.speed) ||
             (glakt.direction != gltmp.direction) ||
             (glakt.funcs != gltmp.funcs))
@@ -1895,10 +1897,13 @@ int readAnswer_LI100_SERIAL(bus_t busnumber)
 
         /* get old data, to send only if something changed */
         cacheGetGL(busnumber, gltmp.id, &glakt);
+        gltmp.n_func = glakt.n_func;
+
         if ((glakt.speed != gltmp.speed) ||
             (glakt.direction != gltmp.direction) ||
             (glakt.funcs != gltmp.funcs))
             cacheSetGL(busnumber, gltmp.id, gltmp);
+
         message_processed = 1;
     }
 
