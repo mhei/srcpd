@@ -324,34 +324,31 @@ int cacheDescribeGL(bus_t busnumber, int addr, char *msg)
 int cacheInfoGL(bus_t busnumber, int addr, char *msg)
 {
     int i;
-    char *tmp;
+    char line[MAXSRCPLINELEN];
+
+    /*get address of specified GL data*/
+    gl_state_t* glptr = &gl[busnumber].glstate[addr];
+    if (glptr == NULL)
+        return SRCP_NODATA;
 
     if (isInitializedGL(busnumber, addr)) {
         sprintf(msg, "%lu.%.3lu 100 INFO %ld GL %d %d %d %d %d",
-                gl[busnumber].glstate[addr].tv.tv_sec,
-                gl[busnumber].glstate[addr].tv.tv_usec / 1000,
-                busnumber, addr, gl[busnumber].glstate[addr].direction,
-                gl[busnumber].glstate[addr].speed,
-                gl[busnumber].glstate[addr].n_fs,
-                (gl[busnumber].glstate[addr].funcs & 0x01) ? 1 : 0);
+                glptr->tv.tv_sec, glptr->tv.tv_usec / 1000,
+                busnumber, addr, glptr->direction,
+                glptr->speed, glptr->n_fs,
+                (glptr->funcs & 0x01) ? 1 : 0);
 
-        for (i = 1; i < gl[busnumber].glstate[addr].n_func; i++) {
-            tmp = malloc(strlen(msg) + 100);
-            sprintf(tmp, "%s %d", msg,
-                    ((gl[busnumber].glstate[addr].
-                      funcs >> i) & 0x01) ? 1 : 0);
-            strcpy(msg, tmp);
-            free(tmp);
+        for (i = 1; i < glptr->n_func; i++) {
+            snprintf(line, sizeof(line), "%s %d", msg,
+                    ((glptr->funcs >> i) & 0x01) ? 1 : 0);
+            strcpy(msg, line);
         }
-        tmp = malloc(strlen(msg) + 2);
-        sprintf(tmp, "%s\n", msg);
-        strcpy(msg, tmp);
-        free(tmp);
+        snprintf(line, sizeof(line), "%s\n", msg);
+        strcpy(msg, line);
 
         return SRCP_INFO;
     }
-    else
-        return SRCP_NODATA;
+    return SRCP_NODATA;
 }
 
 /* has to use a semaphore, must be atomized! */
