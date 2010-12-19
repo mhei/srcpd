@@ -1708,7 +1708,14 @@ int readAnswer_LI100_SERIAL(bus_t busnumber)
         gltmp.funcs |= f5tof12;
 
         /* get old data, to send only if something changed */
-        cacheGetGL(busnumber, gltmp.id, &glakt);
+        int result = cacheGetGL(busnumber, gltmp.id, &glakt);
+
+        /* If GL is unknown, show warning message*/
+        if (SRCP_NODATA == result) {
+            syslog_bus(busnumber, DBG_WARN,
+                    "Command for uninitialized GL received (address = %d)",
+                    gltmp.id);
+        }
         gltmp.n_func = glakt.n_func;
 
         if ((glakt.speed != gltmp.speed) ||
@@ -1852,8 +1859,8 @@ int readAnswer_LI100_SERIAL(bus_t busnumber)
         }
         gltmp.direction = (buffer[2] & 0x80) ? 1 : 0;
         switch (buffer[1] & 7) {
-            case 0:
-            case 4:
+            case 0: /*14 speed steps*/
+            case 4: /*128 speed steps*/
                 gltmp.speed = buffer[2] & 0x7f;
                 if (gltmp.speed == 1) {
                     gltmp.speed = 0;
@@ -1864,8 +1871,8 @@ int readAnswer_LI100_SERIAL(bus_t busnumber)
                         gltmp.speed--;
                 }
                 break;
-            case 1:
-            case 2:
+            case 1: /*27 speed steps*/
+            case 2: /*28 speed steps*/
                 gltmp.speed = buffer[2] & 0x7f;
                 gltmp.speed <<= 1;
                 if (gltmp.speed & 0x20)
@@ -1896,7 +1903,14 @@ int readAnswer_LI100_SERIAL(bus_t busnumber)
         gltmp.funcs |= tmpfuncs;
 
         /* get old data, to send only if something changed */
-        cacheGetGL(busnumber, gltmp.id, &glakt);
+        int result = cacheGetGL(busnumber, gltmp.id, &glakt);
+
+        /* If GL is unknown, show warning message*/
+        if (SRCP_NODATA == result) {
+            syslog_bus(busnumber, DBG_WARN,
+                    "Command for uninitialized GL received (address = %d)",
+                    gltmp.id);
+        }
         gltmp.n_func = glakt.n_func;
 
         if ((glakt.speed != gltmp.speed) ||
