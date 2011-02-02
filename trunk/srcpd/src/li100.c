@@ -214,11 +214,10 @@ int init_bus_LI100_SERIAL(bus_t busnumber)
                    "Version Lenz central unit: %d.%d\n",
                    __li100->version_zentrale / 256,
                    __li100->version_zentrale % 256);
-        /* printf("Code LENZ-Central unit     : %d",__li100->code_zentrale); */
+        /* printf("Code LENZ-Central unit: %d",__li100->code_zentrale); */
         __li100->get_addr = 0;
 
         /* if version of central unit is greater than 3.0, cleanup stack */
-
         if (__li100->version_zentrale >= 0x0300) {
             for (;;) {
                 byte2send[0] = 0xe3;
@@ -1853,6 +1852,7 @@ int readAnswer_LI100_SERIAL(bus_t busnumber)
     /* Locomotive information normal locomotive (single traction) */
     else if (buffer[0] == 0xe4) {
         gltmp.id = __li100->last_value & 0x3fff;
+        /*CHECK: __li100->get_addr = gltmp.id;*/
         /* is engine always allocated by an external device? */
         if (!(buffer[1] & 0x08)) {
             remove_extern_engine(busnumber, __li100->last_value);
