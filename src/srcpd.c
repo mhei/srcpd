@@ -272,8 +272,7 @@ int daemon_init(int flag)
 
 int main(int argc, char **argv)
 {
-    int sleep_ctr;
-    char c;
+    int sleep_ctr, c;
     int daemonflag = 1;
     /* First: Init the device data used internally */
     startup_GL();
