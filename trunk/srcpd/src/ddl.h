@@ -24,7 +24,6 @@
 #include <sched.h>
 
 #if linux
-#include <sys/io.h>
 #include <linux/serial.h>
 #endif
 

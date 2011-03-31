@@ -182,8 +182,11 @@ fi
 dnl Checks for host dependend header files.
 case $host in
   *-*-linux*)
-    AC_CHECK_HEADERS(sys/io.h linux/serial.h \
-                     linux/i2c-dev.h, ,
+    if test "$with_DDLS88" = "yes"; then
+          AC_CHECK_HEADERS(sys/io.h, ,
+                       AC_MSG_ERROR(essential header file is missing))
+    fi
+    AC_CHECK_HEADERS(linux/serial.h  linux/i2c-dev.h, ,
                  AC_MSG_ERROR(essential header file is missing))
     ;;
   *-*-cygwin*)

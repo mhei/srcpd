@@ -29,10 +29,6 @@ email                : frank.schmischke@t-online.de
 #include <string.h>
 #include <unistd.h>
 
-#ifdef linux
-#include <sys/io.h>
-#endif
-
 #include "config-srcpd.h"
 #include "ib.h"
 #include "io.h"
