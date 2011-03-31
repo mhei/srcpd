@@ -15,10 +15,6 @@ email                : frank.schmischke@t-online.de
  *                                                                         *
  ***************************************************************************/
 
-#ifdef linux
-#include <sys/io.h>
-#endif
-
 #include "config-srcpd.h"
 #include "li100.h"
 #include "io.h"
