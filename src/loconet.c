@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
+#include <netinet/in.h>
 
 #include "config.h"
 #ifdef HAVE_LINUX_SERIAL_H
@@ -254,10 +255,10 @@ static int init_lineLOCONET_lbserver(bus_t busnumber)
 
     /* Set preferred network connection options, for Cygwin use IPv4-only
      * as IPv6 is not supported yet */
-#ifdef __CYGWIN__
+#if defined(__CYGWIN__) || defined(__OpenBSD__)
     hi.ai_family = AF_INET;
     hi.ai_protocol = IPPROTO_TCP;
-#else
+#else                                            
     hi.ai_flags = AI_ADDRCONFIG;
 #endif
     hi.ai_socktype = SOCK_STREAM;
