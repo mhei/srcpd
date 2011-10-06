@@ -46,6 +46,7 @@ int queue_GA_isempty(bus_t busnumber);
 int getGA(bus_t busnumber, int addr, ga_state_t *a);
 int setGA(bus_t busnumber, int addr, ga_state_t a);
 int initGA(bus_t busnumber, int addr, const char protocol);
+int termGA(bus_t busnumber, int addr);
 int describeGA(bus_t busnumber, int addr, char *msg);
 int infoGA(bus_t busnumber, int addr, int port, char *msg);
 int cmpGA(ga_state_t a, ga_state_t b);
