@@ -602,7 +602,24 @@ int handleTERM(sessionid_t sessionid, bus_t bus, char *device,
             }
         }
     }
-
+    else if (bus_has_devicegroup(bus, DG_GA)
+        && strncasecmp(device, "GA", 2) == 0) {
+        long int addr = 0;
+        int nelem = 0;
+        if (strlen(parameter) > 0)
+            nelem = sscanf(parameter, "%ld", &addr);
+        if (nelem == 1) {
+            sessionid_t lockid;
+            getlockGA(bus, addr, &lockid);
+            if (lockid == 0 || lockid == sessionid) {
+                rc = unlockGA(bus, addr, sessionid);
+                rc = termGA(bus, addr);
+            }
+            else {
+                rc = SRCP_DEVICELOCKED;
+            }
+        }
+    }
     else if (bus_has_devicegroup(bus, DG_LOCK)
              && strncasecmp(device, "LOCK", 4) == 0) {
         long int addr;

@@ -159,6 +159,18 @@ int setGA(bus_t busnumber, int addr, ga_state_t a)
     }
 }
 
+int termGA(bus_t busnumber, int addr)
+{
+    if (isInitializedGA(busnumber, addr)) {
+        ga[busnumber].gastate[addr].state = 2;
+        enqueueGA(busnumber, addr, 0, 0, 0);
+        return SRCP_OK;
+    }
+    else {
+        return SRCP_NODATA;
+    }
+}
+
 int describeGA(bus_t busnumber, int addr, char *msg)
 {
     int number_ga = get_number_ga(busnumber);
