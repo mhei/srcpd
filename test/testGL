@@ -1,0 +1,14 @@
+#!/usr/bin/expect
+
+spawn telnet localhost 4303
+expect "srcpd"
+send "SET CONNECTIONMODE SRCP COMMAND\n"
+expect "202 OK CONNECTIONMODE"
+send "GO\n"
+expect "200 OK GO"
+send "INIT 1 GL 10 M 2 14 5\n"
+expect "200 OK"
+send "TERM 1 GL 10\n"
+expect "200 OK"
+send "TERM 0 SESSION\n"
+exit
