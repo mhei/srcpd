@@ -59,6 +59,7 @@ static const char P50_ENABLE[] = "ZzA0";
 #define XLokCfg     0x85
 #define XFunc       0x88
 #define XFuncX      0x89
+#define XFunc34     0x8A
 #define XFuncSts    0x8C
 #define XFuncXSts   0x8D
 #define XFunc34Sts  0x8E
