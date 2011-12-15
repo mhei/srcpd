@@ -571,6 +571,23 @@ static void send_command_gl_IB(bus_t busnumber)
 
                     readByte_IB(busnumber, 1, &status);
                 }
+                if (gltmp.n_func > 17) {
+                    writeByte(busnumber, XFunc34, 0);
+
+                    /* send low byte of address */
+                    writeByte(busnumber, gltmp.id & 0xFF, 0);
+
+                    /* send high byte of address */
+                    writeByte(busnumber, gltmp.id >> 8, 0);
+
+                    /* send F17 ... F24 */
+                    writeByte(busnumber, (gltmp.funcs >> 17) & 0xFF, 0);
+
+                    /* send F25 ... F28 */
+                    writeByte(busnumber, (gltmp.funcs >> 25) & 0x0F, 0);
+
+                    readByte_IB(busnumber, 1, &status);
+                }
                 cacheSetGL(busnumber, addr, gltmp);
             }
         }
