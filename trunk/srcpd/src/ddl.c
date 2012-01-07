@@ -1373,14 +1373,54 @@ static int init_gl_DDL(gl_state_t * gl)
 {
     switch (gl->protocol) {
         case 'M':              /* Motorola Codes */
+            switch (gl->protocolversion) {
+               case 1: return (gl->id >= 0 && gl->id < 80 &&
+                               gl->n_fs == 14) ? 
+                               SRCP_OK : SRCP_WRONGVALUE;
+               case 2: return (gl->id >= 0 && gl->id <= 80 &&
+                               gl->n_fs == 14) ?
+                               SRCP_OK : SRCP_WRONGVALUE;
+               case 3: return (gl->id >= 0 && gl->id <= 255 &&
+                               gl->n_fs == 28) ?
+                               SRCP_OK : SRCP_WRONGVALUE;
+               case 4: return (gl->id >= 0 && gl->id <= 255 &&
+                               gl->n_fs == 14) ?
+                               SRCP_OK : SRCP_WRONGVALUE;
+               case 5: return (gl->id >= 0 && gl->id <= 255 &&
+                               gl->n_fs == 28) ?
+                               SRCP_OK : SRCP_WRONGVALUE;
+               default: return SRCP_WRONGVALUE;
+            }
+            /*
             return (gl->protocolversion > 0
                     && gl->protocolversion <=
                     5) ? SRCP_OK : SRCP_WRONGVALUE;
+            */
             break;
         case 'N':
+            switch (gl->protocolversion) {
+               case 1: return (gl->id >= 0 && gl->id < 128 &&
+                               gl->n_fs == 28) ?
+                               SRCP_OK : SRCP_WRONGVALUE;
+               case 2: return (gl->id >= 0 && gl->id < 128 &&
+                               gl->n_fs == 128) ?
+                               SRCP_OK : SRCP_WRONGVALUE;
+               case 3: return (gl->id >= 0 && gl->id < 10240 &&
+                               gl->n_fs == 28) ?
+                               SRCP_OK : SRCP_WRONGVALUE;
+               case 4: return (gl->id >= 0 && gl->id < 10240 &&
+                               gl->n_fs == 28) ?
+                               SRCP_OK : SRCP_WRONGVALUE;
+               case 5: return (gl->id >= 0 && gl->id < 128 &&
+                               gl->n_fs == 14) ?
+                               SRCP_OK : SRCP_WRONGVALUE;
+               default: return SRCP_WRONGVALUE;
+            }
+            /*
             return (gl->protocolversion > 0
                     && gl->protocolversion <=
                     5) ? SRCP_OK : SRCP_WRONGVALUE;
+            */
             break;
     }
     return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
