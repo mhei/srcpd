@@ -72,6 +72,10 @@ typedef unsigned long int sessionid_t;
 #define HW_FILENAME  1
 #define HW_NETWORK   2
 
+/* Flow control for serial lines */
+#define SER_FC_NONE  0
+#define SER_FC_HARD  1
+#define SER_FC_SOFT  2
 
 /*basic data for bus threads*/
 typedef struct bt {
@@ -95,6 +99,7 @@ typedef struct _BUS
         char *path;    /* Path to device, if not null */
         int fd;        /* file descriptor */
         speed_t baudrate;
+        int settings;  /* flow control */
         struct termios devicesettings; /* save device settings, if used */
       } file;
       struct {

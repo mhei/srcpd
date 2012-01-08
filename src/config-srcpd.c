@@ -313,7 +313,7 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
                 buses[current_bus].devicetype = HW_NETWORK;
             }
             else {
-                syslog_bus(0, DBG_ERROR, "WARNING, \"%s\" (bus %ld) is an "
+                syslog_bus(0, DBG_WARN, "WARNING, \"%s\" (bus %ld) is an "
                            "unknown device property!\n", txt2,
                            current_bus);
             }
@@ -327,6 +327,21 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
                             malloc(strlen((char *) txt) + 1);
                         strcpy(buses[current_bus].device.file.path,
                                (char *) txt);
+                        txt2 = xmlGetProp(child, BAD_CAST "flowcontrol");
+                        if(txt2!=NULL) {
+                          if(xmlStrcmp(txt2, BAD_CAST "none")==0) {
+                             buses[current_bus].device.file.settings = SER_FC_NONE;
+                          }else if(xmlStrcmp(txt2, BAD_CAST "hard")==0) {
+                             buses[current_bus].device.file.settings = SER_FC_HARD;
+                          }else if(xmlStrcmp(txt2, BAD_CAST "soft")==0) {
+                             buses[current_bus].device.file.settings = SER_FC_SOFT;
+                          }else {
+                             syslog_bus(0, DBG_WARN, "WARNING, \"%s\" (bus %ld) is an unknown flow control option "
+                               "unknown device property!\n", txt2, current_bus);
+                          }
+                          free(txt2);
+                        }
+
                         break;
                     case HW_NETWORK:
                         free(buses[current_bus].device.file.path);
