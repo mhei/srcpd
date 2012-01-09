@@ -1373,6 +1373,7 @@ static int init_gl_DDL(gl_state_t * gl)
 {
     switch (gl->protocol) {
         case 'M':              /* Motorola Codes */
+            if (gl->n_func < 0 || gl->n_func > 5) return SRCP_WRONGVALUE;
             switch (gl->protocolversion) {
                case 1: return (gl->id >= 0 && gl->id < 80 &&
                                gl->n_fs == 14) ? 
@@ -1398,6 +1399,7 @@ static int init_gl_DDL(gl_state_t * gl)
             */
             break;
         case 'N':
+            if (gl->n_func < 0 || gl->n_func > 28) return SRCP_WRONGVALUE;
             switch (gl->protocolversion) {
                case 1: return (gl->id >= 0 && gl->id < 128 &&
                                gl->n_fs == 28) ?
