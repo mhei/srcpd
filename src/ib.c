@@ -165,7 +165,7 @@ int readConfig_IB(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 int init_gl_IB(gl_state_t * gl)
 {
     gl->n_fs = SPEED_STEPS;
-    if (gl->n_func > 17) {
+    if (gl->n_func > 29) {
         return SRCP_WRONGVALUE;
     }
     gl->protocol = 'P';
