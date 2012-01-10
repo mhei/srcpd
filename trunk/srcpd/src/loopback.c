@@ -141,11 +141,11 @@ int init_gl_LOOPBACK(gl_state_t * gl)
         case 'N':
             switch (gl->protocolversion) {
                 case 1:
-                    return ((gl->n_fs == 14) ||
+                    return ((gl->n_fs == 14) || (gl->n_fs == 28) ||
                             (gl->n_fs == 128)) ? SRCP_OK : SRCP_WRONGVALUE;
                     break;
                 case 2:
-                    return ((gl->n_fs == 14) ||
+                    return ((gl->n_fs == 14) || (gl->n_fs == 28) ||
                             (gl->n_fs == 128)) ? SRCP_OK : SRCP_WRONGVALUE;
                     break;
             }
