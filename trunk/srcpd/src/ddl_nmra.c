@@ -341,7 +341,7 @@ static char *preamble = "111111111111111";
 static const int NMRA_STACKSIZE = 200;
 
 /* 230 is needed for all functions F0-F28 */
-static const unsigned int BUFFERSIZE = 230;
+static const unsigned int BUFFERSIZE = 1000;
 
 /* internal offset of the long addresses */
 static const unsigned int ADDR14BIT_OFFSET = 128;
