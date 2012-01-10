@@ -227,12 +227,12 @@ static int init_lineLOCONET_serial(bus_t busnumber)
         tcgetattr(fd, &interface);
         interface.c_oflag = ONOCR;
         interface.c_cflag = CS8 | CLOCAL | CREAD | HUPCL;
-        if(buses[busnumber].device.file.settings & SER_FC_HARD == SER_FC_HARD) {
+        if ((buses[busnumber].device.file.settings & SER_FC_HARD) == SER_FC_HARD) {
           interface.c_cflag |=  CRTSCTS;
             syslog_bus(busnumber, DBG_DEBUG,
                        "using hardware flow control (CRTRTS)");
         }
-        if(buses[busnumber].device.file.settings & SER_FC_SOFT == SER_FC_SOFT) {
+        if ((buses[busnumber].device.file.settings & SER_FC_SOFT) == SER_FC_SOFT) {
           interface.c_oflag |=  IXON;
             syslog_bus(busnumber, DBG_DEBUG,
                        "using soft flow control (XON/XOFF)");
