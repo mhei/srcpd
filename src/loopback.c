@@ -208,13 +208,11 @@ static void handle_sm_command(bus_t bus)
     struct _SM smtmp;
     /* registers 1-4 == CV#1-4; reg5 == CV#29; reg 7-8 == CV#7-8 */
     int reg6 = 1;
-    int cv[MAX_CV_NUMBER + 1];
-
+    static int cv[MAX_CV_NUMBER + 1];
 
     dequeueNextSM(bus, &smtmp);
     session_lock_wait(bus);
     smtmp.value &= 255;
-    memset(cv, 0, MAX_CV_NUMBER + 1);
 
     switch (smtmp.command) {
         case GET:
