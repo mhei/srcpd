@@ -95,6 +95,7 @@ static const char P50_ENABLE[] = "ZzA0";
 #define XEvtPT      0xCE
 #define XEvtTkR     0xCF
 #define XEvtMem     0xD0
+#define XEvtLSY     0xD1
 
 /* programming track P50X commands */
 
