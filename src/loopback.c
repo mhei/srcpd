@@ -297,6 +297,7 @@ static void handle_sm_command(bus_t bus)
                     }
                     break;
             }
+            setSM(bus, smtmp.type, smtmp.addr, smtmp.typeaddr, smtmp.bit, smtmp.value, 0);
             break;
         case VERIFY:
             switch (smtmp.type) {
