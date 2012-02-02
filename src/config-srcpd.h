@@ -65,7 +65,7 @@ typedef unsigned long int sessionid_t;
 /* driver specific flags */
 #define FB_ORDER_0            0x0200 /* feedback port 0 is bit 0 */
 #define FB_16_PORTS           0x0400 /* feedback-modul has 16 ports */
-#define FB_4_PORTS            0x0800 /* used for Lenz, sening 2x4 ports instead 8 at once */
+#define FB_4_PORTS            0x0800 /* used for Lenz, sending 2x4 ports instead 8 at once */
 
 /* useful constants */
 #define HW_UNDEFINED 0
