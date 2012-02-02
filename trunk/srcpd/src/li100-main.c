@@ -14,6 +14,19 @@ email                : frank.schmischke@t-online.de
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
+#include <errno.h>
+#include <fcntl.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <syslog.h>
+#include <unistd.h>
+
+#ifdef __CYGWIN__
+#include <sys/socket.h>         /*for FIONREAD */
+#endif
+#ifdef __sun__
+#include <sys/filio.h>
+#endif
 
 #include "config-srcpd.h"
 #include "li100.h"
@@ -28,9 +41,13 @@ email                : frank.schmischke@t-online.de
 #include "srcp-info.h"
 #include "srcp-error.h"
 #include "srcp-session.h"
+#include "syslogmessage.h"
 
 #define __li100 ((LI100_DATA*)buses[busnumber].driverdata)
 #define __li100t ((LI100_DATA*)buses[btd->bus].driverdata)
+
+static void add_extern_engine ( bus_t busnumber, int address );
+static void remove_extern_engine ( bus_t busnumber, int address );
 
 #define LI100_USB
 #include "li100.c"
@@ -43,58 +60,75 @@ email                : frank.schmischke@t-online.de
  * cacheInitGL: modifies the gl data used to initialize the device
  * this is called whenever a new loco comes in town...
  */
-int init_gl_LI100(gl_state_t * gl)
+int init_gl_LI100 ( gl_state_t * gl )
 {
-    gl->protocol = 'N';
-    return SRCP_OK;
+  gl->protocol = 'N';
+  return SRCP_OK;
 }
 
 /**
  * initGA: modifies the ga data used to initialize the device
  */
-int init_ga_LI100(ga_state_t * ga)
+int init_ga_LI100 ( ga_state_t * ga )
 {
-    ga->protocol = 'N';
-    return SRCP_OK;
+  ga->protocol = 'N';
+  return SRCP_OK;
 }
 
-void add_extern_engine(bus_t busnumber, int address)
+/**
+ * add an extern controlled engine to internal table
+ */
+static void add_extern_engine ( bus_t busnumber, int address )
 {
-    int i;
-    int ctr;
+  int i;
+  int ctr;
 
-    i = -1;
-    if (__li100->extern_engine_ctr == 0)
-        i = 0;
-    else {
-        for (ctr = 0; ctr < 100; ctr++) {
-            if (__li100->extern_engine[ctr] == address)
-                break;
+  i = -1;
+  if ( __li100->extern_engine_ctr == 0 )
+    i = 0;                                // if no current extern engine, use first entry in table
+  else
+  {
+    // search for address already existing in table
+    for ( ctr = 0; ctr < 100; ctr++ )
+    {
+      if ( __li100->extern_engine[ctr] == address )
+        break;
 
+    }
+    // address not existing in table ==> search first free entry for update
+    if ( __li100->extern_engine_ctr < 100 )
+    {
+      for ( ctr = 0; ctr < 100; ctr++ )
+      {
+        if ( __li100->extern_engine[ctr] == -1 )
+        {
+          i = ctr;
+          break;
         }
-        if (ctr < 100)
-            for (ctr = 0; ctr < 100; ctr++) {
-                if (__li100->extern_engine[ctr] == -1) {
-                    i = ctr;
-                    break;
-                }
-            }
+      }
     }
-    if (i != -1) {
-        __li100->extern_engine[i] = address;
-        __li100->extern_engine_ctr++;
-    }
+  }
+  if ( i != -1 )
+  {
+    __li100->extern_engine[i] = address;
+    __li100->extern_engine_ctr++;
+  }
 }
 
-void remove_extern_engine(bus_t busnumber, int address)
+/**
+ * remove an extern controlled engine from internal table
+ */
+static void remove_extern_engine ( bus_t busnumber, int address )
 {
-    int ctr;
+  int ctr;
 
-    for (ctr = 0; ctr < 100; ctr++) {
-        if (__li100->extern_engine[ctr] == address) {
-            __li100->extern_engine[ctr] = -1;
-            __li100->extern_engine_ctr--;
-            break;
-        }
+  for ( ctr = 0; ctr < 100; ctr++ )
+  {
+    if ( __li100->extern_engine[ctr] == address )
+    {
+      __li100->extern_engine[ctr] = -1;
+      __li100->extern_engine_ctr--;
+      break;
     }
+  }
 }
