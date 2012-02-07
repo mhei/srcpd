@@ -603,7 +603,7 @@ int handleTERM(sessionid_t sessionid, bus_t bus, char *device,
         }
     }
     else if (bus_has_devicegroup(bus, DG_GA)
-        && strncasecmp(device, "GA", 2) == 0) {
+             && strncasecmp(device, "GA", 2) == 0) {
         long int addr = 0;
         int nelem = 0;
         if (strlen(parameter) > 0)
@@ -758,7 +758,7 @@ int handleINIT(sessionid_t sessionid, bus_t bus, char *device,
         if (result < 1)
             rc = SRCP_LISTTOOSHORT;
         else if (strncasecmp(protocol, "NMRA", 4) == 0)
-            rc = infoSM(bus, INIT, 0, -1, 0, 0, 0, reply);
+            rc = infoSM(bus, INIT, 0, -1, NMRA, 0, 0, reply);
         else
             rc = SRCP_WRONGVALUE;
     }
