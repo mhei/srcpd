@@ -57,30 +57,46 @@ static int queue_len(bus_t busnumber);
 static int queue_isfull(bus_t busnumber);
 
 
-int enqueueInfoSM(bus_t busnumber, int addr, int type, int typeaddr,
-                  int bit, int value, int return_code,
+int enqueueInfoSM(bus_t busnumber, int addr, int command, int type,
+                  int typeaddr, int bit, int value, int return_code,
                   struct timeval *akt_time)
 {
     char buffer[1000], msg[1000];
     char tmp[100];
 
     if (return_code == 0) {
-        sprintf(buffer, "%lu.%.3lu 100 INFO %ld SM %d",
-                akt_time->tv_sec, akt_time->tv_usec / 1000, busnumber,
-                addr);
-        switch (type) {
-            case REGISTER:
-                sprintf(tmp, "REG %d %d", typeaddr, value);
-                break;
-            case CV:
-                sprintf(tmp, "CV %d %d", typeaddr, value);
-                break;
-            case CV_BIT:
-                sprintf(tmp, "CVBIT %d %d %d", typeaddr, bit, value);
-                break;
-            case PAGE:
-                sprintf(tmp, "PAGE %d %d", typeaddr, value);
-                break;
+        if (command == INIT) {
+            sprintf(buffer, "%lu.%.3lu 101 INFO %ld SM",
+                    akt_time->tv_sec, akt_time->tv_usec / 1000, busnumber);
+            switch (typeaddr) {
+                case NMRA:
+                    sprintf(tmp, "NMRA");
+                    break;
+            }
+        }
+        else if (command == TERM) {
+            sprintf(buffer, "%lu.%.3lu 102 INFO %ld SM",
+                    akt_time->tv_sec, akt_time->tv_usec / 1000, busnumber);
+            tmp[0] = '\0';
+        }
+        else {
+            sprintf(buffer, "%lu.%.3lu 100 INFO %ld SM %d",
+                    akt_time->tv_sec, akt_time->tv_usec / 1000, busnumber,
+                    addr);
+            switch (type) {
+                case REGISTER:
+                    sprintf(tmp, "REG %d %d", typeaddr, value);
+                    break;
+                case CV:
+                    sprintf(tmp, "CV %d %d", typeaddr, value);
+                    break;
+                case CV_BIT:
+                    sprintf(tmp, "CVBIT %d %d %d", typeaddr, bit, value);
+                    break;
+                case PAGE:
+                    sprintf(tmp, "PAGE %d %d", typeaddr, value);
+                    break;
+            }
         }
     }
     else {
@@ -252,7 +268,7 @@ int setSM(bus_t busnumber, int type, int addr, int typeaddr, int bit,
         gettimeofday(&tv, NULL);
         if (type == CV_BIT)
             value = (value & (1 << bit)) ? 1 : 0;
-        enqueueInfoSM(busnumber, addr, type, typeaddr, bit, value,
+        enqueueInfoSM(busnumber, addr, SET, type, typeaddr, bit, value,
                       return_code, &tv);
         return SRCP_OK;
     }
@@ -271,6 +287,16 @@ int infoSM(bus_t busnumber, int command, int type, int addr,
                "TYPE: %d, CV: %d, BIT: %d, VALUE: 0x%02x", type, typeaddr,
                bit, value);
     session_lock_wait(busnumber);
+    if (command == INIT) {
+        gettimeofday(&now, NULL);
+        enqueueInfoSM(busnumber, addr, INIT, type, typeaddr, 0, 0, 0,
+                      &now);
+    }
+    else if (command == TERM) {
+        gettimeofday(&now, NULL);
+        enqueueInfoSM(busnumber, addr, TERM, type, typeaddr, 0, 0, 0,
+                      &now);
+    }
     status =
         enqueueSM(busnumber, command, type, addr, typeaddr, bit, value);
 

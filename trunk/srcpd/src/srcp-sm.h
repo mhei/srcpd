@@ -36,10 +36,14 @@ enum TYPE {
     CV_BIT
 } sm_type_t;
 
+enum TYPEADDR {
+    NMRA = 0
+} sm_typeaddr_t;
+
 /* Loco decoder */
 typedef struct _SM {
-    char protocol[6];  /* currently only NMRA is supported */
-                       /* (for IB, but not completely, work in progress) */
+    char protocol[6];           /* currently only NMRA is supported */
+    /* (for IB, but not completely, work in progress) */
     int type;
     int command;
     int protocolversion;
@@ -50,12 +54,12 @@ typedef struct _SM {
     struct timeval tv;          /* time of change */
 } sm_t;
 
-int enqueueSM(bus_t busnumber, int command, int type, int addr, int typeaddr,
-            int bit, int value);
+int enqueueSM(bus_t busnumber, int command, int type, int addr,
+              int typeaddr, int bit, int value);
 int queue_SM_isempty(bus_t busnumber);
-int dequeueNextSM(bus_t, sm_t*);
+int dequeueNextSM(bus_t, sm_t *);
 
-int getSM(bus_t busnumber, int addr, sm_t*);
+int getSM(bus_t busnumber, int addr, sm_t *);
 int setSM(bus_t busnumber, int type, int addr, int typeaddr, int bit,
           int value, int return_value);
 int infoSM(bus_t busnumber, int command, int type, int addr, int typeaddr,
