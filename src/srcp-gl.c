@@ -358,11 +358,11 @@ int cacheLockGL(bus_t busnumber, int addr, long int duration,
     char msg[256];
 
     if (isInitializedGL(busnumber, addr)) {
-        if (gl[busnumber].glstate[addr].locked_by == sessionid
-            || gl[busnumber].glstate[addr].locked_by == 0) {
-            gl[busnumber].glstate[addr].locked_by = sessionid;
-            gl[busnumber].glstate[addr].lockduration = duration;
-            gettimeofday(&gl[busnumber].glstate[addr].locktime, NULL);
+        if (gl[busnumber].locked_by == sessionid
+            || gl[busnumber].locked_by == 0) {
+            gl[busnumber].locked_by = sessionid;
+            gl[busnumber].lockduration = duration;
+            gettimeofday(&gl[busnumber].locktime, NULL);
             describeLOCKGL(busnumber, addr, msg);
             enqueueInfoMessage(msg);
             return SRCP_OK;
@@ -380,7 +380,7 @@ int cacheGetLockGL(bus_t busnumber, int addr, sessionid_t * session_id)
 {
     if (isInitializedGL(busnumber, addr)) {
 
-        *session_id = gl[busnumber].glstate[addr].locked_by;
+        *session_id = gl[busnumber].locked_by;
         return SRCP_OK;
     }
     else {
@@ -393,10 +393,10 @@ int describeLOCKGL(bus_t bus, int addr, char *reply)
     if (isInitializedGL(bus, addr)) {
 
         sprintf(reply, "%lu.%.3lu 100 INFO %ld LOCK GL %d %ld %ld\n",
-                gl[bus].glstate[addr].locktime.tv_sec,
-                gl[bus].glstate[addr].locktime.tv_usec / 1000,
-                bus, addr, gl[bus].glstate[addr].lockduration,
-                gl[bus].glstate[addr].locked_by);
+                gl[bus].locktime.tv_sec,
+                gl[bus].locktime.tv_usec / 1000,
+                bus, addr, gl[bus].lockduration,
+                gl[bus].locked_by);
         return SRCP_OK;
     }
     else {
@@ -408,14 +408,14 @@ int cacheUnlockGL(bus_t busnumber, int addr, sessionid_t sessionid)
 {
     if (isInitializedGL(busnumber, addr)) {
 
-        if (gl[busnumber].glstate[addr].locked_by == sessionid
-            || gl[busnumber].glstate[addr].locked_by == 0) {
+        if (gl[busnumber].locked_by == sessionid
+            || gl[busnumber].locked_by == 0) {
             char msg[256];
-            gl[busnumber].glstate[addr].locked_by = 0;
-            gettimeofday(&gl[busnumber].glstate[addr].locktime, NULL);
+            gl[busnumber].locked_by = 0;
+            gettimeofday(&gl[busnumber].locktime, NULL);
             sprintf(msg, "%lu.%.3lu 102 INFO %ld LOCK GL %d %ld\n",
-                    gl[busnumber].glstate[addr].locktime.tv_sec,
-                    gl[busnumber].glstate[addr].locktime.tv_usec / 1000,
+                    gl[busnumber].locktime.tv_sec,
+                    gl[busnumber].locktime.tv_usec / 1000,
                     busnumber, addr, sessionid);
             enqueueInfoMessage(msg);
             return SRCP_OK;
@@ -442,7 +442,7 @@ void unlock_gl_bysessionid(sessionid_t sessionid)
     for (i = 0; i <= num_buses; i++) {
         number = getMaxAddrGL(i);
         for (j = 1; j <= number; j++) {
-            if (gl[i].glstate[j].locked_by == sessionid) {
+            if (gl[i].locked_by == sessionid) {
                 cacheUnlockGL(i, j, sessionid);
             }
         }
@@ -461,9 +461,9 @@ void unlock_gl_bytime(void)
     for (i = 0; i <= num_buses; i++) {
         number = getMaxAddrGL(i);
         for (j = 1; j <= number; j++) {
-            if (gl[i].glstate[j].lockduration > 0
-                && gl[i].glstate[j].lockduration-- == 1) {
-                cacheUnlockGL(i, j, gl[i].glstate[j].locked_by);
+            if (gl[i].lockduration > 0
+                && gl[i].lockduration-- == 1) {
+                cacheUnlockGL(i, j, gl[i].locked_by);
             }
         }
     }
@@ -538,8 +538,8 @@ void debugGL(bus_t busnumber, int start, int end)
         syslog_bus(busnumber, DBG_WARN, "direction %d", gls->direction);
         syslog_bus(busnumber, DBG_WARN, "funcs %d", gls->funcs);
         syslog_bus(busnumber, DBG_WARN, "lockduration %ld",
-                   gls->lockduration);
-        syslog_bus(busnumber, DBG_WARN, "locked_by %ld", gls->locked_by);
+                   gl->lockduration);
+        syslog_bus(busnumber, DBG_WARN, "locked_by %ld", gl->locked_by);
         /*  struct timeval tv;
            struct timeval inittime;
            struct timeval locktime; */

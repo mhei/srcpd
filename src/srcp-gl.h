@@ -23,14 +23,14 @@ typedef struct _GLSTATE {
     unsigned int funcs;         /* Fx..F1, F                           */
     struct timeval tv;          /* Last time of change                 */
     struct timeval inittime;
-    struct timeval locktime;
-    long int lockduration;
-    sessionid_t locked_by;
 } gl_state_t;
 
 typedef struct _GL {
     int numberOfGl;
     gl_state_t *glstate;
+    struct timeval locktime;
+    long int lockduration;
+    sessionid_t locked_by;
 } GL;
 
 int startup_GL(void);
