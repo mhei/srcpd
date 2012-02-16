@@ -697,7 +697,15 @@ int handleINIT(sessionid_t sessionid, bus_t bus, char *device,
             sscanf(parameter, "%ld %c %ld %ld %ld", &addr, &prot,
                    &protversion, &n_fs, &n_func);
         if (nelem >= 5) {
-            rc = cacheInitGL(bus, addr, prot, protversion, n_fs, n_func);
+            sessionid_t lockid = 0;
+            /* Only if not locked !! */
+            cacheGetLockGL(bus, addr, &lockid);
+            if (lockid == 0 || lockid == sessionid) {
+                rc = cacheInitGL(bus, addr, prot, protversion, n_fs, n_func);
+            }
+            else {
+                rc = SRCP_DEVICELOCKED;
+            }
         }
         else {
             rc = SRCP_LISTTOOSHORT;
