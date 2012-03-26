@@ -1,3 +1,6 @@
+2012-03-26 André Schenk <andre_schenk@users.sourceforge.net>
+        * src/ib.c: fixed usage of XEvtLok
+
 2011-10-06 André Schenk <andre_schenk@users.sourceforge.net>
 	* src/srcp-ga.c src/srcp-ga.h src/srcp-command.c: added missing TERM GA function
 
