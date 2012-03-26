@@ -1003,8 +1003,7 @@ static int open_comport(bus_t busnumber, speed_t baud)
 #ifdef linux
         tcgetattr(fd, &interface);
         interface.c_oflag = ONOCR;
-        interface.c_cflag =
-            CS8 | CRTSCTS | CSTOPB | CLOCAL | CREAD | HUPCL;
+        interface.c_cflag = CS8 | CRTSCTS | CSTOPB | CLOCAL | CREAD | HUPCL;
         interface.c_iflag = IGNBRK;
         interface.c_lflag = IEXTEN;
         cfsetispeed(&interface, baud);
@@ -1678,7 +1677,7 @@ static void check_status_gl_IB(bus_t busnumber)
     writeByte(busnumber, XEvtLok, 0);
     readByte_IB(busnumber, 1, &rr);
 
-    while (rr != 0x80) {
+    while (rr < 0x80) {
         if (rr == 1) {
             /* Loco in emergency stop */
             gltmp.speed = 0;
@@ -1716,16 +1715,22 @@ static void check_status_gl_IB(bus_t busnumber)
 
         /* initialize the GL if not done by user, */
         /* because IB can report uninitialized GLs... */
-        if (!isInitializedGL(busnumber, gltmp.id)) {
-            syslog_bus(busnumber, DBG_INFO,
-                       "IB reported uninitialized GL. "
-                       "Performing default init for %d", gltmp.id);
-            cacheInitGL(busnumber, gltmp.id, 'P', 1, SPEED_STEPS, 5);
+        if (gltmp.id > 0) {
+            if (!isInitializedGL(busnumber, gltmp.id)) {
+                syslog_bus(busnumber, DBG_INFO,
+                           "IB reported uninitialized GL. "
+                           "Performing default init for %d", gltmp.id);
+                cacheInitGL(busnumber, gltmp.id, 'P', 1, SPEED_STEPS, 5);
+            }
+            /* get old data, to know which FS the user wants to have... */
+            cacheGetGL(busnumber, gltmp.id, &glakt);
+            /* recalculate speed */
+	    gltmp.n_fs = glakt.n_fs;
+            gltmp.speed = (gltmp.speed * glakt.n_fs) / SPEED_STEPS;
+            cacheSetGL(busnumber, gltmp.id, gltmp);
         }
-        /* get old data, to know which FS the user wants to have... */
-        cacheGetGL(busnumber, gltmp.id, &glakt);
-        /* recalculate speed */
-        gltmp.speed = (gltmp.speed * glakt.n_fs) / SPEED_STEPS;
-        cacheSetGL(busnumber, gltmp.id, gltmp);
+
+        /* further loco events? */
+        readByte_IB(busnumber, 1, &rr);
     }
 }
