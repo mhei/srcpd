@@ -1112,31 +1112,31 @@ static void resetBaudrate(const speed_t speed, const bus_t busnumber)
         case B2400:
             syslog_bus(busnumber, DBG_INFO,
                        "Changing baud rate to 2400 bps\n");
-            writeString(busnumber, "B2400", 0);
+            writeString(busnumber, "XB2400", 0);
             break;
 
         case B4800:
             syslog_bus(busnumber, DBG_INFO,
                        "Changing baud rate to 4800 bps\n");
-            writeString(busnumber, "B4800", 0);
+            writeString(busnumber, "XB4800", 0);
             break;
 
         case B9600:
             syslog_bus(busnumber, DBG_INFO,
                        "Changing baud rate to 9600 bps\n");
-            writeString(busnumber, "B9600", 0);
+            writeString(busnumber, "XB9600", 0);
             break;
 
         case B19200:
             syslog_bus(busnumber, DBG_INFO,
                        "Changing baud rate to 19200 bps\n");
-            writeString(busnumber, "B19200", 0);
+            writeString(busnumber, "XB19200", 0);
             break;
 
         case B38400:
             syslog_bus(busnumber, DBG_INFO,
                        "Changing baud rate to 38400 bps\n");
-            writeString(busnumber, "B38400", 0);
+            writeString(busnumber, "XB38400", 0);
             break;
     }
 
