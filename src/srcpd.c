@@ -81,7 +81,7 @@ void init_all_buses()
             /* initialize each bus and report error on failure */
             if ((*buses[i].init_func) (i) != 0) {
                 syslog(LOG_INFO, "Initialization of bus %ld failed.", i);
-                exit(1);
+                exit(EXIT_FAILURE);
             }
 
             /* Configure descriptors for Selectrix module to throw SIGIO */
@@ -144,7 +144,7 @@ void sighup_handler(int s)
     if (0 == readConfig(conffile)) {
         syslog_bus(0, DBG_ERROR, "Error, no valid bus setup found in "
                    "configuration file. Terminating.\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     init_all_buses();
     create_all_threads();
@@ -297,7 +297,7 @@ int main(int argc, char **argv)
                 break;
             case 'v':
                 printf(WELCOME_MSG);
-                exit(1);
+                exit(EXIT_FAILURE);
                 break;
             case 'n':
                 daemonflag = 0;
@@ -311,12 +311,12 @@ int main(int argc, char **argv)
                        conffile);
                 printf("  -n  Do not daemonize at startup.\n");
                 printf("  -h  Show this help text and quit.\n");
-                exit(1);
+                exit(EXIT_FAILURE);
                 break;
             default:
                 printf("Unknown option: %c\n", c);
                 printf("Use: \"srcpd -h\" for help, terminating.\n");
-                exit(1);
+                exit(EXIT_FAILURE);
                 break;
         }
     }
@@ -327,13 +327,13 @@ int main(int argc, char **argv)
     if (0 == readConfig(conffile)) {
         syslog_bus(0, DBG_ERROR, "Error, no valid bus setup found in "
                    "configuration file '%s'.\n", conffile);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     /*daemonize process */
     if (0 != daemon_init(daemonflag)) {
         syslog_bus(0, DBG_ERROR, "Daemonization failed!\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     CreatePIDFile(getpid());
@@ -379,5 +379,5 @@ int main(int argc, char **argv)
 
     DeletePIDFile();
     closelog();
-    exit(0);
+    exit(EXIT_SUCCESS);
 }

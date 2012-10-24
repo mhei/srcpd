@@ -596,7 +596,7 @@ unsigned char FBSD_inb(int Woher, bus_t busnumber)
     if (__ddl_s88->Fd == -1) {
         syslog_bus(busnumber, DBG_ERROR,
                    "FBSD DDL-S88 Device not open for reading");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     WelchesPort = Woher - __ddl_s88->port;
@@ -638,7 +638,7 @@ unsigned char FBSD_outb(unsigned char Data, int Wohin, bus_t busnumber)
         syslog_bus(busnumber, DBG_ERROR,
                    "FBSD DDL-S88 Device not open for writing byte %d",
                    Data);
-        exit(1);
+        exit(EXIT_FAILURE);
         return -1;
     }
 
