@@ -521,7 +521,7 @@ void *thr_sendrec_I2C_DEV(void *v)
     buses[btd->bus].watchdog = 1;
 
     /* command processing starts here */
-    while (1) {
+    while (true) {
 
         /* process POWER changes */
         if (buses[btd->bus].power_changed == 1) {

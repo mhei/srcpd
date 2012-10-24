@@ -684,7 +684,7 @@ void *thr_sendrec_LOCONET(void *v)
     /*register cleanup routine */
     pthread_cleanup_push((void *) end_bus_thread, (void *) btd);
 
-    while (1) {
+    while (true) {
         pthread_testcancel();
         buses[btd->bus].watchdog = 1;
         memset(ln_packet, 0, sizeof(ln_packet));

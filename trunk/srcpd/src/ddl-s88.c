@@ -461,7 +461,7 @@ void *thr_sendrec_S88(void *v)
     syslog_bus(btd->bus, DBG_INFO, "DDL_S88 bus startet (device = %04x).",
                __ddl_s88t->port);
 
-    while (1) {
+    while (true) {
         if (buses[btd->bus].power_changed == 1) {
             char msg[110];
             buses[btd->bus].power_changed = 0;

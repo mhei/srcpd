@@ -128,7 +128,7 @@ void *thr_doClient(void *v)
         pthread_exit((void *) 1);
     }
 
-    while (1) {
+    while (true) {
         pthread_testcancel();
         rc = SRCP_HS_NODATA;
         reply[0] = 0x00;
