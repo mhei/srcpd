@@ -94,7 +94,7 @@ static void queue_init(bus_t busnumber)
         syslog_bus(busnumber, DBG_ERROR,
                    "pthread_mutex_init() failed: %s (errno = %d).",
                    strerror(result), result);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     result = pthread_mutex_lock(&__DDL->queue_mutex);
@@ -311,7 +311,7 @@ int init_lineDDL(bus_t busnumber)
                    "Terminating...\n", buses[busnumber].device.file.path,
                    strerror(errno), errno);
         /* there is no chance to continue */
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 #if linux
     if ((rc = reset_customdivisor(dev)) != 0) {
@@ -319,7 +319,7 @@ int init_lineDDL(bus_t busnumber)
                    "Error initializing device %s (reset custom "
                    "divisor %d). Abort!",
                    buses[busnumber].device.file.path, rc);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 #endif
 
@@ -328,7 +328,7 @@ int init_lineDDL(bus_t busnumber)
         syslog_bus(busnumber, DBG_FATAL,
                    "tcflush() failed: %s (errno = %d).",
                    strerror(result), result);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     result = tcflow(dev, TCOOFF);       /* suspend output */
@@ -336,7 +336,7 @@ int init_lineDDL(bus_t busnumber)
         syslog_bus(busnumber, DBG_FATAL,
                    "tcflow() failed: %s (errno = %d).",
                    strerror(result), result);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     result = tcgetattr(dev, &__DDL->maerklin_dev_termios);
@@ -345,7 +345,7 @@ int init_lineDDL(bus_t busnumber)
                    "tcgetattr() failed: %s (errno = %d, device = %s).",
                    strerror(result), result,
                    buses[busnumber].device.file.path);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     result = tcgetattr(dev, &__DDL->nmra_dev_termios);
@@ -354,7 +354,7 @@ int init_lineDDL(bus_t busnumber)
                    "tcgetattr() failed: %s (errno = %d, device = %s).",
                    strerror(result), result,
                    buses[busnumber].device.file.path);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     /* init termios structure for Maerklin mode */
@@ -413,13 +413,13 @@ int init_lineDDL(bus_t busnumber)
             syslog_bus(busnumber, DBG_FATAL,
                        "Error initializing device %s (init_serinfo mm). Abort!",
                        buses[busnumber].device.file.path);
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         if (init_serinfo(dev, 7, &__DDL->serinfo_nmradcc) != 0) {
             syslog_bus(busnumber, DBG_FATAL,
                        "Error initializing device %s (init_serinfo dcc). Abort!",
                        buses[busnumber].device.file.path);
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     }
 #endif
@@ -429,7 +429,7 @@ int init_lineDDL(bus_t busnumber)
         syslog_bus(busnumber, DBG_FATAL,
                    "Error initializing device %s. Abort!",
                    buses[busnumber].device.file.path);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     return dev;
@@ -448,7 +448,7 @@ static void init_MaerklinPacketPool(bus_t busnumber)
         syslog_bus(busnumber, DBG_ERROR,
                    "pthread_mutex_init() failed: %s (errno = %d). Abort!",
                    strerror(result), result);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     result = pthread_mutex_lock(&__DDL->maerklin_pktpool_mutex);
@@ -590,7 +590,7 @@ static void init_NMRAPacketPool(bus_t busnumber)
         syslog_bus(busnumber, DBG_ERROR,
                    "pthread_mutex_init() failed: %s (error = %d). Terminating!\n",
                    strerror(result), result);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     result = pthread_mutex_lock(&__DDL->nmra_pktpool_mutex);

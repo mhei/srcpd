@@ -39,7 +39,7 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
     if (buses[0].driverdata == NULL) {
         syslog_bus(busnumber, DBG_ERROR,
                    "Memory allocation error in module '%s'.", node->name);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     buses[0].type = SERVER_SERVER;
@@ -103,7 +103,7 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                 if (__server->username == NULL) {
                     syslog_bus(busnumber, DBG_ERROR,
                                "Cannot allocate memory\n");
-                    exit(1);
+                    exit(EXIT_FAILURE);
                 }
                 strcpy(__server->username, (char *) txt);
                 xmlFree(txt);
@@ -118,7 +118,7 @@ int readconfig_server(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
                 if (__server->groupname == NULL) {
                     syslog_bus(busnumber, DBG_ERROR,
                                "Cannot allocate memory\n");
-                    exit(1);
+                    exit(EXIT_FAILURE);
                 }
                 strcpy(__server->groupname, (char *) txt);
                 xmlFree(txt);

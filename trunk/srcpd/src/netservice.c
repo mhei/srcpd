@@ -140,7 +140,7 @@ void *thr_handlePort(void *v)
             syslog_bus(0, DBG_ERROR,
                        "Socket creation failed: %s (errno = %d). "
                        "Terminating...\n", strerror(errno), errno);
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         saddr = (struct sockaddr *) &sin6;
         fsaddr = (struct sockaddr *) &fsin6;
@@ -161,7 +161,7 @@ void *thr_handlePort(void *v)
             syslog_bus(0, DBG_ERROR,
                        "Socket creation failed: %s (errno = %d). "
                        "Terminating...\n", strerror(errno), errno);
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         saddr = (struct sockaddr *) &sin;
         fsaddr = (struct sockaddr *) &fsin;
@@ -177,7 +177,7 @@ void *thr_handlePort(void *v)
         syslog_bus(0, DBG_ERROR, "setsockopt() failed: %s (errno = %d). "
                    "Terminating...\n", strerror(errno), errno);
         close(ntd->socket);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     /* saddr=(sockaddr_in) if ntd.socket is of type AF_INET else its (sockaddr_in6) */
@@ -185,14 +185,14 @@ void *thr_handlePort(void *v)
         syslog_bus(0, DBG_ERROR, "bind() failed: %s (errno = %d). "
                    "Terminating...\n", strerror(errno), errno);
         close(ntd->socket);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     if (listen(ntd->socket, 1) == -1) {
         syslog_bus(0, DBG_ERROR, "Listen failed: %s (errno = %d). "
                    "Terminating...\n", strerror(errno), errno);
         close(ntd->socket);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     /* Wait for connection requests */
@@ -288,7 +288,7 @@ void create_netservice_thread()
         syslog_bus(0, DBG_ERROR, "Create netservice thread failed: %s "
                    "(errno = %d). Terminating...\n", strerror(result),
                    result);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     syslog_bus(0, DBG_INFO, "Netservice thread for port %d created.",

@@ -639,7 +639,7 @@ void create_all_bus_threads()
                 syslog(LOG_INFO, "Create timer thread for bus %ld "
                        "failed: %s (errno = %d)\n", i,
                        strerror(result), result);
-                exit(1);
+                exit(EXIT_FAILURE);
             }
             buses[i].tidtimer = ttid_tid;
         }
@@ -651,7 +651,7 @@ void create_all_bus_threads()
                 syslog(LOG_INFO, "Create interface thread for bus %ld "
                        "failed: %s (errno = %d)\n", i,
                        strerror(result), result);
-                exit(1);
+                exit(EXIT_FAILURE);
             }
             buses[i].tid = ttid_tid;
         }
