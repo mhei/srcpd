@@ -663,7 +663,7 @@ void *thr_sendrec_LOCONET(void *v)
 {
     unsigned char ln_packet[128];       /* max length is coded with 7 bit */
     unsigned char ln_packetlen = 2;
-    unsigned int addr, timeoutcnt, twomessageflag;
+    unsigned int addr, twomessageflag;
     unsigned int startup_slot_index = 1;        /* read the slot numbers upon start up */
     /*int code, src, dst, data[8], i; */
     int value, port, tmp;
@@ -683,8 +683,6 @@ void *thr_sendrec_LOCONET(void *v)
 
     /*register cleanup routine */
     pthread_cleanup_push((void *) end_bus_thread, (void *) btd);
-
-    timeoutcnt = 0;
 
     while (1) {
         pthread_testcancel();
