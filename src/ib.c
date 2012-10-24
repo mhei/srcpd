@@ -245,7 +245,7 @@ int init_bus_IB(bus_t busnumber)
  * The answer of the Intellibox is written to syslog
  *
  * @param  busnumber inside srcpd
- * @param  off, enable or disable
+ * @param  on, enable or disable
  **/
 static void enableP50Commands(const bus_t busnumber, bool on)
 {
@@ -391,7 +391,7 @@ void *thr_sendrec_IB(void *v)
                        "usleep() failed: %s (errno = %d)\n",
                        strerror(errno), errno);
         }
-    }                           /* End WHILE(1) */
+    }                           /* End WHILE(true) */
 
     /*run the cleanup routine */
     pthread_cleanup_pop(1);
