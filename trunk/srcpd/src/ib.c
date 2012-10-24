@@ -826,10 +826,11 @@ static void check_status_IB(bus_t busnumber)
 {
     unsigned char rr, xevnt1, xevnt2, xevnt3;
 
-    /* Request for state�changes:
-       1. �derungen an S88-Modulen
-       2. manuelle Lokbefehle
-       3. manuelle Weichenbefehle */
+    /* Request state changes:
+       1. Changes on S88 modules
+       2. Manual loco events
+       3. Manual turnout events
+     */
 
     /* #warning add loconet */
 
