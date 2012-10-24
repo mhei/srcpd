@@ -1,15 +1,15 @@
 -*- text -*-
 
-Programming of modules for the srcpd
+Programming of modules for srcpd
 
-Last update: 2005-10-29
+Last update: 2012-10-24
 
 0. Overview
 
 All modules can be used multiple and in parallel. 
 
-All modules are included at compile time. An option to select them
-(e.g. via configure) is not available at this time.
+All modules are included at compile time. Options to disable one or
+more of them are provided via configure (see configure --help).
 
 All configuration is done with the srcpd configuration file
 »srcpd.conf«. The XML based format needs some discipline, e.g. with
@@ -122,9 +122,9 @@ the updated information to all INFORMATION sessions.
 
 9. Naming Convention
 
-9.0 code style
+9.0 Code style
 
-The code is formatted using the indent tool. Its settings
+The code is formatted using the »indent« tool. Its settings
 should read as follows
 
  -kr -br -nce -nut -cbi4 -cli4
@@ -170,13 +170,13 @@ to work).
 Operating systems which are very different from UNIX can be supported,
 but this will need the respective developer(s).
 
-12. Use of CVS
+12. Use of svn
 
-Every one is permitted to read (updates of the public cvs server may
+Every one is permitted to read (updates of the public svn server may
 have a delay of some hours!). The instructions about how to access can
-be found at http://sourceforge.net/projects/srcpd, topic »CVS«.
+be found at http://sourceforge.net/projects/srcpd, topic »svn«.
 
-After CVS checkout the first to do is a 
+After svn checkout the first to do is a 
 
  autoreconf -i
 
@@ -184,4 +184,5 @@ After that the usual ./configure && make && make install should do
 the work.
 
 Who wants to get write access (and immediate read without the delay)
-should contact the project admins. 
+should contact the project admins.
+
