@@ -811,7 +811,7 @@ int doCmdClient(session_node_t * sn)
 
     syslog_session(sn->session, DBG_INFO, "Command mode starting.");
 
-    while (1) {
+    while (true) {
         pthread_testcancel();
         memset(line, 0, sizeof(line));
 

@@ -266,7 +266,7 @@ int doInfoClient(session_node_t * sn)
      *  diffent communication channels each having its own file
      *  descriptor.
      */
-    while (1) {
+    while (true) {
         pthread_testcancel();
 
         FD_SET(sn->pipefd[0], &rset);

@@ -666,7 +666,7 @@ void *thr_commandSelectrix(void *v)
     syslog_bus(btd->bus, DBG_INFO,
                "Selectrix bus command thread started.");
     buses[btd->bus].watchdog = 0;
-    while (1) {
+    while (true) {
         state = 0;
         pthread_testcancel();
         buses[btd->bus].watchdog = 1;
@@ -889,7 +889,7 @@ void *thr_feedbackSelectrix(void *v)
     syslog_bus(busnumber, DBG_INFO, "Selectrix "
                "feedback thread started.");
     respondtime = 0;
-    while (1) {
+    while (true) {
         /* Feed back contacts */
         if ((__selectrix->number_fb > 0) &&
             !(__checkSXflag(Rautenhaus_MODE + Rautenhaus_FDBCK))) {

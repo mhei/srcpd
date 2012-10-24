@@ -347,7 +347,7 @@ int main(int argc, char **argv)
      * Main loop: Wait for _real_ tasks: shutdown, reset and watch for
      * hanging processes
      */
-    while (1) {
+    while (true) {
         if (get_server_state() == ssTerminating)
             break;
 

@@ -346,7 +346,7 @@ void *thr_sendrec_M6051(void *v)
         syslog_bus(btd->bus, DBG_INFO, "Ignoring unread byte: %d ", rr);
     }
 
-    while (1) {
+    while (true) {
         pthread_testcancel();
         buses[btd->bus].watchdog = 2;
 

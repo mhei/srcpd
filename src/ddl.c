@@ -1882,7 +1882,7 @@ static void *thr_sendrec_DDL(void *v)
                    strerror(error), error);
     }
 
-    while (1) {
+    while (true) {
         pthread_testcancel();
         if (!queue_GL_isempty(btd->bus)) {
             char p;
