@@ -312,7 +312,7 @@ static int check_P50_command_state(bus_t busnumber)
  * reads an answer of the intellibox after a command in P50 mode.
  *
  * If required, the answer of the intellibox is shown via syslog.
- * Usually the method reads until '[' is received, which is defined
+ * Usually the method reads until ']' is received, which is defined
  * as the end of the string. This last char is not printed.
  *
  * @param  busnumber inside srcp
