@@ -1,15 +1,19 @@
+--- Release 2.1.2 ----
+
 2012-03-26 André Schenk <andre_schenk@users.sourceforge.net>
-        * src/ib.c: fixed usage of XEvtLok
+	* src/ib.c: Fix usage of XEvtLok
 
 2011-10-06 André Schenk <andre_schenk@users.sourceforge.net>
-	* src/srcp-ga.c src/srcp-ga.h src/srcp-command.c: added missing TERM GA function
+	* src/srcp-ga.c src/srcp-ga.h src/srcp-command.c: Add missing
+	TERM GA function
 
 2010-12-01 Guido Scholz <guido.scholz@bayernline.de>
 	* src/li100.c: Fix GA feedback address nibble mask
 
 2010-03-16 Guido Scholz <guido.scholz@bayernline.de>
-	* srcp-gl.c: Cleaned up GL address validity check. Patch
+	* srcp-gl.c: Clean up GL address validity check. Patch
 	provided by Harald Barth.
+
 
 --- Release 2.1.1 ----
 
@@ -144,6 +148,7 @@
 2008-12-29 Joerg Rottland <rottland@users.sourceforge.net>
 	* ddl.c: Fixes from Torsten Vogt for simultaneous use of DCC and MM
 	Configurable GA Adress shift (for backward compability)
+
 
 --- Release 2.0.12 ----
 
