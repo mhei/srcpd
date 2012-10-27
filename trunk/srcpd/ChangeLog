@@ -1,5 +1,9 @@
 --- Release 2.1.2 ----
 
+2012-10-27 Guido Scholz <guido.scholz@bayernline.de>
+	* src/loconet.c: Improve getaddrinfo() usage to loop over every
+	returned network address.
+
 2012-03-26 André Schenk <andre_schenk@users.sourceforge.net>
 	* src/ib.c: Fix usage of XEvtLok
 

@@ -275,39 +275,42 @@ static int init_lineLOCONET_lbserver(bus_t busnumber)
     err = getaddrinfo(buses[busnumber].device.net.hostname,
                          buses[busnumber].device.net.port, &hints, &result);
     if (err != 0) {
-        syslog_bus(busnumber, DBG_ERROR, "getaddrinfo %s",
+        syslog_bus(busnumber, DBG_ERROR, "getaddrinfo: %s",
                    gai_strerror(err));
         return 0;
     }
-    rp = result;
-    if (rp != NULL) {
+
+    for (rp = result; rp != NULL; rp = rp->ai_next) {
         sfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-        if (sfd == -1) {
-            syslog_bus(busnumber, DBG_FATAL,
-                       "Socket creation failed: %s (errno = %d).\n",
-                       strerror(errno), errno);
-            return 0;
-        }
-        alarm(30);
-        if (connect(sfd, rp->ai_addr, rp->ai_addrlen) != 0) {
-            syslog_bus(busnumber, DBG_ERROR,
-                       "ERROR connecting to %s:%d %d",
-                       buses[busnumber].device.net.hostname,
-                       buses[busnumber].device.net.port, errno);
-            close(sfd);
-            return 0;
-        }
-        alarm(0);
+        if (sfd == -1)
+            continue;
+        
+        alarm(30); /*?*/
+        if (connect(sfd, rp->ai_addr, rp->ai_addrlen) != -1)
+            break;                  /* Success */
 
-        err = socket_readline(sfd, msg, sizeof(msg) - 1);
-
-        /* client terminated connection */
-        if (0 == err) {
-            freeaddrinfo(result);
-            shutdown(sfd, SHUT_RDWR);
-            return 0;
-        }
+        alarm(0); /*?*/
+        close(sfd);
     }
+
+    if (rp == NULL) {               /* No address succeeded */
+        syslog_bus(busnumber, DBG_ERROR,
+                "Could not connect Loconet network device\n");
+        return -1;
+    }
+
+    freeaddrinfo(result);           /* No longer needed */
+
+
+    /*start communication*/
+    err = socket_readline(sfd, msg, sizeof(msg) - 1);
+
+    /* client terminated connection */
+    if (0 == err) {
+        shutdown(sfd, SHUT_RDWR);
+        return 0;
+    }
+
     /* read errror */
     if (-1 == err) {
         syslog_bus(busnumber, DBG_ERROR,
@@ -315,7 +318,7 @@ static int init_lineLOCONET_lbserver(bus_t busnumber)
                    strerror(errno), errno);
         return (-1);
     }
-    freeaddrinfo(result);
+
     syslog_bus(busnumber, DBG_INFO, "connected to %s", msg);
     buses[busnumber].device.net.sockfd = sfd;
     return 1;
