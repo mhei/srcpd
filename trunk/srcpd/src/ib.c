@@ -48,22 +48,7 @@ email                : frank.schmischke@t-online.de
 #define __ib ((IB_DATA*)buses[busnumber].driverdata)
 #define __ibt ((IB_DATA*)buses[btd->bus].driverdata)
 
-/* forward declaration of some IB helper functions */
-static int init_lineIB(bus_t busnumber);
-static int sendBreak(const int fd, bus_t busnumber);
-static int readAnswer_IB(const bus_t busnumber, const int generatePrintf);
-static int readByte_IB(bus_t busnumber, int wait, unsigned char *the_byte);
-static bool readList_IB(bus_t busnumber, unsigned char *bytes, size_t n);
-static speed_t checkBaudrate(const int fd, const bus_t busnumber);
-static void check_status_IB(bus_t busnumber);
-static void check_status_fb_IB(bus_t busnumber);
-static void check_status_ga_IB(bus_t busnumber);
-static void check_status_gl_IB(bus_t busnumber);
-static void check_status_pt_IB(bus_t busnumber);
-static void send_command_ga_IB(bus_t busnumber);
-static void send_command_gl_IB(bus_t busnumber);
-static void send_command_sm_IB(bus_t busnumber);
-static unsigned char send_command_power_IB(bus_t busnumber);
+
 
 int readConfig_IB(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
@@ -173,12 +158,680 @@ int init_gl_IB(gl_state_t * gl)
 }
 
 /**
+ * Provides an extra interface for reading one byte out of the intellibox.
+ *
+ * Tries to read one byte 10 times. If no byte is received -1 is returned.
+ * Because the IB guarantees an answer during 50 ms all write bytes can
+ * be generated with a waiting time of 0, and readByte_IB can be called
+ * directly after write
+ *
+ * @param: busnumber
+ * @param: wait time during read
+ * @param: address of the byte to be received.
+ **/
+static int readByte_IB(bus_t busnumber, int wait, unsigned char *the_byte)
+{
+    int i, status;
+
+    for (i = 0; i < 10; i++) {
+        status = readByte(busnumber, wait, the_byte);
+        if (status == 0)
+            return 0;
+
+        /* wait 10 ms */
+        if (usleep(10000) == -1) {
+            syslog_bus(busnumber, DBG_ERROR,
+                       "usleep() failed: %s (errno = %d)\n",
+                       strerror(errno), errno);
+        }
+    }
+    return -1;
+}
+
+/**
  * initGA: modifies the ga data used to initialize the device
  */
 int init_ga_IB(ga_state_t * ga)
 {
     ga->protocol = 'M';
     return SRCP_OK;
+}
+
+static int open_comport(bus_t busnumber, speed_t baud)
+{
+    int fd;
+    char *name = buses[busnumber].device.file.path;
+
+#ifdef linux
+    unsigned char rr;
+    int status;
+    int result;
+#endif
+
+    struct termios interface;
+
+    syslog_bus(busnumber, DBG_INFO,
+               "Try to open serial line %s for %i baud", name,
+               (2400 * (1 << (baud - 11))));
+    fd = open(name, O_RDWR);
+    buses[busnumber].device.file.fd = fd;
+    if (fd == -1) {
+        syslog_bus(busnumber, DBG_ERROR,
+                   "Open serial line failed: %s (errno = %d).\n",
+                   strerror(errno), errno);
+    }
+    else {
+#ifdef linux
+        tcgetattr(fd, &interface);
+        interface.c_oflag = ONOCR;
+        interface.c_cflag = CS8 | CRTSCTS | CSTOPB | CLOCAL | CREAD | HUPCL;
+        interface.c_iflag = IGNBRK;
+        interface.c_lflag = IEXTEN;
+        cfsetispeed(&interface, baud);
+        cfsetospeed(&interface, baud);
+        interface.c_cc[VMIN] = 0;
+        interface.c_cc[VTIME] = 1;
+        tcsetattr(fd, TCSANOW, &interface);
+
+        result = sleep(1);
+        if (result != 0) {
+            syslog_bus(busnumber, DBG_ERROR,
+                       "sleep() interrupted, %d seconds left\n", result);
+        }
+
+        status = 0;
+        while (status != -1)
+            status = readByte_IB(busnumber, 1, &rr);
+#else
+        cfsetispeed(&interface, baud);
+        cfsetospeed(&interface, baud);
+        interface.c_cflag = CREAD | HUPCL | CS8 | CSTOPB | CRTSCTS;
+        cfmakeraw(&interface);
+        tcsetattr(fd, TCSAFLUSH | TCSANOW, &interface);
+#endif
+
+    }
+    return fd;
+}
+
+/*check if P50 commands are enabled
+ * return values:
+ * 1: enabled
+ * 0: disabled
+ * -1: error, e.g. download mode found*/
+static int check_P50_command_state(bus_t busnumber)
+{
+    int i, len, result;
+    int returnvalue = 0;
+    unsigned char input[10];
+
+    memset(input, '\0', sizeof(input));
+    writeByte(busnumber, XNOP, 0);
+
+    /* wait 200 ms, allow some time for eventual s88 data */
+    if (usleep(200000) == -1) {
+        syslog_bus(busnumber, DBG_ERROR,
+                   "usleep() failed: %s (errno = %d)\n",
+                   strerror(errno), errno);
+    }
+
+    len = 0;
+    for (i = 0; i < 2; i++) {
+        result = readByte_IB(busnumber, 1, &input[i]);
+        if (result == 0)
+            len++;
+    }
+
+    switch (len) {
+        case 1:
+            if (input[0] == 'D') {
+                syslog_bus(busnumber, DBG_FATAL,
+                           "Intellibox in download mode.\n"
+                           "Do not proceed!\n");
+                returnvalue = -1;
+            }
+            syslog_bus(busnumber, DBG_INFO,
+                       "P50-commands are disabled.\n");
+            break;
+
+        case 2:
+            syslog_bus(busnumber, DBG_INFO, "P50-commands are enabled.\n");
+            returnvalue = 1;
+            break;
+
+        default:
+            syslog_bus(busnumber, DBG_ERROR,
+                       "Unexpected read result: %d!\n", len);
+            break;
+    }
+    return returnvalue;
+}
+
+
+/**
+ * reads an answer of the intellibox after a command in P50 mode.
+ *
+ * If required, the answer of the intellibox is shown via syslog.
+ * Usually the method reads until '[' is received, which is defined
+ * as the end of the string. This last char is not printed.
+ *
+ * @param  busnumber inside srcp
+ * @param if > 0 the answer is printed
+ * @return 0 if OK
+ **/
+static int readAnswer_IB(const bus_t busnumber, const int generatePrintf)
+{
+    unsigned char input[80];
+    int counter = 0;
+    bool found = false;
+
+    memset(input, '\0', sizeof(input));
+
+    while ((!found) && (counter < 80)) {
+        if (readByte_IB(busnumber, 1, &input[counter]) == 0) {
+            if (input[counter] == 0)
+                input[counter] = 0x20;
+            if (input[counter] == ']') {
+                input[counter] = '\0';
+                found = true;
+            }
+        }
+        counter++;
+    }
+
+    if (!found)
+        return -1;
+
+    if (generatePrintf > 0) {
+        syslog_bus(busnumber, DBG_INFO, "IBox returned: %s\n", input);
+    }
+    return 0;
+}
+
+/**
+ * Sends the command to switch P50 commands on or off, see interface
+ * description of Intellibox
+ *
+ * The answer of the Intellibox is written to syslog
+ *
+ * @param  busnumber inside srcpd
+ * @param  on, enable or disable
+ **/
+static void enableP50Commands(const bus_t busnumber, bool on)
+{
+    int status;
+
+    if (on) {
+        syslog_bus(busnumber, DBG_INFO, "Switching P50-commands on ...\n");
+        writeString(busnumber, P50_ENABLE, 0);
+    }
+    else {
+        syslog_bus(busnumber, DBG_INFO,
+                   "Switching P50-commands off ...\n");
+        writeString(busnumber, P50_DISABLE, 0);
+    }
+
+    writeByte(busnumber, '\r', 0);
+
+    status = readAnswer_IB(busnumber, 0);
+    if (status == 0)
+        syslog_bus(busnumber, DBG_INFO, "Success.\n");
+    else
+        syslog_bus(busnumber, DBG_INFO, "Failure.\n");
+}
+
+
+/**
+ * reset the baud rate inside ib depending on par 1
+ * @param requested baudrate
+ **/
+static void resetBaudrate(const speed_t speed, const bus_t busnumber)
+{
+    int status;
+
+    switch (check_P50_command_state(busnumber)) {
+        case -1:
+            /*Download mode, exit */
+            return;
+        case 0:
+            /*P50 commands disabled, switch on */
+            enableP50Commands(busnumber, true);
+            break;
+        case 1:
+            /*P50 commands enabled, do nothing */
+            break;
+    }
+
+    switch (speed) {
+        case B2400:
+            syslog_bus(busnumber, DBG_INFO,
+                       "Changing baud rate to 2400 bps\n");
+            writeString(busnumber, "XB2400", 0);
+            break;
+
+        case B4800:
+            syslog_bus(busnumber, DBG_INFO,
+                       "Changing baud rate to 4800 bps\n");
+            writeString(busnumber, "XB4800", 0);
+            break;
+
+        case B9600:
+            syslog_bus(busnumber, DBG_INFO,
+                       "Changing baud rate to 9600 bps\n");
+            writeString(busnumber, "XB9600", 0);
+            break;
+
+        case B19200:
+            syslog_bus(busnumber, DBG_INFO,
+                       "Changing baud rate to 19200 bps\n");
+            writeString(busnumber, "XB19200", 0);
+            break;
+
+        case B38400:
+            syslog_bus(busnumber, DBG_INFO,
+                       "Changing baud rate to 38400 bps\n");
+            writeString(busnumber, "XB38400", 0);
+            break;
+    }
+
+    writeByte(busnumber, '\r', 0);
+
+    /* wait 200 ms */
+    if (usleep(200000) == -1) {
+        syslog_bus(busnumber, DBG_ERROR,
+                   "usleep() failed: %s (errno = %d)\n",
+                   strerror(errno), errno);
+    }
+
+    status = readAnswer_IB(busnumber, 1);
+    if (status == 0)
+        syslog_bus(busnumber, DBG_INFO, "Success.\n");
+    else
+        syslog_bus(busnumber, DBG_INFO, "Failure.\n");
+}
+
+/* Send RS232 break signal
+ * This is an inversion of the data lead for a specific period of
+ * time, exceeding the period of at least one full character, including
+ * the start/stop bits, and any parity. As such, the duration of the
+ * BREAK signal is a function of the port speed of the UART sending the
+ * data. */
+static int sendBreak(const int fd, bus_t busnumber)
+{
+    int result;
+
+    if (tcflush(fd, TCIOFLUSH) == -1) {
+        syslog_bus(busnumber, DBG_ERROR,
+                   "tcflush() failed: %s (errno = %d)\n",
+                   strerror(errno), errno);
+        return -1;
+    }
+
+    if (tcflow(fd, TCOOFF) == -1) {
+        syslog_bus(busnumber, DBG_ERROR,
+                   "tcflow() failed: %s (errno = %d)\n",
+                   strerror(errno), errno);
+    }
+
+    /* wait 300 ms */
+    if (usleep(300000) == -1) {
+        syslog_bus(busnumber, DBG_ERROR,
+                   "usleep() failed: %s (errno = %d)\n",
+                   strerror(errno), errno);
+    }
+
+    /* Why is this simple call not sufficient and what does the "100"
+     * mean? More than undefined behavior? (gs) */
+    if (tcsendbreak(fd, 100) == -1) {
+        syslog_bus(busnumber, DBG_ERROR,
+                   "tcsendbreak() failed: %s (errno = %d)\n",
+                   strerror(errno), errno);
+        return -1;
+    }
+
+    /* wait 3 s */
+    result = sleep(3);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                   "sleep() interrupted, %d seconds left\n", result);
+    }
+
+    /* wait 600 ms */
+    if (usleep(600000) == -1) {
+        syslog_bus(busnumber, DBG_ERROR,
+                   "usleep() failed: %s (errno = %d)\n",
+                   strerror(errno), errno);
+    }
+
+    if (tcflow(fd, TCOON) == -1) {
+        syslog_bus(busnumber, DBG_ERROR,
+                   "tcflow() failed: %s (errno = %d)\n",
+                   strerror(errno), errno);
+    }
+
+    return 0;
+}
+
+
+/**
+ * Autodetection of Intellibox baud rate setting;
+ * see interface description of Intellibox.
+ *
+ * @param file descriptor of the port
+ * @param  busnumber inside srcp
+ * @return the correct baudrate or -1 if not recognized
+ **/
+speed_t checkBaudrate(const int fd, const bus_t busnumber)
+{
+    int found = 0;
+    int baudrate = 2400;
+    struct termios interface;
+    unsigned char input[10];
+    short len = 0;
+    int i;
+    speed_t internalBaudrate = B0;
+
+    syslog_bus(busnumber, DBG_INFO,
+               "Checking baud rate inside IB, see special option #1 "
+               "in IB Programming Handbook\n");
+
+    memset(input, '\0', sizeof(input));
+
+    while ((found == 0) && (baudrate <= 38400)) {
+        syslog_bus(busnumber, DBG_INFO, "baudrate = %i\n", baudrate);
+
+        if (tcgetattr(fd, &interface) == -1) {
+            syslog_bus(busnumber, DBG_ERROR,
+                       "tcgetattr() failed: %s (errno = %d)\n",
+                       strerror(errno), errno);
+            return B0;
+        }
+
+        switch (baudrate) {
+            case 2400:
+                internalBaudrate = B2400;
+                break;
+            case 4800:
+                internalBaudrate = B4800;
+                break;
+            case 9600:
+                internalBaudrate = B9600;
+                break;
+            case 19200:
+                internalBaudrate = B19200;
+                break;
+            case 38400:
+                internalBaudrate = B38400;
+                break;
+            default:
+                internalBaudrate = B19200;
+                break;
+        }
+
+        if (cfsetispeed(&interface, internalBaudrate) == -1) {
+            syslog_bus(busnumber, DBG_ERROR,
+                       "cfsetispeed() failed: %s (errno = %d)\n",
+                       strerror(errno), errno);
+            /*CHECK: What to do now? */
+        }
+
+        if (tcflush(fd, TCOFLUSH) == -1) {
+            syslog_bus(busnumber, DBG_ERROR,
+                       "tcflush() failed: %s (errno = %d)\n",
+                       strerror(errno), errno);
+        }
+
+        if (tcsetattr(fd, TCSANOW, &interface) == -1) {
+            syslog_bus(busnumber, DBG_ERROR,
+                       "tcsetattr() failed: %s (errno = %d)\n",
+                       strerror(errno), errno);
+            return B0;
+        }
+
+        writeByte(busnumber, XNOP, 0);
+
+        /* wait 200 ms */
+        if (usleep(200000) == -1) {
+            syslog_bus(busnumber, DBG_ERROR,
+                       "usleep() failed: %s (errno = %d)\n",
+                       strerror(errno), errno);
+        }
+
+        for (i = 0; i < 2; i++) {
+            int erg = readByte_IB(busnumber, 1, &input[i]);
+            if (erg == 0)
+                len++;
+        }
+
+        switch (len) {
+            case 1:
+                /* IBox has P50 commands disabled */
+                found = 1;
+                if (input[0] == 'D') {
+                    syslog_bus(busnumber, DBG_FATAL,
+                               "Intellibox in download mode.\n"
+                               "DO NOT PROCEED!\n");
+                    return (2);
+                }
+                syslog_bus(busnumber, DBG_INFO,
+                           "IBox found; P50-commands are disabled.\n");
+                break;
+
+            case 2:
+                /* IBox has P50 commands enabled */
+                found = 1;
+                /* don't know if this also works, when P50 is enabled... */
+                /* check disabled for now... */
+                syslog_bus(busnumber, DBG_INFO,
+                           "IBox found; P50-commands are enabled.\n");
+                break;
+
+            default:
+                found = 0;
+                break;
+        }
+
+        if (found == 0) {
+            baudrate <<= 1;
+            internalBaudrate = B0;
+        }
+
+        /* wait 200 ms */
+        if (usleep(200000) == -1) {
+            syslog_bus(busnumber, DBG_ERROR,
+                       "usleep() failed: %s (errno = %d)\n",
+                       strerror(errno), errno);
+        }
+    }
+    syslog_bus(busnumber, DBG_INFO, "Baudrate checked: %d\n", baudrate);
+    return internalBaudrate;
+}
+
+static int run_autodetection(bus_t busnumber)
+{
+    int fd;
+    int status;
+    int result;
+    speed_t baud;
+    struct termios interface;
+    unsigned char rr;
+    char *name = buses[busnumber].device.file.path;
+
+    syslog_bus(busnumber, DBG_INFO,
+               "Beginning to detect IB on serial line: %s\n", name);
+
+    syslog_bus(busnumber, DBG_INFO,
+               "Opening serial line %s for 2400 baud\n", name);
+    fd = open(name, O_RDWR);
+    if (fd == -1) {
+        syslog_bus(busnumber, DBG_ERROR,
+                   "Open serial line failed: %s (errno = %d)\n",
+                   strerror(errno), errno);
+        return 1;
+    }
+    buses[busnumber].device.file.fd = fd;
+    tcgetattr(fd, &interface);
+    interface.c_oflag = ONOCR;
+    interface.c_cflag = CS8 | CRTSCTS | CSTOPB | CLOCAL | CREAD | HUPCL;
+    interface.c_iflag = IGNBRK;
+    interface.c_lflag = IEXTEN;
+    cfsetispeed(&interface, B2400);
+    cfsetospeed(&interface, B2400);
+    interface.c_cc[VMIN] = 0;
+    interface.c_cc[VTIME] = 1;
+    tcsetattr(fd, TCSANOW, &interface);
+
+    result = sleep(1);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                   "sleep() interrupted, %d seconds left\n", result);
+    }
+    syslog_bus(busnumber, DBG_INFO, "Clearing input-buffer\n");
+
+    status = 0;
+    while (status != -1)
+        status = readByte_IB(busnumber, 1, &rr);
+
+    syslog_bus(busnumber, DBG_INFO, "Sending BREAK... ");
+
+    status = sendBreak(fd, busnumber);
+    close(fd);
+
+    if (status == 0)
+        syslog_bus(busnumber, DBG_INFO, "Success.\n");
+    else
+        syslog_bus(busnumber, DBG_INFO, "Failure.\n");
+
+    /* Open the comport with 2400 Baud, to get baud rate from IB */
+    baud = B2400;
+    fd = open_comport(busnumber, baud);
+    buses[busnumber].device.file.fd = fd;
+    if (fd < 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                   "Open serial line failed: %s (errno = %d)\n",
+                   strerror(errno), errno);
+        return (-1);
+    }
+
+    baud = checkBaudrate(fd, busnumber);
+    if ((baud == B0) || (baud > B38400)) {
+        syslog_bus(busnumber, DBG_ERROR, "checkBaurate() failed\n");
+        return -1;
+    }
+
+    buses[busnumber].device.file.baudrate = baud;
+    resetBaudrate(buses[busnumber].device.file.baudrate, busnumber);
+    close_comport(busnumber);
+
+    result = sleep(1);
+    if (result != 0) {
+        syslog_bus(busnumber, DBG_ERROR,
+                   "sleep() interrupted, %d seconds left\n", result);
+    }
+    return 0;
+}
+
+
+/**
+ * Read a configuration list from the intellibox. Every list entry starts
+ * with one byte (length) followed by n bytes. After that another list entry
+ * may follow. If a length byte is 0 then the end of the list is reached.
+ *
+ * All list entries are copied into the given array without any gaps.
+ *
+ * @param: busnumber
+ * @param: bytes array to store the list content
+ * @param: n array size
+ *
+ * @result true if read was successful
+ **/
+static bool readList_IB(bus_t busnumber, unsigned char *bytes, size_t n)
+{
+    bool result = false;
+    size_t j = 0;
+    int i = 0, status;
+    unsigned char length;
+
+    if (bytes != NULL) {
+        while (true) {
+            if (j >= n) {
+                break;
+            }
+            status = readByte_IB(busnumber, 1, &length);
+            if (status != 0) {
+                break;
+            }
+            if (length == 0) {
+                result = true;
+                break;
+            }
+            for (i = 0; i < length && j < n; i++) {
+                status = readByte_IB(busnumber, 1, &bytes[j++]);
+                if (status != 0) {
+                    break;
+                }
+            }
+        }
+    }
+    return result;
+}
+
+static void show_firmware_version(bus_t bus)
+{
+    unsigned char buffer[20];
+
+    memset(buffer, '\0', sizeof(buffer));
+    writeByte(bus, XVer, 0);
+
+    if (!readList_IB(bus, buffer, sizeof(buffer))) {
+        syslog_bus(bus, DBG_INFO, "Could not read version information.\n");
+        return;
+    }
+
+    /* FIXME: This solution definitively is not smart and needs some
+     * fine tuning; the original IB delivers 6 list elements, other P50X
+     * central units may do less. */
+    syslog_bus(bus, DBG_INFO, "Firmware version: "
+               "%hhi %hhi %hhi %hhi %hhi %hhi\n",
+               buffer[0], buffer[1], buffer[2],
+               buffer[3], buffer[4], buffer[5]);
+}
+
+
+static int init_lineIB(bus_t busnumber)
+{
+    int fd;
+
+    if (buses[busnumber].flags & USE_AUTODETECTION) {
+        if (0 != run_autodetection(busnumber))
+            return (-1);
+    }
+
+    /* Open the serial line for the communication */
+    fd = open_comport(busnumber, buses[busnumber].device.file.baudrate);
+    buses[busnumber].device.file.fd = fd;
+    if (fd < 0) {
+        printf("open_comport() failed\n");
+        return (-1);
+    }
+
+    switch (check_P50_command_state(busnumber)) {
+        case -1:
+            /*Download mode, exit */
+            return 2;
+        case 0:
+            /*P50 commands disabled, do nothing */
+            break;
+        case 1:
+            /*P50 commands enabled, switch off */
+            enableP50Commands(busnumber, false);
+            break;
+    }
+
+    /* read firmware version */
+    show_firmware_version(busnumber);
+
+    return 0;
 }
 
 int init_bus_IB(bus_t busnumber)
@@ -238,39 +891,6 @@ int init_bus_IB(bus_t busnumber)
     return status;
 }
 
-/**
- * Sends the command to switch P50 commands on or off, see interface
- * description of Intellibox
- *
- * The answer of the Intellibox is written to syslog
- *
- * @param  busnumber inside srcpd
- * @param  on, enable or disable
- **/
-static void enableP50Commands(const bus_t busnumber, bool on)
-{
-    int status;
-
-    if (on) {
-        syslog_bus(busnumber, DBG_INFO, "Switching P50-commands on ...\n");
-        writeString(busnumber, P50_ENABLE, 0);
-    }
-    else {
-        syslog_bus(busnumber, DBG_INFO,
-                   "Switching P50-commands off ...\n");
-        writeString(busnumber, P50_DISABLE, 0);
-    }
-
-    writeByte(busnumber, '\r', 0);
-
-    status = readAnswer_IB(busnumber, 0);
-    if (status == 0)
-        syslog_bus(busnumber, DBG_INFO, "Success.\n");
-    else
-        syslog_bus(busnumber, DBG_INFO, "Failure.\n");
-}
-
-
 /*thread cleanup routine for this bus*/
 static void end_bus_thread(bus_thread_t * btd)
 {
@@ -307,95 +927,6 @@ static void handle_power_command(bus_t bus)
     infoPower(bus, msg);
     enqueueInfoMessage(msg);
     buses[bus].watchdog++;
-}
-
-void *thr_sendrec_IB(void *v)
-{
-    unsigned char rr;
-    int zaehler1;
-    int last_cancel_state, last_cancel_type;
-
-    bus_thread_t *btd = (bus_thread_t *) malloc(sizeof(bus_thread_t));
-
-    if (btd == NULL)
-        pthread_exit((void *) 1);
-    btd->bus = (bus_t) v;
-    btd->fd = -1;
-
-    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
-    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &last_cancel_type);
-
-    /*register cleanup routine */
-    pthread_cleanup_push((void *) end_bus_thread, (void *) btd);
-
-    syslog_bus(btd->bus, DBG_INFO, "Intellibox bus started (device = %s).",
-               buses[btd->bus].device.file.path);
-
-    /* initialize tga-structure */
-    for (zaehler1 = 0; zaehler1 < 50; zaehler1++)
-        __ibt->tga[zaehler1].id = 0;
-
-    /* request current sensor status */
-    writeByte(btd->bus, XSensOff, 0);
-    readByte_IB(btd->bus, 1, &rr);
-
-    while (true) {
-        buses[btd->bus].watchdog = 1;
-        pthread_testcancel();
-        if (buses[btd->bus].power_changed == 1) {
-            if (__ibt->emergency_on_ib == 1) {
-                syslog_bus(btd->bus, DBG_INFO, "got power off from IB");
-                __ibt->emergency_on_ib = 2;
-                setPower(btd->bus, POWER_OFF, "Emergency Stop");
-            }
-            else {
-                if ((__ibt->emergency_on_ib == 2)
-                    && (buses[btd->bus].power_state == POWER_OFF)) {
-                    check_status_IB(btd->bus);
-                    if (usleep(50000) == -1) {
-                        syslog_bus(btd->bus, DBG_ERROR,
-                                   "usleep() failed: %s (errno = %d)\n",
-                                   strerror(errno), errno);
-                    }
-                    continue;
-                }
-
-                if (send_command_power_IB(btd->bus) == XPWOFF) {
-                    syslog_bus(btd->bus, DBG_INFO,
-                               "power on not possible - overheating");
-                    setPower(btd->bus, POWER_OFF,
-                             "power on not possible - overheating");
-                }
-                else if (buses[btd->bus].power_state == POWER_ON)
-                    __ibt->emergency_on_ib = 0;
-            }
-            handle_power_command(btd->bus);
-        }
-
-        if (buses[btd->bus].power_state == POWER_OFF) {
-            check_status_IB(btd->bus);
-            if (usleep(50000) == -1) {
-                syslog_bus(btd->bus, DBG_ERROR,
-                           "usleep() failed: %s (errno = %d)\n",
-                           strerror(errno), errno);
-            }
-            continue;
-        }
-        send_command_gl_IB(btd->bus);
-        send_command_ga_IB(btd->bus);
-        check_status_IB(btd->bus);
-        send_command_sm_IB(btd->bus);
-        check_reset_fb(btd->bus);
-        if (usleep(50000) == -1) {
-            syslog_bus(btd->bus, DBG_ERROR,
-                       "usleep() failed: %s (errno = %d)\n",
-                       strerror(errno), errno);
-        }
-    }                           /* End WHILE(true) */
-
-    /*run the cleanup routine */
-    pthread_cleanup_pop(1);
-    return NULL;
 }
 
 static void send_command_ga_IB(bus_t busnumber)
@@ -822,6 +1353,159 @@ static void send_command_sm_IB(bus_t busnumber)
     }
 }
 
+static void check_status_fb_IB(bus_t busnumber)
+{
+    unsigned char rr;
+    int temp, aktS88;
+
+    writeByte(busnumber, XEvtSen, 0);
+    readByte_IB(busnumber, 1, &rr);
+    while (rr != 0x00) {
+        aktS88 = rr;
+        readByte_IB(busnumber, 1, &rr);
+        temp = rr;
+        temp <<= 8;
+        readByte_IB(busnumber, 1, &rr);
+        setFBmodul(busnumber, aktS88, temp | rr);
+        readByte_IB(busnumber, 1, &rr);
+    }
+}
+
+static void check_status_ga_IB(bus_t busnumber)
+{
+    unsigned char rr;
+    int temp, i;
+    ga_state_t gatmp;
+
+    writeByte(busnumber, XEvtTrn, 0);
+    readByte_IB(busnumber, 1, &rr);
+    temp = rr;
+    for (i = 0; i < temp; i++) {
+        readByte_IB(busnumber, 1, &rr);
+        gatmp.id = rr;
+        readByte_IB(busnumber, 1, &rr);
+        gatmp.id |= (rr & 0x07) << 8;
+        gatmp.port = (rr & 0x80) ? 1 : 0;
+        gatmp.action = (rr & 0x40) ? 1 : 0;
+        setGA(busnumber, gatmp.id, gatmp);
+    }
+}
+
+static void check_status_gl_IB(bus_t busnumber)
+{
+    unsigned char rr;
+    gl_state_t gltmp, glakt;
+
+    writeByte(busnumber, XEvtLok, 0);
+    readByte_IB(busnumber, 1, &rr);
+
+    while (rr < 0x80) {
+        if (rr == 1) {
+            /* Loco in emergency stop */
+            gltmp.speed = 0;
+            gltmp.direction = 2;
+        }
+        else {
+            /* current loco speed */
+            gltmp.speed = rr;
+            gltmp.direction = 0;
+            if (gltmp.speed > 0)
+                gltmp.speed--;
+        }
+
+        /* 2. byte functions */
+        readByte_IB(busnumber, 1, &rr);
+        /* gltmp.funcs = rr & 0xf0; */
+        gltmp.funcs = (rr << 1);
+
+        /* 3. byte address (low-part A7..A0) */
+        readByte_IB(busnumber, 1, &rr);
+        gltmp.id = rr;
+
+        /* 4. byte address (high-part A13..A8), direction, light */
+        readByte_IB(busnumber, 1, &rr);
+        if ((rr & 0x80) && (gltmp.direction == 0))
+            gltmp.direction = 1;        /* direction is forward */
+        if (rr & 0x40)
+            gltmp.funcs |= 0x01;        /* light is on */
+        rr &= 0x3F;
+        gltmp.id |= rr << 8;
+
+        /* 5. byte real speed (is ignored) */
+        readByte_IB(busnumber, 1, &rr);
+        /* gltmp.id, gltmp.speed, gltmp.direction); */
+
+        /* initialize the GL if not done by user, */
+        /* because IB can report uninitialized GLs... */
+        if (gltmp.id > 0) {
+            if (!isInitializedGL(busnumber, gltmp.id)) {
+                syslog_bus(busnumber, DBG_INFO,
+                           "IB reported uninitialized GL. "
+                           "Performing default init for %d", gltmp.id);
+                cacheInitGL(busnumber, gltmp.id, 'P', 1, SPEED_STEPS, 5);
+            }
+            /* get old data, to know which FS the user wants to have... */
+            cacheGetGL(busnumber, gltmp.id, &glakt);
+            /* recalculate speed */
+	    gltmp.n_fs = glakt.n_fs;
+            gltmp.speed = (gltmp.speed * glakt.n_fs) / SPEED_STEPS;
+            cacheSetGL(busnumber, gltmp.id, gltmp);
+        }
+
+        /* further loco events? */
+        readByte_IB(busnumber, 1, &rr);
+    }
+}
+
+
+static void check_status_pt_IB(bus_t busnumber)
+{
+    int i;
+    int result;
+    unsigned char rr[7];
+
+    syslog_bus(busnumber, DBG_DEBUG,
+               "We've got an answer from programming decoder");
+    /* first clear input-buffer */
+    i = 0;
+    while (i == 0) {
+        i = readByte_IB(busnumber, 0, &rr[0]);
+    }
+
+    i = -1;
+    while (i == -1) {
+        writeByte(busnumber, XEvtPT, 0);
+        i = readByte_IB(busnumber, 1, &rr[0]);
+        if (i == 0) {
+            /* wait for an answer of our programming */
+            if (rr[0] == 0xF5) {
+                /* sleep for one second, if answer is not available yet */
+                i = -1;
+                result = sleep(1);
+                if (result != 0) {
+                    syslog_bus(busnumber, DBG_ERROR,
+                               "sleep() interrupted, %d seconds left\n",
+                               result);
+                }
+            }
+        }
+    }
+
+    for (i = 0; i < (int) rr[0]; i++)
+        readByte_IB(busnumber, 1, &rr[i + 1]);
+
+    if ((int) rr[0] < 2)
+        rr[2] = __ib->last_value;
+
+
+    if (__ib->last_type != -1) {
+        session_endwait(busnumber, (int) rr[2]);
+        setSM(busnumber, __ib->last_type, -1, __ib->last_typeaddr,
+              __ib->last_bit, (int) rr[2], (int) rr[1]);
+        __ib->last_type = -1;
+    }
+}
+
 static void check_status_IB(bus_t busnumber)
 {
     unsigned char rr, xevnt1, xevnt2, xevnt3;
@@ -929,689 +1613,6 @@ static void check_status_IB(bus_t busnumber)
         check_status_pt_IB(busnumber);
 }
 
-static void check_status_pt_IB(bus_t busnumber)
-{
-    int i;
-    int result;
-    unsigned char rr[7];
-
-    syslog_bus(busnumber, DBG_DEBUG,
-               "We've got an answer from programming decoder");
-    /* first clear input-buffer */
-    i = 0;
-    while (i == 0) {
-        i = readByte_IB(busnumber, 0, &rr[0]);
-    }
-
-    i = -1;
-    while (i == -1) {
-        writeByte(busnumber, XEvtPT, 0);
-        i = readByte_IB(busnumber, 1, &rr[0]);
-        if (i == 0) {
-            /* wait for an answer of our programming */
-            if (rr[0] == 0xF5) {
-                /* sleep for one second, if answer is not available yet */
-                i = -1;
-                result = sleep(1);
-                if (result != 0) {
-                    syslog_bus(busnumber, DBG_ERROR,
-                               "sleep() interrupted, %d seconds left\n",
-                               result);
-                }
-            }
-        }
-    }
-
-    for (i = 0; i < (int) rr[0]; i++)
-        readByte_IB(busnumber, 1, &rr[i + 1]);
-
-    if ((int) rr[0] < 2)
-        rr[2] = __ib->last_value;
-
-
-    if (__ib->last_type != -1) {
-        session_endwait(busnumber, (int) rr[2]);
-        setSM(busnumber, __ib->last_type, -1, __ib->last_typeaddr,
-              __ib->last_bit, (int) rr[2], (int) rr[1]);
-        __ib->last_type = -1;
-    }
-}
-
-static int open_comport(bus_t busnumber, speed_t baud)
-{
-    int fd;
-    char *name = buses[busnumber].device.file.path;
-
-#ifdef linux
-    unsigned char rr;
-    int status;
-    int result;
-#endif
-
-    struct termios interface;
-
-    syslog_bus(busnumber, DBG_INFO,
-               "Try to open serial line %s for %i baud", name,
-               (2400 * (1 << (baud - 11))));
-    fd = open(name, O_RDWR);
-    buses[busnumber].device.file.fd = fd;
-    if (fd == -1) {
-        syslog_bus(busnumber, DBG_ERROR,
-                   "Open serial line failed: %s (errno = %d).\n",
-                   strerror(errno), errno);
-    }
-    else {
-#ifdef linux
-        tcgetattr(fd, &interface);
-        interface.c_oflag = ONOCR;
-        interface.c_cflag = CS8 | CRTSCTS | CSTOPB | CLOCAL | CREAD | HUPCL;
-        interface.c_iflag = IGNBRK;
-        interface.c_lflag = IEXTEN;
-        cfsetispeed(&interface, baud);
-        cfsetospeed(&interface, baud);
-        interface.c_cc[VMIN] = 0;
-        interface.c_cc[VTIME] = 1;
-        tcsetattr(fd, TCSANOW, &interface);
-
-        result = sleep(1);
-        if (result != 0) {
-            syslog_bus(busnumber, DBG_ERROR,
-                       "sleep() interrupted, %d seconds left\n", result);
-        }
-
-        status = 0;
-        while (status != -1)
-            status = readByte_IB(busnumber, 1, &rr);
-#else
-        cfsetispeed(&interface, baud);
-        cfsetospeed(&interface, baud);
-        interface.c_cflag = CREAD | HUPCL | CS8 | CSTOPB | CRTSCTS;
-        cfmakeraw(&interface);
-        tcsetattr(fd, TCSAFLUSH | TCSANOW, &interface);
-#endif
-
-    }
-    return fd;
-}
-
-/*check if P50 commands are enabled
- * return values:
- * 1: enabled
- * 0: disabled
- * -1: error, e.g. download mode found*/
-static int check_P50_command_state(bus_t busnumber)
-{
-    int i, len, result;
-    int returnvalue = 0;
-    unsigned char input[10];
-
-    memset(input, '\0', sizeof(input));
-    writeByte(busnumber, XNOP, 0);
-
-    /* wait 200 ms, allow some time for eventual s88 data */
-    if (usleep(200000) == -1) {
-        syslog_bus(busnumber, DBG_ERROR,
-                   "usleep() failed: %s (errno = %d)\n",
-                   strerror(errno), errno);
-    }
-
-    len = 0;
-    for (i = 0; i < 2; i++) {
-        result = readByte_IB(busnumber, 1, &input[i]);
-        if (result == 0)
-            len++;
-    }
-
-    switch (len) {
-        case 1:
-            if (input[0] == 'D') {
-                syslog_bus(busnumber, DBG_FATAL,
-                           "Intellibox in download mode.\n"
-                           "Do not proceed!\n");
-                returnvalue = -1;
-            }
-            syslog_bus(busnumber, DBG_INFO,
-                       "P50-commands are disabled.\n");
-            break;
-
-        case 2:
-            syslog_bus(busnumber, DBG_INFO, "P50-commands are enabled.\n");
-            returnvalue = 1;
-            break;
-
-        default:
-            syslog_bus(busnumber, DBG_ERROR,
-                       "Unexpected read result: %d!\n", len);
-            break;
-    }
-    return returnvalue;
-}
-
-
-/**
- * reset the baud rate inside ib depending on par 1
- * @param requested baudrate
- **/
-static void resetBaudrate(const speed_t speed, const bus_t busnumber)
-{
-    int status;
-
-    switch (check_P50_command_state(busnumber)) {
-        case -1:
-            /*Download mode, exit */
-            return;
-        case 0:
-            /*P50 commands disabled, switch on */
-            enableP50Commands(busnumber, true);
-            break;
-        case 1:
-            /*P50 commands enabled, do nothing */
-            break;
-    }
-
-    switch (speed) {
-        case B2400:
-            syslog_bus(busnumber, DBG_INFO,
-                       "Changing baud rate to 2400 bps\n");
-            writeString(busnumber, "XB2400", 0);
-            break;
-
-        case B4800:
-            syslog_bus(busnumber, DBG_INFO,
-                       "Changing baud rate to 4800 bps\n");
-            writeString(busnumber, "XB4800", 0);
-            break;
-
-        case B9600:
-            syslog_bus(busnumber, DBG_INFO,
-                       "Changing baud rate to 9600 bps\n");
-            writeString(busnumber, "XB9600", 0);
-            break;
-
-        case B19200:
-            syslog_bus(busnumber, DBG_INFO,
-                       "Changing baud rate to 19200 bps\n");
-            writeString(busnumber, "XB19200", 0);
-            break;
-
-        case B38400:
-            syslog_bus(busnumber, DBG_INFO,
-                       "Changing baud rate to 38400 bps\n");
-            writeString(busnumber, "XB38400", 0);
-            break;
-    }
-
-    writeByte(busnumber, '\r', 0);
-
-    /* wait 200 ms */
-    if (usleep(200000) == -1) {
-        syslog_bus(busnumber, DBG_ERROR,
-                   "usleep() failed: %s (errno = %d)\n",
-                   strerror(errno), errno);
-    }
-
-    status = readAnswer_IB(busnumber, 1);
-    if (status == 0)
-        syslog_bus(busnumber, DBG_INFO, "Success.\n");
-    else
-        syslog_bus(busnumber, DBG_INFO, "Failure.\n");
-}
-
-static int run_autodetection(bus_t busnumber)
-{
-    int fd;
-    int status;
-    int result;
-    speed_t baud;
-    struct termios interface;
-    unsigned char rr;
-    char *name = buses[busnumber].device.file.path;
-
-    syslog_bus(busnumber, DBG_INFO,
-               "Beginning to detect IB on serial line: %s\n", name);
-
-    syslog_bus(busnumber, DBG_INFO,
-               "Opening serial line %s for 2400 baud\n", name);
-    fd = open(name, O_RDWR);
-    if (fd == -1) {
-        syslog_bus(busnumber, DBG_ERROR,
-                   "Open serial line failed: %s (errno = %d)\n",
-                   strerror(errno), errno);
-        return 1;
-    }
-    buses[busnumber].device.file.fd = fd;
-    tcgetattr(fd, &interface);
-    interface.c_oflag = ONOCR;
-    interface.c_cflag = CS8 | CRTSCTS | CSTOPB | CLOCAL | CREAD | HUPCL;
-    interface.c_iflag = IGNBRK;
-    interface.c_lflag = IEXTEN;
-    cfsetispeed(&interface, B2400);
-    cfsetospeed(&interface, B2400);
-    interface.c_cc[VMIN] = 0;
-    interface.c_cc[VTIME] = 1;
-    tcsetattr(fd, TCSANOW, &interface);
-
-    result = sleep(1);
-    if (result != 0) {
-        syslog_bus(busnumber, DBG_ERROR,
-                   "sleep() interrupted, %d seconds left\n", result);
-    }
-    syslog_bus(busnumber, DBG_INFO, "Clearing input-buffer\n");
-
-    status = 0;
-    while (status != -1)
-        status = readByte_IB(busnumber, 1, &rr);
-
-    syslog_bus(busnumber, DBG_INFO, "Sending BREAK... ");
-
-    status = sendBreak(fd, busnumber);
-    close(fd);
-
-    if (status == 0)
-        syslog_bus(busnumber, DBG_INFO, "Success.\n");
-    else
-        syslog_bus(busnumber, DBG_INFO, "Failure.\n");
-
-    /* Open the comport with 2400 Baud, to get baud rate from IB */
-    baud = B2400;
-    fd = open_comport(busnumber, baud);
-    buses[busnumber].device.file.fd = fd;
-    if (fd < 0) {
-        syslog_bus(busnumber, DBG_ERROR,
-                   "Open serial line failed: %s (errno = %d)\n",
-                   strerror(errno), errno);
-        return (-1);
-    }
-
-    baud = checkBaudrate(fd, busnumber);
-    if ((baud == B0) || (baud > B38400)) {
-        syslog_bus(busnumber, DBG_ERROR, "checkBaurate() failed\n");
-        return -1;
-    }
-
-    buses[busnumber].device.file.baudrate = baud;
-    resetBaudrate(buses[busnumber].device.file.baudrate, busnumber);
-    close_comport(busnumber);
-
-    result = sleep(1);
-    if (result != 0) {
-        syslog_bus(busnumber, DBG_ERROR,
-                   "sleep() interrupted, %d seconds left\n", result);
-    }
-    return 0;
-}
-
-
-static void show_firmware_version(bus_t bus)
-{
-    unsigned char buffer[20];
-
-    memset(buffer, '\0', sizeof(buffer));
-    writeByte(bus, XVer, 0);
-
-    if (!readList_IB(bus, buffer, sizeof(buffer))) {
-        syslog_bus(bus, DBG_INFO, "Could not read version information.\n");
-        return;
-    }
-
-    /* FIXME: This solution definitively is not smart and needs some
-     * fine tuning; the original IB delivers 6 list elements, other P50X
-     * central units may do less. */
-    syslog_bus(bus, DBG_INFO, "Firmware version: "
-               "%hhi %hhi %hhi %hhi %hhi %hhi\n",
-               buffer[0], buffer[1], buffer[2],
-               buffer[3], buffer[4], buffer[5]);
-}
-
-
-static int init_lineIB(bus_t busnumber)
-{
-    int fd;
-
-    if (buses[busnumber].flags & USE_AUTODETECTION) {
-        if (0 != run_autodetection(busnumber))
-            return (-1);
-    }
-
-    /* Open the serial line for the communication */
-    fd = open_comport(busnumber, buses[busnumber].device.file.baudrate);
-    buses[busnumber].device.file.fd = fd;
-    if (fd < 0) {
-        printf("open_comport() failed\n");
-        return (-1);
-    }
-
-    switch (check_P50_command_state(busnumber)) {
-        case -1:
-            /*Download mode, exit */
-            return 2;
-        case 0:
-            /*P50 commands disabled, do nothing */
-            break;
-        case 1:
-            /*P50 commands enabled, switch off */
-            enableP50Commands(busnumber, false);
-            break;
-    }
-
-    /* read firmware version */
-    show_firmware_version(busnumber);
-
-    return 0;
-}
-
-/* Send RS232 break signal
- * This is an inversion of the data lead for a specific period of
- * time, exceeding the period of at least one full character, including
- * the start/stop bits, and any parity. As such, the duration of the
- * BREAK signal is a function of the port speed of the UART sending the
- * data. */
-static int sendBreak(const int fd, bus_t busnumber)
-{
-    int result;
-
-    if (tcflush(fd, TCIOFLUSH) == -1) {
-        syslog_bus(busnumber, DBG_ERROR,
-                   "tcflush() failed: %s (errno = %d)\n",
-                   strerror(errno), errno);
-        return -1;
-    }
-
-    if (tcflow(fd, TCOOFF) == -1) {
-        syslog_bus(busnumber, DBG_ERROR,
-                   "tcflow() failed: %s (errno = %d)\n",
-                   strerror(errno), errno);
-    }
-
-    /* wait 300 ms */
-    if (usleep(300000) == -1) {
-        syslog_bus(busnumber, DBG_ERROR,
-                   "usleep() failed: %s (errno = %d)\n",
-                   strerror(errno), errno);
-    }
-
-    /* Why is this simple call not sufficient and what does the "100"
-     * mean? More than undefined behavior? (gs) */
-    if (tcsendbreak(fd, 100) == -1) {
-        syslog_bus(busnumber, DBG_ERROR,
-                   "tcsendbreak() failed: %s (errno = %d)\n",
-                   strerror(errno), errno);
-        return -1;
-    }
-
-    /* wait 3 s */
-    result = sleep(3);
-    if (result != 0) {
-        syslog_bus(busnumber, DBG_ERROR,
-                   "sleep() interrupted, %d seconds left\n", result);
-    }
-
-    /* wait 600 ms */
-    if (usleep(600000) == -1) {
-        syslog_bus(busnumber, DBG_ERROR,
-                   "usleep() failed: %s (errno = %d)\n",
-                   strerror(errno), errno);
-    }
-
-    if (tcflow(fd, TCOON) == -1) {
-        syslog_bus(busnumber, DBG_ERROR,
-                   "tcflow() failed: %s (errno = %d)\n",
-                   strerror(errno), errno);
-    }
-
-    return 0;
-}
-
-
-/**
- * Autodetection of Intellibox baud rate setting;
- * see interface description of Intellibox.
- *
- * @param file descriptor of the port
- * @param  busnumber inside srcp
- * @return the correct baudrate or -1 if not recognized
- **/
-speed_t checkBaudrate(const int fd, const bus_t busnumber)
-{
-    int found = 0;
-    int baudrate = 2400;
-    struct termios interface;
-    unsigned char input[10];
-    short len = 0;
-    int i;
-    speed_t internalBaudrate = B0;
-
-    syslog_bus(busnumber, DBG_INFO,
-               "Checking baud rate inside IB, see special option #1 "
-               "in IB Programming Handbook\n");
-
-    memset(input, '\0', sizeof(input));
-
-    while ((found == 0) && (baudrate <= 38400)) {
-        syslog_bus(busnumber, DBG_INFO, "baudrate = %i\n", baudrate);
-
-        if (tcgetattr(fd, &interface) == -1) {
-            syslog_bus(busnumber, DBG_ERROR,
-                       "tcgetattr() failed: %s (errno = %d)\n",
-                       strerror(errno), errno);
-            return B0;
-        }
-
-        switch (baudrate) {
-            case 2400:
-                internalBaudrate = B2400;
-                break;
-            case 4800:
-                internalBaudrate = B4800;
-                break;
-            case 9600:
-                internalBaudrate = B9600;
-                break;
-            case 19200:
-                internalBaudrate = B19200;
-                break;
-            case 38400:
-                internalBaudrate = B38400;
-                break;
-            default:
-                internalBaudrate = B19200;
-                break;
-        }
-
-        if (cfsetispeed(&interface, internalBaudrate) == -1) {
-            syslog_bus(busnumber, DBG_ERROR,
-                       "cfsetispeed() failed: %s (errno = %d)\n",
-                       strerror(errno), errno);
-            /*CHECK: What to do now? */
-        }
-
-        if (tcflush(fd, TCOFLUSH) == -1) {
-            syslog_bus(busnumber, DBG_ERROR,
-                       "tcflush() failed: %s (errno = %d)\n",
-                       strerror(errno), errno);
-        }
-
-        if (tcsetattr(fd, TCSANOW, &interface) == -1) {
-            syslog_bus(busnumber, DBG_ERROR,
-                       "tcsetattr() failed: %s (errno = %d)\n",
-                       strerror(errno), errno);
-            return B0;
-        }
-
-        writeByte(busnumber, XNOP, 0);
-
-        /* wait 200 ms */
-        if (usleep(200000) == -1) {
-            syslog_bus(busnumber, DBG_ERROR,
-                       "usleep() failed: %s (errno = %d)\n",
-                       strerror(errno), errno);
-        }
-
-        for (i = 0; i < 2; i++) {
-            int erg = readByte_IB(busnumber, 1, &input[i]);
-            if (erg == 0)
-                len++;
-        }
-
-        switch (len) {
-            case 1:
-                /* IBox has P50 commands disabled */
-                found = 1;
-                if (input[0] == 'D') {
-                    syslog_bus(busnumber, DBG_FATAL,
-                               "Intellibox in download mode.\n"
-                               "DO NOT PROCEED!\n");
-                    return (2);
-                }
-                syslog_bus(busnumber, DBG_INFO,
-                           "IBox found; P50-commands are disabled.\n");
-                break;
-
-            case 2:
-                /* IBox has P50 commands enabled */
-                found = 1;
-                /* don't know if this also works, when P50 is enabled... */
-                /* check disabled for now... */
-                syslog_bus(busnumber, DBG_INFO,
-                           "IBox found; P50-commands are enabled.\n");
-                break;
-
-            default:
-                found = 0;
-                break;
-        }
-
-        if (found == 0) {
-            baudrate <<= 1;
-            internalBaudrate = B0;
-        }
-
-        /* wait 200 ms */
-        if (usleep(200000) == -1) {
-            syslog_bus(busnumber, DBG_ERROR,
-                       "usleep() failed: %s (errno = %d)\n",
-                       strerror(errno), errno);
-        }
-    }
-    syslog_bus(busnumber, DBG_INFO, "Baudrate checked: %d\n", baudrate);
-    return internalBaudrate;
-}
-
-/**
- * reads an answer of the intellibox after a command in P50 mode.
- *
- * If required, the answer of the intellibox is shown via syslog.
- * Usually the method reads until '[' is received, which is defined
- * as the end of the string. This last char is not printed.
- *
- * @param  busnumber inside srcp
- * @param if > 0 the answer is printed
- * @return 0 if OK
- **/
-static int readAnswer_IB(const bus_t busnumber, const int generatePrintf)
-{
-    unsigned char input[80];
-    int counter = 0;
-    bool found = false;
-
-    memset(input, '\0', sizeof(input));
-
-    while ((!found) && (counter < 80)) {
-        if (readByte_IB(busnumber, 1, &input[counter]) == 0) {
-            if (input[counter] == 0)
-                input[counter] = 0x20;
-            if (input[counter] == ']') {
-                input[counter] = '\0';
-                found = true;
-            }
-        }
-        counter++;
-    }
-
-    if (!found)
-        return -1;
-
-    if (generatePrintf > 0) {
-        syslog_bus(busnumber, DBG_INFO, "IBox returned: %s\n", input);
-    }
-    return 0;
-}
-
-/**
- * Provides an extra interface for reading one byte out of the intellibox.
- *
- * Tries to read one byte 10 times. If no byte is received -1 is returned.
- * Because the IB guarantees an answer during 50 ms all write bytes can
- * be generated with a waiting time of 0, and readByte_IB can be called
- * directly after write
- *
- * @param: busnumber
- * @param: wait time during read
- * @param: address of the byte to be received.
- **/
-static int readByte_IB(bus_t busnumber, int wait, unsigned char *the_byte)
-{
-    int i, status;
-
-    for (i = 0; i < 10; i++) {
-        status = readByte(busnumber, wait, the_byte);
-        if (status == 0)
-            return 0;
-
-        /* wait 10 ms */
-        if (usleep(10000) == -1) {
-            syslog_bus(busnumber, DBG_ERROR,
-                       "usleep() failed: %s (errno = %d)\n",
-                       strerror(errno), errno);
-        }
-    }
-    return -1;
-}
-
-/**
- * Read a configuration list from the intellibox. Every list entry starts
- * with one byte (length) followed by n bytes. After that another list entry
- * may follow. If a length byte is 0 then the end of the list is reached.
- *
- * All list entries are copied into the given array without any gaps.
- *
- * @param: busnumber
- * @param: bytes array to store the list content
- * @param: n array size
- *
- * @result true if read was successful
- **/
-static bool readList_IB(bus_t busnumber, unsigned char *bytes, size_t n)
-{
-    bool result = false;
-    size_t j = 0;
-    int i = 0, status;
-    unsigned char length;
-
-    if (bytes != NULL) {
-        while (true) {
-            if (j >= n) {
-                break;
-            }
-            status = readByte_IB(busnumber, 1, &length);
-            if (status != 0) {
-                break;
-            }
-            if (length == 0) {
-                result = true;
-                break;
-            }
-            for (i = 0; i < length && j < n; i++) {
-                status = readByte_IB(busnumber, 1, &bytes[j++]);
-                if (status != 0) {
-                    break;
-                }
-            }
-        }
-    }
-    return result;
-}
-
 static unsigned char send_command_power_IB(bus_t busnumber)
 {
     unsigned char result;
@@ -1632,106 +1633,92 @@ static unsigned char send_command_power_IB(bus_t busnumber)
     return result;
 }
 
-static void check_status_fb_IB(bus_t busnumber)
+void *thr_sendrec_IB(void *v)
 {
     unsigned char rr;
-    int temp, aktS88;
+    int zaehler1;
+    int last_cancel_state, last_cancel_type;
 
-    writeByte(busnumber, XEvtSen, 0);
-    readByte_IB(busnumber, 1, &rr);
-    while (rr != 0x00) {
-        aktS88 = rr;
-        readByte_IB(busnumber, 1, &rr);
-        temp = rr;
-        temp <<= 8;
-        readByte_IB(busnumber, 1, &rr);
-        setFBmodul(busnumber, aktS88, temp | rr);
-        readByte_IB(busnumber, 1, &rr);
-    }
-}
+    bus_thread_t *btd = (bus_thread_t *) malloc(sizeof(bus_thread_t));
 
-static void check_status_ga_IB(bus_t busnumber)
-{
-    unsigned char rr;
-    int temp, i;
-    ga_state_t gatmp;
+    if (btd == NULL)
+        pthread_exit((void *) 1);
+    btd->bus = (bus_t) v;
+    btd->fd = -1;
 
-    writeByte(busnumber, XEvtTrn, 0);
-    readByte_IB(busnumber, 1, &rr);
-    temp = rr;
-    for (i = 0; i < temp; i++) {
-        readByte_IB(busnumber, 1, &rr);
-        gatmp.id = rr;
-        readByte_IB(busnumber, 1, &rr);
-        gatmp.id |= (rr & 0x07) << 8;
-        gatmp.port = (rr & 0x80) ? 1 : 0;
-        gatmp.action = (rr & 0x40) ? 1 : 0;
-        setGA(busnumber, gatmp.id, gatmp);
-    }
-}
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &last_cancel_state);
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &last_cancel_type);
 
-static void check_status_gl_IB(bus_t busnumber)
-{
-    unsigned char rr;
-    gl_state_t gltmp, glakt;
+    /*register cleanup routine */
+    pthread_cleanup_push((void *) end_bus_thread, (void *) btd);
 
-    writeByte(busnumber, XEvtLok, 0);
-    readByte_IB(busnumber, 1, &rr);
+    syslog_bus(btd->bus, DBG_INFO, "Intellibox bus started (device = %s).",
+               buses[btd->bus].device.file.path);
 
-    while (rr < 0x80) {
-        if (rr == 1) {
-            /* Loco in emergency stop */
-            gltmp.speed = 0;
-            gltmp.direction = 2;
-        }
-        else {
-            /* current loco speed */
-            gltmp.speed = rr;
-            gltmp.direction = 0;
-            if (gltmp.speed > 0)
-                gltmp.speed--;
-        }
+    /* initialize tga-structure */
+    for (zaehler1 = 0; zaehler1 < 50; zaehler1++)
+        __ibt->tga[zaehler1].id = 0;
 
-        /* 2. byte functions */
-        readByte_IB(busnumber, 1, &rr);
-        /* gltmp.funcs = rr & 0xf0; */
-        gltmp.funcs = (rr << 1);
+    /* request current sensor status */
+    writeByte(btd->bus, XSensOff, 0);
+    readByte_IB(btd->bus, 1, &rr);
 
-        /* 3. byte address (low-part A7..A0) */
-        readByte_IB(busnumber, 1, &rr);
-        gltmp.id = rr;
-
-        /* 4. byte address (high-part A13..A8), direction, light */
-        readByte_IB(busnumber, 1, &rr);
-        if ((rr & 0x80) && (gltmp.direction == 0))
-            gltmp.direction = 1;        /* direction is forward */
-        if (rr & 0x40)
-            gltmp.funcs |= 0x01;        /* light is on */
-        rr &= 0x3F;
-        gltmp.id |= rr << 8;
-
-        /* 5. byte real speed (is ignored) */
-        readByte_IB(busnumber, 1, &rr);
-        /* gltmp.id, gltmp.speed, gltmp.direction); */
-
-        /* initialize the GL if not done by user, */
-        /* because IB can report uninitialized GLs... */
-        if (gltmp.id > 0) {
-            if (!isInitializedGL(busnumber, gltmp.id)) {
-                syslog_bus(busnumber, DBG_INFO,
-                           "IB reported uninitialized GL. "
-                           "Performing default init for %d", gltmp.id);
-                cacheInitGL(busnumber, gltmp.id, 'P', 1, SPEED_STEPS, 5);
+    while (true) {
+        buses[btd->bus].watchdog = 1;
+        pthread_testcancel();
+        if (buses[btd->bus].power_changed == 1) {
+            if (__ibt->emergency_on_ib == 1) {
+                syslog_bus(btd->bus, DBG_INFO, "got power off from IB");
+                __ibt->emergency_on_ib = 2;
+                setPower(btd->bus, POWER_OFF, "Emergency Stop");
             }
-            /* get old data, to know which FS the user wants to have... */
-            cacheGetGL(busnumber, gltmp.id, &glakt);
-            /* recalculate speed */
-	    gltmp.n_fs = glakt.n_fs;
-            gltmp.speed = (gltmp.speed * glakt.n_fs) / SPEED_STEPS;
-            cacheSetGL(busnumber, gltmp.id, gltmp);
+            else {
+                if ((__ibt->emergency_on_ib == 2)
+                    && (buses[btd->bus].power_state == POWER_OFF)) {
+                    check_status_IB(btd->bus);
+                    if (usleep(50000) == -1) {
+                        syslog_bus(btd->bus, DBG_ERROR,
+                                   "usleep() failed: %s (errno = %d)\n",
+                                   strerror(errno), errno);
+                    }
+                    continue;
+                }
+
+                if (send_command_power_IB(btd->bus) == XPWOFF) {
+                    syslog_bus(btd->bus, DBG_INFO,
+                               "power on not possible - overheating");
+                    setPower(btd->bus, POWER_OFF,
+                             "power on not possible - overheating");
+                }
+                else if (buses[btd->bus].power_state == POWER_ON)
+                    __ibt->emergency_on_ib = 0;
+            }
+            handle_power_command(btd->bus);
         }
 
-        /* further loco events? */
-        readByte_IB(busnumber, 1, &rr);
-    }
+        if (buses[btd->bus].power_state == POWER_OFF) {
+            check_status_IB(btd->bus);
+            if (usleep(50000) == -1) {
+                syslog_bus(btd->bus, DBG_ERROR,
+                           "usleep() failed: %s (errno = %d)\n",
+                           strerror(errno), errno);
+            }
+            continue;
+        }
+        send_command_gl_IB(btd->bus);
+        send_command_ga_IB(btd->bus);
+        check_status_IB(btd->bus);
+        send_command_sm_IB(btd->bus);
+        check_reset_fb(btd->bus);
+        if (usleep(50000) == -1) {
+            syslog_bus(btd->bus, DBG_ERROR,
+                       "usleep() failed: %s (errno = %d)\n",
+                       strerror(errno), errno);
+        }
+    }                           /* End WHILE(true) */
+
+    /*run the cleanup routine */
+    pthread_cleanup_pop(1);
+    return NULL;
 }
+
