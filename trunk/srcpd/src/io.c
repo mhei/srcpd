@@ -25,7 +25,6 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <stdbool.h>
 #include <string.h>
 #include <sys/ioctl.h>
 
@@ -41,7 +40,7 @@
 #include "ttycygwin.h"
 
 
-int readByte(bus_t bus, int wait, unsigned char *the_byte)
+int readByte(bus_t bus, bool wait, unsigned char *the_byte)
 {
     ssize_t i;
     int status;
@@ -62,8 +61,10 @@ int readByte(bus_t bus, int wait, unsigned char *the_byte)
         syslog_bus(bus, DBG_DEBUG,
                    "readbyte(): (fd = %d), there are %d bytes to read.",
                    buses[bus].device.file.fd, i);
-        /* read only, if there is really an input */
-        if ((i > 0) || (wait == 1)) {
+
+        /* read only, if there is really an input or if "wait" is true
+         * to do a blocking read */
+        if ((i > 0) || wait) {
             i = read(buses[bus].device.file.fd, the_byte, 1);
             if (i == -1) {
                 syslog_bus(bus, DBG_ERROR,
