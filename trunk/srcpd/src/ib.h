@@ -48,8 +48,8 @@ void* thr_sendrec_IB(void *);
 #define POWER_OFF 0
 #define POWER_ON  1
 
-static const char P50_DISABLE[] = "xZzA1";
-static const char P50_ENABLE[] = "ZzA0";
+static const char P50X_DISABLE[] = "xZzA1";
+static const char P50X_ENABLE[] = "ZzA0";
 
 /* general purpose P50Xb commands */
 
