@@ -255,72 +255,70 @@ static int init_lineLOCONET_serial(bus_t busnumber)
 
 static int init_lineLOCONET_lbserver(bus_t busnumber)
 {
-    int sockfd = -1;
-    struct addrinfo *ai;
-    struct addrinfo hi;
-    int result;
+    struct addrinfo hints;
+    struct addrinfo *result, *rp;
+    int sfd = -1;
+    int err;
     char msg[256];
 
-    memset(&hi, '\0', sizeof(hi));
+    memset(&hints, '\0', sizeof(hints));
 
     /* Set preferred network connection options, for Cygwin use IPv4-only
      * as IPv6 is not supported yet */
 #if defined(__CYGWIN__) || defined(__OpenBSD__)
-    hi.ai_family = AF_INET;
-    hi.ai_protocol = IPPROTO_TCP;
+    hints.ai_family = AF_INET;
+    hints.ai_protocol = IPPROTO_TCP;
 #else                                            
-    hi.ai_flags = AI_ADDRCONFIG;
+    hints.ai_flags = AI_ADDRCONFIG;
 #endif
-    hi.ai_socktype = SOCK_STREAM;
-    result = getaddrinfo(buses[busnumber].device.net.hostname,
-                         buses[busnumber].device.net.port, &hi, &ai);
-    if (result != 0) {
+    hints.ai_socktype = SOCK_STREAM;
+    err = getaddrinfo(buses[busnumber].device.net.hostname,
+                         buses[busnumber].device.net.port, &hints, &result);
+    if (err != 0) {
         syslog_bus(busnumber, DBG_ERROR, "getaddrinfo %s",
-                   gai_strerror(result));
+                   gai_strerror(err));
         return 0;
     }
-    struct addrinfo *runp = ai;
-    if (runp != NULL) {
-        sockfd =
-            socket(runp->ai_family, runp->ai_socktype, runp->ai_protocol);
-        if (sockfd == -1) {
+    rp = result;
+    if (rp != NULL) {
+        sfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+        if (sfd == -1) {
             syslog_bus(busnumber, DBG_FATAL,
                        "Socket creation failed: %s (errno = %d).\n",
                        strerror(errno), errno);
             return 0;
         }
         alarm(30);
-        if (connect(sockfd, runp->ai_addr, runp->ai_addrlen) != 0) {
+        if (connect(sfd, rp->ai_addr, rp->ai_addrlen) != 0) {
             syslog_bus(busnumber, DBG_ERROR,
                        "ERROR connecting to %s:%d %d",
                        buses[busnumber].device.net.hostname,
                        buses[busnumber].device.net.port, errno);
-            close(sockfd);
+            close(sfd);
             return 0;
         }
         alarm(0);
 
-        result = socket_readline(sockfd, msg, sizeof(msg) - 1);
+        err = socket_readline(sfd, msg, sizeof(msg) - 1);
 
         /* client terminated connection */
-        if (0 == result) {
-            freeaddrinfo(ai);
-            shutdown(sockfd, SHUT_RDWR);
+        if (0 == err) {
+            freeaddrinfo(result);
+            shutdown(sfd, SHUT_RDWR);
             return 0;
         }
     }
     /* read errror */
-    if (-1 == result) {
+    if (-1 == err) {
         syslog_bus(busnumber, DBG_ERROR,
                    "Socket read failed: %s (errno = %d)\n",
                    strerror(errno), errno);
         return (-1);
     }
-    freeaddrinfo(ai);
+    freeaddrinfo(result);
     syslog_bus(busnumber, DBG_INFO, "connected to %s", msg);
-    buses[busnumber].device.net.sockfd = sockfd;
+    buses[busnumber].device.net.sockfd = sfd;
     return 1;
-
 }
 
 static int init_lineLOCONET(bus_t busnumber)
