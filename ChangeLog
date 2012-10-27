@@ -6,6 +6,7 @@
 	* src/ib.c: Resort code to make forward declarations obsolete.
 	Rename function reading P50 command responses. Rename function to
 	enable/disable P50X mode.
+	* src/ib.c, src/io.*: Replace int by bool parameter.
 
 2012-03-26 André Schenk <andre_schenk@users.sourceforge.net>
 	* src/ib.c: Fix usage of XEvtLok

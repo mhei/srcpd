@@ -18,11 +18,12 @@
 #define _IO_H
 
 #include <unistd.h>
+#include <stdbool.h>
 
 #include "config-srcpd.h"
 
 
-int  readByte(bus_t bus, int wait, unsigned char *the_byte);
+int  readByte(bus_t bus, bool wait, unsigned char *the_byte);
 void writeByte(bus_t bus, const unsigned char the_byte, unsigned long msec);
 void writeString(bus_t bus, const char *the_string, unsigned long msecs);
 
