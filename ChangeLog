@@ -4,6 +4,7 @@
 	* src/loconet.c: Improve getaddrinfo() usage to loop over every
 	returned network address.
 	* src/ib.c: Resort code to make forward declarations obsolete.
+	* src/ib.c: Rename function reading P50 command responses.
 
 2012-03-26 André Schenk <andre_schenk@users.sourceforge.net>
 	* src/ib.c: Fix usage of XEvtLok

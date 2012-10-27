@@ -309,17 +309,17 @@ static int check_P50_command_state(bus_t busnumber)
 
 
 /**
- * reads an answer of the intellibox after a command in P50 mode.
+ * Read Intellibox response in P50 mode.
  *
- * If required, the answer of the intellibox is shown via syslog.
- * Usually the method reads until ']' is received, which is defined
- * as the end of the string. This last char is not printed.
+ * If required, the intellibox response text is shown via syslog.
+ * Usually this method reads until ']' is received, which is defined
+ * as the end of the string. This last character is not printed.
  *
  * @param  busnumber inside srcp
- * @param if > 0 the answer is printed
+ * @param  log_response if "true" the response text is printed
  * @return 0 if OK
  **/
-static int readAnswer_IB(const bus_t busnumber, const int generatePrintf)
+static int read_P50_response(const bus_t busnumber, bool log_response)
 {
     unsigned char input[80];
     int counter = 0;
@@ -342,9 +342,9 @@ static int readAnswer_IB(const bus_t busnumber, const int generatePrintf)
     if (!found)
         return -1;
 
-    if (generatePrintf > 0) {
-        syslog_bus(busnumber, DBG_INFO, "IBox returned: %s\n", input);
-    }
+    if (log_response)
+        syslog_bus(busnumber, DBG_INFO, "IB response: %s\n", input);
+
     return 0;
 }
 
@@ -373,7 +373,7 @@ static void enableP50Commands(const bus_t busnumber, bool on)
 
     writeByte(busnumber, '\r', 0);
 
-    status = readAnswer_IB(busnumber, 0);
+    status = read_P50_response(busnumber, false);
     if (status == 0)
         syslog_bus(busnumber, DBG_INFO, "Success.\n");
     else
@@ -443,7 +443,7 @@ static void resetBaudrate(const speed_t speed, const bus_t busnumber)
                    strerror(errno), errno);
     }
 
-    status = readAnswer_IB(busnumber, 1);
+    status = read_P50_response(busnumber, true);
     if (status == 0)
         syslog_bus(busnumber, DBG_INFO, "Success.\n");
     else
