@@ -1,9 +1,21 @@
-srcpd-2.1.2 (2010-12-??)
+srcpd-2.1.2 (2012-11-??)
   Fixed Bugs
     o Fix Lenz GA address handling (bug introduced in version 2.0.11).
+    o Fix usage of XEvtLok in IB module.
+    o Fix baud rate negotiation in IB module.
+    o Reject INIT GL if device is locked
 
   New Features
     o Support for up to 28 GL functions in Lenz module.
+    o Add missing TERM GA function.
+    o Send info message for SET SM, INIT SM, TERM SM
+    o Provide 28 speed steps for DCC in dll module.
+    o Read initial power state from IB on startup.
+    o Provide functions F17 - F28 in IB module (OpenDCC)
+
+  General Changes
+    o Improve conectivity to usb2serial adapters for Loconet module.
+    o Support for Open-BSD.
 
 
 srcpd-2.1.1 (2010-03-07)
