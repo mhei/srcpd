@@ -349,26 +349,25 @@ static int read_P50_response(const bus_t busnumber, bool log_response)
 }
 
 /**
- * Sends the command to switch P50 commands on or off, see interface
- * description of Intellibox
+ * Send a command to switch P50X commands on or off, see interface
+ * description of Intellibox (P5XINTRO.txt).
  *
  * The answer of the Intellibox is written to syslog
  *
  * @param  busnumber inside srcpd
  * @param  on, enable or disable
  **/
-static void enableP50Commands(const bus_t busnumber, bool on)
+static void enable_P50X_mode(const bus_t busnumber, bool on)
 {
     int status;
 
     if (on) {
-        syslog_bus(busnumber, DBG_INFO, "Switching P50-commands on ...\n");
-        writeString(busnumber, P50_ENABLE, 0);
+        syslog_bus(busnumber, DBG_INFO, "Switching P50X mode on ...\n");
+        writeString(busnumber, P50X_ENABLE, 0);
     }
     else {
-        syslog_bus(busnumber, DBG_INFO,
-                   "Switching P50-commands off ...\n");
-        writeString(busnumber, P50_DISABLE, 0);
+        syslog_bus(busnumber, DBG_INFO, "Switching P50X mode off ...\n");
+        writeString(busnumber, P50X_DISABLE, 0);
     }
 
     writeByte(busnumber, '\r', 0);
@@ -395,7 +394,7 @@ static void resetBaudrate(const speed_t speed, const bus_t busnumber)
             return;
         case 0:
             /*P50 commands disabled, switch on */
-            enableP50Commands(busnumber, true);
+            enable_P50X_mode(busnumber, true);
             break;
         case 1:
             /*P50 commands enabled, do nothing */
@@ -824,7 +823,7 @@ static int init_lineIB(bus_t busnumber)
             break;
         case 1:
             /*P50 commands enabled, switch off */
-            enableP50Commands(busnumber, false);
+            enable_P50X_mode(busnumber, false);
             break;
     }
 
@@ -896,7 +895,7 @@ static void end_bus_thread(bus_thread_t * btd)
 {
     int result;
 
-    enableP50Commands(btd->bus, true);
+    enable_P50X_mode(btd->bus, true);
     syslog_bus(btd->bus, DBG_INFO, "Intellibox bus terminated.");
     __ibt->working_IB = 0;
     close_comport(btd->bus);
