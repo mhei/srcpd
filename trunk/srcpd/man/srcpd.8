@@ -111,14 +111,22 @@ mentioned before is correct, the following command can be used:
 .fi
 .RE
 
-The log file \fI/var/log/messages\fP of the syslog daemon can be used
-to monitor occurring errors on daemon start or during current operation.
-With root rights the upcoming messages can be continuously watched in a
-separate terminal:
+The log file \fI/var/log/messages\fP or \fI/var/log/syslog\fP of the
+syslog daemon can be used to monitor occurring errors on daemon start
+or during current operation.  With root rights the upcoming messages
+can be continuously watched in a separate terminal:
 
 .RS
 .nf
 tail -f /var/log/messages
+.fi
+.RE
+
+or
+
+.RS
+.nf
+tail -f /var/log/syslog
 .fi
 .RE
 

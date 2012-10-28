@@ -5,6 +5,8 @@
 2012-10-28 Guido Scholz <guido.scholz@bayernline.de>
 	* src/ib.c: Rewrite firmware version report to show results in
 	readable manner.
+	* man/srcpd.8, man/srcpd.conf.5: Add information about syslog
+	file /var/log/syslog as an alternative for /var/log/messages.
 
 2012-10-27 Guido Scholz <guido.scholz@bayernline.de>
 	* src/loconet.c: Improve getaddrinfo() usage to loop over every
@@ -18,7 +20,7 @@
 	* src/ib.c: Fix usage of XEvtLok
 
 2011-10-06 André Schenk <andre_schenk@users.sourceforge.net>
-	* src/srcp-ga.c src/srcp-ga.h src/srcp-command.c: Add missing
+	* src/srcp-ga.c, src/srcp-ga.h, src/srcp-command.c: Add missing
 	TERM GA function
 
 2010-12-01 Guido Scholz <guido.scholz@bayernline.de>

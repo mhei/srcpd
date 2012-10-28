@@ -68,9 +68,9 @@ external configuration tool to ensure a syntactically correct format.
 If there are errors during configuration file reading the daemon will
 send appropriate notifications to the syslog daemon.  These messages can
 be watched using with the syslog facility user.info.  This facility
-is usually sent to the file \fI/var/log/messages\fP.  On some systems
-the \fI/etc/syslog.conf\fP may need to be edited to access the user.info
-facility:
+is usually sent to the file \fI/var/log/messages\fP (or
+\fI/var/log/syslog\fP).  On some systems the \fI/etc/syslog.conf\fP may
+need to be edited to access the user.info facility:
 .PP
 .nf
     user.info     /var/adm/user-info.log
@@ -136,7 +136,8 @@ verbosity
 Depending on this number (valid range: 0..5) the bus will tell you less
 or more about what is happening.  The 0 value gives a minimum output.
 This option is mainly used for debugging reasons.  You can watch these
-messages using the syslog daemon file \fI/var/log/messages\fP; see
+messages using the syslog daemon file \fI/var/log/messages\fP (or
+\fI/var/log/messages\fP); see
 .IR srcpd (8)
 for more information.  The default value is
 .IR 4 .
