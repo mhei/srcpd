@@ -85,6 +85,8 @@ Treten beim Lesen der Konfigurationsdatei Fehler auf, sendet
 entsprechende Fehlermeldungen an den syslog-Daemon.  Diese können über
 die Datei
 .IR /var/log/messages
+oder
+.IR /var/log/syslog
 verfolgt werden. Der srcpd benutzt die syslog facility user.info, die
 auf einigen System möglicherweise erst konfiguriert werden muss. 
 .PP
@@ -164,6 +166,8 @@ Fehlersuche sollte der Wert möglichst hoch, bei störungsfreiem Betrieb
 möglichst niedrig gewählt werden.  Die Meldungen lassen sich über die
 Log-Datei des Syslog-Daemons
 .IR /var/log/messages
+oder
+.IR /var/log/syslog
 verfolgen; nähere Informationen hierzu befinden sich im Handbuch
 .IR srcpd (8) .
 Der voreingestellte Wert ist

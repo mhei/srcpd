@@ -116,13 +116,22 @@ die oben geschilderten Bedingungen sind eingehalten, folgender Befehl:
 .RE
 
 Zur Verfolgung von Fehlern beim Start oder im laufenden Betrieb, können
-Sie die Log-Datei des syslog-Systemdienstes (\fI/var/log/messages\fP)
-nutzen. Die Meldungen lassen sich mit Administrationsrechten
-beispielsweise in einem Terminalfenster mit folgendem Befehl beobachten:
+Sie die Log-Datei des syslog-Systemdienstes (\fI/var/log/messages\fP
+oder \fI/var/log/syslog\fP) nutzen. Die Meldungen lassen sich mit
+Administrationsrechten beispielsweise in einem Terminalfenster mit
+folgendem Befehl beobachten:
 
 .RS
 .nf
 tail -f /var/log/messages
+.fi
+.RE
+
+oder
+
+.RS
+.nf
+tail -f /var/log/syslog
 .fi
 .RE
 
