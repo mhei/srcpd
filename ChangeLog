@@ -1,5 +1,9 @@
 --- Release 2.1.2 ----
 
+2012-10-28 Guido Scholz <guido.scholz@bayernline.de>
+	* src/ib.c: Rewrite firmware version report to show results in
+	readable manner.
+
 2012-10-27 Guido Scholz <guido.scholz@bayernline.de>
 	* src/loconet.c: Improve getaddrinfo() usage to loop over every
 	returned network address.

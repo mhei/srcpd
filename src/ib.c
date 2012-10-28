@@ -291,11 +291,11 @@ static int check_P50_command_state(bus_t busnumber)
                 returnvalue = -1;
             }
             syslog_bus(busnumber, DBG_INFO,
-                       "P50-commands are disabled.\n");
+                       "P50X-commands are disabled.\n");
             break;
 
         case 2:
-            syslog_bus(busnumber, DBG_INFO, "P50-commands are enabled.\n");
+            syslog_bus(busnumber, DBG_INFO, "P50X-commands are enabled.\n");
             returnvalue = 1;
             break;
 
@@ -731,70 +731,73 @@ static int run_autodetection(bus_t busnumber)
 }
 
 
-/**
- * Read a configuration list from the intellibox. Every list entry starts
- * with one byte (length) followed by n bytes. After that another list entry
- * may follow. If a length byte is 0 then the end of the list is reached.
- *
- * All list entries are copied into the given array without any gaps.
- *
- * @param: busnumber
- * @param: bytes array to store the list content
- * @param: n array size
- *
- * @result true if read was successful
- **/
-static bool readList_IB(bus_t busnumber, unsigned char *bytes, size_t n)
-{
-    bool result = false;
-    size_t j = 0;
-    int i = 0, status;
-    unsigned char length;
-
-    if (bytes != NULL) {
-        while (true) {
-            if (j >= n) {
-                break;
-            }
-            status = readByte_IB(busnumber, true, &length);
-            if (status != 0) {
-                break;
-            }
-            if (length == 0) {
-                result = true;
-                break;
-            }
-            for (i = 0; i < length && j < n; i++) {
-                status = readByte_IB(busnumber, true, &bytes[j++]);
-                if (status != 0) {
-                    break;
-                }
-            }
-        }
-    }
-    return result;
-}
-
 /*Request version information according to P50X_GEN.txt*/
 static void show_firmware_version(bus_t bus)
 {
-    unsigned char buffer[20];
+    int status = 0;
+    unsigned char value, length, high1, low1, high2, low2;
+    char buffer[20];
+    char line[100];
+    unsigned int counter = 0;
 
     memset(buffer, '\0', sizeof(buffer));
+    memset(line, '\0', sizeof(line));
+
     writeByte(bus, XVer, 0);
 
-    if (!readList_IB(bus, buffer, sizeof(buffer))) {
-        syslog_bus(bus, DBG_INFO, "Could not read version information.\n");
-        return;
-    }
+    do {
+        status = readByte_IB(bus, true, &value);
+        if (status == -1)
+            break;
+        counter++;
 
-    /* FIXME: This solution definitively is not smart and needs some
-     * fine tuning; the original IB delivers 6 list elements, other P50X
-     * central units may do less. */
-    syslog_bus(bus, DBG_INFO, "Firmware version: "
-               "%hhi %hhi %hhi %hhi %hhi %hhi\n",
-               buffer[0], buffer[1], buffer[2],
-               buffer[3], buffer[4], buffer[5]);
+        switch (value) {
+            case 0x00: /* end of version information*/
+                status = -1;
+                break;
+            case 0x01: /* h.l coded version number*/
+                status = readByte_IB(bus, true, &value);
+                if (status == -1)
+                    break;
+                high1 = (value & 0xf0) >> 4;
+                low1 = (value & 0x0f);
+                syslog_bus(bus, DBG_INFO, "Firmware version %d: %d.%d\n",
+                        counter, high1, low1);
+                break;
+            case 0x02: /* h.hll coded version number*/
+                status = readByte_IB(bus, true, &value);
+                if (status == -1)
+                    break;
+                high1 = (value & 0xf0) >> 4;
+                low1 = (value & 0x0f);
+                status = readByte_IB(bus, true, &value);
+                if (status == -1)
+                    break;
+                high2 = (value & 0xf0) >> 4;
+                low2 = (value & 0x0f);
+                syslog_bus(bus, DBG_INFO, "Firmware version %d: %d.%d%d%d\n",
+                        counter, high1, low1, high2, low2);
+                break;
+            default: /* digit version number*/
+                length = value;
+                for (length = 0; length - 1; length++) {
+                    status = readByte_IB(bus, true, &value);
+                    if (status == -1)
+                        break;
+                    high1 = (value & 0xf0) >> 4;
+                    low1 = (value & 0x0f);
+                    snprintf(&buffer[0], sizeof(buffer), "%d%d", high1, low1);
+                    if (strlen(line) + strlen(buffer) < sizeof(line))
+                        strncat(line, buffer, strlen(buffer));
+                    else
+                        syslog_bus(bus, DBG_INFO, "Version buffer overrun\n");
+                }
+                syslog_bus(bus, DBG_INFO, "Firmware version %d: %s\n",
+                        counter, line);
+                break;
+        }
+
+    } while (0 == status);
 }
 
 
@@ -820,10 +823,10 @@ static int init_lineIB(bus_t busnumber)
             /*Download mode, exit */
             return 2;
         case 0:
-            /*P50 commands disabled, do nothing */
+            /*P50X commands disabled, do nothing */
             break;
         case 1:
-            /*P50 commands enabled, switch off */
+            /*P50X commands enabled, switch off */
             enable_P50X_mode(busnumber, false);
             break;
     }
