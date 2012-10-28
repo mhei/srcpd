@@ -253,9 +253,9 @@ int init_gl_M6051(gl_state_t * gl)
  **/
 int init_ga_M6051(ga_state_t * ga)
 {
-    if ((ga->protocol != 'M') || (ga->protocol != 'P'))
-        return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
-    return SRCP_OK;
+    if ((ga->protocol == 'M') || (ga->protocol == 'P'))
+        return SRCP_OK;
+    return SRCP_UNSUPPORTEDDEVICEPROTOCOL;
 }
 
 /*thread cleanup routine for this bus*/

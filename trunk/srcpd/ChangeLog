@@ -1,4 +1,6 @@
 --- Release 2.1.2 ----
+2012-10-28 Matthias Trute <mtrute@web.de>
+	* src/m6051.c: correct the GA protocol checks for INIT.
 
 2012-10-28 Guido Scholz <guido.scholz@bayernline.de>
 	* src/ib.c: Rewrite firmware version report to show results in
