@@ -4,7 +4,7 @@
 
 2012-10-28 Guido Scholz <guido.scholz@bayernline.de>
 	* src/ib.c: Rewrite firmware version report to show results in
-	readable manner.
+	readable manner. Add options to handle a 57600 baud rate.
 	* man/srcpd.8, man/srcpd.conf.5: Add information about syslog
 	file /var/log/syslog as an alternative for /var/log/messages.
 
