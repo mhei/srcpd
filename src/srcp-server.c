@@ -167,9 +167,12 @@ server_state_t get_server_state()
 void server_reset()
 {
     char msg[100];
-    /*TODO: handle reset command, currently nothing happens */
     set_server_state(ssResetting);
     infoSERVER(msg);
+    /* FIXME: simply cancelling and restarting the bus threads does not work 
+    cancel_all_bus_threads();
+    sleep(1);
+    create_all_bus_threads(); */
     enqueueInfoMessage(msg);
     set_server_state(ssRunning);
 }
