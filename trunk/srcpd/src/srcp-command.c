@@ -784,6 +784,13 @@ int handleRESET(sessionid_t sessionid, bus_t bus, char *device,
 {
     struct timeval time;
     int rc = SRCP_UNSUPPORTEDOPERATION;
+    *reply = 0x00;
+
+    if (bus_has_devicegroup(bus, DG_SERVER)
+             && strncasecmp(device, "SERVER", 6) == 0) {
+        rc = SRCP_OK;
+        server_reset();
+    }
 
     gettimeofday(&time, NULL);
     srcp_fmt_msg(rc, reply, time);
