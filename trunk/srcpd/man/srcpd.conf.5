@@ -129,7 +129,8 @@ accordingly.
 .\"
 .SS Universal options
 .PP
-The following options are usable for all used bus sections.
+The following options are usable for all used bus sections. Universal
+options must be specified after bus specific options.
 .\"
 .TP
 verbosity
@@ -619,12 +620,12 @@ TODO
 .SS intellibox
 .PP
 This driver supports the Intellibox device from Uhlenbrock (IB) connected
-via the serial port.  Only extended mode commands are used (P50X
+via the serial port.  Only extended mode commands are used (P50X binary
 protocol); this should be taken into account if protocol compatible
 devices (e.g. OpenDCC, DiCoStation, EasyControl) are used.  Programming
 decoders is currently implemented for DCC only.  Possible values for speed
-of serial port are 2400\ baud, 4800\ baud, 9600\ baud, 19200\ baud and
-38400\ baud.
+of serial port are depending from device and interface type 2400\ baud,
+4800\ baud, 9600\ baud, 19200\ baud, 38400\ bau and 57600\ baud.
 .\"
 .TP
 fb_delay_time_0
@@ -780,7 +781,7 @@ Example
 .nf
 <bus>
     <loconet>
-       <loconet-id>80</loconet-id>
+        <loconet-id>80</loconet-id>
         <sync-time-from-loconet>no</sync-time-from-loconet>
         <ms100>no</ms100>
     </loconet>

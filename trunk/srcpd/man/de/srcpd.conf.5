@@ -152,7 +152,8 @@ sich entsprechend verschieben.
 .SS Allgemeingültige Optionen
 .PP
 Die folgenden Konfigurationsoptionen lassen sich für alle Busse
-jeweils individuell festlegen.
+jeweils individuell festlegen. Es ist zu beachten, dass diese hinter den
+busspezifischen Optionen einzutragen sind.
 .\"
 .TP
 verbosity
@@ -707,11 +708,11 @@ die über eine serielle Schnittstelle angeschlossen ist.  Die Ansteuerung
 der IB erfolgt über das P50X-Protokoll, zum geringeren Teil mit der
 analogen und zum größeren Teil mit der binären Variante.  Beim Betrieb mit
 protokollkompatiblen Zentralen anderer Hersteller (z.B. OpenDCC,
-DiCoStation, EasyControl) ist das gegebenenfalls
-zu berücksichtigen.  Das Programmieren von Decodern ist zur Zeit nur
-für DCC implementiert.  Als Schnittstellengeschwindigkeit sind die
-folgenden Varianten möglich: 2400\ Baud, 4800\ Baud, 9600\ Baud,
-19200\ Baud und 38400\ Baud.
+DiCoStation, EasyControl) ist das gegebenenfalls zu berücksichtigen.  Das
+Programmieren von Decodern ist zur Zeit nur für DCC implementiert.  Als
+Schnittstellengeschwindigkeit sind je nach Gerät und Art der Schnittstelle
+die folgenden Varianten möglich: 2400\ Baud, 4800\ Baud, 9600\ Baud,
+19200\ Baud, 38400\ Baud und 57600\ Baud.
 .\"
 .TP
 fb_delay_time_0

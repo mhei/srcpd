@@ -431,6 +431,12 @@ static void resetBaudrate(const speed_t speed, const bus_t busnumber)
                        "Changing baud rate to 38400 bps\n");
             writeString(busnumber, "XB38400", 0);
             break;
+
+        case B57600:
+            syslog_bus(busnumber, DBG_INFO,
+                       "Changing baud rate to 57600 bps\n");
+            writeString(busnumber, "XB57600", 0);
+            break;
     }
 
     writeByte(busnumber, '\r', 0);
@@ -536,7 +542,7 @@ speed_t checkBaudrate(const int fd, const bus_t busnumber)
 
     memset(input, '\0', sizeof(input));
 
-    while ((found == 0) && (baudrate <= 38400)) {
+    while ((found == 0) && (baudrate <= 57600)) {
         syslog_bus(busnumber, DBG_INFO, "baudrate = %i\n", baudrate);
 
         if (tcgetattr(fd, &interface) == -1) {
@@ -561,6 +567,9 @@ speed_t checkBaudrate(const int fd, const bus_t busnumber)
                 break;
             case 38400:
                 internalBaudrate = B38400;
+                break;
+            case 57600:
+                internalBaudrate = B57600;
                 break;
             default:
                 internalBaudrate = B19200;
@@ -713,7 +722,7 @@ static int run_autodetection(bus_t busnumber)
     }
 
     baud = checkBaudrate(fd, busnumber);
-    if ((baud == B0) || (baud > B38400)) {
+    if ((baud == B0) || (baud > B57600)) {
         syslog_bus(busnumber, DBG_ERROR, "checkBaurate() failed\n");
         return -1;
     }
