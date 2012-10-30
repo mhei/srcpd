@@ -1,4 +1,9 @@
 --- Release 2.1.2 ----
+2012-10-30 Matthias Trute <mtrute@web.de>
+	* src/io.c: ioctl returns less bits of useful data than
+	  an integer may hold. Make sure, every bit is initialized properly.
+	* src/m6051.c: remove duplicate checks for reading feedback modules.
+
 2012-10-28 Matthias Trute <mtrute@web.de>
 	* src/m6051.c: correct the GA protocol checks for INIT.
 
