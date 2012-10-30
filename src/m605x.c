@@ -343,7 +343,7 @@ void *thr_sendrec_M6051(void *v)
                        strerror(errno), errno);
         }
 
-        syslog_bus(btd->bus, DBG_INFO, "Ignoring unread byte: %d ", rr);
+        syslog_bus(btd->bus, DBG_INFO, "Emptying device buffer. Ignoring unread byte: %d ", rr);
     }
 
     while (true) {
@@ -463,30 +463,6 @@ void *thr_sendrec_M6051(void *v)
         /* read every single S88 state */
         if ((number_fb > 0)
             && !((M6051_DATA *) buses[btd->bus].driverdata)->cmd32_pending) {
-
-            result =
-                ioctl(buses[btd->bus].device.file.fd, FIONREAD, &temp);
-            if (result == -1) {
-                syslog_bus(btd->bus, DBG_ERROR,
-                           "ioctl() failed: %s (errno = %d)\n",
-                           strerror(errno), errno);
-            }
-
-            while (temp > 0) {
-                readByte(btd->bus, 0, &rr);
-
-                result =
-                    ioctl(buses[btd->bus].device.file.fd, FIONREAD, &temp);
-                if (result == -1) {
-                    syslog_bus(btd->bus, DBG_ERROR,
-                               "ioctl() failed: %s (errno = %d)\n",
-                               strerror(errno), errno);
-                }
-
-                syslog_bus(btd->bus, DBG_INFO,
-                           "FB M6051: oops; ignoring unread byte: %d ",
-                           rr);
-            }
             SendByte = 192 + akt_S88;
             writeByte(btd->bus, SendByte, pause_between_cmd);
             buses[btd->bus].watchdog = 8;
