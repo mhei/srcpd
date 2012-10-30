@@ -44,7 +44,8 @@ int readByte(bus_t bus, bool wait, unsigned char *the_byte)
 {
     ssize_t i;
     int status;
-
+    i=0; /* make sure every bit of the integer gets initialized, 
+      prevents some ioctl's from beeing misinterpreted */
     /* with debug level beyond DBG_DEBUG, we will not really work on hardware */
     if (buses[bus].debuglevel > DBG_DEBUG) {
         i = 1;
