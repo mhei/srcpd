@@ -1001,7 +1001,8 @@ static void calc_address_stream(char *addrstream, char *addrerrbyte,
 {
     char addrbyte[9];
     char addrbyte2[9];
-    if (mode == 1) {
+    // if (mode == 1 || mode == 2 || mode == 5) { // Torsten Vogt 2012-01-15
+    if (mode == 1) { // Torsten Vogt 2012-11-10
         /* calc 7 bit address - leading bit is zero */
         calc_single_byte(addrbyte, address & 0x7f);
         /* no second byte => error detection byte = addressbyte */
@@ -1019,7 +1020,7 @@ static void calc_address_stream(char *addrstream, char *addrerrbyte,
     strcat(addrstream, "0");
     strcat(addrstream, addrbyte);
     strcat(addrstream, "0");
-    if (mode == 2) {
+    if (mode == 2) { // Torsten Vogt 2012-11-10
         strcat(addrstream, addrbyte2);
         strcat(addrstream, "0");
     }
@@ -1063,12 +1064,15 @@ int comp_nmra_multi_func(bus_t busnumber, int address, int direction,
                "dir:%d speed:%d nspeeds:%d nfunc:%d",
                mode, address, direction, speed, nspeed, nfuncs);
 
-    adr = address;
+    adr = address; // adr is an additional identifier, only used to store
+                   // the pakets in the internal queue!!!!!
 
+    // Torsten Vogt, 2012-11-10
     if (mode == 2) {
         adr += ADDR14BIT_OFFSET;
     }
     /* no special error handling, it's job of the clients */
+    // Torsten Vogt, 2012-11-10
     if (address < 1 || address > 10239 || direction < 0 || direction > 1 ||
         speed < 0 || speed > (nspeed + 1) || (address > 127 && mode == 1))
         return 1;
@@ -1076,7 +1080,9 @@ int comp_nmra_multi_func(bus_t busnumber, int address, int direction,
     if (speed > 127) {
         speed = 127;
     }
+
     calc_address_stream(addrstream, addrerrbyte, address, mode);
+
     if (speed < 2 || nspeed < 15) {
         /* commands for stop and emergency stop are identical for
            14 and 28 speed steps. All decoders supporting 128
@@ -1171,8 +1177,12 @@ int protocol_nmra_sm_write_cvbyte_pom(bus_t busnumber, int address, int cv,
         value < 0 || value > 255 || (address > 127 && mode == 1))
         return 1;
 
-    adr = address;
+    adr = address; // adr is an additional identifier, only used to store
+                   // the pakets in the internal queue!!!!!
+
+    // Torsten Vogt, 2012-11-10
     if (mode == 2) {
+    // if (mode > 2 && mode < 5) {
         adr += ADDR14BIT_OFFSET;
     }
 
@@ -1226,8 +1236,12 @@ int protocol_nmra_sm_write_cvbit_pom(bus_t busnumber, int address, int cv,
         || (address > 127 && mode == 1))
         return 1;
 
-    adr = address;
+    adr = address; // adr is an additional identifier, only used to store
+                   // the pakets in the internal queue!!!!!
+
+    // Torsten Vogt, 2012-11-10
     if (mode == 2) {
+    // if (mode > 2 && mode < 5) {
         adr += ADDR14BIT_OFFSET;
     }
 
