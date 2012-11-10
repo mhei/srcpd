@@ -1375,6 +1375,26 @@ static int init_gl_DDL(gl_state_t * gl)
         case 'M':              /* Motorola Codes */
             if (gl->n_func < 0 || gl->n_func > 5) return SRCP_WRONGVALUE;
             switch (gl->protocolversion) {
+
+               // SRCP only knows 2 types of protocol versions, so the
+               // ddl section was corrected, Torsten 2012-11-10
+
+               // M1: 80 addresses, 14 drive steps, 1 function, relative
+               //     drive direction
+               case 1: return (gl->id >= 0 && gl->id < 80 &&
+                               gl->n_fs == 14 && gl->n_func == 1) ?
+                               SRCP_OK : SRCP_WRONGVALUE;
+
+               // M2: 80 or 255 addresses, up to 28 drive steps, 5 function, 
+               //     absolute drive direction
+               case 2: return (gl->id >= 0 && gl->id <= 255 &&
+                              (gl->n_fs == 14 || gl->n_fs == 28) &&
+                               gl->n_func >= 0 && gl->n_func <= 5 ) ?
+                               SRCP_OK : SRCP_WRONGVALUE;
+
+               // no support of the wikinger decoder, from now on 
+
+/* old code, can be deleted sometimes 
                case 1: return (gl->id >= 0 && gl->id < 80 &&
                                gl->n_fs == 14) ? 
                                SRCP_OK : SRCP_WRONGVALUE;
@@ -1390,6 +1410,8 @@ static int init_gl_DDL(gl_state_t * gl)
                case 5: return (gl->id >= 0 && gl->id <= 255 &&
                                gl->n_fs == 28) ?
                                SRCP_OK : SRCP_WRONGVALUE;
+ end of deletable old code */
+
                default: return SRCP_WRONGVALUE;
             }
             /*
@@ -1399,8 +1421,23 @@ static int init_gl_DDL(gl_state_t * gl)
             */
             break;
         case 'N':
-            if (gl->n_func < 0 || gl->n_func > 28) return SRCP_WRONGVALUE;
+            if (gl->n_func < 0 || gl->n_func > 32) return SRCP_WRONGVALUE;
             switch (gl->protocolversion) {
+
+               // SRCP only knows 2 types of protocol versions, so the
+               // ddl section was corrected, Torsten 2012-11-10
+
+               // N1: short addresses, 28 or 128 drive steps, 32 function
+               case 1: return (gl->id >= 0 && gl->id < 128 &&
+                               (gl->n_fs == 28 || gl->n_fs == 128)) ?
+                               SRCP_OK : SRCP_WRONGVALUE;
+
+               // N2: long addresses, 28 or 128 drive steps, 32 function
+               case 2: return (gl->id >= 0 && gl->id < 10240 &&
+                               (gl->n_fs == 28 || gl->n_fs == 128) ) ?
+                               SRCP_OK : SRCP_WRONGVALUE;
+
+/* old code, can be deleted sometimes
                case 1: return (gl->id >= 0 && gl->id < 128 &&
                                gl->n_fs == 28) ?
                                SRCP_OK : SRCP_WRONGVALUE;
@@ -1416,6 +1453,7 @@ static int init_gl_DDL(gl_state_t * gl)
                case 5: return (gl->id >= 0 && gl->id < 128 &&
                                gl->n_fs == 14) ?
                                SRCP_OK : SRCP_WRONGVALUE;
+ end of deletable old code */
                default: return SRCP_WRONGVALUE;
             }
             /*
@@ -1908,6 +1946,51 @@ static void *thr_sendrec_DDL(void *v)
                     if (direction == 2)
                         speed = 0;
                     switch (pv) {
+
+                    // SRCP only knows 2 types of protocol versions, so the
+                    // ddl section was corrected, Torsten 2012-11-10
+
+                        case 1: // 80 addresses, 14 steps, 1 function
+                            comp_maerklin_1(btd->bus, addr,
+                                            gltmp.direction, speed,
+                                            gltmp.funcs & 0x01);
+                            break;
+                        case 2: // abs. direction
+                            if (gltmp.n_fs == 14) { 
+                               if (addr <= 80)
+                               {
+                                  comp_maerklin_2(btd->bus, addr,
+                                                  gltmp.direction, speed,
+                                                  gltmp.funcs & 0x01,
+                                                  ((gltmp.funcs >> 1) & 0x01),
+                                                  ((gltmp.funcs >> 2) & 0x01),
+                                                  ((gltmp.funcs >> 3) & 0x01),
+                                                  ((gltmp.funcs >> 4) & 0x01));
+                               }
+                               else {
+                                  comp_maerklin_4(btd->bus, addr,
+                                                  gltmp.direction, speed,
+                                                  gltmp.funcs & 0x01,
+                                                  ((gltmp.funcs >> 1) & 0x01),
+                                                  ((gltmp.funcs >> 2) & 0x01),
+                                                  ((gltmp.funcs >> 3) & 0x01),
+                                                  ((gltmp.funcs >> 4) & 0x01));
+                               }
+                            }  
+                            if (gltmp.n_fs == 28 && addr <= 80) {
+                               comp_maerklin_5(btd->bus, addr,
+                                               gltmp.direction, speed,
+                                               gltmp.funcs & 0x01,
+                                               ((gltmp.funcs >> 1) & 0x01),
+                                               ((gltmp.funcs >> 2) & 0x01),
+                                               ((gltmp.funcs >> 3) & 0x01),
+                                               ((gltmp.funcs >> 4) & 0x01));
+                            }
+                            break;
+
+ 
+/* old code, deletable sometimes
+
                         case 1:
                             comp_maerklin_1(btd->bus, addr,
                                             gltmp.direction, speed,
@@ -1948,6 +2031,7 @@ static void *thr_sendrec_DDL(void *v)
                                             ((gltmp.funcs >> 2) & 0x01),
                                             ((gltmp.funcs >> 3) & 0x01),
                                             ((gltmp.funcs >> 4) & 0x01));
+end of deletable code */
                             break;
                     }
                     break;
