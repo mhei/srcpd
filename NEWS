@@ -1,4 +1,4 @@
-srcpd-2.1.2 (2012-11-??)
+srcpd-2.1.2 (2013-01-26)
   Fixed Bugs
     o Fix Lenz GA address handling (bug introduced in version 2.0.11).
     o Fix usage of XEvtLok in IB module.
