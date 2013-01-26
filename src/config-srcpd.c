@@ -478,6 +478,8 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
                 else if (xmlStrcmp(txt, BAD_CAST "no") == 0)
                     buses[current_bus].flags &= ~USE_AUTODETECTION;
                 xmlFree(txt);
+                syslog_bus(0, DBG_ERROR,
+                        "Setting speed_detection for bus: %ld\n", current_bus);
             }
         }
 
