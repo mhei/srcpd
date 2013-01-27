@@ -80,6 +80,10 @@ if USE_ZIMO
 srcpd_SOURCES += zimo.c zimo.h
 endif
 
+if USE_DCCAR
+srcpd_SOURCES += dccar.c dccar.h
+endif
+
 EXTRA_DIST = li100.c
 
 DEFS = -D_REENTRANT -DSYSCONFDIR=\"$(sysconfdir)\" @DEFS@

@@ -1,3 +1,7 @@
+2013-01-27 Achim Marikar <amarikar@users.sourceforge.net>
+	* src/dccar.*: Add support for dc-car sender (serial pc-device)
+
+
 --- Release 2.1.2 ----
 
 2012-10-30 Matthias Trute <mtrute@web.de>

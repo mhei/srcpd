@@ -55,6 +55,7 @@ typedef unsigned long int sessionid_t;
 #define SERVER_ZIMO            10    /* Zimo MX1 */
 #define SERVER_SELECTRIX       11    /* Selectrix-server */
 #define SERVER_LOCONET         12    /* Loconet Gateway */
+#define SERVER_DCCAR           13    /* DC-Car Gateway */
 
 /* generic flags */
 #define USE_WATCHDOG          0x0001 /* use watchdog */
