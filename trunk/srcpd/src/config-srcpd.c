@@ -67,6 +67,10 @@
 #include "zimo.h"
 #endif
 
+#ifdef USE_DCCAR
+#include "dccar.h"
+#endif
+
 #include "syslogmessage.h"
 
 
@@ -297,6 +301,13 @@ static bus_t register_bus(bus_t busnumber, xmlDocPtr doc, xmlNodePtr node)
         else if (xmlStrcmp(child->name, BAD_CAST "zimo") == 0) {
 #ifdef USE_ZIMO
             busnumber += readconfig_ZIMO(doc, child, busnumber);
+#else
+            syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
+#endif
+        }
+        else if (xmlStrcmp(child->name, BAD_CAST "dccar") == 0) {
+#ifdef USE_DCCAR
+            busnumber += readconfig_DCCAR(doc, child, busnumber);
 #else
             syslog_bus(0, DBG_ERROR, DISABLE_MSG, child->name);
 #endif
