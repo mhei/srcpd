@@ -11,6 +11,7 @@
 typedef struct _DCCAR_DATA {
 	int mode;
 	int number_gl;
+	unsigned int pause_between_cmd;
 } DCCAR_DATA;
 
 int readconfig_DCCAR(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber);

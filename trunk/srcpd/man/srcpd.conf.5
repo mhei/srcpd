@@ -212,6 +212,47 @@ srcpd runs under this group.  Default is
 .IR nogroup .
 .\"
 .\"
+.SS dccar
+.PP
+This driver supports
+.IR DC-Car\ Infrared\ Remote\ Control .
+This mode supports remote control of cars (e.g. Faller Car-System) with 
+a DC-Car decoder or Infracar decoder. A sender must be connected to your PC's 
+seriall port. Some USB/Serial Adapter also work, e.g. Prolifi PL 2303 based adapter.
+
+A description of the sender is available at http://www.dc-car.de/DC-Car_PC_Sender.htm 
+.\"
+.TP
+mode
+This option specifies whether DC-Car or Infracar decoders are controled. Currently it 
+is not possible to combine both modes. Possile values are dccar and infracar.
+.\"
+.TP
+number_gl
+This value specifies the address range of the used vehicles (GL). 
+Up to 1024 DC-Cars or 4096 Infracars can be controlled. 
+Default values are 1024 (dccar) and 4096 (infracar).
+.\"
+.TP
+pause_between_commands
+This value specifies the time between two commands The default value is 10\ ms.
+.\"
+.TP
+Example
+.nf
+<bus>
+	<dccar>
+		<mode>dccar</mode>
+		<number_gl>1024</number_gl>
+		<pause_between_commands>10</pause_between_commands>
+	</dccar>
+	<auto_power_on>yes</auto_power_on>
+	<verbosity>4</verbosity>
+	<device>/dev/ttyUSB0</device>
+</bus>
+.fi
+.\"
+.\"
 .SS ddl
 .PP
 Digital Direct for Linux (DDL) via serial line (RS232).  With this module
