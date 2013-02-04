@@ -266,6 +266,54 @@ auf dem System läuft.  Voreingestellt ist
 .IR nogroup .
 .\"
 .\"
+.SS dccar
+.PP
+Dieser Bus ist für den Betriebsmodus
+.IR DC-Car\ Infrarot\ Fernsteuerung .
+In diesem Modus kann ein Straßenfahrzeug (z.B. Faller Car-System), 
+das mit einem DC-Car- oder Infracar-Dekoder ausgestattet ist, aus 
+der Ferne gesteuert werden. Der dazugehörige Sender muss an eine 
+serielle Schnittstelle des PCs angeschlossen werden. Es funktionieren 
+auch einige USB/Seriell-Konverter, z.B. Geräte mit dem Chipsatz PL 
+2302 von Profilic.
+
+Eine Beschreibung samt Bauplan für den Wandler finden sich unter: 
+http://www.dc-car.de/DC-Car_PC_Sender.htm 
+.\"
+.TP
+mode
+Diese Option gibt an, ob Fahrzeuge mit DC-Car-Dekoder oder Infracar-
+Dekoder gesteuert werden sollen. Ein gemischter Betrieb ist derzeit nicht 
+möglich. Die erlaubten Werte sind dccar und infracar.
+.\"
+.TP
+number_gl
+Dieser Wert legt den maximalen Adressbereich für die verwendeten
+Lokdecoder (GL) fest.  Gültig sind Werte von 1 bis 1024 (4096 bei 
+Infracar). Der voreingestellte Wert beträgt 1024 (4096 im Modus infracar).
+.\"
+.TP
+pause_between_commands
+Mit diesem Wert wird die Verzögerungszeit in Millisekunden eingestellt,
+nach der ein weiterer Befehl gesendet wird. Der voreingestellte Wert 
+beträgt 10\ ms.
+.\"
+.TP
+Beispiel
+.nf
+<bus>
+	<dccar>
+		<mode>dccar</mode>
+		<number_gl>1024</number_gl>
+		<pause_between_commands>10</pause_between_commands>
+	</dccar>
+	<auto_power_on>yes</auto_power_on>
+	<verbosity>4</verbosity>
+	<device>/dev/ttyUSB0</device>
+</bus>
+.fi
+.\"
+.\"
 .SS ddl
 .PP
 Dieser Bus ist für den Betriebsmodus

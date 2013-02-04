@@ -62,6 +62,7 @@ int readconfig_DCCAR(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 		"GL POWER LOCK DESCRIPTION");
 
 	__dccar->mode = DCCAR;
+	__dccar->pause_between_cmd = 10;
  
 	xmlNodePtr child = node->children;
 	xmlChar *txt = NULL;
@@ -80,10 +81,18 @@ int readconfig_DCCAR(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 		}
 	}
 
+	else if (xmlStrcmp(child->name, BAD_CAST "pause_between_commands") == 0) {
+		txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
+		if (txt != NULL) {
+			__dccar->pause_between_cmd = atoi((char *) txt);
+			xmlFree(txt);
+		}
+	}
+
 	else if (xmlStrcmp(child->name, BAD_CAST "mode") == 0) {
 		txt = xmlNodeListGetString(doc, child->xmlChildrenNode, 1);
 		if (txt != NULL) {
-			if (xmlStrcmp(txt, BAD_CAST "dc-car") == 0)
+			if (xmlStrcmp(txt, BAD_CAST "dccar") == 0)
 				__dccar->mode = DCCAR;
 			else if (xmlStrcmp(txt, BAD_CAST "infracar") == 0)						 
 				__dccar->mode = INFRACAR;
@@ -161,7 +170,7 @@ int init_bus_DCCAR(bus_t busnumber)
  **/
 int init_gl_DCCAR(gl_state_t * gl)
 {
-	// TODO instead of setting mode (dc-car or infracar) in config file, the mode could be individual specified by protocol of car to enable mixed mode.
+	/* TODO instead of setting mode (dccar or infracar) in config file, the mode could be individual specified by protocol of car to enable mixed mode.*/
 	switch (gl->protocol) {
 		case 'L':
 		case 'S':             
@@ -191,16 +200,16 @@ static void handle_power_command(bus_t busnumber)
 }
 
 void set_address_bytes(unsigned char command[3], int id) {
-	command[0] = (unsigned char) ( id % 64 );			// byte 1, address low
-	command[1] = (unsigned char) ( id / 64 ) + 64;	// byte 2, address high, add 64 for speed and functions F1-F6, 96 for functions F0, F7-F11 and 112 for functions F12 and greater
+	command[0] = (unsigned char) ( id % 64 );			/* byte 1, address low */
+	command[1] = (unsigned char) ( id / 64 ) + 64;	/* byte 2, address high, add 64 for speed and functions F1-F6, 96 for functions F0, F7-F11 and 112 for functions F12 and greater */
 }
 
-void write_command(unsigned char *command, int length, int fd, bus_t bus)
+void write_command(unsigned char *command, int length, int fd, bus_t busnumber)
 {
 	if (!write(fd,command,length))
-		syslog_bus(bus, DBG_ERROR, "could not send data to device");
-	// the cars need a short delay between two commands
-	usleep(10000);
+		syslog_bus(busnumber, DBG_ERROR, "could not send data to device");
+	/* the cars need a short delay between two commands */
+	usleep(__dccar->pause_between_cmd * 1000);
 }
 
 static void handle_gl_command(bus_t busnumber)
@@ -208,7 +217,7 @@ static void handle_gl_command(bus_t busnumber)
 	gl_state_t gltmp, glakt;
 	int addr;
 
-	// byte 1: address low, byte 2: address high, byte 3: speed/functions (see http://www.dc-car.de/DC-Car_PC_Sender.htm & http://www.modellautobahnen.de/newsletter/download/wdp_dc-car_steuerung2.pdf for details)
+	/* byte 1: address low, byte 2: address high, byte 3: speed/functions (see http://www.dc-car.de/DC-Car_PC_Sender.htm & http://www.modellautobahnen.de/newsletter/download/wdp_dc-car_steuerung2.pdf for details) */
 	unsigned char command[3];
 
 	dequeueNextGL(busnumber, &gltmp);
@@ -220,7 +229,7 @@ static void handle_gl_command(bus_t busnumber)
 		gltmp.direction = !glakt.direction;
 	}
 	
-	// send speed message to car
+	/* send speed message to car */
 	if (gltmp.speed != glakt.speed) {
 		set_address_bytes(command,gltmp.id);
 		
@@ -238,11 +247,11 @@ static void handle_gl_command(bus_t busnumber)
 		write_command(command, sizeof(command), fd, busnumber);
 	}
 
-	// send function message to car
+	/* send function message to car */
 	if (gltmp.funcs != glakt.funcs) {
 		unsigned char byte;
 
-		// separate functions to different messages with offset for byte 2 0x40 (default), 0x60 (+32) or 0x70 (+64, currently not implemented)
+		/* separate functions to different messages with offset for byte 2 0x40 (default), 0x60 (+32) or 0x70 (+64, currently not implemented) */
 		if( (gltmp.funcs&126) != (glakt.funcs&126) ) {
 			set_address_bytes(command,gltmp.id);
 			byte = 128;
