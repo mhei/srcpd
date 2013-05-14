@@ -844,6 +844,7 @@ int doCmdClient(session_node_t * sn)
             line[linelen - 1] = '\0';
 
         memset(command, 0, sizeof(command));
+        memset(cbus, 0, sizeof(cbus));
         memset(devicegroup, 0, sizeof(devicegroup));
         memset(parameter, 0, sizeof(parameter));
         memset(reply, 0, sizeof(reply));
