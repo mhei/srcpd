@@ -1258,6 +1258,27 @@ static int write_cvbit_IB(bus_t busnumber, int cv, int bit, int value)
     return status;
 }
 
+/* read decoder on the main */
+static int read_pom_IB(bus_t busnumber, int addr, int cv)
+{
+    unsigned char status;
+
+    /* send pom-command */
+    writeByte(busnumber, XDCC_PDR, 0);
+    /* low-byte of decoder-address */
+    writeByte(busnumber, addr & 0xFF, 0);
+    /* high-byte of decoder-address */
+    writeByte(busnumber, addr >> 8, 0);
+    /* low-byte of cv */
+    writeByte(busnumber, cv & 0xff, 0);
+    /* high-byte of cv */
+    writeByte(busnumber, cv >> 8, 0);
+
+    readByte_IB(busnumber, true, &status);
+
+    return status;
+}
+
 /* program decoder on the main */
 static int send_pom_IB(bus_t busnumber, int addr, int cv, int value)
 {
@@ -1337,19 +1358,24 @@ static void send_command_sm_IB(bus_t busnumber)
                 }
                 break;
             case GET:
-                switch (smakt.type) {
-                    case REGISTER:
-                        read_register_IB(busnumber, smakt.typeaddr);
-                        break;
-                    case CV:
-                        read_cv_IB(busnumber, smakt.typeaddr);
-                        break;
-                    case CV_BIT:
-                        read_cvbit_IB(busnumber, smakt.typeaddr,
-                                      smakt.bit);
-                        break;
-                    case PAGE:
-                        read_page_IB(busnumber, smakt.typeaddr);
+                if (smakt.addr == -1) {
+                    switch (smakt.type) {
+                        case REGISTER:
+                            read_register_IB(busnumber, smakt.typeaddr);
+                            break;
+                        case CV:
+                            read_cv_IB(busnumber, smakt.typeaddr);
+                            break;
+                        case CV_BIT:
+                            read_cvbit_IB(busnumber, smakt.typeaddr,
+                                          smakt.bit);
+                            break;
+                        case PAGE:
+                            read_page_IB(busnumber, smakt.typeaddr);
+                    }
+                }
+                else {
+		  read_pom_IB(busnumber, smakt.addr, smakt.typeaddr);
                 }
                 break;
             case VERIFY:
@@ -1621,8 +1647,14 @@ static void check_status_IB(bus_t busnumber)
     }
 
     /* we should send an XPT_event-command */
-    if (xevnt3 & 0x01)
+    if (xevnt3 & 0x01) {
         check_status_pt_IB(busnumber);
+    }
+
+    /* Bidi CV message */
+    if (xevnt3 & 0x20) {
+        check_status_pt_IB(busnumber);
+    }
 }
 
 static unsigned char send_command_power_IB(bus_t busnumber)

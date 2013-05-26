@@ -99,6 +99,8 @@ static const char P50X_ENABLE[] = "ZzA0";
 
 /* programming track P50X commands */
 
+#define XDCC_PDR    0xDA
+#define XDCC_PAR    0xDB
 #define XPT_DCCEWr  0xDC
 #define XPT_FMZEWr  0xDD
 #define XDCC_PD     0xDE
