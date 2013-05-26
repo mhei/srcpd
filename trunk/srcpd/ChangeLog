@@ -1,3 +1,6 @@
+2013-05-26 André Schenk <andre_schenk@users.sourceforge.net>
+	* src/ib.*: added POM read for locomotives
+
 2013-01-27 Achim Marikar <amarikar@users.sourceforge.net>
 	* src/dccar.*: Add support for dc-car sender (serial pc-device)
 
