@@ -96,6 +96,9 @@ static const char P50X_ENABLE[] = "ZzA0";
 #define XEvtTkR     0xCF
 #define XEvtMem     0xD0
 #define XEvtLSY     0xD1
+#define XEvtBiDi    0xD2
+#define XBiDiSet    0xD3
+#define XBiDiQuery  0xD4
 
 /* programming track P50X commands */
 
