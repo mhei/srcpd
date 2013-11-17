@@ -48,7 +48,7 @@ email                : frank.schmischke@t-online.de
 #define __ib ((IB_DATA*)buses[busnumber].driverdata)
 #define __ibt ((IB_DATA*)buses[btd->bus].driverdata)
 
-
+static bool isOpenDCC_XP = false;
 
 int readConfig_IB(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber)
 {
@@ -777,6 +777,10 @@ static void show_firmware_version(bus_t bus)
                 status = readByte_IB(bus, true, &value);
                 if (status == -1)
                     break;
+
+                /* OpenDCC_XP? */
+                isOpenDCC_XP = counter == 1 && value == 23;
+
                 high1 = (value & 0xf0) >> 4;
                 low1 = (value & 0x0f);
                 status = readByte_IB(bus, true, &value);
@@ -809,10 +813,10 @@ static void show_firmware_version(bus_t bus)
     } while (0 == status);
 }
 
-
 static int init_lineIB(bus_t busnumber)
 {
     int fd;
+    unsigned char rr;
 
     if (buses[busnumber].flags & USE_AUTODETECTION) {
         if (0 != run_autodetection(busnumber))
@@ -842,6 +846,13 @@ static int init_lineIB(bus_t busnumber)
 
     /* read firmware version */
     show_firmware_version(busnumber);
+
+    if (isOpenDCC_XP) {
+        /* enable Bidi commands */
+        writeByte(busnumber, XBiDiSet, 0);
+        writeByte(busnumber, 3, 0);
+        readByte_IB(busnumber, true, &rr);
+    }
 
     return 0;
 }
@@ -1375,7 +1386,7 @@ static void send_command_sm_IB(bus_t busnumber)
                     }
                 }
                 else {
-		  read_pom_IB(busnumber, smakt.addr, smakt.typeaddr);
+                  read_pom_IB(busnumber, smakt.addr, smakt.typeaddr);
                 }
                 break;
             case VERIFY:
@@ -1485,7 +1496,7 @@ static void check_status_gl_IB(bus_t busnumber)
             /* get old data, to know which FS the user wants to have... */
             cacheGetGL(busnumber, gltmp.id, &glakt);
             /* recalculate speed */
-	    gltmp.n_fs = glakt.n_fs;
+            gltmp.n_fs = glakt.n_fs;
             gltmp.speed = (gltmp.speed * glakt.n_fs) / SPEED_STEPS;
             cacheSetGL(busnumber, gltmp.id, gltmp);
         }
@@ -1572,14 +1583,26 @@ static void check_status_IB(bus_t busnumber)
         check_status_gl_IB(busnumber);
     }
 
+    if (xevnt1 & 0x02) {
+        syslog_bus(busnumber, DBG_WARN, "received unknown GO event\n");
+    }
+
     /* some feedback state has changed */
     if (xevnt1 & 0x04) {
         check_status_fb_IB(busnumber);
     }
 
+    if (xevnt1 & 0x10) {
+        syslog_bus(busnumber, DBG_WARN, "received unknown Tres event\n");
+    }
+
     /* some turnout was switched by hand */
     if (xevnt1 & 0x20) {
         check_status_ga_IB(busnumber);
+    }
+
+    if (xevnt1 & 0x40) {
+        syslog_bus(busnumber, DBG_WARN, "received unknown Lissy event\n");
     }
 
     /* overheat, short-circuit on track etc. */
@@ -1649,6 +1672,22 @@ static void check_status_IB(bus_t busnumber)
     /* we should send an XPT_event-command */
     if (xevnt3 & 0x01) {
         check_status_pt_IB(busnumber);
+    }
+
+    if (xevnt3 & 0x02) {
+        syslog_bus(busnumber, DBG_WARN, "received unknown RSOF event\n");
+    }
+
+    if (xevnt3 & 0x04) {
+        syslog_bus(busnumber, DBG_WARN, "received unknown Mem event\n");
+    }
+
+    if (xevnt3 & 0x08) {
+        syslog_bus(busnumber, DBG_WARN, "received unknown TkRel event\n");
+    }
+
+    if (xevnt3 & 0x10) {
+        syslog_bus(busnumber, DBG_WARN, "received unknown ExVlt event\n");
     }
 
     /* Bidi CV message */
@@ -1765,4 +1804,3 @@ void *thr_sendrec_IB(void *v)
     pthread_cleanup_pop(1);
     return NULL;
 }
-
