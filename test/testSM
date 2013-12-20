@@ -1,0 +1,22 @@
+#!/usr/bin/expect
+
+set HOST localhost
+set PORT 4303
+set BUS 1
+set ADDR 1
+set CV 1
+
+spawn telnet $HOST $PORT
+expect "srcpd"
+send "SET CONNECTIONMODE SRCP COMMAND\n"
+expect "202 OK CONNECTIONMODE"
+send "GO\n"
+expect "200 OK GO"
+send "INIT $BUS SM NMRA\n"
+expect "200 OK"
+send "GET $BUS SM $ADDR CV $CV\n"
+expect "INFO $BUS SM $ADDR CV $CV"
+send "TERM $BUS SM\n"
+expect "200 OK"
+send "TERM 0 SESSION\n"
+exit
