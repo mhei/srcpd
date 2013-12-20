@@ -1,9 +1,11 @@
 #!/usr/bin/expect
 
+set HOST localhost
+set PORT 4303
 set BUS 1
 set ADDR 10
 
-spawn telnet localhost 4303
+spawn telnet $HOST $PORT
 expect "srcpd"
 send "SET CONNECTIONMODE SRCP COMMAND\n"
 expect "202 OK CONNECTIONMODE"
