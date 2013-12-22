@@ -910,7 +910,7 @@ int init_bus_IB(bus_t busnumber)
 
     __ib->last_type = -1;
     __ib->emergency_on_ib = 2;
-    __ib->pt = false;
+    __ib->pt_initialized = false;
 
     return status;
 }
@@ -1315,14 +1315,16 @@ static int send_pom_IB(bus_t busnumber, int addr, int cv, int value)
 
 static int init_pgm_IB(bus_t busnumber)
 {
-    unsigned char status;
+    unsigned char status = 0;
 
-    /* send command turn on PT */
-    writeByte(busnumber, XPT_On, 0);
+    if (!__ib->pt_initialized) {
+        /* send command turn on PT */
+        writeByte(busnumber, XPT_On, 0);
 
-    readByte_IB(busnumber, true, &status);
+        readByte_IB(busnumber, true, &status);
 
-    __ib->pt = true;
+        __ib->pt_initialized = true;
+    }
 
     return (status == 0) ? 0 : -1;
 }
@@ -1384,6 +1386,7 @@ static void send_command_sm_IB(bus_t busnumber)
                 break;
             case GET:
                 if (smakt.addr == -1) {
+                    init_pgm_IB(busnumber);
                     switch (smakt.type) {
                         case REGISTER:
                             read_register_IB(busnumber, smakt.typeaddr);
@@ -1407,7 +1410,7 @@ static void send_command_sm_IB(bus_t busnumber)
                 session_endwait(busnumber, 0);
                 break;
             case TERM:
-                if (__ib->pt) {
+                if (__ib->pt_initialized) {
                     session_endwait(busnumber, term_pgm_IB(busnumber));
 		}
 		else {
