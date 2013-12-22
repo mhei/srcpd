@@ -910,6 +910,7 @@ int init_bus_IB(bus_t busnumber)
 
     __ib->last_type = -1;
     __ib->emergency_on_ib = 2;
+    __ib->pt = false;
 
     return status;
 }
@@ -1312,6 +1313,20 @@ static int send_pom_IB(bus_t busnumber, int addr, int cv, int value)
     return (status == 0) ? 0 : -1;
 }
 
+static int init_pgm_IB(bus_t busnumber)
+{
+    unsigned char status;
+
+    /* send command turn on PT */
+    writeByte(busnumber, XPT_On, 0);
+
+    readByte_IB(busnumber, true, &status);
+
+    __ib->pt = true;
+
+    return (status == 0) ? 0 : -1;
+}
+
 static int term_pgm_IB(bus_t busnumber)
 {
     unsigned char status;
@@ -1344,6 +1359,7 @@ static void send_command_sm_IB(bus_t busnumber)
         switch (smakt.command) {
             case SET:
                 if (smakt.addr == -1) {
+                    init_pgm_IB(busnumber);
                     switch (smakt.type) {
                         case REGISTER:
                             write_register_IB(busnumber, smakt.typeaddr,
@@ -1363,9 +1379,7 @@ static void send_command_sm_IB(bus_t busnumber)
                     }
                 }
                 else {
-                    send_pom_IB(busnumber, smakt.addr, smakt.typeaddr,
-                                smakt.value);
-                    session_endwait(busnumber, 0);
+                    session_endwait(busnumber, send_pom_IB(busnumber, smakt.addr, smakt.typeaddr, smakt.value));
                 }
                 break;
             case GET:
@@ -1386,17 +1400,22 @@ static void send_command_sm_IB(bus_t busnumber)
                     }
                 }
                 else {
-                  read_pom_IB(busnumber, smakt.addr, smakt.typeaddr);
+                    read_pom_IB(busnumber, smakt.addr, smakt.typeaddr);
                 }
                 break;
             case VERIFY:
                 session_endwait(busnumber, 0);
                 break;
             case TERM:
-                session_endwait(busnumber, term_pgm_IB(busnumber));
+                if (__ib->pt) {
+                    session_endwait(busnumber, term_pgm_IB(busnumber));
+		}
+		else {
+                    session_endwait(busnumber, 0);
+		}
                 break;
             case INIT:
-                session_endwait(busnumber, 0);
+	        session_endwait(busnumber, 0);
                 break;
         }
     }
@@ -1506,7 +1525,6 @@ static void check_status_gl_IB(bus_t busnumber)
     }
 }
 
-
 static void check_status_pt_IB(bus_t busnumber)
 {
     int i;
@@ -1515,12 +1533,6 @@ static void check_status_pt_IB(bus_t busnumber)
 
     syslog_bus(busnumber, DBG_DEBUG,
                "We've got an answer from programming decoder");
-    /* first clear input-buffer */
-    i = 0;
-    while (i == 0) {
-        i = readByte_IB(busnumber, false, &rr[0]);
-    }
-
     i = -1;
     while (i == -1) {
         writeByte(busnumber, XEvtPT, 0);
@@ -1540,18 +1552,28 @@ static void check_status_pt_IB(bus_t busnumber)
         }
     }
 
-    for (i = 0; i < (int) rr[0]; i++)
-        readByte_IB(busnumber, true, &rr[i + 1]);
+    if (rr[0] != 0xF5) {
+        readByte_IB(busnumber, true, &rr[1]);
+        if (rr[1] == 0) {
+            for (i = 2; i <= (int) rr[0]; i++)
+                readByte_IB(busnumber, true, &rr[i]);
 
-    if ((int) rr[0] < 2)
-        rr[2] = __ib->last_value;
+            if ((int) rr[0] < 2)
+                rr[2] = __ib->last_value;
 
-
-    if (__ib->last_type != -1) {
-        session_endwait(busnumber, (int) rr[2]);
-        setSM(busnumber, __ib->last_type, -1, __ib->last_typeaddr,
-              __ib->last_bit, (int) rr[2], (int) rr[1]);
-        __ib->last_type = -1;
+            if (__ib->last_type != -1) {
+	        session_endwait(busnumber, (int) rr[2]);
+                setSM(busnumber, __ib->last_type, -1, __ib->last_typeaddr,
+                    __ib->last_bit, (int) rr[2], (int) rr[1]);
+                __ib->last_type = -1;
+            }
+	}
+	else {
+            syslog_bus(busnumber, DBG_DEBUG, "got error %02x while reading answer from programmer", rr[1]);
+	}
+    }
+    else {
+        syslog_bus(busnumber, DBG_DEBUG, "Timeout while reading answer from programmer");
     }
 }
 

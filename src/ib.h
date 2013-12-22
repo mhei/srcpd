@@ -32,6 +32,7 @@ typedef struct _IB_DATA {
     int working_IB;
     int emergency_on_ib;
     unsigned int pause_between_cmd;
+    bool pt; /* This will be set to true when using the programming track. */
 } IB_DATA;
 
 int readConfig_IB(xmlDocPtr doc, xmlNodePtr node, bus_t busnumber);
