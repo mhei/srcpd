@@ -311,7 +311,8 @@ void unlock_ga_bysessionid(sessionid_t sessionid)
     int j, number;
 
     syslog_session(sessionid, DBG_DEBUG, "Unlocking GAs by session-id");
-    for (i = 0; i < num_buses; i++) {
+    /* buses start with 1 */
+    for (i = 1; i <= num_buses; i++) {
         number = get_number_ga(i);
         for (j = 1; j <= number; j++) {
             if (ga[i].gastate[j].locked_by == sessionid) {
@@ -327,7 +328,8 @@ void unlock_ga_bytime(void)
     unsigned int i;
     int j, number;
 
-    for (i = 0; i < num_buses; i++) {
+    /* buses start with 1 */
+    for (i = 1; i <= num_buses; i++) {
         number = get_number_ga(i);
         for (j = 1; j <= number; j++) {
             if (ga[i].gastate[j].lockduration-- == 1) {

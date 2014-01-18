@@ -1,4 +1,5 @@
 2014-01-18 Guido Scholz <guido.scholz@bayernline.de>
+	* src/srcp-ga.c: Fix GA unlock. Patch provided by Lothar Roth.
 	* src/clientservice.c: Fix incomplete handshake. Patch provided
 	by Lothar Roth.
 
