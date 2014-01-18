@@ -1,3 +1,7 @@
+2014-01-18 Guido Scholz <guido.scholz@bayernline.de>
+	* src/clientservice.c: Fix incomplete handshake. Patch provided
+	by Lothar Roth.
+
 2013-05-26 André Schenk <andre_schenk@users.sourceforge.net>
 	* src/ib.*: added POM read for locomotives
 

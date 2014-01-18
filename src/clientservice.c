@@ -40,7 +40,7 @@ void end_client_thread(session_node_t * sn)
     sid = sn->session;
 
     syslog_session(sid, DBG_INFO,
-                   "Session entered cancel state (mode = %d).", sn->mode);
+                   "Session entered cancel state (mode = %d sid = %d).", mode, sid);
 
     if (mode == smInfo) {
         result = close(sn->pipefd[0]);
@@ -68,10 +68,13 @@ void end_client_thread(session_node_t * sn)
         }
     }
 
-    destroy_session(sid);
+    if ((mode != smUndefined) && (sid!=0)) {
+        /* session finished handshake and has valid sid */
 
-    /*at last tell all remaining sessions about this one to leave */
-    stop_session(sid);
+        destroy_session(sid);
+        /*at last tell all remaining sessions about this one to leave */
+        stop_session(sid);
+    }
     syslog_session(sid, DBG_INFO, "Session sucessfully cancelled.");
 }
 
