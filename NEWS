@@ -1,10 +1,11 @@
 srcpd-2.??2 (2013-??-??)
   Fixed Bugs
-    o 
+    o Fix GA unlock.
+    o Fix incomplete handshake.
 
   New Features
     o Add support for dc-car sender (serial pc-device).
-    o 
+    o Add POM read for locomotives.
 
   General Changes
     o 
