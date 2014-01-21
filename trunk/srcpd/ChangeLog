@@ -1,3 +1,6 @@
+2014-01-21 Guido Scholz <guido.scholz@bayernline.de>
+	* src/syslogmessage.c: Fix syslog message buffer overflow.
+
 2014-01-18 Guido Scholz <guido.scholz@bayernline.de>
 	* src/srcp-ga.c: Fix GA unlock. Patch provided by Lothar Roth.
 	* src/clientservice.c: Fix incomplete handshake. Patch provided

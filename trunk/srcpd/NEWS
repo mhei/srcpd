@@ -2,6 +2,7 @@ srcpd-2.??2 (2013-??-??)
   Fixed Bugs
     o Fix GA unlock.
     o Fix incomplete handshake.
+    o Fix syslog message buffer overflow.
 
   New Features
     o Add support for dc-car sender (serial pc-device).
