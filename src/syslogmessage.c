@@ -39,7 +39,7 @@ void syslog_bus(bus_t busnumber, int dbglevel, const char *fmt, ...)
         va_list parm;
         va_start(parm, fmt);
         char *msg;
-        msg = (char *) malloc(sizeof(char) * (strlen(fmt) + 10));
+        msg = (char *) malloc(sizeof(char) * (strlen(fmt) + 18));
         if (msg == NULL)
             return;
         sprintf(msg, "[bus %ld] %s", busnumber, fmt);
@@ -58,7 +58,7 @@ void syslog_session(sessionid_t session, int dbglevel, const char *fmt,
         va_start(parm, fmt);
 
         char *msg;
-        msg = (char *) malloc(sizeof(char) * (strlen(fmt) + 14));
+        msg = (char *) malloc(sizeof(char) * (strlen(fmt) + 22));
         if (msg == NULL)
             return;
         sprintf(msg, "[session %ld] %s", session, fmt);
