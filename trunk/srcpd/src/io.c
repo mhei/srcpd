@@ -178,7 +178,7 @@ static int isvalidchar(unsigned char c)
  * return values
  *   -1: error
  *    0: end of file (EOF), client terminated connection
- *   >0: number of written characters
+ *   >0: number of read characters
  * */
 ssize_t socket_readline(int Socket, char *line, int len)
 {
