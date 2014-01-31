@@ -279,9 +279,28 @@ int cacheInitGL(bus_t busnumber, int addr, const char protocol,
 
 int cacheTermGL(bus_t busnumber, int addr)
 {
+    gl_state_t gltmp;
+
     if (isInitializedGL(busnumber, addr)) {
-        gl[busnumber].glstate[addr].state = 2;
-        enqueueGL(busnumber, addr, 0, 0, 1, 0);
+        cacheGetGL(busnumber, addr, &gltmp);
+       
+        /* first brake if current speed != 0 */
+        if (gltmp.speed != 0) {
+            gltmp.speed = 0;
+            gltmp.state = 2;
+            cacheSetGL(busnumber, addr, gltmp);
+        }
+
+        /* second terminate GL */
+        char msg[256];
+        gettimeofday(&gltmp.tv, NULL);
+        snprintf(msg, sizeof(msg), "%lu.%.3lu 102 INFO %ld GL %d\n",
+                gltmp.tv.tv_sec, gltmp.tv.tv_usec / 1000, busnumber, addr);
+        enqueueInfoMessage(msg);
+
+        /* third clear GL data */
+        memset(&gl[busnumber].glstate[addr], 0, sizeof(gl_state_t));
+
         return SRCP_OK;
     }
     else {
