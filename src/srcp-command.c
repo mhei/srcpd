@@ -593,7 +593,10 @@ int handleTERM(sessionid_t sessionid, bus_t bus, char *device,
         if (nelem == 1) {
             sessionid_t lockid;
             cacheGetLockGL(bus, addr, &lockid);
-            if (lockid == 0 || lockid == sessionid) {
+            if (lockid == 0) {
+                rc = cacheTermGL(bus, addr);
+            }
+            else if (lockid == sessionid) {
                 rc = cacheUnlockGL(bus, addr, sessionid);
                 rc = cacheTermGL(bus, addr);
             }
