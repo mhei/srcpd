@@ -493,7 +493,7 @@ void *thr_sendrec_LOOPBACK(void *v)
         /* handle delayed switching of GAs (there is a better place) */
         gettimeofday(&akt_time, NULL);
         for (ctr = 0; ctr < 50; ctr++) {
-            if (__loopbackt->tga[ctr].id) {
+            if (__loopbackt->tga[ctr].id > 0) {
                 cmp_time = __loopbackt->tga[ctr].t;
 
                 /* switch off time reached? */
