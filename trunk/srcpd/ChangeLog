@@ -1,3 +1,8 @@
+2014-01-31 Guido Scholz <guido.scholz@bayernline.de>
+	* src/srcp-command.c, src/srcp-gl.c: Fix needless INFO LOCK
+	message on TERM GL.
+	* src/srcp-gl.c: Fix missing 102 INFO message for TERM GL.
+
 2014-01-21 Guido Scholz <guido.scholz@bayernline.de>
 	* src/syslogmessage.c: Fix syslog message buffer overflow.
 
