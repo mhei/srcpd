@@ -4,7 +4,7 @@
 # Copyright (c) 1995-2000 SuSE GmbH Nuernberg, Germany.
 #
 # Author: Kurt Garloff <feedback@suse.de>
-# modified by Matthias Trute
+# modified by Matthias Trute, Guido Scholz
 #
 # init.d/srcpd
 #
@@ -16,11 +16,12 @@
 #
 ### BEGIN INIT INFO
 # Provides: srcpd
-# Required-Start: $syslog
-# Required-Stop:  $syslog
+# Required-Start: $remote_fs $syslog $network
+# Required-Stop:  $remote_fs $syslog $network
 # Default-Start:  3 5
 # Default-Stop:   0 1 2 6
-# Description:    Start srcpd to let locos drive ;=)
+# Short-Description: SRCP command daemon
+# Description:    Start srcpd to let model railway locomotives drive ;=)
 ### END INIT INFO
 
 # Source old SuSE config (pre 8.1)
