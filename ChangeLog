@@ -1,3 +1,6 @@
+2014-02-17 André Schenk <andre_schenk@users.sourceforge.net>
+        * src/ib.c: send extended information (BiDi) in FB INFO
+
 2014-01-31 Guido Scholz <guido.scholz@bayernline.de>
 	* src/srcp-command.c, src/srcp-gl.c: Fix needless INFO LOCK
 	message on TERM GL.
