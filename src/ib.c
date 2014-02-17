@@ -813,6 +813,56 @@ static void show_firmware_version(bus_t bus)
     } while (0 == status);
 }
 
+static void check_status_bidi_IB(bus_t busnumber)
+{
+    unsigned char rr[5];
+    gl_state_t gl;
+    int fbNumber;
+    char msg[50];
+    char bidiData[20];
+
+    writeByte(busnumber, XEvtBiDi, 0);
+    readByte_IB(busnumber, true, &rr[0]);
+    while (rr[0] != 0) {
+        readByte_IB(busnumber, true, &rr[1]);
+        readByte_IB(busnumber, true, &rr[2]);
+        readByte_IB(busnumber, true, &rr[3]);
+        fbNumber = (rr[1] | ((rr[0] & 0x0F) << 8)) + 1;
+        gl.id = rr[2] | ((rr[3] & 0x3F) << 8);
+        cacheGetGL(busnumber, gl.id, &gl);
+        gl.direction = (rr[3] & 0x80) >> 7;
+        if (rr[3] & 0x40) {
+            /* speed information */
+            readByte_IB(busnumber, true, &rr[4]);
+            if (rr[4] >= 0 && rr[4] <= 63) {
+                gl.speed = rr[4] / 2;
+            }
+            else if (rr[4] >= 64 && rr[4] <= 127) {
+                gl.speed = rr[4] - 32;
+            }
+            else if (rr[4] >= 128 && rr[4] <= 254) {
+                gl.speed = rr[4] * 4;
+            }
+        }
+        else {
+            rr[4] = 0;
+        }
+        setFB(busnumber, fbNumber, 1);
+        infoFB(busnumber, fbNumber, msg, sizeof(msg));
+        if (gl.speed != 0) {
+            sprintf(bidiData, " GL %d %d %d\n", gl.id, gl.direction, gl.speed);
+            msg[strlen(msg) - 1] = 0;
+            enqueueInfoMessage(strcat(msg, bidiData));
+        }
+        if ((rr[0] & 0x80) != 0) {
+            readByte_IB(busnumber, true, &rr[0]);
+        }
+	else {
+            rr[0] = 0;
+        }
+    }
+}
+
 static int init_lineIB(bus_t busnumber)
 {
     int fd;
@@ -1718,6 +1768,11 @@ static void check_status_IB(bus_t busnumber)
     /* Bidi CV message */
     if (xevnt3 & 0x20) {
         check_status_pt_IB(busnumber);
+    }
+
+    /* Bidi location message */
+    if (xevnt3 & 0x40) {
+        check_status_bidi_IB(busnumber);
     }
 }
 
