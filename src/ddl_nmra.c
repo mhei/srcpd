@@ -1172,8 +1172,8 @@ int protocol_nmra_sm_write_cvbyte_pom(bus_t busnumber, int address, int cv,
                "command for PoM %d received \naddr:%d CV:%d value:%d",
                mode, address, cv, value);
     cv -= 1;
-    /* do not allow to change the address on the main ==> cv 1 is disabled */
-    if (address < 1 || address > 10239 || cv < 1 || cv > 1023 ||
+
+    if (address < 1 || address > 10239 || cv < 0 || cv > 1023 ||
         value < 0 || value > 255 || (address > 127 && mode == 1))
         return 1;
 
