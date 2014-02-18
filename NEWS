@@ -11,7 +11,8 @@ srcpd-2.1.3 (2014-??-??)
     o Add support for dc-car sender (serial pc-device).
     o Add POM read for locomotives.
     o Add experimental BiDi GL address message for IB (opendcc) module
-    o Enable operations mode programming in ddl mode.
+    o Writing CV#1 in operations mode programming in ddl mode now
+      enabled
 
   General Changes
     o 
