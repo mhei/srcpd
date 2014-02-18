@@ -1609,13 +1609,11 @@ static int readAnswer_LI100_SERIAL(bus_t busnumber)
             return status;
 
         if (usleep(2000) == -1) {
-            {
-                syslog_bus(busnumber, DBG_ERROR,
-                           "usleep() failed: %s (errno = %d)\n",
-                           strerror(errno), errno);
-            }
-            status = readByte(busnumber, 1, &buffer[0]);
+            syslog_bus(busnumber, DBG_ERROR,
+                    "usleep() failed: %s (errno = %d)\n",
+                    strerror(errno), errno);
         }
+        status = readByte(busnumber, 1, &buffer[0]);
 
 #ifdef LI100_USB
         /* skip LI100_USB-header */
