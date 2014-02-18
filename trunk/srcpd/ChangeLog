@@ -1,5 +1,7 @@
 2014-02-18 Guido Scholz <gscholz@users.sourceforge.net>
 	* src/li100.c: Fix broken first serial line read.
+	* src/ddl_nmra.c: Enable operations mode programming in ddl
+	mode, patch provided by Dirk Holzenburg
 
 2014-02-17 André Schenk <andre_schenk@users.sourceforge.net>
 	* src/ib.c: send extended information (BiDi) in FB INFO
