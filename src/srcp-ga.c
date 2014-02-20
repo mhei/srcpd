@@ -161,9 +161,25 @@ int setGA(bus_t busnumber, int addr, ga_state_t a)
 
 int termGA(bus_t busnumber, int addr)
 {
+    /*pointer to ga state data*/
+    ga_state_t* ga_tmp;
+
     if (isInitializedGA(busnumber, addr)) {
-        ga[busnumber].gastate[addr].state = 2;
-        enqueueGA(busnumber, addr, 0, 0, 0);
+
+        ga_tmp = &ga[busnumber].gastate[addr];
+        ga_tmp->state = 2;
+
+        /* send termination info GA */
+        char msg[256];
+        struct timeval now;
+        gettimeofday(&now, NULL);
+        snprintf(msg, sizeof(msg), "%lu.%.3lu 102 INFO %ld GA %d\n",
+                now.tv_sec, now.tv_usec / 1000, busnumber, addr);
+        enqueueInfoMessage(msg);
+
+        /* at least clear GA data */
+        memset(ga_tmp, 0, sizeof(ga_state_t));
+
         return SRCP_OK;
     }
     else {
@@ -289,7 +305,7 @@ int describeLOCKGA(bus_t bus, int addr, char *reply)
 int unlockGA(bus_t busnumber, int addr, sessionid_t sessionid)
 {
     if (ga[busnumber].gastate[addr].locked_by == sessionid
-        || ga[busnumber].gastate[addr].locked_by == 0) {
+        /*|| ga[busnumber].gastate[addr].locked_by == 0*/) {
         char msg[256];
         ga[busnumber].gastate[addr].locked_by = 0;
         gettimeofday(&ga[busnumber].gastate[addr].locktime, NULL);

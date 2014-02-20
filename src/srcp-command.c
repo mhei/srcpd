@@ -614,7 +614,10 @@ int handleTERM(sessionid_t sessionid, bus_t bus, char *device,
         if (nelem == 1) {
             sessionid_t lockid;
             getlockGA(bus, addr, &lockid);
-            if (lockid == 0 || lockid == sessionid) {
+            if (lockid == 0) {
+                rc = termGA(bus, addr);
+            }
+            else if (lockid == sessionid) {
                 rc = unlockGA(bus, addr, sessionid);
                 rc = termGA(bus, addr);
             }
