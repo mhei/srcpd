@@ -6,6 +6,8 @@ srcpd-2.1.3 (2014-??-??)
     o Fix missing 102 INFO message for TERM GL.
     o Fix needless INFO LOCK message on TERM GL.
     o Fix serial line read on unusable Lenz module.
+    o Fix missing 102 INFO message for TERM GA.
+    o Fix needless INFO LOCK message on TERM GA.
 
   New Features
     o Add support for dc-car sender (serial pc-device).

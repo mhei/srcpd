@@ -1,3 +1,8 @@
+2014-02-20 Guido Scholz <gscholz@users.sourceforge.net>
+	* src/srcp-command.c, src/srcp-ga.c: Fix needless INFO LOCK
+	message on TERM GA.
+	* src/srcp-gA.c: Fix missing 102 INFO message for TERM GA.
+
 2014-02-18 Guido Scholz <gscholz@users.sourceforge.net>
 	* src/li100.c: Fix broken first serial line read.
 	* src/ddl_nmra.c: Enable operations mode programming in ddl
