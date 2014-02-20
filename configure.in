@@ -195,8 +195,12 @@ case $host in
           AC_CHECK_HEADERS(sys/io.h, ,
                        AC_MSG_ERROR(essential header file is missing))
     fi
-    AC_CHECK_HEADERS(linux/serial.h  linux/i2c-dev.h, ,
+    AC_CHECK_HEADERS(linux/serial.h, ,
                  AC_MSG_ERROR(essential header file is missing))
+    if test "$with_I2C" = "yes"; then
+    AC_CHECK_HEADERS(linux/i2c-dev.h, ,
+                 AC_MSG_ERROR(essential header file is missing))
+    fi
     ;;
   *-*-cygwin*)
     AC_CHECK_HEADERS(sys/io.h, ,
