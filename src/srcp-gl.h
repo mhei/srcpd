@@ -15,8 +15,8 @@ typedef struct _GLSTATE {
     int state;                  /* 0==dead, 1==living, 2==terminating */
     char protocol;
     int protocolversion;
-    int n_func;
-    int n_fs;
+    int n_func;                 /* number of functions */
+    int n_fs;                   /* number of speed steps*/
     int id;                     /* address  */
     int speed;                  /* Sollgeschwindigkeit skal. auf 0..14 */
     int direction;              /* 0/1/2                               */

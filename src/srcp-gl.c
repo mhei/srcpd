@@ -95,8 +95,8 @@ bool isInitializedGL(bus_t busnumber, int addr)
     }
 }
 
-/* �ernehme die neuen Angaben fr die Lok, einige wenige Prfungen.
-   Lock wird ignoriert! Lock wird in den SRCP Routinen beachtet, hier
+/* Take new locomotive data and make some checks.
+   Lock is ignored! Lock wird in den SRCP Routinen beachtet, hier
    ist das nicht angebracht (Notstop)
 */
 
@@ -288,6 +288,9 @@ int cacheTermGL(bus_t busnumber, int addr)
         if (gltmp.speed != 0) {
             gltmp.speed = 0;
             gltmp.state = 2;
+            gltmp.direction = 2;
+            enqueueGL(busnumber, addr, gltmp.direction, gltmp.speed,
+                    gltmp.n_fs, gltmp.funcs);
             cacheSetGL(busnumber, addr, gltmp);
         }
 
