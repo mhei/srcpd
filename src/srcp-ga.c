@@ -304,8 +304,7 @@ int describeLOCKGA(bus_t bus, int addr, char *reply)
 
 int unlockGA(bus_t busnumber, int addr, sessionid_t sessionid)
 {
-    if (ga[busnumber].gastate[addr].locked_by == sessionid
-        /*|| ga[busnumber].gastate[addr].locked_by == 0*/) {
+    if (ga[busnumber].gastate[addr].locked_by == sessionid) {
         char msg[256];
         ga[busnumber].gastate[addr].locked_by = 0;
         gettimeofday(&ga[busnumber].gastate[addr].locktime, NULL);
