@@ -597,8 +597,8 @@ int handleTERM(sessionid_t sessionid, bus_t bus, char *device,
                 rc = cacheTermGL(bus, addr);
             }
             else if (lockid == sessionid) {
-                rc = cacheUnlockGL(bus, addr, sessionid);
-                rc = cacheTermGL(bus, addr);
+                if (SRCP_OK == cacheUnlockGL(bus, addr, sessionid))
+                    rc = cacheTermGL(bus, addr);
             }
             else {
                 rc = SRCP_DEVICELOCKED;
@@ -618,8 +618,8 @@ int handleTERM(sessionid_t sessionid, bus_t bus, char *device,
                 rc = termGA(bus, addr);
             }
             else if (lockid == sessionid) {
-                rc = unlockGA(bus, addr, sessionid);
-                rc = termGA(bus, addr);
+                if (SRCP_OK == unlockGA(bus, addr, sessionid))
+                    rc = termGA(bus, addr);
             }
             else {
                 rc = SRCP_DEVICELOCKED;
