@@ -430,8 +430,7 @@ int cacheUnlockGL(bus_t busnumber, int addr, sessionid_t sessionid)
 {
     if (isInitializedGL(busnumber, addr)) {
 
-        if (gl[busnumber].locked_by == sessionid
-            /*|| gl[busnumber].locked_by == 0*/) {
+        if (gl[busnumber].locked_by == sessionid) {
             char msg[256];
             gl[busnumber].locked_by = 0;
             gettimeofday(&gl[busnumber].locktime, NULL);
