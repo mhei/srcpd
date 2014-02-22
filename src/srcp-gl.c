@@ -434,10 +434,10 @@ int cacheUnlockGL(bus_t busnumber, int addr, sessionid_t sessionid)
             char msg[256];
             gl[busnumber].locked_by = 0;
             gettimeofday(&gl[busnumber].locktime, NULL);
-            sprintf(msg, "%lu.%.3lu 102 INFO %ld LOCK GL %d %ld\n",
+            sprintf(msg, "%lu.%.3lu 102 INFO %ld LOCK GL %d\n",
                     gl[busnumber].locktime.tv_sec,
                     gl[busnumber].locktime.tv_usec / 1000,
-                    busnumber, addr, sessionid);
+                    busnumber, addr);
             enqueueInfoMessage(msg);
             return SRCP_OK;
         }
