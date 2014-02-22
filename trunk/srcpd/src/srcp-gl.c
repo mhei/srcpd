@@ -428,25 +428,23 @@ int describeLOCKGL(bus_t bus, int addr, char *reply)
 
 int cacheUnlockGL(bus_t busnumber, int addr, sessionid_t sessionid)
 {
-    if (isInitializedGL(busnumber, addr)) {
+    if (!isInitializedGL(busnumber, addr))
+        return SRCP_WRONGVALUE;
 
-        if (gl[busnumber].locked_by == sessionid) {
-            char msg[256];
-            gl[busnumber].locked_by = 0;
-            gettimeofday(&gl[busnumber].locktime, NULL);
-            sprintf(msg, "%lu.%.3lu 102 INFO %ld LOCK GL %d\n",
-                    gl[busnumber].locktime.tv_sec,
-                    gl[busnumber].locktime.tv_usec / 1000,
-                    busnumber, addr);
-            enqueueInfoMessage(msg);
-            return SRCP_OK;
-        }
-        else {
-            return SRCP_DEVICELOCKED;
-        }
+    if (gl[busnumber].locked_by == 0 || 
+            gl[busnumber].locked_by == sessionid) {
+        char msg[256];
+        gl[busnumber].locked_by = 0;
+        gettimeofday(&gl[busnumber].locktime, NULL);
+        sprintf(msg, "%lu.%.3lu 102 INFO %ld LOCK GL %d\n",
+                gl[busnumber].locktime.tv_sec,
+                gl[busnumber].locktime.tv_usec / 1000,
+                busnumber, addr);
+        enqueueInfoMessage(msg);
+        return SRCP_OK;
     }
     else {
-        return SRCP_WRONGVALUE;
+        return SRCP_DEVICELOCKED;
     }
 }
 
@@ -510,7 +508,6 @@ int startup_GL(void)
                        "pthread_mutex_init() failed: %s (errno = %d).",
                        strerror(result), result);
         }
-
     }
     return 0;
 }

@@ -304,14 +304,19 @@ int describeLOCKGA(bus_t bus, int addr, char *reply)
 
 int unlockGA(bus_t busnumber, int addr, sessionid_t sessionid)
 {
-    if (ga[busnumber].gastate[addr].locked_by == sessionid) {
-        char msg[256];
-        ga[busnumber].gastate[addr].locked_by = 0;
-        gettimeofday(&ga[busnumber].gastate[addr].locktime, NULL);
-        sprintf(msg, "%lu.%.3lu 102 INFO %ld LOCK GA %d %ld\n",
-                ga[busnumber].gastate[addr].locktime.tv_sec,
-                ga[busnumber].gastate[addr].locktime.tv_usec / 1000,
-                busnumber, addr, sessionid);
+    /*pointer to ga state data*/
+    ga_state_t* ga_tmp;
+    char msg[256];
+
+    ga_tmp = &ga[busnumber].gastate[addr];
+    
+    if (ga_tmp->locked_by == 0 || ga_tmp->locked_by == sessionid) {
+        ga_tmp->locked_by = 0;
+        gettimeofday(&ga_tmp->locktime, NULL);
+        sprintf(msg, "%lu.%.3lu 102 INFO %ld LOCK GA %d\n",
+                ga_tmp->locktime.tv_sec,
+                ga_tmp->locktime.tv_usec / 1000,
+                busnumber, addr);
         enqueueInfoMessage(msg);
         return SRCP_OK;
     }
