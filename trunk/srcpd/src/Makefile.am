@@ -64,7 +64,7 @@ if USE_LOCONET
 srcpd_SOURCES += loconet.c loconet.h
 endif
 
-if USE_LOCONET
+if USE_LOOPBACK
 srcpd_SOURCES += loopback.c loopback.h
 endif
 
