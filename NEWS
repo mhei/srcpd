@@ -8,6 +8,7 @@ srcpd-2.1.3 (2014-??-??)
     o Fix serial line read on unusable Lenz module.
     o Fix missing 102 INFO message for TERM GA.
     o Fix needless INFO LOCK message on TERM GA.
+    o Fix potential buffer overflow.
 
   New Features
     o Add support for dc-car sender (serial pc-device).

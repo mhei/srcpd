@@ -368,7 +368,7 @@ int handleGET(sessionid_t sessionid, bus_t bus, char *device,
 
         /* there are two descriptions */
         long int addr;
-        char devgrp[10];
+        char devgrp[11];
         int nelem = 0;
         if (strlen(parameter) > 0)
             nelem = sscanf(parameter, "%10s %ld", devgrp, &addr);

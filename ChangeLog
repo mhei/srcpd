@@ -1,3 +1,6 @@
+2015-04-23 Guido Scholz <gscholz@users.sourceforge.net>
+	* src/srcp-command.c: Fix potential buffer overflow.
+
 2014-02-20 Guido Scholz <gscholz@users.sourceforge.net>
 	* src/srcp-command.c, src/srcp-ga.c: Fix needless INFO LOCK
 	message on TERM GA.
