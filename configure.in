@@ -4,7 +4,7 @@ dnl Last update: $Date$
 
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT([srcpd], [2.1.2], [srcpd-devel@lists.sourceforge.net])
+AC_INIT([srcpd], [2.1.3], [srcpd-devel@lists.sourceforge.net])
 AC_CANONICAL_HOST
 AC_CONFIG_HEADER([src/config.h])
 AC_CONFIG_SRCDIR([src/srcpd.c])
