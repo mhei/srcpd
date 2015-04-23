@@ -407,7 +407,7 @@ static int ln_read_serial(bus_t busnumber, unsigned char *cmd, int len)
     struct timeval t = { 0, 0 };
     int retval;
     unsigned char c;
-    ssize_t pktlen;
+    ssize_t pktlen = 0;
 
     FD_ZERO(&fds);
     FD_SET(fd, &fds);
